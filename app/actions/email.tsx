@@ -537,7 +537,7 @@ export const sendMailVerdictDebtor = async (
 
     const attachments = [
       {
-        filename: `Blokkade.pdf`,
+        filename: `verdict_${verdictData.reference}.pdf`,
         content: pdfBase64,
       },
     ];
@@ -545,7 +545,7 @@ export const sendMailVerdictDebtor = async (
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
-      subject: `Kennisgeving van vonnis ${verdictData.reference}`,
+      subject: `Waarschuwing voor loonbeslag - ${verdictData.reference}`,
       react: (
         <VerdictDebtorMail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
@@ -560,6 +560,9 @@ export const sendMailVerdictDebtor = async (
     if (error) {
       return Response.json({ error }, { status: 500 });
     }
+
+    console.log("Verdict creditor email sent to:", to);
+    console.log("Email data:", data);
 
     return Response.json(data);
   } catch (error) {
@@ -597,7 +600,7 @@ export const sendMailVerdictCreditor = async (
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
-      subject: `Kennisgeving van vonnis ${verdictData.reference_number}`,
+      subject: `Factuur ${invoiceData.invoice_number}`,
       react: (
         <VerdictCreditorMail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
@@ -612,6 +615,9 @@ export const sendMailVerdictCreditor = async (
     if (error) {
       return Response.json({ error }, { status: 500 });
     }
+
+    console.log("Verdict creditor email sent to:", to);
+    console.log("Email data:", data);
 
     return Response.json(data);
   } catch (error) {

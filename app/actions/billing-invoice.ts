@@ -280,7 +280,6 @@ export const createInvoice = async (
   tenant_id: string
 ): Promise<BillingInvoiceBase> => {
   try {
-    console.log("Creating invoice:", invoice);
     const newInvoice = await prisma.billingInvoice.create({
       data: {
         invoice_number: invoice.invoice_number,
@@ -303,7 +302,7 @@ export const createInvoice = async (
         item_tax_rate: detail.item_tax_rate,
         item_tax_amount: detail.item_tax_amount,
         item_total_with_tax: detail.item_total_with_tax,
-        invoiceId: newInvoice.id,
+        billing_invoice_id: newInvoice.id,
       })),
     });
 
@@ -312,6 +311,7 @@ export const createInvoice = async (
       status: newInvoice.status as "unpaid" | "paid" | "overdue",
     };
   } catch (error) {
+    console.error("Error creating invoice:", error);
     throw new Error("Error creating invoice");
   }
 };

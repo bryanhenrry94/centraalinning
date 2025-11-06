@@ -801,6 +801,7 @@ export const approveVerdict = async (id: string): Promise<boolean> => {
 
     return VerdictUpdated ? true : false;
   } catch (error) {
+    console.error("Error approving verdict:", error);
     return false;
   }
 };
