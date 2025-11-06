@@ -33,6 +33,7 @@ model Tenant {
   billing_invoice  BillingInvoice[]
   collection_cases CollectionCase[]
   debtors          Debtor[]
+  bailiffs         Bailiff[]
   verdicts         Verdict[]
   users            User[]
   chat_rooms       ChatRoom[]
@@ -62,20 +63,20 @@ model TenantInvitation {
 }
 
 model User {
-  id               String        @id @default(uuid())
-  email            String        @db.VarChar(80)
-  password_hash    String?       @db.VarChar(120)
-  fullname         String?       @db.VarChar(80)
-  phone            String?       @db.VarChar(25)
-  tenant_id        String
-  tenant           Tenant        @relation(fields: [tenant_id], references: [id])
-  role             roleEnum      @default(TENANT_ADMIN)
-  is_active        Boolean       @default(true)
-  created_at       DateTime      @default(now())
-  updated_at       DateTime      @updatedAt
-  debtors          Debtor[]
-  verdict_bailiffs Verdict[]     @relation("UserToVerdictBailiff")
-  messages         ChatMessage[]
+  id            String        @id @default(uuid())
+  email         String        @db.VarChar(80)
+  password_hash String?       @db.VarChar(120)
+  fullname      String?       @db.VarChar(80)
+  phone         String?       @db.VarChar(25)
+  tenant_id     String
+  tenant        Tenant        @relation(fields: [tenant_id], references: [id])
+  role          roleEnum      @default(TENANT_ADMIN)
+  is_active     Boolean       @default(true)
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
+  debtors       Debtor[]
+  bailiffs      Bailiff[]
+  messages      ChatMessage[]
 
   @@map("user")
 }
@@ -136,7 +137,7 @@ model Verdict {
   tenant_id           String
   notes               String?
   bailiff_id          String?
-  bailiff             User?                    @relation("UserToVerdictBailiff", fields: [bailiff_id], references: [id])
+  bailiff             Bailiff?                 @relation("BailiffToVerdict", fields: [bailiff_id], references: [id])
   debtor              Debtor                   @relation(fields: [debtor_id], references: [id])
   tenant              Tenant                   @relation(fields: [tenant_id], references: [id])
   attachments         VerdictAttachment[]
@@ -395,6 +396,23 @@ model Debtor {
   @@unique([tenant_id, email])
   @@unique([tenant_id, identification])
   @@map("debtor")
+}
+
+model Bailiff {
+  id         String   @id @default(uuid())
+  fullname   String
+  email      String   @unique
+  phone      String?
+  tenant_id  String
+  user_id    String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  tenant   Tenant    @relation(fields: [tenant_id], references: [id])
+  user     User?     @relation(fields: [user_id], references: [id])
+  verdicts Verdict[] @relation("BailiffToVerdict")
+
+  @@map("bailiff")
 }
 
 model ChatRoom {

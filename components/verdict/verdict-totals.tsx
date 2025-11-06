@@ -29,11 +29,11 @@ const VerdictTotals: React.FC<VerdictTotalsProps> = () => {
 
   const verdictInterest: VerdictInterestItem[] = useWatch({
     control,
-    name: "verdictInterest",
+    name: "verdict_interest",
   });
   const verdictEmbargo: VerdictEmbargoItem[] = useWatch({
     control,
-    name: "verdictEmbargo",
+    name: "verdict_embargo",
   });
 
   const bailiff_services: VerdictBailiffItem[] = useWatch({
@@ -56,7 +56,7 @@ const VerdictTotals: React.FC<VerdictTotalsProps> = () => {
 
   const totalBailiffAmount =
     bailiff_services?.reduce(
-      (sum, item) => sum + (item?.service_cost ?? 0),
+      (sum, item) => sum + (Number(item?.service_cost) ?? 0),
       0
     ) ?? 0;
 

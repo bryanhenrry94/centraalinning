@@ -2,22 +2,28 @@
 import React from "react";
 import VerdictFormPage from "@/components/verdict/verdict-form";
 import { VerdictProvider } from "@/contexts/verdictContext";
-import ActionToolbar from "@/components/ui/breadcrums";
 import { Box } from "@mui/material";
 
 const VerdictPage: React.FC = () => {
+  const defaultValues = {
+    invoice_number: "",
+    creditor_name: "",
+    debtor_id: "",
+    registration_number: "",
+    sentence_amount: 0,
+    sentence_date: new Date(),
+    procesal_cost: 0,
+    bailiff_id: null,
+    verdict_interest: [],
+    verdict_embargo: [],
+    bailiff_services: [],
+  };
+
   return (
     <Box sx={{ m: 4 }}>
-      {/* <ActionToolbar
-        title="Nieuw"
-        navigation={[
-          { title: "Dashboard", href: "/dashboard" },
-          { title: "Vonnis", href: "/dashboard/verdicts" },
-        ]}
-      /> */}
-      <Box >
+      <Box>
         <VerdictProvider>
-          <VerdictFormPage />
+          <VerdictFormPage defaultValues={defaultValues} modeEdit={false} />
         </VerdictProvider>
       </Box>
     </Box>

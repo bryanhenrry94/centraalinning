@@ -10,7 +10,7 @@ const TotalBailiff: React.FC<{ control: any }> = ({ control }) => {
 
   const total =
     (bailiff_services as VerdictBailiffItem[] | undefined)?.reduce(
-      (sum: number, item: VerdictBailiffItem) => sum + (item?.service_cost ?? 0),
+      (sum: number, item: VerdictBailiffItem) => sum + (Number(item?.service_cost) || 0),
       0
     ) ?? 0;
 

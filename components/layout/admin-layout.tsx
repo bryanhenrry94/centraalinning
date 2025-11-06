@@ -3,7 +3,7 @@ import Header from "./header";
 import Navigation from "./navigation";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import LoadingUI from "@/components/ui/loading-ui";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 export const AdminLayout = ({ children }: { children?: ReactNode }) => {
   const { user } = useAuthSession();
@@ -17,11 +17,30 @@ export const AdminLayout = ({ children }: { children?: ReactNode }) => {
       <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
         <Header />
         <Navigation role={user.role} />
-        <main className="flex-1 p-6 bg-gray-50; scroll-y-auto">{children}</main>
-        <footer className="p-4 text-center text-sm text-gray-500">
-          {/* &copy; {new Date().getFullYear()} CI Systeem. All rights reserved. */}
-          Klantnummer: CIARU001
-        </footer>
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            padding: 3,
+            backgroundColor: "grey.50",
+            overflowY: "auto",
+            height: "100%",
+          }}
+        >
+          {children}
+        </Box>
+        <Box
+          component="footer"
+          sx={{
+            padding: 2,
+            textAlign: "center",
+            backgroundColor: "background.paper",
+          }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            Klantnummer: CIARU001
+          </Typography>
+        </Box>
       </Box>
     </>
   );

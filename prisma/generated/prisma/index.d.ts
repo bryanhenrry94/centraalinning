@@ -114,6 +114,11 @@ export type CollectionCasePayment = $Result.DefaultSelection<Prisma.$CollectionC
  */
 export type Debtor = $Result.DefaultSelection<Prisma.$DebtorPayload>
 /**
+ * Model Bailiff
+ * 
+ */
+export type Bailiff = $Result.DefaultSelection<Prisma.$BailiffPayload>
+/**
  * Model ChatRoom
  * 
  */
@@ -613,6 +618,16 @@ export class PrismaClient<
     * ```
     */
   get debtor(): Prisma.DebtorDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.bailiff`: Exposes CRUD operations for the **Bailiff** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Bailiffs
+    * const bailiffs = await prisma.bailiff.findMany()
+    * ```
+    */
+  get bailiff(): Prisma.BailiffDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.chatRoom`: Exposes CRUD operations for the **ChatRoom** model.
@@ -1123,6 +1138,7 @@ export namespace Prisma {
     CollectionCaseNotification: 'CollectionCaseNotification',
     CollectionCasePayment: 'CollectionCasePayment',
     Debtor: 'Debtor',
+    Bailiff: 'Bailiff',
     ChatRoom: 'ChatRoom',
     ChatMessage: 'ChatMessage',
     DebtorIncome: 'DebtorIncome',
@@ -1146,7 +1162,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "tenant" | "tenantInvitation" | "user" | "parameter" | "verdict" | "verdictInterest" | "verdictInterestDetails" | "verdictEmbargo" | "verdictBailiffServices" | "verdictAttachment" | "interestType" | "interestDetail" | "billingInvoice" | "billingInvoiceDetail" | "billingPayment" | "collectionCase" | "collectionCaseFine" | "collectionCaseNotification" | "collectionCasePayment" | "debtor" | "chatRoom" | "chatMessage" | "debtorIncome" | "collectionCaseAgreement" | "collectionCaseAgreementInstallment"
+      modelProps: "tenant" | "tenantInvitation" | "user" | "parameter" | "verdict" | "verdictInterest" | "verdictInterestDetails" | "verdictEmbargo" | "verdictBailiffServices" | "verdictAttachment" | "interestType" | "interestDetail" | "billingInvoice" | "billingInvoiceDetail" | "billingPayment" | "collectionCase" | "collectionCaseFine" | "collectionCaseNotification" | "collectionCasePayment" | "debtor" | "bailiff" | "chatRoom" | "chatMessage" | "debtorIncome" | "collectionCaseAgreement" | "collectionCaseAgreementInstallment"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2630,6 +2646,80 @@ export namespace Prisma {
           }
         }
       }
+      Bailiff: {
+        payload: Prisma.$BailiffPayload<ExtArgs>
+        fields: Prisma.BailiffFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.BailiffFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BailiffPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.BailiffFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BailiffPayload>
+          }
+          findFirst: {
+            args: Prisma.BailiffFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BailiffPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.BailiffFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BailiffPayload>
+          }
+          findMany: {
+            args: Prisma.BailiffFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BailiffPayload>[]
+          }
+          create: {
+            args: Prisma.BailiffCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BailiffPayload>
+          }
+          createMany: {
+            args: Prisma.BailiffCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.BailiffCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BailiffPayload>[]
+          }
+          delete: {
+            args: Prisma.BailiffDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BailiffPayload>
+          }
+          update: {
+            args: Prisma.BailiffUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BailiffPayload>
+          }
+          deleteMany: {
+            args: Prisma.BailiffDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.BailiffUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.BailiffUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BailiffPayload>[]
+          }
+          upsert: {
+            args: Prisma.BailiffUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BailiffPayload>
+          }
+          aggregate: {
+            args: Prisma.BailiffAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateBailiff>
+          }
+          groupBy: {
+            args: Prisma.BailiffGroupByArgs<ExtArgs>
+            result: $Utils.Optional<BailiffGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.BailiffCountArgs<ExtArgs>
+            result: $Utils.Optional<BailiffCountAggregateOutputType> | number
+          }
+        }
+      }
       ChatRoom: {
         payload: Prisma.$ChatRoomPayload<ExtArgs>
         fields: Prisma.ChatRoomFieldRefs
@@ -3116,6 +3206,7 @@ export namespace Prisma {
     collectionCaseNotification?: CollectionCaseNotificationOmit
     collectionCasePayment?: CollectionCasePaymentOmit
     debtor?: DebtorOmit
+    bailiff?: BailiffOmit
     chatRoom?: ChatRoomOmit
     chatMessage?: ChatMessageOmit
     debtorIncome?: DebtorIncomeOmit
@@ -3204,6 +3295,7 @@ export namespace Prisma {
     billing_invoice: number
     collection_cases: number
     debtors: number
+    bailiffs: number
     verdicts: number
     users: number
     chat_rooms: number
@@ -3215,6 +3307,7 @@ export namespace Prisma {
     billing_invoice?: boolean | TenantCountOutputTypeCountBilling_invoiceArgs
     collection_cases?: boolean | TenantCountOutputTypeCountCollection_casesArgs
     debtors?: boolean | TenantCountOutputTypeCountDebtorsArgs
+    bailiffs?: boolean | TenantCountOutputTypeCountBailiffsArgs
     verdicts?: boolean | TenantCountOutputTypeCountVerdictsArgs
     users?: boolean | TenantCountOutputTypeCountUsersArgs
     chat_rooms?: boolean | TenantCountOutputTypeCountChat_roomsArgs
@@ -3252,6 +3345,13 @@ export namespace Prisma {
    */
   export type TenantCountOutputTypeCountDebtorsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: DebtorWhereInput
+  }
+
+  /**
+   * TenantCountOutputType without action
+   */
+  export type TenantCountOutputTypeCountBailiffsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BailiffWhereInput
   }
 
   /**
@@ -3296,13 +3396,13 @@ export namespace Prisma {
 
   export type UserCountOutputType = {
     debtors: number
-    verdict_bailiffs: number
+    bailiffs: number
     messages: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     debtors?: boolean | UserCountOutputTypeCountDebtorsArgs
-    verdict_bailiffs?: boolean | UserCountOutputTypeCountVerdict_bailiffsArgs
+    bailiffs?: boolean | UserCountOutputTypeCountBailiffsArgs
     messages?: boolean | UserCountOutputTypeCountMessagesArgs
   }
 
@@ -3327,8 +3427,8 @@ export namespace Prisma {
   /**
    * UserCountOutputType without action
    */
-  export type UserCountOutputTypeCountVerdict_bailiffsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: VerdictWhereInput
+  export type UserCountOutputTypeCountBailiffsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BailiffWhereInput
   }
 
   /**
@@ -3651,6 +3751,37 @@ export namespace Prisma {
    * DebtorCountOutputType without action
    */
   export type DebtorCountOutputTypeCountVerdictsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VerdictWhereInput
+  }
+
+
+  /**
+   * Count Type BailiffCountOutputType
+   */
+
+  export type BailiffCountOutputType = {
+    verdicts: number
+  }
+
+  export type BailiffCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    verdicts?: boolean | BailiffCountOutputTypeCountVerdictsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * BailiffCountOutputType without action
+   */
+  export type BailiffCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BailiffCountOutputType
+     */
+    select?: BailiffCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * BailiffCountOutputType without action
+   */
+  export type BailiffCountOutputTypeCountVerdictsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: VerdictWhereInput
   }
 
@@ -4035,6 +4166,7 @@ export namespace Prisma {
     billing_invoice?: boolean | Tenant$billing_invoiceArgs<ExtArgs>
     collection_cases?: boolean | Tenant$collection_casesArgs<ExtArgs>
     debtors?: boolean | Tenant$debtorsArgs<ExtArgs>
+    bailiffs?: boolean | Tenant$bailiffsArgs<ExtArgs>
     verdicts?: boolean | Tenant$verdictsArgs<ExtArgs>
     users?: boolean | Tenant$usersArgs<ExtArgs>
     chat_rooms?: boolean | Tenant$chat_roomsArgs<ExtArgs>
@@ -4111,6 +4243,7 @@ export namespace Prisma {
     billing_invoice?: boolean | Tenant$billing_invoiceArgs<ExtArgs>
     collection_cases?: boolean | Tenant$collection_casesArgs<ExtArgs>
     debtors?: boolean | Tenant$debtorsArgs<ExtArgs>
+    bailiffs?: boolean | Tenant$bailiffsArgs<ExtArgs>
     verdicts?: boolean | Tenant$verdictsArgs<ExtArgs>
     users?: boolean | Tenant$usersArgs<ExtArgs>
     chat_rooms?: boolean | Tenant$chat_roomsArgs<ExtArgs>
@@ -4127,6 +4260,7 @@ export namespace Prisma {
       billing_invoice: Prisma.$BillingInvoicePayload<ExtArgs>[]
       collection_cases: Prisma.$CollectionCasePayload<ExtArgs>[]
       debtors: Prisma.$DebtorPayload<ExtArgs>[]
+      bailiffs: Prisma.$BailiffPayload<ExtArgs>[]
       verdicts: Prisma.$VerdictPayload<ExtArgs>[]
       users: Prisma.$UserPayload<ExtArgs>[]
       chat_rooms: Prisma.$ChatRoomPayload<ExtArgs>[]
@@ -4549,6 +4683,7 @@ export namespace Prisma {
     billing_invoice<T extends Tenant$billing_invoiceArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$billing_invoiceArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BillingInvoicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     collection_cases<T extends Tenant$collection_casesArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$collection_casesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CollectionCasePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     debtors<T extends Tenant$debtorsArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$debtorsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DebtorPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    bailiffs<T extends Tenant$bailiffsArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$bailiffsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BailiffPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     verdicts<T extends Tenant$verdictsArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$verdictsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VerdictPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     users<T extends Tenant$usersArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$usersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     chat_rooms<T extends Tenant$chat_roomsArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$chat_roomsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChatRoomPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -5058,6 +5193,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: DebtorScalarFieldEnum | DebtorScalarFieldEnum[]
+  }
+
+  /**
+   * Tenant.bailiffs
+   */
+  export type Tenant$bailiffsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Bailiff
+     */
+    select?: BailiffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Bailiff
+     */
+    omit?: BailiffOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BailiffInclude<ExtArgs> | null
+    where?: BailiffWhereInput
+    orderBy?: BailiffOrderByWithRelationInput | BailiffOrderByWithRelationInput[]
+    cursor?: BailiffWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: BailiffScalarFieldEnum | BailiffScalarFieldEnum[]
   }
 
   /**
@@ -6541,7 +6700,7 @@ export namespace Prisma {
     updated_at?: boolean
     tenant?: boolean | TenantDefaultArgs<ExtArgs>
     debtors?: boolean | User$debtorsArgs<ExtArgs>
-    verdict_bailiffs?: boolean | User$verdict_bailiffsArgs<ExtArgs>
+    bailiffs?: boolean | User$bailiffsArgs<ExtArgs>
     messages?: boolean | User$messagesArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
@@ -6591,7 +6750,7 @@ export namespace Prisma {
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     tenant?: boolean | TenantDefaultArgs<ExtArgs>
     debtors?: boolean | User$debtorsArgs<ExtArgs>
-    verdict_bailiffs?: boolean | User$verdict_bailiffsArgs<ExtArgs>
+    bailiffs?: boolean | User$bailiffsArgs<ExtArgs>
     messages?: boolean | User$messagesArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
@@ -6607,7 +6766,7 @@ export namespace Prisma {
     objects: {
       tenant: Prisma.$TenantPayload<ExtArgs>
       debtors: Prisma.$DebtorPayload<ExtArgs>[]
-      verdict_bailiffs: Prisma.$VerdictPayload<ExtArgs>[]
+      bailiffs: Prisma.$BailiffPayload<ExtArgs>[]
       messages: Prisma.$ChatMessagePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -7017,7 +7176,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     tenant<T extends TenantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TenantDefaultArgs<ExtArgs>>): Prisma__TenantClient<$Result.GetResult<Prisma.$TenantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     debtors<T extends User$debtorsArgs<ExtArgs> = {}>(args?: Subset<T, User$debtorsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DebtorPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    verdict_bailiffs<T extends User$verdict_bailiffsArgs<ExtArgs> = {}>(args?: Subset<T, User$verdict_bailiffsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VerdictPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    bailiffs<T extends User$bailiffsArgs<ExtArgs> = {}>(args?: Subset<T, User$bailiffsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BailiffPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     messages<T extends User$messagesArgs<ExtArgs> = {}>(args?: Subset<T, User$messagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChatMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -7478,27 +7637,27 @@ export namespace Prisma {
   }
 
   /**
-   * User.verdict_bailiffs
+   * User.bailiffs
    */
-  export type User$verdict_bailiffsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type User$bailiffsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Verdict
+     * Select specific fields to fetch from the Bailiff
      */
-    select?: VerdictSelect<ExtArgs> | null
+    select?: BailiffSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Verdict
+     * Omit specific fields from the Bailiff
      */
-    omit?: VerdictOmit<ExtArgs> | null
+    omit?: BailiffOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: VerdictInclude<ExtArgs> | null
-    where?: VerdictWhereInput
-    orderBy?: VerdictOrderByWithRelationInput | VerdictOrderByWithRelationInput[]
-    cursor?: VerdictWhereUniqueInput
+    include?: BailiffInclude<ExtArgs> | null
+    where?: BailiffWhereInput
+    orderBy?: BailiffOrderByWithRelationInput | BailiffOrderByWithRelationInput[]
+    cursor?: BailiffWhereUniqueInput
     take?: number
     skip?: number
-    distinct?: VerdictScalarFieldEnum | VerdictScalarFieldEnum[]
+    distinct?: BailiffScalarFieldEnum | BailiffScalarFieldEnum[]
   }
 
   /**
@@ -9305,7 +9464,7 @@ export namespace Prisma {
   export type $VerdictPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Verdict"
     objects: {
-      bailiff: Prisma.$UserPayload<ExtArgs> | null
+      bailiff: Prisma.$BailiffPayload<ExtArgs> | null
       debtor: Prisma.$DebtorPayload<ExtArgs>
       tenant: Prisma.$TenantPayload<ExtArgs>
       attachments: Prisma.$VerdictAttachmentPayload<ExtArgs>[]
@@ -9722,7 +9881,7 @@ export namespace Prisma {
    */
   export interface Prisma__VerdictClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    bailiff<T extends Verdict$bailiffArgs<ExtArgs> = {}>(args?: Subset<T, Verdict$bailiffArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    bailiff<T extends Verdict$bailiffArgs<ExtArgs> = {}>(args?: Subset<T, Verdict$bailiffArgs<ExtArgs>>): Prisma__BailiffClient<$Result.GetResult<Prisma.$BailiffPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     debtor<T extends DebtorDefaultArgs<ExtArgs> = {}>(args?: Subset<T, DebtorDefaultArgs<ExtArgs>>): Prisma__DebtorClient<$Result.GetResult<Prisma.$DebtorPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     tenant<T extends TenantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TenantDefaultArgs<ExtArgs>>): Prisma__TenantClient<$Result.GetResult<Prisma.$TenantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     attachments<T extends Verdict$attachmentsArgs<ExtArgs> = {}>(args?: Subset<T, Verdict$attachmentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VerdictAttachmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -10172,18 +10331,18 @@ export namespace Prisma {
    */
   export type Verdict$bailiffArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the User
+     * Select specific fields to fetch from the Bailiff
      */
-    select?: UserSelect<ExtArgs> | null
+    select?: BailiffSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the User
+     * Omit specific fields from the Bailiff
      */
-    omit?: UserOmit<ExtArgs> | null
+    omit?: BailiffOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: UserInclude<ExtArgs> | null
-    where?: UserWhereInput
+    include?: BailiffInclude<ExtArgs> | null
+    where?: BailiffWhereInput
   }
 
   /**
@@ -28078,6 +28237,1160 @@ export namespace Prisma {
 
 
   /**
+   * Model Bailiff
+   */
+
+  export type AggregateBailiff = {
+    _count: BailiffCountAggregateOutputType | null
+    _min: BailiffMinAggregateOutputType | null
+    _max: BailiffMaxAggregateOutputType | null
+  }
+
+  export type BailiffMinAggregateOutputType = {
+    id: string | null
+    fullname: string | null
+    email: string | null
+    phone: string | null
+    tenant_id: string | null
+    user_id: string | null
+    created_at: Date | null
+    updated_at: Date | null
+  }
+
+  export type BailiffMaxAggregateOutputType = {
+    id: string | null
+    fullname: string | null
+    email: string | null
+    phone: string | null
+    tenant_id: string | null
+    user_id: string | null
+    created_at: Date | null
+    updated_at: Date | null
+  }
+
+  export type BailiffCountAggregateOutputType = {
+    id: number
+    fullname: number
+    email: number
+    phone: number
+    tenant_id: number
+    user_id: number
+    created_at: number
+    updated_at: number
+    _all: number
+  }
+
+
+  export type BailiffMinAggregateInputType = {
+    id?: true
+    fullname?: true
+    email?: true
+    phone?: true
+    tenant_id?: true
+    user_id?: true
+    created_at?: true
+    updated_at?: true
+  }
+
+  export type BailiffMaxAggregateInputType = {
+    id?: true
+    fullname?: true
+    email?: true
+    phone?: true
+    tenant_id?: true
+    user_id?: true
+    created_at?: true
+    updated_at?: true
+  }
+
+  export type BailiffCountAggregateInputType = {
+    id?: true
+    fullname?: true
+    email?: true
+    phone?: true
+    tenant_id?: true
+    user_id?: true
+    created_at?: true
+    updated_at?: true
+    _all?: true
+  }
+
+  export type BailiffAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Bailiff to aggregate.
+     */
+    where?: BailiffWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Bailiffs to fetch.
+     */
+    orderBy?: BailiffOrderByWithRelationInput | BailiffOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: BailiffWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Bailiffs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Bailiffs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Bailiffs
+    **/
+    _count?: true | BailiffCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: BailiffMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: BailiffMaxAggregateInputType
+  }
+
+  export type GetBailiffAggregateType<T extends BailiffAggregateArgs> = {
+        [P in keyof T & keyof AggregateBailiff]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateBailiff[P]>
+      : GetScalarType<T[P], AggregateBailiff[P]>
+  }
+
+
+
+
+  export type BailiffGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BailiffWhereInput
+    orderBy?: BailiffOrderByWithAggregationInput | BailiffOrderByWithAggregationInput[]
+    by: BailiffScalarFieldEnum[] | BailiffScalarFieldEnum
+    having?: BailiffScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: BailiffCountAggregateInputType | true
+    _min?: BailiffMinAggregateInputType
+    _max?: BailiffMaxAggregateInputType
+  }
+
+  export type BailiffGroupByOutputType = {
+    id: string
+    fullname: string
+    email: string
+    phone: string | null
+    tenant_id: string
+    user_id: string | null
+    created_at: Date
+    updated_at: Date
+    _count: BailiffCountAggregateOutputType | null
+    _min: BailiffMinAggregateOutputType | null
+    _max: BailiffMaxAggregateOutputType | null
+  }
+
+  type GetBailiffGroupByPayload<T extends BailiffGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<BailiffGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof BailiffGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], BailiffGroupByOutputType[P]>
+            : GetScalarType<T[P], BailiffGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type BailiffSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    fullname?: boolean
+    email?: boolean
+    phone?: boolean
+    tenant_id?: boolean
+    user_id?: boolean
+    created_at?: boolean
+    updated_at?: boolean
+    tenant?: boolean | TenantDefaultArgs<ExtArgs>
+    user?: boolean | Bailiff$userArgs<ExtArgs>
+    verdicts?: boolean | Bailiff$verdictsArgs<ExtArgs>
+    _count?: boolean | BailiffCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["bailiff"]>
+
+  export type BailiffSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    fullname?: boolean
+    email?: boolean
+    phone?: boolean
+    tenant_id?: boolean
+    user_id?: boolean
+    created_at?: boolean
+    updated_at?: boolean
+    tenant?: boolean | TenantDefaultArgs<ExtArgs>
+    user?: boolean | Bailiff$userArgs<ExtArgs>
+  }, ExtArgs["result"]["bailiff"]>
+
+  export type BailiffSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    fullname?: boolean
+    email?: boolean
+    phone?: boolean
+    tenant_id?: boolean
+    user_id?: boolean
+    created_at?: boolean
+    updated_at?: boolean
+    tenant?: boolean | TenantDefaultArgs<ExtArgs>
+    user?: boolean | Bailiff$userArgs<ExtArgs>
+  }, ExtArgs["result"]["bailiff"]>
+
+  export type BailiffSelectScalar = {
+    id?: boolean
+    fullname?: boolean
+    email?: boolean
+    phone?: boolean
+    tenant_id?: boolean
+    user_id?: boolean
+    created_at?: boolean
+    updated_at?: boolean
+  }
+
+  export type BailiffOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "fullname" | "email" | "phone" | "tenant_id" | "user_id" | "created_at" | "updated_at", ExtArgs["result"]["bailiff"]>
+  export type BailiffInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    tenant?: boolean | TenantDefaultArgs<ExtArgs>
+    user?: boolean | Bailiff$userArgs<ExtArgs>
+    verdicts?: boolean | Bailiff$verdictsArgs<ExtArgs>
+    _count?: boolean | BailiffCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type BailiffIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    tenant?: boolean | TenantDefaultArgs<ExtArgs>
+    user?: boolean | Bailiff$userArgs<ExtArgs>
+  }
+  export type BailiffIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    tenant?: boolean | TenantDefaultArgs<ExtArgs>
+    user?: boolean | Bailiff$userArgs<ExtArgs>
+  }
+
+  export type $BailiffPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Bailiff"
+    objects: {
+      tenant: Prisma.$TenantPayload<ExtArgs>
+      user: Prisma.$UserPayload<ExtArgs> | null
+      verdicts: Prisma.$VerdictPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      fullname: string
+      email: string
+      phone: string | null
+      tenant_id: string
+      user_id: string | null
+      created_at: Date
+      updated_at: Date
+    }, ExtArgs["result"]["bailiff"]>
+    composites: {}
+  }
+
+  type BailiffGetPayload<S extends boolean | null | undefined | BailiffDefaultArgs> = $Result.GetResult<Prisma.$BailiffPayload, S>
+
+  type BailiffCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<BailiffFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: BailiffCountAggregateInputType | true
+    }
+
+  export interface BailiffDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Bailiff'], meta: { name: 'Bailiff' } }
+    /**
+     * Find zero or one Bailiff that matches the filter.
+     * @param {BailiffFindUniqueArgs} args - Arguments to find a Bailiff
+     * @example
+     * // Get one Bailiff
+     * const bailiff = await prisma.bailiff.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends BailiffFindUniqueArgs>(args: SelectSubset<T, BailiffFindUniqueArgs<ExtArgs>>): Prisma__BailiffClient<$Result.GetResult<Prisma.$BailiffPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Bailiff that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {BailiffFindUniqueOrThrowArgs} args - Arguments to find a Bailiff
+     * @example
+     * // Get one Bailiff
+     * const bailiff = await prisma.bailiff.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends BailiffFindUniqueOrThrowArgs>(args: SelectSubset<T, BailiffFindUniqueOrThrowArgs<ExtArgs>>): Prisma__BailiffClient<$Result.GetResult<Prisma.$BailiffPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Bailiff that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BailiffFindFirstArgs} args - Arguments to find a Bailiff
+     * @example
+     * // Get one Bailiff
+     * const bailiff = await prisma.bailiff.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends BailiffFindFirstArgs>(args?: SelectSubset<T, BailiffFindFirstArgs<ExtArgs>>): Prisma__BailiffClient<$Result.GetResult<Prisma.$BailiffPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Bailiff that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BailiffFindFirstOrThrowArgs} args - Arguments to find a Bailiff
+     * @example
+     * // Get one Bailiff
+     * const bailiff = await prisma.bailiff.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends BailiffFindFirstOrThrowArgs>(args?: SelectSubset<T, BailiffFindFirstOrThrowArgs<ExtArgs>>): Prisma__BailiffClient<$Result.GetResult<Prisma.$BailiffPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Bailiffs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BailiffFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Bailiffs
+     * const bailiffs = await prisma.bailiff.findMany()
+     * 
+     * // Get first 10 Bailiffs
+     * const bailiffs = await prisma.bailiff.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const bailiffWithIdOnly = await prisma.bailiff.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends BailiffFindManyArgs>(args?: SelectSubset<T, BailiffFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BailiffPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Bailiff.
+     * @param {BailiffCreateArgs} args - Arguments to create a Bailiff.
+     * @example
+     * // Create one Bailiff
+     * const Bailiff = await prisma.bailiff.create({
+     *   data: {
+     *     // ... data to create a Bailiff
+     *   }
+     * })
+     * 
+     */
+    create<T extends BailiffCreateArgs>(args: SelectSubset<T, BailiffCreateArgs<ExtArgs>>): Prisma__BailiffClient<$Result.GetResult<Prisma.$BailiffPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Bailiffs.
+     * @param {BailiffCreateManyArgs} args - Arguments to create many Bailiffs.
+     * @example
+     * // Create many Bailiffs
+     * const bailiff = await prisma.bailiff.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends BailiffCreateManyArgs>(args?: SelectSubset<T, BailiffCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Bailiffs and returns the data saved in the database.
+     * @param {BailiffCreateManyAndReturnArgs} args - Arguments to create many Bailiffs.
+     * @example
+     * // Create many Bailiffs
+     * const bailiff = await prisma.bailiff.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Bailiffs and only return the `id`
+     * const bailiffWithIdOnly = await prisma.bailiff.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends BailiffCreateManyAndReturnArgs>(args?: SelectSubset<T, BailiffCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BailiffPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Bailiff.
+     * @param {BailiffDeleteArgs} args - Arguments to delete one Bailiff.
+     * @example
+     * // Delete one Bailiff
+     * const Bailiff = await prisma.bailiff.delete({
+     *   where: {
+     *     // ... filter to delete one Bailiff
+     *   }
+     * })
+     * 
+     */
+    delete<T extends BailiffDeleteArgs>(args: SelectSubset<T, BailiffDeleteArgs<ExtArgs>>): Prisma__BailiffClient<$Result.GetResult<Prisma.$BailiffPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Bailiff.
+     * @param {BailiffUpdateArgs} args - Arguments to update one Bailiff.
+     * @example
+     * // Update one Bailiff
+     * const bailiff = await prisma.bailiff.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends BailiffUpdateArgs>(args: SelectSubset<T, BailiffUpdateArgs<ExtArgs>>): Prisma__BailiffClient<$Result.GetResult<Prisma.$BailiffPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Bailiffs.
+     * @param {BailiffDeleteManyArgs} args - Arguments to filter Bailiffs to delete.
+     * @example
+     * // Delete a few Bailiffs
+     * const { count } = await prisma.bailiff.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends BailiffDeleteManyArgs>(args?: SelectSubset<T, BailiffDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Bailiffs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BailiffUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Bailiffs
+     * const bailiff = await prisma.bailiff.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends BailiffUpdateManyArgs>(args: SelectSubset<T, BailiffUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Bailiffs and returns the data updated in the database.
+     * @param {BailiffUpdateManyAndReturnArgs} args - Arguments to update many Bailiffs.
+     * @example
+     * // Update many Bailiffs
+     * const bailiff = await prisma.bailiff.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Bailiffs and only return the `id`
+     * const bailiffWithIdOnly = await prisma.bailiff.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends BailiffUpdateManyAndReturnArgs>(args: SelectSubset<T, BailiffUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BailiffPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Bailiff.
+     * @param {BailiffUpsertArgs} args - Arguments to update or create a Bailiff.
+     * @example
+     * // Update or create a Bailiff
+     * const bailiff = await prisma.bailiff.upsert({
+     *   create: {
+     *     // ... data to create a Bailiff
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Bailiff we want to update
+     *   }
+     * })
+     */
+    upsert<T extends BailiffUpsertArgs>(args: SelectSubset<T, BailiffUpsertArgs<ExtArgs>>): Prisma__BailiffClient<$Result.GetResult<Prisma.$BailiffPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Bailiffs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BailiffCountArgs} args - Arguments to filter Bailiffs to count.
+     * @example
+     * // Count the number of Bailiffs
+     * const count = await prisma.bailiff.count({
+     *   where: {
+     *     // ... the filter for the Bailiffs we want to count
+     *   }
+     * })
+    **/
+    count<T extends BailiffCountArgs>(
+      args?: Subset<T, BailiffCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], BailiffCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Bailiff.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BailiffAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends BailiffAggregateArgs>(args: Subset<T, BailiffAggregateArgs>): Prisma.PrismaPromise<GetBailiffAggregateType<T>>
+
+    /**
+     * Group by Bailiff.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BailiffGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends BailiffGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: BailiffGroupByArgs['orderBy'] }
+        : { orderBy?: BailiffGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, BailiffGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetBailiffGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Bailiff model
+   */
+  readonly fields: BailiffFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Bailiff.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__BailiffClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    tenant<T extends TenantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TenantDefaultArgs<ExtArgs>>): Prisma__TenantClient<$Result.GetResult<Prisma.$TenantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    user<T extends Bailiff$userArgs<ExtArgs> = {}>(args?: Subset<T, Bailiff$userArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    verdicts<T extends Bailiff$verdictsArgs<ExtArgs> = {}>(args?: Subset<T, Bailiff$verdictsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VerdictPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Bailiff model
+   */
+  interface BailiffFieldRefs {
+    readonly id: FieldRef<"Bailiff", 'String'>
+    readonly fullname: FieldRef<"Bailiff", 'String'>
+    readonly email: FieldRef<"Bailiff", 'String'>
+    readonly phone: FieldRef<"Bailiff", 'String'>
+    readonly tenant_id: FieldRef<"Bailiff", 'String'>
+    readonly user_id: FieldRef<"Bailiff", 'String'>
+    readonly created_at: FieldRef<"Bailiff", 'DateTime'>
+    readonly updated_at: FieldRef<"Bailiff", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Bailiff findUnique
+   */
+  export type BailiffFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Bailiff
+     */
+    select?: BailiffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Bailiff
+     */
+    omit?: BailiffOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BailiffInclude<ExtArgs> | null
+    /**
+     * Filter, which Bailiff to fetch.
+     */
+    where: BailiffWhereUniqueInput
+  }
+
+  /**
+   * Bailiff findUniqueOrThrow
+   */
+  export type BailiffFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Bailiff
+     */
+    select?: BailiffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Bailiff
+     */
+    omit?: BailiffOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BailiffInclude<ExtArgs> | null
+    /**
+     * Filter, which Bailiff to fetch.
+     */
+    where: BailiffWhereUniqueInput
+  }
+
+  /**
+   * Bailiff findFirst
+   */
+  export type BailiffFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Bailiff
+     */
+    select?: BailiffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Bailiff
+     */
+    omit?: BailiffOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BailiffInclude<ExtArgs> | null
+    /**
+     * Filter, which Bailiff to fetch.
+     */
+    where?: BailiffWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Bailiffs to fetch.
+     */
+    orderBy?: BailiffOrderByWithRelationInput | BailiffOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Bailiffs.
+     */
+    cursor?: BailiffWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Bailiffs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Bailiffs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Bailiffs.
+     */
+    distinct?: BailiffScalarFieldEnum | BailiffScalarFieldEnum[]
+  }
+
+  /**
+   * Bailiff findFirstOrThrow
+   */
+  export type BailiffFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Bailiff
+     */
+    select?: BailiffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Bailiff
+     */
+    omit?: BailiffOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BailiffInclude<ExtArgs> | null
+    /**
+     * Filter, which Bailiff to fetch.
+     */
+    where?: BailiffWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Bailiffs to fetch.
+     */
+    orderBy?: BailiffOrderByWithRelationInput | BailiffOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Bailiffs.
+     */
+    cursor?: BailiffWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Bailiffs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Bailiffs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Bailiffs.
+     */
+    distinct?: BailiffScalarFieldEnum | BailiffScalarFieldEnum[]
+  }
+
+  /**
+   * Bailiff findMany
+   */
+  export type BailiffFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Bailiff
+     */
+    select?: BailiffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Bailiff
+     */
+    omit?: BailiffOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BailiffInclude<ExtArgs> | null
+    /**
+     * Filter, which Bailiffs to fetch.
+     */
+    where?: BailiffWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Bailiffs to fetch.
+     */
+    orderBy?: BailiffOrderByWithRelationInput | BailiffOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Bailiffs.
+     */
+    cursor?: BailiffWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Bailiffs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Bailiffs.
+     */
+    skip?: number
+    distinct?: BailiffScalarFieldEnum | BailiffScalarFieldEnum[]
+  }
+
+  /**
+   * Bailiff create
+   */
+  export type BailiffCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Bailiff
+     */
+    select?: BailiffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Bailiff
+     */
+    omit?: BailiffOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BailiffInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Bailiff.
+     */
+    data: XOR<BailiffCreateInput, BailiffUncheckedCreateInput>
+  }
+
+  /**
+   * Bailiff createMany
+   */
+  export type BailiffCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Bailiffs.
+     */
+    data: BailiffCreateManyInput | BailiffCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Bailiff createManyAndReturn
+   */
+  export type BailiffCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Bailiff
+     */
+    select?: BailiffSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Bailiff
+     */
+    omit?: BailiffOmit<ExtArgs> | null
+    /**
+     * The data used to create many Bailiffs.
+     */
+    data: BailiffCreateManyInput | BailiffCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BailiffIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Bailiff update
+   */
+  export type BailiffUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Bailiff
+     */
+    select?: BailiffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Bailiff
+     */
+    omit?: BailiffOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BailiffInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Bailiff.
+     */
+    data: XOR<BailiffUpdateInput, BailiffUncheckedUpdateInput>
+    /**
+     * Choose, which Bailiff to update.
+     */
+    where: BailiffWhereUniqueInput
+  }
+
+  /**
+   * Bailiff updateMany
+   */
+  export type BailiffUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Bailiffs.
+     */
+    data: XOR<BailiffUpdateManyMutationInput, BailiffUncheckedUpdateManyInput>
+    /**
+     * Filter which Bailiffs to update
+     */
+    where?: BailiffWhereInput
+    /**
+     * Limit how many Bailiffs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Bailiff updateManyAndReturn
+   */
+  export type BailiffUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Bailiff
+     */
+    select?: BailiffSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Bailiff
+     */
+    omit?: BailiffOmit<ExtArgs> | null
+    /**
+     * The data used to update Bailiffs.
+     */
+    data: XOR<BailiffUpdateManyMutationInput, BailiffUncheckedUpdateManyInput>
+    /**
+     * Filter which Bailiffs to update
+     */
+    where?: BailiffWhereInput
+    /**
+     * Limit how many Bailiffs to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BailiffIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Bailiff upsert
+   */
+  export type BailiffUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Bailiff
+     */
+    select?: BailiffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Bailiff
+     */
+    omit?: BailiffOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BailiffInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Bailiff to update in case it exists.
+     */
+    where: BailiffWhereUniqueInput
+    /**
+     * In case the Bailiff found by the `where` argument doesn't exist, create a new Bailiff with this data.
+     */
+    create: XOR<BailiffCreateInput, BailiffUncheckedCreateInput>
+    /**
+     * In case the Bailiff was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<BailiffUpdateInput, BailiffUncheckedUpdateInput>
+  }
+
+  /**
+   * Bailiff delete
+   */
+  export type BailiffDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Bailiff
+     */
+    select?: BailiffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Bailiff
+     */
+    omit?: BailiffOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BailiffInclude<ExtArgs> | null
+    /**
+     * Filter which Bailiff to delete.
+     */
+    where: BailiffWhereUniqueInput
+  }
+
+  /**
+   * Bailiff deleteMany
+   */
+  export type BailiffDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Bailiffs to delete
+     */
+    where?: BailiffWhereInput
+    /**
+     * Limit how many Bailiffs to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Bailiff.user
+   */
+  export type Bailiff$userArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
+   * Bailiff.verdicts
+   */
+  export type Bailiff$verdictsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Verdict
+     */
+    select?: VerdictSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Verdict
+     */
+    omit?: VerdictOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerdictInclude<ExtArgs> | null
+    where?: VerdictWhereInput
+    orderBy?: VerdictOrderByWithRelationInput | VerdictOrderByWithRelationInput[]
+    cursor?: VerdictWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VerdictScalarFieldEnum | VerdictScalarFieldEnum[]
+  }
+
+  /**
+   * Bailiff without action
+   */
+  export type BailiffDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Bailiff
+     */
+    select?: BailiffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Bailiff
+     */
+    omit?: BailiffOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BailiffInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model ChatRoom
    */
 
@@ -34237,6 +35550,20 @@ export namespace Prisma {
   export type DebtorScalarFieldEnum = (typeof DebtorScalarFieldEnum)[keyof typeof DebtorScalarFieldEnum]
 
 
+  export const BailiffScalarFieldEnum: {
+    id: 'id',
+    fullname: 'fullname',
+    email: 'email',
+    phone: 'phone',
+    tenant_id: 'tenant_id',
+    user_id: 'user_id',
+    created_at: 'created_at',
+    updated_at: 'updated_at'
+  };
+
+  export type BailiffScalarFieldEnum = (typeof BailiffScalarFieldEnum)[keyof typeof BailiffScalarFieldEnum]
+
+
   export const ChatRoomScalarFieldEnum: {
     id: 'id',
     tenant_id: 'tenant_id',
@@ -34598,6 +35925,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceListRelationFilter
     collection_cases?: CollectionCaseListRelationFilter
     debtors?: DebtorListRelationFilter
+    bailiffs?: BailiffListRelationFilter
     verdicts?: VerdictListRelationFilter
     users?: UserListRelationFilter
     chat_rooms?: ChatRoomListRelationFilter
@@ -34627,6 +35955,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceOrderByRelationAggregateInput
     collection_cases?: CollectionCaseOrderByRelationAggregateInput
     debtors?: DebtorOrderByRelationAggregateInput
+    bailiffs?: BailiffOrderByRelationAggregateInput
     verdicts?: VerdictOrderByRelationAggregateInput
     users?: UserOrderByRelationAggregateInput
     chat_rooms?: ChatRoomOrderByRelationAggregateInput
@@ -34659,6 +35988,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceListRelationFilter
     collection_cases?: CollectionCaseListRelationFilter
     debtors?: DebtorListRelationFilter
+    bailiffs?: BailiffListRelationFilter
     verdicts?: VerdictListRelationFilter
     users?: UserListRelationFilter
     chat_rooms?: ChatRoomListRelationFilter
@@ -34817,7 +36147,7 @@ export namespace Prisma {
     updated_at?: DateTimeFilter<"User"> | Date | string
     tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
     debtors?: DebtorListRelationFilter
-    verdict_bailiffs?: VerdictListRelationFilter
+    bailiffs?: BailiffListRelationFilter
     messages?: ChatMessageListRelationFilter
   }
 
@@ -34834,7 +36164,7 @@ export namespace Prisma {
     updated_at?: SortOrder
     tenant?: TenantOrderByWithRelationInput
     debtors?: DebtorOrderByRelationAggregateInput
-    verdict_bailiffs?: VerdictOrderByRelationAggregateInput
+    bailiffs?: BailiffOrderByRelationAggregateInput
     messages?: ChatMessageOrderByRelationAggregateInput
   }
 
@@ -34854,7 +36184,7 @@ export namespace Prisma {
     updated_at?: DateTimeFilter<"User"> | Date | string
     tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
     debtors?: DebtorListRelationFilter
-    verdict_bailiffs?: VerdictListRelationFilter
+    bailiffs?: BailiffListRelationFilter
     messages?: ChatMessageListRelationFilter
   }, "id">
 
@@ -35072,7 +36402,7 @@ export namespace Prisma {
     tenant_id?: StringFilter<"Verdict"> | string
     notes?: StringNullableFilter<"Verdict"> | string | null
     bailiff_id?: StringNullableFilter<"Verdict"> | string | null
-    bailiff?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    bailiff?: XOR<BailiffNullableScalarRelationFilter, BailiffWhereInput> | null
     debtor?: XOR<DebtorScalarRelationFilter, DebtorWhereInput>
     tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
     attachments?: VerdictAttachmentListRelationFilter
@@ -35096,7 +36426,7 @@ export namespace Prisma {
     tenant_id?: SortOrder
     notes?: SortOrderInput | SortOrder
     bailiff_id?: SortOrderInput | SortOrder
-    bailiff?: UserOrderByWithRelationInput
+    bailiff?: BailiffOrderByWithRelationInput
     debtor?: DebtorOrderByWithRelationInput
     tenant?: TenantOrderByWithRelationInput
     attachments?: VerdictAttachmentOrderByRelationAggregateInput
@@ -35123,7 +36453,7 @@ export namespace Prisma {
     tenant_id?: StringFilter<"Verdict"> | string
     notes?: StringNullableFilter<"Verdict"> | string | null
     bailiff_id?: StringNullableFilter<"Verdict"> | string | null
-    bailiff?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    bailiff?: XOR<BailiffNullableScalarRelationFilter, BailiffWhereInput> | null
     debtor?: XOR<DebtorScalarRelationFilter, DebtorWhereInput>
     tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
     attachments?: VerdictAttachmentListRelationFilter
@@ -36410,6 +37740,82 @@ export namespace Prisma {
     updated_at?: DateTimeWithAggregatesFilter<"Debtor"> | Date | string
   }
 
+  export type BailiffWhereInput = {
+    AND?: BailiffWhereInput | BailiffWhereInput[]
+    OR?: BailiffWhereInput[]
+    NOT?: BailiffWhereInput | BailiffWhereInput[]
+    id?: StringFilter<"Bailiff"> | string
+    fullname?: StringFilter<"Bailiff"> | string
+    email?: StringFilter<"Bailiff"> | string
+    phone?: StringNullableFilter<"Bailiff"> | string | null
+    tenant_id?: StringFilter<"Bailiff"> | string
+    user_id?: StringNullableFilter<"Bailiff"> | string | null
+    created_at?: DateTimeFilter<"Bailiff"> | Date | string
+    updated_at?: DateTimeFilter<"Bailiff"> | Date | string
+    tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
+    user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    verdicts?: VerdictListRelationFilter
+  }
+
+  export type BailiffOrderByWithRelationInput = {
+    id?: SortOrder
+    fullname?: SortOrder
+    email?: SortOrder
+    phone?: SortOrderInput | SortOrder
+    tenant_id?: SortOrder
+    user_id?: SortOrderInput | SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+    tenant?: TenantOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
+    verdicts?: VerdictOrderByRelationAggregateInput
+  }
+
+  export type BailiffWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    email?: string
+    AND?: BailiffWhereInput | BailiffWhereInput[]
+    OR?: BailiffWhereInput[]
+    NOT?: BailiffWhereInput | BailiffWhereInput[]
+    fullname?: StringFilter<"Bailiff"> | string
+    phone?: StringNullableFilter<"Bailiff"> | string | null
+    tenant_id?: StringFilter<"Bailiff"> | string
+    user_id?: StringNullableFilter<"Bailiff"> | string | null
+    created_at?: DateTimeFilter<"Bailiff"> | Date | string
+    updated_at?: DateTimeFilter<"Bailiff"> | Date | string
+    tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
+    user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    verdicts?: VerdictListRelationFilter
+  }, "id" | "email">
+
+  export type BailiffOrderByWithAggregationInput = {
+    id?: SortOrder
+    fullname?: SortOrder
+    email?: SortOrder
+    phone?: SortOrderInput | SortOrder
+    tenant_id?: SortOrder
+    user_id?: SortOrderInput | SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+    _count?: BailiffCountOrderByAggregateInput
+    _max?: BailiffMaxOrderByAggregateInput
+    _min?: BailiffMinOrderByAggregateInput
+  }
+
+  export type BailiffScalarWhereWithAggregatesInput = {
+    AND?: BailiffScalarWhereWithAggregatesInput | BailiffScalarWhereWithAggregatesInput[]
+    OR?: BailiffScalarWhereWithAggregatesInput[]
+    NOT?: BailiffScalarWhereWithAggregatesInput | BailiffScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Bailiff"> | string
+    fullname?: StringWithAggregatesFilter<"Bailiff"> | string
+    email?: StringWithAggregatesFilter<"Bailiff"> | string
+    phone?: StringNullableWithAggregatesFilter<"Bailiff"> | string | null
+    tenant_id?: StringWithAggregatesFilter<"Bailiff"> | string
+    user_id?: StringNullableWithAggregatesFilter<"Bailiff"> | string | null
+    created_at?: DateTimeWithAggregatesFilter<"Bailiff"> | Date | string
+    updated_at?: DateTimeWithAggregatesFilter<"Bailiff"> | Date | string
+  }
+
   export type ChatRoomWhereInput = {
     AND?: ChatRoomWhereInput | ChatRoomWhereInput[]
     OR?: ChatRoomWhereInput[]
@@ -36827,6 +38233,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceCreateNestedManyWithoutTenantInput
     collection_cases?: CollectionCaseCreateNestedManyWithoutTenantInput
     debtors?: DebtorCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffCreateNestedManyWithoutTenantInput
     verdicts?: VerdictCreateNestedManyWithoutTenantInput
     users?: UserCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
@@ -36856,6 +38263,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceUncheckedCreateNestedManyWithoutTenantInput
     collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutTenantInput
     debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
     verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
     users?: UserUncheckedCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
@@ -36885,6 +38293,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceUpdateManyWithoutTenantNestedInput
     collection_cases?: CollectionCaseUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUpdateManyWithoutTenantNestedInput
     users?: UserUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
@@ -36914,6 +38323,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceUncheckedUpdateManyWithoutTenantNestedInput
     collection_cases?: CollectionCaseUncheckedUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
     users?: UserUncheckedUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
@@ -37093,7 +38503,7 @@ export namespace Prisma {
     updated_at?: Date | string
     tenant: TenantCreateNestedOneWithoutUsersInput
     debtors?: DebtorCreateNestedManyWithoutUserInput
-    verdict_bailiffs?: VerdictCreateNestedManyWithoutBailiffInput
+    bailiffs?: BailiffCreateNestedManyWithoutUserInput
     messages?: ChatMessageCreateNestedManyWithoutSenderInput
   }
 
@@ -37109,7 +38519,7 @@ export namespace Prisma {
     created_at?: Date | string
     updated_at?: Date | string
     debtors?: DebtorUncheckedCreateNestedManyWithoutUserInput
-    verdict_bailiffs?: VerdictUncheckedCreateNestedManyWithoutBailiffInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutUserInput
     messages?: ChatMessageUncheckedCreateNestedManyWithoutSenderInput
   }
 
@@ -37125,7 +38535,7 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     tenant?: TenantUpdateOneRequiredWithoutUsersNestedInput
     debtors?: DebtorUpdateManyWithoutUserNestedInput
-    verdict_bailiffs?: VerdictUpdateManyWithoutBailiffNestedInput
+    bailiffs?: BailiffUpdateManyWithoutUserNestedInput
     messages?: ChatMessageUpdateManyWithoutSenderNestedInput
   }
 
@@ -37141,7 +38551,7 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     debtors?: DebtorUncheckedUpdateManyWithoutUserNestedInput
-    verdict_bailiffs?: VerdictUncheckedUpdateManyWithoutBailiffNestedInput
+    bailiffs?: BailiffUncheckedUpdateManyWithoutUserNestedInput
     messages?: ChatMessageUncheckedUpdateManyWithoutSenderNestedInput
   }
 
@@ -37405,7 +38815,7 @@ export namespace Prisma {
     updated_at?: Date | string
     procesal_cost?: number | null
     notes?: string | null
-    bailiff?: UserCreateNestedOneWithoutVerdict_bailiffsInput
+    bailiff?: BailiffCreateNestedOneWithoutVerdictsInput
     debtor: DebtorCreateNestedOneWithoutVerdictsInput
     tenant: TenantCreateNestedOneWithoutVerdictsInput
     attachments?: VerdictAttachmentCreateNestedManyWithoutVerdictInput
@@ -37447,7 +38857,7 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     procesal_cost?: NullableFloatFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
-    bailiff?: UserUpdateOneWithoutVerdict_bailiffsNestedInput
+    bailiff?: BailiffUpdateOneWithoutVerdictsNestedInput
     debtor?: DebtorUpdateOneRequiredWithoutVerdictsNestedInput
     tenant?: TenantUpdateOneRequiredWithoutVerdictsNestedInput
     attachments?: VerdictAttachmentUpdateManyWithoutVerdictNestedInput
@@ -38873,6 +40283,85 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type BailiffCreateInput = {
+    id?: string
+    fullname: string
+    email: string
+    phone?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    tenant: TenantCreateNestedOneWithoutBailiffsInput
+    user?: UserCreateNestedOneWithoutBailiffsInput
+    verdicts?: VerdictCreateNestedManyWithoutBailiffInput
+  }
+
+  export type BailiffUncheckedCreateInput = {
+    id?: string
+    fullname: string
+    email: string
+    phone?: string | null
+    tenant_id: string
+    user_id?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    verdicts?: VerdictUncheckedCreateNestedManyWithoutBailiffInput
+  }
+
+  export type BailiffUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullname?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    tenant?: TenantUpdateOneRequiredWithoutBailiffsNestedInput
+    user?: UserUpdateOneWithoutBailiffsNestedInput
+    verdicts?: VerdictUpdateManyWithoutBailiffNestedInput
+  }
+
+  export type BailiffUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullname?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    tenant_id?: StringFieldUpdateOperationsInput | string
+    user_id?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    verdicts?: VerdictUncheckedUpdateManyWithoutBailiffNestedInput
+  }
+
+  export type BailiffCreateManyInput = {
+    id?: string
+    fullname: string
+    email: string
+    phone?: string | null
+    tenant_id: string
+    user_id?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type BailiffUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullname?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BailiffUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullname?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    tenant_id?: StringFieldUpdateOperationsInput | string
+    user_id?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ChatRoomCreateInput = {
     id?: string
     name: string
@@ -39356,6 +40845,12 @@ export namespace Prisma {
     none?: DebtorWhereInput
   }
 
+  export type BailiffListRelationFilter = {
+    every?: BailiffWhereInput
+    some?: BailiffWhereInput
+    none?: BailiffWhereInput
+  }
+
   export type VerdictListRelationFilter = {
     every?: VerdictWhereInput
     some?: VerdictWhereInput
@@ -39400,6 +40895,10 @@ export namespace Prisma {
   }
 
   export type DebtorOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type BailiffOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -39916,9 +41415,9 @@ export namespace Prisma {
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
-  export type UserNullableScalarRelationFilter = {
-    is?: UserWhereInput | null
-    isNot?: UserWhereInput | null
+  export type BailiffNullableScalarRelationFilter = {
+    is?: BailiffWhereInput | null
+    isNot?: BailiffWhereInput | null
   }
 
   export type DebtorScalarRelationFilter = {
@@ -40957,6 +42456,11 @@ export namespace Prisma {
     not?: NestedEnumIdentificationTypeNullableFilter<$PrismaModel> | $Enums.IdentificationType | null
   }
 
+  export type UserNullableScalarRelationFilter = {
+    is?: UserWhereInput | null
+    isNot?: UserWhereInput | null
+  }
+
   export type DebtorIncomeListRelationFilter = {
     every?: DebtorIncomeWhereInput
     some?: DebtorIncomeWhereInput
@@ -41051,6 +42555,39 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedEnumIdentificationTypeNullableFilter<$PrismaModel>
     _max?: NestedEnumIdentificationTypeNullableFilter<$PrismaModel>
+  }
+
+  export type BailiffCountOrderByAggregateInput = {
+    id?: SortOrder
+    fullname?: SortOrder
+    email?: SortOrder
+    phone?: SortOrder
+    tenant_id?: SortOrder
+    user_id?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type BailiffMaxOrderByAggregateInput = {
+    id?: SortOrder
+    fullname?: SortOrder
+    email?: SortOrder
+    phone?: SortOrder
+    tenant_id?: SortOrder
+    user_id?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type BailiffMinOrderByAggregateInput = {
+    id?: SortOrder
+    fullname?: SortOrder
+    email?: SortOrder
+    phone?: SortOrder
+    tenant_id?: SortOrder
+    user_id?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
   }
 
   export type ChatRoomCountOrderByAggregateInput = {
@@ -41337,6 +42874,13 @@ export namespace Prisma {
     connect?: DebtorWhereUniqueInput | DebtorWhereUniqueInput[]
   }
 
+  export type BailiffCreateNestedManyWithoutTenantInput = {
+    create?: XOR<BailiffCreateWithoutTenantInput, BailiffUncheckedCreateWithoutTenantInput> | BailiffCreateWithoutTenantInput[] | BailiffUncheckedCreateWithoutTenantInput[]
+    connectOrCreate?: BailiffCreateOrConnectWithoutTenantInput | BailiffCreateOrConnectWithoutTenantInput[]
+    createMany?: BailiffCreateManyTenantInputEnvelope
+    connect?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
+  }
+
   export type VerdictCreateNestedManyWithoutTenantInput = {
     create?: XOR<VerdictCreateWithoutTenantInput, VerdictUncheckedCreateWithoutTenantInput> | VerdictCreateWithoutTenantInput[] | VerdictUncheckedCreateWithoutTenantInput[]
     connectOrCreate?: VerdictCreateOrConnectWithoutTenantInput | VerdictCreateOrConnectWithoutTenantInput[]
@@ -41391,6 +42935,13 @@ export namespace Prisma {
     connectOrCreate?: DebtorCreateOrConnectWithoutTenantInput | DebtorCreateOrConnectWithoutTenantInput[]
     createMany?: DebtorCreateManyTenantInputEnvelope
     connect?: DebtorWhereUniqueInput | DebtorWhereUniqueInput[]
+  }
+
+  export type BailiffUncheckedCreateNestedManyWithoutTenantInput = {
+    create?: XOR<BailiffCreateWithoutTenantInput, BailiffUncheckedCreateWithoutTenantInput> | BailiffCreateWithoutTenantInput[] | BailiffUncheckedCreateWithoutTenantInput[]
+    connectOrCreate?: BailiffCreateOrConnectWithoutTenantInput | BailiffCreateOrConnectWithoutTenantInput[]
+    createMany?: BailiffCreateManyTenantInputEnvelope
+    connect?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
   }
 
   export type VerdictUncheckedCreateNestedManyWithoutTenantInput = {
@@ -41492,6 +43043,20 @@ export namespace Prisma {
     update?: DebtorUpdateWithWhereUniqueWithoutTenantInput | DebtorUpdateWithWhereUniqueWithoutTenantInput[]
     updateMany?: DebtorUpdateManyWithWhereWithoutTenantInput | DebtorUpdateManyWithWhereWithoutTenantInput[]
     deleteMany?: DebtorScalarWhereInput | DebtorScalarWhereInput[]
+  }
+
+  export type BailiffUpdateManyWithoutTenantNestedInput = {
+    create?: XOR<BailiffCreateWithoutTenantInput, BailiffUncheckedCreateWithoutTenantInput> | BailiffCreateWithoutTenantInput[] | BailiffUncheckedCreateWithoutTenantInput[]
+    connectOrCreate?: BailiffCreateOrConnectWithoutTenantInput | BailiffCreateOrConnectWithoutTenantInput[]
+    upsert?: BailiffUpsertWithWhereUniqueWithoutTenantInput | BailiffUpsertWithWhereUniqueWithoutTenantInput[]
+    createMany?: BailiffCreateManyTenantInputEnvelope
+    set?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
+    disconnect?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
+    delete?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
+    connect?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
+    update?: BailiffUpdateWithWhereUniqueWithoutTenantInput | BailiffUpdateWithWhereUniqueWithoutTenantInput[]
+    updateMany?: BailiffUpdateManyWithWhereWithoutTenantInput | BailiffUpdateManyWithWhereWithoutTenantInput[]
+    deleteMany?: BailiffScalarWhereInput | BailiffScalarWhereInput[]
   }
 
   export type VerdictUpdateManyWithoutTenantNestedInput = {
@@ -41606,6 +43171,20 @@ export namespace Prisma {
     deleteMany?: DebtorScalarWhereInput | DebtorScalarWhereInput[]
   }
 
+  export type BailiffUncheckedUpdateManyWithoutTenantNestedInput = {
+    create?: XOR<BailiffCreateWithoutTenantInput, BailiffUncheckedCreateWithoutTenantInput> | BailiffCreateWithoutTenantInput[] | BailiffUncheckedCreateWithoutTenantInput[]
+    connectOrCreate?: BailiffCreateOrConnectWithoutTenantInput | BailiffCreateOrConnectWithoutTenantInput[]
+    upsert?: BailiffUpsertWithWhereUniqueWithoutTenantInput | BailiffUpsertWithWhereUniqueWithoutTenantInput[]
+    createMany?: BailiffCreateManyTenantInputEnvelope
+    set?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
+    disconnect?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
+    delete?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
+    connect?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
+    update?: BailiffUpdateWithWhereUniqueWithoutTenantInput | BailiffUpdateWithWhereUniqueWithoutTenantInput[]
+    updateMany?: BailiffUpdateManyWithWhereWithoutTenantInput | BailiffUpdateManyWithWhereWithoutTenantInput[]
+    deleteMany?: BailiffScalarWhereInput | BailiffScalarWhereInput[]
+  }
+
   export type VerdictUncheckedUpdateManyWithoutTenantNestedInput = {
     create?: XOR<VerdictCreateWithoutTenantInput, VerdictUncheckedCreateWithoutTenantInput> | VerdictCreateWithoutTenantInput[] | VerdictUncheckedCreateWithoutTenantInput[]
     connectOrCreate?: VerdictCreateOrConnectWithoutTenantInput | VerdictCreateOrConnectWithoutTenantInput[]
@@ -41711,11 +43290,11 @@ export namespace Prisma {
     connect?: DebtorWhereUniqueInput | DebtorWhereUniqueInput[]
   }
 
-  export type VerdictCreateNestedManyWithoutBailiffInput = {
-    create?: XOR<VerdictCreateWithoutBailiffInput, VerdictUncheckedCreateWithoutBailiffInput> | VerdictCreateWithoutBailiffInput[] | VerdictUncheckedCreateWithoutBailiffInput[]
-    connectOrCreate?: VerdictCreateOrConnectWithoutBailiffInput | VerdictCreateOrConnectWithoutBailiffInput[]
-    createMany?: VerdictCreateManyBailiffInputEnvelope
-    connect?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
+  export type BailiffCreateNestedManyWithoutUserInput = {
+    create?: XOR<BailiffCreateWithoutUserInput, BailiffUncheckedCreateWithoutUserInput> | BailiffCreateWithoutUserInput[] | BailiffUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: BailiffCreateOrConnectWithoutUserInput | BailiffCreateOrConnectWithoutUserInput[]
+    createMany?: BailiffCreateManyUserInputEnvelope
+    connect?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
   }
 
   export type ChatMessageCreateNestedManyWithoutSenderInput = {
@@ -41732,11 +43311,11 @@ export namespace Prisma {
     connect?: DebtorWhereUniqueInput | DebtorWhereUniqueInput[]
   }
 
-  export type VerdictUncheckedCreateNestedManyWithoutBailiffInput = {
-    create?: XOR<VerdictCreateWithoutBailiffInput, VerdictUncheckedCreateWithoutBailiffInput> | VerdictCreateWithoutBailiffInput[] | VerdictUncheckedCreateWithoutBailiffInput[]
-    connectOrCreate?: VerdictCreateOrConnectWithoutBailiffInput | VerdictCreateOrConnectWithoutBailiffInput[]
-    createMany?: VerdictCreateManyBailiffInputEnvelope
-    connect?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
+  export type BailiffUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<BailiffCreateWithoutUserInput, BailiffUncheckedCreateWithoutUserInput> | BailiffCreateWithoutUserInput[] | BailiffUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: BailiffCreateOrConnectWithoutUserInput | BailiffCreateOrConnectWithoutUserInput[]
+    createMany?: BailiffCreateManyUserInputEnvelope
+    connect?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
   }
 
   export type ChatMessageUncheckedCreateNestedManyWithoutSenderInput = {
@@ -41768,18 +43347,18 @@ export namespace Prisma {
     deleteMany?: DebtorScalarWhereInput | DebtorScalarWhereInput[]
   }
 
-  export type VerdictUpdateManyWithoutBailiffNestedInput = {
-    create?: XOR<VerdictCreateWithoutBailiffInput, VerdictUncheckedCreateWithoutBailiffInput> | VerdictCreateWithoutBailiffInput[] | VerdictUncheckedCreateWithoutBailiffInput[]
-    connectOrCreate?: VerdictCreateOrConnectWithoutBailiffInput | VerdictCreateOrConnectWithoutBailiffInput[]
-    upsert?: VerdictUpsertWithWhereUniqueWithoutBailiffInput | VerdictUpsertWithWhereUniqueWithoutBailiffInput[]
-    createMany?: VerdictCreateManyBailiffInputEnvelope
-    set?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
-    disconnect?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
-    delete?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
-    connect?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
-    update?: VerdictUpdateWithWhereUniqueWithoutBailiffInput | VerdictUpdateWithWhereUniqueWithoutBailiffInput[]
-    updateMany?: VerdictUpdateManyWithWhereWithoutBailiffInput | VerdictUpdateManyWithWhereWithoutBailiffInput[]
-    deleteMany?: VerdictScalarWhereInput | VerdictScalarWhereInput[]
+  export type BailiffUpdateManyWithoutUserNestedInput = {
+    create?: XOR<BailiffCreateWithoutUserInput, BailiffUncheckedCreateWithoutUserInput> | BailiffCreateWithoutUserInput[] | BailiffUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: BailiffCreateOrConnectWithoutUserInput | BailiffCreateOrConnectWithoutUserInput[]
+    upsert?: BailiffUpsertWithWhereUniqueWithoutUserInput | BailiffUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: BailiffCreateManyUserInputEnvelope
+    set?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
+    disconnect?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
+    delete?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
+    connect?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
+    update?: BailiffUpdateWithWhereUniqueWithoutUserInput | BailiffUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: BailiffUpdateManyWithWhereWithoutUserInput | BailiffUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: BailiffScalarWhereInput | BailiffScalarWhereInput[]
   }
 
   export type ChatMessageUpdateManyWithoutSenderNestedInput = {
@@ -41810,18 +43389,18 @@ export namespace Prisma {
     deleteMany?: DebtorScalarWhereInput | DebtorScalarWhereInput[]
   }
 
-  export type VerdictUncheckedUpdateManyWithoutBailiffNestedInput = {
-    create?: XOR<VerdictCreateWithoutBailiffInput, VerdictUncheckedCreateWithoutBailiffInput> | VerdictCreateWithoutBailiffInput[] | VerdictUncheckedCreateWithoutBailiffInput[]
-    connectOrCreate?: VerdictCreateOrConnectWithoutBailiffInput | VerdictCreateOrConnectWithoutBailiffInput[]
-    upsert?: VerdictUpsertWithWhereUniqueWithoutBailiffInput | VerdictUpsertWithWhereUniqueWithoutBailiffInput[]
-    createMany?: VerdictCreateManyBailiffInputEnvelope
-    set?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
-    disconnect?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
-    delete?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
-    connect?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
-    update?: VerdictUpdateWithWhereUniqueWithoutBailiffInput | VerdictUpdateWithWhereUniqueWithoutBailiffInput[]
-    updateMany?: VerdictUpdateManyWithWhereWithoutBailiffInput | VerdictUpdateManyWithWhereWithoutBailiffInput[]
-    deleteMany?: VerdictScalarWhereInput | VerdictScalarWhereInput[]
+  export type BailiffUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<BailiffCreateWithoutUserInput, BailiffUncheckedCreateWithoutUserInput> | BailiffCreateWithoutUserInput[] | BailiffUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: BailiffCreateOrConnectWithoutUserInput | BailiffCreateOrConnectWithoutUserInput[]
+    upsert?: BailiffUpsertWithWhereUniqueWithoutUserInput | BailiffUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: BailiffCreateManyUserInputEnvelope
+    set?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
+    disconnect?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
+    delete?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
+    connect?: BailiffWhereUniqueInput | BailiffWhereUniqueInput[]
+    update?: BailiffUpdateWithWhereUniqueWithoutUserInput | BailiffUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: BailiffUpdateManyWithWhereWithoutUserInput | BailiffUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: BailiffScalarWhereInput | BailiffScalarWhereInput[]
   }
 
   export type ChatMessageUncheckedUpdateManyWithoutSenderNestedInput = {
@@ -41854,10 +43433,10 @@ export namespace Prisma {
     divide?: number
   }
 
-  export type UserCreateNestedOneWithoutVerdict_bailiffsInput = {
-    create?: XOR<UserCreateWithoutVerdict_bailiffsInput, UserUncheckedCreateWithoutVerdict_bailiffsInput>
-    connectOrCreate?: UserCreateOrConnectWithoutVerdict_bailiffsInput
-    connect?: UserWhereUniqueInput
+  export type BailiffCreateNestedOneWithoutVerdictsInput = {
+    create?: XOR<BailiffCreateWithoutVerdictsInput, BailiffUncheckedCreateWithoutVerdictsInput>
+    connectOrCreate?: BailiffCreateOrConnectWithoutVerdictsInput
+    connect?: BailiffWhereUniqueInput
   }
 
   export type DebtorCreateNestedOneWithoutVerdictsInput = {
@@ -41940,14 +43519,14 @@ export namespace Prisma {
     divide?: number
   }
 
-  export type UserUpdateOneWithoutVerdict_bailiffsNestedInput = {
-    create?: XOR<UserCreateWithoutVerdict_bailiffsInput, UserUncheckedCreateWithoutVerdict_bailiffsInput>
-    connectOrCreate?: UserCreateOrConnectWithoutVerdict_bailiffsInput
-    upsert?: UserUpsertWithoutVerdict_bailiffsInput
-    disconnect?: UserWhereInput | boolean
-    delete?: UserWhereInput | boolean
-    connect?: UserWhereUniqueInput
-    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutVerdict_bailiffsInput, UserUpdateWithoutVerdict_bailiffsInput>, UserUncheckedUpdateWithoutVerdict_bailiffsInput>
+  export type BailiffUpdateOneWithoutVerdictsNestedInput = {
+    create?: XOR<BailiffCreateWithoutVerdictsInput, BailiffUncheckedCreateWithoutVerdictsInput>
+    connectOrCreate?: BailiffCreateOrConnectWithoutVerdictsInput
+    upsert?: BailiffUpsertWithoutVerdictsInput
+    disconnect?: BailiffWhereInput | boolean
+    delete?: BailiffWhereInput | boolean
+    connect?: BailiffWhereUniqueInput
+    update?: XOR<XOR<BailiffUpdateToOneWithWhereWithoutVerdictsInput, BailiffUpdateWithoutVerdictsInput>, BailiffUncheckedUpdateWithoutVerdictsInput>
   }
 
   export type DebtorUpdateOneRequiredWithoutVerdictsNestedInput = {
@@ -42954,6 +44533,78 @@ export namespace Prisma {
     deleteMany?: VerdictScalarWhereInput | VerdictScalarWhereInput[]
   }
 
+  export type TenantCreateNestedOneWithoutBailiffsInput = {
+    create?: XOR<TenantCreateWithoutBailiffsInput, TenantUncheckedCreateWithoutBailiffsInput>
+    connectOrCreate?: TenantCreateOrConnectWithoutBailiffsInput
+    connect?: TenantWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutBailiffsInput = {
+    create?: XOR<UserCreateWithoutBailiffsInput, UserUncheckedCreateWithoutBailiffsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutBailiffsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type VerdictCreateNestedManyWithoutBailiffInput = {
+    create?: XOR<VerdictCreateWithoutBailiffInput, VerdictUncheckedCreateWithoutBailiffInput> | VerdictCreateWithoutBailiffInput[] | VerdictUncheckedCreateWithoutBailiffInput[]
+    connectOrCreate?: VerdictCreateOrConnectWithoutBailiffInput | VerdictCreateOrConnectWithoutBailiffInput[]
+    createMany?: VerdictCreateManyBailiffInputEnvelope
+    connect?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
+  }
+
+  export type VerdictUncheckedCreateNestedManyWithoutBailiffInput = {
+    create?: XOR<VerdictCreateWithoutBailiffInput, VerdictUncheckedCreateWithoutBailiffInput> | VerdictCreateWithoutBailiffInput[] | VerdictUncheckedCreateWithoutBailiffInput[]
+    connectOrCreate?: VerdictCreateOrConnectWithoutBailiffInput | VerdictCreateOrConnectWithoutBailiffInput[]
+    createMany?: VerdictCreateManyBailiffInputEnvelope
+    connect?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
+  }
+
+  export type TenantUpdateOneRequiredWithoutBailiffsNestedInput = {
+    create?: XOR<TenantCreateWithoutBailiffsInput, TenantUncheckedCreateWithoutBailiffsInput>
+    connectOrCreate?: TenantCreateOrConnectWithoutBailiffsInput
+    upsert?: TenantUpsertWithoutBailiffsInput
+    connect?: TenantWhereUniqueInput
+    update?: XOR<XOR<TenantUpdateToOneWithWhereWithoutBailiffsInput, TenantUpdateWithoutBailiffsInput>, TenantUncheckedUpdateWithoutBailiffsInput>
+  }
+
+  export type UserUpdateOneWithoutBailiffsNestedInput = {
+    create?: XOR<UserCreateWithoutBailiffsInput, UserUncheckedCreateWithoutBailiffsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutBailiffsInput
+    upsert?: UserUpsertWithoutBailiffsInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutBailiffsInput, UserUpdateWithoutBailiffsInput>, UserUncheckedUpdateWithoutBailiffsInput>
+  }
+
+  export type VerdictUpdateManyWithoutBailiffNestedInput = {
+    create?: XOR<VerdictCreateWithoutBailiffInput, VerdictUncheckedCreateWithoutBailiffInput> | VerdictCreateWithoutBailiffInput[] | VerdictUncheckedCreateWithoutBailiffInput[]
+    connectOrCreate?: VerdictCreateOrConnectWithoutBailiffInput | VerdictCreateOrConnectWithoutBailiffInput[]
+    upsert?: VerdictUpsertWithWhereUniqueWithoutBailiffInput | VerdictUpsertWithWhereUniqueWithoutBailiffInput[]
+    createMany?: VerdictCreateManyBailiffInputEnvelope
+    set?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
+    disconnect?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
+    delete?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
+    connect?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
+    update?: VerdictUpdateWithWhereUniqueWithoutBailiffInput | VerdictUpdateWithWhereUniqueWithoutBailiffInput[]
+    updateMany?: VerdictUpdateManyWithWhereWithoutBailiffInput | VerdictUpdateManyWithWhereWithoutBailiffInput[]
+    deleteMany?: VerdictScalarWhereInput | VerdictScalarWhereInput[]
+  }
+
+  export type VerdictUncheckedUpdateManyWithoutBailiffNestedInput = {
+    create?: XOR<VerdictCreateWithoutBailiffInput, VerdictUncheckedCreateWithoutBailiffInput> | VerdictCreateWithoutBailiffInput[] | VerdictUncheckedCreateWithoutBailiffInput[]
+    connectOrCreate?: VerdictCreateOrConnectWithoutBailiffInput | VerdictCreateOrConnectWithoutBailiffInput[]
+    upsert?: VerdictUpsertWithWhereUniqueWithoutBailiffInput | VerdictUpsertWithWhereUniqueWithoutBailiffInput[]
+    createMany?: VerdictCreateManyBailiffInputEnvelope
+    set?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
+    disconnect?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
+    delete?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
+    connect?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
+    update?: VerdictUpdateWithWhereUniqueWithoutBailiffInput | VerdictUpdateWithWhereUniqueWithoutBailiffInput[]
+    updateMany?: VerdictUpdateManyWithWhereWithoutBailiffInput | VerdictUpdateManyWithWhereWithoutBailiffInput[]
+    deleteMany?: VerdictScalarWhereInput | VerdictScalarWhereInput[]
+  }
+
   export type TenantCreateNestedOneWithoutChat_roomsInput = {
     create?: XOR<TenantCreateWithoutChat_roomsInput, TenantUncheckedCreateWithoutChat_roomsInput>
     connectOrCreate?: TenantCreateOrConnectWithoutChat_roomsInput
@@ -43839,6 +45490,38 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type BailiffCreateWithoutTenantInput = {
+    id?: string
+    fullname: string
+    email: string
+    phone?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    user?: UserCreateNestedOneWithoutBailiffsInput
+    verdicts?: VerdictCreateNestedManyWithoutBailiffInput
+  }
+
+  export type BailiffUncheckedCreateWithoutTenantInput = {
+    id?: string
+    fullname: string
+    email: string
+    phone?: string | null
+    user_id?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    verdicts?: VerdictUncheckedCreateNestedManyWithoutBailiffInput
+  }
+
+  export type BailiffCreateOrConnectWithoutTenantInput = {
+    where: BailiffWhereUniqueInput
+    create: XOR<BailiffCreateWithoutTenantInput, BailiffUncheckedCreateWithoutTenantInput>
+  }
+
+  export type BailiffCreateManyTenantInputEnvelope = {
+    data: BailiffCreateManyTenantInput | BailiffCreateManyTenantInput[]
+    skipDuplicates?: boolean
+  }
+
   export type VerdictCreateWithoutTenantInput = {
     id?: string
     invoice_number: string
@@ -43851,7 +45534,7 @@ export namespace Prisma {
     updated_at?: Date | string
     procesal_cost?: number | null
     notes?: string | null
-    bailiff?: UserCreateNestedOneWithoutVerdict_bailiffsInput
+    bailiff?: BailiffCreateNestedOneWithoutVerdictsInput
     debtor: DebtorCreateNestedOneWithoutVerdictsInput
     attachments?: VerdictAttachmentCreateNestedManyWithoutVerdictInput
     bailiff_services?: VerdictBailiffServicesCreateNestedManyWithoutVerdictInput
@@ -43900,7 +45583,7 @@ export namespace Prisma {
     created_at?: Date | string
     updated_at?: Date | string
     debtors?: DebtorCreateNestedManyWithoutUserInput
-    verdict_bailiffs?: VerdictCreateNestedManyWithoutBailiffInput
+    bailiffs?: BailiffCreateNestedManyWithoutUserInput
     messages?: ChatMessageCreateNestedManyWithoutSenderInput
   }
 
@@ -43915,7 +45598,7 @@ export namespace Prisma {
     created_at?: Date | string
     updated_at?: Date | string
     debtors?: DebtorUncheckedCreateNestedManyWithoutUserInput
-    verdict_bailiffs?: VerdictUncheckedCreateNestedManyWithoutBailiffInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutUserInput
     messages?: ChatMessageUncheckedCreateNestedManyWithoutSenderInput
   }
 
@@ -44146,6 +45829,36 @@ export namespace Prisma {
     updated_at?: DateTimeFilter<"Debtor"> | Date | string
   }
 
+  export type BailiffUpsertWithWhereUniqueWithoutTenantInput = {
+    where: BailiffWhereUniqueInput
+    update: XOR<BailiffUpdateWithoutTenantInput, BailiffUncheckedUpdateWithoutTenantInput>
+    create: XOR<BailiffCreateWithoutTenantInput, BailiffUncheckedCreateWithoutTenantInput>
+  }
+
+  export type BailiffUpdateWithWhereUniqueWithoutTenantInput = {
+    where: BailiffWhereUniqueInput
+    data: XOR<BailiffUpdateWithoutTenantInput, BailiffUncheckedUpdateWithoutTenantInput>
+  }
+
+  export type BailiffUpdateManyWithWhereWithoutTenantInput = {
+    where: BailiffScalarWhereInput
+    data: XOR<BailiffUpdateManyMutationInput, BailiffUncheckedUpdateManyWithoutTenantInput>
+  }
+
+  export type BailiffScalarWhereInput = {
+    AND?: BailiffScalarWhereInput | BailiffScalarWhereInput[]
+    OR?: BailiffScalarWhereInput[]
+    NOT?: BailiffScalarWhereInput | BailiffScalarWhereInput[]
+    id?: StringFilter<"Bailiff"> | string
+    fullname?: StringFilter<"Bailiff"> | string
+    email?: StringFilter<"Bailiff"> | string
+    phone?: StringNullableFilter<"Bailiff"> | string | null
+    tenant_id?: StringFilter<"Bailiff"> | string
+    user_id?: StringNullableFilter<"Bailiff"> | string | null
+    created_at?: DateTimeFilter<"Bailiff"> | Date | string
+    updated_at?: DateTimeFilter<"Bailiff"> | Date | string
+  }
+
   export type VerdictUpsertWithWhereUniqueWithoutTenantInput = {
     where: VerdictWhereUniqueInput
     update: XOR<VerdictUpdateWithoutTenantInput, VerdictUncheckedUpdateWithoutTenantInput>
@@ -44332,6 +46045,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceCreateNestedManyWithoutTenantInput
     collection_cases?: CollectionCaseCreateNestedManyWithoutTenantInput
     debtors?: DebtorCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffCreateNestedManyWithoutTenantInput
     verdicts?: VerdictCreateNestedManyWithoutTenantInput
     users?: UserCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
@@ -44360,6 +46074,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceUncheckedCreateNestedManyWithoutTenantInput
     collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutTenantInput
     debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
     verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
     users?: UserUncheckedCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
@@ -44404,6 +46119,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceUpdateManyWithoutTenantNestedInput
     collection_cases?: CollectionCaseUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUpdateManyWithoutTenantNestedInput
     users?: UserUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
@@ -44432,6 +46148,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceUncheckedUpdateManyWithoutTenantNestedInput
     collection_cases?: CollectionCaseUncheckedUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
     users?: UserUncheckedUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
@@ -44460,6 +46177,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceCreateNestedManyWithoutTenantInput
     collection_cases?: CollectionCaseCreateNestedManyWithoutTenantInput
     debtors?: DebtorCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffCreateNestedManyWithoutTenantInput
     verdicts?: VerdictCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
     agreements?: CollectionCaseAgreementCreateNestedManyWithoutTenantInput
@@ -44488,6 +46206,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceUncheckedCreateNestedManyWithoutTenantInput
     collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutTenantInput
     debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
     verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
     agreements?: CollectionCaseAgreementUncheckedCreateNestedManyWithoutTenantInput
@@ -44547,53 +46266,35 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type VerdictCreateWithoutBailiffInput = {
+  export type BailiffCreateWithoutUserInput = {
     id?: string
-    invoice_number: string
-    creditor_name: string
-    registration_number: string
-    sentence_amount: number
-    sentence_date: Date | string
-    status?: $Enums.VerdictStatus
+    fullname: string
+    email: string
+    phone?: string | null
     created_at?: Date | string
     updated_at?: Date | string
-    procesal_cost?: number | null
-    notes?: string | null
-    debtor: DebtorCreateNestedOneWithoutVerdictsInput
-    tenant: TenantCreateNestedOneWithoutVerdictsInput
-    attachments?: VerdictAttachmentCreateNestedManyWithoutVerdictInput
-    bailiff_services?: VerdictBailiffServicesCreateNestedManyWithoutVerdictInput
-    verdict_embargo?: VerdictEmbargoCreateNestedManyWithoutVerdictInput
-    verdict_interest?: VerdictInterestCreateNestedManyWithoutVerdictInput
+    tenant: TenantCreateNestedOneWithoutBailiffsInput
+    verdicts?: VerdictCreateNestedManyWithoutBailiffInput
   }
 
-  export type VerdictUncheckedCreateWithoutBailiffInput = {
+  export type BailiffUncheckedCreateWithoutUserInput = {
     id?: string
-    invoice_number: string
-    creditor_name: string
-    debtor_id: string
-    registration_number: string
-    sentence_amount: number
-    sentence_date: Date | string
-    status?: $Enums.VerdictStatus
-    created_at?: Date | string
-    updated_at?: Date | string
-    procesal_cost?: number | null
+    fullname: string
+    email: string
+    phone?: string | null
     tenant_id: string
-    notes?: string | null
-    attachments?: VerdictAttachmentUncheckedCreateNestedManyWithoutVerdictInput
-    bailiff_services?: VerdictBailiffServicesUncheckedCreateNestedManyWithoutVerdictInput
-    verdict_embargo?: VerdictEmbargoUncheckedCreateNestedManyWithoutVerdictInput
-    verdict_interest?: VerdictInterestUncheckedCreateNestedManyWithoutVerdictInput
+    created_at?: Date | string
+    updated_at?: Date | string
+    verdicts?: VerdictUncheckedCreateNestedManyWithoutBailiffInput
   }
 
-  export type VerdictCreateOrConnectWithoutBailiffInput = {
-    where: VerdictWhereUniqueInput
-    create: XOR<VerdictCreateWithoutBailiffInput, VerdictUncheckedCreateWithoutBailiffInput>
+  export type BailiffCreateOrConnectWithoutUserInput = {
+    where: BailiffWhereUniqueInput
+    create: XOR<BailiffCreateWithoutUserInput, BailiffUncheckedCreateWithoutUserInput>
   }
 
-  export type VerdictCreateManyBailiffInputEnvelope = {
-    data: VerdictCreateManyBailiffInput | VerdictCreateManyBailiffInput[]
+  export type BailiffCreateManyUserInputEnvelope = {
+    data: BailiffCreateManyUserInput | BailiffCreateManyUserInput[]
     skipDuplicates?: boolean
   }
 
@@ -44662,6 +46363,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceUpdateManyWithoutTenantNestedInput
     collection_cases?: CollectionCaseUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
     agreements?: CollectionCaseAgreementUpdateManyWithoutTenantNestedInput
@@ -44690,6 +46392,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceUncheckedUpdateManyWithoutTenantNestedInput
     collection_cases?: CollectionCaseUncheckedUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
     agreements?: CollectionCaseAgreementUncheckedUpdateManyWithoutTenantNestedInput
@@ -44712,20 +46415,20 @@ export namespace Prisma {
     data: XOR<DebtorUpdateManyMutationInput, DebtorUncheckedUpdateManyWithoutUserInput>
   }
 
-  export type VerdictUpsertWithWhereUniqueWithoutBailiffInput = {
-    where: VerdictWhereUniqueInput
-    update: XOR<VerdictUpdateWithoutBailiffInput, VerdictUncheckedUpdateWithoutBailiffInput>
-    create: XOR<VerdictCreateWithoutBailiffInput, VerdictUncheckedCreateWithoutBailiffInput>
+  export type BailiffUpsertWithWhereUniqueWithoutUserInput = {
+    where: BailiffWhereUniqueInput
+    update: XOR<BailiffUpdateWithoutUserInput, BailiffUncheckedUpdateWithoutUserInput>
+    create: XOR<BailiffCreateWithoutUserInput, BailiffUncheckedCreateWithoutUserInput>
   }
 
-  export type VerdictUpdateWithWhereUniqueWithoutBailiffInput = {
-    where: VerdictWhereUniqueInput
-    data: XOR<VerdictUpdateWithoutBailiffInput, VerdictUncheckedUpdateWithoutBailiffInput>
+  export type BailiffUpdateWithWhereUniqueWithoutUserInput = {
+    where: BailiffWhereUniqueInput
+    data: XOR<BailiffUpdateWithoutUserInput, BailiffUncheckedUpdateWithoutUserInput>
   }
 
-  export type VerdictUpdateManyWithWhereWithoutBailiffInput = {
-    where: VerdictScalarWhereInput
-    data: XOR<VerdictUpdateManyMutationInput, VerdictUncheckedUpdateManyWithoutBailiffInput>
+  export type BailiffUpdateManyWithWhereWithoutUserInput = {
+    where: BailiffScalarWhereInput
+    data: XOR<BailiffUpdateManyMutationInput, BailiffUncheckedUpdateManyWithoutUserInput>
   }
 
   export type ChatMessageUpsertWithWhereUniqueWithoutSenderInput = {
@@ -44759,39 +46462,31 @@ export namespace Prisma {
     updated_at?: DateTimeFilter<"ChatMessage"> | Date | string
   }
 
-  export type UserCreateWithoutVerdict_bailiffsInput = {
+  export type BailiffCreateWithoutVerdictsInput = {
     id?: string
+    fullname: string
     email: string
-    password_hash?: string | null
-    fullname?: string | null
     phone?: string | null
-    role?: $Enums.roleEnum
-    is_active?: boolean
     created_at?: Date | string
     updated_at?: Date | string
-    tenant: TenantCreateNestedOneWithoutUsersInput
-    debtors?: DebtorCreateNestedManyWithoutUserInput
-    messages?: ChatMessageCreateNestedManyWithoutSenderInput
+    tenant: TenantCreateNestedOneWithoutBailiffsInput
+    user?: UserCreateNestedOneWithoutBailiffsInput
   }
 
-  export type UserUncheckedCreateWithoutVerdict_bailiffsInput = {
+  export type BailiffUncheckedCreateWithoutVerdictsInput = {
     id?: string
+    fullname: string
     email: string
-    password_hash?: string | null
-    fullname?: string | null
     phone?: string | null
     tenant_id: string
-    role?: $Enums.roleEnum
-    is_active?: boolean
+    user_id?: string | null
     created_at?: Date | string
     updated_at?: Date | string
-    debtors?: DebtorUncheckedCreateNestedManyWithoutUserInput
-    messages?: ChatMessageUncheckedCreateNestedManyWithoutSenderInput
   }
 
-  export type UserCreateOrConnectWithoutVerdict_bailiffsInput = {
-    where: UserWhereUniqueInput
-    create: XOR<UserCreateWithoutVerdict_bailiffsInput, UserUncheckedCreateWithoutVerdict_bailiffsInput>
+  export type BailiffCreateOrConnectWithoutVerdictsInput = {
+    where: BailiffWhereUniqueInput
+    create: XOR<BailiffCreateWithoutVerdictsInput, BailiffUncheckedCreateWithoutVerdictsInput>
   }
 
   export type DebtorCreateWithoutVerdictsInput = {
@@ -44859,6 +46554,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceCreateNestedManyWithoutTenantInput
     collection_cases?: CollectionCaseCreateNestedManyWithoutTenantInput
     debtors?: DebtorCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffCreateNestedManyWithoutTenantInput
     users?: UserCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
     agreements?: CollectionCaseAgreementCreateNestedManyWithoutTenantInput
@@ -44887,6 +46583,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceUncheckedCreateNestedManyWithoutTenantInput
     collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutTenantInput
     debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
     users?: UserUncheckedCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
     agreements?: CollectionCaseAgreementUncheckedCreateNestedManyWithoutTenantInput
@@ -45026,45 +46723,37 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type UserUpsertWithoutVerdict_bailiffsInput = {
-    update: XOR<UserUpdateWithoutVerdict_bailiffsInput, UserUncheckedUpdateWithoutVerdict_bailiffsInput>
-    create: XOR<UserCreateWithoutVerdict_bailiffsInput, UserUncheckedCreateWithoutVerdict_bailiffsInput>
-    where?: UserWhereInput
+  export type BailiffUpsertWithoutVerdictsInput = {
+    update: XOR<BailiffUpdateWithoutVerdictsInput, BailiffUncheckedUpdateWithoutVerdictsInput>
+    create: XOR<BailiffCreateWithoutVerdictsInput, BailiffUncheckedCreateWithoutVerdictsInput>
+    where?: BailiffWhereInput
   }
 
-  export type UserUpdateToOneWithWhereWithoutVerdict_bailiffsInput = {
-    where?: UserWhereInput
-    data: XOR<UserUpdateWithoutVerdict_bailiffsInput, UserUncheckedUpdateWithoutVerdict_bailiffsInput>
+  export type BailiffUpdateToOneWithWhereWithoutVerdictsInput = {
+    where?: BailiffWhereInput
+    data: XOR<BailiffUpdateWithoutVerdictsInput, BailiffUncheckedUpdateWithoutVerdictsInput>
   }
 
-  export type UserUpdateWithoutVerdict_bailiffsInput = {
+  export type BailiffUpdateWithoutVerdictsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    password_hash?: NullableStringFieldUpdateOperationsInput | string | null
-    fullname?: NullableStringFieldUpdateOperationsInput | string | null
     phone?: NullableStringFieldUpdateOperationsInput | string | null
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
-    is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    tenant?: TenantUpdateOneRequiredWithoutUsersNestedInput
-    debtors?: DebtorUpdateManyWithoutUserNestedInput
-    messages?: ChatMessageUpdateManyWithoutSenderNestedInput
+    tenant?: TenantUpdateOneRequiredWithoutBailiffsNestedInput
+    user?: UserUpdateOneWithoutBailiffsNestedInput
   }
 
-  export type UserUncheckedUpdateWithoutVerdict_bailiffsInput = {
+  export type BailiffUncheckedUpdateWithoutVerdictsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    password_hash?: NullableStringFieldUpdateOperationsInput | string | null
-    fullname?: NullableStringFieldUpdateOperationsInput | string | null
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     tenant_id?: StringFieldUpdateOperationsInput | string
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
-    is_active?: BoolFieldUpdateOperationsInput | boolean
+    user_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    debtors?: DebtorUncheckedUpdateManyWithoutUserNestedInput
-    messages?: ChatMessageUncheckedUpdateManyWithoutSenderNestedInput
   }
 
   export type DebtorUpsertWithoutVerdictsInput = {
@@ -45149,6 +46838,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceUpdateManyWithoutTenantNestedInput
     collection_cases?: CollectionCaseUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
     users?: UserUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
     agreements?: CollectionCaseAgreementUpdateManyWithoutTenantNestedInput
@@ -45177,6 +46867,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceUncheckedUpdateManyWithoutTenantNestedInput
     collection_cases?: CollectionCaseUncheckedUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
     users?: UserUncheckedUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
     agreements?: CollectionCaseAgreementUncheckedUpdateManyWithoutTenantNestedInput
@@ -45318,7 +47009,7 @@ export namespace Prisma {
     updated_at?: Date | string
     procesal_cost?: number | null
     notes?: string | null
-    bailiff?: UserCreateNestedOneWithoutVerdict_bailiffsInput
+    bailiff?: BailiffCreateNestedOneWithoutVerdictsInput
     debtor: DebtorCreateNestedOneWithoutVerdictsInput
     tenant: TenantCreateNestedOneWithoutVerdictsInput
     attachments?: VerdictAttachmentCreateNestedManyWithoutVerdictInput
@@ -45414,7 +47105,7 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     procesal_cost?: NullableFloatFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
-    bailiff?: UserUpdateOneWithoutVerdict_bailiffsNestedInput
+    bailiff?: BailiffUpdateOneWithoutVerdictsNestedInput
     debtor?: DebtorUpdateOneRequiredWithoutVerdictsNestedInput
     tenant?: TenantUpdateOneRequiredWithoutVerdictsNestedInput
     attachments?: VerdictAttachmentUpdateManyWithoutVerdictNestedInput
@@ -45557,7 +47248,7 @@ export namespace Prisma {
     updated_at?: Date | string
     procesal_cost?: number | null
     notes?: string | null
-    bailiff?: UserCreateNestedOneWithoutVerdict_bailiffsInput
+    bailiff?: BailiffCreateNestedOneWithoutVerdictsInput
     debtor: DebtorCreateNestedOneWithoutVerdictsInput
     tenant: TenantCreateNestedOneWithoutVerdictsInput
     attachments?: VerdictAttachmentCreateNestedManyWithoutVerdictInput
@@ -45613,7 +47304,7 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     procesal_cost?: NullableFloatFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
-    bailiff?: UserUpdateOneWithoutVerdict_bailiffsNestedInput
+    bailiff?: BailiffUpdateOneWithoutVerdictsNestedInput
     debtor?: DebtorUpdateOneRequiredWithoutVerdictsNestedInput
     tenant?: TenantUpdateOneRequiredWithoutVerdictsNestedInput
     attachments?: VerdictAttachmentUpdateManyWithoutVerdictNestedInput
@@ -45653,7 +47344,7 @@ export namespace Prisma {
     updated_at?: Date | string
     procesal_cost?: number | null
     notes?: string | null
-    bailiff?: UserCreateNestedOneWithoutVerdict_bailiffsInput
+    bailiff?: BailiffCreateNestedOneWithoutVerdictsInput
     debtor: DebtorCreateNestedOneWithoutVerdictsInput
     tenant: TenantCreateNestedOneWithoutVerdictsInput
     attachments?: VerdictAttachmentCreateNestedManyWithoutVerdictInput
@@ -45709,7 +47400,7 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     procesal_cost?: NullableFloatFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
-    bailiff?: UserUpdateOneWithoutVerdict_bailiffsNestedInput
+    bailiff?: BailiffUpdateOneWithoutVerdictsNestedInput
     debtor?: DebtorUpdateOneRequiredWithoutVerdictsNestedInput
     tenant?: TenantUpdateOneRequiredWithoutVerdictsNestedInput
     attachments?: VerdictAttachmentUpdateManyWithoutVerdictNestedInput
@@ -45749,7 +47440,7 @@ export namespace Prisma {
     updated_at?: Date | string
     procesal_cost?: number | null
     notes?: string | null
-    bailiff?: UserCreateNestedOneWithoutVerdict_bailiffsInput
+    bailiff?: BailiffCreateNestedOneWithoutVerdictsInput
     debtor: DebtorCreateNestedOneWithoutVerdictsInput
     tenant: TenantCreateNestedOneWithoutVerdictsInput
     bailiff_services?: VerdictBailiffServicesCreateNestedManyWithoutVerdictInput
@@ -45805,7 +47496,7 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     procesal_cost?: NullableFloatFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
-    bailiff?: UserUpdateOneWithoutVerdict_bailiffsNestedInput
+    bailiff?: BailiffUpdateOneWithoutVerdictsNestedInput
     debtor?: DebtorUpdateOneRequiredWithoutVerdictsNestedInput
     tenant?: TenantUpdateOneRequiredWithoutVerdictsNestedInput
     bailiff_services?: VerdictBailiffServicesUpdateManyWithoutVerdictNestedInput
@@ -45942,6 +47633,7 @@ export namespace Prisma {
     updated_at?: Date | string
     collection_cases?: CollectionCaseCreateNestedManyWithoutTenantInput
     debtors?: DebtorCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffCreateNestedManyWithoutTenantInput
     verdicts?: VerdictCreateNestedManyWithoutTenantInput
     users?: UserCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
@@ -45970,6 +47662,7 @@ export namespace Prisma {
     updated_at?: Date | string
     collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutTenantInput
     debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
     verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
     users?: UserUncheckedCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
@@ -46082,6 +47775,7 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     collection_cases?: CollectionCaseUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUpdateManyWithoutTenantNestedInput
     users?: UserUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
@@ -46110,6 +47804,7 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     collection_cases?: CollectionCaseUncheckedUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
     users?: UserUncheckedUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
@@ -46397,6 +48092,7 @@ export namespace Prisma {
     updated_at?: Date | string
     billing_invoice?: BillingInvoiceCreateNestedManyWithoutTenantInput
     debtors?: DebtorCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffCreateNestedManyWithoutTenantInput
     verdicts?: VerdictCreateNestedManyWithoutTenantInput
     users?: UserCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
@@ -46425,6 +48121,7 @@ export namespace Prisma {
     updated_at?: Date | string
     billing_invoice?: BillingInvoiceUncheckedCreateNestedManyWithoutTenantInput
     debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
     verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
     users?: UserUncheckedCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
@@ -46682,6 +48379,7 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     billing_invoice?: BillingInvoiceUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUpdateManyWithoutTenantNestedInput
     users?: UserUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
@@ -46710,6 +48408,7 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     billing_invoice?: BillingInvoiceUncheckedUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
     users?: UserUncheckedUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
@@ -47429,6 +49128,7 @@ export namespace Prisma {
     updated_at?: Date | string
     billing_invoice?: BillingInvoiceCreateNestedManyWithoutTenantInput
     collection_cases?: CollectionCaseCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffCreateNestedManyWithoutTenantInput
     verdicts?: VerdictCreateNestedManyWithoutTenantInput
     users?: UserCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
@@ -47457,6 +49157,7 @@ export namespace Prisma {
     updated_at?: Date | string
     billing_invoice?: BillingInvoiceUncheckedCreateNestedManyWithoutTenantInput
     collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
     verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
     users?: UserUncheckedCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
@@ -47480,7 +49181,7 @@ export namespace Prisma {
     created_at?: Date | string
     updated_at?: Date | string
     tenant: TenantCreateNestedOneWithoutUsersInput
-    verdict_bailiffs?: VerdictCreateNestedManyWithoutBailiffInput
+    bailiffs?: BailiffCreateNestedManyWithoutUserInput
     messages?: ChatMessageCreateNestedManyWithoutSenderInput
   }
 
@@ -47495,7 +49196,7 @@ export namespace Prisma {
     is_active?: boolean
     created_at?: Date | string
     updated_at?: Date | string
-    verdict_bailiffs?: VerdictUncheckedCreateNestedManyWithoutBailiffInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutUserInput
     messages?: ChatMessageUncheckedCreateNestedManyWithoutSenderInput
   }
 
@@ -47586,7 +49287,7 @@ export namespace Prisma {
     updated_at?: Date | string
     procesal_cost?: number | null
     notes?: string | null
-    bailiff?: UserCreateNestedOneWithoutVerdict_bailiffsInput
+    bailiff?: BailiffCreateNestedOneWithoutVerdictsInput
     tenant: TenantCreateNestedOneWithoutVerdictsInput
     attachments?: VerdictAttachmentCreateNestedManyWithoutVerdictInput
     bailiff_services?: VerdictBailiffServicesCreateNestedManyWithoutVerdictInput
@@ -47672,6 +49373,7 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     billing_invoice?: BillingInvoiceUpdateManyWithoutTenantNestedInput
     collection_cases?: CollectionCaseUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUpdateManyWithoutTenantNestedInput
     users?: UserUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
@@ -47700,6 +49402,7 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     billing_invoice?: BillingInvoiceUncheckedUpdateManyWithoutTenantNestedInput
     collection_cases?: CollectionCaseUncheckedUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
     users?: UserUncheckedUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
@@ -47729,7 +49432,7 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     tenant?: TenantUpdateOneRequiredWithoutUsersNestedInput
-    verdict_bailiffs?: VerdictUpdateManyWithoutBailiffNestedInput
+    bailiffs?: BailiffUpdateManyWithoutUserNestedInput
     messages?: ChatMessageUpdateManyWithoutSenderNestedInput
   }
 
@@ -47744,7 +49447,7 @@ export namespace Prisma {
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    verdict_bailiffs?: VerdictUncheckedUpdateManyWithoutBailiffNestedInput
+    bailiffs?: BailiffUncheckedUpdateManyWithoutUserNestedInput
     messages?: ChatMessageUncheckedUpdateManyWithoutSenderNestedInput
   }
 
@@ -47808,6 +49511,280 @@ export namespace Prisma {
     data: XOR<VerdictUpdateManyMutationInput, VerdictUncheckedUpdateManyWithoutDebtorInput>
   }
 
+  export type TenantCreateWithoutBailiffsInput = {
+    id?: string
+    name: string
+    code: string
+    subdomain: string
+    contact_email: string
+    country_code: string
+    kvk?: string | null
+    legal_name?: string | null
+    address?: string | null
+    city?: string | null
+    logo_url?: string | null
+    number_of_employees?: number | null
+    phone?: string | null
+    website?: string | null
+    terms_accepted?: boolean
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    billing_invoice?: BillingInvoiceCreateNestedManyWithoutTenantInput
+    collection_cases?: CollectionCaseCreateNestedManyWithoutTenantInput
+    debtors?: DebtorCreateNestedManyWithoutTenantInput
+    verdicts?: VerdictCreateNestedManyWithoutTenantInput
+    users?: UserCreateNestedManyWithoutTenantInput
+    chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
+    agreements?: CollectionCaseAgreementCreateNestedManyWithoutTenantInput
+    invitations?: TenantInvitationCreateNestedManyWithoutTenantInput
+  }
+
+  export type TenantUncheckedCreateWithoutBailiffsInput = {
+    id?: string
+    name: string
+    code: string
+    subdomain: string
+    contact_email: string
+    country_code: string
+    kvk?: string | null
+    legal_name?: string | null
+    address?: string | null
+    city?: string | null
+    logo_url?: string | null
+    number_of_employees?: number | null
+    phone?: string | null
+    website?: string | null
+    terms_accepted?: boolean
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    billing_invoice?: BillingInvoiceUncheckedCreateNestedManyWithoutTenantInput
+    collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutTenantInput
+    debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
+    verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
+    users?: UserUncheckedCreateNestedManyWithoutTenantInput
+    chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
+    agreements?: CollectionCaseAgreementUncheckedCreateNestedManyWithoutTenantInput
+    invitations?: TenantInvitationUncheckedCreateNestedManyWithoutTenantInput
+  }
+
+  export type TenantCreateOrConnectWithoutBailiffsInput = {
+    where: TenantWhereUniqueInput
+    create: XOR<TenantCreateWithoutBailiffsInput, TenantUncheckedCreateWithoutBailiffsInput>
+  }
+
+  export type UserCreateWithoutBailiffsInput = {
+    id?: string
+    email: string
+    password_hash?: string | null
+    fullname?: string | null
+    phone?: string | null
+    role?: $Enums.roleEnum
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    tenant: TenantCreateNestedOneWithoutUsersInput
+    debtors?: DebtorCreateNestedManyWithoutUserInput
+    messages?: ChatMessageCreateNestedManyWithoutSenderInput
+  }
+
+  export type UserUncheckedCreateWithoutBailiffsInput = {
+    id?: string
+    email: string
+    password_hash?: string | null
+    fullname?: string | null
+    phone?: string | null
+    tenant_id: string
+    role?: $Enums.roleEnum
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    debtors?: DebtorUncheckedCreateNestedManyWithoutUserInput
+    messages?: ChatMessageUncheckedCreateNestedManyWithoutSenderInput
+  }
+
+  export type UserCreateOrConnectWithoutBailiffsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutBailiffsInput, UserUncheckedCreateWithoutBailiffsInput>
+  }
+
+  export type VerdictCreateWithoutBailiffInput = {
+    id?: string
+    invoice_number: string
+    creditor_name: string
+    registration_number: string
+    sentence_amount: number
+    sentence_date: Date | string
+    status?: $Enums.VerdictStatus
+    created_at?: Date | string
+    updated_at?: Date | string
+    procesal_cost?: number | null
+    notes?: string | null
+    debtor: DebtorCreateNestedOneWithoutVerdictsInput
+    tenant: TenantCreateNestedOneWithoutVerdictsInput
+    attachments?: VerdictAttachmentCreateNestedManyWithoutVerdictInput
+    bailiff_services?: VerdictBailiffServicesCreateNestedManyWithoutVerdictInput
+    verdict_embargo?: VerdictEmbargoCreateNestedManyWithoutVerdictInput
+    verdict_interest?: VerdictInterestCreateNestedManyWithoutVerdictInput
+  }
+
+  export type VerdictUncheckedCreateWithoutBailiffInput = {
+    id?: string
+    invoice_number: string
+    creditor_name: string
+    debtor_id: string
+    registration_number: string
+    sentence_amount: number
+    sentence_date: Date | string
+    status?: $Enums.VerdictStatus
+    created_at?: Date | string
+    updated_at?: Date | string
+    procesal_cost?: number | null
+    tenant_id: string
+    notes?: string | null
+    attachments?: VerdictAttachmentUncheckedCreateNestedManyWithoutVerdictInput
+    bailiff_services?: VerdictBailiffServicesUncheckedCreateNestedManyWithoutVerdictInput
+    verdict_embargo?: VerdictEmbargoUncheckedCreateNestedManyWithoutVerdictInput
+    verdict_interest?: VerdictInterestUncheckedCreateNestedManyWithoutVerdictInput
+  }
+
+  export type VerdictCreateOrConnectWithoutBailiffInput = {
+    where: VerdictWhereUniqueInput
+    create: XOR<VerdictCreateWithoutBailiffInput, VerdictUncheckedCreateWithoutBailiffInput>
+  }
+
+  export type VerdictCreateManyBailiffInputEnvelope = {
+    data: VerdictCreateManyBailiffInput | VerdictCreateManyBailiffInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type TenantUpsertWithoutBailiffsInput = {
+    update: XOR<TenantUpdateWithoutBailiffsInput, TenantUncheckedUpdateWithoutBailiffsInput>
+    create: XOR<TenantCreateWithoutBailiffsInput, TenantUncheckedCreateWithoutBailiffsInput>
+    where?: TenantWhereInput
+  }
+
+  export type TenantUpdateToOneWithWhereWithoutBailiffsInput = {
+    where?: TenantWhereInput
+    data: XOR<TenantUpdateWithoutBailiffsInput, TenantUncheckedUpdateWithoutBailiffsInput>
+  }
+
+  export type TenantUpdateWithoutBailiffsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    subdomain?: StringFieldUpdateOperationsInput | string
+    contact_email?: StringFieldUpdateOperationsInput | string
+    country_code?: StringFieldUpdateOperationsInput | string
+    kvk?: NullableStringFieldUpdateOperationsInput | string | null
+    legal_name?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    logo_url?: NullableStringFieldUpdateOperationsInput | string | null
+    number_of_employees?: NullableIntFieldUpdateOperationsInput | number | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    terms_accepted?: BoolFieldUpdateOperationsInput | boolean
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    billing_invoice?: BillingInvoiceUpdateManyWithoutTenantNestedInput
+    collection_cases?: CollectionCaseUpdateManyWithoutTenantNestedInput
+    debtors?: DebtorUpdateManyWithoutTenantNestedInput
+    verdicts?: VerdictUpdateManyWithoutTenantNestedInput
+    users?: UserUpdateManyWithoutTenantNestedInput
+    chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
+    agreements?: CollectionCaseAgreementUpdateManyWithoutTenantNestedInput
+    invitations?: TenantInvitationUpdateManyWithoutTenantNestedInput
+  }
+
+  export type TenantUncheckedUpdateWithoutBailiffsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    subdomain?: StringFieldUpdateOperationsInput | string
+    contact_email?: StringFieldUpdateOperationsInput | string
+    country_code?: StringFieldUpdateOperationsInput | string
+    kvk?: NullableStringFieldUpdateOperationsInput | string | null
+    legal_name?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    logo_url?: NullableStringFieldUpdateOperationsInput | string | null
+    number_of_employees?: NullableIntFieldUpdateOperationsInput | number | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    terms_accepted?: BoolFieldUpdateOperationsInput | boolean
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    billing_invoice?: BillingInvoiceUncheckedUpdateManyWithoutTenantNestedInput
+    collection_cases?: CollectionCaseUncheckedUpdateManyWithoutTenantNestedInput
+    debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
+    verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
+    users?: UserUncheckedUpdateManyWithoutTenantNestedInput
+    chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
+    agreements?: CollectionCaseAgreementUncheckedUpdateManyWithoutTenantNestedInput
+    invitations?: TenantInvitationUncheckedUpdateManyWithoutTenantNestedInput
+  }
+
+  export type UserUpsertWithoutBailiffsInput = {
+    update: XOR<UserUpdateWithoutBailiffsInput, UserUncheckedUpdateWithoutBailiffsInput>
+    create: XOR<UserCreateWithoutBailiffsInput, UserUncheckedCreateWithoutBailiffsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutBailiffsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutBailiffsInput, UserUncheckedUpdateWithoutBailiffsInput>
+  }
+
+  export type UserUpdateWithoutBailiffsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    fullname?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    tenant?: TenantUpdateOneRequiredWithoutUsersNestedInput
+    debtors?: DebtorUpdateManyWithoutUserNestedInput
+    messages?: ChatMessageUpdateManyWithoutSenderNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutBailiffsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    fullname?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    tenant_id?: StringFieldUpdateOperationsInput | string
+    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    debtors?: DebtorUncheckedUpdateManyWithoutUserNestedInput
+    messages?: ChatMessageUncheckedUpdateManyWithoutSenderNestedInput
+  }
+
+  export type VerdictUpsertWithWhereUniqueWithoutBailiffInput = {
+    where: VerdictWhereUniqueInput
+    update: XOR<VerdictUpdateWithoutBailiffInput, VerdictUncheckedUpdateWithoutBailiffInput>
+    create: XOR<VerdictCreateWithoutBailiffInput, VerdictUncheckedCreateWithoutBailiffInput>
+  }
+
+  export type VerdictUpdateWithWhereUniqueWithoutBailiffInput = {
+    where: VerdictWhereUniqueInput
+    data: XOR<VerdictUpdateWithoutBailiffInput, VerdictUncheckedUpdateWithoutBailiffInput>
+  }
+
+  export type VerdictUpdateManyWithWhereWithoutBailiffInput = {
+    where: VerdictScalarWhereInput
+    data: XOR<VerdictUpdateManyMutationInput, VerdictUncheckedUpdateManyWithoutBailiffInput>
+  }
+
   export type TenantCreateWithoutChat_roomsInput = {
     id?: string
     name: string
@@ -47830,6 +49807,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceCreateNestedManyWithoutTenantInput
     collection_cases?: CollectionCaseCreateNestedManyWithoutTenantInput
     debtors?: DebtorCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffCreateNestedManyWithoutTenantInput
     verdicts?: VerdictCreateNestedManyWithoutTenantInput
     users?: UserCreateNestedManyWithoutTenantInput
     agreements?: CollectionCaseAgreementCreateNestedManyWithoutTenantInput
@@ -47858,6 +49836,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceUncheckedCreateNestedManyWithoutTenantInput
     collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutTenantInput
     debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
     verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
     users?: UserUncheckedCreateNestedManyWithoutTenantInput
     agreements?: CollectionCaseAgreementUncheckedCreateNestedManyWithoutTenantInput
@@ -47991,6 +49970,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceUpdateManyWithoutTenantNestedInput
     collection_cases?: CollectionCaseUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUpdateManyWithoutTenantNestedInput
     users?: UserUpdateManyWithoutTenantNestedInput
     agreements?: CollectionCaseAgreementUpdateManyWithoutTenantNestedInput
@@ -48019,6 +49999,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceUncheckedUpdateManyWithoutTenantNestedInput
     collection_cases?: CollectionCaseUncheckedUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
     users?: UserUncheckedUpdateManyWithoutTenantNestedInput
     agreements?: CollectionCaseAgreementUncheckedUpdateManyWithoutTenantNestedInput
@@ -48139,7 +50120,7 @@ export namespace Prisma {
     updated_at?: Date | string
     tenant: TenantCreateNestedOneWithoutUsersInput
     debtors?: DebtorCreateNestedManyWithoutUserInput
-    verdict_bailiffs?: VerdictCreateNestedManyWithoutBailiffInput
+    bailiffs?: BailiffCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutMessagesInput = {
@@ -48154,7 +50135,7 @@ export namespace Prisma {
     created_at?: Date | string
     updated_at?: Date | string
     debtors?: DebtorUncheckedCreateNestedManyWithoutUserInput
-    verdict_bailiffs?: VerdictUncheckedCreateNestedManyWithoutBailiffInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutMessagesInput = {
@@ -48214,7 +50195,7 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     tenant?: TenantUpdateOneRequiredWithoutUsersNestedInput
     debtors?: DebtorUpdateManyWithoutUserNestedInput
-    verdict_bailiffs?: VerdictUpdateManyWithoutBailiffNestedInput
+    bailiffs?: BailiffUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutMessagesInput = {
@@ -48229,7 +50210,7 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     debtors?: DebtorUncheckedUpdateManyWithoutUserNestedInput
-    verdict_bailiffs?: VerdictUncheckedUpdateManyWithoutBailiffNestedInput
+    bailiffs?: BailiffUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type DebtorCreateWithoutIncomesInput = {
@@ -48346,6 +50327,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceCreateNestedManyWithoutTenantInput
     collection_cases?: CollectionCaseCreateNestedManyWithoutTenantInput
     debtors?: DebtorCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffCreateNestedManyWithoutTenantInput
     verdicts?: VerdictCreateNestedManyWithoutTenantInput
     users?: UserCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
@@ -48374,6 +50356,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceUncheckedCreateNestedManyWithoutTenantInput
     collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutTenantInput
     debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
     verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
     users?: UserUncheckedCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
@@ -48584,6 +50567,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceUpdateManyWithoutTenantNestedInput
     collection_cases?: CollectionCaseUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUpdateManyWithoutTenantNestedInput
     users?: UserUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
@@ -48612,6 +50596,7 @@ export namespace Prisma {
     billing_invoice?: BillingInvoiceUncheckedUpdateManyWithoutTenantNestedInput
     collection_cases?: CollectionCaseUncheckedUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
     users?: UserUncheckedUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
@@ -48959,6 +50944,16 @@ export namespace Prisma {
     updated_at?: Date | string
   }
 
+  export type BailiffCreateManyTenantInput = {
+    id?: string
+    fullname: string
+    email: string
+    phone?: string | null
+    user_id?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
   export type VerdictCreateManyTenantInput = {
     id?: string
     invoice_number: string
@@ -49192,6 +51187,38 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type BailiffUpdateWithoutTenantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullname?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneWithoutBailiffsNestedInput
+    verdicts?: VerdictUpdateManyWithoutBailiffNestedInput
+  }
+
+  export type BailiffUncheckedUpdateWithoutTenantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullname?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    user_id?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    verdicts?: VerdictUncheckedUpdateManyWithoutBailiffNestedInput
+  }
+
+  export type BailiffUncheckedUpdateManyWithoutTenantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fullname?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    user_id?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type VerdictUpdateWithoutTenantInput = {
     id?: StringFieldUpdateOperationsInput | string
     invoice_number?: StringFieldUpdateOperationsInput | string
@@ -49204,7 +51231,7 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     procesal_cost?: NullableFloatFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
-    bailiff?: UserUpdateOneWithoutVerdict_bailiffsNestedInput
+    bailiff?: BailiffUpdateOneWithoutVerdictsNestedInput
     debtor?: DebtorUpdateOneRequiredWithoutVerdictsNestedInput
     attachments?: VerdictAttachmentUpdateManyWithoutVerdictNestedInput
     bailiff_services?: VerdictBailiffServicesUpdateManyWithoutVerdictNestedInput
@@ -49259,7 +51286,7 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     debtors?: DebtorUpdateManyWithoutUserNestedInput
-    verdict_bailiffs?: VerdictUpdateManyWithoutBailiffNestedInput
+    bailiffs?: BailiffUpdateManyWithoutUserNestedInput
     messages?: ChatMessageUpdateManyWithoutSenderNestedInput
   }
 
@@ -49274,7 +51301,7 @@ export namespace Prisma {
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     debtors?: DebtorUncheckedUpdateManyWithoutUserNestedInput
-    verdict_bailiffs?: VerdictUncheckedUpdateManyWithoutBailiffNestedInput
+    bailiffs?: BailiffUncheckedUpdateManyWithoutUserNestedInput
     messages?: ChatMessageUncheckedUpdateManyWithoutSenderNestedInput
   }
 
@@ -49419,20 +51446,14 @@ export namespace Prisma {
     updated_at?: Date | string
   }
 
-  export type VerdictCreateManyBailiffInput = {
+  export type BailiffCreateManyUserInput = {
     id?: string
-    invoice_number: string
-    creditor_name: string
-    debtor_id: string
-    registration_number: string
-    sentence_amount: number
-    sentence_date: Date | string
-    status?: $Enums.VerdictStatus
+    fullname: string
+    email: string
+    phone?: string | null
+    tenant_id: string
     created_at?: Date | string
     updated_at?: Date | string
-    procesal_cost?: number | null
-    tenant_id: string
-    notes?: string | null
   }
 
   export type ChatMessageCreateManySenderInput = {
@@ -49499,60 +51520,36 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type VerdictUpdateWithoutBailiffInput = {
+  export type BailiffUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoice_number?: StringFieldUpdateOperationsInput | string
-    creditor_name?: StringFieldUpdateOperationsInput | string
-    registration_number?: StringFieldUpdateOperationsInput | string
-    sentence_amount?: FloatFieldUpdateOperationsInput | number
-    sentence_date?: DateTimeFieldUpdateOperationsInput | Date | string
-    status?: EnumVerdictStatusFieldUpdateOperationsInput | $Enums.VerdictStatus
+    fullname?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    procesal_cost?: NullableFloatFieldUpdateOperationsInput | number | null
-    notes?: NullableStringFieldUpdateOperationsInput | string | null
-    debtor?: DebtorUpdateOneRequiredWithoutVerdictsNestedInput
-    tenant?: TenantUpdateOneRequiredWithoutVerdictsNestedInput
-    attachments?: VerdictAttachmentUpdateManyWithoutVerdictNestedInput
-    bailiff_services?: VerdictBailiffServicesUpdateManyWithoutVerdictNestedInput
-    verdict_embargo?: VerdictEmbargoUpdateManyWithoutVerdictNestedInput
-    verdict_interest?: VerdictInterestUpdateManyWithoutVerdictNestedInput
+    tenant?: TenantUpdateOneRequiredWithoutBailiffsNestedInput
+    verdicts?: VerdictUpdateManyWithoutBailiffNestedInput
   }
 
-  export type VerdictUncheckedUpdateWithoutBailiffInput = {
+  export type BailiffUncheckedUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoice_number?: StringFieldUpdateOperationsInput | string
-    creditor_name?: StringFieldUpdateOperationsInput | string
-    debtor_id?: StringFieldUpdateOperationsInput | string
-    registration_number?: StringFieldUpdateOperationsInput | string
-    sentence_amount?: FloatFieldUpdateOperationsInput | number
-    sentence_date?: DateTimeFieldUpdateOperationsInput | Date | string
-    status?: EnumVerdictStatusFieldUpdateOperationsInput | $Enums.VerdictStatus
+    fullname?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    tenant_id?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    procesal_cost?: NullableFloatFieldUpdateOperationsInput | number | null
-    tenant_id?: StringFieldUpdateOperationsInput | string
-    notes?: NullableStringFieldUpdateOperationsInput | string | null
-    attachments?: VerdictAttachmentUncheckedUpdateManyWithoutVerdictNestedInput
-    bailiff_services?: VerdictBailiffServicesUncheckedUpdateManyWithoutVerdictNestedInput
-    verdict_embargo?: VerdictEmbargoUncheckedUpdateManyWithoutVerdictNestedInput
-    verdict_interest?: VerdictInterestUncheckedUpdateManyWithoutVerdictNestedInput
+    verdicts?: VerdictUncheckedUpdateManyWithoutBailiffNestedInput
   }
 
-  export type VerdictUncheckedUpdateManyWithoutBailiffInput = {
+  export type BailiffUncheckedUpdateManyWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoice_number?: StringFieldUpdateOperationsInput | string
-    creditor_name?: StringFieldUpdateOperationsInput | string
-    debtor_id?: StringFieldUpdateOperationsInput | string
-    registration_number?: StringFieldUpdateOperationsInput | string
-    sentence_amount?: FloatFieldUpdateOperationsInput | number
-    sentence_date?: DateTimeFieldUpdateOperationsInput | Date | string
-    status?: EnumVerdictStatusFieldUpdateOperationsInput | $Enums.VerdictStatus
+    fullname?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    tenant_id?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    procesal_cost?: NullableFloatFieldUpdateOperationsInput | number | null
-    tenant_id?: StringFieldUpdateOperationsInput | string
-    notes?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ChatMessageUpdateWithoutSenderInput = {
@@ -50424,7 +52421,7 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     procesal_cost?: NullableFloatFieldUpdateOperationsInput | number | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
-    bailiff?: UserUpdateOneWithoutVerdict_bailiffsNestedInput
+    bailiff?: BailiffUpdateOneWithoutVerdictsNestedInput
     tenant?: TenantUpdateOneRequiredWithoutVerdictsNestedInput
     attachments?: VerdictAttachmentUpdateManyWithoutVerdictNestedInput
     bailiff_services?: VerdictBailiffServicesUpdateManyWithoutVerdictNestedInput
@@ -50466,6 +52463,78 @@ export namespace Prisma {
     tenant_id?: StringFieldUpdateOperationsInput | string
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     bailiff_id?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type VerdictCreateManyBailiffInput = {
+    id?: string
+    invoice_number: string
+    creditor_name: string
+    debtor_id: string
+    registration_number: string
+    sentence_amount: number
+    sentence_date: Date | string
+    status?: $Enums.VerdictStatus
+    created_at?: Date | string
+    updated_at?: Date | string
+    procesal_cost?: number | null
+    tenant_id: string
+    notes?: string | null
+  }
+
+  export type VerdictUpdateWithoutBailiffInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    invoice_number?: StringFieldUpdateOperationsInput | string
+    creditor_name?: StringFieldUpdateOperationsInput | string
+    registration_number?: StringFieldUpdateOperationsInput | string
+    sentence_amount?: FloatFieldUpdateOperationsInput | number
+    sentence_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: EnumVerdictStatusFieldUpdateOperationsInput | $Enums.VerdictStatus
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    procesal_cost?: NullableFloatFieldUpdateOperationsInput | number | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    debtor?: DebtorUpdateOneRequiredWithoutVerdictsNestedInput
+    tenant?: TenantUpdateOneRequiredWithoutVerdictsNestedInput
+    attachments?: VerdictAttachmentUpdateManyWithoutVerdictNestedInput
+    bailiff_services?: VerdictBailiffServicesUpdateManyWithoutVerdictNestedInput
+    verdict_embargo?: VerdictEmbargoUpdateManyWithoutVerdictNestedInput
+    verdict_interest?: VerdictInterestUpdateManyWithoutVerdictNestedInput
+  }
+
+  export type VerdictUncheckedUpdateWithoutBailiffInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    invoice_number?: StringFieldUpdateOperationsInput | string
+    creditor_name?: StringFieldUpdateOperationsInput | string
+    debtor_id?: StringFieldUpdateOperationsInput | string
+    registration_number?: StringFieldUpdateOperationsInput | string
+    sentence_amount?: FloatFieldUpdateOperationsInput | number
+    sentence_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: EnumVerdictStatusFieldUpdateOperationsInput | $Enums.VerdictStatus
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    procesal_cost?: NullableFloatFieldUpdateOperationsInput | number | null
+    tenant_id?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    attachments?: VerdictAttachmentUncheckedUpdateManyWithoutVerdictNestedInput
+    bailiff_services?: VerdictBailiffServicesUncheckedUpdateManyWithoutVerdictNestedInput
+    verdict_embargo?: VerdictEmbargoUncheckedUpdateManyWithoutVerdictNestedInput
+    verdict_interest?: VerdictInterestUncheckedUpdateManyWithoutVerdictNestedInput
+  }
+
+  export type VerdictUncheckedUpdateManyWithoutBailiffInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    invoice_number?: StringFieldUpdateOperationsInput | string
+    creditor_name?: StringFieldUpdateOperationsInput | string
+    debtor_id?: StringFieldUpdateOperationsInput | string
+    registration_number?: StringFieldUpdateOperationsInput | string
+    sentence_amount?: FloatFieldUpdateOperationsInput | number
+    sentence_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: EnumVerdictStatusFieldUpdateOperationsInput | $Enums.VerdictStatus
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    procesal_cost?: NullableFloatFieldUpdateOperationsInput | number | null
+    tenant_id?: StringFieldUpdateOperationsInput | string
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ChatMessageCreateManyRoomInput = {

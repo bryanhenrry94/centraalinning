@@ -12,9 +12,21 @@ import { notifyError } from "@/lib/notifications";
 import { protocol, rootDomain } from "@/lib/config";
 import path from "path";
 import fs from "fs/promises";
-import { formatCurrency } from "@/utils/formatters";
+import { formatCurrency, formatDate } from "@/utils/formatters";
 import { VerdictAttachment } from "@/lib/validations/verdict-attachments";
 import { $Enums } from "@/prisma/generated/prisma";
+import {
+  sendMailVerdictCreditor,
+  sendMailVerdictDebtor,
+  sendVerdictApprovalEmail,
+} from "./email";
+import { createInvoice, generateInvoiceNumber } from "./billing-invoice";
+import { BillingInvoiceCreate } from "@/lib/validations/billing-invoice";
+import { BillingInvoiceDetailCreate } from "@/lib/validations/billing-invoice-detail";
+import { InvoicePDFProps } from "@/templates/pdfs";
+import { getParameter } from "./parameter";
+import { VerdictDebtorPDFProps } from "@/templates/pdfs/VerdictDebtorPDF";
+import { VerdictCreditorPDFProps } from "@/templates/pdfs/VerdictCreditorPDF";
 
 export const getAllVerdicts = async (
   tenant_id: string
@@ -200,6 +212,7 @@ export const createVerdict = async (
           sentence_amount: data.sentence_amount,
           sentence_date: data.sentence_date,
           procesal_cost: data.procesal_cost,
+          bailiff_id: data.bailiff_id ?? null,
           tenant_id: tenant_id,
         },
       });
@@ -265,13 +278,16 @@ export const createVerdict = async (
 };
 
 export const updateVerdict = async (
-  id: string,
+  verdict_id: string,
   data: VerdictUpdate
 ): Promise<VerdictResponse | null> => {
   try {
+    console.log("updateVerdict ID: ", verdict_id);
+    console.log("updateVerdict Data: ", data);
+
     const updatedVerdict = await prisma.$transaction(async (tx) => {
       const verdict = await prisma.verdict.update({
-        where: { id },
+        where: { id: verdict_id },
         data: {
           invoice_number: data.invoice_number,
           creditor_name: data.creditor_name,
@@ -284,13 +300,15 @@ export const updateVerdict = async (
         },
       });
 
+      console.log("Verdict updated, now updating related data...");
+
       // if verdict interest exists
       if (data.verdict_interest) {
         // elimina los detalles de interest
         // Obtener los IDs de los verdictInterest relacionados a este veredicto
         const verdictInterestIds = (
           await tx.verdictInterest.findMany({
-            where: { verdict_id: verdict.id },
+            where: { verdict_id: verdict_id },
             select: { id: true },
           })
         ).map((vi) => vi.id);
@@ -306,7 +324,7 @@ export const updateVerdict = async (
 
         // Eliminar los intereses existentes relacionados al veredicto
         await tx.verdictInterest.deleteMany({
-          where: { verdict_id: verdict.id },
+          where: { verdict_id: verdict_id },
         });
 
         for (const item of data.verdict_interest) {
@@ -319,7 +337,7 @@ export const updateVerdict = async (
               calculation_start: item.calculation_start,
               calculation_end: item.calculation_end,
               total_interest: item.total_interest,
-              verdict_id: verdict.id,
+              verdict_id: verdict_id,
             },
           });
 
@@ -338,7 +356,7 @@ export const updateVerdict = async (
         // elimina los detalles de embargo
         const verdictEmbargoIds = (
           await tx.verdictEmbargo.findMany({
-            where: { verdict_id: verdict.id },
+            where: { verdict_id: verdict_id },
             select: { id: true },
           })
         ).map((vi) => vi.id);
@@ -355,7 +373,7 @@ export const updateVerdict = async (
           // create verdict embargo
           await tx.verdictEmbargo.create({
             data: {
-              verdict_id: verdict.id,
+              verdict_id: verdict_id,
               company_name: item.company_name,
               company_phone: item.company_phone,
               company_email: item.company_email,
@@ -371,14 +389,14 @@ export const updateVerdict = async (
 
       if (data.bailiff_services) {
         await tx.verdictBailiffServices.deleteMany({
-          where: { verdict_id: verdict.id },
+          where: { verdict_id: verdict_id },
         });
 
         for (const item of data.bailiff_services) {
           await tx.verdictBailiffServices.create({
             data: {
               ...item,
-              verdict_id: verdict.id,
+              verdict_id: verdict_id,
             },
           });
         }
@@ -566,111 +584,6 @@ export const deleteVerdict = async (id: string): Promise<boolean> => {
   }
 };
 
-export const handleSendMailNotificationDebtor = async (
-  id: string
-): Promise<boolean> => {
-  try {
-    const createdVerdict = await prisma.verdict.findUnique({
-      where: { id },
-      include: { tenant: true },
-    });
-
-    if (!createdVerdict) return false;
-
-    const debtor = await prisma.debtor.findUnique({
-      where: { id: createdVerdict.debtor_id },
-    });
-
-    if (debtor?.email) {
-      const debtorEmail = debtor?.email;
-      const subject = `Kennisgeving van vonnis - ${createdVerdict.registration_number}`;
-
-      const dataMail = {
-        recipientName: debtor.fullname || "Schuldenaar",
-        currentYear: new Date().getFullYear(),
-        messageBody:
-          "Er is een nieuw vonnis tegen u geregistreerd in het Centraal Incassoplatform (CI). U kunt de details van dit vonnis veilig bekijken door in te loggen op het CI-platform:",
-      };
-
-      const dataAttachment = {
-        date: new Date().toISOString().split("T")[0],
-        debtorName: debtor.fullname,
-        reference: createdVerdict.registration_number,
-        sentence_date: createdVerdict.sentence_date.toISOString().split("T")[0],
-        sentence_amount: formatCurrency(createdVerdict.sentence_amount),
-        bankAccountNumber: "114.588.06",
-      };
-
-      // // 1, Generar HTML desde plantilla
-      // const htmlAttachment = renderTemplate(
-      //   "verdict/VerdictDebtor",
-      //   dataAttachment
-      // );
-
-      console.log("notificacion de debtor enviada al correo: ", debtorEmail);
-      return true;
-    }
-
-    return false;
-  } catch (error) {
-    console.error("Error sending mail notification:", error);
-    return false;
-  }
-};
-
-export const handleSendMailNotificationCreditor = async (
-  id: string
-): Promise<boolean> => {
-  try {
-    const createdVerdict = await prisma.verdict.findUnique({
-      where: { id },
-      include: { tenant: true },
-    });
-
-    if (!createdVerdict) return false;
-
-    const debtor = await prisma.debtor.findUnique({
-      where: { id: createdVerdict.debtor_id },
-    });
-
-    if (debtor?.email) {
-      const debtorEmail = debtor?.email;
-      const subject = `FACTUUR - ${createdVerdict.invoice_number}`;
-
-      const dataMail = {
-        recipientName: createdVerdict.creditor_name || "Schuldenaar",
-        currentYear: new Date().getFullYear(),
-        messageBody:
-          "Er is een nieuw vonnis tegen u geregistreerd in het Centraal Incassoplatform (CI). U kunt de details van dit vonnis veilig bekijken door in te loggen op het CI-platform:",
-      };
-
-      const dataAttachment = {
-        invoice_number: createdVerdict.invoice_number,
-        creditor_name: createdVerdict.creditor_name,
-        debtorName: debtor.fullname,
-        date: new Date().toISOString().split("T")[0],
-        bailiffAmount: formatCurrency(250),
-        cioAmount: formatCurrency(150),
-        total_amount: formatCurrency(400),
-      };
-
-      // // 1, Generar HTML desde plantilla
-      // const htmlAttachment = renderTemplate(
-      //   "verdict/VerdictCreditor",
-      //   dataAttachment
-      // );
-
-      console.log("notificacion de debtor enviada al correo: ", debtorEmail);
-      return true;
-    }
-
-    return false;
-  } catch (error) {
-    console.error("Error sending mail notification:", error);
-    return false;
-  }
-};
-
 export const handleSendMailNotificationBailiff = async (
   id: string
 ): Promise<boolean> => {
@@ -688,19 +601,11 @@ export const handleSendMailNotificationBailiff = async (
       return false;
     }
 
-    const dataAttachment = {
-      date: new Date().toISOString().split("T")[0],
-      bailiffName: createdVerdict.bailiff.fullname,
-      creditor_name: createdVerdict.creditor_name,
-      reference: createdVerdict.registration_number,
-      dateVerdict: createdVerdict.sentence_date.toISOString().split("T")[0],
-    };
-
-    // // 1, Generar HTML desde plantilla
-    // const htmlAttachment = renderTemplate(
-    //   "verdict/VerdictApproval",
-    //   dataAttachment
-    // );
+    await sendVerdictApprovalEmail(
+      createdVerdict.bailiff.email,
+      createdVerdict.bailiff.fullname || "Bailiff",
+      createdVerdict.id
+    );
 
     return false;
   } catch (error) {
@@ -766,11 +671,135 @@ export const UploadAttachmentToVerdict = async (
 
 export const approveVerdict = async (id: string): Promise<boolean> => {
   try {
-    const response = await prisma.verdict.update({
+    const VerdictUpdated = await prisma.verdict.update({
       where: { id },
       data: { status: "APPROVED" },
     });
-    return response ? true : false;
+
+    const parameter = await getParameter();
+
+    if (!parameter) {
+      console.error("Parameter not found");
+      return false;
+    }
+
+    // Generar número de factura único
+    const invoice_number = await generateInvoiceNumber();
+
+    const amount = 90; // Monto fijo por ahora
+    const tax_rate = parameter.abb_rate; // 6% de IVA
+    const tax_amount = amount * tax_rate;
+    const total_with_tax = amount + tax_amount;
+
+    const details: BillingInvoiceDetailCreate[] = [
+      {
+        item_description: `Servicekosten`,
+        item_quantity: 1,
+        item_unit_price: amount,
+        item_total_price: amount,
+        item_tax_rate: tax_rate,
+        item_tax_amount: tax_amount,
+        item_total_with_tax: total_with_tax,
+      },
+    ];
+
+    const invoice: BillingInvoiceCreate = {
+      invoice_number: invoice_number,
+      issue_date: new Date(),
+      due_date: new Date(),
+      description: `Factuur voor vonnis ${VerdictUpdated.registration_number}`,
+      status: "unpaid",
+      tenant_id: VerdictUpdated.tenant_id,
+      currency: "USD",
+      amount: 90,
+      invoice_details: details,
+    };
+
+    // Crear la factura en la base de datos
+    const invoiceCreated = await createInvoice(
+      invoice,
+      VerdictUpdated.tenant_id
+    );
+
+    // cliente del veredicto
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: VerdictUpdated.tenant_id },
+    });
+
+    if (!tenant) {
+      console.error("Tenant not found for verdict id:", id);
+      return false;
+    }
+
+    const debtor = await prisma.debtor.findUnique({
+      where: { id: VerdictUpdated.debtor_id },
+      include: { tenant: true },
+    });
+
+    if (!debtor) {
+      console.error("Debtor not found for verdict id:", id);
+      return false;
+    }
+
+    const verdictCreditorData: VerdictCreditorPDFProps = {
+      logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
+      invoice_number: invoiceCreated.invoice_number,
+      creditor_name: debtor.tenant?.name || "Creditor",
+      debtorName: debtor.fullname || "Debtor",
+      date: invoiceCreated.issue_date
+        ? formatDate(invoiceCreated.issue_date.toString())
+        : formatDate(new Date().toISOString()),
+      total_amount: formatCurrency(invoiceCreated.amount),
+      reference_number: VerdictUpdated.registration_number || "Reference",
+    };
+
+    const verdictDebtorData: VerdictDebtorPDFProps = {
+      logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
+      debtorName: debtor.fullname || "Debtor",
+      reference: VerdictUpdated.registration_number || "Reference",
+      sentence_date: formatDate(
+        VerdictUpdated.sentence_date
+          ? VerdictUpdated.sentence_date.toISOString()
+          : new Date().toISOString()
+      ),
+      sentence_amount: VerdictUpdated.sentence_amount
+        ? VerdictUpdated.sentence_amount.toFixed(2)
+        : "0.00",
+      bankAccountNumber: parameter.bank_account,
+      date: formatDate(new Date().toISOString()),
+    };
+
+    // Datos de ejemplo para el PDF de la factura
+    const invoiceData: InvoicePDFProps = {
+      logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
+      invoice_number: invoiceCreated.invoice_number,
+      issue_date: formatDate(invoiceCreated.issue_date.toString()),
+      customer_name: debtor.fullname,
+      customer_address: debtor.address || "",
+      customer_island: debtor.tenant?.country_code || "",
+      details: [
+        {
+          item_description: "Servicekosten",
+          item_quantity: 1,
+          item_unit_price: amount,
+          item_tax_rate: tax_rate,
+          item_subtotal: total_with_tax,
+        },
+      ],
+      total: total_with_tax,
+      bank_name: parameter.bank_name,
+      bank_account: parameter.bank_account,
+    };
+
+    // Enviar notificación al acreedor y deudor
+    await sendMailVerdictCreditor(
+      tenant.contact_email,
+      verdictCreditorData,
+      invoiceData
+    );
+    await sendMailVerdictDebtor(debtor.email, verdictDebtorData);
+
+    return VerdictUpdated ? true : false;
   } catch (error) {
     return false;
   }

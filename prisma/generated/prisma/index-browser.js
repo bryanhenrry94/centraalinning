@@ -402,6 +402,17 @@ exports.Prisma.DebtorScalarFieldEnum = {
   updated_at: 'updated_at'
 };
 
+exports.Prisma.BailiffScalarFieldEnum = {
+  id: 'id',
+  fullname: 'fullname',
+  email: 'email',
+  phone: 'phone',
+  tenant_id: 'tenant_id',
+  user_id: 'user_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
 exports.Prisma.ChatRoomScalarFieldEnum = {
   id: 'id',
   tenant_id: 'tenant_id',
@@ -564,6 +575,7 @@ exports.Prisma.ModelName = {
   CollectionCaseNotification: 'CollectionCaseNotification',
   CollectionCasePayment: 'CollectionCasePayment',
   Debtor: 'Debtor',
+  Bailiff: 'Bailiff',
   ChatRoom: 'ChatRoom',
   ChatMessage: 'ChatMessage',
   DebtorIncome: 'DebtorIncome',

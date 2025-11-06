@@ -26,12 +26,7 @@ import CalculateIcon from "@mui/icons-material/Calculate";
 import SellIcon from "@mui/icons-material/Sell";
 
 import { VerdictResponse } from "@/lib/validations/verdict";
-import {
-  approveVerdict,
-  getVerdictById,
-  handleSendMailNotificationCreditor,
-  handleSendMailNotificationDebtor,
-} from "@/app/actions/verdict";
+import { approveVerdict, getVerdictById } from "@/app/actions/verdict";
 import { VerdictEmbargo } from "@/lib/validations/verdict-embargo";
 import { IVerdictInterest } from "@/lib/validations/verdict-interest";
 import { InterestType } from "@/lib/validations/interest-type";
@@ -40,7 +35,7 @@ import { formatCurrency, formatDate } from "@/utils/formatters";
 import { getAllInterestTypes } from "@/app/actions/interest-type";
 import { embargoTipos } from "@/constants/embargo";
 import { AlertService } from "@/lib/alerts";
-import { notifyInfo } from "@/lib/notifications";
+import { notifyError, notifyInfo } from "@/lib/notifications";
 import { useRouter } from "next/navigation";
 import { Catalogo } from "@/types/catalogo";
 
@@ -178,16 +173,14 @@ const VerdictPageView: React.FC = () => {
       "Cancelar"
     ).then(async (confirmed) => {
       if (confirmed) {
-        await approveVerdict(id);
-        notifyInfo("Vonnis aprobado exitosamente");
+        const response = await approveVerdict(id);
 
-        await handleSendMailNotificationDebtor(id);
-        notifyInfo("Notificación enviada al deudor");
-
-        await handleSendMailNotificationCreditor(id);
-        notifyInfo("Notificación enviada al acreedor");
-
-        router.push(`/dashboard/verdicts`);
+        if (response) {
+          notifyInfo("Vonnis aprobado exitosamente");
+          router.push(`/dashboard/verdicts`);
+        } else {
+          notifyError("Error al aprobar el vonnis");
+        }
       }
     });
   };

@@ -1,15 +1,7 @@
 "use client";
 import React, { Suspense, useEffect } from "react";
-import { Container } from "@mui/material";
-import ActionToolbar from "@/components/ui/breadcrums";
 import { useRouter } from "next/navigation";
-import {
-  deleteVerdict,
-  getAllVerdicts,
-  handleSendMailNotificationDebtor,
-  handleSendMailNotificationBailiff,
-  handleSendMailNotificationCreditor,
-} from "@/app/actions/verdict";
+import { deleteVerdict, getAllVerdicts } from "@/app/actions/verdict";
 import { VerdictResponse } from "@/lib/validations/verdict";
 import {
   Box,
@@ -184,38 +176,6 @@ const VerdictsPage: React.FC = () => {
   const handleView = (verdict: VerdictResponse) => {
     router.push(`/dashboard/verdicts/${verdict.id}/view`);
     handleClose();
-  };
-
-  const handlePayments = (verdict: VerdictResponse) => {
-    router.push(`/dashboard/verdicts/${verdict.id}/payments`);
-    handleClose();
-  };
-
-  const handleSendMail = async () => {
-    AlertService.showConfirm(
-      "¿Estás seguro?",
-      "Esta acción enviará una notificación.",
-      "Sí, enviar",
-      "Cancelar"
-    ).then(async (confirmed) => {
-      if (!confirmed) {
-        return;
-      }
-
-      if (selectedVerdict?.status === "APPROVED") {
-        await handleSendMailNotificationDebtor(selectedVerdict.id);
-        notifyInfo("Notificación del deudor enviada exitosamente");
-
-        await handleSendMailNotificationCreditor(selectedVerdict.id);
-        notifyInfo("Notificación del acreedor enviada exitosamente");
-      }
-
-      if (selectedVerdict?.status === "PENDING") {
-        await handleSendMailNotificationBailiff(selectedVerdict.id);
-        notifyInfo("Notificación enviada exitosamente");
-      }
-    });
-    return;
   };
 
   const handleDelete = async (verdict: VerdictResponse) => {
@@ -552,7 +512,7 @@ const VerdictsPage: React.FC = () => {
                           if (selectedVerdict) handleEdit(selectedVerdict.id);
                           handleClose();
                         }}
-                        disabled={verdict.status !== "DRAFT"}
+                        // disabled={verdict.status !== "DRAFT"}
                       >
                         Editar
                       </MenuItem>
@@ -564,27 +524,6 @@ const VerdictsPage: React.FC = () => {
                         disabled={verdict.status !== "PENDING"}
                       >
                         Aprobar
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          if (selectedVerdict) handleSendMail();
-                          handleClose();
-                        }}
-                        disabled={
-                          verdict.status !== "APPROVED" &&
-                          verdict.status !== "PENDING"
-                        }
-                      >
-                        Reenviar Notificación
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          if (selectedVerdict) handlePayments(selectedVerdict);
-                          handleClose();
-                        }}
-                        disabled={verdict.status !== "APPROVED"}
-                      >
-                        Pagos
                       </MenuItem>
                       <MenuItem
                         onClick={() => {

@@ -12,7 +12,7 @@ interface InterestCellProps {
 const InterestCell: React.FC<InterestCellProps> = ({ control, index }) => {
   const item = useWatch({
     control,
-    name: `verdictInterest.${index}`,
+    name: `verdict_interest.${index}`,
   });
 
   const [total_interest, setTotalInterest] = useState(0);
@@ -20,7 +20,7 @@ const InterestCell: React.FC<InterestCellProps> = ({ control, index }) => {
     setValue,
     formState: { errors },
   } = useFormContext<{
-    verdictInterest: IVerdictInterestCreate[];
+    verdict_interest: IVerdictInterestCreate[];
   }>(); // ⬅️ para acceder a setValue desde context
 
   useEffect(() => {
@@ -44,8 +44,8 @@ const InterestCell: React.FC<InterestCellProps> = ({ control, index }) => {
 
       const total = details?.reduce((acc, curr) => acc + curr.interest, 0) || 0;
 
-      setValue(`verdictInterest.${index}.details`, details);
-      setValue(`verdictInterest.${index}.total_interest`, total);
+      setValue(`verdict_interest.${index}.details`, details);
+      setValue(`verdict_interest.${index}.total_interest`, total);
 
       setTotalInterest(total); // para mostrar en el campo
     };
@@ -55,15 +55,15 @@ const InterestCell: React.FC<InterestCellProps> = ({ control, index }) => {
 
   return (
     <Controller
-      name={`verdictInterest.${index}.total_interest`}
+      name={`verdict_interest.${index}.total_interest`}
       control={control}
       render={({ field }) => (
         <TextField
           {...field}
           value={total_interest.toFixed(2)}
           size="small"
-          error={!!errors.verdictInterest?.[index]?.total_interest}
-          helperText={errors.verdictInterest?.[index]?.total_interest?.message}
+          error={!!errors.verdict_interest?.[index]?.total_interest}
+          helperText={errors.verdict_interest?.[index]?.total_interest?.message}
           InputProps={{
             readOnly: true,
           }}

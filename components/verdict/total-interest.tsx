@@ -10,7 +10,7 @@ const TotalInterest: React.FC<{ control: Control<any> }> = ({ control }) => {
 
   const verdictInterest: VerdictInterestItem[] = useWatch({
     control,
-    name: "verdictInterest",
+    name: "verdict_interest",
   });
 
   const total: number =

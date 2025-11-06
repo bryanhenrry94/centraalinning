@@ -5,6 +5,6 @@ if (typeof window === "undefined") {
       startJobScheduler();
     });
   } else {
-    console.log("⚠️ Scheduler disabled in production");
+    console.log("⚠️ Scheduler disabled in development mode");
   }
 }

@@ -5,7 +5,7 @@ import { TextField } from "@mui/material";
 const TotalCell = ({ control, index }: { control: any; index: number }) => {
   const item = useWatch({
     control,
-    name: `verdictInterest.${index}`,
+    name: `verdict_interest.${index}`,
   });
 
   const [total, setTotal] = useState(0);
