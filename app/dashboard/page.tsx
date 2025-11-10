@@ -6,6 +6,7 @@ import DashboardSuperAdmin from "@/components/dashboard/superadmin/dashboard";
 import { DashboardAdmin } from "@/components/dashboard/admin/dashboard";
 import DashboardDebtor from "@/components/dashboard/debtor/dashboard";
 import { $Enums } from "@/prisma/generated/prisma";
+import { DashboardBailiff } from "@/components/dashboard/bailiff/dashboard";
 
 const CompanyHomePage = () => {
   const { isAuthenticated, isLoading, user } = useAuthSession();
@@ -26,6 +27,10 @@ const CompanyHomePage = () => {
 
   if (user?.role === $Enums.roleEnum.DEBTOR) {
     return <DashboardDebtor />;
+  }
+
+  if (user?.role === $Enums.roleEnum.BAILIFF) {
+    return <DashboardBailiff />;
   }
 
   return <div>Rol de usuario no reconocido.</div>;

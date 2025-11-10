@@ -33,6 +33,8 @@ import LastPageIcon from "@mui/icons-material/LastPage";
 import AddIcon from "@mui/icons-material/Add";
 import { formatCurrency } from "@/utils/formatters";
 import { useTenant } from "@/hooks/useTenant";
+import { useSession } from "next-auth/react";
+import { getBailiffByUserId } from "@/app/actions/bailiff";
 
 interface TablePaginationActionsProps {
   count: number;
@@ -124,6 +126,7 @@ const VerdictsPage: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const [verdicts, setVerdicts] = React.useState<VerdictResponse[]>([]);
   const { tenant } = useTenant();
+  const { data: session } = useSession();
 
   React.useEffect(() => {
     // Llamada inicial
@@ -173,11 +176,6 @@ const VerdictsPage: React.FC = () => {
     handleClose();
   };
 
-  const handleView = (verdict: VerdictResponse) => {
-    router.push(`/dashboard/verdicts/${verdict.id}/view`);
-    handleClose();
-  };
-
   const handleDelete = async (verdict: VerdictResponse) => {
     AlertService.showConfirm(
       "¿Estás seguro?",
@@ -202,6 +200,22 @@ const VerdictsPage: React.FC = () => {
     if (!tenant) return;
 
     const verdicts = await getAllVerdicts(tenant?.id);
+
+    const bailiffResponse = await getBailiffByUserId(session?.user?.id || "");
+
+    const bailiffId =
+      bailiffResponse.success && bailiffResponse.data
+        ? bailiffResponse.data.id
+        : "";
+
+    if (session?.user?.role === "BAILIFF") {
+      const filteredVerdicts = verdicts.filter(
+        (verdict) => verdict.bailiff_id === bailiffId
+      );
+      setVerdicts(filteredVerdicts);
+      return;
+    }
+
     setVerdicts(verdicts);
   };
 
@@ -515,15 +529,6 @@ const VerdictsPage: React.FC = () => {
                         // disabled={verdict.status !== "DRAFT"}
                       >
                         Editar
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          if (selectedVerdict) handleView(selectedVerdict);
-                          handleClose();
-                        }}
-                        disabled={verdict.status !== "PENDING"}
-                      >
-                        Aprobar
                       </MenuItem>
                       <MenuItem
                         onClick={() => {

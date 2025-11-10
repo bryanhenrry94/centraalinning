@@ -60,7 +60,7 @@ export const VerdictSchema = VerdictBaseSchema.superRefine((data, ctx) => {});
 
 export const VerdictCreateSchema = VerdictBaseSchema.omit({
   id: true,
-  status: true,
+  // status: true,
   created_at: true,
   updated_at: true,
 });

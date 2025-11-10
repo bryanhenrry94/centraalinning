@@ -203,13 +203,14 @@ model VerdictEmbargo {
 }
 
 model VerdictBailiffServices {
-  id           String   @id @default(uuid())
-  verdict_id   String
-  service_type String
-  service_cost Float
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
-  verdict      Verdict  @relation(fields: [verdict_id], references: [id])
+  id                     String   @id @default(uuid())
+  verdict_id             String
+  service_invoice_number String
+  service_type           String
+  service_cost           Float
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
+  verdict                Verdict  @relation(fields: [verdict_id], references: [id])
 
   @@map("verdict_bailiff_services")
 }
@@ -475,7 +476,7 @@ model CollectionCaseAgreement {
   created_at         DateTime        @default(now())
   updated_at         DateTime        @updatedAt
 
-  // Relaciones
+  //                 Relaciones
   debtor          Debtor?                              @relation(fields: [debtor_id], references: [id])
   collection_case CollectionCase                       @relation(fields: [collection_case_id], references: [id])
   installments    CollectionCaseAgreementInstallment[]
@@ -495,7 +496,7 @@ model CollectionCaseAgreementInstallment {
   created_at   DateTime          @default(now())
   updated_at   DateTime          @updatedAt
 
-  // Relaciones
+  //                                                                      Relaciones
   agreement CollectionCaseAgreement @relation(fields: [agreement_id], references: [id])
   payment   CollectionCasePayment?  @relation(fields: [payment_id], references: [id])
 

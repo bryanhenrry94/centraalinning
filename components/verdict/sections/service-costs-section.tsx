@@ -66,12 +66,27 @@ const ServiceCostsSection: React.FC<ServiceCostsSectionProps> = ({
   }> = ({ item, index }) => {
     return (
       <TableRow key={item.id}>
-        <TableCell>
-          <TextField
-            value={item.service_type}
-            size="small"
-            fullWidth
-            disabled
+        {/* service_invoice_number */}
+        <TableCell sx={{ textAlign: "center" }}>
+          <Controller
+            name={`bailiff_services.${index}.service_invoice_number`}
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                size="small"
+                fullWidth
+                type="text"
+                placeholder="Voorbeeld: INV-12345"
+                error={
+                  !!errors.bailiff_services?.[index]?.service_invoice_number
+                }
+                helperText={
+                  errors.bailiff_services?.[index]?.service_invoice_number
+                    ?.message
+                }
+              />
+            )}
           />
         </TableCell>
         {/* service_type */}
@@ -172,7 +187,7 @@ const ServiceCostsSection: React.FC<ServiceCostsSectionProps> = ({
         </Box>
       </Box>
       <Box sx={{ p: 2 }}>
-        <Grid container spacing={2} sx={{ mt: 1, mb: 1 }}>
+        {/* <Grid container spacing={2} sx={{ mt: 1, mb: 1 }}>
           <Grid size={{ xs: 6, sm: 4, md: 4 }}>
             <Box sx={{ display: "flex", flexDirection: "row" }}>
               <Controller
@@ -212,12 +227,11 @@ const ServiceCostsSection: React.FC<ServiceCostsSectionProps> = ({
                 )}
               />
               <IconButton aria-label="toggle password visibility" edge="end">
-                {/* <FaUserEdit onClick={onOpenModalDebtor} /> */}
                 <PersonAddIcon onClick={handleOpenModalBailiff} />
               </IconButton>
             </Box>
           </Grid>
-        </Grid>
+        </Grid> */}
 
         <TableContainer component={Paper}>
           <Table
@@ -293,6 +307,7 @@ const ServiceCostsSection: React.FC<ServiceCostsSectionProps> = ({
                     onClick={() =>
                       append({
                         id: Date.now().toString(),
+                        service_invoice_number: "",
                         verdict_id: "",
                         service_type: "",
                         service_cost: 0,

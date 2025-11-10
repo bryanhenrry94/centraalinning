@@ -14100,6 +14100,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesMinAggregateOutputType = {
     id: string | null
     verdict_id: string | null
+    service_invoice_number: string | null
     service_type: string | null
     service_cost: number | null
     created_at: Date | null
@@ -14109,6 +14110,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesMaxAggregateOutputType = {
     id: string | null
     verdict_id: string | null
+    service_invoice_number: string | null
     service_type: string | null
     service_cost: number | null
     created_at: Date | null
@@ -14118,6 +14120,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesCountAggregateOutputType = {
     id: number
     verdict_id: number
+    service_invoice_number: number
     service_type: number
     service_cost: number
     created_at: number
@@ -14137,6 +14140,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesMinAggregateInputType = {
     id?: true
     verdict_id?: true
+    service_invoice_number?: true
     service_type?: true
     service_cost?: true
     created_at?: true
@@ -14146,6 +14150,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesMaxAggregateInputType = {
     id?: true
     verdict_id?: true
+    service_invoice_number?: true
     service_type?: true
     service_cost?: true
     created_at?: true
@@ -14155,6 +14160,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesCountAggregateInputType = {
     id?: true
     verdict_id?: true
+    service_invoice_number?: true
     service_type?: true
     service_cost?: true
     created_at?: true
@@ -14251,6 +14257,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesGroupByOutputType = {
     id: string
     verdict_id: string
+    service_invoice_number: string
     service_type: string
     service_cost: number
     created_at: Date
@@ -14279,6 +14286,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     verdict_id?: boolean
+    service_invoice_number?: boolean
     service_type?: boolean
     service_cost?: boolean
     created_at?: boolean
@@ -14289,6 +14297,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     verdict_id?: boolean
+    service_invoice_number?: boolean
     service_type?: boolean
     service_cost?: boolean
     created_at?: boolean
@@ -14299,6 +14308,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     verdict_id?: boolean
+    service_invoice_number?: boolean
     service_type?: boolean
     service_cost?: boolean
     created_at?: boolean
@@ -14309,13 +14319,14 @@ export namespace Prisma {
   export type VerdictBailiffServicesSelectScalar = {
     id?: boolean
     verdict_id?: boolean
+    service_invoice_number?: boolean
     service_type?: boolean
     service_cost?: boolean
     created_at?: boolean
     updated_at?: boolean
   }
 
-  export type VerdictBailiffServicesOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "verdict_id" | "service_type" | "service_cost" | "created_at" | "updated_at", ExtArgs["result"]["verdictBailiffServices"]>
+  export type VerdictBailiffServicesOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "verdict_id" | "service_invoice_number" | "service_type" | "service_cost" | "created_at" | "updated_at", ExtArgs["result"]["verdictBailiffServices"]>
   export type VerdictBailiffServicesInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     verdict?: boolean | VerdictDefaultArgs<ExtArgs>
   }
@@ -14334,6 +14345,7 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       verdict_id: string
+      service_invoice_number: string
       service_type: string
       service_cost: number
       created_at: Date
@@ -14764,6 +14776,7 @@ export namespace Prisma {
   interface VerdictBailiffServicesFieldRefs {
     readonly id: FieldRef<"VerdictBailiffServices", 'String'>
     readonly verdict_id: FieldRef<"VerdictBailiffServices", 'String'>
+    readonly service_invoice_number: FieldRef<"VerdictBailiffServices", 'String'>
     readonly service_type: FieldRef<"VerdictBailiffServices", 'String'>
     readonly service_cost: FieldRef<"VerdictBailiffServices", 'Float'>
     readonly created_at: FieldRef<"VerdictBailiffServices", 'DateTime'>
@@ -35374,6 +35387,7 @@ export namespace Prisma {
   export const VerdictBailiffServicesScalarFieldEnum: {
     id: 'id',
     verdict_id: 'verdict_id',
+    service_invoice_number: 'service_invoice_number',
     service_type: 'service_type',
     service_cost: 'service_cost',
     created_at: 'created_at',
@@ -36784,6 +36798,7 @@ export namespace Prisma {
     NOT?: VerdictBailiffServicesWhereInput | VerdictBailiffServicesWhereInput[]
     id?: StringFilter<"VerdictBailiffServices"> | string
     verdict_id?: StringFilter<"VerdictBailiffServices"> | string
+    service_invoice_number?: StringFilter<"VerdictBailiffServices"> | string
     service_type?: StringFilter<"VerdictBailiffServices"> | string
     service_cost?: FloatFilter<"VerdictBailiffServices"> | number
     created_at?: DateTimeFilter<"VerdictBailiffServices"> | Date | string
@@ -36794,6 +36809,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesOrderByWithRelationInput = {
     id?: SortOrder
     verdict_id?: SortOrder
+    service_invoice_number?: SortOrder
     service_type?: SortOrder
     service_cost?: SortOrder
     created_at?: SortOrder
@@ -36807,6 +36823,7 @@ export namespace Prisma {
     OR?: VerdictBailiffServicesWhereInput[]
     NOT?: VerdictBailiffServicesWhereInput | VerdictBailiffServicesWhereInput[]
     verdict_id?: StringFilter<"VerdictBailiffServices"> | string
+    service_invoice_number?: StringFilter<"VerdictBailiffServices"> | string
     service_type?: StringFilter<"VerdictBailiffServices"> | string
     service_cost?: FloatFilter<"VerdictBailiffServices"> | number
     created_at?: DateTimeFilter<"VerdictBailiffServices"> | Date | string
@@ -36817,6 +36834,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesOrderByWithAggregationInput = {
     id?: SortOrder
     verdict_id?: SortOrder
+    service_invoice_number?: SortOrder
     service_type?: SortOrder
     service_cost?: SortOrder
     created_at?: SortOrder
@@ -36834,6 +36852,7 @@ export namespace Prisma {
     NOT?: VerdictBailiffServicesScalarWhereWithAggregatesInput | VerdictBailiffServicesScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"VerdictBailiffServices"> | string
     verdict_id?: StringWithAggregatesFilter<"VerdictBailiffServices"> | string
+    service_invoice_number?: StringWithAggregatesFilter<"VerdictBailiffServices"> | string
     service_type?: StringWithAggregatesFilter<"VerdictBailiffServices"> | string
     service_cost?: FloatWithAggregatesFilter<"VerdictBailiffServices"> | number
     created_at?: DateTimeWithAggregatesFilter<"VerdictBailiffServices"> | Date | string
@@ -39246,6 +39265,7 @@ export namespace Prisma {
 
   export type VerdictBailiffServicesCreateInput = {
     id?: string
+    service_invoice_number: string
     service_type: string
     service_cost: number
     created_at?: Date | string
@@ -39256,6 +39276,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesUncheckedCreateInput = {
     id?: string
     verdict_id: string
+    service_invoice_number: string
     service_type: string
     service_cost: number
     created_at?: Date | string
@@ -39264,6 +39285,7 @@ export namespace Prisma {
 
   export type VerdictBailiffServicesUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    service_invoice_number?: StringFieldUpdateOperationsInput | string
     service_type?: StringFieldUpdateOperationsInput | string
     service_cost?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -39274,6 +39296,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     verdict_id?: StringFieldUpdateOperationsInput | string
+    service_invoice_number?: StringFieldUpdateOperationsInput | string
     service_type?: StringFieldUpdateOperationsInput | string
     service_cost?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -39283,6 +39306,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesCreateManyInput = {
     id?: string
     verdict_id: string
+    service_invoice_number: string
     service_type: string
     service_cost: number
     created_at?: Date | string
@@ -39291,6 +39315,7 @@ export namespace Prisma {
 
   export type VerdictBailiffServicesUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    service_invoice_number?: StringFieldUpdateOperationsInput | string
     service_type?: StringFieldUpdateOperationsInput | string
     service_cost?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -39300,6 +39325,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     verdict_id?: StringFieldUpdateOperationsInput | string
+    service_invoice_number?: StringFieldUpdateOperationsInput | string
     service_type?: StringFieldUpdateOperationsInput | string
     service_cost?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -41752,6 +41778,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesCountOrderByAggregateInput = {
     id?: SortOrder
     verdict_id?: SortOrder
+    service_invoice_number?: SortOrder
     service_type?: SortOrder
     service_cost?: SortOrder
     created_at?: SortOrder
@@ -41765,6 +41792,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesMaxOrderByAggregateInput = {
     id?: SortOrder
     verdict_id?: SortOrder
+    service_invoice_number?: SortOrder
     service_type?: SortOrder
     service_cost?: SortOrder
     created_at?: SortOrder
@@ -41774,6 +41802,7 @@ export namespace Prisma {
   export type VerdictBailiffServicesMinOrderByAggregateInput = {
     id?: SortOrder
     verdict_id?: SortOrder
+    service_invoice_number?: SortOrder
     service_type?: SortOrder
     service_cost?: SortOrder
     created_at?: SortOrder
@@ -46625,6 +46654,7 @@ export namespace Prisma {
 
   export type VerdictBailiffServicesCreateWithoutVerdictInput = {
     id?: string
+    service_invoice_number: string
     service_type: string
     service_cost: number
     created_at?: Date | string
@@ -46633,6 +46663,7 @@ export namespace Prisma {
 
   export type VerdictBailiffServicesUncheckedCreateWithoutVerdictInput = {
     id?: string
+    service_invoice_number: string
     service_type: string
     service_cost: number
     created_at?: Date | string
@@ -46925,6 +46956,7 @@ export namespace Prisma {
     NOT?: VerdictBailiffServicesScalarWhereInput | VerdictBailiffServicesScalarWhereInput[]
     id?: StringFilter<"VerdictBailiffServices"> | string
     verdict_id?: StringFilter<"VerdictBailiffServices"> | string
+    service_invoice_number?: StringFilter<"VerdictBailiffServices"> | string
     service_type?: StringFilter<"VerdictBailiffServices"> | string
     service_cost?: FloatFilter<"VerdictBailiffServices"> | number
     created_at?: DateTimeFilter<"VerdictBailiffServices"> | Date | string
@@ -51596,6 +51628,7 @@ export namespace Prisma {
 
   export type VerdictBailiffServicesCreateManyVerdictInput = {
     id?: string
+    service_invoice_number: string
     service_type: string
     service_cost: number
     created_at?: Date | string
@@ -51657,6 +51690,7 @@ export namespace Prisma {
 
   export type VerdictBailiffServicesUpdateWithoutVerdictInput = {
     id?: StringFieldUpdateOperationsInput | string
+    service_invoice_number?: StringFieldUpdateOperationsInput | string
     service_type?: StringFieldUpdateOperationsInput | string
     service_cost?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -51665,6 +51699,7 @@ export namespace Prisma {
 
   export type VerdictBailiffServicesUncheckedUpdateWithoutVerdictInput = {
     id?: StringFieldUpdateOperationsInput | string
+    service_invoice_number?: StringFieldUpdateOperationsInput | string
     service_type?: StringFieldUpdateOperationsInput | string
     service_cost?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -51673,6 +51708,7 @@ export namespace Prisma {
 
   export type VerdictBailiffServicesUncheckedUpdateManyWithoutVerdictInput = {
     id?: StringFieldUpdateOperationsInput | string
+    service_invoice_number?: StringFieldUpdateOperationsInput | string
     service_type?: StringFieldUpdateOperationsInput | string
     service_cost?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string

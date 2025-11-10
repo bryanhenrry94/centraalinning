@@ -314,10 +314,6 @@ const AttachmentSection: React.FC = () => {
           <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
             BESLAG
           </Typography>
-
-          <Box sx={{ mr: 2 }}>
-            <TotalInterest control={control} />
-          </Box>
         </Box>
       </Box>
       <Box sx={{ p: 2 }}>

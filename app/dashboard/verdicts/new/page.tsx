@@ -3,9 +3,10 @@ import React from "react";
 import VerdictFormPage from "@/components/verdict/verdict-form";
 import { VerdictProvider } from "@/contexts/verdictContext";
 import { Box } from "@mui/material";
+import { VerdictCreate } from "@/lib/validations/verdict";
 
 const VerdictPage: React.FC = () => {
-  const defaultValues = {
+  const defaultValues: VerdictCreate = {
     invoice_number: "",
     creditor_name: "",
     debtor_id: "",
@@ -17,6 +18,7 @@ const VerdictPage: React.FC = () => {
     verdict_interest: [],
     verdict_embargo: [],
     bailiff_services: [],
+    status: "DRAFT",
   };
 
   return (

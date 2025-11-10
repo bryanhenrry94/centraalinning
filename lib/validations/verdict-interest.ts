@@ -13,8 +13,12 @@ export const VerdictInterestBaseSchema = z.object({
       z.number()
     )
     .optional(),
-  calculation_start: z.date(),
-  calculation_end: z.date(),
+  calculation_start: z.coerce.date({
+    message: "La fecha de inicio de cálculo debe ser una fecha válida",
+  }),
+  calculation_end: z.coerce.date({
+    message: "La fecha de fin de cálculo debe ser una fecha válida",
+  }),
   total_interest: z.number(),
   details: z.array(VerdictInterestDetailCreateSchema),
 });

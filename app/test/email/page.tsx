@@ -5,15 +5,17 @@ import {
   SommatieEmail,
   WelcomeEmail,
 } from "@/templates/emails";
+import VerdictDebtorMail from "@/templates/emails/VerdictDebtorMail";
+import VerdictRegisterEmail from "@/templates/emails/VerdictRegisterMail";
 import { render } from "@react-email/render";
 
 export default async function Page() {
-  const params = {
-    logoUrl: "/static/logo.png",
-    fullname: "Bryan Navarrete",
-    appUrl: process.env.NEXT_PUBLIC_APP_URL || "https://www.centraalinning.com",
-  };
-  const html = await render(<WelcomeEmail {...params} />);
+  // const params = {
+  //   logoUrl: "/static/logo.png",
+  //   fullname: "Bryan Navarrete",
+  //   appUrl: process.env.NEXT_PUBLIC_APP_URL || "https://www.centraalinning.com",
+  // };
+  // const html = await render(<WelcomeEmail {...params} />);
 
   // const params = {
   //   logoUrl: "/static/logo.png",
@@ -33,12 +35,27 @@ export default async function Page() {
   // };
   // const html = await render(<IngebrekestellingEmail {...params} />);
 
+  const params = {
+    logoUrl: "/static/logo.png",
+    fullname: "Bryan Navarrete",
+    paymentLink: "https://example.com/pay-invoice/12345",
+  };
+  const html = await render(<InvoiceEmail {...params} />);
+
   // const params = {
-  //   logoUrl: "/static/logo.png",
-  //   fullname: "Bryan Navarrete",
-  //   paymentLink: "https://example.com/pay-invoice/12345",
+  //   logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "/static/logo.png",
+  //   link: process.env.NEXT_PUBLIC_APP_URL || "https://www.centraalinning.com",
+  //   datumVonnis: "01-01-2024",
+  //   vonnisNummer: "1234567890",
   // };
-  // const html = await render(<InvoiceEmail {...params} />);
+  // const html = await render(<VerdictDebtorMail {...params} />);
+
+  // const params = {
+  //   logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "/static/logo.png",
+  //   verdictReference: "1234567890",
+  //   verdictDate: "01-01-2024",
+  // };
+  // const html = await render(<VerdictRegisterEmail {...params} />);
 
   return <div dangerouslySetInnerHTML={{ __html: html }} />;
 }

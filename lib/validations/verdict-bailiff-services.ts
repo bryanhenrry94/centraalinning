@@ -3,6 +3,7 @@ import { z } from "zod";
 export const VerdictBailiffServicesSchema = z.object({
   id: z.string().uuid(),
   verdict_id: z.string().uuid(),
+  service_invoice_number: z.string(),
   service_type: z.string(),
   service_cost: z.preprocess(
     (val) => (typeof val === "string" ? Number(val) : val),

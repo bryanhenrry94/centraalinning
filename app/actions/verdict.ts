@@ -16,6 +16,8 @@ import { formatCurrency, formatDate } from "@/utils/formatters";
 import { VerdictAttachment } from "@/lib/validations/verdict-attachments";
 import { $Enums } from "@/prisma/generated/prisma";
 import {
+  sendInvoiceEmail,
+  sendMailRegisterVerdict,
   sendMailVerdictCreditor,
   sendMailVerdictDebtor,
   sendVerdictApprovalEmail,
@@ -262,6 +264,15 @@ export const createVerdict = async (
           });
         }
       }
+
+      const params = {
+        to: data.creditor_name,
+        verdictReference: newVerdict.registration_number,
+        verdictDate: formatDate(newVerdict.sentence_date.toISOString()),
+      };
+
+      // notify register verdict via email
+      await sendMailRegisterVerdict(params);
 
       return newVerdict;
     });
@@ -686,14 +697,17 @@ export const approveVerdict = async (id: string): Promise<boolean> => {
     // Generar número de factura único
     const invoice_number = await generateInvoiceNumber();
 
-    const amount = 90; // Monto fijo por ahora
+    const cost_service = 40; // costo fijo de servicio, traer del parametro
+    const base_amount = VerdictUpdated.sentence_amount * 0.1;
+
+    const amount = base_amount + cost_service; // Monto fijo por ahora
     const tax_rate = parameter.abb_rate; // 6% de IVA
-    const tax_amount = amount * tax_rate;
+    const tax_amount = (amount * tax_rate) / 100;
     const total_with_tax = amount + tax_amount;
 
     const details: BillingInvoiceDetailCreate[] = [
       {
-        item_description: `Servicekosten`,
+        item_description: `Registratiekosten vonnis ${VerdictUpdated.registration_number}`,
         item_quantity: 1,
         item_unit_price: amount,
         item_total_price: amount,
@@ -741,63 +755,69 @@ export const approveVerdict = async (id: string): Promise<boolean> => {
       return false;
     }
 
-    const verdictCreditorData: VerdictCreditorPDFProps = {
-      logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
-      invoice_number: invoiceCreated.invoice_number,
-      creditor_name: debtor.tenant?.name || "Creditor",
-      debtorName: debtor.fullname || "Debtor",
-      date: invoiceCreated.issue_date
-        ? formatDate(invoiceCreated.issue_date.toString())
-        : formatDate(new Date().toISOString()),
-      total_amount: formatCurrency(invoiceCreated.amount),
-      reference_number: VerdictUpdated.registration_number || "Reference",
-    };
+    // const verdictCreditorData: VerdictCreditorPDFProps = {
+    //   logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
+    //   invoice_number: invoiceCreated.invoice_number,
+    //   creditor_name: debtor.tenant?.name || "Creditor",
+    //   debtorName: debtor.fullname || "Debtor",
+    //   date: invoiceCreated.issue_date
+    //     ? formatDate(invoiceCreated.issue_date.toString())
+    //     : formatDate(new Date().toISOString()),
+    //   total_amount: formatCurrency(invoiceCreated.amount),
+    //   reference_number: VerdictUpdated.registration_number || "Reference",
+    // };
 
-    const verdictDebtorData: VerdictDebtorPDFProps = {
-      logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
-      debtorName: debtor.fullname || "Debtor",
-      reference: VerdictUpdated.registration_number || "Reference",
-      sentence_date: formatDate(
-        VerdictUpdated.sentence_date
-          ? VerdictUpdated.sentence_date.toISOString()
-          : new Date().toISOString()
-      ),
-      sentence_amount: VerdictUpdated.sentence_amount
-        ? VerdictUpdated.sentence_amount.toFixed(2)
-        : "0.00",
-      bankAccountNumber: parameter.bank_account,
-      date: formatDate(new Date().toISOString()),
-    };
+    // const verdictDebtorData: VerdictDebtorPDFProps = {
+    //   logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
+    //   debtorName: debtor.fullname || "Debtor",
+    //   reference: VerdictUpdated.registration_number || "Reference",
+    //   sentence_date: formatDate(
+    //     VerdictUpdated.sentence_date
+    //       ? VerdictUpdated.sentence_date.toISOString()
+    //       : new Date().toISOString()
+    //   ),
+    //   sentence_amount: VerdictUpdated.sentence_amount
+    //     ? VerdictUpdated.sentence_amount.toFixed(2)
+    //     : "0.00",
+    //   bankAccountNumber: parameter.bank_account,
+    //   date: formatDate(new Date().toISOString()),
+    // };
 
     // Datos de ejemplo para el PDF de la factura
-    const invoiceData: InvoicePDFProps = {
-      logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
-      invoice_number: invoiceCreated.invoice_number,
-      issue_date: formatDate(invoiceCreated.issue_date.toString()),
-      customer_name: debtor.fullname,
-      customer_address: debtor.address || "",
-      customer_island: debtor.tenant?.country_code || "",
-      details: [
-        {
-          item_description: "Servicekosten",
-          item_quantity: 1,
-          item_unit_price: amount,
-          item_tax_rate: tax_rate,
-          item_subtotal: total_with_tax,
-        },
-      ],
-      total: total_with_tax,
-      bank_name: parameter.bank_name,
-      bank_account: parameter.bank_account,
-    };
+    // const invoiceData: InvoicePDFProps = {
+    //   logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
+    //   invoice_number: invoiceCreated.invoice_number,
+    //   issue_date: formatDate(invoiceCreated.issue_date.toString()),
+    //   customer_name: debtor.fullname,
+    //   customer_address: debtor.address || "",
+    //   customer_island: debtor.tenant?.country_code || "",
+    //   details: [
+    //     {
+    //       item_description: "Servicekosten",
+    //       item_quantity: 1,
+    //       item_unit_price: amount,
+    //       item_tax_rate: tax_rate,
+    //       item_subtotal: total_with_tax,
+    //     },
+    //   ],
+    //   total: total_with_tax,
+    //   bank_name: parameter.bank_name,
+    //   bank_account: parameter.bank_account,
+    // };
+
+    // Si no viene de sistema se debe cobrar el 10% de servicio.
+    await sendInvoiceEmail(
+      debtor.tenant?.contact_email || "",
+      invoiceCreated.id
+    );
 
     // Enviar notificación al acreedor y deudor
-    await sendMailVerdictCreditor(
-      tenant.contact_email,
-      verdictCreditorData,
-      invoiceData
-    );
-    await sendMailVerdictDebtor(debtor.email, verdictDebtorData);
+    // await sendMailVerdictCreditor(
+    //   tenant.contact_email,
+    //   verdictCreditorData,
+    //   invoiceData
+    // );
+    // await sendMailVerdictDebtor(debtor.email, verdictDebtorData);
 
     return VerdictUpdated ? true : false;
   } catch (error) {

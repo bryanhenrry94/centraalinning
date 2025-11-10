@@ -262,6 +262,7 @@ exports.Prisma.VerdictEmbargoScalarFieldEnum = {
 exports.Prisma.VerdictBailiffServicesScalarFieldEnum = {
   id: 'id',
   verdict_id: 'verdict_id',
+  service_invoice_number: 'service_invoice_number',
   service_type: 'service_type',
   service_cost: 'service_cost',
   created_at: 'created_at',

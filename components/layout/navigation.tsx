@@ -27,6 +27,7 @@ const menus: MenuItem[] = [
       $Enums.roleEnum.TENANT_ADMIN,
       $Enums.roleEnum.PLATFORM_OWNER,
       $Enums.roleEnum.DEBTOR,
+      $Enums.roleEnum.BAILIFF,
     ],
   },
   {
@@ -39,7 +40,7 @@ const menus: MenuItem[] = [
     label: "Gerechtelijk Vonnis",
     href: "/dashboard/verdicts",
     icon: <GavelIcon fontSize="small" />,
-    role: [$Enums.roleEnum.TENANT_ADMIN],
+    role: [$Enums.roleEnum.TENANT_ADMIN, $Enums.roleEnum.BAILIFF],
   },
   {
     label: "Betalingsregeling",
@@ -98,7 +99,7 @@ const Navigation = ({ role }: { role: string }) => {
               px: 1,
               py: 0.5,
               fontSize: "0.9rem",
-              maxWidth: 140,
+              maxWidth: 200,
               width: "100%",
               textAlign: "center",
               display: "flex",

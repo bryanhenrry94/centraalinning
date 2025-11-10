@@ -5,37 +5,35 @@ import {
   Html,
   Img,
   Text,
-  Link,
 } from "@react-email/components";
 
-interface VerdictDebtorMailProps {
+interface VerdictRegisterEmailProps {
   logoUrl: string;
-  link: string;
-  datumVonnis: string;
-  vonnisNummer: string;
+  verdictReference: string;
+  verdictDate: string;
 }
 
-export const VerdictDebtorMail = ({
+export const VerdictRegisterEmail = ({
   logoUrl,
-  link,
-  datumVonnis,
-  vonnisNummer,
-}: VerdictDebtorMailProps) => (
+  verdictReference,
+  verdictDate,
+}: VerdictRegisterEmailProps) => (
   <Html>
     <Head />
     <Body style={main}>
       <Container style={container}>
         <Img src={logoUrl} width="120" height="50" alt="Plaid" style={logo} />
-        <Text style={paragraph}>Waarschuwing vóór loonbeslag</Text>
+        <Text style={paragraph}>Bedankt voor uw registratie.</Text>
         <Text style={paragraph}>
-          Er is een gerechtelijk vonnis tegen u geregistreerd (vonnisnummer
-          {" "}{vonnisNummer}, uitspraakdatum {datumVonnis}). Dit vonnis is bevestigd
-          door de gerechtsdeurwaarder voor centrale uitvoering. U wordt verzocht
-          per direct actie te ondernemen om verdere maatregelen te voorkomen.
+          Hierbij ontvangt u de bevestiging van de registratie van uw vonnis (
+          {verdictReference} - Datum uitspraak-verdicto {verdictDate}).
         </Text>
         <Text style={paragraph}>
-          Om direct te betalen, klikt u op de onderstaande link of logt u in op{" "}
-          <Link href={link}>www.centraalinning.com</Link>
+          Na controle en bevestiging door de deurwaarder ontvangt u van ons een
+          factuur voor de uitvoering hiervan.
+        </Text>
+        <Text style={paragraph}>
+          Met vriendelijke groet, Centraal Inning (CI)
         </Text>
         <Text style={footer}>
           Dit bericht is automatisch gegenereerd door het Centraal
@@ -47,15 +45,13 @@ export const VerdictDebtorMail = ({
   </Html>
 );
 
-VerdictDebtorMail.PreviewProps = {
-  logoUrl:
-    "https://www.centraalinning.com/wp-content/uploads/2020/06/CI-Logo-Orange.png",
-  link: "https://www.centraalinning.com",
-  datumVonnis: "01-01-2024",
-  vonnisNummer: "1234567890",
-} as VerdictDebtorMailProps;
+VerdictRegisterEmail.PreviewProps = {
+  logoUrl: "/static/logo.png",
+  verdictReference: "1234567890",
+  verdictDate: "01-01-2024",
+} as VerdictRegisterEmailProps;
 
-export default VerdictDebtorMail;
+export default VerdictRegisterEmail;
 
 const main = {
   backgroundColor: "#ffffff",
@@ -88,9 +84,10 @@ const paragraph = {
   letterSpacing: "0",
   lineHeight: "23px",
   padding: "0 40px",
+  margin: "0",
+  textAlign: "justify" as const,
   marginTop: "10px",
   marginBottom: "10px",
-  textAlign: "justify" as const,
 };
 
 const footer = {

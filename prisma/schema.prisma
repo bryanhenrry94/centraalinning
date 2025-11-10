@@ -10,10 +10,10 @@ datasource db {
 }
 
 model Tenant {
-  id                  String  @id @default(uuid())
+  id                  String                     @id @default(uuid())
   name                String
-  code                String  @unique
-  subdomain           String  @unique
+  code                String                     @unique
+  subdomain           String                     @unique
   contact_email       String
   country_code        String
   kvk                 String?
@@ -24,36 +24,36 @@ model Tenant {
   number_of_employees Int?
   phone               String?
   website             String?
-  terms_accepted      Boolean @default(false)
-  is_active           Boolean @default(false)
+  terms_accepted      Boolean                    @default(false)
+  is_active           Boolean                    @default(false)
 
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  created_at          DateTime                   @default(now())
+  updated_at          DateTime                   @updatedAt
 
-  billing_invoice  BillingInvoice[]
-  collection_cases CollectionCase[]
-  debtors          Debtor[]
-  bailiffs         Bailiff[]
-  verdicts         Verdict[]
-  users            User[]
-  chat_rooms       ChatRoom[]
-  agreements       CollectionCaseAgreement[]
-  invitations      TenantInvitation[]
+  billing_invoice     BillingInvoice[]
+  collection_cases    CollectionCase[]
+  debtors             Debtor[]
+  bailiffs            Bailiff[]
+  verdicts            Verdict[]
+  users               User[]
+  chat_rooms          ChatRoom[]
+  agreements          CollectionCaseAgreement[]
+  invitations         TenantInvitation[]
 
   @@map("tenant")
 }
 
 model TenantInvitation {
-  id         String    @id @default(uuid())
+  id         String     @id @default(uuid())
   tenant_id  String
   email      String
   fullname   String?
-  token      String    @unique
-  role       roleEnum  @default(DEBTOR)
+  token      String     @unique
+  role       roleEnum   @default(DEBTOR)
   debtor_id  String?
-  created_at DateTime  @default(now())
+  created_at DateTime   @default(now())
   expires_at DateTime
-  used       Boolean   @default(false)
+  used       Boolean    @default(false)
   used_at    DateTime?
   tenant     Tenant    @relation(fields: [tenant_id], references: [id])
 
@@ -63,17 +63,17 @@ model TenantInvitation {
 }
 
 model User {
-  id            String        @id @default(uuid())
-  email         String        @db.VarChar(80)
-  password_hash String?       @db.VarChar(120)
-  fullname      String?       @db.VarChar(80)
-  phone         String?       @db.VarChar(25)
+  id            String         @id @default(uuid())
+  email         String         @db.VarChar(80)
+  password_hash String?        @db.VarChar(120)
+  fullname      String?        @db.VarChar(80)
+  phone         String?        @db.VarChar(25)
   tenant_id     String
   tenant        Tenant        @relation(fields: [tenant_id], references: [id])
-  role          roleEnum      @default(TENANT_ADMIN)
-  is_active     Boolean       @default(true)
-  created_at    DateTime      @default(now())
-  updated_at    DateTime      @updatedAt
+  role          roleEnum       @default(TENANT_ADMIN)
+  is_active     Boolean        @default(true)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
   debtors       Debtor[]
   bailiffs      Bailiff[]
   messages      ChatMessage[]
@@ -82,58 +82,58 @@ model User {
 }
 
 model Parameter {
-  id String @id @default(uuid())
+  id                             String    @id @default(uuid())
 
-  collection_fee_rate Float @default(0)
-  abb_rate            Float @default(0)
+  collection_fee_rate            Float     @default(0)
+  abb_rate                       Float     @default(0)
 
-  company_aanmaning_term_days  Int @default(0)
-  consumer_aanmaning_term_days Int @default(0)
-  company_sommatie_term_days   Int @default(0)
-  consumer_sommatie_term_days  Int @default(0)
+  company_aanmaning_term_days    Int       @default(0)
+  consumer_aanmaning_term_days   Int       @default(0)
+  company_sommatie_term_days     Int       @default(0)
+  consumer_sommatie_term_days    Int       @default(0)
 
-  small_company_price            Float @default(0)
-  small_company_pfc_contribution Float @default(0)
-  large_company_price            Float @default(0)
-  large_company_pfc_contribution Float @default(0)
+  small_company_price            Float     @default(0)
+  small_company_pfc_contribution Float     @default(0)
+  large_company_price            Float     @default(0)
+  large_company_pfc_contribution Float     @default(0)
 
-  company_aanmaning_penalty Float @default(0)
-  natural_aanmaning_penalty Float @default(0)
-  company_sommatie_penalty  Float @default(0)
-  natural_sommatie_penalty  Float @default(0)
+  company_aanmaning_penalty      Float     @default(0)
+  natural_aanmaning_penalty      Float     @default(0)
+  company_sommatie_penalty       Float     @default(0)
+  natural_sommatie_penalty       Float     @default(0)
 
-  company_reaction_limit_days Int   @default(0)
-  company_no_reaction_penalty Float @default(0)
-  natural_no_reaction_penalty Float @default(0)
+  company_reaction_limit_days    Int       @default(0)
+  company_no_reaction_penalty    Float     @default(0)
+  natural_no_reaction_penalty    Float     @default(0)
 
-  company_payment_agreement_fee Float @default(0)
-  natural_payment_agreement_fee Float @default(0)
+  company_payment_agreement_fee  Float     @default(0)
+  natural_payment_agreement_fee  Float     @default(0)
 
-  invoice_number_length Int    @default(8)
-  invoice_prefix        String @default("")
-  invoice_sequence      Int    @default(0)
+  invoice_number_length          Int       @default(8)
+  invoice_prefix                 String    @default("")
+  invoice_sequence               Int       @default(0)
 
-  bank_account String @default("")
-  bank_name    String @default("")
+  bank_account                   String    @default("")
+  bank_name                      String    @default("")
 
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  created_at                     DateTime  @default(now())
+  updated_at                     DateTime  @updatedAt
 
   @@map("parameter")
 }
 
 model Verdict {
-  id                  String                   @id @default(uuid())
-  invoice_number      String                   @db.VarChar(100)
-  creditor_name       String                   @db.VarChar(100)
+  id                  String                    @id @default(uuid())
+  invoice_number      String                    @db.VarChar(100)
+  creditor_name       String                    @db.VarChar(100)
   debtor_id           String
-  registration_number String                   @db.VarChar(100)
+  registration_number String                    @db.VarChar(100)
   sentence_amount     Float
   sentence_date       DateTime
-  status              VerdictStatus            @default(DRAFT)
-  created_at          DateTime                 @default(now())
-  updated_at          DateTime                 @updatedAt
-  procesal_cost       Float?                   @default(0)
+  status              VerdictStatus             @default(DRAFT)
+  created_at          DateTime                  @default(now())
+  updated_at          DateTime                  @updatedAt
+  procesal_cost       Float?                    @default(0)
   tenant_id           String
   notes               String?
   bailiff_id          String?
@@ -149,15 +149,15 @@ model Verdict {
 }
 
 model VerdictInterest {
-  id                  String                   @id @default(uuid())
+  id                  String                    @id @default(uuid())
   interest_type       String
   base_amount         Float
   calculated_interest Float?
   calculation_start   DateTime
   calculation_end     DateTime
   total_interest      Float
-  created_at          DateTime                 @default(now())
-  updated_at          DateTime                 @updatedAt
+  created_at          DateTime                  @default(now())
+  updated_at          DateTime                  @updatedAt
   verdict_id          String?
   verdict             Verdict?                 @relation(fields: [verdict_id], references: [id])
   details             VerdictInterestDetails[]
@@ -166,7 +166,7 @@ model VerdictInterest {
 }
 
 model VerdictInterestDetails {
-  id                  String          @id @default(uuid())
+  id                  String           @id @default(uuid())
   period              String
   period_start        DateTime
   period_end          DateTime
@@ -177,15 +177,15 @@ model VerdictInterestDetails {
   interest            Float
   total               Float
   verdict_interest_id String
-  created_at          DateTime        @default(now())
-  updated_at          DateTime        @updatedAt
+  created_at          DateTime         @default(now())
+  updated_at          DateTime         @updatedAt
   verdict_interest    VerdictInterest @relation(fields: [verdict_interest_id], references: [id])
 
   @@map("verdict_interest_details")
 }
 
 model VerdictEmbargo {
-  id              String   @id @default(uuid())
+  id              String    @id @default(uuid())
   verdict_id      String
   company_name    String
   company_phone   String
@@ -195,32 +195,33 @@ model VerdictEmbargo {
   embargo_date    DateTime
   embargo_amount  Float
   total_amount    Float
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
   verdict         Verdict  @relation(fields: [verdict_id], references: [id])
 
   @@map("verdict_embargo")
 }
 
 model VerdictBailiffServices {
-  id           String   @id @default(uuid())
-  verdict_id   String
-  service_type String
-  service_cost Float
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
-  verdict      Verdict  @relation(fields: [verdict_id], references: [id])
+  id                     String    @id @default(uuid())
+  verdict_id             String
+  service_invoice_number String
+  service_type           String
+  service_cost           Float
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
+  verdict                Verdict  @relation(fields: [verdict_id], references: [id])
 
   @@map("verdict_bailiff_services")
 }
 
 model VerdictAttachment {
-  id         String   @id @default(uuid())
+  id         String    @id @default(uuid())
   verdict_id String
   file_path  String
   file_size  BigInt
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
   file_name  String
   verdict    Verdict  @relation(fields: [verdict_id], references: [id])
 
@@ -228,7 +229,7 @@ model VerdictAttachment {
 }
 
 model InterestType {
-  id               String              @id @default(uuid())
+  id               String               @id @default(uuid())
   name             String
   calculation_type CalculationTypeEnum
   details          InterestDetail[]
@@ -237,7 +238,7 @@ model InterestType {
 }
 
 model InterestDetail {
-  id               String       @id @default(uuid())
+  id               String        @id @default(uuid())
   date             String
   rate             Float
   interest_type_id String
@@ -247,17 +248,17 @@ model InterestDetail {
 }
 
 model BillingInvoice {
-  id             String                 @id @default(uuid())
+  id             String                  @id @default(uuid())
   tenant_id      String
-  invoice_number String                 @unique
+  invoice_number String                  @unique
   amount         Float
-  currency       String                 @default("USD")
+  currency       String                  @default("USD")
   issue_date     DateTime
   due_date       DateTime
   description    String?
-  status         String                 @default("unpaid")
-  created_at     DateTime               @default(now())
-  updated_at     DateTime               @updatedAt
+  status         String                  @default("unpaid")
+  created_at     DateTime                @default(now())
+  updated_at     DateTime                @updatedAt
   tenant         Tenant                 @relation(fields: [tenant_id], references: [id])
   details        BillingInvoiceDetail[]
   payments       BillingPayment[]
@@ -266,7 +267,7 @@ model BillingInvoice {
 }
 
 model BillingInvoiceDetail {
-  id                  String          @id @default(uuid())
+  id                  String           @id @default(uuid())
   item_description    String
   item_quantity       Int
   item_unit_price     Float
@@ -274,8 +275,8 @@ model BillingInvoiceDetail {
   item_tax_rate       Float
   item_tax_amount     Float
   item_total_with_tax Float
-  created_at          DateTime        @default(now())
-  updated_at          DateTime        @updatedAt
+  created_at          DateTime         @default(now())
+  updated_at          DateTime         @updatedAt
   billing_invoice_id  String?
   billing_invoice     BillingInvoice? @relation(fields: [billing_invoice_id], references: [id])
 
@@ -283,14 +284,14 @@ model BillingInvoiceDetail {
 }
 
 model BillingPayment {
-  id                 String          @id @default(uuid())
+  id                 String           @id @default(uuid())
   payment_date       DateTime
   amount             Float
   payment_method     String
   transaction_id     String?
   status             String
-  created_at         DateTime        @default(now())
-  updated_at         DateTime        @updatedAt
+  created_at         DateTime         @default(now())
+  updated_at         DateTime         @updatedAt
   billing_invoice_id String?
   billing_invoice    BillingInvoice? @relation(fields: [billing_invoice_id], references: [id])
 
@@ -298,25 +299,25 @@ model BillingPayment {
 }
 
 model CollectionCase {
-  id               String                       @id @default(cuid())
+  id               String                        @id @default(cuid())
   reference_number String?
   issue_date       DateTime
   due_date         DateTime
   tenant_id        String
   debtor_id        String
-  amount_original  Decimal                      @db.Decimal(10, 2)
-  fee_rate         Decimal                      @db.Decimal(5, 2)
-  fee_amount       Decimal                      @db.Decimal(10, 2)
-  abb_rate         Decimal                      @db.Decimal(5, 2)
-  abb_amount       Decimal                      @db.Decimal(10, 2)
-  total_fined      Decimal                      @default(0) @db.Decimal(10, 2) // total de multas
-  total_due        Decimal                      @default(0) @db.Decimal(10, 2) // total con impuestos y multas
-  total_to_receive Decimal                      @default(0) @db.Decimal(10, 2) // neto después de retención
-  total_paid       Decimal                      @default(0) @db.Decimal(10, 2)
-  balance          Decimal                      @default(0) @db.Decimal(10, 2)
-  status           CollectionCaseStatus         @default(AANMANING)
-  created_at       DateTime                     @default(now())
-  updated_at       DateTime                     @updatedAt
+  amount_original  Decimal                       @db.Decimal(10, 2)
+  fee_rate         Decimal                       @db.Decimal(5, 2)
+  fee_amount       Decimal                       @db.Decimal(10, 2)
+  abb_rate         Decimal                       @db.Decimal(5, 2)
+  abb_amount       Decimal                       @db.Decimal(10, 2)
+  total_fined      Decimal                       @default(0) @db.Decimal(10, 2) // total de multas
+  total_due        Decimal                       @default(0) @db.Decimal(10, 2) // total con impuestos y multas
+  total_to_receive Decimal                       @default(0) @db.Decimal(10, 2) // neto después de retención
+  total_paid       Decimal                       @default(0) @db.Decimal(10, 2)
+  balance          Decimal                       @default(0) @db.Decimal(10, 2)
+  status           CollectionCaseStatus          @default(AANMANING)
+  created_at       DateTime                      @default(now())
+  updated_at       DateTime                      @updatedAt
   debtor           Debtor                       @relation(fields: [debtor_id], references: [id])
   tenant           Tenant                       @relation(fields: [tenant_id], references: [id])
   fines            CollectionCaseFine[]
@@ -329,42 +330,42 @@ model CollectionCase {
 }
 
 model CollectionCaseFine {
-  id                 String         @id @default(cuid())
+  id                 String          @id @default(cuid())
   collection_case_id String
   description        String?
-  amount             Decimal        @db.Decimal(10, 2)
-  applied_at         DateTime       @default(now())
-  created_at         DateTime       @default(now())
-  updated_at         DateTime       @updatedAt
+  amount             Decimal         @db.Decimal(10, 2)
+  applied_at         DateTime        @default(now())
+  created_at         DateTime        @default(now())
+  updated_at         DateTime        @updatedAt
   collection_case    CollectionCase @relation(fields: [collection_case_id], references: [id])
 
   @@map("collection_case_fine")
 }
 
 model CollectionCaseNotification {
-  id                 String           @id @default(cuid())
+  id                 String            @id @default(cuid())
   collection_case_id String
   type               NotificationType
   title              String
   message            String
-  sent_at            DateTime         @default(now())
-  read               Boolean          @default(false)
-  created_at         DateTime         @default(now())
+  sent_at            DateTime          @default(now())
+  read               Boolean           @default(false)
+  created_at         DateTime          @default(now())
   collection_case    CollectionCase   @relation(fields: [collection_case_id], references: [id])
 
   @@map("collection_case_notification")
 }
 
 model CollectionCasePayment {
-  id                 String                               @id @default(cuid())
+  id                 String                                @id @default(cuid())
   method             PaymentMethod
-  amount             Decimal                              @db.Decimal(10, 2)
+  amount             Decimal                               @db.Decimal(10, 2)
   collection_case_id String
   payment_date       DateTime
   reference_number   String?
   agreement_id       String?
-  created_at         DateTime                             @default(now())
-  updated_at         DateTime                             @updatedAt
+  created_at         DateTime                              @default(now())
+  updated_at         DateTime                              @updatedAt
   collection_case    CollectionCase                       @relation(fields: [collection_case_id], references: [id])
   agreement          CollectionCaseAgreement?             @relation(fields: [agreement_id], references: [id])
   installments       CollectionCaseAgreementInstallment[]
@@ -373,19 +374,19 @@ model CollectionCasePayment {
 }
 
 model Debtor {
-  id                  String                    @id @default(uuid())
+  id                  String                     @id @default(uuid())
   tenant_id           String
   user_id             String?
   fullname            String
   email               String
   phone               String?
   address             String?
-  person_type         PersonType                @default(INDIVIDUAL)
+  person_type         PersonType                 @default(INDIVIDUAL)
   identification_type IdentificationType?
   identification      String?
   total_income        Float?
-  created_at          DateTime                  @default(now())
-  updated_at          DateTime                  @updatedAt
+  created_at          DateTime                   @default(now())
+  updated_at          DateTime                   @updatedAt
   collection_cases    CollectionCase[]
   tenant              Tenant                    @relation(fields: [tenant_id], references: [id])
   user                User?                     @relation(fields: [user_id], references: [id])
@@ -399,105 +400,105 @@ model Debtor {
 }
 
 model Bailiff {
-  id         String   @id @default(uuid())
+  id         String     @id @default(uuid())
   fullname   String
-  email      String   @unique
+  email      String     @unique
   phone      String?
   tenant_id  String
   user_id    String?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
 
-  tenant   Tenant    @relation(fields: [tenant_id], references: [id])
-  user     User?     @relation(fields: [user_id], references: [id])
-  verdicts Verdict[] @relation("BailiffToVerdict")
+  tenant     Tenant    @relation(fields: [tenant_id], references: [id])
+  user       User?     @relation(fields: [user_id], references: [id])
+  verdicts   Verdict[] @relation("BailiffToVerdict")
 
   @@map("bailiff")
 }
 
 model ChatRoom {
-  id                 String         @id @default(cuid())
+  id                 String          @id @default(cuid())
   tenant_id          String
   tenant             Tenant         @relation(fields: [tenant_id], references: [id])
   collection_case_id String
   collection_case    CollectionCase @relation(fields: [collection_case_id], references: [id])
   name               String
-  created_at         DateTime       @default(now())
-  updated_at         DateTime       @updatedAt
+  created_at         DateTime        @default(now())
+  updated_at         DateTime        @updatedAt
   messages           ChatMessage[]
 
   @@map("chat_room")
 }
 
 model ChatMessage {
-  id      String   @id @default(cuid())
-  room_id String
-  room    ChatRoom @relation(fields: [room_id], references: [id])
+  id         String    @id @default(cuid())
+  room_id    String
+  room       ChatRoom @relation(fields: [room_id], references: [id])
 
-  sender_id String
-  sender    User    @relation(fields: [sender_id], references: [id])
-  message   String
-  file_url  String?
-  file_name String?
+  sender_id  String
+  sender     User     @relation(fields: [sender_id], references: [id])
+  message    String
+  file_url   String?
+  file_name  String?
 
-  timestamp  DateTime @default(now())
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  timestamp  DateTime  @default(now())
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
 
   @@map("chat_message")
 }
 
 model DebtorIncome {
-  id         String   @id @default(uuid())
+  id         String    @id @default(uuid())
   debtor_id  String
   amount     Float
   source     String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
   debtor     Debtor   @relation(fields: [debtor_id], references: [id])
 
   @@map("debtor_incomes")
 }
 
 model CollectionCaseAgreement {
-  id                 String          @id @default(cuid())
+  id                 String                                @id @default(cuid())
   collection_case_id String
   debtor_id          String?
-  total_amount       Decimal         @db.Decimal(10, 2)
-  installment_amount Decimal         @db.Decimal(10, 2)
+  total_amount       Decimal                               @db.Decimal(10, 2)
+  installment_amount Decimal                               @db.Decimal(10, 2)
   installments_count Int
   start_date         DateTime
   end_date           DateTime
-  status             AgreementStatus @default(PENDING)
+  status             AgreementStatus                       @default(PENDING)
   tenant_id          String
-  tenant             Tenant          @relation(fields: [tenant_id], references: [id])
+  tenant             Tenant                               @relation(fields: [tenant_id], references: [id])
   comment            String?
-  created_at         DateTime        @default(now())
-  updated_at         DateTime        @updatedAt
+  created_at         DateTime                              @default(now())
+  updated_at         DateTime                              @updatedAt
 
-  // Relaciones
-  debtor          Debtor?                              @relation(fields: [debtor_id], references: [id])
-  collection_case CollectionCase                       @relation(fields: [collection_case_id], references: [id])
-  installments    CollectionCaseAgreementInstallment[]
-  payments        CollectionCasePayment[]
+  //                 Relaciones
+  debtor             Debtor?                              @relation(fields: [debtor_id], references: [id])
+  collection_case    CollectionCase                       @relation(fields: [collection_case_id], references: [id])
+  installments       CollectionCaseAgreementInstallment[]
+  payments           CollectionCasePayment[]
 
   @@map("collection_case_agreement")
 }
 
 model CollectionCaseAgreementInstallment {
-  id           String            @id @default(cuid())
-  agreement_id String
-  number       Int
-  due_date     DateTime
-  amount       Decimal           @db.Decimal(10, 2)
-  status       InstallmentStatus @default(PENDING)
+  id                                                                      String                   @id @default(cuid())
+  agreement_id                                                            String
+  number                                                                  Int
+  due_date                                                                DateTime
+  amount                                                                  Decimal                  @db.Decimal(10, 2)
+  status                                                                  InstallmentStatus        @default(PENDING)
   payment_id   String? // si se pagó, relaciona con CollectionCasePayment
-  created_at   DateTime          @default(now())
-  updated_at   DateTime          @updatedAt
+  created_at                                                              DateTime                 @default(now())
+  updated_at                                                              DateTime                 @updatedAt
 
-  // Relaciones
-  agreement CollectionCaseAgreement @relation(fields: [agreement_id], references: [id])
-  payment   CollectionCasePayment?  @relation(fields: [payment_id], references: [id])
+  //                                                                      Relaciones
+  agreement                                                               CollectionCaseAgreement @relation(fields: [agreement_id], references: [id])
+  payment                                                                 CollectionCasePayment?  @relation(fields: [payment_id], references: [id])
 
   @@map("collection_case_agreement_installment")
 }

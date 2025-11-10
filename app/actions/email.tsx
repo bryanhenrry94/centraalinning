@@ -35,6 +35,7 @@ import VerdictCreditorMail from "@/templates/emails/VerdictCreditorMail";
 import VerdictCreditorPDF, {
   VerdictCreditorPDFProps,
 } from "@/templates/pdfs/VerdictCreditorPDF";
+import VerdictRegisterEmail from "@/templates/emails/VerdictRegisterMail";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -552,6 +553,8 @@ export const sendMailVerdictDebtor = async (
           link={
             process.env.NEXT_PUBLIC_APP_URL || "https://www.centraalinning.com"
           }
+          datumVonnis={verdictData.date}
+          vonnisNummer={verdictData.reference}
         />
       ),
       attachments: attachments,
@@ -617,6 +620,45 @@ export const sendMailVerdictCreditor = async (
     }
 
     console.log("Verdict creditor email sent to:", to);
+    console.log("Email data:", data);
+
+    return Response.json(data);
+  } catch (error) {
+    console.error("Error sending email:", error);
+    return Response.json({ error }, { status: 500 });
+  }
+};
+
+type VerdictRegisterEmailParams = {
+  to: string;
+  verdictReference: string;
+  verdictDate: string;
+};
+
+export const sendMailRegisterVerdict = async (
+  params: VerdictRegisterEmailParams
+) => {
+  try {
+    const recipient = await getEmailByEnv(params.to);
+
+    const { data, error } = await resend.emails.send({
+      from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
+      to: recipient,
+      subject: "Bedankt voor uw registratie.",
+      react: (
+        <VerdictRegisterEmail
+          logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
+          verdictReference={params.verdictReference}
+          verdictDate={params.verdictDate}
+        />
+      ),
+    });
+
+    if (error) {
+      return Response.json({ error }, { status: 500 });
+    }
+
+    console.log("Verdict register email sent to:", params.to);
     console.log("Email data:", data);
 
     return Response.json(data);

@@ -7,8 +7,6 @@ import {
   BailiffUpdate,
 } from "@/lib/validations/bailiff";
 
-import { revalidatePath } from "next/cache";
-
 export async function createBailiff(
   data: BailiffCreate,
   tenantId: string
@@ -101,3 +99,27 @@ export async function getAllBailiffs(tenant_id: string): Promise<Bailiff[]> {
   });
   return bailiffs;
 }
+
+export const getBailiffByUserId = async (
+  user_id: string
+): Promise<{ success: boolean; data?: Bailiff; error?: string }> => {
+  try {
+    const bailiff = await prisma.bailiff.findFirst({
+      where: { user_id },
+    });
+
+    if (!bailiff) {
+      throw new Error(
+        "Alguacil no encontrado para el ID de usuario proporcionado"
+      );
+    }
+
+    return { success: true, data: bailiff };
+  } catch (error) {
+    console.error("Error getting bailiff by user ID:", error);
+    return {
+      success: false,
+      error: "Error al obtener el alguacil por ID de usuario",
+    };
+  }
+};

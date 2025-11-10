@@ -1,17 +1,20 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 // mui
 import { Box, Button, Grid, Stack, Typography } from "@mui/material";
 // icons
 import SaveIcon from "@mui/icons-material/Save";
 import { z } from "zod";
 // validations
-import { VerdictCreateForm } from "@/lib/validations/verdict";
-import { notifyInfo } from "@/lib/notifications";
+import { VerdictCreate, VerdictCreateForm } from "@/lib/validations/verdict";
+import { notifyError, notifyInfo } from "@/lib/notifications";
 // actions
 import {
+  approveVerdict,
+  createVerdict,
   handleSendMailNotificationBailiff,
   requestVerdictApproval,
+  updateVerdict,
 } from "@/app/actions/verdict";
 import { DebtorBase } from "@/lib/validations/debtor";
 // hooks and libs
@@ -31,9 +34,15 @@ import { getAllDebtorsByTenantId } from "@/app/actions/debtor";
 import { ModalFormBailiff } from "../bailiff/modal-bailiff-form";
 import { getAllBailiffs } from "@/app/actions/bailiff";
 import { Bailiff } from "@/lib/validations/bailiff";
+import { useSession } from "next-auth/react";
+import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Resolver } from "react-hook-form";
+import { BailiffSection } from "./sections/bailiff-section";
+import GavelIcon from "@mui/icons-material/Gavel";
 
 interface VerdictFormPageProps {
-  defaultValues: z.infer<typeof VerdictCreateForm>;
+  defaultValues: VerdictCreate;
   modeEdit: boolean;
   id?: string;
 }
@@ -43,6 +52,7 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
   defaultValues,
   modeEdit,
 }) => {
+  const { data: session } = useSession();
   const { tenant } = useTenant();
   const [debtors, setDebtors] = React.useState<DebtorBase[]>([]);
   const [bailiffs, setBailiffs] = React.useState<Bailiff[]>([]);
@@ -52,8 +62,9 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
     React.useState<Bailiff | null>();
   const [debtorSelected, setDebtorSelected] =
     React.useState<DebtorBase | null>();
-  const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
+
+  // console.log("Session in VerdictFormPage:", session);
 
   const handleSelectDebtor = (debtor: DebtorBase | null) => {
     if (debtor) {
@@ -149,87 +160,217 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
     fetchBailiffs();
   }, [tenant?.id]);
 
+  const methods = useForm<z.infer<typeof VerdictCreateForm>>({
+    resolver: zodResolver(VerdictCreateForm) as Resolver<
+      z.infer<typeof VerdictCreateForm>
+    >,
+    defaultValues,
+  });
+
+  const {
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isSubmitting },
+  } = methods;
+
+  const serializedDefaults = useMemo(
+    () => JSON.stringify(defaultValues),
+    [defaultValues]
+  );
+
+  useEffect(() => {
+    if (!defaultValues) return;
+    methods.reset(JSON.parse(serializedDefaults));
+  }, [serializedDefaults]);
+
+  const onSubmit = async (data: z.infer<typeof VerdictCreateForm>) => {
+    try {
+      // Update flow
+      if (id) {
+        const updated = await updateVerdict(id, data);
+        if (updated) {
+          notifyInfo("Registratie is bijgewerkt");
+        } else {
+          notifyError("Bijwerken mislukt. Probeer het opnieuw.");
+        }
+        return;
+      }
+
+      // Create flow
+      if (!tenant) {
+        notifyError(
+          "Onverwerkte fout, neem contact op met uw systeembeheerder"
+        );
+        return;
+      }
+
+      const confirmed = await AlertService.showConfirm(
+        "Weet je het zeker?",
+        "Deze actie registreert het vonnis. Wil je doorgaan?",
+        "Ja, registreren",
+        "Annuleren"
+      );
+
+      if (!confirmed) return;
+
+      const newVerdict = await createVerdict(data, tenant.id);
+      if (!newVerdict) {
+        notifyError(
+          "Er is een fout opgetreden bij het aanmaken van de registratie."
+        );
+        return;
+      }
+
+      notifyInfo("Registratie is succesvol aangemaakt");
+      router.push(`/dashboard/verdicts/${newVerdict.id}/edit`);
+    } catch (error) {
+      console.error("Error submitting verdict form:", error);
+      notifyError(
+        "Er is een fout opgetreden bij het verzenden van het formulier."
+      );
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!id) return;
+
+    AlertService.showConfirm(
+      "Weet je het zeker?",
+      "Het vonnis wordt goedgekeurd en de schuldenaar wordt op de hoogte gesteld.",
+      "Ja, goedkeuren",
+      "Annuleren"
+    ).then(async (confirmed) => {
+      if (confirmed) {
+        const response = await approveVerdict(id);
+
+        if (response) {
+          notifyInfo("Vonnis succesvol goedgekeurd");
+          router.push(`/dashboard/verdicts`);
+        } else {
+          notifyError("Fout bij het goedkeuren van het vonnis");
+        }
+      }
+    });
+  };
+
   return (
     <Box>
-      <VerdictFormProvider
-        id={id}
-        defaultValues={defaultValues}
-        setSubmitting={setSubmitting}
-      >
-        {/* Action Buttons */}
-        <Box
-          sx={{
-            mb: 2,
-            mt: 2,
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Typography variant="h6" gutterBottom>
-            NIEUW VONNIS TOEVOEGEN
-          </Typography>
+      <FormProvider {...methods}>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          {/* Action Buttons */}
+          <Box
+            sx={{
+              mb: 2,
+              mt: 2,
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Typography variant="h6" gutterBottom>
+              NIEUW VONNIS TOEVOEGEN
+            </Typography>
 
-          <Stack direction="row" spacing={1}>
-            <Button
-              aria-label="delete"
-              color="primary"
-              type="submit"
-              variant="contained"
-              startIcon={<SaveIcon />}
-              loading={submitting ? true : false}
-            >
-              Bewaar Vonnis
-            </Button>
-            <Button
-              aria-label="pending"
-              color="secondary"
-              variant="contained"
-              startIcon={<SaveIcon />}
-              onClick={handleRequestApproval}
-            >
-              Vraag goedkeuring aan
-            </Button>
-          </Stack>
-        </Box>
+            <Stack direction="row" spacing={1}>
+              <Button
+                aria-label="delete"
+                color="primary"
+                type="submit"
+                variant="contained"
+                startIcon={<SaveIcon />}
+                loading={isSubmitting ? true : false}
+              >
+                Bewaar Vonnis
+              </Button>
+              {watch("status") === "DRAFT" &&
+                session?.user?.role !== "BAILIFF" &&
+                watch("bailiff_id") && (
+                  <Button
+                    aria-label="pending"
+                    color="secondary"
+                    variant="contained"
+                    startIcon={<SaveIcon />}
+                    onClick={handleRequestApproval}
+                    disabled={modeEdit ? false : true}
+                  >
+                    Vraag goedkeuring aan
+                  </Button>
+                )}
 
-        {/* Vonnis Toevoegen Section */}
-        <JudgmentSection
-          handleOpenModalDebtor={handleOpenModalDebtor}
-          onSelectDebtor={handleSelectDebtor}
-          debtors={debtors}
-        />
+              {session?.user?.role === "BAILIFF" && modeEdit && (
+                <Button
+                  color="secondary"
+                  aria-label="add an alarm"
+                  variant="contained"
+                  onClick={handleApprove}
+                  startIcon={<GavelIcon />}
+                >
+                  Vonnis goedkeuren
+                </Button>
+              )}
 
-        <StatutoryInterestSection />
+              {/* {verdict?.status === "APPROVED" ? (
+                <Chip color="success" label="Vonnis aprobado" />
+              ) : (
+                <Box>
+                  <Stack direction="row" spacing={1}>
+                   
+                  </Stack>
+                </Box>
+              )} */}
+            </Stack>
+          </Box>
 
-        <AttachmentSection />
+          {/* Vonnis Toevoegen Section */}
+          <JudgmentSection
+            handleOpenModalDebtor={handleOpenModalDebtor}
+            onSelectDebtor={handleSelectDebtor}
+            debtors={debtors}
+          />
 
-        <ServiceCostsSection
-          handleOpenModalBailiff={handleOpenModalBailiff}
-          onSelectBailiff={handleSelectBailiff}
-          bailiffs={bailiffs}
-        />
+          <Box>
+            <BailiffSection
+              handleOpenModalBailiff={handleOpenModalBailiff}
+              onSelectBailiff={handleSelectBailiff}
+              bailiffs={bailiffs}
+            />
+          </Box>
 
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, md: 8 }}>
-            <Grid
-              container
-              direction="column"
-              justifyContent="start"
-              alignItems="center"
-              sx={{ minHeight: 200, mt: 2, height: "100%" }}
-            >
-              {modeEdit && <AttachmentsSection verdictId={id || ""} />}
+          {session?.user?.role === "BAILIFF" && (
+            <>
+              <StatutoryInterestSection />
+
+              <AttachmentSection />
+
+              <ServiceCostsSection
+                handleOpenModalBailiff={handleOpenModalBailiff}
+                onSelectBailiff={handleSelectBailiff}
+                bailiffs={bailiffs}
+              />
+            </>
+          )}
+
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, md: 8 }}>
+              <Grid
+                container
+                direction="column"
+                justifyContent="start"
+                alignItems="center"
+                sx={{ minHeight: 200, mt: 2, height: "100%" }}
+              >
+                {modeEdit && <AttachmentsSection verdictId={id || ""} />}
+              </Grid>
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 4 }}>
+              <VerdictTotals />
             </Grid>
           </Grid>
-
-          <Grid size={{ xs: 12, md: 4 }}>
-            <VerdictTotals />
-          </Grid>
-        </Grid>
-      </VerdictFormProvider>
-
+        </form>
+      </FormProvider>
       <ModalFormDebtor
         open={openModalDebtor}
         onClose={handleCloseModalDebtor}
