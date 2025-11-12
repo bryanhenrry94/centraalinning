@@ -39,6 +39,7 @@ model Tenant {
   chat_rooms       ChatRoom[]
   agreements       CollectionCaseAgreement[]
   invitations      TenantInvitation[]
+  employees        Employee[]
 
   @@map("tenant")
 }
@@ -414,6 +415,23 @@ model Bailiff {
   verdicts Verdict[] @relation("BailiffToVerdict")
 
   @@map("bailiff")
+}
+
+model Employee {
+  id             String   @id @default(uuid())
+  identification String
+  first_name     String
+  last_name      String
+  email          String
+  address        String?
+  phone          String?
+  tenant_id      String
+  tenant         Tenant   @relation(fields: [tenant_id], references: [id])
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@unique([identification])
+  @@map("employee")
 }
 
 model ChatRoom {

@@ -274,6 +274,25 @@ export const createVerdict = async (
       // notify register verdict via email
       await sendMailRegisterVerdict(params);
 
+      // set verdict status to PENDING
+      await prisma.verdict.update({
+        where: { id: newVerdict.id },
+        data: { status: "PENDING" },
+      });
+
+      // send email to bailiff for approval
+      const bailiff = await tx.bailiff.findUnique({
+        where: { id: newVerdict.bailiff_id ?? "" },
+      });
+
+      if (bailiff?.email) {
+        await sendVerdictApprovalEmail(
+          bailiff.email,
+          bailiff.fullname || "Bailiff",
+          createdVerdict.id
+        );
+      }
+
       return newVerdict;
     });
 
@@ -767,22 +786,6 @@ export const approveVerdict = async (id: string): Promise<boolean> => {
     //   reference_number: VerdictUpdated.registration_number || "Reference",
     // };
 
-    // const verdictDebtorData: VerdictDebtorPDFProps = {
-    //   logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
-    //   debtorName: debtor.fullname || "Debtor",
-    //   reference: VerdictUpdated.registration_number || "Reference",
-    //   sentence_date: formatDate(
-    //     VerdictUpdated.sentence_date
-    //       ? VerdictUpdated.sentence_date.toISOString()
-    //       : new Date().toISOString()
-    //   ),
-    //   sentence_amount: VerdictUpdated.sentence_amount
-    //     ? VerdictUpdated.sentence_amount.toFixed(2)
-    //     : "0.00",
-    //   bankAccountNumber: parameter.bank_account,
-    //   date: formatDate(new Date().toISOString()),
-    // };
-
     // Datos de ejemplo para el PDF de la factura
     // const invoiceData: InvoicePDFProps = {
     //   logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
@@ -817,7 +820,24 @@ export const approveVerdict = async (id: string): Promise<boolean> => {
     //   verdictCreditorData,
     //   invoiceData
     // );
-    // await sendMailVerdictDebtor(debtor.email, verdictDebtorData);
+
+    const verdictDebtorData: VerdictDebtorPDFProps = {
+      logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
+      debtorName: debtor.fullname || "Debtor",
+      reference: VerdictUpdated.registration_number || "Reference",
+      sentence_date: formatDate(
+        VerdictUpdated.sentence_date
+          ? VerdictUpdated.sentence_date.toISOString()
+          : new Date().toISOString()
+      ),
+      sentence_amount: VerdictUpdated.sentence_amount
+        ? VerdictUpdated.sentence_amount.toFixed(2)
+        : "0.00",
+      bankAccountNumber: parameter.bank_account,
+      date: formatDate(new Date().toISOString()),
+    };
+
+    await sendMailVerdictDebtor(debtor.email, verdictDebtorData);
 
     return VerdictUpdated ? true : false;
   } catch (error) {

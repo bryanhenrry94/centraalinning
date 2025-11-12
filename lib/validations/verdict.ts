@@ -19,7 +19,7 @@ export const VerdictStatusEnum = z.enum([
 // Verdict schema
 const VerdictBaseSchema = z.object({
   id: z.string().uuid({ message: "El id debe ser un UUID válido." }),
-  invoice_number: z.string().max(100),
+  invoice_number: z.string({ message: "El número de factura es obligatorio." }),
   creditor_name: z.string().max(100, {
     message: "El nombre del acreedor no debe exceder 100 caracteres.",
   }),
@@ -52,8 +52,8 @@ const VerdictBaseSchema = z.object({
   bailiff_services: z.array(VerdictBailiffServicesCreateSchema).optional(),
   status: VerdictStatusEnum,
   attachments: z.array(VerdictAttachmentSchema).optional(),
-  created_at: z.date().default(() => new Date()),
-  updated_at: z.date().default(() => new Date()),
+  created_at: z.date(),
+  updated_at: z.date(),
 });
 
 export const VerdictSchema = VerdictBaseSchema.superRefine((data, ctx) => {});
@@ -65,7 +65,7 @@ export const VerdictCreateSchema = VerdictBaseSchema.omit({
   updated_at: true,
 });
 
-export const VerdictCreateForm = z.object({
+export const VerdictCreateFormSchema = z.object({
   ...VerdictCreateSchema.shape,
 });
 
@@ -83,3 +83,4 @@ export type Verdict = z.infer<typeof VerdictSchema>;
 export type VerdictResponse = z.infer<typeof VerdictResponseSchema>;
 export type VerdictCreate = z.infer<typeof VerdictCreateSchema>;
 export type VerdictUpdate = z.infer<typeof VerdictUpdateSchema>;
+export type VerdictCreateForm = z.infer<typeof VerdictCreateFormSchema>;

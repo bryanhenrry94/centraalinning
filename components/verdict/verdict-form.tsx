@@ -6,7 +6,11 @@ import { Box, Button, Grid, Stack, Typography } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import { z } from "zod";
 // validations
-import { VerdictCreate, VerdictCreateForm } from "@/lib/validations/verdict";
+import {
+  VerdictCreate,
+  VerdictCreateForm,
+  VerdictCreateFormSchema,
+} from "@/lib/validations/verdict";
 import { notifyError, notifyInfo } from "@/lib/notifications";
 // actions
 import {
@@ -27,7 +31,6 @@ import { JudgmentSection } from "./sections/judgment-section";
 import StatutoryInterestSection from "./sections/statutory-interest-section";
 import AttachmentSection from "./sections/attachment-section";
 import ServiceCostsSection from "./sections/service-costs-section";
-import { VerdictFormProvider } from "./form-context";
 import AttachmentsSection from "./sections/attachments-section";
 import { ModalFormDebtor } from "../debtor/modal-debtor-form";
 import { getAllDebtorsByTenantId } from "@/app/actions/debtor";
@@ -64,8 +67,6 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
     React.useState<DebtorBase | null>();
   const router = useRouter();
 
-  // console.log("Session in VerdictFormPage:", session);
-
   const handleSelectDebtor = (debtor: DebtorBase | null) => {
     if (debtor) {
       setDebtorSelected(debtor);
@@ -97,7 +98,7 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
 
     AlertService.showConfirm(
       "Weet je het zeker?",
-      "Deze actie vraagt goedkeuring voor het vonnis. Wil je doorgaan?",
+      "Met deze actie wordt het vonnis opgeslagen en wordt om goedkeuring gevraagd.",
       "Ja, aanvragen",
       "Annuleren"
     ).then(async (confirmed) => {
@@ -160,18 +161,17 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
     fetchBailiffs();
   }, [tenant?.id]);
 
-  const methods = useForm<z.infer<typeof VerdictCreateForm>>({
-    resolver: zodResolver(VerdictCreateForm) as Resolver<
-      z.infer<typeof VerdictCreateForm>
-    >,
+  const methods = useForm<VerdictCreateForm>({
+    resolver: zodResolver(
+      VerdictCreateFormSchema
+    ) as Resolver<VerdictCreateForm>,
     defaultValues,
   });
 
   const {
     handleSubmit,
-    reset,
     watch,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
   } = methods;
 
   const serializedDefaults = useMemo(
@@ -184,46 +184,54 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
     methods.reset(JSON.parse(serializedDefaults));
   }, [serializedDefaults]);
 
-  const onSubmit = async (data: z.infer<typeof VerdictCreateForm>) => {
+  const onSubmit = async (data: VerdictCreateForm) => {
     try {
-      // Update flow
-      if (id) {
-        const updated = await updateVerdict(id, data);
-        if (updated) {
-          notifyInfo("Registratie is bijgewerkt");
-        } else {
-          notifyError("Bijwerken mislukt. Probeer het opnieuw.");
-        }
-        return;
-      }
-
-      // Create flow
+      // Prevent submission without tenant
+      console.log("Submitting verdict form with data:", data);
       if (!tenant) {
-        notifyError(
+        return notifyError(
           "Onverwerkte fout, neem contact op met uw systeembeheerder"
         );
-        return;
       }
 
-      const confirmed = await AlertService.showConfirm(
-        "Weet je het zeker?",
-        "Deze actie registreert het vonnis. Wil je doorgaan?",
-        "Ja, registreren",
-        "Annuleren"
+      const isUpdate = Boolean(id);
+      const actionMessage = isUpdate
+        ? "U staat op het punt de registratie bij te werken. Wilt u doorgaan?"
+        : "U staat op het punt een nieuwe registratie aan te maken. Wilt u doorgaan?";
+
+      // Confirm creation only for new verdicts
+      if (!isUpdate) {
+        const confirmed = await AlertService.showConfirm(
+          "Waarschuwing",
+          actionMessage,
+          "Ja, registreren",
+          "Annuleren"
+        );
+        if (!confirmed) return;
+      }
+
+      // Execute create or update
+      const verdict = isUpdate
+        ? await updateVerdict(id!, data)
+        : await createVerdict(data, tenant.id);
+
+      // Handle result
+      if (!verdict) {
+        return notifyError(
+          `Er is een fout opgetreden bij het ${
+            isUpdate ? "bijwerken" : "aanmaken"
+          } van de registratie.`
+        );
+      }
+
+      notifyInfo(
+        `Registratie is succesvol ${isUpdate ? "bijgewerkt" : "aangemaakt"}`
       );
 
-      if (!confirmed) return;
-
-      const newVerdict = await createVerdict(data, tenant.id);
-      if (!newVerdict) {
-        notifyError(
-          "Er is een fout opgetreden bij het aanmaken van de registratie."
-        );
-        return;
+      // Redirect after creation
+      if (!isUpdate) {
+        router.push(`/dashboard/verdicts/${verdict.id}/edit`);
       }
-
-      notifyInfo("Registratie is succesvol aangemaakt");
-      router.push(`/dashboard/verdicts/${newVerdict.id}/edit`);
     } catch (error) {
       console.error("Error submitting verdict form:", error);
       notifyError(
@@ -310,16 +318,6 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
                   Vonnis goedkeuren
                 </Button>
               )}
-
-              {/* {verdict?.status === "APPROVED" ? (
-                <Chip color="success" label="Vonnis aprobado" />
-              ) : (
-                <Box>
-                  <Stack direction="row" spacing={1}>
-                   
-                  </Stack>
-                </Box>
-              )} */}
             </Stack>
           </Box>
 
@@ -330,13 +328,13 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
             debtors={debtors}
           />
 
-          <Box>
+          {session?.user?.role !== "BAILIFF" && (
             <BailiffSection
               handleOpenModalBailiff={handleOpenModalBailiff}
               onSelectBailiff={handleSelectBailiff}
               bailiffs={bailiffs}
             />
-          </Box>
+          )}
 
           {session?.user?.role === "BAILIFF" && (
             <>

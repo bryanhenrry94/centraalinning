@@ -16,6 +16,7 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { updateUserProfile } from "@/app/actions/user";
 import { notifyInfo } from "@/lib/notifications";
 import UserTable from "@/components/settings/user-table";
+import { EmployeeForm } from "@/components/employees/employee-form";
 
 const SettingPage = () => {
   const [value, setValue] = useState(0);
@@ -65,6 +66,7 @@ const SettingPage = () => {
           <Tab value={1} label="Profiel" />
           <Tab value={2} label="Gebruikers" />
           <Tab value={3} label="Facturering" />
+          <Tab value={4} label="Medewerkers" />
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
@@ -84,6 +86,9 @@ const SettingPage = () => {
         <UserTable tenant_id={user?.tenant_id || ""} />
       </TabPanel>
       <TabPanel value={value} index={3}></TabPanel>
+      <TabPanel value={value} index={4}>
+        <EmployeeForm />
+      </TabPanel>
     </Container>
   );
 };

@@ -201,14 +201,14 @@ const VerdictsPage: React.FC = () => {
 
     const verdicts = await getAllVerdicts(tenant?.id);
 
-    const bailiffResponse = await getBailiffByUserId(session?.user?.id || "");
-
-    const bailiffId =
-      bailiffResponse.success && bailiffResponse.data
-        ? bailiffResponse.data.id
-        : "";
-
     if (session?.user?.role === "BAILIFF") {
+      const bailiffResponse = await getBailiffByUserId(session?.user?.id || "");
+
+      const bailiffId =
+        bailiffResponse.success && bailiffResponse.data
+          ? bailiffResponse.data.id
+          : "";
+
       const filteredVerdicts = verdicts.filter(
         (verdict) => verdict.bailiff_id === bailiffId
       );

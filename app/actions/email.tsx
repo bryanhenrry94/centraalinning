@@ -546,7 +546,7 @@ export const sendMailVerdictDebtor = async (
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
-      subject: `Waarschuwing voor loonbeslag - ${verdictData.reference}`,
+      subject: `Betekening Vonnis - ${verdictData.reference}`,
       react: (
         <VerdictDebtorMail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
