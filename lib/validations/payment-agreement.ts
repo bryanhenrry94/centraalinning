@@ -2,7 +2,8 @@ import { z } from "zod";
 
 export const PaymentAgreementSchema = z.object({
   id: z.string().cuid(),
-  collection_case_id: z.string(),
+  collection_case_id: z.string().optional().nullable(),
+  verdict_id: z.string().optional().nullable(),
   tenant_id: z.uuid(),
   total_amount: z.number(),
   installment_amount: z.number(),
@@ -27,11 +28,13 @@ export const PaymentAgreementUpdateSchema =
   PaymentAgreementCreateSchema.partial();
 
 export const PaymentAgreementResponseSchema = PaymentAgreementSchema.extend({
-  collection_case: z.object({
-    id: z.string().cuid(),
-    reference_number: z.string(),
-    issue_date: z.date().optional().nullable(),
-  }),
+  collection_case: z
+    .object({
+      id: z.string().cuid(),
+      reference_number: z.string(),
+      issue_date: z.date().optional().nullable(),
+    })
+    .optional(),
   debtor: z
     .object({
       id: z.string().cuid(),

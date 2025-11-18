@@ -30,7 +30,7 @@ const PendingRequestCard: React.FC<PendingRequestCardProps> = ({
     // Fetch collection case details if needed
     const fetchCollectionCase = async () => {
       const data = await getCollectionViewById(
-        collectionCaseAgreement.collection_case_id
+        collectionCaseAgreement.collection_case_id || ""
       );
       setCollectionCase(data);
     };

@@ -457,10 +457,11 @@ exports.Prisma.DebtorIncomeScalarFieldEnum = {
   updated_at: 'updated_at'
 };
 
-exports.Prisma.CollectionCaseAgreementScalarFieldEnum = {
+exports.Prisma.AgreementScalarFieldEnum = {
   id: 'id',
-  collection_case_id: 'collection_case_id',
   debtor_id: 'debtor_id',
+  collection_case_id: 'collection_case_id',
+  verdict_id: 'verdict_id',
   total_amount: 'total_amount',
   installment_amount: 'installment_amount',
   installments_count: 'installments_count',
@@ -473,7 +474,7 @@ exports.Prisma.CollectionCaseAgreementScalarFieldEnum = {
   updated_at: 'updated_at'
 };
 
-exports.Prisma.CollectionCaseAgreementInstallmentScalarFieldEnum = {
+exports.Prisma.AgreementInstallmentScalarFieldEnum = {
   id: 'id',
   agreement_id: 'agreement_id',
   number: 'number',
@@ -481,6 +482,18 @@ exports.Prisma.CollectionCaseAgreementInstallmentScalarFieldEnum = {
   amount: 'amount',
   status: 'status',
   payment_id: 'payment_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.PaymentScalarFieldEnum = {
+  id: 'id',
+  method: 'method',
+  amount: 'amount',
+  documentId: 'documentId',
+  payment_date: 'payment_date',
+  reference_number: 'reference_number',
+  agreement_id: 'agreement_id',
   created_at: 'created_at',
   updated_at: 'updated_at'
 };
@@ -594,8 +607,9 @@ exports.Prisma.ModelName = {
   ChatRoom: 'ChatRoom',
   ChatMessage: 'ChatMessage',
   DebtorIncome: 'DebtorIncome',
-  CollectionCaseAgreement: 'CollectionCaseAgreement',
-  CollectionCaseAgreementInstallment: 'CollectionCaseAgreementInstallment'
+  Agreement: 'Agreement',
+  AgreementInstallment: 'AgreementInstallment',
+  Payment: 'Payment'
 };
 
 /**

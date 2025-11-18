@@ -14,7 +14,7 @@ const VerdictPage: React.FC = () => {
     sentence_amount: 0,
     sentence_date: new Date(),
     procesal_cost: 0,
-    bailiff_id: null,
+    bailiff_id: "",
     verdict_interest: [],
     verdict_embargo: [],
     bailiff_services: [],

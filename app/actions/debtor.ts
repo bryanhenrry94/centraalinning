@@ -318,3 +318,70 @@ export const sendFinancialSummaryEmail = async (
     return false;
   }
 };
+
+export const getAllDebts = async (
+  debtor_id: string
+): Promise<{ success: boolean; data?: any[]; message?: string }> => {
+  try {
+    const collections = await prisma.collectionCase.findMany({
+      where: {
+        debtor_id: debtor_id,
+      },
+    });
+
+    const verdicts = await prisma.verdict.findMany({
+      where: {
+        debtor_id: debtor_id,
+      },
+    });
+
+    const debts: any[] = [];
+
+    collections.forEach((collection) => {
+      debts.push({
+        type: "Buitengerechtelijk",
+        id: collection.id,
+        reference: collection.reference_number,
+        issueDate: collection.issue_date
+          ? collection.issue_date.toISOString()
+          : null,
+        dueDate: collection.due_date ? collection.due_date.toISOString() : null,
+        amount: collection.total_due ? Number(collection.total_due) : 0,
+        status: collection.status,
+        created_at: collection.created_at
+          ? collection.created_at.toISOString()
+          : null,
+      });
+    });
+
+    verdicts.forEach((verdict) => {
+      debts.push({
+        type: "Vonnis",
+        id: verdict.id,
+        reference: verdict.registration_number,
+        issueDate: verdict.sentence_date
+          ? verdict.sentence_date.toISOString()
+          : null,
+        dueDate: verdict.sentence_date
+          ? verdict.sentence_date.toISOString()
+          : null,
+        amount: verdict.sentence_amount ? Number(verdict.sentence_amount) : 0,
+        status: verdict.status,
+        created_at: verdict.created_at
+          ? verdict.created_at.toISOString()
+          : null,
+      });
+    });
+
+    // Sort debts by created_at date descending
+    debts.sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    return { success: true, data: debts };
+  } catch (error) {
+    console.error("Error fetching debts:", error);
+    return { success: false, message: "Error fetching debts" };
+  }
+};

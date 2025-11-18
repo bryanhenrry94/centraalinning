@@ -91,30 +91,6 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
     setOpenModalDebtor(false);
   };
 
-  const handleRequestApproval = async () => {
-    if (!id) return;
-
-    if (!tenant) return;
-
-    AlertService.showConfirm(
-      "Weet je het zeker?",
-      "Met deze actie wordt het vonnis opgeslagen en wordt om goedkeuring gevraagd.",
-      "Ja, aanvragen",
-      "Annuleren"
-    ).then(async (confirmed) => {
-      if (confirmed) {
-        await requestVerdictApproval(id);
-        notifyInfo("Aanvraag voor goedkeuring verzonden");
-
-        // tenant?.subdomain
-        await handleSendMailNotificationBailiff(id);
-        notifyInfo("We hebben een melding naar de deurwaarder gestuurd.");
-
-        router.push(`/dashboard/verdicts`);
-      }
-    });
-  };
-
   const handleSaveDebtor = async (debtor: DebtorBase) => {
     handleSelectDebtor(debtor);
     await fetchDebtors();
@@ -170,7 +146,6 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
 
   const {
     handleSubmit,
-    watch,
     formState: { isSubmitting },
   } = methods;
 
@@ -292,20 +267,6 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
               >
                 Bewaar Vonnis
               </Button>
-              {watch("status") === "DRAFT" &&
-                session?.user?.role !== "BAILIFF" &&
-                watch("bailiff_id") && (
-                  <Button
-                    aria-label="pending"
-                    color="secondary"
-                    variant="contained"
-                    startIcon={<SaveIcon />}
-                    onClick={handleRequestApproval}
-                    disabled={modeEdit ? false : true}
-                  >
-                    Vraag goedkeuring aan
-                  </Button>
-                )}
 
               {session?.user?.role === "BAILIFF" && modeEdit && (
                 <Button

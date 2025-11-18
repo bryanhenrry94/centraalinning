@@ -47,20 +47,20 @@ const AgreementForm: React.FC<AgreementFormProps> = ({
     <form onSubmit={handleSubmit}>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2, p: 2 }}>
         <Box>
-          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          {/* <Box sx={{ display: "flex", justifyContent: "space-between" }}>
             <Typography variant="body2" gutterBottom>
               Aflostermijnen:
             </Typography>
             <Typography variant="h6" gutterBottom>
               {formData?.installments_count || 0}
             </Typography>
-          </Box>
+          </Box> */}
           <Box sx={{ width: "100%", px: 1 }}>
             <Slider
               name="installments_count"
-              defaultValue={3}
+              defaultValue={1}
               step={1}
-              min={3}
+              min={1}
               max={24}
               valueLabelDisplay="auto"
               value={formData?.installments_count || 0}
@@ -79,7 +79,7 @@ const AgreementForm: React.FC<AgreementFormProps> = ({
           </Box>
           <Box sx={{ display: "flex", justifyContent: "space-between" }}>
             <Typography variant="caption" gutterBottom>
-              3 Maanden
+              1 Maand
             </Typography>
             <Typography variant="caption" gutterBottom>
               24 Maanden

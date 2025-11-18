@@ -12,32 +12,41 @@ import { notifyError } from "@/lib/notifications";
 import { protocol, rootDomain } from "@/lib/config";
 import path from "path";
 import fs from "fs/promises";
-import { formatCurrency, formatDate } from "@/utils/formatters";
+import { formatDate } from "@/utils/formatters";
 import { VerdictAttachment } from "@/lib/validations/verdict-attachments";
 import { $Enums } from "@/prisma/generated/prisma";
 import {
   sendInvoiceEmail,
   sendMailRegisterVerdict,
-  sendMailVerdictCreditor,
   sendMailVerdictDebtor,
   sendVerdictApprovalEmail,
 } from "./email";
 import { createInvoice, generateInvoiceNumber } from "./billing-invoice";
 import { BillingInvoiceCreate } from "@/lib/validations/billing-invoice";
 import { BillingInvoiceDetailCreate } from "@/lib/validations/billing-invoice-detail";
-import { InvoicePDFProps } from "@/templates/pdfs";
 import { getParameter } from "./parameter";
 import { VerdictDebtorPDFProps } from "@/templates/pdfs/VerdictDebtorPDF";
-import { VerdictCreditorPDFProps } from "@/templates/pdfs/VerdictCreditorPDF";
 
 export const getAllVerdicts = async (
-  tenant_id: string
+  tenant_id: string,
+  status?: string,
+  debtor_id?: string
 ): Promise<VerdictResponse[]> => {
   try {
+    const whereClause: any = { tenant_id };
+
+    if (status) {
+      whereClause.status = status;
+    }
+
+    if (debtor_id) {
+      whereClause.debtor_id = debtor_id;
+    }
+
+    console.log("Where Clause:", whereClause);
+
     const verdicts = await prisma.verdict.findMany({
-      where: {
-        tenant_id,
-      },
+      where: whereClause,
       include: {
         debtor: true,
         verdict_embargo: true,
@@ -214,8 +223,11 @@ export const createVerdict = async (
           sentence_amount: data.sentence_amount,
           sentence_date: data.sentence_date,
           procesal_cost: data.procesal_cost,
-          bailiff_id: data.bailiff_id ?? null,
+          bailiff_id: data.bailiff_id,
           tenant_id: tenant_id,
+        },
+        include: {
+          tenant: true,
         },
       });
 
@@ -265,26 +277,31 @@ export const createVerdict = async (
         }
       }
 
-      const params = {
-        to: data.creditor_name,
-        verdictReference: newVerdict.registration_number,
-        verdictDate: formatDate(newVerdict.sentence_date.toISOString()),
-      };
-
-      // notify register verdict via email
-      await sendMailRegisterVerdict(params);
-
       // set verdict status to PENDING
-      await prisma.verdict.update({
+      await tx.verdict.update({
         where: { id: newVerdict.id },
         data: { status: "PENDING" },
       });
 
-      // send email to bailiff for approval
-      const bailiff = await tx.bailiff.findUnique({
-        where: { id: newVerdict.bailiff_id ?? "" },
-      });
+      return newVerdict;
+    });
 
+    if (createdVerdict) {
+      // send email to bailiff for approval
+      if (createdVerdict.tenant.contact_email) {
+        const params = {
+          to: createdVerdict.tenant.contact_email || "",
+          verdictReference: createdVerdict.registration_number,
+          verdictDate: formatDate(createdVerdict.sentence_date.toISOString()),
+        };
+
+        await sendMailRegisterVerdict(params);
+      }
+
+      // send email notification to bailiff
+      const bailiff = await prisma.bailiff.findUnique({
+        where: { id: createdVerdict.bailiff_id ?? "" },
+      });
       if (bailiff?.email) {
         await sendVerdictApprovalEmail(
           bailiff.email,
@@ -293,10 +310,6 @@ export const createVerdict = async (
         );
       }
 
-      return newVerdict;
-    });
-
-    if (createdVerdict) {
       return getVerdictById(createdVerdict.id);
     } else {
       return null;
@@ -326,7 +339,7 @@ export const updateVerdict = async (
           sentence_amount: data.sentence_amount,
           sentence_date: data.sentence_date,
           procesal_cost: data.procesal_cost,
-          bailiff_id: data.bailiff_id ?? null,
+          bailiff_id: data.bailiff_id,
         },
       });
 

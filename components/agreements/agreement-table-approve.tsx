@@ -20,7 +20,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import CloseIcon from "@mui/icons-material/Close";
 
 // components
-import { formatCurrency } from "@/utils/formatters";
+import { formatCurrency, formatDate } from "@/utils/formatters";
 import {
   PaymentAgreement,
   PaymentAgreementResponse,
@@ -78,6 +78,16 @@ export const AgreementTableApprove = ({
                 align="center"
               >
                 Akkoord / Annuleren
+              </TableCell>
+              <TableCell
+                sx={{
+                  backgroundColor: "secondary.main",
+                  color: "#fff",
+                  fontWeight: "bold",
+                }}
+                align="center"
+              >
+                Zaaktype
               </TableCell>
               <TableCell
                 sx={{
@@ -179,6 +189,9 @@ export const AgreementTableApprove = ({
                   </IconButton>
                 </TableCell>
                 <TableCell align="center">
+                  {agreement.collection_case ? "Buitengerechtelijk" : "Vonnis"}
+                </TableCell>
+                <TableCell align="center">
                   {new Date(agreement.created_at || "").toLocaleDateString()}
                 </TableCell>
                 <TableCell align="center">
@@ -196,10 +209,10 @@ export const AgreementTableApprove = ({
                   {formatCurrency(agreement.installment_amount)}
                 </TableCell>
                 <TableCell align="center">
-                  {new Date(agreement.start_date).toLocaleDateString()}
+                  {formatDate(agreement.start_date.toString())}
                 </TableCell>
                 <TableCell align="center">
-                  {new Date(agreement.end_date).toLocaleDateString()}
+                  {formatDate(agreement.end_date.toString())}
                 </TableCell>
                 <TableCell align="center">
                   <IconButton>

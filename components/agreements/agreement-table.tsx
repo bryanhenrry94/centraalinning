@@ -1,3 +1,4 @@
+"use client";
 import { formatCurrency, formatDate } from "@/utils/formatters";
 import {
   Box,
@@ -90,8 +91,8 @@ const AgreementTable = ({
               <TableCell
                 sx={{
                   minWidth: 50,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
+                  backgroundColor: "paper.main",
+                  color: "#000",
                   fontWeight: "bold",
                   border: "1px solid #bdbdbd",
                 }}
@@ -102,44 +103,20 @@ const AgreementTable = ({
               <TableCell
                 sx={{
                   minWidth: 50,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
+                  backgroundColor: "paper.main",
+                  color: "#000",
                   fontWeight: "bold",
                   border: "1px solid #bdbdbd",
                 }}
                 align="center"
               >
-                Naam debiteur
+                Open
               </TableCell>
               <TableCell
                 sx={{
                   minWidth: 50,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                  border: "1px solid #bdbdbd",
-                }}
-                align="center"
-              >
-                Referentie
-              </TableCell>
-              <TableCell
-                sx={{
-                  minWidth: 50,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                  border: "1px solid #bdbdbd",
-                }}
-                align="center"
-              >
-                Totaal te bedrag
-              </TableCell>
-              <TableCell
-                sx={{
-                  minWidth: 50,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
+                  backgroundColor: "paper.main",
+                  color: "#000",
                   fontWeight: "bold",
                   border: "1px solid #bdbdbd",
                 }}
@@ -150,8 +127,8 @@ const AgreementTable = ({
               <TableCell
                 sx={{
                   minWidth: 50,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
+                  backgroundColor: "paper.main",
+                  color: "#000",
                   fontWeight: "bold",
                   border: "1px solid #bdbdbd",
                 }}
@@ -161,8 +138,8 @@ const AgreementTable = ({
               </TableCell>
               <TableCell
                 sx={{
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
+                  backgroundColor: "paper.main",
+                  color: "#000",
                   fontWeight: "bold",
                 }}
                 align="center"
@@ -171,8 +148,8 @@ const AgreementTable = ({
               </TableCell>
               <TableCell
                 sx={{
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
+                  backgroundColor: "paper.main",
+                  color: "#000",
                   fontWeight: "bold",
                 }}
                 align="center"
@@ -182,8 +159,8 @@ const AgreementTable = ({
               {/* <TableCell
                 sx={{
                   minWidth: 50,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
+                  backgroundColor: "paper.main",
+                  color: "#000",
                   fontWeight: "bold",
                   border: "1px solid #bdbdbd",
                 }}
@@ -191,18 +168,18 @@ const AgreementTable = ({
               >
                 Eerste termijn datum
               </TableCell> */}
-              <TableCell
+              {/* <TableCell
                 sx={{
                   minWidth: 50,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
+                  backgroundColor: "paper.main",
+                  color: "#000",
                   fontWeight: "bold",
                   border: "1px solid #bdbdbd",
                 }}
                 align="center"
               >
                 Status
-              </TableCell>
+              </TableCell> */}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -215,7 +192,7 @@ const AgreementTable = ({
                   {agreement.debtor?.fullname ?? "N/A"}
                 </TableCell>
                 <TableCell align="center">
-                  {agreement.collection_case.reference_number || "N/A"}
+                  {agreement?.collection_case?.reference_number || "N/A"}
                 </TableCell>
                 <TableCell align="right">
                   {formatCurrency(agreement.total_amount)}
@@ -226,8 +203,12 @@ const AgreementTable = ({
                 <TableCell align="right">
                   {formatCurrency(agreement.installment_amount)}
                 </TableCell>
-                <TableCell align="right"></TableCell>
-                <TableCell align="right"></TableCell>
+                <TableCell align="center">
+                  {formatDate(agreement.start_date.toString())}
+                </TableCell>
+                <TableCell align="center">
+                  {formatDate(agreement.end_date.toString())}
+                </TableCell>
                 {/* <TableCell align="center">
                   {formatDate(agreement.start_date.toString())}
                 </TableCell> */}
@@ -293,6 +274,31 @@ const AgreementTable = ({
                 </TableCell> */}
               </TableRow>
             ))}
+            {/* Datos de prueba */}
+            <TableRow>
+              <TableCell component="th" scope="row" align="center">
+                01-09-2023
+              </TableCell>
+              <TableCell align="right">{formatCurrency(1200)}</TableCell>
+              <TableCell align="center">12</TableCell>
+              <TableCell align="right">{formatCurrency(100)}</TableCell>
+              <TableCell align="center">01-09-2023</TableCell>
+              <TableCell align="center">01-08-2024</TableCell>
+              {/* <TableCell align="center">
+                <PaymentAgreementStatusChip
+                  status={$Enums.AgreementStatus.APPROVED}
+                />
+              </TableCell> */}
+            </TableRow>
+            {/* <TableRow>
+              <TableCell colSpan={9} align="center">
+                {agreements.length === 0 && (
+                  <Typography variant="body2" color="textSecondary">
+                    Geen gegevens beschikbaar.
+                  </Typography>
+                )}
+              </TableCell>
+            </TableRow> */}
           </TableBody>
         </Table>
       </TableContainer>

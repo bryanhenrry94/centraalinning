@@ -18,7 +18,7 @@ type PaymentAgreementFilter = {
 export const getPaymentAgreements = async (
   filter?: Partial<PaymentAgreementFilter>
 ): Promise<PaymentAgreementResponse[]> => {
-  const agreements = await prisma.collectionCaseAgreement.findMany({
+  const agreements = await prisma.agreement.findMany({
     where: { ...filter },
     include: {
       collection_case: true,
@@ -29,7 +29,7 @@ export const getPaymentAgreements = async (
   revalidatePath("/dashboard/payment-agreements");
   return agreements.map((agreement) => ({
     id: agreement.id,
-    collection_case_id: agreement.collection_case_id,
+    collection_case_id: agreement.collection_case_id || "",
     tenant_id: agreement.tenant_id,
     total_amount: Number(agreement.total_amount),
     installment_amount: Number(agreement.installment_amount),
@@ -41,11 +41,13 @@ export const getPaymentAgreements = async (
     updated_at: agreement.updated_at ?? undefined,
     debtor_id: agreement.debtor_id ?? undefined,
     comment: agreement.comment ?? undefined,
-    collection_case: {
-      id: agreement.collection_case.id,
-      reference_number: agreement.collection_case.reference_number ?? "",
-      issue_date: agreement.collection_case.issue_date ?? undefined,
-    },
+    collection_case: agreement?.collection_case
+      ? {
+          id: agreement?.collection_case?.id,
+          reference_number: agreement?.collection_case?.reference_number ?? "",
+          issue_date: agreement?.collection_case?.issue_date ?? undefined,
+        }
+      : undefined,
     debtor: agreement.debtor
       ? {
           id: agreement.debtor.id,
@@ -61,10 +63,11 @@ export const createPaymentAgreement = async (
   tenant_id: string,
   data: PaymentAgreementCreate
 ) => {
-  const newAgreement = await prisma.collectionCaseAgreement.create({
+  const newAgreement = await prisma.agreement.create({
     data: {
       tenant_id: tenant_id,
-      collection_case_id: data.collection_case_id,
+      collection_case_id: data.collection_case_id ?? null,
+      verdict_id: data.verdict_id ?? null,
       total_amount: data.total_amount,
       installment_amount: data.installment_amount,
       installments_count: data.installments_count,
@@ -80,7 +83,7 @@ export const createPaymentAgreement = async (
     const installmentDate = new Date(data.start_date);
     installmentDate.setMonth(installmentDate.getMonth() + i);
 
-    await prisma.collectionCaseAgreementInstallment.create({
+    await prisma.agreementInstallment.create({
       data: {
         agreement_id: newAgreement.id,
         number: i + 1,
@@ -108,12 +111,12 @@ export const createPaymentAgreement = async (
 
 export const deletePaymentAgreement = async (id: string) => {
   // primero elimina las cuotas asociadas al acuerdo de pago
-  await prisma.collectionCaseAgreementInstallment.deleteMany({
+  await prisma.agreementInstallment.deleteMany({
     where: { agreement_id: id },
   });
 
   // luego elimina el acuerdo de pago
-  const agreement = await prisma.collectionCaseAgreement.delete({
+  const agreement = await prisma.agreement.delete({
     where: { id },
   });
 
@@ -149,14 +152,14 @@ export const updatePaymentAgreement = async (
     updateData.debtor_id = data.debtor_id ?? null;
   if (data.comment !== undefined) updateData.comment = data.comment ?? "";
 
-  const updatedAgreement = await prisma.collectionCaseAgreement.update({
+  const updatedAgreement = await prisma.agreement.update({
     where: { id },
     data: updateData,
   });
 
   if (updateData.installments_count) {
     // elimina las cuotas existentes
-    await prisma.collectionCaseAgreementInstallment.deleteMany({
+    await prisma.agreementInstallment.deleteMany({
       where: { agreement_id: id },
     });
 
@@ -167,7 +170,7 @@ export const updatePaymentAgreement = async (
       );
       installmentDate.setMonth(installmentDate.getMonth() + i);
 
-      await prisma.collectionCaseAgreementInstallment.create({
+      await prisma.agreementInstallment.create({
         data: {
           agreement_id: id,
           number: i + 1,
@@ -200,7 +203,7 @@ export const updatePaymentAgreement = async (
 export const existsPaymentAgreement = async (
   collection_case_id: string
 ): Promise<boolean> => {
-  const count = await prisma.collectionCaseAgreement.count({
+  const count = await prisma.agreement.count({
     where: { collection_case_id, status: $Enums.AgreementStatus.ACCEPTED },
   });
 
@@ -210,7 +213,7 @@ export const existsPaymentAgreement = async (
 export const getPaymentAgreementById = async (
   id: string
 ): Promise<PaymentAgreement | null> => {
-  const agreement = await prisma.collectionCaseAgreement.findUnique({
+  const agreement = await prisma.agreement.findUnique({
     where: { id },
   });
 
@@ -220,7 +223,7 @@ export const getPaymentAgreementById = async (
 
   return {
     id: agreement.id,
-    collection_case_id: agreement.collection_case_id,
+    collection_case_id: agreement.collection_case_id || "",
     tenant_id: agreement.tenant_id,
     total_amount: Number(agreement.total_amount),
     installment_amount: Number(agreement.installment_amount),
@@ -237,7 +240,7 @@ export const getPaymentAgreementById = async (
 export const countPaymentAgreementsByCollection = async (
   collection_case_id: string
 ): Promise<number> => {
-  const count = await prisma.collectionCaseAgreement.count({
+  const count = await prisma.agreement.count({
     where: { collection_case_id },
   });
 
@@ -245,11 +248,9 @@ export const countPaymentAgreementsByCollection = async (
 };
 
 export const getInstallmentsByAgreement = async (agreement_id: string) => {
-  const installments = await prisma.collectionCaseAgreementInstallment.findMany(
-    {
-      where: { agreement_id },
-    }
-  );
+  const installments = await prisma.agreementInstallment.findMany({
+    where: { agreement_id },
+  });
 
   return installments.map((installment) => ({
     id: installment.id,
@@ -265,7 +266,7 @@ export const getInstallmentsByAgreement = async (agreement_id: string) => {
 
 export const hasAgreement = async (collectionId: string): Promise<boolean> => {
   try {
-    const agreement = await prisma.collectionCaseAgreement.findFirst({
+    const agreement = await prisma.agreement.findFirst({
       where: {
         collection_case_id: collectionId,
         status: $Enums.AgreementStatus.ACCEPTED,
@@ -284,7 +285,7 @@ export const hasPaymentsUpToDate = async (
   collectionId: string
 ): Promise<boolean> => {
   try {
-    const agreement = await prisma.collectionCaseAgreement.findFirst({
+    const agreement = await prisma.agreement.findFirst({
       where: {
         collection_case_id: collectionId,
         status: $Enums.AgreementStatus.ACCEPTED,
@@ -315,7 +316,7 @@ export const hasPaymentsUpToDate = async (
 export const cancelAgreementsByCollectionCase = async (
   collection_case_id: string
 ) => {
-  await prisma.collectionCaseAgreement.updateMany({
+  await prisma.agreement.updateMany({
     where: {
       collection_case_id,
       status: $Enums.AgreementStatus.ACCEPTED,

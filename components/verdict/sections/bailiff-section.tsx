@@ -94,10 +94,9 @@ export const BailiffSection: React.FC<BailiffSectionProps> = ({
                 />
               )}
             />
-            <IconButton aria-label="toggle password visibility" edge="end">
-              {/* <FaUserEdit onClick={onOpenModalDebtor} /> */}
+            {/* <IconButton aria-label="toggle password visibility" edge="end">
               <PersonAddIcon onClick={handleOpenModalBailiff} />
-            </IconButton>
+            </IconButton> */}
           </Box>
         </Grid>
       </Grid>

@@ -60,7 +60,7 @@ async function main() {
     },
   });
 
-  const password_hash = await hash("@M1n0T4ur0", 10);
+  const password_hash = await hash("demo1234", 10);
 
   await prisma.user.upsert({
     where: { id: "28112419-5c53-47c5-b109-a29d02c1bb5d" },

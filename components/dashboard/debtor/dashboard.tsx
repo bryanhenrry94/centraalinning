@@ -19,6 +19,7 @@ import {
   TableCell,
   TableBody,
   Stack,
+  Tooltip,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import HandshakeIcon from "@mui/icons-material/Handshake";
@@ -32,18 +33,20 @@ import {
   PaymentAgreementCreate,
   PaymentAgreementResponse,
 } from "@/lib/validations/payment-agreement";
+import { notifyError, notifyInfo } from "@/lib/notifications";
+import TabPanel from "@/components/ui/tab-panel";
+import AgreementForm from "@/components/agreements/agreement-form";
+import { $Enums, CollectionCaseNotification } from "@/prisma/generated/prisma";
+import ModalNotifications from "@/components/notification/modal-notifications";
+import { useTenant } from "@/hooks/useTenant";
+// Actions
 import {
   createPaymentAgreement,
   existsPaymentAgreement,
   getPaymentAgreements,
   updatePaymentAgreement,
 } from "@/app/actions/payment-agreement";
-import { notifyError, notifyInfo } from "@/lib/notifications";
-import TabPanel from "@/components/ui/tab-panel";
-import AgreementForm from "@/components/agreements/agreement-form";
-import { getDebtorByUserId } from "@/app/actions/debtor";
-import { $Enums, CollectionCaseNotification } from "@/prisma/generated/prisma";
-import ModalNotifications from "@/components/notification/modal-notifications";
+import { getAllDebts, getDebtorByUserId } from "@/app/actions/debtor";
 import { getAllNotificationsByCollectionCase } from "@/app/actions/notification";
 
 const DashboardDebtor = () => {
@@ -53,20 +56,16 @@ const DashboardDebtor = () => {
   // State variables
   const [loading, setLoading] = useState(false);
   const [value, setValue] = React.useState(0);
-  const [paymentAgreements, setPaymentAgreements] = useState<
-    PaymentAgreementResponse[]
-  >([]);
-  const [collectionCaseSelected, setCollectionCaseSelected] =
-    useState<CollectionCaseResponse | null>(null);
-  const [collectionCases, setCollectionCases] = useState<
-    CollectionCaseResponse[]
-  >([]);
+
   const [notifications, setNotifications] = useState<
     CollectionCaseNotification[]
   >([]);
   const [openModalAgreement, setOpenModalAgreement] = React.useState(false);
   const [openModalNotifications, setOpenModalNotifications] =
     React.useState(false);
+
+  const [debtSelected, setDebtSelected] = useState<any | null>(null);
+  const [debts, setDebts] = React.useState<any[]>([]);
 
   const handleOpenModalNotifications = async (caseId: string) => {
     await fetchNotifications(caseId);
@@ -76,56 +75,35 @@ const DashboardDebtor = () => {
   const handleCloseModalNotifications = () => setOpenModalNotifications(false);
 
   useEffect(() => {
-    fetchCollectionCases();
-    fetchPaymentAgreements();
+    fetchDebts();
   }, []);
+
+  const fetchDebts = async () => {
+    try {
+      const debtor = await getDebtorByUserId(user?.id as string);
+      if (!debtor) {
+        notifyError("No se encontró el deudor asociado al usuario");
+        return;
+      }
+      const response = await getAllDebts(debtor.id);
+      if (response.success) {
+        console.log("Debts fetched:", response.data);
+        setDebts(response.data || []);
+      } else {
+        setDebts([]);
+      }
+      // Fetch debts logic here
+      // For demonstration, setting an empty array
+    } catch (error) {
+      console.error("Error fetching debts:", error);
+    }
+  };
 
   const handleOpenModalAgreement = () => {
     setOpenModalAgreement(true);
   };
 
   const handleCloseModalAgreement = () => setOpenModalAgreement(false);
-
-  const fetchCollectionCases = async () => {
-    try {
-      const debtor = await getDebtorByUserId(user?.id as string);
-      if (!debtor) {
-        notifyError("No se encontró el deudor asociado al usuario");
-        return;
-      }
-
-      const params = {
-        tenant_id: session?.user?.tenant_id as string,
-        debtor_id: debtor.id,
-      };
-      const data = await getAllCollectionCases(params);
-      setCollectionCases(data);
-    } catch (error) {
-      console.error("Error fetching collection cases:", error);
-    }
-  };
-
-  const fetchPaymentAgreements = async () => {
-    try {
-      setLoading(true);
-
-      const debtor = await getDebtorByUserId(user?.id as string);
-      if (!debtor) {
-        notifyError("No se encontró el deudor asociado al usuario");
-        return;
-      }
-
-      const data = await getPaymentAgreements({ debtor_id: debtor.id });
-      if (data) {
-        setPaymentAgreements(data);
-      }
-    } catch (error) {
-      console.error("Error fetching payment agreements:", error);
-      notifyError("Error al cargar los acuerdos de pago");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchNotifications = async (caseId: string) => {
     try {
@@ -137,22 +115,13 @@ const DashboardDebtor = () => {
     }
   };
 
-  const onDeleteAgreement = () => {
-    if (!collectionCaseSelected) return;
-    fetchPaymentAgreements();
-  };
-
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
-  };
-
   const handleAgreementSubmit = async (data: Partial<PaymentAgreement>) => {
     // Implement submission logic here
     try {
       setLoading(true);
       console.log("Agreement Data Submitted:", data);
 
-      if (!collectionCaseSelected?.id) return;
+      if (!debtSelected?.id) return;
 
       if (!session?.user?.tenant_id) {
         notifyError("No se encontró el tenant_id del usuario");
@@ -160,7 +129,8 @@ const DashboardDebtor = () => {
       }
 
       const agreementCreate: PaymentAgreementCreate = {
-        collection_case_id: collectionCaseSelected.id,
+        collection_case_id: debtSelected.collection_case_id || null,
+        verdict_id: debtSelected.verdict_id || null,
         total_amount: Number(data.total_amount),
         installments_count: Number(data.installments_count),
         installment_amount: Number(data.installment_amount),
@@ -174,7 +144,7 @@ const DashboardDebtor = () => {
         return;
       }
 
-      const exists = await existsPaymentAgreement(collectionCaseSelected?.id);
+      const exists = await existsPaymentAgreement(debtSelected?.id);
       if (exists) {
         notifyError("Ya existe un acuerdo de pago para esta collection");
         return;
@@ -188,8 +158,9 @@ const DashboardDebtor = () => {
 
       agreementCreate.debtor_id = debtor.id;
 
+      console.log("Creating agreement with data:", agreementCreate);
+
       await createPaymentAgreement(session?.user?.tenant_id, agreementCreate);
-      await fetchPaymentAgreements();
       handleCloseModalAgreement();
       notifyInfo("Payment agreement submitted successfully");
     } catch (error) {
@@ -200,50 +171,8 @@ const DashboardDebtor = () => {
     }
   };
 
-  const handleApprove = async (data: Partial<PaymentAgreement>) => {
-    try {
-      setLoading(true);
-      if (!data.id) {
-        notifyError("Agreement ID is required");
-        return;
-      }
-      await updatePaymentAgreement(data.id, {
-        ...data,
-        status: $Enums.AgreementStatus.ACCEPTED,
-      });
-      notifyInfo("Payment agreement approved successfully");
-      fetchPaymentAgreements();
-    } catch (error) {
-      console.error("Error approving payment agreement:", error);
-      notifyError("Error al aprobar el acuerdo de pago");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleReject = async (data: Partial<PaymentAgreement>) => {
-    try {
-      setLoading(true);
-      if (!data.id) {
-        notifyError("Agreement ID is required");
-        return;
-      }
-      await updatePaymentAgreement(data.id, {
-        ...data,
-        status: $Enums.AgreementStatus.REJECTED,
-      });
-      notifyInfo("Payment agreement rejected successfully");
-      fetchPaymentAgreements();
-    } catch (error) {
-      console.error("Error rejecting payment agreement:", error);
-      notifyError("Error al rechazar el acuerdo de pago");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <Container maxWidth="lg">
+    <Container maxWidth="xl">
       <Typography variant="h4" gutterBottom>
         Mijn schulden
       </Typography>
@@ -252,141 +181,111 @@ const DashboardDebtor = () => {
         <TableContainer component={Paper} sx={{ mt: 2 }}>
           <Table
             stickyHeader
+            size="small" // DENSE
             sx={{
               "& .MuiTableCell-root": {
                 border: "1px solid #e0e0e0",
+                padding: "4px 8px", // compacto
+              },
+              "& .MuiTableRow-root": {
+                height: "32px", // compacta las filas
               },
             }}
             aria-label="tabla de embargo"
-            size="small"
           >
             <TableHead>
               <TableRow>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Referentie
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Status
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Datum
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Reactietermijn
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Totaal te bedrag
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Betalingsregeling
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Overzicht
-                </TableCell>
+                {[
+                  "Zaaktype",
+                  "Referentie",
+                  "Status",
+                  "Datum",
+                  "Reactietermijn",
+                  "Totaal",
+                  "Boet",
+                  "Betaling",
+                  "Open",
+                  "Actie",
+                ].map((col) => (
+                  <TableCell
+                    key={col}
+                    align="center"
+                    sx={{
+                      minWidth: 50,
+                      backgroundColor: "secondary.main",
+                      color: "#fff",
+                      fontWeight: "bold",
+                      border: "1px solid #bdbdbd",
+                      padding: "4px 8px",
+                    }}
+                  >
+                    {col}
+                  </TableCell>
+                ))}
               </TableRow>
             </TableHead>
+
             <TableBody>
-              {collectionCases.map((caseItem) => (
-                <TableRow key={caseItem.id}>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {caseItem.reference_number}
+              {debts.map((debt) => (
+                <TableRow key={debt.id}>
+                  <TableCell sx={{ textAlign: "left" }}>{debt.type}</TableCell>
+                  <TableCell sx={{ textAlign: "left" }}>
+                    {debt.reference}
                   </TableCell>
                   <TableCell sx={{ textAlign: "center" }}>
-                    {caseItem.status}
+                    {debt.status}
                   </TableCell>
                   <TableCell sx={{ textAlign: "center" }}>
-                    {formatDate(caseItem.issue_date?.toString() || "")}
+                    {formatDate(debt.issueDate?.toString() || "")}
                   </TableCell>
                   <TableCell sx={{ textAlign: "center" }}>
-                    {formatDate(caseItem.due_date?.toString() || "")}
+                    {formatDate(debt.dueDate?.toString() || "")}
                   </TableCell>
                   <TableCell sx={{ textAlign: "right" }}>
-                    {formatCurrency(caseItem.total_due)}
+                    {formatCurrency(debt.amount)}
                   </TableCell>
+                  <TableCell sx={{ textAlign: "right" }}>
+                    {formatCurrency(0)}
+                  </TableCell>
+                  <TableCell sx={{ textAlign: "right" }}>
+                    {formatCurrency(0)}
+                  </TableCell>
+                  <TableCell sx={{ textAlign: "right" }}>
+                    {formatCurrency(0)}
+                  </TableCell>
+
                   <TableCell sx={{ textAlign: "center" }}>
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCollectionCaseSelected(caseItem);
-                        handleOpenModalAgreement();
-                      }}
-                      startIcon={<HandshakeIcon />}
-                    >
-                      Nieuwe regeling
-                    </Button>
-                  </TableCell>
-                  <TableCell>
                     <Stack direction="row" spacing={1} justifyContent="center">
-                      <IconButton>
-                        <VisibilityIcon
-                          onClick={() => {
-                            handleOpenModalNotifications(caseItem.id);
+                      <Tooltip title="Betalingsregeling">
+                        <IconButton
+                          onClick={(e) => {
+                            e.stopPropagation();
+
+                            debt.collection_case_id =
+                              debt.type === "Buitengerechtelijk"
+                                ? debt.id
+                                : null;
+
+                            debt.verdict_id =
+                              debt.type === "Vonnis" ? debt.verdict_id : null;
+
+                            setDebtSelected(debt);
+                            handleOpenModalAgreement();
                           }}
-                        />
-                      </IconButton>
+                          size="small" // más compacto
+                        >
+                          <HandshakeIcon color="primary" fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+
+                      <Tooltip title="Overzicht">
+                        <IconButton
+                          onClick={() => handleOpenModalNotifications(debt.id)}
+                          size="small"
+                        >
+                          <VisibilityIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                     </Stack>
                   </TableCell>
                 </TableRow>
@@ -396,21 +295,25 @@ const DashboardDebtor = () => {
         </TableContainer>
       </Suspense>
 
-      <Box sx={{ width: "100%", mt: 4 }}>
-        <Tabs value={value} onChange={handleChange} aria-label="example tabs">
-          <Tab value={0} label="Betalingsovereenkomsten" wrapped />
-        </Tabs>
+      <Box sx={{ mt: 6, display: "flex", justifyContent: "flex-end" }}>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Typography variant="h6" sx={{ fontWeight: 500 }}>
+            Totale schulden:
+          </Typography>
+
+          <Box sx={{ bgcolor: "grey.100", px: 2, py: 1, borderRadius: 1 }}>
+            <Typography
+              variant="h4"
+              sx={{ fontWeight: 600, ml: 1 }}
+              color="primary.main"
+            >
+              {formatCurrency(
+                debts.reduce((total, debt) => total + (debt.amount || 0), 0)
+              )}
+            </Typography>
+          </Box>
+        </Stack>
       </Box>
-      <TabPanel value={value} index={0}>
-        <Box sx={{ mt: 2 }}>
-          <AgreementTable
-            agreements={paymentAgreements}
-            onDelete={onDeleteAgreement}
-            onApprove={handleApprove}
-            onReject={handleReject}
-          />
-        </Box>
-      </TabPanel>
 
       <Modal
         open={openModalAgreement}
@@ -454,12 +357,15 @@ const DashboardDebtor = () => {
               <CloseIcon onClick={handleCloseModalAgreement} />
             </IconButton>
           </Box>
+
+          {/* {JSON.stringify(debtSelected)} */}
           <AgreementForm
             onSubmit={handleAgreementSubmit}
             initialData={{
-              ...collectionCaseSelected,
-              total_amount: collectionCaseSelected?.total_due ?? 0,
-              installments_count: 3,
+              ...debtSelected,
+
+              total_amount: debtSelected?.amount ?? 0,
+              installments_count: 1,
               start_date: new Date(
                 new Date().getFullYear(),
                 new Date().getMonth() + 1,

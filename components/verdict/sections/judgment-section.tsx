@@ -9,18 +9,32 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Controller, useFormContext } from "react-hook-form";
+import { Controller, Resolver, useFormContext } from "react-hook-form";
 import AddIcon from "@mui/icons-material/Add";
 
 // Local Components and Functions
 import { DebtorBase } from "@/lib/validations/debtor";
-import { Verdict } from "@/lib/validations/verdict";
+import {
+  Verdict,
+  VerdictCreateForm,
+  VerdictCreateFormSchema,
+  VerdictJudgment,
+  VerdictJudgmentSchema,
+} from "@/lib/validations/verdict";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface JudgmentSectionProps {
   handleOpenModalDebtor: () => void;
   onSelectDebtor: (debtor: DebtorBase | null) => void;
   debtors: DebtorBase[];
 }
+
+// {
+//     resolver: zodResolver(
+//       VerdictCreateFormSchema
+//     ) as Resolver<VerdictCreateForm>,
+//     defaultValues: {},
+//   }
 
 export const JudgmentSection: React.FC<JudgmentSectionProps> = ({
   handleOpenModalDebtor,
@@ -29,9 +43,8 @@ export const JudgmentSection: React.FC<JudgmentSectionProps> = ({
 }) => {
   const {
     control,
-    watch,
     formState: { errors },
-  } = useFormContext<Verdict>();
+  } = useFormContext<VerdictJudgment>();
 
   return (
     <Paper
@@ -74,7 +87,7 @@ export const JudgmentSection: React.FC<JudgmentSectionProps> = ({
                     fullWidth
                     {...field}
                     value={field.value ?? ""}
-                    error={!!errors.invoice_number}
+                    error={errors.invoice_number ? true : false}
                     helperText={errors.invoice_number?.message}
                   />
                 )}

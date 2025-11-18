@@ -18,14 +18,17 @@ export const VerdictStatusEnum = z.enum([
 
 // Verdict schema
 const VerdictBaseSchema = z.object({
-  id: z.string().uuid({ message: "El id debe ser un UUID válido." }),
-  invoice_number: z.string({ message: "El número de factura es obligatorio." }),
-  creditor_name: z.string().max(100, {
-    message: "El nombre del acreedor no debe exceder 100 caracteres.",
-  }),
+  id: z.string().uuid({ message: "De id moet een geldige UUID zijn." }),
+  invoice_number: z.string({ message: "Het factuurnummer is verplicht." }),
+  creditor_name: z
+    .string({ message: "De naam van de schuldeiser is verplicht." })
+    .max(100, {
+      message:
+        "De naam van de schuldeiser mag niet langer zijn dan 100 tekens.",
+    }),
   debtor_id: z.string(),
   registration_number: z.string().max(100, {
-    message: "El número de registro no debe exceder 100 caracteres.",
+    message: "Het registratienummer mag maximaal 100 tekens lang zijn.",
   }),
   sentence_amount: z.preprocess(
     (val) => (typeof val === "string" ? Number(val) : val),
@@ -45,9 +48,8 @@ const VerdictBaseSchema = z.object({
   bailiff_id: z.preprocess(
     (val) => (val === "" ? null : val),
     z
-      .string()
-      .uuid({ message: "El id del alguacil debe ser un UUID válido." })
-      .nullable()
+      .string({ message: "Selecteer een deurwaarder" })
+      .uuid({ message: "Selecteer een geldige deurwaarder" })
   ),
   bailiff_services: z.array(VerdictBailiffServicesCreateSchema).optional(),
   status: VerdictStatusEnum,
@@ -77,6 +79,17 @@ export const VerdictResponseSchema = VerdictBaseSchema.extend({
   verdict_embargo: z.array(VerdictEmbargoBaseSchema),
 });
 
+export const VerdictJudgmentSchema = VerdictBaseSchema.pick({
+  id: true,
+  invoice_number: true,
+  creditor_name: true,
+  debtor_id: true,
+  registration_number: true,
+  sentence_amount: true,
+  sentence_date: true,
+  procesal_cost: true,
+});
+
 // Types
 export type VerdictStatus = z.infer<typeof VerdictStatusEnum>;
 export type Verdict = z.infer<typeof VerdictSchema>;
@@ -84,3 +97,4 @@ export type VerdictResponse = z.infer<typeof VerdictResponseSchema>;
 export type VerdictCreate = z.infer<typeof VerdictCreateSchema>;
 export type VerdictUpdate = z.infer<typeof VerdictUpdateSchema>;
 export type VerdictCreateForm = z.infer<typeof VerdictCreateFormSchema>;
+export type VerdictJudgment = z.infer<typeof VerdictJudgmentSchema>;
