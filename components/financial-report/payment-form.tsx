@@ -16,12 +16,12 @@ interface PaymentFormProps {
   loading: boolean;
 }
 
-export default function PaymentForm({
+export const PaymentCXForm = ({
   amount,
   onSuccess,
   disabled,
   loading,
-}: PaymentFormProps) {
+}: PaymentFormProps) => {
   const [fname, setFname] = useState("");
   const [lname, setLname] = useState("");
 
@@ -137,4 +137,4 @@ export default function PaymentForm({
       </Typography>
     </Box>
   );
-}
+};

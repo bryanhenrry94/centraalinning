@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Box, Typography, Alert } from "@mui/material";
 import { ShoppingCart } from "@mui/icons-material";
-import PaymentForm from "@/components/financial-report/payment-form";
+import { PaymentCXForm } from "@/components/financial-report/payment-form";
 
 type Item = {
   id: number;
@@ -116,7 +116,7 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
             {/* <Chip label="Seguro" color="success" /> */}
           </Box>
 
-          <PaymentForm
+          <PaymentCXForm
             amount={amount}
             onSuccess={handlePaymentSuccess}
             disabled={orderCompleted}

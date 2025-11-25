@@ -61,6 +61,7 @@ export const getAllVerdicts = async (
     // Map the verdicts to match the VerdictResponse type
     const mappedVerdicts: VerdictResponse[] = verdicts.map((verdict) => ({
       ...verdict,
+      debt_id: verdict.debt_id ?? undefined,
       procesal_cost:
         verdict.procesal_cost === null ? undefined : verdict.procesal_cost,
       debtor: verdict.debtor
@@ -138,6 +139,7 @@ export const getVerdictById = async (
       ...verdict,
       procesal_cost: verdict.procesal_cost ?? undefined,
       sentence_date: verdict.sentence_date,
+      debt_id: verdict.debt_id ?? undefined,
       debtor: verdict.debtor
         ? {
             ...verdict.debtor,
@@ -213,6 +215,8 @@ export const createVerdict = async (
     console.log("iniciando transaccion verdict");
     // initialize transaction
     const createdVerdict = await prisma.$transaction(async (tx) => {
+      let total_due: number = data.sentence_amount + (data.procesal_cost || 0);
+
       // create new verdict
       const newVerdict = await tx.verdict.create({
         data: {
@@ -255,6 +259,14 @@ export const createVerdict = async (
             })),
           });
         }
+
+        // Calculate total_due interest from all verdict interests
+        const totalInterest = data.verdict_interest.reduce(
+          (sum, item) => sum + item.total_interest,
+          0
+        );
+
+        total_due += totalInterest;
       }
 
       // if verdict embargo exists
@@ -275,12 +287,31 @@ export const createVerdict = async (
             },
           });
         }
+
+        const totalEmbargo = data.verdict_embargo.reduce(
+          (sum, item) => sum + item.total_amount,
+          0
+        );
+
+        total_due += totalEmbargo;
       }
 
-      // set verdict status to PENDING
+      // Registra deuda en tabla debt
+      const newDebt = await tx.debt.create({
+        data: {
+          debtor_id: data.debtor_id,
+          tenant_id: tenant_id,
+          source_type: $Enums.DebtSourceType.VERDICT,
+          source_id: newVerdict.id,
+          principal_amount: total_due,
+          status: $Enums.DebtStatus.OPEN,
+        },
+      });
+
+      // Actualiza el veredicto con el debt_id y cambia estado a PENDING
       await tx.verdict.update({
         where: { id: newVerdict.id },
-        data: { status: "PENDING" },
+        data: { status: "PENDING", debt_id: newDebt.id },
       });
 
       return newVerdict;
@@ -327,6 +358,9 @@ export const updateVerdict = async (
   try {
     console.log("updateVerdict ID: ", verdict_id);
     console.log("updateVerdict Data: ", data);
+
+    let total_due: number = 0;
+    total_due += (data.sentence_amount || 0) + (data.procesal_cost || 0);
 
     const updatedVerdict = await prisma.$transaction(async (tx) => {
       const verdict = await prisma.verdict.update({
@@ -392,6 +426,13 @@ export const updateVerdict = async (
             })),
           });
         }
+
+        const totalInterest = data.verdict_interest.reduce(
+          (sum, item) => sum + item.total_interest,
+          0
+        );
+
+        total_due += totalInterest;
       }
 
       // if verdict embargo exists
@@ -428,6 +469,13 @@ export const updateVerdict = async (
             },
           });
         }
+
+        const totalEmbargo = data.verdict_embargo.reduce(
+          (sum, item) => sum + item.total_amount,
+          0
+        );
+
+        total_due += totalEmbargo;
       }
 
       if (data.bailiff_services) {
@@ -442,6 +490,20 @@ export const updateVerdict = async (
               verdict_id: verdict_id,
             },
           });
+        }
+      }
+
+      // Actualiza la deuda asociada
+      if (verdict.debt_id) {
+        try {
+          await tx.debt.update({
+            where: { id: verdict.debt_id },
+            data: {
+              principal_amount: total_due,
+            },
+          });
+        } catch (e) {
+          console.warn(`No existing debt found for verdict ${verdict.debt_id}`);
         }
       }
 

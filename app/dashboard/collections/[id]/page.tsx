@@ -16,42 +16,27 @@ import {
   TableBody,
   Button,
   Modal,
-  IconButton,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
 import { CollectionCaseView } from "@/lib/validations/collection";
 import { Payment } from "@/lib/validations/payment";
 import { getCollectionViewById } from "@/app/actions/collection-case";
 import { notifyError, notifyInfo } from "@/lib/notifications";
 import { formatCurrency } from "@/utils/formatters";
 import { getPaymentsByInvoice } from "@/app/actions/payment";
-import PaymentForm from "@/components/payment/payment-form";
 import {
   getAllNotificationsByCollectionCase,
   sendNotification,
 } from "@/app/actions/notification";
 import { Notification } from "@/lib/validations/notification";
 import TabPanel from "@/components/ui/tab-panel";
-import {
-  PaymentAgreement,
-  PaymentAgreementCreate,
-  PaymentAgreementResponse,
-} from "@/lib/validations/payment-agreement";
-import {
-  createPaymentAgreement,
-  existsPaymentAgreement,
-  getPaymentAgreements,
-} from "@/app/actions/payment-agreement";
-import AgreementForm from "@/components/agreements/agreement-form";
-import AgreementTable from "@/components/agreements/agreement-table";
+
 import { useSession } from "next-auth/react";
-import { getDebtorByUserId } from "@/app/actions/debtor";
-import { $Enums } from "@/prisma/generated/prisma";
+import LoadingUI from "@/components/ui/loading-ui";
+import { PaymentFormDialog } from "@/components/payment/payment-form-dialog";
 
 const CollectionViewPage: React.FC = () => {
   const router = useRouter();
-  const { data: session } = useSession();
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(false);
   const [collection, setCollection] = React.useState<CollectionCaseView | null>(
     null
   );
@@ -60,17 +45,10 @@ const CollectionViewPage: React.FC = () => {
     null
   );
   const [value, setValue] = React.useState(0);
-  const [paymentAgreements, setPaymentAgreements] = useState<
-    PaymentAgreementResponse[]
-  >([]);
 
   const [openModalPayment, setOpenModalPayment] = React.useState(false);
   const handleOpenModalPayment = () => setOpenModalPayment(true);
   const handleCloseModalPayment = () => setOpenModalPayment(false);
-
-  const [openModalAgreement, setOpenModalAgreement] = React.useState(false);
-  const handleOpenModalAgreement = () => setOpenModalAgreement(true);
-  const handleCloseModalAgreement = () => setOpenModalAgreement(false);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -82,7 +60,6 @@ const CollectionViewPage: React.FC = () => {
     fetchInvoice();
     fetchPayments();
     fetchNotifications();
-    fetchPaymentAgreements();
   }, []);
 
   const fetchInvoice = async () => {
@@ -169,84 +146,6 @@ const CollectionViewPage: React.FC = () => {
     }
   };
 
-  const fetchPaymentAgreements = async () => {
-    try {
-      setLoading(true);
-      if (!params.id) {
-        notifyError("ID de collection no proporcionado");
-        router.back();
-        return;
-      }
-
-      const data = await getPaymentAgreements({
-        collection_case_id: params.id as string,
-      });
-      if (data) {
-        setPaymentAgreements(data);
-      }
-    } catch (error) {
-      console.error("Error fetching payment agreements:", error);
-      notifyError("Error al cargar los acuerdos de pago");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAgreementSubmit = async (data: Partial<PaymentAgreement>) => {
-    // Implement submission logic here
-    try {
-      setLoading(true);
-      console.log("Agreement Data Submitted:", data);
-
-      if (!session?.user?.tenant_id) {
-        notifyError("No se pudo obtener la información del inquilino");
-        return;
-      }
-
-      const debtor = await getDebtorByUserId(collection?.debtor_id || "");
-      if (!debtor) {
-        notifyError("No se encontró el deudor asociado al usuario");
-        return;
-      }
-
-      const agreementCreate: PaymentAgreementCreate = {
-        collection_case_id: data.collection_case_id || "",
-        total_amount: Number(data.total_amount) || 0,
-        installments_count: Number(data.installments_count) || 0,
-        installment_amount: Number(data.installment_amount) || 0,
-        start_date: data.start_date || new Date(),
-        end_date: data.end_date || new Date(),
-        status: data.status || $Enums.AgreementStatus.PENDING,
-        debtor_id: data.debtor_id,
-      };
-
-      if (agreementCreate.start_date < new Date()) {
-        notifyError("La fecha de inicio debe ser mayor a la fecha actual");
-        return;
-      }
-
-      const exists = await existsPaymentAgreement(params.id as string);
-      if (exists) {
-        notifyError("Ya tiene un acuerdo de pago vigente");
-        return;
-      }
-
-      await createPaymentAgreement(session?.user?.tenant_id, agreementCreate);
-      await fetchPaymentAgreements();
-      handleCloseModalAgreement();
-      notifyInfo("Payment agreement submitted successfully");
-    } catch (error) {
-      console.error("Error creating payment agreement:", error);
-      notifyError("Error al crear el acuerdo de pago");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onDeleteAgreement = async () => {
-    await fetchPaymentAgreements();
-  };
-
   return (
     <Container maxWidth="lg">
       <Container maxWidth="lg" sx={{ py: 6 }}>
@@ -268,6 +167,9 @@ const CollectionViewPage: React.FC = () => {
               OVERZICHT VORDERING
             </Typography>
           </Box>
+
+          {loading ?? <LoadingUI />}
+
           <Box sx={{ p: 2 }}>
             <Typography variant="body1" color="text.secondary">
               Datum vordering:{" "}
@@ -304,8 +206,7 @@ const CollectionViewPage: React.FC = () => {
         <Box sx={{ width: "100%" }}>
           <Tabs value={value} onChange={handleChange} aria-label="example tabs">
             <Tab value={0} label="Betalingen" wrapped />
-            <Tab value={1} label="Overeenkomsten" />
-            <Tab value={2} label="Notificaties" />
+            <Tab value={1} label="Notificaties" />
           </Tabs>
         </Box>
         <TabPanel value={value} index={0}>
@@ -317,28 +218,11 @@ const CollectionViewPage: React.FC = () => {
             >
               Nieuwe betaling
             </Button>
-            <Modal
+
+            <PaymentFormDialog
               open={openModalPayment}
               onClose={handleCloseModalPayment}
-              aria-labelledby="modal-modal-title"
-              aria-describedby="modal-modal-description"
-            >
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  width: 400,
-                  bgcolor: "background.paper",
-                  borderRadius: 2,
-                  boxShadow: 24,
-                  p: 4,
-                }}
-              >
-                <PaymentForm />
-              </Box>
-            </Modal>
+            />
 
             <TableContainer component={Paper}>
               <Table aria-label="simple table">
@@ -360,7 +244,7 @@ const CollectionViewPage: React.FC = () => {
                         {new Date(payment.payment_date).toLocaleDateString()}
                       </TableCell>
                       <TableCell align="right">
-                        {formatCurrency(payment.amount)}
+                        {formatCurrency(payment.total_amount)}
                       </TableCell>
                       <TableCell align="right">{payment.method}</TableCell>
                       <TableCell align="right">
@@ -374,81 +258,6 @@ const CollectionViewPage: React.FC = () => {
           </Box>
         </TabPanel>
         <TabPanel value={value} index={1}>
-          <Box sx={{ mt: 2 }}>
-            <Button
-              variant="contained"
-              sx={{ mb: 2 }}
-              onClick={handleOpenModalAgreement}
-            >
-              NIEUWE OVEREENKOMST
-            </Button>
-            <AgreementTable
-              agreements={paymentAgreements}
-              onDelete={onDeleteAgreement}
-            />
-            <Modal
-              open={openModalAgreement}
-              onClose={handleCloseModalAgreement}
-              aria-labelledby="modal-modal-title"
-              aria-describedby="modal-modal-description"
-            >
-              <Paper
-                component="section"
-                sx={{
-                  mt: 2,
-                  elevation: 1,
-                  borderRadius: 1,
-                  overflow: "hidden",
-                  mb: 2,
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  width: 400,
-                }}
-              >
-                <Box
-                  sx={{
-                    bgcolor: "secondary.main",
-                    color: "white",
-                    px: 2,
-                    py: 1.5,
-                    borderTopLeftRadius: 8,
-                    borderTopRightRadius: 8,
-                    borderBottom: "1px solid #e0e0e0",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    component="h3"
-                    sx={{ fontWeight: 600 }}
-                  >
-                    NIEUWE OVEREENKOMST
-                  </Typography>
-                  <IconButton sx={{ color: "white" }}>
-                    <CloseIcon onClick={handleCloseModalAgreement} />
-                  </IconButton>
-                </Box>
-                <AgreementForm
-                  onSubmit={handleAgreementSubmit}
-                  initialData={{
-                    collection_case_id: params.id as string,
-                    total_amount: collection?.amount_original || 0,
-                    installments_count: 0,
-                    installment_amount: 0,
-                    start_date: new Date(),
-                    status: "ACTIVE",
-                  }}
-                  loading={loading}
-                />
-              </Paper>
-            </Modal>
-          </Box>
-        </TabPanel>
-        <TabPanel value={value} index={2}>
           <Box sx={{ mt: 2 }}>
             <Button
               variant="contained"

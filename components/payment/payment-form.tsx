@@ -2,7 +2,6 @@ import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { useTenant } from "@/hooks/useTenant";
 import { TextField, Button, MenuItem, Box, Autocomplete } from "@mui/material";
 import { notifyError, notifyInfo } from "@/lib/notifications";
 
@@ -11,55 +10,61 @@ import {
   PaymentCreateSchema,
   PaymentCreate,
 } from "@/lib/validations/payment";
-import { CollectionCase } from "@/lib/validations/collection";
 import { registerPayment } from "@/app/actions/payment";
-import { getAllCollectionCases } from "@/app/actions/collection-case";
 import { $Enums } from "@/prisma/generated/prisma";
+import { DebtorSummary } from "@/types/DebtorSummary";
+import { useSession } from "next-auth/react";
+import { getDebts } from "@/app/actions/debtor";
+import { formatCurrency } from "@/utils/formatters";
 
-const PaymentForm = ({
-  onSubmit,
-}: {
-  onSubmit?: (data: PaymentCreate) => void;
-}) => {
-  const [collections, setCollections] = React.useState<CollectionCase[]>([]);
-  const { tenant } = useTenant();
+const initialState: PaymentCreate = {
+  debt_id: "",
+  total_amount: 0,
+  method: $Enums.PaymentMethod.TRANSFER,
+  reference_number: "",
+  payment_date: new Date().toISOString().slice(0, 16), // Format for datetime-local input
+};
+
+interface PaymentFormProps {
+  debtId?: string;
+  onSave?: () => void;
+}
+
+export const PaymentForm: React.FC<PaymentFormProps> = ({ debtId, onSave }) => {
+  const [debts, setDebs] = React.useState<DebtorSummary[]>([]);
+  const { data: session } = useSession();
 
   React.useEffect(() => {
-    // Fetch collections from the API or any other source
-    const fetchInvoices = async () => {
-      if (!tenant) return;
+    if (!session?.user?.tenant_id) return;
+    fetchDebts();
+  }, [session?.user?.tenant_id]);
 
-      const params = {
-        tenant_id: tenant.id,
-      };
-      const data = await getAllCollectionCases(params);
-      setCollections(data);
-    };
+  const fetchDebts = async () => {
+    if (!session?.user?.tenant_id) return;
 
-    fetchInvoices();
-  }, []);
+    const response = await getDebts({ tenant_id: session.user.tenant_id });
+
+    if (response.success) setDebs(response.data || []);
+  };
 
   const {
     control,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm({
     resolver: zodResolver(PaymentCreateSchema),
-    defaultValues: {
-      collection_case_id: "",
-      amount: 0,
-      method: $Enums.PaymentMethod.TRANSFER,
-      reference_number: "",
-      payment_date: new Date().toISOString().slice(0, 16), // Format for datetime-local input
-    },
+    defaultValues: initialState,
   });
 
-  const handleSavePayment = async (data: PaymentCreate) => {
+  const onSubmit = async (data: PaymentCreate) => {
     try {
       console.log("Payment Data:", data);
-      // Implement the logic to save the payment data
       await registerPayment(data);
       notifyInfo("Payment registered successfully");
+      await fetchDebts();
+      reset(initialState);
+      onSave?.();
     } catch (error) {
       console.error("Error registering payment:", error);
       notifyError("Error registering payment");
@@ -74,9 +79,15 @@ const PaymentForm = ({
   return (
     <Box
       component="form"
-      onSubmit={handleSubmit(onSubmit || handleSavePayment)}
+      onSubmit={handleSubmit(onSubmit)}
       noValidate
-      sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+        p: 2,
+        width: 400,
+      }}
     >
       {allErrorMessages.length > 0 && (
         <Box sx={{ color: "error.main", mb: 2 }}>
@@ -86,24 +97,24 @@ const PaymentForm = ({
         </Box>
       )}
       <Controller
-        name="collection_case_id"
+        name="debt_id"
         control={control}
         render={({ field }) => (
           <Autocomplete
-            options={collections}
+            options={debts}
             getOptionLabel={(option) =>
               option.id
-                ? `${option.reference_number} - Saldo: $${option.balance}`
+                ? `${option.reference} - Open: ${formatCurrency(option.balance)}`
                 : ""
             }
             onChange={(_, value) => field.onChange(value ? value.id : "")}
-            value={collections.find((inv) => inv.id === field.value) || null}
+            value={debts.find((inv) => inv.id === field.value) || null}
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Invoice"
-                error={!!errors.collection_case_id}
-                helperText={errors.collection_case_id?.message}
+                label="Schulden"
+                error={!!errors.debt_id}
+                helperText={errors.debt_id?.message}
                 required
               />
             )}
@@ -112,15 +123,15 @@ const PaymentForm = ({
         )}
       />
       <Controller
-        name="amount"
+        name="total_amount"
         control={control}
         render={({ field }) => (
           <TextField
             {...field}
             label="Amount"
             type="number"
-            error={!!errors.amount}
-            helperText={errors.amount?.message}
+            error={!!errors.total_amount}
+            helperText={errors.total_amount?.message}
             required
           />
         )}
@@ -179,5 +190,3 @@ const PaymentForm = ({
     </Box>
   );
 };
-
-export default PaymentForm;

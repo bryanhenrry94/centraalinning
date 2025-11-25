@@ -1,0 +1,24 @@
+export type DebtorSummary = {
+  id: string;
+  type: string;
+  debtor_id: string;
+  tenant_id: string;
+  source_type: string;
+  source_id: string;
+  principal_amount: number;
+  total_paid: number | null;
+  total_fined: number | null;
+  balance: number;
+  status: string;
+  created_at: Date;
+  updated_at: Date;
+  reference: string | null;
+  issue_date: Date | null;
+  due_date: Date | null;
+  amount: number | null;
+  agreement_total_amount: number | null;
+  agreement_installment_amount: number | null;
+  agreement_installments_count: number | null;
+  agreement_start_date: Date | null;
+  agreement_end_date: Date | null;
+};

@@ -13,7 +13,7 @@ import { generateUniqueSubdomain } from "./tenant";
 import { AuthSignUpSchema, ITenantSignUp } from "@/lib/validations/signup";
 import { getParameter } from "./parameter";
 import { CountryList } from "@/constants/country";
-import { sendWelcomeEmail } from "./email";
+import { sendNewClitentEmail, sendWelcomeEmail } from "./email";
 
 export const signInWithPassword = async (
   params: LoginFormData
@@ -167,6 +167,29 @@ export async function createAccount(
     });
 
     await sendWelcomeEmail(result.user.email, result.user.fullname || "");
+
+    // const tenants = await prisma.tenant.findMany();
+    // console.log("Current tenants:", tenants);
+    // tenants.forEach(async (t) => {
+    //   console.log(`Tenant: ${t.name}, Subdomain: ${t.subdomain}`);
+
+    //   await sendNewClitentEmail(
+    //     t.contact_email || "",
+    //     result.tenant.name,
+    //     new Date().toLocaleDateString(),
+    //     await prisma.tenant.count()
+    //   );
+    // });
+
+    // espera 4 segundos antes de enviar el otro correo
+    setTimeout(async () => {
+      await sendNewClitentEmail(
+        result.user.email || "",
+        result.tenant.name,
+        new Date().toLocaleDateString(),
+        await prisma.tenant.count()
+      );
+    }, 4000);
 
     // ✅ 5. Revalidar caché si es necesario
     revalidatePath("/auth/signup");

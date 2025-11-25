@@ -16,7 +16,7 @@ const VerdictPageEdit: React.FC = () => {
       const fetchVerdict = async () => {
         const verdict = await getVerdictById(id);
         if (verdict) {
-          // console.log("Fetched verdict:", verdict);
+          console.log("Fetched verdict:", verdict);
           setVerdictData(verdict);
         }
       };

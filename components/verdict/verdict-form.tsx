@@ -1,10 +1,9 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 // mui
 import { Box, Button, Grid, Stack, Typography } from "@mui/material";
 // icons
 import SaveIcon from "@mui/icons-material/Save";
-import { z } from "zod";
 // validations
 import {
   VerdictCreate,
@@ -16,8 +15,6 @@ import { notifyError, notifyInfo } from "@/lib/notifications";
 import {
   approveVerdict,
   createVerdict,
-  handleSendMailNotificationBailiff,
-  requestVerdictApproval,
   updateVerdict,
 } from "@/app/actions/verdict";
 import { DebtorBase } from "@/lib/validations/debtor";

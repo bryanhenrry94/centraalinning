@@ -1,92 +1,176 @@
-import React, { useEffect, useState } from "react";
+"use client";
+
+import React, { useEffect, useMemo } from "react";
 import { Box, Button, Slider, Typography } from "@mui/material";
-import {
-  PaymentAgreement,
-  PaymentAgreementCreate,
-} from "@/lib/validations/payment-agreement";
+import { useForm, Controller } from "react-hook-form";
+import { CreateAgreement, UpdateAgreement } from "@/lib/validations/agreement";
 import { formatCurrency, formatDate } from "@/utils/formatters";
+import { notifyError, notifyInfo } from "@/lib/notifications";
+import { useSession } from "next-auth/react";
+import { getDebtorByUserId } from "@/app/actions/debtor";
+import {
+  createPaymentAgreement,
+  existsPaymentAgreement,
+  updatePaymentAgreement,
+} from "@/app/actions/agreement";
+import { $Enums } from "@/prisma/generated/prisma";
 
 interface AgreementFormProps {
-  initialData?: Partial<PaymentAgreement>;
-  onSubmit: (data: Partial<PaymentAgreement>) => void;
-  loading?: boolean;
+  id?: string;
+  initialData?: CreateAgreement;
+  debt_id: string;
+  onSave?: () => void;
 }
 
-const AgreementForm: React.FC<AgreementFormProps> = ({
-  onSubmit,
+export const AgreementForm: React.FC<AgreementFormProps> = ({
+  id,
   initialData,
-  loading,
+  debt_id,
+  onSave,
 }) => {
-  const [formData, setFormData] = useState<Partial<PaymentAgreement> | null>(
-    initialData || null
-  );
+  const { data: session } = useSession();
+  const modeEdit = Boolean(id);
+
+  const [loading, setLoading] = React.useState(false);
+
+  const {
+    control,
+    watch,
+    setValue,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<CreateAgreement>({
+    defaultValues: initialData || {
+      debt_id,
+      total_amount: 0,
+      installments_count: 1,
+      installment_amount: 0,
+      start_date: new Date(),
+      end_date: new Date(),
+      status: undefined,
+      debtor_id: "",
+    },
+  });
+
+  const totalAmount = watch("total_amount");
+  const installmentsCount = watch("installments_count");
+  const startDate = watch("start_date");
+
+  // Calcular installment_amount
+  useEffect(() => {
+    if (totalAmount > 0 && installmentsCount > 0) {
+      setValue("installment_amount", totalAmount / installmentsCount);
+    }
+  }, [totalAmount, installmentsCount, setValue]);
+
+  // Calcular end_date automáticamente
+  const endDate = useMemo(() => {
+    if (!startDate || !installmentsCount) return null;
+    const date = new Date(startDate);
+    date.setMonth(date.getMonth() + installmentsCount);
+    return date;
+  }, [startDate, installmentsCount]);
 
   useEffect(() => {
-    if (initialData) {
-      if (!initialData.total_amount)
-        initialData.total_amount = Number(initialData.total_amount);
-
-      if (!initialData.installments_count)
-        initialData.installments_count = Number(initialData.installments_count);
-
-      setFormData({
-        ...initialData,
-        installment_amount:
-          initialData.total_amount / initialData.installments_count,
-      });
+    if (endDate) {
+      setValue("end_date", endDate);
     }
-  }, [initialData]);
+  }, [endDate, setValue]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData) return;
-    onSubmit(formData);
+  // SUBMIT
+  const onSubmit = async (data: CreateAgreement) => {
+    try {
+      setLoading(true);
+
+      if (!session?.user?.tenant_id) {
+        return notifyError("No se encontró el tenant del usuario");
+      }
+
+      if (new Date(data.start_date) < new Date()) {
+        return notifyError("La fecha de inicio debe ser mayor a la actual");
+      }
+
+      if (!modeEdit) {
+        const exists = await existsPaymentAgreement(debt_id);
+        if (exists) {
+          return notifyError(
+            "Ya existe un acuerdo de pago para esta collection"
+          );
+        }
+      }
+
+      if (modeEdit && id) {
+        const payload: UpdateAgreement = {
+          debt_id: data.debt_id,
+          debtor_id: data.debtor_id,
+          total_amount: Number(data.total_amount),
+          installments_count: Number(data.installments_count),
+          installment_amount: Number(data.installment_amount),
+          start_date: data.start_date,
+          end_date: data.end_date,
+          status: data.status ?? $Enums.AgreementStatus.COUNTEROFFER,
+        };
+
+        await updatePaymentAgreement(id, payload);
+        notifyInfo("Acuerdo de pago actualizado correctamente");
+        return onSave?.();
+      }
+
+      // CREATE MODE
+      const debtor = await getDebtorByUserId(session.user.id);
+      if (!debtor)
+        return notifyError("No se encontró deudor asociado al usuario");
+
+      const payload: CreateAgreement = {
+        debt_id,
+        debtor_id: debtor.id,
+        total_amount: data.total_amount,
+        installments_count: data.installments_count,
+        installment_amount: data.installment_amount,
+        start_date: data.start_date,
+        end_date: data.end_date,
+        status: data.status,
+      };
+
+      await createPaymentAgreement(session.user.tenant_id, payload);
+      notifyInfo("Acuerdo de pago creado correctamente");
+      onSave?.();
+    } catch (err) {
+      console.error(err);
+      notifyError("Error al procesar el acuerdo de pago");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit(onSubmit)}>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2, p: 2 }}>
-        <Box>
-          {/* <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-            <Typography variant="body2" gutterBottom>
-              Aflostermijnen:
-            </Typography>
-            <Typography variant="h6" gutterBottom>
-              {formData?.installments_count || 0}
-            </Typography>
-          </Box> */}
-          <Box sx={{ width: "100%", px: 1 }}>
-            <Slider
-              name="installments_count"
-              defaultValue={1}
-              step={1}
-              min={1}
-              max={24}
-              valueLabelDisplay="auto"
-              value={formData?.installments_count || 0}
-              onChange={(e, newValue) => {
-                setFormData({
-                  ...formData,
+        {/* --- SLIDER DE CUOTAS --- */}
+        <Controller
+          name="installments_count"
+          control={control}
+          render={({ field }) => (
+            <Box>
+              <Box sx={{ width: "100%", px: 1 }}>
+                <Slider
+                  {...field}
+                  step={1}
+                  min={1}
+                  max={24}
+                  valueLabelDisplay="auto"
+                  onChange={(_, value) => field.onChange(Number(value))}
+                />
+              </Box>
+              <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                <Typography variant="caption">1 Maand</Typography>
+                <Typography variant="caption">24 Maanden</Typography>
+              </Box>
+            </Box>
+          )}
+        />
 
-                  installment_amount: formData
-                    ? Number(formData.total_amount) / Number(newValue)
-                    : 0,
-
-                  installments_count: Number(newValue),
-                } as PaymentAgreementCreate);
-              }}
-            />
-          </Box>
-          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-            <Typography variant="caption" gutterBottom>
-              1 Maand
-            </Typography>
-            <Typography variant="caption" gutterBottom>
-              24 Maanden
-            </Typography>
-          </Box>
-        </Box>
-
+        {/* --- RESUMEN --- */}
         <Box
           sx={{
             borderRadius: 1,
@@ -96,66 +180,21 @@ const AgreementForm: React.FC<AgreementFormProps> = ({
             gap: 1,
           }}
         >
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Typography variant="body2" color="text.secondary">
-              Totaal te bedrag:
-            </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              {formatCurrency(formData?.total_amount || 0)}
-            </Typography>
-          </Box>
+          <SummaryRow
+            label="Totaal te bedrag:"
+            value={formatCurrency(totalAmount)}
+          />
+          <SummaryRow label="Termijn:" value={installmentsCount} />
+          <SummaryRow
+            label="Startdatum:"
+            value={formatDate(startDate?.toString())}
+          />
+          <SummaryRow
+            label="Einddatum:"
+            value={formatDate(endDate?.toString() || "")}
+          />
 
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Typography variant="body2" color="text.secondary">
-              Aflostermijnen:
-            </Typography>
-            <Typography variant="body2">
-              {formData?.installments_count ?? 0}
-            </Typography>
-          </Box>
-
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Typography variant="body2" color="text.secondary">
-              Startdatum:
-            </Typography>
-            <Typography variant="body2">
-              {formatDate(formData?.start_date?.toString() || "")}
-            </Typography>
-          </Box>
-
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Typography variant="body2" color="text.secondary">
-              Einddatum:
-            </Typography>
-            <Typography variant="body2">
-              {formatDate(formData?.start_date?.toString() || "")}
-            </Typography>
-          </Box>
-
+          {/* Monto por cuota */}
           <Box
             sx={{
               borderTop: 1,
@@ -163,31 +202,42 @@ const AgreementForm: React.FC<AgreementFormProps> = ({
               pt: 2,
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "center",
             }}
           >
             <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
               Aflosbedrag:
             </Typography>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              {formatCurrency(
-                formData?.total_amount && formData?.installments_count
-                  ? formData.total_amount / formData.installments_count
-                  : 0
-              )}{" "}
+              {formatCurrency(totalAmount / installmentsCount || 0)}
             </Typography>
           </Box>
         </Box>
+
+        {/* BOTÓN */}
         <Button
           variant="contained"
-          color="primary"
           type="submit"
-          loading={loading}
+          disabled={loading || isSubmitting}
         >
-          Save
+          {modeEdit ? "Update" : "Save"}
         </Button>
       </Box>
     </form>
   );
 };
-export default AgreementForm;
+
+/* COMPONENTE PEQUEÑO REUTILIZABLE */
+const SummaryRow = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number | null | undefined;
+}) => (
+  <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+    <Typography variant="body2" color="text.secondary">
+      {label}
+    </Typography>
+    <Typography variant="body2">{value ?? "-"}</Typography>
+  </Box>
+);

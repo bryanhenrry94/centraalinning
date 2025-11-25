@@ -466,7 +466,8 @@ const VerdictsPage: React.FC = () => {
                           (acc, curr) =>
                             Number(acc) + Number(curr.embargo_amount),
                           0
-                        )
+                        ) +
+                        (verdict.procesal_cost || 0)
                     )}
                   </TableCell>
                   <TableCell>
@@ -486,7 +487,8 @@ const VerdictsPage: React.FC = () => {
                           (acc, curr) =>
                             Number(acc) + Number(curr.embargo_amount),
                           0
-                        )
+                        ) +
+                        (verdict.procesal_cost || 0)
                     )}
                   </TableCell>
                   <TableCell>

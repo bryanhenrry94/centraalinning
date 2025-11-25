@@ -5,11 +5,11 @@ export type PaymentMethod = z.infer<typeof PaymentMethodEnum>;
 
 export const PaymentSchema = z.object({
   id: z.string(),
-  collection_case_id: z.string(),
+  debt_id: z.string(),
   payment_date: z
     .union([z.string(), z.date()])
     .transform((date) => (date instanceof Date ? date.toISOString() : date)),
-  amount: z.preprocess(
+  total_amount: z.preprocess(
     (val) => (typeof val === "string" ? Number(val) : val),
     z.number()
   ),

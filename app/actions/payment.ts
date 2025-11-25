@@ -4,7 +4,7 @@ import { Payment, PaymentCreate } from "@/lib/validations/payment";
 
 export const registerPayment = async (payload: PaymentCreate) => {
   // Create payment
-  await prisma.collectionCasePayment.create({
+  await prisma.payment.create({
     data: {
       ...payload,
       payment_date: new Date(payload.payment_date),
@@ -12,35 +12,9 @@ export const registerPayment = async (payload: PaymentCreate) => {
     },
   });
 
-  if (payload.collection_case_id) {
-    // Update collection case balance
-    const payments = await prisma.collectionCasePayment.findMany({
-      where: { collection_case_id: payload.collection_case_id },
-    });
-
-    const totalPaid = payments.reduce(
-      (sum, payment) => sum + Number(payment.amount),
-      0
-    );
-    const collectionCase = await prisma.collectionCase.findUnique({
-      where: { id: payload.collection_case_id },
-    });
-    if (collectionCase) {
-      const newBalance = Number(collectionCase.total_due) - totalPaid;
-
-      await prisma.collectionCase.update({
-        where: { id: payload.collection_case_id },
-        data: {
-          total_paid: totalPaid,
-          balance: newBalance,
-        },
-      });
-    }
-  }
-
   // // Check if the accounts receivable exists
   // const accountsReceivable = await prisma.accountsReceivable.findUnique({
-  //   where: { id: payload.collection_case_id, tenant_id: tenant_id },
+  //   where: { id: payload.debt_id, tenant_id: tenant_id },
   //   include: { debtor: true },
   // });
 
@@ -50,7 +24,7 @@ export const registerPayment = async (payload: PaymentCreate) => {
   // // Verificar si hay un acuerdo de pago asociado
   // const collectionCaseAgreement = await prisma.collectionCaseAgreement.findFirst({
   //   where: {
-  //     accountsReceivableId: payload.collection_case_id,
+  //     accountsReceivableId: payload.debt_id,
   //     accountsReceivable: {
   //       tenant_id: tenant_id,
   //     },
@@ -105,7 +79,7 @@ export const registerPayment = async (payload: PaymentCreate) => {
   //       // Crear el detalle del pago especificando información de la cuota
   //       const payment = await prisma.paymentDetail.create({
   //         data: {
-  //           accountsReceivableId: payload.collection_case_id,
+  //           accountsReceivableId: payload.debt_id,
   //           paymentAgreementId: collectionCaseAgreement.id,
   //           paymentAmount: amountToPay,
   //           paymentMethod: payload.paymentMethod,
@@ -130,7 +104,7 @@ export const registerPayment = async (payload: PaymentCreate) => {
   //       // Crear el detalle del pago especificando información de la cuota
   //       await prisma.paymentDetail.create({
   //         data: {
-  //           accountsReceivableId: payload.collection_case_id,
+  //           accountsReceivableId: payload.debt_id,
   //           paymentAgreementId: collectionCaseAgreement.id,
   //           paymentAmount: amountToApply,
   //           paymentMethod: payload.paymentMethod,
@@ -155,12 +129,12 @@ export const registerPayment = async (payload: PaymentCreate) => {
   //   }
 
   //   // Enviar el monto restante para recalcular el saldo pendiente, incluso si es cero
-  //   await recalculateInvoiceBalance(tenant_id, payload.collection_case_id);
+  //   await recalculateInvoiceBalance(tenant_id, payload.debt_id);
   // } else {
   //   // Si no hay acuerdo de pago, registrar el pago directamente
   //   const payment = await prisma.paymentDetail.create({
   //     data: {
-  //       accountsReceivableId: payload.collection_case_id,
+  //       accountsReceivableId: payload.debt_id,
   //       paymentAmount: payload.paymentAmount,
   //       paymentMethod: payload.paymentMethod,
   //       reference_number: payload.reference_number,
@@ -171,7 +145,7 @@ export const registerPayment = async (payload: PaymentCreate) => {
   //   });
 
   //   // Recalcular el saldo pendiente de la factura
-  //   await recalculateInvoiceBalance(tenant_id, payload.collection_case_id);
+  //   await recalculateInvoiceBalance(tenant_id, payload.debt_id);
 
   //   // Distribuir el pago entre capital, interés, impuestos, cobranza, etc.
   //   await distributePayment(payment.id);
@@ -191,33 +165,60 @@ export const registerPayment = async (payload: PaymentCreate) => {
   return { success: true };
 };
 
-export const getAllPayments = async (tenant_id: string) => {
-  // const payments = await prisma.paymentDetail.findMany({
-  //   where: {
-  //     accountsReceivable: {
-  //       tenant_id: tenant_id,
-  //     },
-  //   },
-  //   include: {
-  //     accountsReceivable: true,
-  //   },
-  // });
-  // return payments;
+interface PaymentFilter {
+  debt_id?: string;
+}
+
+export const getPayments = async (
+  filter: PaymentFilter
+): Promise<{ success: boolean; error?: string; data?: Payment[] }> => {
+  try {
+    const payments = await prisma.payment.findMany({
+      where: {
+        debt_id: filter.debt_id,
+      },
+    });
+
+    const formattedPayments: Payment[] = payments.map((payment) => ({
+      ...payment,
+      debt_id: payment.debt_id ?? "",
+      total_amount:
+        typeof payment.total_amount === "object" &&
+        "toNumber" in payment.total_amount
+          ? payment.total_amount.toNumber()
+          : Number(payment.total_amount),
+      method:
+        payment.method === "CREDIT_CARD"
+          ? "CREDIT_CARD"
+          : (payment.method as "TRANSFER" | "CREDIT_CARD"),
+      payment_date: payment.payment_date.toISOString(),
+      reference_number: payment.reference_number ?? undefined,
+      created_at: payment.created_at,
+      updated_at: payment.updated_at,
+    }));
+
+    return { success: true, data: formattedPayments };
+  } catch (error) {
+    console.error("Error fetching payments:", error);
+    return { success: false, error: "Error fetching payments" };
+  }
 };
 
 export const getPaymentsByInvoice = async (
-  collection_case_id: string
+  debt_id: string
 ): Promise<Payment[]> => {
-  const payments = await prisma.collectionCasePayment.findMany({
-    where: { collection_case_id: collection_case_id },
+  const payments = await prisma.payment.findMany({
+    where: { debt_id: debt_id },
   });
 
   return payments.map((payment) => ({
     ...payment,
-    amount:
-      typeof payment.amount === "object" && "toNumber" in payment.amount
-        ? payment.amount.toNumber()
-        : Number(payment.amount),
+    debt_id: payment.debt_id ?? "",
+    total_amount:
+      typeof payment.total_amount === "object" &&
+      "toNumber" in payment.total_amount
+        ? payment.total_amount.toNumber()
+        : Number(payment.total_amount),
     method:
       payment.method === "CREDIT_CARD"
         ? "CREDIT_CARD"
@@ -291,23 +292,23 @@ export const deletePayment = async (tenant_id: string, paymentId: string) => {
   // if (!payment) {
   //   throw new Error("Payment not found");
   // }
-  // const collection_case_id = payment.accountsReceivableId;
+  // const debt_id = payment.accountsReceivableId;
   // await prisma.paymentDetail.delete({
   //   where: { id: paymentId },
   // });
   // // Recalculate the invoice balance
-  // await recalculateInvoiceBalance(tenant_id, collection_case_id);
+  // await recalculateInvoiceBalance(tenant_id, debt_id);
 };
 
 // 9. Validar consistencia: Recalcular automáticamente el saldo pendiente de una factura
 export const recalculateInvoiceBalance = async (
   tenant_id: string,
-  collection_case_id: string
+  debt_id: string
 ) => {
   //
   // const payments = await prisma.paymentDetail.findMany({
   //   where: {
-  //     accountsReceivableId: collection_case_id,
+  //     accountsReceivableId: debt_id,
   //     accountsReceivable: { tenant_id: tenant_id },
   //   },
   // });
@@ -318,14 +319,14 @@ export const recalculateInvoiceBalance = async (
   // );
   // // Obtener la factura asociada
   // const invoice = await prisma.accountsReceivable.findUnique({
-  //   where: { id: collection_case_id, tenant_id: tenant_id },
+  //   where: { id: debt_id, tenant_id: tenant_id },
   // });
   // if (!invoice) {
   //   throw new Error("Invoice not found");
   // }
   // const remainingBalance = invoice.invoiceAmount - totalPaid;
   // await prisma.accountsReceivable.update({
-  //   where: { id: collection_case_id },
+  //   where: { id: debt_id },
   //   data: {
   //     remainingBalance: remainingBalance,
   //     // receivableStatus: remainingBalance <= 0 ? "paid" : "pending",
@@ -340,7 +341,7 @@ export const recalculateInvoiceBalance = async (
   //   );
   // }
   // // Si hay un acuerdo de pago, actualizar el saldo restante
-  // await updateInvoiceStatusIfPaid(collection_case_id);
+  // await updateInvoiceStatusIfPaid(debt_id);
 };
 
 // Recalcular los valores de PaymentAgreement
@@ -386,9 +387,9 @@ export const recalculatePaymentAgreement = async (
 };
 
 // 10. Validar consistencia: Actualizar estado de factura cuando ya se pagó completamente
-export const updateInvoiceStatusIfPaid = async (collection_case_id: string) => {
+export const updateInvoiceStatusIfPaid = async (debt_id: string) => {
   // const invoice = await prisma.accountsReceivable.findUnique({
-  //   where: { id: collection_case_id },
+  //   where: { id: debt_id },
   // });
   // if (!invoice) {
   //   throw new Error("Invoice not found");
@@ -400,7 +401,7 @@ export const updateInvoiceStatusIfPaid = async (collection_case_id: string) => {
   // // Sumamos el monto de la factura con los fees
   // const totalWithFees = invoice.invoiceAmount + totalFees;
   // const payments = await prisma.paymentDetail.findMany({
-  //   where: { accountsReceivableId: collection_case_id },
+  //   where: { accountsReceivableId: debt_id },
   // });
   // const totalPaid = payments.reduce(
   //   (sum, payment) => sum + payment.paymentAmount,
@@ -410,7 +411,7 @@ export const updateInvoiceStatusIfPaid = async (collection_case_id: string) => {
   // console.log("Total con Fees:", totalWithFees);
   // if (totalPaid >= totalWithFees) {
   //   await prisma.accountsReceivable.update({
-  //     where: { id: collection_case_id },
+  //     where: { id: debt_id },
   //     data: {
   //       receivableStatus: "paid",
   //       collectionStatus: "settled",

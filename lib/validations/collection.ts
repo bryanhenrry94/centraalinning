@@ -51,8 +51,6 @@ export const CollectionCaseResponseSchema = CollectionCaseSchema.extend({
 
 export const CollectionCaseViewSchema = CollectionCaseSchema.extend({
   debtor: DebtorSchema,
-  payments: PaymentSchema.array(),
-  // You can add agreements, notifications, penalties schemas here if needed
 });
 
 export type CollectionCase = z.infer<typeof CollectionCaseSchema>;

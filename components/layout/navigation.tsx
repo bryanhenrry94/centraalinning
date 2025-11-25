@@ -44,7 +44,7 @@ const menus: MenuItem[] = [
   },
   {
     label: "Betalingsregeling",
-    href: "/dashboard/payment-agreements",
+    href: "/dashboard/agreements",
     icon: <HandshakeIcon fontSize="small" />,
     role: [$Enums.roleEnum.TENANT_ADMIN],
   },

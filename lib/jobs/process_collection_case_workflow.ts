@@ -5,8 +5,8 @@ import {
   cancelAgreementsByCollectionCase,
   hasAgreement,
   hasPaymentsUpToDate,
-} from "@/app/actions/payment-agreement";
-import { applyCollectionCaseFine } from "@/app/actions/collection-case-fine";
+} from "@/app/actions/agreement";
+import { applyFine } from "@/app/actions/debt-fine";
 import { getParameter } from "@/app/actions/parameter";
 import { getLastNotificationDate } from "@/app/actions/notification";
 
@@ -21,13 +21,13 @@ export async function processCollectionCaseWorkflow() {
           $Enums.CollectionCaseStatus.INGEBREKESTELLING,
         ],
       },
-      notifications: {
+      collectionCaseNotification: {
         none: {
           type: "BLOKKADE",
         },
       },
     },
-    include: { debtor: true, notifications: true },
+    include: { debtor: true, collectionCaseNotification: true },
   });
 
   // Obtener parámetros generales
@@ -130,11 +130,14 @@ export async function processCollectionCaseWorkflow() {
 
         if (penalty_amount > 0) {
           // Registrar multa
-          await applyCollectionCaseFine(
-            c.id,
-            penalty_amount,
-            `Multa por pago atrasado en estado ${c.status}`
-          );
+          if (c.debt_id) {
+            await applyFine(
+              c.debt_id,
+              penalty_amount,
+              `Multa por pago atrasado en estado ${c.status}`,
+              $Enums.FineType.PENALTY
+            );
+          }
         }
 
         // Cancelar acuerdo de pago aceptados

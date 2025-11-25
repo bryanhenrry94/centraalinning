@@ -9,6 +9,11 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "./erd.svg"
+}
+
 model Tenant {
   id                  String  @id @default(uuid())
   name                String
@@ -40,6 +45,7 @@ model Tenant {
   invitations      TenantInvitation[]
   employees        Employee[]
   agreements       Agreement[]
+  debts            Debt[]
 
   @@map("tenant")
 }
@@ -128,6 +134,8 @@ model Verdict {
   invoice_number      String                   @db.VarChar(100)
   creditor_name       String                   @db.VarChar(100)
   debtor_id           String
+  debt_id             String?
+  debt                Debt?                    @relation(fields: [debt_id], references: [id])
   registration_number String                   @db.VarChar(100)
   sentence_amount     Float
   sentence_date       DateTime
@@ -145,7 +153,6 @@ model Verdict {
   bailiff_services    VerdictBailiffServices[]
   verdict_embargo     VerdictEmbargo[]
   verdict_interest    VerdictInterest[]
-  agreements          Agreement[]
 
   @@map("verdict")
 }
@@ -300,48 +307,77 @@ model BillingPayment {
   @@map("billing_payment")
 }
 
+model Debt {
+  id               String         @id @default(cuid())
+  debtor_id        String
+  tenant_id        String
+  source_type      DebtSourceType
+  source_id        String
+  principal_amount Decimal        @db.Decimal(10, 2)
+
+  status     DebtStatus
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+
+  debtor           Debtor           @relation(fields: [debtor_id], references: [id])
+  tenant           Tenant           @relation(fields: [tenant_id], references: [id])
+  payments         Payment[]
+  agreements       Agreement[]
+  fines            DebtFine[]
+  collection_cases CollectionCase[]
+  verdicts         Verdict[]
+
+  @@map("debt")
+}
+
+model DebtFine {
+  id      String @id @default(cuid())
+  debt_id String
+  debt    Debt   @relation(fields: [debt_id], references: [id])
+
+  type        FineType // MORA | PENALTY | INTEREST | JUDICIAL_FEE | OTHER
+  description String?
+
+  amount     Decimal  @db.Decimal(10, 2)
+  applied_at DateTime @default(now())
+
+  status       FineStatus // ACTIVE | CANCELLED | REVERSED
+  cancelled_at DateTime?
+
+  created_at DateTime @default(now())
+
+  @@map("debt_fine")
+}
+
 model CollectionCase {
-  id               String                       @id @default(cuid())
+  id               String               @id @default(cuid())
+  debt_id          String?
+  debt             Debt?                @relation(fields: [debt_id], references: [id])
   reference_number String?
   issue_date       DateTime
   due_date         DateTime
   tenant_id        String
   debtor_id        String
-  amount_original  Decimal                      @db.Decimal(10, 2)
-  fee_rate         Decimal                      @db.Decimal(5, 2)
-  fee_amount       Decimal                      @db.Decimal(10, 2)
-  abb_rate         Decimal                      @db.Decimal(5, 2)
-  abb_amount       Decimal                      @db.Decimal(10, 2)
-  total_fined      Decimal                      @default(0) @db.Decimal(10, 2) // total de multas
-  total_due        Decimal                      @default(0) @db.Decimal(10, 2) // total con impuestos y multas
-  total_to_receive Decimal                      @default(0) @db.Decimal(10, 2) // neto después de retención
-  total_paid       Decimal                      @default(0) @db.Decimal(10, 2)
-  balance          Decimal                      @default(0) @db.Decimal(10, 2)
-  status           CollectionCaseStatus         @default(AANMANING)
-  created_at       DateTime                     @default(now())
-  updated_at       DateTime                     @updatedAt
-  debtor           Debtor                       @relation(fields: [debtor_id], references: [id])
-  tenant           Tenant                       @relation(fields: [tenant_id], references: [id])
-  fines            CollectionCaseFine[]
-  payments         CollectionCasePayment[]
-  notifications    CollectionCaseNotification[]
-  chat_rooms       ChatRoom[]
-  agreements       Agreement[]
+  amount_original  Decimal              @db.Decimal(10, 2)
+  fee_rate         Decimal              @db.Decimal(5, 2)
+  fee_amount       Decimal              @db.Decimal(10, 2)
+  abb_rate         Decimal              @db.Decimal(5, 2)
+  abb_amount       Decimal              @db.Decimal(10, 2)
+  total_fined      Decimal              @default(0) @db.Decimal(10, 2) // total de multas
+  total_due        Decimal              @default(0) @db.Decimal(10, 2) // total con impuestos y multas
+  total_to_receive Decimal              @default(0) @db.Decimal(10, 2) // neto después de retención
+  total_paid       Decimal              @default(0) @db.Decimal(10, 2)
+  balance          Decimal              @default(0) @db.Decimal(10, 2)
+  status           CollectionCaseStatus @default(AANMANING)
+  created_at       DateTime             @default(now())
+  updated_at       DateTime             @updatedAt
+  debtor           Debtor               @relation(fields: [debtor_id], references: [id])
+  tenant           Tenant               @relation(fields: [tenant_id], references: [id])
+
+  chat_rooms                 ChatRoom[]
+  collectionCaseNotification CollectionCaseNotification[]
 
   @@map("collection_case")
-}
-
-model CollectionCaseFine {
-  id                 String         @id @default(cuid())
-  collection_case_id String
-  description        String?
-  amount             Decimal        @db.Decimal(10, 2)
-  applied_at         DateTime       @default(now())
-  created_at         DateTime       @default(now())
-  updated_at         DateTime       @updatedAt
-  collection_case    CollectionCase @relation(fields: [collection_case_id], references: [id])
-
-  @@map("collection_case_fine")
 }
 
 model CollectionCaseNotification {
@@ -356,21 +392,6 @@ model CollectionCaseNotification {
   collection_case    CollectionCase   @relation(fields: [collection_case_id], references: [id])
 
   @@map("collection_case_notification")
-}
-
-model CollectionCasePayment {
-  id                 String         @id @default(cuid())
-  method             PaymentMethod
-  amount             Decimal        @db.Decimal(10, 2)
-  collection_case_id String
-  payment_date       DateTime
-  reference_number   String?
-  agreement_id       String?
-  created_at         DateTime       @default(now())
-  updated_at         DateTime       @updatedAt
-  collection_case    CollectionCase @relation(fields: [collection_case_id], references: [id])
-
-  @@map("collection_case_payment")
 }
 
 model Debtor {
@@ -393,10 +414,23 @@ model Debtor {
   incomes             DebtorIncome[]
   verdicts            Verdict[]
   agreements          Agreement[]
+  debts               Debt[]
 
   @@unique([tenant_id, email])
   @@unique([tenant_id, identification])
   @@map("debtor")
+}
+
+model DebtorIncome {
+  id         String   @id @default(uuid())
+  debtor_id  String
+  amount     Float
+  source     String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  debtor     Debtor   @relation(fields: [debtor_id], references: [id])
+
+  @@map("debtor_incomes")
 }
 
 model Bailiff {
@@ -465,23 +499,11 @@ model ChatMessage {
   @@map("chat_message")
 }
 
-model DebtorIncome {
-  id         String   @id @default(uuid())
-  debtor_id  String
-  amount     Float
-  source     String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  debtor     Debtor   @relation(fields: [debtor_id], references: [id])
-
-  @@map("debtor_incomes")
-}
-
 model Agreement {
   id                 String          @id @default(cuid())
   debtor_id          String?
-  collection_case_id String?
-  verdict_id         String?
+  debt_id            String
+  debt               Debt            @relation(fields: [debt_id], references: [id])
   total_amount       Decimal         @db.Decimal(10, 2)
   installment_amount Decimal         @db.Decimal(10, 2)
   installments_count Int
@@ -495,11 +517,9 @@ model Agreement {
   updated_at         DateTime        @updatedAt
 
   //                 Relaciones
-  debtor          Debtor?                @relation(fields: [debtor_id], references: [id])
-  collection_case CollectionCase?        @relation(fields: [collection_case_id], references: [id])
-  verdict         Verdict?               @relation(fields: [verdict_id], references: [id])
-  installments    AgreementInstallment[]
-  payment         Payment[]
+  debtor       Debtor?                @relation(fields: [debtor_id], references: [id])
+  installments AgreementInstallment[]
+  payment      Payment[]
 
   @@map("agreement")
 }
@@ -523,19 +543,41 @@ model AgreementInstallment {
 }
 
 model Payment {
-  id               String                 @id @default(cuid())
+  id               String        @id @default(cuid())
+  debt_id          String?
+  debt             Debt?         @relation(fields: [debt_id], references: [id])
   method           PaymentMethod
-  amount           Decimal                @db.Decimal(10, 2)
-  documentId       String
+  total_amount     Decimal       @db.Decimal(10, 2)
   payment_date     DateTime
   reference_number String?
   agreement_id     String?
-  created_at       DateTime               @default(now())
-  updated_at       DateTime               @updatedAt
-  agreement        Agreement?             @relation(fields: [agreement_id], references: [id])
-  installments     AgreementInstallment[]
+  created_at       DateTime      @default(now())
+  updated_at       DateTime      @updatedAt
+
+  allocations  PaymentAllocation[]
+  installments AgreementInstallment[]
+  agreements   Agreement?             @relation(fields: [agreement_id], references: [id])
 
   @@map("payment")
+}
+
+model PaymentAllocation {
+  id         String           @id @default(cuid())
+  payment_id String
+  payment    Payment          @relation(fields: [payment_id], references: [id])
+  debt_id    String?
+  component  PaymentComponent // PRINCIPAL | FINE | INTEREST | OTHER | INSTALLMENT
+  amount     Decimal          @db.Decimal(10, 2)
+
+  @@map("payment_allocation")
+}
+
+enum PaymentComponent {
+  PRINCIPAL
+  FINE
+  INTEREST
+  INSTALLMENT
+  OTHER
 }
 
 enum InstallmentStatus {
@@ -611,4 +653,30 @@ enum InvitationRole {
   DEBTOR
   AGENT
   SHERIFF
+}
+
+enum DebtSourceType {
+  VERDICT
+  COLLECTION_CASE
+}
+
+enum DebtStatus {
+  OPEN
+  PARTIALLY_PAID
+  PAID
+  CANCELLED
+}
+
+enum FineType {
+  MORA
+  PENALTY
+  INTEREST
+  JUDICIAL_FEE
+  OTHER
+}
+
+enum FineStatus {
+  ACTIVE
+  CANCELLED
+  REVERSED
 }

@@ -1,16 +1,11 @@
 "use client";
-import React, { Suspense, useEffect, useState } from "react";
-import { getAllCollectionCases } from "@/app/actions/collection-case";
-import { CollectionCaseResponse } from "@/lib/validations/collection";
+import React, { Suspense, useEffect, useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import {
   Container,
   Paper,
   Typography,
   Box,
-  Button,
-  Tabs,
-  Tab,
-  Modal,
   IconButton,
   TableContainer,
   Table,
@@ -20,178 +15,148 @@ import {
   TableBody,
   Stack,
   Tooltip,
+  Button,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
+
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 
-import { useSession } from "next-auth/react";
 import { formatCurrency, formatDate } from "@/utils/formatters";
-import AgreementTable from "@/components/agreements/agreement-table";
-import {
-  PaymentAgreement,
-  PaymentAgreementCreate,
-  PaymentAgreementResponse,
-} from "@/lib/validations/payment-agreement";
-import { notifyError, notifyInfo } from "@/lib/notifications";
-import TabPanel from "@/components/ui/tab-panel";
-import AgreementForm from "@/components/agreements/agreement-form";
-import { $Enums, CollectionCaseNotification } from "@/prisma/generated/prisma";
-import ModalNotifications from "@/components/notification/modal-notifications";
-import { useTenant } from "@/hooks/useTenant";
-// Actions
-import {
-  createPaymentAgreement,
-  existsPaymentAgreement,
-  getPaymentAgreements,
-  updatePaymentAgreement,
-} from "@/app/actions/payment-agreement";
-import { getAllDebts, getDebtorByUserId } from "@/app/actions/debtor";
-import { getAllNotificationsByCollectionCase } from "@/app/actions/notification";
+import { AgreementResponse } from "@/lib/validations/agreement";
+import { notifyError } from "@/lib/notifications";
+
+import { getAgreementsByDebtId } from "@/app/actions/agreement";
+
+import { getDebtorByUserId, getDebts } from "@/app/actions/debtor";
+import { DebtorSummary } from "@/types/DebtorSummary";
+import { AgreementDialog } from "@/components/agreements/agreement-dialog";
+import { PaymentsDialog } from "@/components/payment/payments-dialog";
+import { AgreementFormDialog } from "@/components/agreements/agreement-form-dialog";
+import { PaymentFormDialog } from "@/components/payment/payment-form-dialog";
+import { $Enums } from "@/prisma/generated/prisma";
 
 const DashboardDebtor = () => {
   const { data: session } = useSession();
   const user = session?.user;
 
-  // State variables
-  const [loading, setLoading] = useState(false);
-  const [value, setValue] = React.useState(0);
+  const [debts, setDebts] = useState<DebtorSummary[]>([]);
+  const [debtSelected, setDebtSelected] = useState<DebtorSummary | null>(null);
+  const [agreements, setAgreements] = useState<AgreementResponse[]>([]);
 
-  const [notifications, setNotifications] = useState<
-    CollectionCaseNotification[]
-  >([]);
-  const [openModalAgreement, setOpenModalAgreement] = React.useState(false);
-  const [openModalNotifications, setOpenModalNotifications] =
-    React.useState(false);
+  const [openModalAgreement, setOpenModalAgreement] = useState(false);
+  const [openModalNotifications, setOpenModalNotifications] = useState(false);
+  const [openModalPayment, setOpenModalPayment] = useState(false);
+  const [openModalPaymentForm, setOpenModalPaymentForm] = useState(false);
 
-  const [debtSelected, setDebtSelected] = useState<any | null>(null);
-  const [debts, setDebts] = React.useState<any[]>([]);
-
-  const handleOpenModalNotifications = async (caseId: string) => {
-    await fetchNotifications(caseId);
-
-    setOpenModalNotifications(true);
-  };
-  const handleCloseModalNotifications = () => setOpenModalNotifications(false);
-
-  useEffect(() => {
-    fetchDebts();
-  }, []);
-
-  const fetchDebts = async () => {
+  /** ---------------------------------------------------------------------
+   * FETCH DEBTS
+   * -------------------------------------------------------------------- */
+  const fetchDebts = useCallback(async () => {
     try {
       const debtor = await getDebtorByUserId(user?.id as string);
       if (!debtor) {
         notifyError("No se encontró el deudor asociado al usuario");
         return;
       }
-      const response = await getAllDebts(debtor.id);
-      if (response.success) {
-        console.log("Debts fetched:", response.data);
-        setDebts(response.data || []);
-      } else {
-        setDebts([]);
-      }
-      // Fetch debts logic here
-      // For demonstration, setting an empty array
+
+      if (!session?.user?.tenant_id) return;
+      const response = await getDebts({ debtor_id: debtor.id });
+
+      if (response.success) setDebts(response.data || []);
     } catch (error) {
       console.error("Error fetching debts:", error);
+      notifyError("Error al obtener deudas");
     }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user?.id) fetchDebts();
+  }, [user?.id, fetchDebts]);
+
+  /** ---------------------------------------------------------------------
+   * FETCH AGREEMENTS
+   * -------------------------------------------------------------------- */
+  const fetchAgreements = async (debtId: string) => {
+    const response = await getAgreementsByDebtId(debtId);
+    setAgreements(response || []);
   };
 
-  const handleOpenModalAgreement = () => {
+  /** ---------------------------------------------------------------------
+   * MODAL HANDLERS
+   * -------------------------------------------------------------------- */
+  const openAgreementModal = (debt: DebtorSummary) => {
+    setDebtSelected(debt);
     setOpenModalAgreement(true);
   };
 
-  const handleCloseModalAgreement = () => setOpenModalAgreement(false);
-
-  const fetchNotifications = async (caseId: string) => {
-    try {
-      const data: CollectionCaseNotification[] =
-        await getAllNotificationsByCollectionCase(caseId);
-      setNotifications(data);
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-    }
+  const openPaymentModal = (debt: DebtorSummary) => {
+    setDebtSelected(debt);
+    setOpenModalPayment(true);
   };
 
-  const handleAgreementSubmit = async (data: Partial<PaymentAgreement>) => {
-    // Implement submission logic here
-    try {
-      setLoading(true);
-      console.log("Agreement Data Submitted:", data);
-
-      if (!debtSelected?.id) return;
-
-      if (!session?.user?.tenant_id) {
-        notifyError("No se encontró el tenant_id del usuario");
-        return;
-      }
-
-      const agreementCreate: PaymentAgreementCreate = {
-        collection_case_id: debtSelected.collection_case_id || null,
-        verdict_id: debtSelected.verdict_id || null,
-        total_amount: Number(data.total_amount),
-        installments_count: Number(data.installments_count),
-        installment_amount: Number(data.installment_amount),
-        start_date: data.start_date || new Date(),
-        end_date: data.end_date || new Date(),
-        status: data.status || "ACTIVE",
-      };
-
-      if (agreementCreate.start_date < new Date()) {
-        notifyError("La fecha de inicio debe ser mayor a la fecha actual");
-        return;
-      }
-
-      const exists = await existsPaymentAgreement(debtSelected?.id);
-      if (exists) {
-        notifyError("Ya existe un acuerdo de pago para esta collection");
-        return;
-      }
-
-      const debtor = await getDebtorByUserId(user?.id as string);
-      if (!debtor) {
-        notifyError("No se encontró el deudor asociado al usuario");
-        return;
-      }
-
-      agreementCreate.debtor_id = debtor.id;
-
-      console.log("Creating agreement with data:", agreementCreate);
-
-      await createPaymentAgreement(session?.user?.tenant_id, agreementCreate);
-      handleCloseModalAgreement();
-      notifyInfo("Payment agreement submitted successfully");
-    } catch (error) {
-      console.error("Error creating payment agreement:", error);
-      notifyError("Error al crear el acuerdo de pago");
-    } finally {
-      setLoading(false);
-    }
+  const openNotificationsModal = async (debt: DebtorSummary) => {
+    setDebtSelected(debt);
+    await fetchAgreements(debt.id);
+    setOpenModalNotifications(true);
   };
 
+  const onSaveAgreement = async () => {
+    setOpenModalAgreement(false);
+    await fetchDebts();
+  };
+
+  const handleOpenPaymentForm = () => {
+    setOpenModalPaymentForm(true);
+  };
+
+  const handleClosePaymentForm = () => {
+    setOpenModalPaymentForm(false);
+  };
+
+  const handleSavePayment = async () => {
+    setOpenModalPaymentForm(false);
+    await fetchDebts();
+  };
+
+  /** ---------------------------------------------------------------------
+   * RENDER
+   * -------------------------------------------------------------------- */
   return (
     <Container maxWidth="xl">
-      <Typography variant="h4" gutterBottom>
-        Mijn schulden
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          mb: 2,
+          mt: 2,
+          alignItems: "center",
+        }}
+      >
+        <Typography variant="h4" gutterBottom sx={{ mt: 1 }}>
+          Mijn schulden
+        </Typography>
+        <Button
+          variant="contained"
+          size="small"
+          onClick={handleOpenPaymentForm}
+        >
+          Betalen
+        </Button>
+      </Box>
 
       <Suspense fallback={<h1>Loading collection cases...</h1>}>
         <TableContainer component={Paper} sx={{ mt: 2 }}>
           <Table
             stickyHeader
-            size="small" // DENSE
+            size="small"
             sx={{
               "& .MuiTableCell-root": {
                 border: "1px solid #e0e0e0",
-                padding: "4px 8px", // compacto
+                padding: "4px 8px",
               },
-              "& .MuiTableRow-root": {
-                height: "32px", // compacta las filas
-              },
+              "& .MuiTableRow-root": { height: "32px" },
             }}
-            aria-label="tabla de embargo"
           >
             <TableHead>
               <TableRow>
@@ -204,6 +169,10 @@ const DashboardDebtor = () => {
                   "Totaal",
                   "Boet",
                   "Betaling",
+                  "Termijn",
+                  "Aflosbedrag",
+                  "Startdatum",
+                  "Einddatum",
                   "Open",
                   "Actie",
                 ].map((col) => (
@@ -215,8 +184,6 @@ const DashboardDebtor = () => {
                       backgroundColor: "secondary.main",
                       color: "#fff",
                       fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                      padding: "4px 8px",
                     }}
                   >
                     {col}
@@ -228,60 +195,71 @@ const DashboardDebtor = () => {
             <TableBody>
               {debts.map((debt) => (
                 <TableRow key={debt.id}>
-                  <TableCell sx={{ textAlign: "left" }}>{debt.type}</TableCell>
-                  <TableCell sx={{ textAlign: "left" }}>
-                    {debt.reference}
+                  <TableCell>{debt.type}</TableCell>
+                  <TableCell>{debt.reference}</TableCell>
+                  <TableCell align="center">{debt.status}</TableCell>
+                  <TableCell align="center">
+                    {debt.issue_date
+                      ? formatDate(debt.issue_date.toString())
+                      : "-"}
                   </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {debt.status}
+                  <TableCell align="center">
+                    {debt.due_date ? formatDate(debt.due_date.toString()) : "-"}
                   </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {formatDate(debt.issueDate?.toString() || "")}
+                  <TableCell align="right">
+                    {debt.amount ? formatCurrency(debt.amount) : "-"}
                   </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {formatDate(debt.dueDate?.toString() || "")}
+                  <TableCell align="right">
+                    {formatCurrency(debt.total_fined || 0)}
                   </TableCell>
-                  <TableCell sx={{ textAlign: "right" }}>
-                    {formatCurrency(debt.amount)}
+                  <TableCell align="right">
+                    {formatCurrency(debt.total_paid || 0)}
                   </TableCell>
-                  <TableCell sx={{ textAlign: "right" }}>
-                    {formatCurrency(0)}
+                  <TableCell align="center">
+                    {debt.agreement_installments_count || "-"}
                   </TableCell>
-                  <TableCell sx={{ textAlign: "right" }}>
-                    {formatCurrency(0)}
+                  <TableCell align="center">
+                    {debt.agreement_installment_amount
+                      ? formatCurrency(debt.agreement_installment_amount)
+                      : "-"}
                   </TableCell>
-                  <TableCell sx={{ textAlign: "right" }}>
-                    {formatCurrency(0)}
+                  <TableCell align="center">
+                    {debt.agreement_start_date
+                      ? formatDate(debt.agreement_start_date.toString())
+                      : "-"}
                   </TableCell>
-
-                  <TableCell sx={{ textAlign: "center" }}>
+                  <TableCell align="center">
+                    {debt.agreement_end_date
+                      ? formatDate(debt.agreement_end_date.toString())
+                      : "-"}
+                  </TableCell>
+                  <TableCell align="right">
+                    {formatCurrency(debt.balance)}
+                  </TableCell>
+                  <TableCell align="center">
                     <Stack direction="row" spacing={1} justifyContent="center">
                       <Tooltip title="Betalingsregeling">
                         <IconButton
-                          onClick={(e) => {
-                            e.stopPropagation();
-
-                            debt.collection_case_id =
-                              debt.type === "Buitengerechtelijk"
-                                ? debt.id
-                                : null;
-
-                            debt.verdict_id =
-                              debt.type === "Vonnis" ? debt.verdict_id : null;
-
-                            setDebtSelected(debt);
-                            handleOpenModalAgreement();
-                          }}
-                          size="small" // más compacto
+                          size="small"
+                          onClick={() => openAgreementModal(debt)}
                         >
                           <HandshakeIcon color="primary" fontSize="small" />
                         </IconButton>
                       </Tooltip>
 
+                      <Tooltip title="Betalingen">
+                        <IconButton
+                          size="small"
+                          onClick={() => openPaymentModal(debt)}
+                        >
+                          <AttachMoneyIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+
                       <Tooltip title="Overzicht">
                         <IconButton
-                          onClick={() => handleOpenModalNotifications(debt.id)}
                           size="small"
+                          onClick={() => openNotificationsModal(debt)}
                         >
                           <VisibilityIcon fontSize="small" />
                         </IconButton>
@@ -295,6 +273,7 @@ const DashboardDebtor = () => {
         </TableContainer>
       </Suspense>
 
+      {/* TOTAL DEBTS */}
       <Box sx={{ mt: 6, display: "flex", justifyContent: "flex-end" }}>
         <Stack direction="row" spacing={2} alignItems="center">
           <Typography variant="h6" sx={{ fontWeight: 500 }}>
@@ -302,86 +281,53 @@ const DashboardDebtor = () => {
           </Typography>
 
           <Box sx={{ bgcolor: "grey.100", px: 2, py: 1, borderRadius: 1 }}>
-            <Typography
-              variant="h4"
-              sx={{ fontWeight: 600, ml: 1 }}
-              color="primary.main"
-            >
+            <Typography variant="h4" color="primary.main">
               {formatCurrency(
-                debts.reduce((total, debt) => total + (debt.amount || 0), 0)
+                debts.reduce((t, d) => t + (d.amount || 0), 0) +
+                  debts.reduce((t, d) => t + (d.total_fined || 0), 0) -
+                  debts.reduce((t, d) => t + (d.total_paid || 0), 0)
               )}
             </Typography>
           </Box>
         </Stack>
       </Box>
 
-      <Modal
+      <AgreementFormDialog
         open={openModalAgreement}
-        onClose={handleCloseModalAgreement}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Paper
-          component="section"
-          sx={{
-            mt: 2,
-            elevation: 1,
-            borderRadius: 1,
-            overflow: "hidden",
-            mb: 2,
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 400,
-          }}
-        >
-          <Box
-            sx={{
-              bgcolor: "secondary.main",
-              color: "white",
-              px: 2,
-              py: 1.5,
-              borderTopLeftRadius: 8,
-              borderTopRightRadius: 8,
-              borderBottom: "1px solid #e0e0e0",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
-              NIEUWE OVEREENKOMST
-            </Typography>
-            <IconButton sx={{ color: "white" }}>
-              <CloseIcon onClick={handleCloseModalAgreement} />
-            </IconButton>
-          </Box>
+        onClose={() => setOpenModalAgreement(false)}
+        title="NIEUWE OVEREENKOMST"
+        onSave={onSaveAgreement}
+        debt_id={debtSelected?.id || ""}
+        initialData={{
+          debt_id: debtSelected?.id || "",
+          total_amount: debtSelected?.amount || 0,
+          installments_count: 1,
+          installment_amount: 0,
+          start_date: new Date(
+            new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+          ),
+          end_date: new Date(),
+          status: $Enums.AgreementStatus.PENDING,
+          debtor_id: debtSelected?.debtor_id,
+        }}
+      />
 
-          {/* {JSON.stringify(debtSelected)} */}
-          <AgreementForm
-            onSubmit={handleAgreementSubmit}
-            initialData={{
-              ...debtSelected,
-
-              total_amount: debtSelected?.amount ?? 0,
-              installments_count: 1,
-              start_date: new Date(
-                new Date().getFullYear(),
-                new Date().getMonth() + 1,
-                0
-              ),
-              status: $Enums.AgreementStatus.PENDING,
-            }}
-            loading={loading}
-          />
-        </Paper>
-      </Modal>
-
-      <ModalNotifications
+      <AgreementDialog
         open={openModalNotifications}
-        onClose={handleCloseModalNotifications}
-        notifications={notifications}
+        onClose={() => setOpenModalNotifications(false)}
+        agreements={agreements}
+      />
+
+      <PaymentsDialog
+        open={openModalPayment}
+        onClose={() => setOpenModalPayment(false)}
+        debtId={debtSelected?.id || ""}
+      />
+
+      <PaymentFormDialog
+        open={openModalPaymentForm}
+        onClose={handleClosePaymentForm}
+        onSave={handleSavePayment}
       />
     </Container>
   );

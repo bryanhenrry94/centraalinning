@@ -5,6 +5,7 @@ import {
   SommatieEmail,
   WelcomeEmail,
 } from "@/templates/emails";
+import NewClientEmail from "@/templates/emails/NewClientEmail";
 import VerdictDebtorMail from "@/templates/emails/VerdictDebtorMail";
 import VerdictRegisterEmail from "@/templates/emails/VerdictRegisterMail";
 import { render } from "@react-email/render";
@@ -35,12 +36,12 @@ export default async function Page() {
   // };
   // const html = await render(<IngebrekestellingEmail {...params} />);
 
-  const params = {
-    logoUrl: "/static/logo.png",
-    fullname: "Bryan Navarrete",
-    paymentLink: "https://example.com/pay-invoice/12345",
-  };
-  const html = await render(<InvoiceEmail {...params} />);
+  // const params = {
+  //   logoUrl: "/static/logo.png",
+  //   fullname: "Bryan Navarrete",
+  //   paymentLink: "https://example.com/pay-invoice/12345",
+  // };
+  // const html = await render(<InvoiceEmail {...params} />);
 
   // const params = {
   //   logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "/static/logo.png",
@@ -56,6 +57,14 @@ export default async function Page() {
   //   verdictDate: "01-01-2024",
   // };
   // const html = await render(<VerdictRegisterEmail {...params} />);
+
+  const params = {
+    logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "/static/logo.png",
+    clientName: "Empresa Ejemplo S.A.",
+    registeredAt: "2024-06-15",
+    totalClients: 150,
+  };
+  const html = await render(<NewClientEmail {...params} />);
 
   return <div dangerouslySetInnerHTML={{ __html: html }} />;
 }

@@ -2,9 +2,7 @@
 import React from "react";
 // mui
 import {
-  Box,
   IconButton,
-  Modal,
   Paper,
   Table,
   TableBody,
@@ -12,28 +10,28 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Typography,
 } from "@mui/material";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import EditIcon from "@mui/icons-material/Edit";
-import CloseIcon from "@mui/icons-material/Close";
 
 // components
 import { formatCurrency, formatDate } from "@/utils/formatters";
 import {
-  PaymentAgreement,
-  PaymentAgreementResponse,
-} from "@/lib/validations/payment-agreement";
-import AgreementForm from "./agreement-form";
+  AgreementResponse,
+  CreateAgreement,
+} from "@/lib/validations/agreement";
 import { $Enums } from "@/prisma/generated/prisma";
+import { AlertService } from "@/lib/alerts";
+import { updatePaymentAgreement } from "@/app/actions/agreement";
+import { notifyInfo } from "@/lib/notifications";
+import { AgreementFormDialog } from "./agreement-form-dialog";
 
 interface AgreementTableApproveProps {
-  agreements: PaymentAgreementResponse[];
-  onApprove: (agreementId: string) => void;
-  onReject: (agreementId: string) => void;
-  onUpdate: (data: Partial<PaymentAgreement>) => void;
-  loading?: boolean;
+  agreements: AgreementResponse[];
+  onApprove: () => void;
+  onReject: () => void;
+  onUpdate: () => void;
 }
 
 export const AgreementTableApprove = ({
@@ -41,17 +39,47 @@ export const AgreementTableApprove = ({
   onApprove,
   onReject,
   onUpdate,
-  loading,
 }: AgreementTableApproveProps) => {
   const [openModal, setOpenModal] = React.useState(false);
   const [agreementSelected, setAgreementSelected] =
-    React.useState<PaymentAgreementResponse | null>(null);
+    React.useState<AgreementResponse | null>(null);
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
 
-  const handleUpdate = (data: Partial<PaymentAgreement>) => {
-    handleCloseModal();
-    onUpdate(data);
+  const handleApprove = (id: string) => {
+    AlertService.showConfirm(
+      "¿Wilt u deze betalingsregeling accepteren?",
+      "",
+      "JA",
+      "NEE"
+    ).then(async (confirmed) => {
+      if (confirmed) {
+        await updatePaymentAgreement(id, {
+          status: $Enums.AgreementStatus.ACCEPTED,
+        });
+        await notifyInfo("Betalingsregeling succesvol goedgekeurd.");
+        // await fetchAgreements();
+        onApprove();
+      }
+    });
+  };
+
+  const handleReject = (id: string) => {
+    AlertService.showConfirm(
+      "¿Bent u zeker dat u deze wilt annuleren?",
+      "",
+      "JA",
+      "NEE"
+    ).then(async (confirmed) => {
+      if (confirmed) {
+        await updatePaymentAgreement(id, {
+          status: $Enums.AgreementStatus.REJECTED,
+        });
+        await notifyInfo("Betalingsregeling afgewezen.");
+        // await fetchAgreements();
+        onReject();
+      }
+    });
   };
 
   return (
@@ -77,7 +105,7 @@ export const AgreementTableApprove = ({
                 }}
                 align="center"
               >
-                Akkoord / Annuleren
+                Akkoord
               </TableCell>
               <TableCell
                 sx={{
@@ -107,7 +135,7 @@ export const AgreementTableApprove = ({
                 }}
                 align="center"
               >
-                Naam debiteur
+                Debiteur
               </TableCell>
               <TableCell
                 sx={{
@@ -117,7 +145,7 @@ export const AgreementTableApprove = ({
                 }}
                 align="center"
               >
-                Totaal te bedrag
+                Totaal
               </TableCell>
               <TableCell
                 sx={{
@@ -127,7 +155,27 @@ export const AgreementTableApprove = ({
                 }}
                 align="center"
               >
-                Aflostermijnen
+                Boet
+              </TableCell>
+              <TableCell
+                sx={{
+                  backgroundColor: "secondary.main",
+                  color: "#fff",
+                  fontWeight: "bold",
+                }}
+                align="center"
+              >
+                Betaling
+              </TableCell>
+              <TableCell
+                sx={{
+                  backgroundColor: "secondary.main",
+                  color: "#fff",
+                  fontWeight: "bold",
+                }}
+                align="center"
+              >
+                Termijn
               </TableCell>
               <TableCell
                 sx={{
@@ -167,29 +215,39 @@ export const AgreementTableApprove = ({
                 }}
                 align="center"
               >
-                Aanpassen
+                Open
+              </TableCell>
+              <TableCell
+                sx={{
+                  backgroundColor: "secondary.main",
+                  color: "#fff",
+                  fontWeight: "bold",
+                }}
+                align="center"
+              >
+                Edit
               </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {agreements.map((agreement) => (
+            {agreements.map((agreement: AgreementResponse) => (
               <TableRow key={agreement.id}>
                 <TableCell align="center">
                   <IconButton
                     color="primary"
-                    onClick={() => onApprove(agreement.id)}
+                    onClick={() => handleApprove(agreement.id)}
                   >
                     <ThumbUpAltIcon />
                   </IconButton>
                   <IconButton
                     color="secondary"
-                    onClick={() => onReject(agreement.id)}
+                    onClick={() => handleReject(agreement.id)}
                   >
                     <ThumbDownAltIcon />
                   </IconButton>
                 </TableCell>
                 <TableCell align="center">
-                  {agreement.collection_case ? "Buitengerechtelijk" : "Vonnis"}
+                  {agreement.collection_case ? "Vonnis" : "Buitengerechtelijk"}
                 </TableCell>
                 <TableCell align="center">
                   {new Date(agreement.created_at || "").toLocaleDateString()}
@@ -202,6 +260,9 @@ export const AgreementTableApprove = ({
                 <TableCell align="center">
                   {formatCurrency(agreement.total_amount)}
                 </TableCell>
+                <TableCell align="center">{formatCurrency(0)}</TableCell>
+                <TableCell align="center">{formatCurrency(0)}</TableCell>
+
                 <TableCell align="center">
                   {agreement.installments_count}
                 </TableCell>
@@ -214,6 +275,10 @@ export const AgreementTableApprove = ({
                 <TableCell align="center">
                   {formatDate(agreement.end_date.toString())}
                 </TableCell>
+                <TableCell align="right">
+                  {formatCurrency(agreement.total_amount)}
+                </TableCell>
+
                 <TableCell align="center">
                   <IconButton>
                     <EditIcon
@@ -230,58 +295,24 @@ export const AgreementTableApprove = ({
         </Table>
       </TableContainer>
 
-      <Modal
+      <AgreementFormDialog
+        title="BETALINGSREGELING AANPASSEN"
         open={openModal}
         onClose={handleCloseModal}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Paper
-          component="section"
-          sx={{
-            mt: 2,
-            elevation: 1,
-            borderRadius: 1,
-            overflow: "hidden",
-            mb: 2,
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 400,
-          }}
-        >
-          <Box
-            sx={{
-              bgcolor: "secondary.main",
-              color: "white",
-              px: 2,
-              py: 1.5,
-              borderTopLeftRadius: 8,
-              borderTopRightRadius: 8,
-              borderBottom: "1px solid #e0e0e0",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
-              BETALINGSREGELING AANPASSEN
-            </Typography>
-            <IconButton sx={{ color: "white" }}>
-              <CloseIcon onClick={handleCloseModal} />
-            </IconButton>
-          </Box>
-          <AgreementForm
-            initialData={{
-              ...agreementSelected,
-              status: $Enums.AgreementStatus.COUNTEROFFER,
-            }}
-            onSubmit={handleUpdate}
-            loading={loading}
-          />
-        </Paper>
-      </Modal>
+        id={agreementSelected?.id || ""}
+        debt_id={agreementSelected?.debt_id || ""}
+        initialData={{
+          debt_id: agreementSelected?.debt_id || "",
+          ...agreementSelected,
+          total_amount: agreementSelected?.total_amount || 0,
+          installment_amount: agreementSelected?.installment_amount || 0,
+          installments_count: agreementSelected?.installments_count || 0,
+          start_date: agreementSelected?.start_date || new Date(),
+          end_date: agreementSelected?.end_date || new Date(),
+          status: $Enums.AgreementStatus.COUNTEROFFER,
+        }}
+        onSave={onUpdate}
+      />
     </>
   );
 };

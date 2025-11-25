@@ -111,7 +111,7 @@ export const getCollectionViewById = async (
 ): Promise<CollectionCaseView> => {
   const collection = await prisma.collectionCase.findUnique({
     where: { id },
-    include: { debtor: true, payments: true },
+    include: { debtor: true },
   });
   if (!collection) throw new Error("Collection not found");
 
@@ -136,21 +136,6 @@ export const getCollectionViewById = async (
     status: collection.status as $Enums.CollectionCaseStatus,
     created_at: collection.created_at,
     updated_at: collection.updated_at,
-    payments:
-      collection.payments.map((payment) => ({
-        ...payment,
-        amount:
-          typeof payment.amount === "object" && "toNumber" in payment.amount
-            ? payment.amount.toNumber()
-            : Number(payment.amount),
-        method: payment.method as $Enums.PaymentMethod,
-        payment_date:
-          payment.payment_date instanceof Date
-            ? payment.payment_date.toISOString()
-            : payment.payment_date,
-        reference_number: payment.reference_number ?? undefined,
-        created_at: payment.created_at,
-      })) ?? undefined,
     debtor: {
       id: collection.debtor?.id ?? "",
       fullname: collection.debtor?.fullname ?? "",
@@ -256,6 +241,26 @@ export const createCollectionCase = async (
         (parsedData.status as $Enums.CollectionCaseStatus) ||
         $Enums.CollectionCaseStatus.AANMANING,
       tenant_id: tenant_id,
+    },
+  });
+
+  // Crear registro en debt
+  const new_debt = await prisma.debt.create({
+    data: {
+      debtor_id: debtor.id,
+      tenant_id: tenant.id,
+      source_type: $Enums.DebtSourceType.COLLECTION_CASE,
+      source_id: newCollectionCase.id,
+      principal_amount: total_due,
+      status: $Enums.DebtStatus.OPEN,
+    },
+  });
+
+  // Actualiza el debt_id en el collection case
+  await prisma.collectionCase.update({
+    where: { id: newCollectionCase.id },
+    data: {
+      debt_id: new_debt.id,
     },
   });
 

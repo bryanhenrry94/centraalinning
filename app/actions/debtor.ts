@@ -9,6 +9,7 @@ import {
 } from "@/lib/validations/debtor";
 import { getUserByEmail } from "@/app/actions/user";
 import { roleEnum } from "@/prisma/generated/prisma";
+import { DebtorSummary } from "@/types/DebtorSummary";
 
 export const getAllDebtorsByTenantId = async (
   tenant_id: string
@@ -319,67 +320,62 @@ export const sendFinancialSummaryEmail = async (
   }
 };
 
-export const getAllDebts = async (
-  debtor_id: string
-): Promise<{ success: boolean; data?: any[]; message?: string }> => {
+interface DebtFilters {
+  tenant_id?: string;
+  debtor_id?: string;
+}
+
+export const getDebts = async (
+  filters: DebtFilters
+): Promise<{ success: boolean; data?: DebtorSummary[]; message?: string }> => {
   try {
-    const collections = await prisma.collectionCase.findMany({
-      where: {
-        debtor_id: debtor_id,
-      },
+    const whereClauses: string[] = [];
+    const params: any[] = [];
+
+    if (filters.tenant_id) {
+      whereClauses.push(`tenant_id = $${params.length + 1}`);
+      params.push(filters.tenant_id);
+    }
+
+    if (filters.debtor_id) {
+      whereClauses.push(`debtor_id = $${params.length + 1}`);
+      params.push(filters.debtor_id);
+    }
+
+    const whereSQL =
+      whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+
+    const query = `
+      SELECT * 
+      FROM vw_debtor_summary
+      ${whereSQL}
+    `;
+
+    const raw = await prisma.$queryRawUnsafe<any[]>(query, ...params);
+
+    // Convertir todos los Decimal a number
+    const summary = raw.map((row) => {
+      const result: any = {};
+
+      for (const key of Object.keys(row)) {
+        const value = row[key];
+
+        if (value && typeof value === "object" && "toNumber" in value) {
+          result[key] = value.toNumber();
+        } else {
+          result[key] = value;
+        }
+      }
+
+      return result;
     });
 
-    const verdicts = await prisma.verdict.findMany({
-      where: {
-        debtor_id: debtor_id,
-      },
-    });
-
-    const debts: any[] = [];
-
-    collections.forEach((collection) => {
-      debts.push({
-        type: "Buitengerechtelijk",
-        id: collection.id,
-        reference: collection.reference_number,
-        issueDate: collection.issue_date
-          ? collection.issue_date.toISOString()
-          : null,
-        dueDate: collection.due_date ? collection.due_date.toISOString() : null,
-        amount: collection.total_due ? Number(collection.total_due) : 0,
-        status: collection.status,
-        created_at: collection.created_at
-          ? collection.created_at.toISOString()
-          : null,
-      });
-    });
-
-    verdicts.forEach((verdict) => {
-      debts.push({
-        type: "Vonnis",
-        id: verdict.id,
-        reference: verdict.registration_number,
-        issueDate: verdict.sentence_date
-          ? verdict.sentence_date.toISOString()
-          : null,
-        dueDate: verdict.sentence_date
-          ? verdict.sentence_date.toISOString()
-          : null,
-        amount: verdict.sentence_amount ? Number(verdict.sentence_amount) : 0,
-        status: verdict.status,
-        created_at: verdict.created_at
-          ? verdict.created_at.toISOString()
-          : null,
-      });
-    });
-
-    // Sort debts by created_at date descending
-    debts.sort(
+    summary.sort(
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
-    return { success: true, data: debts };
+    return { success: true, data: summary };
   } catch (error) {
     console.error("Error fetching debts:", error);
     return { success: false, message: "Error fetching debts" };

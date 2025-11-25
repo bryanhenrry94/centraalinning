@@ -36,6 +36,9 @@ import VerdictCreditorPDF, {
   VerdictCreditorPDFProps,
 } from "@/templates/pdfs/VerdictCreditorPDF";
 import VerdictRegisterEmail from "@/templates/emails/VerdictRegisterMail";
+import NewClientEmail, {
+  NewClientEmailProps,
+} from "@/templates/emails/NewClientEmail";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -80,6 +83,43 @@ export async function sendWelcomeEmail(to: string, fullname: string) {
     return Response.json({ error }, { status: 500 });
   }
 }
+
+export const sendNewClitentEmail = async (
+  to: string,
+  clientName: string,
+  registeredAt: string,
+  totalClients: number
+) => {
+  try {
+    const recipient = await getEmailByEnv(to);
+
+    const params: NewClientEmailProps = {
+      logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
+      clientName,
+      registeredAt,
+      totalClients,
+    };
+
+    console.log("params:", params);
+
+    const { data, error } = await resend.emails.send({
+      from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
+      to: recipient,
+      subject: `New Client Registered - ${clientName}`,
+      react: <NewClientEmail {...params} />,
+    });
+
+    if (error) {
+      console.error("Error sending New Client email:", error);
+      return Response.json({ error }, { status: 500 });
+    }
+
+    return Response.json(data);
+  } catch (error) {
+    console.error("Error sending email:", error);
+    return Response.json({ error }, { status: 500 });
+  }
+};
 
 export const sendInvoiceEmail = async (
   to: string,
