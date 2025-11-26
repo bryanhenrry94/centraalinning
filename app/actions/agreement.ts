@@ -21,7 +21,11 @@ export const getPaymentAgreements = async (
   const agreements = await prisma.agreement.findMany({
     where: { ...filter },
     include: {
-      debtor: true,
+      debtor: {
+        include: {
+          person: true,
+        },
+      },
       debt: true,
     },
   });
@@ -44,9 +48,13 @@ export const getPaymentAgreements = async (
     debtor: agreement.debtor
       ? {
           id: agreement.debtor.id,
-          fullname: agreement.debtor.fullname,
+          fullname:
+            agreement.debtor.person?.first_name +
+              " " +
+              agreement.debtor.person?.last_name ||
+            agreement.debtor.person?.business_name ||
+            "",
           email: agreement.debtor.email ?? undefined,
-          phone: agreement.debtor.phone ?? undefined,
         }
       : undefined,
   }));
@@ -321,7 +329,12 @@ export const getAgreementsByDebtId = async (
   const agreements = await prisma.agreement.findMany({
     where: { debt_id },
     include: {
-      debtor: true,
+      debtor: {
+        include: {
+          person: true,
+        },
+      },
+      debt: true,
     },
   });
 
@@ -342,9 +355,13 @@ export const getAgreementsByDebtId = async (
     debtor: agreement.debtor
       ? {
           id: agreement.debtor.id,
-          fullname: agreement.debtor.fullname,
+          fullname:
+            agreement.debtor.person?.first_name +
+              " " +
+              agreement.debtor.person?.last_name ||
+            agreement.debtor.person?.business_name ||
+            "",
           email: agreement.debtor.email ?? undefined,
-          phone: agreement.debtor.phone ?? undefined,
         }
       : undefined,
   }));

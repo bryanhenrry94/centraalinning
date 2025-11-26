@@ -9,32 +9,17 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Controller, Resolver, useFormContext } from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
 import AddIcon from "@mui/icons-material/Add";
 
-// Local Components and Functions
-import { DebtorBase } from "@/lib/validations/debtor";
-import {
-  Verdict,
-  VerdictCreateForm,
-  VerdictCreateFormSchema,
-  VerdictJudgment,
-  VerdictJudgmentSchema,
-} from "@/lib/validations/verdict";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { DebtorBase, DebtorResponse } from "@/lib/validations/debtor";
+import { VerdictJudgment } from "@/lib/validations/verdict";
 
 interface JudgmentSectionProps {
   handleOpenModalDebtor: () => void;
   onSelectDebtor: (debtor: DebtorBase | null) => void;
-  debtors: DebtorBase[];
+  debtors: DebtorResponse[];
 }
-
-// {
-//     resolver: zodResolver(
-//       VerdictCreateFormSchema
-//     ) as Resolver<VerdictCreateForm>,
-//     defaultValues: {},
-//   }
 
 export const JudgmentSection: React.FC<JudgmentSectionProps> = ({
   handleOpenModalDebtor,
@@ -118,7 +103,9 @@ export const JudgmentSection: React.FC<JudgmentSectionProps> = ({
                   render={({ field: { onChange, value, ref } }) => (
                     <Autocomplete
                       options={debtors}
-                      getOptionLabel={(option) => option?.fullname ?? ""}
+                      getOptionLabel={(option) =>
+                        `${option.person?.first_name || ""} ${option.person?.last_name || ""}`
+                      }
                       isOptionEqualToValue={(option, val) =>
                         option.id === val.id
                       }
@@ -131,13 +118,10 @@ export const JudgmentSection: React.FC<JudgmentSectionProps> = ({
                         if (newValue) {
                           const debtorSelected: DebtorBase = {
                             id: newValue?.id,
-                            fullname: newValue?.fullname,
                             email: newValue?.email,
-                            phone: newValue?.phone || "",
-                            address: newValue?.address || "",
-                            identification_type: "DNI",
-                            identification: newValue?.identification || "",
                             tenant_id: newValue?.tenant_id || "",
+                            user_id: newValue?.user_id || "",
+                            person_id: newValue?.person_id || "",
                             total_income: newValue?.total_income ?? 0,
                           };
 
@@ -149,7 +133,7 @@ export const JudgmentSection: React.FC<JudgmentSectionProps> = ({
                       fullWidth
                       renderOption={(props, option) => (
                         <li {...props} key={option.id}>
-                          {option.fullname}
+                          {option.person?.first_name} {option.person?.last_name}
                         </li>
                       )}
                       renderInput={(params) => (

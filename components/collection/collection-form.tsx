@@ -15,7 +15,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import SaveIcon from "@mui/icons-material/Save";
 import { CollectionCaseCreate } from "@/lib/validations/collection";
 import { ModalFormDebtor } from "@/components/debtor/modal-debtor-form";
-import { DebtorBase } from "@/lib/validations/debtor";
+import { DebtorBase, DebtorResponse } from "@/lib/validations/debtor";
 import { getParameter } from "@/app/actions/parameter";
 import { createCollectionCase } from "@/app/actions/collection-case";
 import { notifyError, notifySuccess } from "@/lib/notifications";
@@ -60,7 +60,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
     open: false,
     debtor_id: "",
   });
-  const [debtors, setDebtors] = useState<DebtorBase[]>([]);
+  const [debtors, setDebtors] = useState<DebtorResponse[]>([]);
 
   useEffect(() => {
     fetchDebtors();
@@ -166,7 +166,11 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
               <Autocomplete
                 disablePortal
                 options={debtors}
-                getOptionLabel={(option) => option?.fullname ?? ""}
+                getOptionLabel={(option) =>
+                  `${option.person?.first_name || ""} ${
+                    option.person?.last_name || ""
+                  }`
+                }
                 isOptionEqualToValue={(option, val) => option.id === val.id}
                 value={
                   debtors.find((debtor) => debtor.id === formData.debtor_id) ||
@@ -181,7 +185,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
                 fullWidth
                 renderOption={(props, option) => (
                   <li {...props} key={option.id}>
-                    {option.fullname}
+                    {option.person?.first_name} {option.person?.last_name}
                   </li>
                 )}
                 renderInput={(params) => (

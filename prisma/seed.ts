@@ -71,9 +71,18 @@ async function main() {
       password_hash: password_hash,
       fullname: "Bryan Henrry",
       phone: "+59998765432",
+      is_active: true,
+    },
+  });
+
+  await prisma.membership.upsert({
+    where: { id: "5c6f3e2a-3f4b-4d3a- ninth-8f0b5e6c2d7a" },
+    update: {},
+    create: {
+      id: "5c6f3e2a-3f4b-4d3a- ninth-8f0b5e6c2d7a",
+      user_id: "28112419-5c53-47c5-b109-a29d02c1bb5d",
       tenant_id: "0874303e-6795-46ef-8416-5d76bba8071b",
       role: "PLATFORM_OWNER",
-      is_active: true,
     },
   });
 

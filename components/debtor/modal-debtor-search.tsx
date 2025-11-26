@@ -22,6 +22,7 @@ import { getAllDebtors } from "@/app/actions/debtor";
 import {
   DebtorBase,
   DebtorCreate as DebtorCreateBase,
+  DebtorResponse,
 } from "@/lib/validations/debtor";
 
 type DebtorCreate = DebtorCreateBase & { id: string };
@@ -52,7 +53,7 @@ const ModalSearchDebtor: React.FC<ModalSearchDebtorProps> = ({
   onEdit,
 }) => {
   const [search, setSearch] = useState("");
-  const [debtors, setDebtors] = useState<DebtorBase[]>([]);
+  const [debtors, setDebtors] = useState<DebtorResponse[]>([]);
 
   useEffect(() => {
     // Simulate fetching debtors
@@ -71,9 +72,10 @@ const ModalSearchDebtor: React.FC<ModalSearchDebtorProps> = ({
 
   const filteredDebtors = debtors.filter(
     (debtor) =>
-      debtor.fullname.toLowerCase().includes(search.toLowerCase()) ||
-      debtor.email.toLowerCase().includes(search.toLowerCase()) ||
-      debtor.identification?.toLowerCase().includes(search.toLowerCase())
+      debtor.person?.first_name?.toLowerCase().includes(search.toLowerCase()) ||
+      debtor.person?.last_name?.toLowerCase().includes(search.toLowerCase()) ||
+      debtor.person?.identification ||
+      debtor.email.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -105,8 +107,10 @@ const ModalSearchDebtor: React.FC<ModalSearchDebtorProps> = ({
             <TableBody>
               {filteredDebtors.map((debtor) => (
                 <TableRow key={debtor.id}>
-                  <TableCell>{debtor.fullname}</TableCell>
-                  <TableCell>{debtor.identification}</TableCell>
+                  <TableCell>
+                    {debtor.person?.first_name} {debtor.person?.last_name}
+                  </TableCell>
+                  <TableCell>{debtor.person?.identification}</TableCell>
                   <TableCell>{debtor.email}</TableCell>
                   <TableCell align="center">
                     <IconButton

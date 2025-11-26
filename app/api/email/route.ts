@@ -21,7 +21,7 @@ export async function GET(req: Request) {
     const data = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: "bryanhenrry94@gmail.com",
-      subject: `New Client Registered - ${params.clientName}`,
+      subject: `Nieuwe geregistreerde klant - ${params.clientName}`,
       html,
     });
 

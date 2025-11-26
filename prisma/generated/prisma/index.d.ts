@@ -19,15 +19,25 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
  */
 export type Tenant = $Result.DefaultSelection<Prisma.$TenantPayload>
 /**
+ * Model User
+ * 
+ */
+export type User = $Result.DefaultSelection<Prisma.$UserPayload>
+/**
+ * Model Membership
+ * 
+ */
+export type Membership = $Result.DefaultSelection<Prisma.$MembershipPayload>
+/**
  * Model TenantInvitation
  * 
  */
 export type TenantInvitation = $Result.DefaultSelection<Prisma.$TenantInvitationPayload>
 /**
- * Model User
+ * Model Person
  * 
  */
-export type User = $Result.DefaultSelection<Prisma.$UserPayload>
+export type Person = $Result.DefaultSelection<Prisma.$PersonPayload>
 /**
  * Model Parameter
  * 
@@ -236,7 +246,7 @@ export const IdentificationType: {
 export type IdentificationType = (typeof IdentificationType)[keyof typeof IdentificationType]
 
 
-export const roleEnum: {
+export const UserRole: {
   PLATFORM_OWNER: 'PLATFORM_OWNER',
   TENANT_ADMIN: 'TENANT_ADMIN',
   AGENT: 'AGENT',
@@ -244,7 +254,7 @@ export const roleEnum: {
   BAILIFF: 'BAILIFF'
 };
 
-export type roleEnum = (typeof roleEnum)[keyof typeof roleEnum]
+export type UserRole = (typeof UserRole)[keyof typeof UserRole]
 
 
 export const PaymentMethod: {
@@ -349,9 +359,9 @@ export type IdentificationType = $Enums.IdentificationType
 
 export const IdentificationType: typeof $Enums.IdentificationType
 
-export type roleEnum = $Enums.roleEnum
+export type UserRole = $Enums.UserRole
 
-export const roleEnum: typeof $Enums.roleEnum
+export const UserRole: typeof $Enums.UserRole
 
 export type PaymentMethod = $Enums.PaymentMethod
 
@@ -514,6 +524,26 @@ export class PrismaClient<
   get tenant(): Prisma.TenantDelegate<ExtArgs, ClientOptions>;
 
   /**
+   * `prisma.user`: Exposes CRUD operations for the **User** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Users
+    * const users = await prisma.user.findMany()
+    * ```
+    */
+  get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.membership`: Exposes CRUD operations for the **Membership** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Memberships
+    * const memberships = await prisma.membership.findMany()
+    * ```
+    */
+  get membership(): Prisma.MembershipDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.tenantInvitation`: Exposes CRUD operations for the **TenantInvitation** model.
     * Example usage:
     * ```ts
@@ -524,14 +554,14 @@ export class PrismaClient<
   get tenantInvitation(): Prisma.TenantInvitationDelegate<ExtArgs, ClientOptions>;
 
   /**
-   * `prisma.user`: Exposes CRUD operations for the **User** model.
+   * `prisma.person`: Exposes CRUD operations for the **Person** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more Users
-    * const users = await prisma.user.findMany()
+    * // Fetch zero or more People
+    * const people = await prisma.person.findMany()
     * ```
     */
-  get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
+  get person(): Prisma.PersonDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.parameter`: Exposes CRUD operations for the **Parameter** model.
@@ -1233,8 +1263,10 @@ export namespace Prisma {
 
   export const ModelName: {
     Tenant: 'Tenant',
-    TenantInvitation: 'TenantInvitation',
     User: 'User',
+    Membership: 'Membership',
+    TenantInvitation: 'TenantInvitation',
+    Person: 'Person',
     Parameter: 'Parameter',
     Verdict: 'Verdict',
     VerdictInterest: 'VerdictInterest',
@@ -1279,7 +1311,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "tenant" | "tenantInvitation" | "user" | "parameter" | "verdict" | "verdictInterest" | "verdictInterestDetails" | "verdictEmbargo" | "verdictBailiffServices" | "verdictAttachment" | "interestType" | "interestDetail" | "billingInvoice" | "billingInvoiceDetail" | "billingPayment" | "debt" | "debtFine" | "collectionCase" | "collectionCaseNotification" | "debtor" | "debtorIncome" | "bailiff" | "employee" | "chatRoom" | "chatMessage" | "agreement" | "agreementInstallment" | "payment" | "paymentAllocation"
+      modelProps: "tenant" | "user" | "membership" | "tenantInvitation" | "person" | "parameter" | "verdict" | "verdictInterest" | "verdictInterestDetails" | "verdictEmbargo" | "verdictBailiffServices" | "verdictAttachment" | "interestType" | "interestDetail" | "billingInvoice" | "billingInvoiceDetail" | "billingPayment" | "debt" | "debtFine" | "collectionCase" | "collectionCaseNotification" | "debtor" | "debtorIncome" | "bailiff" | "employee" | "chatRoom" | "chatMessage" | "agreement" | "agreementInstallment" | "payment" | "paymentAllocation"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1357,6 +1389,154 @@ export namespace Prisma {
           }
         }
       }
+      User: {
+        payload: Prisma.$UserPayload<ExtArgs>
+        fields: Prisma.UserFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.UserFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.UserFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>
+          }
+          findFirst: {
+            args: Prisma.UserFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.UserFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>
+          }
+          findMany: {
+            args: Prisma.UserFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>[]
+          }
+          create: {
+            args: Prisma.UserCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>
+          }
+          createMany: {
+            args: Prisma.UserCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.UserCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>[]
+          }
+          delete: {
+            args: Prisma.UserDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>
+          }
+          update: {
+            args: Prisma.UserUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>
+          }
+          deleteMany: {
+            args: Prisma.UserDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.UserUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.UserUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>[]
+          }
+          upsert: {
+            args: Prisma.UserUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserPayload>
+          }
+          aggregate: {
+            args: Prisma.UserAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateUser>
+          }
+          groupBy: {
+            args: Prisma.UserGroupByArgs<ExtArgs>
+            result: $Utils.Optional<UserGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.UserCountArgs<ExtArgs>
+            result: $Utils.Optional<UserCountAggregateOutputType> | number
+          }
+        }
+      }
+      Membership: {
+        payload: Prisma.$MembershipPayload<ExtArgs>
+        fields: Prisma.MembershipFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.MembershipFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.MembershipFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>
+          }
+          findFirst: {
+            args: Prisma.MembershipFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.MembershipFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>
+          }
+          findMany: {
+            args: Prisma.MembershipFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>[]
+          }
+          create: {
+            args: Prisma.MembershipCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>
+          }
+          createMany: {
+            args: Prisma.MembershipCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.MembershipCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>[]
+          }
+          delete: {
+            args: Prisma.MembershipDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>
+          }
+          update: {
+            args: Prisma.MembershipUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>
+          }
+          deleteMany: {
+            args: Prisma.MembershipDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.MembershipUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.MembershipUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>[]
+          }
+          upsert: {
+            args: Prisma.MembershipUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MembershipPayload>
+          }
+          aggregate: {
+            args: Prisma.MembershipAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateMembership>
+          }
+          groupBy: {
+            args: Prisma.MembershipGroupByArgs<ExtArgs>
+            result: $Utils.Optional<MembershipGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.MembershipCountArgs<ExtArgs>
+            result: $Utils.Optional<MembershipCountAggregateOutputType> | number
+          }
+        }
+      }
       TenantInvitation: {
         payload: Prisma.$TenantInvitationPayload<ExtArgs>
         fields: Prisma.TenantInvitationFieldRefs
@@ -1431,77 +1611,77 @@ export namespace Prisma {
           }
         }
       }
-      User: {
-        payload: Prisma.$UserPayload<ExtArgs>
-        fields: Prisma.UserFieldRefs
+      Person: {
+        payload: Prisma.$PersonPayload<ExtArgs>
+        fields: Prisma.PersonFieldRefs
         operations: {
           findUnique: {
-            args: Prisma.UserFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$UserPayload> | null
+            args: Prisma.PersonFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonPayload> | null
           }
           findUniqueOrThrow: {
-            args: Prisma.UserFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$UserPayload>
+            args: Prisma.PersonFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonPayload>
           }
           findFirst: {
-            args: Prisma.UserFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$UserPayload> | null
+            args: Prisma.PersonFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonPayload> | null
           }
           findFirstOrThrow: {
-            args: Prisma.UserFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$UserPayload>
+            args: Prisma.PersonFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonPayload>
           }
           findMany: {
-            args: Prisma.UserFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$UserPayload>[]
+            args: Prisma.PersonFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonPayload>[]
           }
           create: {
-            args: Prisma.UserCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$UserPayload>
+            args: Prisma.PersonCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonPayload>
           }
           createMany: {
-            args: Prisma.UserCreateManyArgs<ExtArgs>
+            args: Prisma.PersonCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
           createManyAndReturn: {
-            args: Prisma.UserCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$UserPayload>[]
+            args: Prisma.PersonCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonPayload>[]
           }
           delete: {
-            args: Prisma.UserDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$UserPayload>
+            args: Prisma.PersonDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonPayload>
           }
           update: {
-            args: Prisma.UserUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$UserPayload>
+            args: Prisma.PersonUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonPayload>
           }
           deleteMany: {
-            args: Prisma.UserDeleteManyArgs<ExtArgs>
+            args: Prisma.PersonDeleteManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateMany: {
-            args: Prisma.UserUpdateManyArgs<ExtArgs>
+            args: Prisma.PersonUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateManyAndReturn: {
-            args: Prisma.UserUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$UserPayload>[]
+            args: Prisma.PersonUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonPayload>[]
           }
           upsert: {
-            args: Prisma.UserUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$UserPayload>
+            args: Prisma.PersonUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PersonPayload>
           }
           aggregate: {
-            args: Prisma.UserAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateUser>
+            args: Prisma.PersonAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePerson>
           }
           groupBy: {
-            args: Prisma.UserGroupByArgs<ExtArgs>
-            result: $Utils.Optional<UserGroupByOutputType>[]
+            args: Prisma.PersonGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PersonGroupByOutputType>[]
           }
           count: {
-            args: Prisma.UserCountArgs<ExtArgs>
-            result: $Utils.Optional<UserCountAggregateOutputType> | number
+            args: Prisma.PersonCountArgs<ExtArgs>
+            result: $Utils.Optional<PersonCountAggregateOutputType> | number
           }
         }
       }
@@ -3526,8 +3706,10 @@ export namespace Prisma {
   }
   export type GlobalOmitConfig = {
     tenant?: TenantOmit
-    tenantInvitation?: TenantInvitationOmit
     user?: UserOmit
+    membership?: MembershipOmit
+    tenantInvitation?: TenantInvitationOmit
+    person?: PersonOmit
     parameter?: ParameterOmit
     verdict?: VerdictOmit
     verdictInterest?: VerdictInterestOmit
@@ -3639,12 +3821,12 @@ export namespace Prisma {
     debtors: number
     bailiffs: number
     verdicts: number
-    users: number
     chat_rooms: number
     invitations: number
     employees: number
     agreements: number
     debts: number
+    memberships: number
   }
 
   export type TenantCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3653,12 +3835,12 @@ export namespace Prisma {
     debtors?: boolean | TenantCountOutputTypeCountDebtorsArgs
     bailiffs?: boolean | TenantCountOutputTypeCountBailiffsArgs
     verdicts?: boolean | TenantCountOutputTypeCountVerdictsArgs
-    users?: boolean | TenantCountOutputTypeCountUsersArgs
     chat_rooms?: boolean | TenantCountOutputTypeCountChat_roomsArgs
     invitations?: boolean | TenantCountOutputTypeCountInvitationsArgs
     employees?: boolean | TenantCountOutputTypeCountEmployeesArgs
     agreements?: boolean | TenantCountOutputTypeCountAgreementsArgs
     debts?: boolean | TenantCountOutputTypeCountDebtsArgs
+    memberships?: boolean | TenantCountOutputTypeCountMembershipsArgs
   }
 
   // Custom InputTypes
@@ -3710,13 +3892,6 @@ export namespace Prisma {
   /**
    * TenantCountOutputType without action
    */
-  export type TenantCountOutputTypeCountUsersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: UserWhereInput
-  }
-
-  /**
-   * TenantCountOutputType without action
-   */
   export type TenantCountOutputTypeCountChat_roomsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ChatRoomWhereInput
   }
@@ -3749,18 +3924,27 @@ export namespace Prisma {
     where?: DebtWhereInput
   }
 
+  /**
+   * TenantCountOutputType without action
+   */
+  export type TenantCountOutputTypeCountMembershipsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MembershipWhereInput
+  }
+
 
   /**
    * Count Type UserCountOutputType
    */
 
   export type UserCountOutputType = {
+    memberships: number
     debtors: number
     bailiffs: number
     messages: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    memberships?: boolean | UserCountOutputTypeCountMembershipsArgs
     debtors?: boolean | UserCountOutputTypeCountDebtorsArgs
     bailiffs?: boolean | UserCountOutputTypeCountBailiffsArgs
     messages?: boolean | UserCountOutputTypeCountMessagesArgs
@@ -3775,6 +3959,13 @@ export namespace Prisma {
      * Select specific fields to fetch from the UserCountOutputType
      */
     select?: UserCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountMembershipsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MembershipWhereInput
   }
 
   /**
@@ -3796,6 +3987,37 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountMessagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ChatMessageWhereInput
+  }
+
+
+  /**
+   * Count Type PersonCountOutputType
+   */
+
+  export type PersonCountOutputType = {
+    debtors: number
+  }
+
+  export type PersonCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    debtors?: boolean | PersonCountOutputTypeCountDebtorsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * PersonCountOutputType without action
+   */
+  export type PersonCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PersonCountOutputType
+     */
+    select?: PersonCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * PersonCountOutputType without action
+   */
+  export type PersonCountOutputTypeCountDebtorsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DebtorWhereInput
   }
 
 
@@ -4586,12 +4808,12 @@ export namespace Prisma {
     debtors?: boolean | Tenant$debtorsArgs<ExtArgs>
     bailiffs?: boolean | Tenant$bailiffsArgs<ExtArgs>
     verdicts?: boolean | Tenant$verdictsArgs<ExtArgs>
-    users?: boolean | Tenant$usersArgs<ExtArgs>
     chat_rooms?: boolean | Tenant$chat_roomsArgs<ExtArgs>
     invitations?: boolean | Tenant$invitationsArgs<ExtArgs>
     employees?: boolean | Tenant$employeesArgs<ExtArgs>
     agreements?: boolean | Tenant$agreementsArgs<ExtArgs>
     debts?: boolean | Tenant$debtsArgs<ExtArgs>
+    memberships?: boolean | Tenant$membershipsArgs<ExtArgs>
     _count?: boolean | TenantCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["tenant"]>
 
@@ -4665,12 +4887,12 @@ export namespace Prisma {
     debtors?: boolean | Tenant$debtorsArgs<ExtArgs>
     bailiffs?: boolean | Tenant$bailiffsArgs<ExtArgs>
     verdicts?: boolean | Tenant$verdictsArgs<ExtArgs>
-    users?: boolean | Tenant$usersArgs<ExtArgs>
     chat_rooms?: boolean | Tenant$chat_roomsArgs<ExtArgs>
     invitations?: boolean | Tenant$invitationsArgs<ExtArgs>
     employees?: boolean | Tenant$employeesArgs<ExtArgs>
     agreements?: boolean | Tenant$agreementsArgs<ExtArgs>
     debts?: boolean | Tenant$debtsArgs<ExtArgs>
+    memberships?: boolean | Tenant$membershipsArgs<ExtArgs>
     _count?: boolean | TenantCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type TenantIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -4684,12 +4906,12 @@ export namespace Prisma {
       debtors: Prisma.$DebtorPayload<ExtArgs>[]
       bailiffs: Prisma.$BailiffPayload<ExtArgs>[]
       verdicts: Prisma.$VerdictPayload<ExtArgs>[]
-      users: Prisma.$UserPayload<ExtArgs>[]
       chat_rooms: Prisma.$ChatRoomPayload<ExtArgs>[]
       invitations: Prisma.$TenantInvitationPayload<ExtArgs>[]
       employees: Prisma.$EmployeePayload<ExtArgs>[]
       agreements: Prisma.$AgreementPayload<ExtArgs>[]
       debts: Prisma.$DebtPayload<ExtArgs>[]
+      memberships: Prisma.$MembershipPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -5109,12 +5331,12 @@ export namespace Prisma {
     debtors<T extends Tenant$debtorsArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$debtorsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DebtorPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     bailiffs<T extends Tenant$bailiffsArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$bailiffsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BailiffPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     verdicts<T extends Tenant$verdictsArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$verdictsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VerdictPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    users<T extends Tenant$usersArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$usersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     chat_rooms<T extends Tenant$chat_roomsArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$chat_roomsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChatRoomPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     invitations<T extends Tenant$invitationsArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$invitationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TenantInvitationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     employees<T extends Tenant$employeesArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$employeesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     agreements<T extends Tenant$agreementsArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$agreementsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgreementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     debts<T extends Tenant$debtsArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$debtsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DebtPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    memberships<T extends Tenant$membershipsArgs<ExtArgs> = {}>(args?: Subset<T, Tenant$membershipsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5670,30 +5892,6 @@ export namespace Prisma {
   }
 
   /**
-   * Tenant.users
-   */
-  export type Tenant$usersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the User
-     */
-    select?: UserSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the User
-     */
-    omit?: UserOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserInclude<ExtArgs> | null
-    where?: UserWhereInput
-    orderBy?: UserOrderByWithRelationInput | UserOrderByWithRelationInput[]
-    cursor?: UserWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
-  }
-
-  /**
    * Tenant.chat_rooms
    */
   export type Tenant$chat_roomsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5814,6 +6012,30 @@ export namespace Prisma {
   }
 
   /**
+   * Tenant.memberships
+   */
+  export type Tenant$membershipsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    where?: MembershipWhereInput
+    orderBy?: MembershipOrderByWithRelationInput | MembershipOrderByWithRelationInput[]
+    cursor?: MembershipWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MembershipScalarFieldEnum | MembershipScalarFieldEnum[]
+  }
+
+  /**
    * Tenant without action
    */
   export type TenantDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5833,6 +6055,2265 @@ export namespace Prisma {
 
 
   /**
+   * Model User
+   */
+
+  export type AggregateUser = {
+    _count: UserCountAggregateOutputType | null
+    _min: UserMinAggregateOutputType | null
+    _max: UserMaxAggregateOutputType | null
+  }
+
+  export type UserMinAggregateOutputType = {
+    id: string | null
+    email: string | null
+    password_hash: string | null
+    fullname: string | null
+    phone: string | null
+    is_active: boolean | null
+    created_at: Date | null
+    updated_at: Date | null
+  }
+
+  export type UserMaxAggregateOutputType = {
+    id: string | null
+    email: string | null
+    password_hash: string | null
+    fullname: string | null
+    phone: string | null
+    is_active: boolean | null
+    created_at: Date | null
+    updated_at: Date | null
+  }
+
+  export type UserCountAggregateOutputType = {
+    id: number
+    email: number
+    password_hash: number
+    fullname: number
+    phone: number
+    is_active: number
+    created_at: number
+    updated_at: number
+    _all: number
+  }
+
+
+  export type UserMinAggregateInputType = {
+    id?: true
+    email?: true
+    password_hash?: true
+    fullname?: true
+    phone?: true
+    is_active?: true
+    created_at?: true
+    updated_at?: true
+  }
+
+  export type UserMaxAggregateInputType = {
+    id?: true
+    email?: true
+    password_hash?: true
+    fullname?: true
+    phone?: true
+    is_active?: true
+    created_at?: true
+    updated_at?: true
+  }
+
+  export type UserCountAggregateInputType = {
+    id?: true
+    email?: true
+    password_hash?: true
+    fullname?: true
+    phone?: true
+    is_active?: true
+    created_at?: true
+    updated_at?: true
+    _all?: true
+  }
+
+  export type UserAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which User to aggregate.
+     */
+    where?: UserWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Users to fetch.
+     */
+    orderBy?: UserOrderByWithRelationInput | UserOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: UserWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Users from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Users.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Users
+    **/
+    _count?: true | UserCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: UserMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: UserMaxAggregateInputType
+  }
+
+  export type GetUserAggregateType<T extends UserAggregateArgs> = {
+        [P in keyof T & keyof AggregateUser]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateUser[P]>
+      : GetScalarType<T[P], AggregateUser[P]>
+  }
+
+
+
+
+  export type UserGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserWhereInput
+    orderBy?: UserOrderByWithAggregationInput | UserOrderByWithAggregationInput[]
+    by: UserScalarFieldEnum[] | UserScalarFieldEnum
+    having?: UserScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: UserCountAggregateInputType | true
+    _min?: UserMinAggregateInputType
+    _max?: UserMaxAggregateInputType
+  }
+
+  export type UserGroupByOutputType = {
+    id: string
+    email: string
+    password_hash: string | null
+    fullname: string | null
+    phone: string | null
+    is_active: boolean
+    created_at: Date
+    updated_at: Date
+    _count: UserCountAggregateOutputType | null
+    _min: UserMinAggregateOutputType | null
+    _max: UserMaxAggregateOutputType | null
+  }
+
+  type GetUserGroupByPayload<T extends UserGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<UserGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof UserGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], UserGroupByOutputType[P]>
+            : GetScalarType<T[P], UserGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type UserSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    email?: boolean
+    password_hash?: boolean
+    fullname?: boolean
+    phone?: boolean
+    is_active?: boolean
+    created_at?: boolean
+    updated_at?: boolean
+    memberships?: boolean | User$membershipsArgs<ExtArgs>
+    debtors?: boolean | User$debtorsArgs<ExtArgs>
+    bailiffs?: boolean | User$bailiffsArgs<ExtArgs>
+    messages?: boolean | User$messagesArgs<ExtArgs>
+    _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["user"]>
+
+  export type UserSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    email?: boolean
+    password_hash?: boolean
+    fullname?: boolean
+    phone?: boolean
+    is_active?: boolean
+    created_at?: boolean
+    updated_at?: boolean
+  }, ExtArgs["result"]["user"]>
+
+  export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    email?: boolean
+    password_hash?: boolean
+    fullname?: boolean
+    phone?: boolean
+    is_active?: boolean
+    created_at?: boolean
+    updated_at?: boolean
+  }, ExtArgs["result"]["user"]>
+
+  export type UserSelectScalar = {
+    id?: boolean
+    email?: boolean
+    password_hash?: boolean
+    fullname?: boolean
+    phone?: boolean
+    is_active?: boolean
+    created_at?: boolean
+    updated_at?: boolean
+  }
+
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "password_hash" | "fullname" | "phone" | "is_active" | "created_at" | "updated_at", ExtArgs["result"]["user"]>
+  export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    memberships?: boolean | User$membershipsArgs<ExtArgs>
+    debtors?: boolean | User$debtorsArgs<ExtArgs>
+    bailiffs?: boolean | User$bailiffsArgs<ExtArgs>
+    messages?: boolean | User$messagesArgs<ExtArgs>
+    _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type UserIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "User"
+    objects: {
+      memberships: Prisma.$MembershipPayload<ExtArgs>[]
+      debtors: Prisma.$DebtorPayload<ExtArgs>[]
+      bailiffs: Prisma.$BailiffPayload<ExtArgs>[]
+      messages: Prisma.$ChatMessagePayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      email: string
+      password_hash: string | null
+      fullname: string | null
+      phone: string | null
+      is_active: boolean
+      created_at: Date
+      updated_at: Date
+    }, ExtArgs["result"]["user"]>
+    composites: {}
+  }
+
+  type UserGetPayload<S extends boolean | null | undefined | UserDefaultArgs> = $Result.GetResult<Prisma.$UserPayload, S>
+
+  type UserCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<UserFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: UserCountAggregateInputType | true
+    }
+
+  export interface UserDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['User'], meta: { name: 'User' } }
+    /**
+     * Find zero or one User that matches the filter.
+     * @param {UserFindUniqueArgs} args - Arguments to find a User
+     * @example
+     * // Get one User
+     * const user = await prisma.user.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends UserFindUniqueArgs>(args: SelectSubset<T, UserFindUniqueArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one User that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {UserFindUniqueOrThrowArgs} args - Arguments to find a User
+     * @example
+     * // Get one User
+     * const user = await prisma.user.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends UserFindUniqueOrThrowArgs>(args: SelectSubset<T, UserFindUniqueOrThrowArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first User that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserFindFirstArgs} args - Arguments to find a User
+     * @example
+     * // Get one User
+     * const user = await prisma.user.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends UserFindFirstArgs>(args?: SelectSubset<T, UserFindFirstArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first User that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserFindFirstOrThrowArgs} args - Arguments to find a User
+     * @example
+     * // Get one User
+     * const user = await prisma.user.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends UserFindFirstOrThrowArgs>(args?: SelectSubset<T, UserFindFirstOrThrowArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Users that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Users
+     * const users = await prisma.user.findMany()
+     * 
+     * // Get first 10 Users
+     * const users = await prisma.user.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const userWithIdOnly = await prisma.user.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends UserFindManyArgs>(args?: SelectSubset<T, UserFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a User.
+     * @param {UserCreateArgs} args - Arguments to create a User.
+     * @example
+     * // Create one User
+     * const User = await prisma.user.create({
+     *   data: {
+     *     // ... data to create a User
+     *   }
+     * })
+     * 
+     */
+    create<T extends UserCreateArgs>(args: SelectSubset<T, UserCreateArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Users.
+     * @param {UserCreateManyArgs} args - Arguments to create many Users.
+     * @example
+     * // Create many Users
+     * const user = await prisma.user.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends UserCreateManyArgs>(args?: SelectSubset<T, UserCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Users and returns the data saved in the database.
+     * @param {UserCreateManyAndReturnArgs} args - Arguments to create many Users.
+     * @example
+     * // Create many Users
+     * const user = await prisma.user.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Users and only return the `id`
+     * const userWithIdOnly = await prisma.user.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends UserCreateManyAndReturnArgs>(args?: SelectSubset<T, UserCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a User.
+     * @param {UserDeleteArgs} args - Arguments to delete one User.
+     * @example
+     * // Delete one User
+     * const User = await prisma.user.delete({
+     *   where: {
+     *     // ... filter to delete one User
+     *   }
+     * })
+     * 
+     */
+    delete<T extends UserDeleteArgs>(args: SelectSubset<T, UserDeleteArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one User.
+     * @param {UserUpdateArgs} args - Arguments to update one User.
+     * @example
+     * // Update one User
+     * const user = await prisma.user.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends UserUpdateArgs>(args: SelectSubset<T, UserUpdateArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Users.
+     * @param {UserDeleteManyArgs} args - Arguments to filter Users to delete.
+     * @example
+     * // Delete a few Users
+     * const { count } = await prisma.user.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends UserDeleteManyArgs>(args?: SelectSubset<T, UserDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Users.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Users
+     * const user = await prisma.user.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends UserUpdateManyArgs>(args: SelectSubset<T, UserUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Users and returns the data updated in the database.
+     * @param {UserUpdateManyAndReturnArgs} args - Arguments to update many Users.
+     * @example
+     * // Update many Users
+     * const user = await prisma.user.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Users and only return the `id`
+     * const userWithIdOnly = await prisma.user.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends UserUpdateManyAndReturnArgs>(args: SelectSubset<T, UserUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one User.
+     * @param {UserUpsertArgs} args - Arguments to update or create a User.
+     * @example
+     * // Update or create a User
+     * const user = await prisma.user.upsert({
+     *   create: {
+     *     // ... data to create a User
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the User we want to update
+     *   }
+     * })
+     */
+    upsert<T extends UserUpsertArgs>(args: SelectSubset<T, UserUpsertArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Users.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserCountArgs} args - Arguments to filter Users to count.
+     * @example
+     * // Count the number of Users
+     * const count = await prisma.user.count({
+     *   where: {
+     *     // ... the filter for the Users we want to count
+     *   }
+     * })
+    **/
+    count<T extends UserCountArgs>(
+      args?: Subset<T, UserCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], UserCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a User.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends UserAggregateArgs>(args: Subset<T, UserAggregateArgs>): Prisma.PrismaPromise<GetUserAggregateType<T>>
+
+    /**
+     * Group by User.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends UserGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: UserGroupByArgs['orderBy'] }
+        : { orderBy?: UserGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, UserGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUserGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the User model
+   */
+  readonly fields: UserFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for User.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    memberships<T extends User$membershipsArgs<ExtArgs> = {}>(args?: Subset<T, User$membershipsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    debtors<T extends User$debtorsArgs<ExtArgs> = {}>(args?: Subset<T, User$debtorsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DebtorPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    bailiffs<T extends User$bailiffsArgs<ExtArgs> = {}>(args?: Subset<T, User$bailiffsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BailiffPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    messages<T extends User$messagesArgs<ExtArgs> = {}>(args?: Subset<T, User$messagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChatMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the User model
+   */
+  interface UserFieldRefs {
+    readonly id: FieldRef<"User", 'String'>
+    readonly email: FieldRef<"User", 'String'>
+    readonly password_hash: FieldRef<"User", 'String'>
+    readonly fullname: FieldRef<"User", 'String'>
+    readonly phone: FieldRef<"User", 'String'>
+    readonly is_active: FieldRef<"User", 'Boolean'>
+    readonly created_at: FieldRef<"User", 'DateTime'>
+    readonly updated_at: FieldRef<"User", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * User findUnique
+   */
+  export type UserFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
+     * Filter, which User to fetch.
+     */
+    where: UserWhereUniqueInput
+  }
+
+  /**
+   * User findUniqueOrThrow
+   */
+  export type UserFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
+     * Filter, which User to fetch.
+     */
+    where: UserWhereUniqueInput
+  }
+
+  /**
+   * User findFirst
+   */
+  export type UserFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
+     * Filter, which User to fetch.
+     */
+    where?: UserWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Users to fetch.
+     */
+    orderBy?: UserOrderByWithRelationInput | UserOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Users.
+     */
+    cursor?: UserWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Users from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Users.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Users.
+     */
+    distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
+  }
+
+  /**
+   * User findFirstOrThrow
+   */
+  export type UserFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
+     * Filter, which User to fetch.
+     */
+    where?: UserWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Users to fetch.
+     */
+    orderBy?: UserOrderByWithRelationInput | UserOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Users.
+     */
+    cursor?: UserWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Users from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Users.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Users.
+     */
+    distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
+  }
+
+  /**
+   * User findMany
+   */
+  export type UserFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
+     * Filter, which Users to fetch.
+     */
+    where?: UserWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Users to fetch.
+     */
+    orderBy?: UserOrderByWithRelationInput | UserOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Users.
+     */
+    cursor?: UserWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Users from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Users.
+     */
+    skip?: number
+    distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
+  }
+
+  /**
+   * User create
+   */
+  export type UserCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
+     * The data needed to create a User.
+     */
+    data: XOR<UserCreateInput, UserUncheckedCreateInput>
+  }
+
+  /**
+   * User createMany
+   */
+  export type UserCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Users.
+     */
+    data: UserCreateManyInput | UserCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * User createManyAndReturn
+   */
+  export type UserCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * The data used to create many Users.
+     */
+    data: UserCreateManyInput | UserCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * User update
+   */
+  export type UserUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
+     * The data needed to update a User.
+     */
+    data: XOR<UserUpdateInput, UserUncheckedUpdateInput>
+    /**
+     * Choose, which User to update.
+     */
+    where: UserWhereUniqueInput
+  }
+
+  /**
+   * User updateMany
+   */
+  export type UserUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Users.
+     */
+    data: XOR<UserUpdateManyMutationInput, UserUncheckedUpdateManyInput>
+    /**
+     * Filter which Users to update
+     */
+    where?: UserWhereInput
+    /**
+     * Limit how many Users to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * User updateManyAndReturn
+   */
+  export type UserUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * The data used to update Users.
+     */
+    data: XOR<UserUpdateManyMutationInput, UserUncheckedUpdateManyInput>
+    /**
+     * Filter which Users to update
+     */
+    where?: UserWhereInput
+    /**
+     * Limit how many Users to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * User upsert
+   */
+  export type UserUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
+     * The filter to search for the User to update in case it exists.
+     */
+    where: UserWhereUniqueInput
+    /**
+     * In case the User found by the `where` argument doesn't exist, create a new User with this data.
+     */
+    create: XOR<UserCreateInput, UserUncheckedCreateInput>
+    /**
+     * In case the User was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<UserUpdateInput, UserUncheckedUpdateInput>
+  }
+
+  /**
+   * User delete
+   */
+  export type UserDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
+     * Filter which User to delete.
+     */
+    where: UserWhereUniqueInput
+  }
+
+  /**
+   * User deleteMany
+   */
+  export type UserDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Users to delete
+     */
+    where?: UserWhereInput
+    /**
+     * Limit how many Users to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * User.memberships
+   */
+  export type User$membershipsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    where?: MembershipWhereInput
+    orderBy?: MembershipOrderByWithRelationInput | MembershipOrderByWithRelationInput[]
+    cursor?: MembershipWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MembershipScalarFieldEnum | MembershipScalarFieldEnum[]
+  }
+
+  /**
+   * User.debtors
+   */
+  export type User$debtorsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Debtor
+     */
+    select?: DebtorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Debtor
+     */
+    omit?: DebtorOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DebtorInclude<ExtArgs> | null
+    where?: DebtorWhereInput
+    orderBy?: DebtorOrderByWithRelationInput | DebtorOrderByWithRelationInput[]
+    cursor?: DebtorWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DebtorScalarFieldEnum | DebtorScalarFieldEnum[]
+  }
+
+  /**
+   * User.bailiffs
+   */
+  export type User$bailiffsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Bailiff
+     */
+    select?: BailiffSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Bailiff
+     */
+    omit?: BailiffOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BailiffInclude<ExtArgs> | null
+    where?: BailiffWhereInput
+    orderBy?: BailiffOrderByWithRelationInput | BailiffOrderByWithRelationInput[]
+    cursor?: BailiffWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: BailiffScalarFieldEnum | BailiffScalarFieldEnum[]
+  }
+
+  /**
+   * User.messages
+   */
+  export type User$messagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChatMessage
+     */
+    select?: ChatMessageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChatMessage
+     */
+    omit?: ChatMessageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChatMessageInclude<ExtArgs> | null
+    where?: ChatMessageWhereInput
+    orderBy?: ChatMessageOrderByWithRelationInput | ChatMessageOrderByWithRelationInput[]
+    cursor?: ChatMessageWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ChatMessageScalarFieldEnum | ChatMessageScalarFieldEnum[]
+  }
+
+  /**
+   * User without action
+   */
+  export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Membership
+   */
+
+  export type AggregateMembership = {
+    _count: MembershipCountAggregateOutputType | null
+    _min: MembershipMinAggregateOutputType | null
+    _max: MembershipMaxAggregateOutputType | null
+  }
+
+  export type MembershipMinAggregateOutputType = {
+    id: string | null
+    user_id: string | null
+    tenant_id: string | null
+    role: $Enums.UserRole | null
+    created_at: Date | null
+  }
+
+  export type MembershipMaxAggregateOutputType = {
+    id: string | null
+    user_id: string | null
+    tenant_id: string | null
+    role: $Enums.UserRole | null
+    created_at: Date | null
+  }
+
+  export type MembershipCountAggregateOutputType = {
+    id: number
+    user_id: number
+    tenant_id: number
+    role: number
+    created_at: number
+    _all: number
+  }
+
+
+  export type MembershipMinAggregateInputType = {
+    id?: true
+    user_id?: true
+    tenant_id?: true
+    role?: true
+    created_at?: true
+  }
+
+  export type MembershipMaxAggregateInputType = {
+    id?: true
+    user_id?: true
+    tenant_id?: true
+    role?: true
+    created_at?: true
+  }
+
+  export type MembershipCountAggregateInputType = {
+    id?: true
+    user_id?: true
+    tenant_id?: true
+    role?: true
+    created_at?: true
+    _all?: true
+  }
+
+  export type MembershipAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Membership to aggregate.
+     */
+    where?: MembershipWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Memberships to fetch.
+     */
+    orderBy?: MembershipOrderByWithRelationInput | MembershipOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: MembershipWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Memberships from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Memberships.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Memberships
+    **/
+    _count?: true | MembershipCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: MembershipMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: MembershipMaxAggregateInputType
+  }
+
+  export type GetMembershipAggregateType<T extends MembershipAggregateArgs> = {
+        [P in keyof T & keyof AggregateMembership]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateMembership[P]>
+      : GetScalarType<T[P], AggregateMembership[P]>
+  }
+
+
+
+
+  export type MembershipGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MembershipWhereInput
+    orderBy?: MembershipOrderByWithAggregationInput | MembershipOrderByWithAggregationInput[]
+    by: MembershipScalarFieldEnum[] | MembershipScalarFieldEnum
+    having?: MembershipScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: MembershipCountAggregateInputType | true
+    _min?: MembershipMinAggregateInputType
+    _max?: MembershipMaxAggregateInputType
+  }
+
+  export type MembershipGroupByOutputType = {
+    id: string
+    user_id: string
+    tenant_id: string
+    role: $Enums.UserRole
+    created_at: Date
+    _count: MembershipCountAggregateOutputType | null
+    _min: MembershipMinAggregateOutputType | null
+    _max: MembershipMaxAggregateOutputType | null
+  }
+
+  type GetMembershipGroupByPayload<T extends MembershipGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<MembershipGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof MembershipGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], MembershipGroupByOutputType[P]>
+            : GetScalarType<T[P], MembershipGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type MembershipSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    user_id?: boolean
+    tenant_id?: boolean
+    role?: boolean
+    created_at?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membership"]>
+
+  export type MembershipSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    user_id?: boolean
+    tenant_id?: boolean
+    role?: boolean
+    created_at?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membership"]>
+
+  export type MembershipSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    user_id?: boolean
+    tenant_id?: boolean
+    role?: boolean
+    created_at?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["membership"]>
+
+  export type MembershipSelectScalar = {
+    id?: boolean
+    user_id?: boolean
+    tenant_id?: boolean
+    role?: boolean
+    created_at?: boolean
+  }
+
+  export type MembershipOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "user_id" | "tenant_id" | "role" | "created_at", ExtArgs["result"]["membership"]>
+  export type MembershipInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }
+  export type MembershipIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }
+  export type MembershipIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    tenant?: boolean | TenantDefaultArgs<ExtArgs>
+  }
+
+  export type $MembershipPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Membership"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+      tenant: Prisma.$TenantPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      user_id: string
+      tenant_id: string
+      role: $Enums.UserRole
+      created_at: Date
+    }, ExtArgs["result"]["membership"]>
+    composites: {}
+  }
+
+  type MembershipGetPayload<S extends boolean | null | undefined | MembershipDefaultArgs> = $Result.GetResult<Prisma.$MembershipPayload, S>
+
+  type MembershipCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<MembershipFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: MembershipCountAggregateInputType | true
+    }
+
+  export interface MembershipDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Membership'], meta: { name: 'Membership' } }
+    /**
+     * Find zero or one Membership that matches the filter.
+     * @param {MembershipFindUniqueArgs} args - Arguments to find a Membership
+     * @example
+     * // Get one Membership
+     * const membership = await prisma.membership.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends MembershipFindUniqueArgs>(args: SelectSubset<T, MembershipFindUniqueArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Membership that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {MembershipFindUniqueOrThrowArgs} args - Arguments to find a Membership
+     * @example
+     * // Get one Membership
+     * const membership = await prisma.membership.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends MembershipFindUniqueOrThrowArgs>(args: SelectSubset<T, MembershipFindUniqueOrThrowArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Membership that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipFindFirstArgs} args - Arguments to find a Membership
+     * @example
+     * // Get one Membership
+     * const membership = await prisma.membership.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends MembershipFindFirstArgs>(args?: SelectSubset<T, MembershipFindFirstArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Membership that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipFindFirstOrThrowArgs} args - Arguments to find a Membership
+     * @example
+     * // Get one Membership
+     * const membership = await prisma.membership.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends MembershipFindFirstOrThrowArgs>(args?: SelectSubset<T, MembershipFindFirstOrThrowArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Memberships that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Memberships
+     * const memberships = await prisma.membership.findMany()
+     * 
+     * // Get first 10 Memberships
+     * const memberships = await prisma.membership.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const membershipWithIdOnly = await prisma.membership.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends MembershipFindManyArgs>(args?: SelectSubset<T, MembershipFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Membership.
+     * @param {MembershipCreateArgs} args - Arguments to create a Membership.
+     * @example
+     * // Create one Membership
+     * const Membership = await prisma.membership.create({
+     *   data: {
+     *     // ... data to create a Membership
+     *   }
+     * })
+     * 
+     */
+    create<T extends MembershipCreateArgs>(args: SelectSubset<T, MembershipCreateArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Memberships.
+     * @param {MembershipCreateManyArgs} args - Arguments to create many Memberships.
+     * @example
+     * // Create many Memberships
+     * const membership = await prisma.membership.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends MembershipCreateManyArgs>(args?: SelectSubset<T, MembershipCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Memberships and returns the data saved in the database.
+     * @param {MembershipCreateManyAndReturnArgs} args - Arguments to create many Memberships.
+     * @example
+     * // Create many Memberships
+     * const membership = await prisma.membership.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Memberships and only return the `id`
+     * const membershipWithIdOnly = await prisma.membership.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MembershipCreateManyAndReturnArgs>(args?: SelectSubset<T, MembershipCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Membership.
+     * @param {MembershipDeleteArgs} args - Arguments to delete one Membership.
+     * @example
+     * // Delete one Membership
+     * const Membership = await prisma.membership.delete({
+     *   where: {
+     *     // ... filter to delete one Membership
+     *   }
+     * })
+     * 
+     */
+    delete<T extends MembershipDeleteArgs>(args: SelectSubset<T, MembershipDeleteArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Membership.
+     * @param {MembershipUpdateArgs} args - Arguments to update one Membership.
+     * @example
+     * // Update one Membership
+     * const membership = await prisma.membership.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends MembershipUpdateArgs>(args: SelectSubset<T, MembershipUpdateArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Memberships.
+     * @param {MembershipDeleteManyArgs} args - Arguments to filter Memberships to delete.
+     * @example
+     * // Delete a few Memberships
+     * const { count } = await prisma.membership.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends MembershipDeleteManyArgs>(args?: SelectSubset<T, MembershipDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Memberships.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Memberships
+     * const membership = await prisma.membership.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends MembershipUpdateManyArgs>(args: SelectSubset<T, MembershipUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Memberships and returns the data updated in the database.
+     * @param {MembershipUpdateManyAndReturnArgs} args - Arguments to update many Memberships.
+     * @example
+     * // Update many Memberships
+     * const membership = await prisma.membership.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Memberships and only return the `id`
+     * const membershipWithIdOnly = await prisma.membership.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends MembershipUpdateManyAndReturnArgs>(args: SelectSubset<T, MembershipUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Membership.
+     * @param {MembershipUpsertArgs} args - Arguments to update or create a Membership.
+     * @example
+     * // Update or create a Membership
+     * const membership = await prisma.membership.upsert({
+     *   create: {
+     *     // ... data to create a Membership
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Membership we want to update
+     *   }
+     * })
+     */
+    upsert<T extends MembershipUpsertArgs>(args: SelectSubset<T, MembershipUpsertArgs<ExtArgs>>): Prisma__MembershipClient<$Result.GetResult<Prisma.$MembershipPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Memberships.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipCountArgs} args - Arguments to filter Memberships to count.
+     * @example
+     * // Count the number of Memberships
+     * const count = await prisma.membership.count({
+     *   where: {
+     *     // ... the filter for the Memberships we want to count
+     *   }
+     * })
+    **/
+    count<T extends MembershipCountArgs>(
+      args?: Subset<T, MembershipCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], MembershipCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Membership.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends MembershipAggregateArgs>(args: Subset<T, MembershipAggregateArgs>): Prisma.PrismaPromise<GetMembershipAggregateType<T>>
+
+    /**
+     * Group by Membership.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MembershipGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends MembershipGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: MembershipGroupByArgs['orderBy'] }
+        : { orderBy?: MembershipGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, MembershipGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetMembershipGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Membership model
+   */
+  readonly fields: MembershipFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Membership.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__MembershipClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    tenant<T extends TenantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TenantDefaultArgs<ExtArgs>>): Prisma__TenantClient<$Result.GetResult<Prisma.$TenantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Membership model
+   */
+  interface MembershipFieldRefs {
+    readonly id: FieldRef<"Membership", 'String'>
+    readonly user_id: FieldRef<"Membership", 'String'>
+    readonly tenant_id: FieldRef<"Membership", 'String'>
+    readonly role: FieldRef<"Membership", 'UserRole'>
+    readonly created_at: FieldRef<"Membership", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Membership findUnique
+   */
+  export type MembershipFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * Filter, which Membership to fetch.
+     */
+    where: MembershipWhereUniqueInput
+  }
+
+  /**
+   * Membership findUniqueOrThrow
+   */
+  export type MembershipFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * Filter, which Membership to fetch.
+     */
+    where: MembershipWhereUniqueInput
+  }
+
+  /**
+   * Membership findFirst
+   */
+  export type MembershipFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * Filter, which Membership to fetch.
+     */
+    where?: MembershipWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Memberships to fetch.
+     */
+    orderBy?: MembershipOrderByWithRelationInput | MembershipOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Memberships.
+     */
+    cursor?: MembershipWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Memberships from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Memberships.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Memberships.
+     */
+    distinct?: MembershipScalarFieldEnum | MembershipScalarFieldEnum[]
+  }
+
+  /**
+   * Membership findFirstOrThrow
+   */
+  export type MembershipFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * Filter, which Membership to fetch.
+     */
+    where?: MembershipWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Memberships to fetch.
+     */
+    orderBy?: MembershipOrderByWithRelationInput | MembershipOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Memberships.
+     */
+    cursor?: MembershipWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Memberships from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Memberships.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Memberships.
+     */
+    distinct?: MembershipScalarFieldEnum | MembershipScalarFieldEnum[]
+  }
+
+  /**
+   * Membership findMany
+   */
+  export type MembershipFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * Filter, which Memberships to fetch.
+     */
+    where?: MembershipWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Memberships to fetch.
+     */
+    orderBy?: MembershipOrderByWithRelationInput | MembershipOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Memberships.
+     */
+    cursor?: MembershipWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Memberships from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Memberships.
+     */
+    skip?: number
+    distinct?: MembershipScalarFieldEnum | MembershipScalarFieldEnum[]
+  }
+
+  /**
+   * Membership create
+   */
+  export type MembershipCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Membership.
+     */
+    data: XOR<MembershipCreateInput, MembershipUncheckedCreateInput>
+  }
+
+  /**
+   * Membership createMany
+   */
+  export type MembershipCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Memberships.
+     */
+    data: MembershipCreateManyInput | MembershipCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Membership createManyAndReturn
+   */
+  export type MembershipCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * The data used to create many Memberships.
+     */
+    data: MembershipCreateManyInput | MembershipCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Membership update
+   */
+  export type MembershipUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Membership.
+     */
+    data: XOR<MembershipUpdateInput, MembershipUncheckedUpdateInput>
+    /**
+     * Choose, which Membership to update.
+     */
+    where: MembershipWhereUniqueInput
+  }
+
+  /**
+   * Membership updateMany
+   */
+  export type MembershipUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Memberships.
+     */
+    data: XOR<MembershipUpdateManyMutationInput, MembershipUncheckedUpdateManyInput>
+    /**
+     * Filter which Memberships to update
+     */
+    where?: MembershipWhereInput
+    /**
+     * Limit how many Memberships to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Membership updateManyAndReturn
+   */
+  export type MembershipUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * The data used to update Memberships.
+     */
+    data: XOR<MembershipUpdateManyMutationInput, MembershipUncheckedUpdateManyInput>
+    /**
+     * Filter which Memberships to update
+     */
+    where?: MembershipWhereInput
+    /**
+     * Limit how many Memberships to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Membership upsert
+   */
+  export type MembershipUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Membership to update in case it exists.
+     */
+    where: MembershipWhereUniqueInput
+    /**
+     * In case the Membership found by the `where` argument doesn't exist, create a new Membership with this data.
+     */
+    create: XOR<MembershipCreateInput, MembershipUncheckedCreateInput>
+    /**
+     * In case the Membership was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<MembershipUpdateInput, MembershipUncheckedUpdateInput>
+  }
+
+  /**
+   * Membership delete
+   */
+  export type MembershipDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+    /**
+     * Filter which Membership to delete.
+     */
+    where: MembershipWhereUniqueInput
+  }
+
+  /**
+   * Membership deleteMany
+   */
+  export type MembershipDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Memberships to delete
+     */
+    where?: MembershipWhereInput
+    /**
+     * Limit how many Memberships to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Membership without action
+   */
+  export type MembershipDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Membership
+     */
+    select?: MembershipSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Membership
+     */
+    omit?: MembershipOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MembershipInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model TenantInvitation
    */
 
@@ -5848,7 +8329,7 @@ export namespace Prisma {
     email: string | null
     fullname: string | null
     token: string | null
-    role: $Enums.roleEnum | null
+    role: $Enums.UserRole | null
     debtor_id: string | null
     created_at: Date | null
     expires_at: Date | null
@@ -5862,7 +8343,7 @@ export namespace Prisma {
     email: string | null
     fullname: string | null
     token: string | null
-    role: $Enums.roleEnum | null
+    role: $Enums.UserRole | null
     debtor_id: string | null
     created_at: Date | null
     expires_at: Date | null
@@ -6007,7 +8488,7 @@ export namespace Prisma {
     email: string
     fullname: string | null
     token: string
-    role: $Enums.roleEnum
+    role: $Enums.UserRole
     debtor_id: string | null
     created_at: Date
     expires_at: Date
@@ -6113,7 +8594,7 @@ export namespace Prisma {
       email: string
       fullname: string | null
       token: string
-      role: $Enums.roleEnum
+      role: $Enums.UserRole
       debtor_id: string | null
       created_at: Date
       expires_at: Date
@@ -6548,7 +9029,7 @@ export namespace Prisma {
     readonly email: FieldRef<"TenantInvitation", 'String'>
     readonly fullname: FieldRef<"TenantInvitation", 'String'>
     readonly token: FieldRef<"TenantInvitation", 'String'>
-    readonly role: FieldRef<"TenantInvitation", 'roleEnum'>
+    readonly role: FieldRef<"TenantInvitation", 'UserRole'>
     readonly debtor_id: FieldRef<"TenantInvitation", 'String'>
     readonly created_at: FieldRef<"TenantInvitation", 'DateTime'>
     readonly expires_at: FieldRef<"TenantInvitation", 'DateTime'>
@@ -6969,421 +9450,430 @@ export namespace Prisma {
 
 
   /**
-   * Model User
+   * Model Person
    */
 
-  export type AggregateUser = {
-    _count: UserCountAggregateOutputType | null
-    _min: UserMinAggregateOutputType | null
-    _max: UserMaxAggregateOutputType | null
+  export type AggregatePerson = {
+    _count: PersonCountAggregateOutputType | null
+    _min: PersonMinAggregateOutputType | null
+    _max: PersonMaxAggregateOutputType | null
   }
 
-  export type UserMinAggregateOutputType = {
+  export type PersonMinAggregateOutputType = {
     id: string | null
+    person_type: $Enums.PersonType | null
+    identification_type: $Enums.IdentificationType | null
+    identification: string | null
+    first_name: string | null
+    last_name: string | null
+    business_name: string | null
     email: string | null
-    password_hash: string | null
-    fullname: string | null
     phone: string | null
-    tenant_id: string | null
-    role: $Enums.roleEnum | null
-    is_active: boolean | null
+    address: string | null
     created_at: Date | null
     updated_at: Date | null
   }
 
-  export type UserMaxAggregateOutputType = {
+  export type PersonMaxAggregateOutputType = {
     id: string | null
+    person_type: $Enums.PersonType | null
+    identification_type: $Enums.IdentificationType | null
+    identification: string | null
+    first_name: string | null
+    last_name: string | null
+    business_name: string | null
     email: string | null
-    password_hash: string | null
-    fullname: string | null
     phone: string | null
-    tenant_id: string | null
-    role: $Enums.roleEnum | null
-    is_active: boolean | null
+    address: string | null
     created_at: Date | null
     updated_at: Date | null
   }
 
-  export type UserCountAggregateOutputType = {
+  export type PersonCountAggregateOutputType = {
     id: number
+    person_type: number
+    identification_type: number
+    identification: number
+    first_name: number
+    last_name: number
+    business_name: number
     email: number
-    password_hash: number
-    fullname: number
     phone: number
-    tenant_id: number
-    role: number
-    is_active: number
+    address: number
     created_at: number
     updated_at: number
     _all: number
   }
 
 
-  export type UserMinAggregateInputType = {
+  export type PersonMinAggregateInputType = {
     id?: true
+    person_type?: true
+    identification_type?: true
+    identification?: true
+    first_name?: true
+    last_name?: true
+    business_name?: true
     email?: true
-    password_hash?: true
-    fullname?: true
     phone?: true
-    tenant_id?: true
-    role?: true
-    is_active?: true
+    address?: true
     created_at?: true
     updated_at?: true
   }
 
-  export type UserMaxAggregateInputType = {
+  export type PersonMaxAggregateInputType = {
     id?: true
+    person_type?: true
+    identification_type?: true
+    identification?: true
+    first_name?: true
+    last_name?: true
+    business_name?: true
     email?: true
-    password_hash?: true
-    fullname?: true
     phone?: true
-    tenant_id?: true
-    role?: true
-    is_active?: true
+    address?: true
     created_at?: true
     updated_at?: true
   }
 
-  export type UserCountAggregateInputType = {
+  export type PersonCountAggregateInputType = {
     id?: true
+    person_type?: true
+    identification_type?: true
+    identification?: true
+    first_name?: true
+    last_name?: true
+    business_name?: true
     email?: true
-    password_hash?: true
-    fullname?: true
     phone?: true
-    tenant_id?: true
-    role?: true
-    is_active?: true
+    address?: true
     created_at?: true
     updated_at?: true
     _all?: true
   }
 
-  export type UserAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type PersonAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which User to aggregate.
+     * Filter which Person to aggregate.
      */
-    where?: UserWhereInput
+    where?: PersonWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of Users to fetch.
+     * Determine the order of People to fetch.
      */
-    orderBy?: UserOrderByWithRelationInput | UserOrderByWithRelationInput[]
+    orderBy?: PersonOrderByWithRelationInput | PersonOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
      * Sets the start position
      */
-    cursor?: UserWhereUniqueInput
+    cursor?: PersonWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` Users from the position of the cursor.
+     * Take `±n` People from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` Users.
+     * Skip the first `n` People.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Count returned Users
+     * Count returned People
     **/
-    _count?: true | UserCountAggregateInputType
+    _count?: true | PersonCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the minimum value
     **/
-    _min?: UserMinAggregateInputType
+    _min?: PersonMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the maximum value
     **/
-    _max?: UserMaxAggregateInputType
+    _max?: PersonMaxAggregateInputType
   }
 
-  export type GetUserAggregateType<T extends UserAggregateArgs> = {
-        [P in keyof T & keyof AggregateUser]: P extends '_count' | 'count'
+  export type GetPersonAggregateType<T extends PersonAggregateArgs> = {
+        [P in keyof T & keyof AggregatePerson]: P extends '_count' | 'count'
       ? T[P] extends true
         ? number
-        : GetScalarType<T[P], AggregateUser[P]>
-      : GetScalarType<T[P], AggregateUser[P]>
+        : GetScalarType<T[P], AggregatePerson[P]>
+      : GetScalarType<T[P], AggregatePerson[P]>
   }
 
 
 
 
-  export type UserGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: UserWhereInput
-    orderBy?: UserOrderByWithAggregationInput | UserOrderByWithAggregationInput[]
-    by: UserScalarFieldEnum[] | UserScalarFieldEnum
-    having?: UserScalarWhereWithAggregatesInput
+  export type PersonGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PersonWhereInput
+    orderBy?: PersonOrderByWithAggregationInput | PersonOrderByWithAggregationInput[]
+    by: PersonScalarFieldEnum[] | PersonScalarFieldEnum
+    having?: PersonScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    _count?: UserCountAggregateInputType | true
-    _min?: UserMinAggregateInputType
-    _max?: UserMaxAggregateInputType
+    _count?: PersonCountAggregateInputType | true
+    _min?: PersonMinAggregateInputType
+    _max?: PersonMaxAggregateInputType
   }
 
-  export type UserGroupByOutputType = {
+  export type PersonGroupByOutputType = {
     id: string
-    email: string
-    password_hash: string | null
-    fullname: string | null
+    person_type: $Enums.PersonType
+    identification_type: $Enums.IdentificationType
+    identification: string
+    first_name: string | null
+    last_name: string | null
+    business_name: string | null
+    email: string | null
     phone: string | null
-    tenant_id: string
-    role: $Enums.roleEnum
-    is_active: boolean
+    address: string | null
     created_at: Date
     updated_at: Date
-    _count: UserCountAggregateOutputType | null
-    _min: UserMinAggregateOutputType | null
-    _max: UserMaxAggregateOutputType | null
+    _count: PersonCountAggregateOutputType | null
+    _min: PersonMinAggregateOutputType | null
+    _max: PersonMaxAggregateOutputType | null
   }
 
-  type GetUserGroupByPayload<T extends UserGroupByArgs> = Prisma.PrismaPromise<
+  type GetPersonGroupByPayload<T extends PersonGroupByArgs> = Prisma.PrismaPromise<
     Array<
-      PickEnumerable<UserGroupByOutputType, T['by']> &
+      PickEnumerable<PersonGroupByOutputType, T['by']> &
         {
-          [P in ((keyof T) & (keyof UserGroupByOutputType))]: P extends '_count'
+          [P in ((keyof T) & (keyof PersonGroupByOutputType))]: P extends '_count'
             ? T[P] extends boolean
               ? number
-              : GetScalarType<T[P], UserGroupByOutputType[P]>
-            : GetScalarType<T[P], UserGroupByOutputType[P]>
+              : GetScalarType<T[P], PersonGroupByOutputType[P]>
+            : GetScalarType<T[P], PersonGroupByOutputType[P]>
         }
       >
     >
 
 
-  export type UserSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type PersonSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    person_type?: boolean
+    identification_type?: boolean
+    identification?: boolean
+    first_name?: boolean
+    last_name?: boolean
+    business_name?: boolean
     email?: boolean
-    password_hash?: boolean
-    fullname?: boolean
     phone?: boolean
-    tenant_id?: boolean
-    role?: boolean
-    is_active?: boolean
+    address?: boolean
     created_at?: boolean
     updated_at?: boolean
-    tenant?: boolean | TenantDefaultArgs<ExtArgs>
-    debtors?: boolean | User$debtorsArgs<ExtArgs>
-    bailiffs?: boolean | User$bailiffsArgs<ExtArgs>
-    messages?: boolean | User$messagesArgs<ExtArgs>
-    _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["user"]>
+    debtors?: boolean | Person$debtorsArgs<ExtArgs>
+    _count?: boolean | PersonCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["person"]>
 
-  export type UserSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type PersonSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    person_type?: boolean
+    identification_type?: boolean
+    identification?: boolean
+    first_name?: boolean
+    last_name?: boolean
+    business_name?: boolean
     email?: boolean
-    password_hash?: boolean
-    fullname?: boolean
     phone?: boolean
-    tenant_id?: boolean
-    role?: boolean
-    is_active?: boolean
+    address?: boolean
     created_at?: boolean
     updated_at?: boolean
-    tenant?: boolean | TenantDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["user"]>
+  }, ExtArgs["result"]["person"]>
 
-  export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type PersonSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    person_type?: boolean
+    identification_type?: boolean
+    identification?: boolean
+    first_name?: boolean
+    last_name?: boolean
+    business_name?: boolean
     email?: boolean
-    password_hash?: boolean
-    fullname?: boolean
     phone?: boolean
-    tenant_id?: boolean
-    role?: boolean
-    is_active?: boolean
+    address?: boolean
     created_at?: boolean
     updated_at?: boolean
-    tenant?: boolean | TenantDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["user"]>
+  }, ExtArgs["result"]["person"]>
 
-  export type UserSelectScalar = {
+  export type PersonSelectScalar = {
     id?: boolean
+    person_type?: boolean
+    identification_type?: boolean
+    identification?: boolean
+    first_name?: boolean
+    last_name?: boolean
+    business_name?: boolean
     email?: boolean
-    password_hash?: boolean
-    fullname?: boolean
     phone?: boolean
-    tenant_id?: boolean
-    role?: boolean
-    is_active?: boolean
+    address?: boolean
     created_at?: boolean
     updated_at?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "password_hash" | "fullname" | "phone" | "tenant_id" | "role" | "is_active" | "created_at" | "updated_at", ExtArgs["result"]["user"]>
-  export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    tenant?: boolean | TenantDefaultArgs<ExtArgs>
-    debtors?: boolean | User$debtorsArgs<ExtArgs>
-    bailiffs?: boolean | User$bailiffsArgs<ExtArgs>
-    messages?: boolean | User$messagesArgs<ExtArgs>
-    _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
+  export type PersonOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "person_type" | "identification_type" | "identification" | "first_name" | "last_name" | "business_name" | "email" | "phone" | "address" | "created_at" | "updated_at", ExtArgs["result"]["person"]>
+  export type PersonInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    debtors?: boolean | Person$debtorsArgs<ExtArgs>
+    _count?: boolean | PersonCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    tenant?: boolean | TenantDefaultArgs<ExtArgs>
-  }
-  export type UserIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    tenant?: boolean | TenantDefaultArgs<ExtArgs>
-  }
+  export type PersonIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type PersonIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
-  export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "User"
+  export type $PersonPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Person"
     objects: {
-      tenant: Prisma.$TenantPayload<ExtArgs>
       debtors: Prisma.$DebtorPayload<ExtArgs>[]
-      bailiffs: Prisma.$BailiffPayload<ExtArgs>[]
-      messages: Prisma.$ChatMessagePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      email: string
-      password_hash: string | null
-      fullname: string | null
+      person_type: $Enums.PersonType
+      identification_type: $Enums.IdentificationType
+      identification: string
+      first_name: string | null
+      last_name: string | null
+      business_name: string | null
+      email: string | null
       phone: string | null
-      tenant_id: string
-      role: $Enums.roleEnum
-      is_active: boolean
+      address: string | null
       created_at: Date
       updated_at: Date
-    }, ExtArgs["result"]["user"]>
+    }, ExtArgs["result"]["person"]>
     composites: {}
   }
 
-  type UserGetPayload<S extends boolean | null | undefined | UserDefaultArgs> = $Result.GetResult<Prisma.$UserPayload, S>
+  type PersonGetPayload<S extends boolean | null | undefined | PersonDefaultArgs> = $Result.GetResult<Prisma.$PersonPayload, S>
 
-  type UserCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<UserFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: UserCountAggregateInputType | true
+  type PersonCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<PersonFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: PersonCountAggregateInputType | true
     }
 
-  export interface UserDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['User'], meta: { name: 'User' } }
+  export interface PersonDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Person'], meta: { name: 'Person' } }
     /**
-     * Find zero or one User that matches the filter.
-     * @param {UserFindUniqueArgs} args - Arguments to find a User
+     * Find zero or one Person that matches the filter.
+     * @param {PersonFindUniqueArgs} args - Arguments to find a Person
      * @example
-     * // Get one User
-     * const user = await prisma.user.findUnique({
+     * // Get one Person
+     * const person = await prisma.person.findUnique({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUnique<T extends UserFindUniqueArgs>(args: SelectSubset<T, UserFindUniqueArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findUnique<T extends PersonFindUniqueArgs>(args: SelectSubset<T, PersonFindUniqueArgs<ExtArgs>>): Prisma__PersonClient<$Result.GetResult<Prisma.$PersonPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find one User that matches the filter or throw an error with `error.code='P2025'`
+     * Find one Person that matches the filter or throw an error with `error.code='P2025'`
      * if no matches were found.
-     * @param {UserFindUniqueOrThrowArgs} args - Arguments to find a User
+     * @param {PersonFindUniqueOrThrowArgs} args - Arguments to find a Person
      * @example
-     * // Get one User
-     * const user = await prisma.user.findUniqueOrThrow({
+     * // Get one Person
+     * const person = await prisma.person.findUniqueOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUniqueOrThrow<T extends UserFindUniqueOrThrowArgs>(args: SelectSubset<T, UserFindUniqueOrThrowArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findUniqueOrThrow<T extends PersonFindUniqueOrThrowArgs>(args: SelectSubset<T, PersonFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PersonClient<$Result.GetResult<Prisma.$PersonPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first User that matches the filter.
+     * Find the first Person that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {UserFindFirstArgs} args - Arguments to find a User
+     * @param {PersonFindFirstArgs} args - Arguments to find a Person
      * @example
-     * // Get one User
-     * const user = await prisma.user.findFirst({
+     * // Get one Person
+     * const person = await prisma.person.findFirst({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirst<T extends UserFindFirstArgs>(args?: SelectSubset<T, UserFindFirstArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    findFirst<T extends PersonFindFirstArgs>(args?: SelectSubset<T, PersonFindFirstArgs<ExtArgs>>): Prisma__PersonClient<$Result.GetResult<Prisma.$PersonPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find the first User that matches the filter or
+     * Find the first Person that matches the filter or
      * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {UserFindFirstOrThrowArgs} args - Arguments to find a User
+     * @param {PersonFindFirstOrThrowArgs} args - Arguments to find a Person
      * @example
-     * // Get one User
-     * const user = await prisma.user.findFirstOrThrow({
+     * // Get one Person
+     * const person = await prisma.person.findFirstOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirstOrThrow<T extends UserFindFirstOrThrowArgs>(args?: SelectSubset<T, UserFindFirstOrThrowArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    findFirstOrThrow<T extends PersonFindFirstOrThrowArgs>(args?: SelectSubset<T, PersonFindFirstOrThrowArgs<ExtArgs>>): Prisma__PersonClient<$Result.GetResult<Prisma.$PersonPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Find zero or more Users that matches the filter.
+     * Find zero or more People that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {UserFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @param {PersonFindManyArgs} args - Arguments to filter and select certain fields only.
      * @example
-     * // Get all Users
-     * const users = await prisma.user.findMany()
+     * // Get all People
+     * const people = await prisma.person.findMany()
      * 
-     * // Get first 10 Users
-     * const users = await prisma.user.findMany({ take: 10 })
+     * // Get first 10 People
+     * const people = await prisma.person.findMany({ take: 10 })
      * 
      * // Only select the `id`
-     * const userWithIdOnly = await prisma.user.findMany({ select: { id: true } })
+     * const personWithIdOnly = await prisma.person.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends UserFindManyArgs>(args?: SelectSubset<T, UserFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+    findMany<T extends PersonFindManyArgs>(args?: SelectSubset<T, PersonFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PersonPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
 
     /**
-     * Create a User.
-     * @param {UserCreateArgs} args - Arguments to create a User.
+     * Create a Person.
+     * @param {PersonCreateArgs} args - Arguments to create a Person.
      * @example
-     * // Create one User
-     * const User = await prisma.user.create({
+     * // Create one Person
+     * const Person = await prisma.person.create({
      *   data: {
-     *     // ... data to create a User
+     *     // ... data to create a Person
      *   }
      * })
      * 
      */
-    create<T extends UserCreateArgs>(args: SelectSubset<T, UserCreateArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    create<T extends PersonCreateArgs>(args: SelectSubset<T, PersonCreateArgs<ExtArgs>>): Prisma__PersonClient<$Result.GetResult<Prisma.$PersonPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Create many Users.
-     * @param {UserCreateManyArgs} args - Arguments to create many Users.
+     * Create many People.
+     * @param {PersonCreateManyArgs} args - Arguments to create many People.
      * @example
-     * // Create many Users
-     * const user = await prisma.user.createMany({
+     * // Create many People
+     * const person = await prisma.person.createMany({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      *     
      */
-    createMany<T extends UserCreateManyArgs>(args?: SelectSubset<T, UserCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    createMany<T extends PersonCreateManyArgs>(args?: SelectSubset<T, PersonCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many Users and returns the data saved in the database.
-     * @param {UserCreateManyAndReturnArgs} args - Arguments to create many Users.
+     * Create many People and returns the data saved in the database.
+     * @param {PersonCreateManyAndReturnArgs} args - Arguments to create many People.
      * @example
-     * // Create many Users
-     * const user = await prisma.user.createManyAndReturn({
+     * // Create many People
+     * const person = await prisma.person.createManyAndReturn({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      * 
-     * // Create many Users and only return the `id`
-     * const userWithIdOnly = await prisma.user.createManyAndReturn({
+     * // Create many People and only return the `id`
+     * const personWithIdOnly = await prisma.person.createManyAndReturn({
      *   select: { id: true },
      *   data: [
      *     // ... provide data here
@@ -7393,28 +9883,28 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends UserCreateManyAndReturnArgs>(args?: SelectSubset<T, UserCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+    createManyAndReturn<T extends PersonCreateManyAndReturnArgs>(args?: SelectSubset<T, PersonCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PersonPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Delete a User.
-     * @param {UserDeleteArgs} args - Arguments to delete one User.
+     * Delete a Person.
+     * @param {PersonDeleteArgs} args - Arguments to delete one Person.
      * @example
-     * // Delete one User
-     * const User = await prisma.user.delete({
+     * // Delete one Person
+     * const Person = await prisma.person.delete({
      *   where: {
-     *     // ... filter to delete one User
+     *     // ... filter to delete one Person
      *   }
      * })
      * 
      */
-    delete<T extends UserDeleteArgs>(args: SelectSubset<T, UserDeleteArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    delete<T extends PersonDeleteArgs>(args: SelectSubset<T, PersonDeleteArgs<ExtArgs>>): Prisma__PersonClient<$Result.GetResult<Prisma.$PersonPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Update one User.
-     * @param {UserUpdateArgs} args - Arguments to update one User.
+     * Update one Person.
+     * @param {PersonUpdateArgs} args - Arguments to update one Person.
      * @example
-     * // Update one User
-     * const user = await prisma.user.update({
+     * // Update one Person
+     * const person = await prisma.person.update({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -7424,30 +9914,30 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends UserUpdateArgs>(args: SelectSubset<T, UserUpdateArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    update<T extends PersonUpdateArgs>(args: SelectSubset<T, PersonUpdateArgs<ExtArgs>>): Prisma__PersonClient<$Result.GetResult<Prisma.$PersonPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
     /**
-     * Delete zero or more Users.
-     * @param {UserDeleteManyArgs} args - Arguments to filter Users to delete.
+     * Delete zero or more People.
+     * @param {PersonDeleteManyArgs} args - Arguments to filter People to delete.
      * @example
-     * // Delete a few Users
-     * const { count } = await prisma.user.deleteMany({
+     * // Delete a few People
+     * const { count } = await prisma.person.deleteMany({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      * 
      */
-    deleteMany<T extends UserDeleteManyArgs>(args?: SelectSubset<T, UserDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    deleteMany<T extends PersonDeleteManyArgs>(args?: SelectSubset<T, PersonDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more Users.
+     * Update zero or more People.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {UserUpdateManyArgs} args - Arguments to update one or more rows.
+     * @param {PersonUpdateManyArgs} args - Arguments to update one or more rows.
      * @example
-     * // Update many Users
-     * const user = await prisma.user.updateMany({
+     * // Update many People
+     * const person = await prisma.person.updateMany({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -7457,14 +9947,14 @@ export namespace Prisma {
      * })
      * 
      */
-    updateMany<T extends UserUpdateManyArgs>(args: SelectSubset<T, UserUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    updateMany<T extends PersonUpdateManyArgs>(args: SelectSubset<T, PersonUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more Users and returns the data updated in the database.
-     * @param {UserUpdateManyAndReturnArgs} args - Arguments to update many Users.
+     * Update zero or more People and returns the data updated in the database.
+     * @param {PersonUpdateManyAndReturnArgs} args - Arguments to update many People.
      * @example
-     * // Update many Users
-     * const user = await prisma.user.updateManyAndReturn({
+     * // Update many People
+     * const person = await prisma.person.updateManyAndReturn({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -7473,8 +9963,8 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more Users and only return the `id`
-     * const userWithIdOnly = await prisma.user.updateManyAndReturn({
+     * // Update zero or more People and only return the `id`
+     * const personWithIdOnly = await prisma.person.updateManyAndReturn({
      *   select: { id: true },
      *   where: {
      *     // ... provide filter here
@@ -7487,56 +9977,56 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    updateManyAndReturn<T extends UserUpdateManyAndReturnArgs>(args: SelectSubset<T, UserUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+    updateManyAndReturn<T extends PersonUpdateManyAndReturnArgs>(args: SelectSubset<T, PersonUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PersonPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
-     * Create or update one User.
-     * @param {UserUpsertArgs} args - Arguments to update or create a User.
+     * Create or update one Person.
+     * @param {PersonUpsertArgs} args - Arguments to update or create a Person.
      * @example
-     * // Update or create a User
-     * const user = await prisma.user.upsert({
+     * // Update or create a Person
+     * const person = await prisma.person.upsert({
      *   create: {
-     *     // ... data to create a User
+     *     // ... data to create a Person
      *   },
      *   update: {
      *     // ... in case it already exists, update
      *   },
      *   where: {
-     *     // ... the filter for the User we want to update
+     *     // ... the filter for the Person we want to update
      *   }
      * })
      */
-    upsert<T extends UserUpsertArgs>(args: SelectSubset<T, UserUpsertArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+    upsert<T extends PersonUpsertArgs>(args: SelectSubset<T, PersonUpsertArgs<ExtArgs>>): Prisma__PersonClient<$Result.GetResult<Prisma.$PersonPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
 
 
     /**
-     * Count the number of Users.
+     * Count the number of People.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {UserCountArgs} args - Arguments to filter Users to count.
+     * @param {PersonCountArgs} args - Arguments to filter People to count.
      * @example
-     * // Count the number of Users
-     * const count = await prisma.user.count({
+     * // Count the number of People
+     * const count = await prisma.person.count({
      *   where: {
-     *     // ... the filter for the Users we want to count
+     *     // ... the filter for the People we want to count
      *   }
      * })
     **/
-    count<T extends UserCountArgs>(
-      args?: Subset<T, UserCountArgs>,
+    count<T extends PersonCountArgs>(
+      args?: Subset<T, PersonCountArgs>,
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<'select', any>
         ? T['select'] extends true
           ? number
-          : GetScalarType<T['select'], UserCountAggregateOutputType>
+          : GetScalarType<T['select'], PersonCountAggregateOutputType>
         : number
     >
 
     /**
-     * Allows you to perform aggregations operations on a User.
+     * Allows you to perform aggregations operations on a Person.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {UserAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @param {PersonAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
      * @example
      * // Ordered by age ascending
      * // Where email contains prisma.io
@@ -7556,13 +10046,13 @@ export namespace Prisma {
      *   take: 10,
      * })
     **/
-    aggregate<T extends UserAggregateArgs>(args: Subset<T, UserAggregateArgs>): Prisma.PrismaPromise<GetUserAggregateType<T>>
+    aggregate<T extends PersonAggregateArgs>(args: Subset<T, PersonAggregateArgs>): Prisma.PrismaPromise<GetPersonAggregateType<T>>
 
     /**
-     * Group by User.
+     * Group by Person.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {UserGroupByArgs} args - Group by arguments.
+     * @param {PersonGroupByArgs} args - Group by arguments.
      * @example
      * // Group by city, order by createdAt, get count
      * const result = await prisma.user.groupBy({
@@ -7577,14 +10067,14 @@ export namespace Prisma {
      * 
     **/
     groupBy<
-      T extends UserGroupByArgs,
+      T extends PersonGroupByArgs,
       HasSelectOrTake extends Or<
         Extends<'skip', Keys<T>>,
         Extends<'take', Keys<T>>
       >,
       OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: UserGroupByArgs['orderBy'] }
-        : { orderBy?: UserGroupByArgs['orderBy'] },
+        ? { orderBy: PersonGroupByArgs['orderBy'] }
+        : { orderBy?: PersonGroupByArgs['orderBy'] },
       OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
       ByFields extends MaybeTupleToUnion<T['by']>,
       ByValid extends Has<ByFields, OrderFields>,
@@ -7633,25 +10123,22 @@ export namespace Prisma {
             ? never
             : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
         }[OrderFields]
-    >(args: SubsetIntersection<T, UserGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUserGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+    >(args: SubsetIntersection<T, PersonGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPersonGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
   /**
-   * Fields of the User model
+   * Fields of the Person model
    */
-  readonly fields: UserFieldRefs;
+  readonly fields: PersonFieldRefs;
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for User.
+   * The delegate class that acts as a "Promise-like" for Person.
    * Why is this prefixed with `Prisma__`?
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__PersonClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    tenant<T extends TenantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TenantDefaultArgs<ExtArgs>>): Prisma__TenantClient<$Result.GetResult<Prisma.$TenantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    debtors<T extends User$debtorsArgs<ExtArgs> = {}>(args?: Subset<T, User$debtorsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DebtorPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    bailiffs<T extends User$bailiffsArgs<ExtArgs> = {}>(args?: Subset<T, User$bailiffsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BailiffPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    messages<T extends User$messagesArgs<ExtArgs> = {}>(args?: Subset<T, User$messagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChatMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    debtors<T extends Person$debtorsArgs<ExtArgs> = {}>(args?: Subset<T, Person$debtorsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DebtorPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7678,418 +10165,412 @@ export namespace Prisma {
 
 
   /**
-   * Fields of the User model
+   * Fields of the Person model
    */
-  interface UserFieldRefs {
-    readonly id: FieldRef<"User", 'String'>
-    readonly email: FieldRef<"User", 'String'>
-    readonly password_hash: FieldRef<"User", 'String'>
-    readonly fullname: FieldRef<"User", 'String'>
-    readonly phone: FieldRef<"User", 'String'>
-    readonly tenant_id: FieldRef<"User", 'String'>
-    readonly role: FieldRef<"User", 'roleEnum'>
-    readonly is_active: FieldRef<"User", 'Boolean'>
-    readonly created_at: FieldRef<"User", 'DateTime'>
-    readonly updated_at: FieldRef<"User", 'DateTime'>
+  interface PersonFieldRefs {
+    readonly id: FieldRef<"Person", 'String'>
+    readonly person_type: FieldRef<"Person", 'PersonType'>
+    readonly identification_type: FieldRef<"Person", 'IdentificationType'>
+    readonly identification: FieldRef<"Person", 'String'>
+    readonly first_name: FieldRef<"Person", 'String'>
+    readonly last_name: FieldRef<"Person", 'String'>
+    readonly business_name: FieldRef<"Person", 'String'>
+    readonly email: FieldRef<"Person", 'String'>
+    readonly phone: FieldRef<"Person", 'String'>
+    readonly address: FieldRef<"Person", 'String'>
+    readonly created_at: FieldRef<"Person", 'DateTime'>
+    readonly updated_at: FieldRef<"Person", 'DateTime'>
   }
     
 
   // Custom InputTypes
   /**
-   * User findUnique
+   * Person findUnique
    */
-  export type UserFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type PersonFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the User
+     * Select specific fields to fetch from the Person
      */
-    select?: UserSelect<ExtArgs> | null
+    select?: PersonSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the User
+     * Omit specific fields from the Person
      */
-    omit?: UserOmit<ExtArgs> | null
+    omit?: PersonOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: UserInclude<ExtArgs> | null
+    include?: PersonInclude<ExtArgs> | null
     /**
-     * Filter, which User to fetch.
+     * Filter, which Person to fetch.
      */
-    where: UserWhereUniqueInput
+    where: PersonWhereUniqueInput
   }
 
   /**
-   * User findUniqueOrThrow
+   * Person findUniqueOrThrow
    */
-  export type UserFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type PersonFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the User
+     * Select specific fields to fetch from the Person
      */
-    select?: UserSelect<ExtArgs> | null
+    select?: PersonSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the User
+     * Omit specific fields from the Person
      */
-    omit?: UserOmit<ExtArgs> | null
+    omit?: PersonOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: UserInclude<ExtArgs> | null
+    include?: PersonInclude<ExtArgs> | null
     /**
-     * Filter, which User to fetch.
+     * Filter, which Person to fetch.
      */
-    where: UserWhereUniqueInput
+    where: PersonWhereUniqueInput
   }
 
   /**
-   * User findFirst
+   * Person findFirst
    */
-  export type UserFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type PersonFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the User
+     * Select specific fields to fetch from the Person
      */
-    select?: UserSelect<ExtArgs> | null
+    select?: PersonSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the User
+     * Omit specific fields from the Person
      */
-    omit?: UserOmit<ExtArgs> | null
+    omit?: PersonOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: UserInclude<ExtArgs> | null
+    include?: PersonInclude<ExtArgs> | null
     /**
-     * Filter, which User to fetch.
+     * Filter, which Person to fetch.
      */
-    where?: UserWhereInput
+    where?: PersonWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of Users to fetch.
+     * Determine the order of People to fetch.
      */
-    orderBy?: UserOrderByWithRelationInput | UserOrderByWithRelationInput[]
+    orderBy?: PersonOrderByWithRelationInput | PersonOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for Users.
+     * Sets the position for searching for People.
      */
-    cursor?: UserWhereUniqueInput
+    cursor?: PersonWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` Users from the position of the cursor.
+     * Take `±n` People from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` Users.
+     * Skip the first `n` People.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of Users.
+     * Filter by unique combinations of People.
      */
-    distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
+    distinct?: PersonScalarFieldEnum | PersonScalarFieldEnum[]
   }
 
   /**
-   * User findFirstOrThrow
+   * Person findFirstOrThrow
    */
-  export type UserFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type PersonFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the User
+     * Select specific fields to fetch from the Person
      */
-    select?: UserSelect<ExtArgs> | null
+    select?: PersonSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the User
+     * Omit specific fields from the Person
      */
-    omit?: UserOmit<ExtArgs> | null
+    omit?: PersonOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: UserInclude<ExtArgs> | null
+    include?: PersonInclude<ExtArgs> | null
     /**
-     * Filter, which User to fetch.
+     * Filter, which Person to fetch.
      */
-    where?: UserWhereInput
+    where?: PersonWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of Users to fetch.
+     * Determine the order of People to fetch.
      */
-    orderBy?: UserOrderByWithRelationInput | UserOrderByWithRelationInput[]
+    orderBy?: PersonOrderByWithRelationInput | PersonOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for Users.
+     * Sets the position for searching for People.
      */
-    cursor?: UserWhereUniqueInput
+    cursor?: PersonWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` Users from the position of the cursor.
+     * Take `±n` People from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` Users.
+     * Skip the first `n` People.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of Users.
+     * Filter by unique combinations of People.
      */
-    distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
+    distinct?: PersonScalarFieldEnum | PersonScalarFieldEnum[]
   }
 
   /**
-   * User findMany
+   * Person findMany
    */
-  export type UserFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type PersonFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the User
+     * Select specific fields to fetch from the Person
      */
-    select?: UserSelect<ExtArgs> | null
+    select?: PersonSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the User
+     * Omit specific fields from the Person
      */
-    omit?: UserOmit<ExtArgs> | null
+    omit?: PersonOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: UserInclude<ExtArgs> | null
+    include?: PersonInclude<ExtArgs> | null
     /**
-     * Filter, which Users to fetch.
+     * Filter, which People to fetch.
      */
-    where?: UserWhereInput
+    where?: PersonWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of Users to fetch.
+     * Determine the order of People to fetch.
      */
-    orderBy?: UserOrderByWithRelationInput | UserOrderByWithRelationInput[]
+    orderBy?: PersonOrderByWithRelationInput | PersonOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for listing Users.
+     * Sets the position for listing People.
      */
-    cursor?: UserWhereUniqueInput
+    cursor?: PersonWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` Users from the position of the cursor.
+     * Take `±n` People from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` Users.
+     * Skip the first `n` People.
      */
     skip?: number
-    distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
+    distinct?: PersonScalarFieldEnum | PersonScalarFieldEnum[]
   }
 
   /**
-   * User create
+   * Person create
    */
-  export type UserCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type PersonCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the User
+     * Select specific fields to fetch from the Person
      */
-    select?: UserSelect<ExtArgs> | null
+    select?: PersonSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the User
+     * Omit specific fields from the Person
      */
-    omit?: UserOmit<ExtArgs> | null
+    omit?: PersonOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: UserInclude<ExtArgs> | null
+    include?: PersonInclude<ExtArgs> | null
     /**
-     * The data needed to create a User.
+     * The data needed to create a Person.
      */
-    data: XOR<UserCreateInput, UserUncheckedCreateInput>
+    data: XOR<PersonCreateInput, PersonUncheckedCreateInput>
   }
 
   /**
-   * User createMany
+   * Person createMany
    */
-  export type UserCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type PersonCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to create many Users.
+     * The data used to create many People.
      */
-    data: UserCreateManyInput | UserCreateManyInput[]
+    data: PersonCreateManyInput | PersonCreateManyInput[]
     skipDuplicates?: boolean
   }
 
   /**
-   * User createManyAndReturn
+   * Person createManyAndReturn
    */
-  export type UserCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type PersonCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the User
+     * Select specific fields to fetch from the Person
      */
-    select?: UserSelectCreateManyAndReturn<ExtArgs> | null
+    select?: PersonSelectCreateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the User
+     * Omit specific fields from the Person
      */
-    omit?: UserOmit<ExtArgs> | null
+    omit?: PersonOmit<ExtArgs> | null
     /**
-     * The data used to create many Users.
+     * The data used to create many People.
      */
-    data: UserCreateManyInput | UserCreateManyInput[]
+    data: PersonCreateManyInput | PersonCreateManyInput[]
     skipDuplicates?: boolean
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
-   * User update
+   * Person update
    */
-  export type UserUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type PersonUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the User
+     * Select specific fields to fetch from the Person
      */
-    select?: UserSelect<ExtArgs> | null
+    select?: PersonSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the User
+     * Omit specific fields from the Person
      */
-    omit?: UserOmit<ExtArgs> | null
+    omit?: PersonOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: UserInclude<ExtArgs> | null
+    include?: PersonInclude<ExtArgs> | null
     /**
-     * The data needed to update a User.
+     * The data needed to update a Person.
      */
-    data: XOR<UserUpdateInput, UserUncheckedUpdateInput>
+    data: XOR<PersonUpdateInput, PersonUncheckedUpdateInput>
     /**
-     * Choose, which User to update.
+     * Choose, which Person to update.
      */
-    where: UserWhereUniqueInput
+    where: PersonWhereUniqueInput
   }
 
   /**
-   * User updateMany
+   * Person updateMany
    */
-  export type UserUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type PersonUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to update Users.
+     * The data used to update People.
      */
-    data: XOR<UserUpdateManyMutationInput, UserUncheckedUpdateManyInput>
+    data: XOR<PersonUpdateManyMutationInput, PersonUncheckedUpdateManyInput>
     /**
-     * Filter which Users to update
+     * Filter which People to update
      */
-    where?: UserWhereInput
+    where?: PersonWhereInput
     /**
-     * Limit how many Users to update.
+     * Limit how many People to update.
      */
     limit?: number
   }
 
   /**
-   * User updateManyAndReturn
+   * Person updateManyAndReturn
    */
-  export type UserUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type PersonUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the User
+     * Select specific fields to fetch from the Person
      */
-    select?: UserSelectUpdateManyAndReturn<ExtArgs> | null
+    select?: PersonSelectUpdateManyAndReturn<ExtArgs> | null
     /**
-     * Omit specific fields from the User
+     * Omit specific fields from the Person
      */
-    omit?: UserOmit<ExtArgs> | null
+    omit?: PersonOmit<ExtArgs> | null
     /**
-     * The data used to update Users.
+     * The data used to update People.
      */
-    data: XOR<UserUpdateManyMutationInput, UserUncheckedUpdateManyInput>
+    data: XOR<PersonUpdateManyMutationInput, PersonUncheckedUpdateManyInput>
     /**
-     * Filter which Users to update
+     * Filter which People to update
      */
-    where?: UserWhereInput
+    where?: PersonWhereInput
     /**
-     * Limit how many Users to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserIncludeUpdateManyAndReturn<ExtArgs> | null
-  }
-
-  /**
-   * User upsert
-   */
-  export type UserUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the User
-     */
-    select?: UserSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the User
-     */
-    omit?: UserOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserInclude<ExtArgs> | null
-    /**
-     * The filter to search for the User to update in case it exists.
-     */
-    where: UserWhereUniqueInput
-    /**
-     * In case the User found by the `where` argument doesn't exist, create a new User with this data.
-     */
-    create: XOR<UserCreateInput, UserUncheckedCreateInput>
-    /**
-     * In case the User was found with the provided `where` argument, update it with this data.
-     */
-    update: XOR<UserUpdateInput, UserUncheckedUpdateInput>
-  }
-
-  /**
-   * User delete
-   */
-  export type UserDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the User
-     */
-    select?: UserSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the User
-     */
-    omit?: UserOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserInclude<ExtArgs> | null
-    /**
-     * Filter which User to delete.
-     */
-    where: UserWhereUniqueInput
-  }
-
-  /**
-   * User deleteMany
-   */
-  export type UserDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which Users to delete
-     */
-    where?: UserWhereInput
-    /**
-     * Limit how many Users to delete.
+     * Limit how many People to update.
      */
     limit?: number
   }
 
   /**
-   * User.debtors
+   * Person upsert
    */
-  export type User$debtorsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type PersonUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Person
+     */
+    select?: PersonSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Person
+     */
+    omit?: PersonOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PersonInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Person to update in case it exists.
+     */
+    where: PersonWhereUniqueInput
+    /**
+     * In case the Person found by the `where` argument doesn't exist, create a new Person with this data.
+     */
+    create: XOR<PersonCreateInput, PersonUncheckedCreateInput>
+    /**
+     * In case the Person was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PersonUpdateInput, PersonUncheckedUpdateInput>
+  }
+
+  /**
+   * Person delete
+   */
+  export type PersonDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Person
+     */
+    select?: PersonSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Person
+     */
+    omit?: PersonOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PersonInclude<ExtArgs> | null
+    /**
+     * Filter which Person to delete.
+     */
+    where: PersonWhereUniqueInput
+  }
+
+  /**
+   * Person deleteMany
+   */
+  export type PersonDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which People to delete
+     */
+    where?: PersonWhereInput
+    /**
+     * Limit how many People to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Person.debtors
+   */
+  export type Person$debtorsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
      * Select specific fields to fetch from the Debtor
      */
@@ -8111,69 +10592,21 @@ export namespace Prisma {
   }
 
   /**
-   * User.bailiffs
+   * Person without action
    */
-  export type User$bailiffsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type PersonDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the Bailiff
+     * Select specific fields to fetch from the Person
      */
-    select?: BailiffSelect<ExtArgs> | null
+    select?: PersonSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the Bailiff
+     * Omit specific fields from the Person
      */
-    omit?: BailiffOmit<ExtArgs> | null
+    omit?: PersonOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: BailiffInclude<ExtArgs> | null
-    where?: BailiffWhereInput
-    orderBy?: BailiffOrderByWithRelationInput | BailiffOrderByWithRelationInput[]
-    cursor?: BailiffWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: BailiffScalarFieldEnum | BailiffScalarFieldEnum[]
-  }
-
-  /**
-   * User.messages
-   */
-  export type User$messagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ChatMessage
-     */
-    select?: ChatMessageSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ChatMessage
-     */
-    omit?: ChatMessageOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ChatMessageInclude<ExtArgs> | null
-    where?: ChatMessageWhereInput
-    orderBy?: ChatMessageOrderByWithRelationInput | ChatMessageOrderByWithRelationInput[]
-    cursor?: ChatMessageWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: ChatMessageScalarFieldEnum | ChatMessageScalarFieldEnum[]
-  }
-
-  /**
-   * User without action
-   */
-  export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the User
-     */
-    select?: UserSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the User
-     */
-    omit?: UserOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserInclude<ExtArgs> | null
+    include?: PersonInclude<ExtArgs> | null
   }
 
 
@@ -27524,14 +29957,9 @@ export namespace Prisma {
   export type DebtorMinAggregateOutputType = {
     id: string | null
     tenant_id: string | null
+    person_id: string | null
     user_id: string | null
-    fullname: string | null
     email: string | null
-    phone: string | null
-    address: string | null
-    person_type: $Enums.PersonType | null
-    identification_type: $Enums.IdentificationType | null
-    identification: string | null
     total_income: number | null
     created_at: Date | null
     updated_at: Date | null
@@ -27540,14 +29968,9 @@ export namespace Prisma {
   export type DebtorMaxAggregateOutputType = {
     id: string | null
     tenant_id: string | null
+    person_id: string | null
     user_id: string | null
-    fullname: string | null
     email: string | null
-    phone: string | null
-    address: string | null
-    person_type: $Enums.PersonType | null
-    identification_type: $Enums.IdentificationType | null
-    identification: string | null
     total_income: number | null
     created_at: Date | null
     updated_at: Date | null
@@ -27556,14 +29979,9 @@ export namespace Prisma {
   export type DebtorCountAggregateOutputType = {
     id: number
     tenant_id: number
+    person_id: number
     user_id: number
-    fullname: number
     email: number
-    phone: number
-    address: number
-    person_type: number
-    identification_type: number
-    identification: number
     total_income: number
     created_at: number
     updated_at: number
@@ -27582,14 +30000,9 @@ export namespace Prisma {
   export type DebtorMinAggregateInputType = {
     id?: true
     tenant_id?: true
+    person_id?: true
     user_id?: true
-    fullname?: true
     email?: true
-    phone?: true
-    address?: true
-    person_type?: true
-    identification_type?: true
-    identification?: true
     total_income?: true
     created_at?: true
     updated_at?: true
@@ -27598,14 +30011,9 @@ export namespace Prisma {
   export type DebtorMaxAggregateInputType = {
     id?: true
     tenant_id?: true
+    person_id?: true
     user_id?: true
-    fullname?: true
     email?: true
-    phone?: true
-    address?: true
-    person_type?: true
-    identification_type?: true
-    identification?: true
     total_income?: true
     created_at?: true
     updated_at?: true
@@ -27614,14 +30022,9 @@ export namespace Prisma {
   export type DebtorCountAggregateInputType = {
     id?: true
     tenant_id?: true
+    person_id?: true
     user_id?: true
-    fullname?: true
     email?: true
-    phone?: true
-    address?: true
-    person_type?: true
-    identification_type?: true
-    identification?: true
     total_income?: true
     created_at?: true
     updated_at?: true
@@ -27717,15 +30120,10 @@ export namespace Prisma {
   export type DebtorGroupByOutputType = {
     id: string
     tenant_id: string
+    person_id: string
     user_id: string | null
-    fullname: string
     email: string
-    phone: string | null
-    address: string | null
-    person_type: $Enums.PersonType
-    identification_type: $Enums.IdentificationType | null
-    identification: string | null
-    total_income: number | null
+    total_income: number
     created_at: Date
     updated_at: Date
     _count: DebtorCountAggregateOutputType | null
@@ -27752,20 +30150,16 @@ export namespace Prisma {
   export type DebtorSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     tenant_id?: boolean
+    person_id?: boolean
     user_id?: boolean
-    fullname?: boolean
     email?: boolean
-    phone?: boolean
-    address?: boolean
-    person_type?: boolean
-    identification_type?: boolean
-    identification?: boolean
     total_income?: boolean
     created_at?: boolean
     updated_at?: boolean
-    collection_cases?: boolean | Debtor$collection_casesArgs<ExtArgs>
     tenant?: boolean | TenantDefaultArgs<ExtArgs>
+    person?: boolean | PersonDefaultArgs<ExtArgs>
     user?: boolean | Debtor$userArgs<ExtArgs>
+    collection_cases?: boolean | Debtor$collection_casesArgs<ExtArgs>
     incomes?: boolean | Debtor$incomesArgs<ExtArgs>
     verdicts?: boolean | Debtor$verdictsArgs<ExtArgs>
     agreements?: boolean | Debtor$agreementsArgs<ExtArgs>
@@ -27776,60 +30170,48 @@ export namespace Prisma {
   export type DebtorSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     tenant_id?: boolean
+    person_id?: boolean
     user_id?: boolean
-    fullname?: boolean
     email?: boolean
-    phone?: boolean
-    address?: boolean
-    person_type?: boolean
-    identification_type?: boolean
-    identification?: boolean
     total_income?: boolean
     created_at?: boolean
     updated_at?: boolean
     tenant?: boolean | TenantDefaultArgs<ExtArgs>
+    person?: boolean | PersonDefaultArgs<ExtArgs>
     user?: boolean | Debtor$userArgs<ExtArgs>
   }, ExtArgs["result"]["debtor"]>
 
   export type DebtorSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     tenant_id?: boolean
+    person_id?: boolean
     user_id?: boolean
-    fullname?: boolean
     email?: boolean
-    phone?: boolean
-    address?: boolean
-    person_type?: boolean
-    identification_type?: boolean
-    identification?: boolean
     total_income?: boolean
     created_at?: boolean
     updated_at?: boolean
     tenant?: boolean | TenantDefaultArgs<ExtArgs>
+    person?: boolean | PersonDefaultArgs<ExtArgs>
     user?: boolean | Debtor$userArgs<ExtArgs>
   }, ExtArgs["result"]["debtor"]>
 
   export type DebtorSelectScalar = {
     id?: boolean
     tenant_id?: boolean
+    person_id?: boolean
     user_id?: boolean
-    fullname?: boolean
     email?: boolean
-    phone?: boolean
-    address?: boolean
-    person_type?: boolean
-    identification_type?: boolean
-    identification?: boolean
     total_income?: boolean
     created_at?: boolean
     updated_at?: boolean
   }
 
-  export type DebtorOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenant_id" | "user_id" | "fullname" | "email" | "phone" | "address" | "person_type" | "identification_type" | "identification" | "total_income" | "created_at" | "updated_at", ExtArgs["result"]["debtor"]>
+  export type DebtorOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenant_id" | "person_id" | "user_id" | "email" | "total_income" | "created_at" | "updated_at", ExtArgs["result"]["debtor"]>
   export type DebtorInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    collection_cases?: boolean | Debtor$collection_casesArgs<ExtArgs>
     tenant?: boolean | TenantDefaultArgs<ExtArgs>
+    person?: boolean | PersonDefaultArgs<ExtArgs>
     user?: boolean | Debtor$userArgs<ExtArgs>
+    collection_cases?: boolean | Debtor$collection_casesArgs<ExtArgs>
     incomes?: boolean | Debtor$incomesArgs<ExtArgs>
     verdicts?: boolean | Debtor$verdictsArgs<ExtArgs>
     agreements?: boolean | Debtor$agreementsArgs<ExtArgs>
@@ -27838,19 +30220,22 @@ export namespace Prisma {
   }
   export type DebtorIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     tenant?: boolean | TenantDefaultArgs<ExtArgs>
+    person?: boolean | PersonDefaultArgs<ExtArgs>
     user?: boolean | Debtor$userArgs<ExtArgs>
   }
   export type DebtorIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     tenant?: boolean | TenantDefaultArgs<ExtArgs>
+    person?: boolean | PersonDefaultArgs<ExtArgs>
     user?: boolean | Debtor$userArgs<ExtArgs>
   }
 
   export type $DebtorPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Debtor"
     objects: {
-      collection_cases: Prisma.$CollectionCasePayload<ExtArgs>[]
       tenant: Prisma.$TenantPayload<ExtArgs>
+      person: Prisma.$PersonPayload<ExtArgs>
       user: Prisma.$UserPayload<ExtArgs> | null
+      collection_cases: Prisma.$CollectionCasePayload<ExtArgs>[]
       incomes: Prisma.$DebtorIncomePayload<ExtArgs>[]
       verdicts: Prisma.$VerdictPayload<ExtArgs>[]
       agreements: Prisma.$AgreementPayload<ExtArgs>[]
@@ -27859,15 +30244,10 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       tenant_id: string
+      person_id: string
       user_id: string | null
-      fullname: string
       email: string
-      phone: string | null
-      address: string | null
-      person_type: $Enums.PersonType
-      identification_type: $Enums.IdentificationType | null
-      identification: string | null
-      total_income: number | null
+      total_income: number
       created_at: Date
       updated_at: Date
     }, ExtArgs["result"]["debtor"]>
@@ -28264,9 +30644,10 @@ export namespace Prisma {
    */
   export interface Prisma__DebtorClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    collection_cases<T extends Debtor$collection_casesArgs<ExtArgs> = {}>(args?: Subset<T, Debtor$collection_casesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CollectionCasePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     tenant<T extends TenantDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TenantDefaultArgs<ExtArgs>>): Prisma__TenantClient<$Result.GetResult<Prisma.$TenantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    person<T extends PersonDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PersonDefaultArgs<ExtArgs>>): Prisma__PersonClient<$Result.GetResult<Prisma.$PersonPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     user<T extends Debtor$userArgs<ExtArgs> = {}>(args?: Subset<T, Debtor$userArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    collection_cases<T extends Debtor$collection_casesArgs<ExtArgs> = {}>(args?: Subset<T, Debtor$collection_casesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CollectionCasePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     incomes<T extends Debtor$incomesArgs<ExtArgs> = {}>(args?: Subset<T, Debtor$incomesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DebtorIncomePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     verdicts<T extends Debtor$verdictsArgs<ExtArgs> = {}>(args?: Subset<T, Debtor$verdictsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VerdictPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     agreements<T extends Debtor$agreementsArgs<ExtArgs> = {}>(args?: Subset<T, Debtor$agreementsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgreementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -28302,14 +30683,9 @@ export namespace Prisma {
   interface DebtorFieldRefs {
     readonly id: FieldRef<"Debtor", 'String'>
     readonly tenant_id: FieldRef<"Debtor", 'String'>
+    readonly person_id: FieldRef<"Debtor", 'String'>
     readonly user_id: FieldRef<"Debtor", 'String'>
-    readonly fullname: FieldRef<"Debtor", 'String'>
     readonly email: FieldRef<"Debtor", 'String'>
-    readonly phone: FieldRef<"Debtor", 'String'>
-    readonly address: FieldRef<"Debtor", 'String'>
-    readonly person_type: FieldRef<"Debtor", 'PersonType'>
-    readonly identification_type: FieldRef<"Debtor", 'IdentificationType'>
-    readonly identification: FieldRef<"Debtor", 'String'>
     readonly total_income: FieldRef<"Debtor", 'Float'>
     readonly created_at: FieldRef<"Debtor", 'DateTime'>
     readonly updated_at: FieldRef<"Debtor", 'DateTime'>
@@ -28709,6 +31085,25 @@ export namespace Prisma {
   }
 
   /**
+   * Debtor.user
+   */
+  export type Debtor$userArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
    * Debtor.collection_cases
    */
   export type Debtor$collection_casesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -28730,25 +31125,6 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: CollectionCaseScalarFieldEnum | CollectionCaseScalarFieldEnum[]
-  }
-
-  /**
-   * Debtor.user
-   */
-  export type Debtor$userArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the User
-     */
-    select?: UserSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the User
-     */
-    omit?: UserOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserInclude<ExtArgs> | null
-    where?: UserWhereInput
   }
 
   /**
@@ -39325,6 +41701,31 @@ export namespace Prisma {
   export type TenantScalarFieldEnum = (typeof TenantScalarFieldEnum)[keyof typeof TenantScalarFieldEnum]
 
 
+  export const UserScalarFieldEnum: {
+    id: 'id',
+    email: 'email',
+    password_hash: 'password_hash',
+    fullname: 'fullname',
+    phone: 'phone',
+    is_active: 'is_active',
+    created_at: 'created_at',
+    updated_at: 'updated_at'
+  };
+
+  export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+  export const MembershipScalarFieldEnum: {
+    id: 'id',
+    user_id: 'user_id',
+    tenant_id: 'tenant_id',
+    role: 'role',
+    created_at: 'created_at'
+  };
+
+  export type MembershipScalarFieldEnum = (typeof MembershipScalarFieldEnum)[keyof typeof MembershipScalarFieldEnum]
+
+
   export const TenantInvitationScalarFieldEnum: {
     id: 'id',
     tenant_id: 'tenant_id',
@@ -39342,20 +41743,22 @@ export namespace Prisma {
   export type TenantInvitationScalarFieldEnum = (typeof TenantInvitationScalarFieldEnum)[keyof typeof TenantInvitationScalarFieldEnum]
 
 
-  export const UserScalarFieldEnum: {
+  export const PersonScalarFieldEnum: {
     id: 'id',
+    person_type: 'person_type',
+    identification_type: 'identification_type',
+    identification: 'identification',
+    first_name: 'first_name',
+    last_name: 'last_name',
+    business_name: 'business_name',
     email: 'email',
-    password_hash: 'password_hash',
-    fullname: 'fullname',
     phone: 'phone',
-    tenant_id: 'tenant_id',
-    role: 'role',
-    is_active: 'is_active',
+    address: 'address',
     created_at: 'created_at',
     updated_at: 'updated_at'
   };
 
-  export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+  export type PersonScalarFieldEnum = (typeof PersonScalarFieldEnum)[keyof typeof PersonScalarFieldEnum]
 
 
   export const ParameterScalarFieldEnum: {
@@ -39632,14 +42035,9 @@ export namespace Prisma {
   export const DebtorScalarFieldEnum: {
     id: 'id',
     tenant_id: 'tenant_id',
+    person_id: 'person_id',
     user_id: 'user_id',
-    fullname: 'fullname',
     email: 'email',
-    phone: 'phone',
-    address: 'address',
-    person_type: 'person_type',
-    identification_type: 'identification_type',
-    identification: 'identification',
     total_income: 'total_income',
     created_at: 'created_at',
     updated_at: 'updated_at'
@@ -39856,16 +42254,44 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'roleEnum'
+   * Reference to a field of type 'UserRole'
    */
-  export type EnumroleEnumFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'roleEnum'>
+  export type EnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole'>
     
 
 
   /**
-   * Reference to a field of type 'roleEnum[]'
+   * Reference to a field of type 'UserRole[]'
    */
-  export type ListEnumroleEnumFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'roleEnum[]'>
+  export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'PersonType'
+   */
+  export type EnumPersonTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PersonType'>
+    
+
+
+  /**
+   * Reference to a field of type 'PersonType[]'
+   */
+  export type ListEnumPersonTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PersonType[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'IdentificationType'
+   */
+  export type EnumIdentificationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'IdentificationType'>
+    
+
+
+  /**
+   * Reference to a field of type 'IdentificationType[]'
+   */
+  export type ListEnumIdentificationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'IdentificationType[]'>
     
 
 
@@ -40024,34 +42450,6 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'PersonType'
-   */
-  export type EnumPersonTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PersonType'>
-    
-
-
-  /**
-   * Reference to a field of type 'PersonType[]'
-   */
-  export type ListEnumPersonTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PersonType[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'IdentificationType'
-   */
-  export type EnumIdentificationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'IdentificationType'>
-    
-
-
-  /**
-   * Reference to a field of type 'IdentificationType[]'
-   */
-  export type ListEnumIdentificationTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'IdentificationType[]'>
-    
-
-
-  /**
    * Reference to a field of type 'AgreementStatus'
    */
   export type EnumAgreementStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AgreementStatus'>
@@ -40137,12 +42535,12 @@ export namespace Prisma {
     debtors?: DebtorListRelationFilter
     bailiffs?: BailiffListRelationFilter
     verdicts?: VerdictListRelationFilter
-    users?: UserListRelationFilter
     chat_rooms?: ChatRoomListRelationFilter
     invitations?: TenantInvitationListRelationFilter
     employees?: EmployeeListRelationFilter
     agreements?: AgreementListRelationFilter
     debts?: DebtListRelationFilter
+    memberships?: MembershipListRelationFilter
   }
 
   export type TenantOrderByWithRelationInput = {
@@ -40169,12 +42567,12 @@ export namespace Prisma {
     debtors?: DebtorOrderByRelationAggregateInput
     bailiffs?: BailiffOrderByRelationAggregateInput
     verdicts?: VerdictOrderByRelationAggregateInput
-    users?: UserOrderByRelationAggregateInput
     chat_rooms?: ChatRoomOrderByRelationAggregateInput
     invitations?: TenantInvitationOrderByRelationAggregateInput
     employees?: EmployeeOrderByRelationAggregateInput
     agreements?: AgreementOrderByRelationAggregateInput
     debts?: DebtOrderByRelationAggregateInput
+    memberships?: MembershipOrderByRelationAggregateInput
   }
 
   export type TenantWhereUniqueInput = Prisma.AtLeast<{
@@ -40204,12 +42602,12 @@ export namespace Prisma {
     debtors?: DebtorListRelationFilter
     bailiffs?: BailiffListRelationFilter
     verdicts?: VerdictListRelationFilter
-    users?: UserListRelationFilter
     chat_rooms?: ChatRoomListRelationFilter
     invitations?: TenantInvitationListRelationFilter
     employees?: EmployeeListRelationFilter
     agreements?: AgreementListRelationFilter
     debts?: DebtListRelationFilter
+    memberships?: MembershipListRelationFilter
   }, "id" | "code" | "subdomain">
 
   export type TenantOrderByWithAggregationInput = {
@@ -40262,6 +42660,144 @@ export namespace Prisma {
     updated_at?: DateTimeWithAggregatesFilter<"Tenant"> | Date | string
   }
 
+  export type UserWhereInput = {
+    AND?: UserWhereInput | UserWhereInput[]
+    OR?: UserWhereInput[]
+    NOT?: UserWhereInput | UserWhereInput[]
+    id?: StringFilter<"User"> | string
+    email?: StringFilter<"User"> | string
+    password_hash?: StringNullableFilter<"User"> | string | null
+    fullname?: StringNullableFilter<"User"> | string | null
+    phone?: StringNullableFilter<"User"> | string | null
+    is_active?: BoolFilter<"User"> | boolean
+    created_at?: DateTimeFilter<"User"> | Date | string
+    updated_at?: DateTimeFilter<"User"> | Date | string
+    memberships?: MembershipListRelationFilter
+    debtors?: DebtorListRelationFilter
+    bailiffs?: BailiffListRelationFilter
+    messages?: ChatMessageListRelationFilter
+  }
+
+  export type UserOrderByWithRelationInput = {
+    id?: SortOrder
+    email?: SortOrder
+    password_hash?: SortOrderInput | SortOrder
+    fullname?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
+    is_active?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+    memberships?: MembershipOrderByRelationAggregateInput
+    debtors?: DebtorOrderByRelationAggregateInput
+    bailiffs?: BailiffOrderByRelationAggregateInput
+    messages?: ChatMessageOrderByRelationAggregateInput
+  }
+
+  export type UserWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    email?: string
+    AND?: UserWhereInput | UserWhereInput[]
+    OR?: UserWhereInput[]
+    NOT?: UserWhereInput | UserWhereInput[]
+    password_hash?: StringNullableFilter<"User"> | string | null
+    fullname?: StringNullableFilter<"User"> | string | null
+    phone?: StringNullableFilter<"User"> | string | null
+    is_active?: BoolFilter<"User"> | boolean
+    created_at?: DateTimeFilter<"User"> | Date | string
+    updated_at?: DateTimeFilter<"User"> | Date | string
+    memberships?: MembershipListRelationFilter
+    debtors?: DebtorListRelationFilter
+    bailiffs?: BailiffListRelationFilter
+    messages?: ChatMessageListRelationFilter
+  }, "id" | "email">
+
+  export type UserOrderByWithAggregationInput = {
+    id?: SortOrder
+    email?: SortOrder
+    password_hash?: SortOrderInput | SortOrder
+    fullname?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
+    is_active?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+    _count?: UserCountOrderByAggregateInput
+    _max?: UserMaxOrderByAggregateInput
+    _min?: UserMinOrderByAggregateInput
+  }
+
+  export type UserScalarWhereWithAggregatesInput = {
+    AND?: UserScalarWhereWithAggregatesInput | UserScalarWhereWithAggregatesInput[]
+    OR?: UserScalarWhereWithAggregatesInput[]
+    NOT?: UserScalarWhereWithAggregatesInput | UserScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"User"> | string
+    email?: StringWithAggregatesFilter<"User"> | string
+    password_hash?: StringNullableWithAggregatesFilter<"User"> | string | null
+    fullname?: StringNullableWithAggregatesFilter<"User"> | string | null
+    phone?: StringNullableWithAggregatesFilter<"User"> | string | null
+    is_active?: BoolWithAggregatesFilter<"User"> | boolean
+    created_at?: DateTimeWithAggregatesFilter<"User"> | Date | string
+    updated_at?: DateTimeWithAggregatesFilter<"User"> | Date | string
+  }
+
+  export type MembershipWhereInput = {
+    AND?: MembershipWhereInput | MembershipWhereInput[]
+    OR?: MembershipWhereInput[]
+    NOT?: MembershipWhereInput | MembershipWhereInput[]
+    id?: StringFilter<"Membership"> | string
+    user_id?: StringFilter<"Membership"> | string
+    tenant_id?: StringFilter<"Membership"> | string
+    role?: EnumUserRoleFilter<"Membership"> | $Enums.UserRole
+    created_at?: DateTimeFilter<"Membership"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
+  }
+
+  export type MembershipOrderByWithRelationInput = {
+    id?: SortOrder
+    user_id?: SortOrder
+    tenant_id?: SortOrder
+    role?: SortOrder
+    created_at?: SortOrder
+    user?: UserOrderByWithRelationInput
+    tenant?: TenantOrderByWithRelationInput
+  }
+
+  export type MembershipWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    user_id_tenant_id?: MembershipUser_idTenant_idCompoundUniqueInput
+    AND?: MembershipWhereInput | MembershipWhereInput[]
+    OR?: MembershipWhereInput[]
+    NOT?: MembershipWhereInput | MembershipWhereInput[]
+    user_id?: StringFilter<"Membership"> | string
+    tenant_id?: StringFilter<"Membership"> | string
+    role?: EnumUserRoleFilter<"Membership"> | $Enums.UserRole
+    created_at?: DateTimeFilter<"Membership"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
+  }, "id" | "user_id_tenant_id">
+
+  export type MembershipOrderByWithAggregationInput = {
+    id?: SortOrder
+    user_id?: SortOrder
+    tenant_id?: SortOrder
+    role?: SortOrder
+    created_at?: SortOrder
+    _count?: MembershipCountOrderByAggregateInput
+    _max?: MembershipMaxOrderByAggregateInput
+    _min?: MembershipMinOrderByAggregateInput
+  }
+
+  export type MembershipScalarWhereWithAggregatesInput = {
+    AND?: MembershipScalarWhereWithAggregatesInput | MembershipScalarWhereWithAggregatesInput[]
+    OR?: MembershipScalarWhereWithAggregatesInput[]
+    NOT?: MembershipScalarWhereWithAggregatesInput | MembershipScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Membership"> | string
+    user_id?: StringWithAggregatesFilter<"Membership"> | string
+    tenant_id?: StringWithAggregatesFilter<"Membership"> | string
+    role?: EnumUserRoleWithAggregatesFilter<"Membership"> | $Enums.UserRole
+    created_at?: DateTimeWithAggregatesFilter<"Membership"> | Date | string
+  }
+
   export type TenantInvitationWhereInput = {
     AND?: TenantInvitationWhereInput | TenantInvitationWhereInput[]
     OR?: TenantInvitationWhereInput[]
@@ -40271,7 +42807,7 @@ export namespace Prisma {
     email?: StringFilter<"TenantInvitation"> | string
     fullname?: StringNullableFilter<"TenantInvitation"> | string | null
     token?: StringFilter<"TenantInvitation"> | string
-    role?: EnumroleEnumFilter<"TenantInvitation"> | $Enums.roleEnum
+    role?: EnumUserRoleFilter<"TenantInvitation"> | $Enums.UserRole
     debtor_id?: StringNullableFilter<"TenantInvitation"> | string | null
     created_at?: DateTimeFilter<"TenantInvitation"> | Date | string
     expires_at?: DateTimeFilter<"TenantInvitation"> | Date | string
@@ -40304,7 +42840,7 @@ export namespace Prisma {
     tenant_id?: StringFilter<"TenantInvitation"> | string
     email?: StringFilter<"TenantInvitation"> | string
     fullname?: StringNullableFilter<"TenantInvitation"> | string | null
-    role?: EnumroleEnumFilter<"TenantInvitation"> | $Enums.roleEnum
+    role?: EnumUserRoleFilter<"TenantInvitation"> | $Enums.UserRole
     debtor_id?: StringNullableFilter<"TenantInvitation"> | string | null
     created_at?: DateTimeFilter<"TenantInvitation"> | Date | string
     expires_at?: DateTimeFilter<"TenantInvitation"> | Date | string
@@ -40339,7 +42875,7 @@ export namespace Prisma {
     email?: StringWithAggregatesFilter<"TenantInvitation"> | string
     fullname?: StringNullableWithAggregatesFilter<"TenantInvitation"> | string | null
     token?: StringWithAggregatesFilter<"TenantInvitation"> | string
-    role?: EnumroleEnumWithAggregatesFilter<"TenantInvitation"> | $Enums.roleEnum
+    role?: EnumUserRoleWithAggregatesFilter<"TenantInvitation"> | $Enums.UserRole
     debtor_id?: StringNullableWithAggregatesFilter<"TenantInvitation"> | string | null
     created_at?: DateTimeWithAggregatesFilter<"TenantInvitation"> | Date | string
     expires_at?: DateTimeWithAggregatesFilter<"TenantInvitation"> | Date | string
@@ -40347,93 +42883,94 @@ export namespace Prisma {
     used_at?: DateTimeNullableWithAggregatesFilter<"TenantInvitation"> | Date | string | null
   }
 
-  export type UserWhereInput = {
-    AND?: UserWhereInput | UserWhereInput[]
-    OR?: UserWhereInput[]
-    NOT?: UserWhereInput | UserWhereInput[]
-    id?: StringFilter<"User"> | string
-    email?: StringFilter<"User"> | string
-    password_hash?: StringNullableFilter<"User"> | string | null
-    fullname?: StringNullableFilter<"User"> | string | null
-    phone?: StringNullableFilter<"User"> | string | null
-    tenant_id?: StringFilter<"User"> | string
-    role?: EnumroleEnumFilter<"User"> | $Enums.roleEnum
-    is_active?: BoolFilter<"User"> | boolean
-    created_at?: DateTimeFilter<"User"> | Date | string
-    updated_at?: DateTimeFilter<"User"> | Date | string
-    tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
+  export type PersonWhereInput = {
+    AND?: PersonWhereInput | PersonWhereInput[]
+    OR?: PersonWhereInput[]
+    NOT?: PersonWhereInput | PersonWhereInput[]
+    id?: StringFilter<"Person"> | string
+    person_type?: EnumPersonTypeFilter<"Person"> | $Enums.PersonType
+    identification_type?: EnumIdentificationTypeFilter<"Person"> | $Enums.IdentificationType
+    identification?: StringFilter<"Person"> | string
+    first_name?: StringNullableFilter<"Person"> | string | null
+    last_name?: StringNullableFilter<"Person"> | string | null
+    business_name?: StringNullableFilter<"Person"> | string | null
+    email?: StringNullableFilter<"Person"> | string | null
+    phone?: StringNullableFilter<"Person"> | string | null
+    address?: StringNullableFilter<"Person"> | string | null
+    created_at?: DateTimeFilter<"Person"> | Date | string
+    updated_at?: DateTimeFilter<"Person"> | Date | string
     debtors?: DebtorListRelationFilter
-    bailiffs?: BailiffListRelationFilter
-    messages?: ChatMessageListRelationFilter
   }
 
-  export type UserOrderByWithRelationInput = {
+  export type PersonOrderByWithRelationInput = {
     id?: SortOrder
-    email?: SortOrder
-    password_hash?: SortOrderInput | SortOrder
-    fullname?: SortOrderInput | SortOrder
+    person_type?: SortOrder
+    identification_type?: SortOrder
+    identification?: SortOrder
+    first_name?: SortOrderInput | SortOrder
+    last_name?: SortOrderInput | SortOrder
+    business_name?: SortOrderInput | SortOrder
+    email?: SortOrderInput | SortOrder
     phone?: SortOrderInput | SortOrder
-    tenant_id?: SortOrder
-    role?: SortOrder
-    is_active?: SortOrder
+    address?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
-    tenant?: TenantOrderByWithRelationInput
     debtors?: DebtorOrderByRelationAggregateInput
-    bailiffs?: BailiffOrderByRelationAggregateInput
-    messages?: ChatMessageOrderByRelationAggregateInput
   }
 
-  export type UserWhereUniqueInput = Prisma.AtLeast<{
+  export type PersonWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    AND?: UserWhereInput | UserWhereInput[]
-    OR?: UserWhereInput[]
-    NOT?: UserWhereInput | UserWhereInput[]
-    email?: StringFilter<"User"> | string
-    password_hash?: StringNullableFilter<"User"> | string | null
-    fullname?: StringNullableFilter<"User"> | string | null
-    phone?: StringNullableFilter<"User"> | string | null
-    tenant_id?: StringFilter<"User"> | string
-    role?: EnumroleEnumFilter<"User"> | $Enums.roleEnum
-    is_active?: BoolFilter<"User"> | boolean
-    created_at?: DateTimeFilter<"User"> | Date | string
-    updated_at?: DateTimeFilter<"User"> | Date | string
-    tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
+    identification?: string
+    email?: string
+    AND?: PersonWhereInput | PersonWhereInput[]
+    OR?: PersonWhereInput[]
+    NOT?: PersonWhereInput | PersonWhereInput[]
+    person_type?: EnumPersonTypeFilter<"Person"> | $Enums.PersonType
+    identification_type?: EnumIdentificationTypeFilter<"Person"> | $Enums.IdentificationType
+    first_name?: StringNullableFilter<"Person"> | string | null
+    last_name?: StringNullableFilter<"Person"> | string | null
+    business_name?: StringNullableFilter<"Person"> | string | null
+    phone?: StringNullableFilter<"Person"> | string | null
+    address?: StringNullableFilter<"Person"> | string | null
+    created_at?: DateTimeFilter<"Person"> | Date | string
+    updated_at?: DateTimeFilter<"Person"> | Date | string
     debtors?: DebtorListRelationFilter
-    bailiffs?: BailiffListRelationFilter
-    messages?: ChatMessageListRelationFilter
-  }, "id">
+  }, "id" | "identification" | "email">
 
-  export type UserOrderByWithAggregationInput = {
+  export type PersonOrderByWithAggregationInput = {
     id?: SortOrder
-    email?: SortOrder
-    password_hash?: SortOrderInput | SortOrder
-    fullname?: SortOrderInput | SortOrder
+    person_type?: SortOrder
+    identification_type?: SortOrder
+    identification?: SortOrder
+    first_name?: SortOrderInput | SortOrder
+    last_name?: SortOrderInput | SortOrder
+    business_name?: SortOrderInput | SortOrder
+    email?: SortOrderInput | SortOrder
     phone?: SortOrderInput | SortOrder
-    tenant_id?: SortOrder
-    role?: SortOrder
-    is_active?: SortOrder
+    address?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
-    _count?: UserCountOrderByAggregateInput
-    _max?: UserMaxOrderByAggregateInput
-    _min?: UserMinOrderByAggregateInput
+    _count?: PersonCountOrderByAggregateInput
+    _max?: PersonMaxOrderByAggregateInput
+    _min?: PersonMinOrderByAggregateInput
   }
 
-  export type UserScalarWhereWithAggregatesInput = {
-    AND?: UserScalarWhereWithAggregatesInput | UserScalarWhereWithAggregatesInput[]
-    OR?: UserScalarWhereWithAggregatesInput[]
-    NOT?: UserScalarWhereWithAggregatesInput | UserScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"User"> | string
-    email?: StringWithAggregatesFilter<"User"> | string
-    password_hash?: StringNullableWithAggregatesFilter<"User"> | string | null
-    fullname?: StringNullableWithAggregatesFilter<"User"> | string | null
-    phone?: StringNullableWithAggregatesFilter<"User"> | string | null
-    tenant_id?: StringWithAggregatesFilter<"User"> | string
-    role?: EnumroleEnumWithAggregatesFilter<"User"> | $Enums.roleEnum
-    is_active?: BoolWithAggregatesFilter<"User"> | boolean
-    created_at?: DateTimeWithAggregatesFilter<"User"> | Date | string
-    updated_at?: DateTimeWithAggregatesFilter<"User"> | Date | string
+  export type PersonScalarWhereWithAggregatesInput = {
+    AND?: PersonScalarWhereWithAggregatesInput | PersonScalarWhereWithAggregatesInput[]
+    OR?: PersonScalarWhereWithAggregatesInput[]
+    NOT?: PersonScalarWhereWithAggregatesInput | PersonScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Person"> | string
+    person_type?: EnumPersonTypeWithAggregatesFilter<"Person"> | $Enums.PersonType
+    identification_type?: EnumIdentificationTypeWithAggregatesFilter<"Person"> | $Enums.IdentificationType
+    identification?: StringWithAggregatesFilter<"Person"> | string
+    first_name?: StringNullableWithAggregatesFilter<"Person"> | string | null
+    last_name?: StringNullableWithAggregatesFilter<"Person"> | string | null
+    business_name?: StringNullableWithAggregatesFilter<"Person"> | string | null
+    email?: StringNullableWithAggregatesFilter<"Person"> | string | null
+    phone?: StringNullableWithAggregatesFilter<"Person"> | string | null
+    address?: StringNullableWithAggregatesFilter<"Person"> | string | null
+    created_at?: DateTimeWithAggregatesFilter<"Person"> | Date | string
+    updated_at?: DateTimeWithAggregatesFilter<"Person"> | Date | string
   }
 
   export type ParameterWhereInput = {
@@ -41882,20 +44419,16 @@ export namespace Prisma {
     NOT?: DebtorWhereInput | DebtorWhereInput[]
     id?: StringFilter<"Debtor"> | string
     tenant_id?: StringFilter<"Debtor"> | string
+    person_id?: StringFilter<"Debtor"> | string
     user_id?: StringNullableFilter<"Debtor"> | string | null
-    fullname?: StringFilter<"Debtor"> | string
     email?: StringFilter<"Debtor"> | string
-    phone?: StringNullableFilter<"Debtor"> | string | null
-    address?: StringNullableFilter<"Debtor"> | string | null
-    person_type?: EnumPersonTypeFilter<"Debtor"> | $Enums.PersonType
-    identification_type?: EnumIdentificationTypeNullableFilter<"Debtor"> | $Enums.IdentificationType | null
-    identification?: StringNullableFilter<"Debtor"> | string | null
-    total_income?: FloatNullableFilter<"Debtor"> | number | null
+    total_income?: FloatFilter<"Debtor"> | number
     created_at?: DateTimeFilter<"Debtor"> | Date | string
     updated_at?: DateTimeFilter<"Debtor"> | Date | string
-    collection_cases?: CollectionCaseListRelationFilter
     tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
+    person?: XOR<PersonScalarRelationFilter, PersonWhereInput>
     user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    collection_cases?: CollectionCaseListRelationFilter
     incomes?: DebtorIncomeListRelationFilter
     verdicts?: VerdictListRelationFilter
     agreements?: AgreementListRelationFilter
@@ -41905,20 +44438,16 @@ export namespace Prisma {
   export type DebtorOrderByWithRelationInput = {
     id?: SortOrder
     tenant_id?: SortOrder
+    person_id?: SortOrder
     user_id?: SortOrderInput | SortOrder
-    fullname?: SortOrder
     email?: SortOrder
-    phone?: SortOrderInput | SortOrder
-    address?: SortOrderInput | SortOrder
-    person_type?: SortOrder
-    identification_type?: SortOrderInput | SortOrder
-    identification?: SortOrderInput | SortOrder
-    total_income?: SortOrderInput | SortOrder
+    total_income?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
-    collection_cases?: CollectionCaseOrderByRelationAggregateInput
     tenant?: TenantOrderByWithRelationInput
+    person?: PersonOrderByWithRelationInput
     user?: UserOrderByWithRelationInput
+    collection_cases?: CollectionCaseOrderByRelationAggregateInput
     incomes?: DebtorIncomeOrderByRelationAggregateInput
     verdicts?: VerdictOrderByRelationAggregateInput
     agreements?: AgreementOrderByRelationAggregateInput
@@ -41928,43 +44457,33 @@ export namespace Prisma {
   export type DebtorWhereUniqueInput = Prisma.AtLeast<{
     id?: string
     tenant_id_email?: DebtorTenant_idEmailCompoundUniqueInput
-    tenant_id_identification?: DebtorTenant_idIdentificationCompoundUniqueInput
     AND?: DebtorWhereInput | DebtorWhereInput[]
     OR?: DebtorWhereInput[]
     NOT?: DebtorWhereInput | DebtorWhereInput[]
     tenant_id?: StringFilter<"Debtor"> | string
+    person_id?: StringFilter<"Debtor"> | string
     user_id?: StringNullableFilter<"Debtor"> | string | null
-    fullname?: StringFilter<"Debtor"> | string
     email?: StringFilter<"Debtor"> | string
-    phone?: StringNullableFilter<"Debtor"> | string | null
-    address?: StringNullableFilter<"Debtor"> | string | null
-    person_type?: EnumPersonTypeFilter<"Debtor"> | $Enums.PersonType
-    identification_type?: EnumIdentificationTypeNullableFilter<"Debtor"> | $Enums.IdentificationType | null
-    identification?: StringNullableFilter<"Debtor"> | string | null
-    total_income?: FloatNullableFilter<"Debtor"> | number | null
+    total_income?: FloatFilter<"Debtor"> | number
     created_at?: DateTimeFilter<"Debtor"> | Date | string
     updated_at?: DateTimeFilter<"Debtor"> | Date | string
-    collection_cases?: CollectionCaseListRelationFilter
     tenant?: XOR<TenantScalarRelationFilter, TenantWhereInput>
+    person?: XOR<PersonScalarRelationFilter, PersonWhereInput>
     user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    collection_cases?: CollectionCaseListRelationFilter
     incomes?: DebtorIncomeListRelationFilter
     verdicts?: VerdictListRelationFilter
     agreements?: AgreementListRelationFilter
     debts?: DebtListRelationFilter
-  }, "id" | "tenant_id_email" | "tenant_id_identification">
+  }, "id" | "tenant_id_email">
 
   export type DebtorOrderByWithAggregationInput = {
     id?: SortOrder
     tenant_id?: SortOrder
+    person_id?: SortOrder
     user_id?: SortOrderInput | SortOrder
-    fullname?: SortOrder
     email?: SortOrder
-    phone?: SortOrderInput | SortOrder
-    address?: SortOrderInput | SortOrder
-    person_type?: SortOrder
-    identification_type?: SortOrderInput | SortOrder
-    identification?: SortOrderInput | SortOrder
-    total_income?: SortOrderInput | SortOrder
+    total_income?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     _count?: DebtorCountOrderByAggregateInput
@@ -41980,15 +44499,10 @@ export namespace Prisma {
     NOT?: DebtorScalarWhereWithAggregatesInput | DebtorScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"Debtor"> | string
     tenant_id?: StringWithAggregatesFilter<"Debtor"> | string
+    person_id?: StringWithAggregatesFilter<"Debtor"> | string
     user_id?: StringNullableWithAggregatesFilter<"Debtor"> | string | null
-    fullname?: StringWithAggregatesFilter<"Debtor"> | string
     email?: StringWithAggregatesFilter<"Debtor"> | string
-    phone?: StringNullableWithAggregatesFilter<"Debtor"> | string | null
-    address?: StringNullableWithAggregatesFilter<"Debtor"> | string | null
-    person_type?: EnumPersonTypeWithAggregatesFilter<"Debtor"> | $Enums.PersonType
-    identification_type?: EnumIdentificationTypeNullableWithAggregatesFilter<"Debtor"> | $Enums.IdentificationType | null
-    identification?: StringNullableWithAggregatesFilter<"Debtor"> | string | null
-    total_income?: FloatNullableWithAggregatesFilter<"Debtor"> | number | null
+    total_income?: FloatWithAggregatesFilter<"Debtor"> | number
     created_at?: DateTimeWithAggregatesFilter<"Debtor"> | Date | string
     updated_at?: DateTimeWithAggregatesFilter<"Debtor"> | Date | string
   }
@@ -42711,12 +45225,12 @@ export namespace Prisma {
     debtors?: DebtorCreateNestedManyWithoutTenantInput
     bailiffs?: BailiffCreateNestedManyWithoutTenantInput
     verdicts?: VerdictCreateNestedManyWithoutTenantInput
-    users?: UserCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
     invitations?: TenantInvitationCreateNestedManyWithoutTenantInput
     employees?: EmployeeCreateNestedManyWithoutTenantInput
     agreements?: AgreementCreateNestedManyWithoutTenantInput
     debts?: DebtCreateNestedManyWithoutTenantInput
+    memberships?: MembershipCreateNestedManyWithoutTenantInput
   }
 
   export type TenantUncheckedCreateInput = {
@@ -42743,12 +45257,12 @@ export namespace Prisma {
     debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
     bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
     verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
-    users?: UserUncheckedCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
     invitations?: TenantInvitationUncheckedCreateNestedManyWithoutTenantInput
     employees?: EmployeeUncheckedCreateNestedManyWithoutTenantInput
     agreements?: AgreementUncheckedCreateNestedManyWithoutTenantInput
     debts?: DebtUncheckedCreateNestedManyWithoutTenantInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutTenantInput
   }
 
   export type TenantUpdateInput = {
@@ -42775,12 +45289,12 @@ export namespace Prisma {
     debtors?: DebtorUpdateManyWithoutTenantNestedInput
     bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUpdateManyWithoutTenantNestedInput
-    users?: UserUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUpdateManyWithoutTenantNestedInput
     employees?: EmployeeUpdateManyWithoutTenantNestedInput
     agreements?: AgreementUpdateManyWithoutTenantNestedInput
     debts?: DebtUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUpdateManyWithoutTenantNestedInput
   }
 
   export type TenantUncheckedUpdateInput = {
@@ -42807,12 +45321,12 @@ export namespace Prisma {
     debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
     bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
-    users?: UserUncheckedUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUncheckedUpdateManyWithoutTenantNestedInput
     employees?: EmployeeUncheckedUpdateManyWithoutTenantNestedInput
     agreements?: AgreementUncheckedUpdateManyWithoutTenantNestedInput
     debts?: DebtUncheckedUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutTenantNestedInput
   }
 
   export type TenantCreateManyInput = {
@@ -42878,12 +45392,159 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type UserCreateInput = {
+    id?: string
+    email: string
+    password_hash?: string | null
+    fullname?: string | null
+    phone?: string | null
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutUserInput
+    debtors?: DebtorCreateNestedManyWithoutUserInput
+    bailiffs?: BailiffCreateNestedManyWithoutUserInput
+    messages?: ChatMessageCreateNestedManyWithoutSenderInput
+  }
+
+  export type UserUncheckedCreateInput = {
+    id?: string
+    email: string
+    password_hash?: string | null
+    fullname?: string | null
+    phone?: string | null
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    debtors?: DebtorUncheckedCreateNestedManyWithoutUserInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutUserInput
+    messages?: ChatMessageUncheckedCreateNestedManyWithoutSenderInput
+  }
+
+  export type UserUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    fullname?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
+    debtors?: DebtorUpdateManyWithoutUserNestedInput
+    bailiffs?: BailiffUpdateManyWithoutUserNestedInput
+    messages?: ChatMessageUpdateManyWithoutSenderNestedInput
+  }
+
+  export type UserUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    fullname?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
+    debtors?: DebtorUncheckedUpdateManyWithoutUserNestedInput
+    bailiffs?: BailiffUncheckedUpdateManyWithoutUserNestedInput
+    messages?: ChatMessageUncheckedUpdateManyWithoutSenderNestedInput
+  }
+
+  export type UserCreateManyInput = {
+    id?: string
+    email: string
+    password_hash?: string | null
+    fullname?: string | null
+    phone?: string | null
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type UserUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    fullname?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    fullname?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipCreateInput = {
+    id?: string
+    role: $Enums.UserRole
+    created_at?: Date | string
+    user: UserCreateNestedOneWithoutMembershipsInput
+    tenant: TenantCreateNestedOneWithoutMembershipsInput
+  }
+
+  export type MembershipUncheckedCreateInput = {
+    id?: string
+    user_id: string
+    tenant_id: string
+    role: $Enums.UserRole
+    created_at?: Date | string
+  }
+
+  export type MembershipUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutMembershipsNestedInput
+    tenant?: TenantUpdateOneRequiredWithoutMembershipsNestedInput
+  }
+
+  export type MembershipUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    user_id?: StringFieldUpdateOperationsInput | string
+    tenant_id?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipCreateManyInput = {
+    id?: string
+    user_id: string
+    tenant_id: string
+    role: $Enums.UserRole
+    created_at?: Date | string
+  }
+
+  export type MembershipUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    user_id?: StringFieldUpdateOperationsInput | string
+    tenant_id?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type TenantInvitationCreateInput = {
     id?: string
     email: string
     fullname?: string | null
     token: string
-    role?: $Enums.roleEnum
+    role?: $Enums.UserRole
     debtor_id?: string | null
     created_at?: Date | string
     expires_at: Date | string
@@ -42898,7 +45559,7 @@ export namespace Prisma {
     email: string
     fullname?: string | null
     token: string
-    role?: $Enums.roleEnum
+    role?: $Enums.UserRole
     debtor_id?: string | null
     created_at?: Date | string
     expires_at: Date | string
@@ -42911,7 +45572,7 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     fullname?: NullableStringFieldUpdateOperationsInput | string | null
     token?: StringFieldUpdateOperationsInput | string
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     debtor_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     expires_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -42926,7 +45587,7 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     fullname?: NullableStringFieldUpdateOperationsInput | string | null
     token?: StringFieldUpdateOperationsInput | string
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     debtor_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     expires_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -42940,7 +45601,7 @@ export namespace Prisma {
     email: string
     fullname?: string | null
     token: string
-    role?: $Enums.roleEnum
+    role?: $Enums.UserRole
     debtor_id?: string | null
     created_at?: Date | string
     expires_at: Date | string
@@ -42953,7 +45614,7 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     fullname?: NullableStringFieldUpdateOperationsInput | string | null
     token?: StringFieldUpdateOperationsInput | string
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     debtor_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     expires_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -42967,7 +45628,7 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     fullname?: NullableStringFieldUpdateOperationsInput | string | null
     token?: StringFieldUpdateOperationsInput | string
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     debtor_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     expires_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -42975,104 +45636,111 @@ export namespace Prisma {
     used_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
-  export type UserCreateInput = {
+  export type PersonCreateInput = {
     id?: string
-    email: string
-    password_hash?: string | null
-    fullname?: string | null
+    person_type: $Enums.PersonType
+    identification_type: $Enums.IdentificationType
+    identification: string
+    first_name?: string | null
+    last_name?: string | null
+    business_name?: string | null
+    email?: string | null
     phone?: string | null
-    role?: $Enums.roleEnum
-    is_active?: boolean
+    address?: string | null
     created_at?: Date | string
     updated_at?: Date | string
-    tenant: TenantCreateNestedOneWithoutUsersInput
-    debtors?: DebtorCreateNestedManyWithoutUserInput
-    bailiffs?: BailiffCreateNestedManyWithoutUserInput
-    messages?: ChatMessageCreateNestedManyWithoutSenderInput
+    debtors?: DebtorCreateNestedManyWithoutPersonInput
   }
 
-  export type UserUncheckedCreateInput = {
+  export type PersonUncheckedCreateInput = {
     id?: string
-    email: string
-    password_hash?: string | null
-    fullname?: string | null
+    person_type: $Enums.PersonType
+    identification_type: $Enums.IdentificationType
+    identification: string
+    first_name?: string | null
+    last_name?: string | null
+    business_name?: string | null
+    email?: string | null
     phone?: string | null
-    tenant_id: string
-    role?: $Enums.roleEnum
-    is_active?: boolean
+    address?: string | null
     created_at?: Date | string
     updated_at?: Date | string
-    debtors?: DebtorUncheckedCreateNestedManyWithoutUserInput
-    bailiffs?: BailiffUncheckedCreateNestedManyWithoutUserInput
-    messages?: ChatMessageUncheckedCreateNestedManyWithoutSenderInput
+    debtors?: DebtorUncheckedCreateNestedManyWithoutPersonInput
   }
 
-  export type UserUpdateInput = {
+  export type PersonUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    password_hash?: NullableStringFieldUpdateOperationsInput | string | null
-    fullname?: NullableStringFieldUpdateOperationsInput | string | null
+    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
+    identification_type?: EnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType
+    identification?: StringFieldUpdateOperationsInput | string
+    first_name?: NullableStringFieldUpdateOperationsInput | string | null
+    last_name?: NullableStringFieldUpdateOperationsInput | string | null
+    business_name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
     phone?: NullableStringFieldUpdateOperationsInput | string | null
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
-    is_active?: BoolFieldUpdateOperationsInput | boolean
+    address?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    tenant?: TenantUpdateOneRequiredWithoutUsersNestedInput
-    debtors?: DebtorUpdateManyWithoutUserNestedInput
-    bailiffs?: BailiffUpdateManyWithoutUserNestedInput
-    messages?: ChatMessageUpdateManyWithoutSenderNestedInput
+    debtors?: DebtorUpdateManyWithoutPersonNestedInput
   }
 
-  export type UserUncheckedUpdateInput = {
+  export type PersonUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    password_hash?: NullableStringFieldUpdateOperationsInput | string | null
-    fullname?: NullableStringFieldUpdateOperationsInput | string | null
+    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
+    identification_type?: EnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType
+    identification?: StringFieldUpdateOperationsInput | string
+    first_name?: NullableStringFieldUpdateOperationsInput | string | null
+    last_name?: NullableStringFieldUpdateOperationsInput | string | null
+    business_name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
     phone?: NullableStringFieldUpdateOperationsInput | string | null
-    tenant_id?: StringFieldUpdateOperationsInput | string
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
-    is_active?: BoolFieldUpdateOperationsInput | boolean
+    address?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    debtors?: DebtorUncheckedUpdateManyWithoutUserNestedInput
-    bailiffs?: BailiffUncheckedUpdateManyWithoutUserNestedInput
-    messages?: ChatMessageUncheckedUpdateManyWithoutSenderNestedInput
+    debtors?: DebtorUncheckedUpdateManyWithoutPersonNestedInput
   }
 
-  export type UserCreateManyInput = {
+  export type PersonCreateManyInput = {
     id?: string
-    email: string
-    password_hash?: string | null
-    fullname?: string | null
+    person_type: $Enums.PersonType
+    identification_type: $Enums.IdentificationType
+    identification: string
+    first_name?: string | null
+    last_name?: string | null
+    business_name?: string | null
+    email?: string | null
     phone?: string | null
-    tenant_id: string
-    role?: $Enums.roleEnum
-    is_active?: boolean
+    address?: string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
 
-  export type UserUpdateManyMutationInput = {
+  export type PersonUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    password_hash?: NullableStringFieldUpdateOperationsInput | string | null
-    fullname?: NullableStringFieldUpdateOperationsInput | string | null
+    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
+    identification_type?: EnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType
+    identification?: StringFieldUpdateOperationsInput | string
+    first_name?: NullableStringFieldUpdateOperationsInput | string | null
+    last_name?: NullableStringFieldUpdateOperationsInput | string | null
+    business_name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
     phone?: NullableStringFieldUpdateOperationsInput | string | null
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
-    is_active?: BoolFieldUpdateOperationsInput | boolean
+    address?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type UserUncheckedUpdateManyInput = {
+  export type PersonUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    password_hash?: NullableStringFieldUpdateOperationsInput | string | null
-    fullname?: NullableStringFieldUpdateOperationsInput | string | null
+    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
+    identification_type?: EnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType
+    identification?: StringFieldUpdateOperationsInput | string
+    first_name?: NullableStringFieldUpdateOperationsInput | string | null
+    last_name?: NullableStringFieldUpdateOperationsInput | string | null
+    business_name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
     phone?: NullableStringFieldUpdateOperationsInput | string | null
-    tenant_id?: StringFieldUpdateOperationsInput | string
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
-    is_active?: BoolFieldUpdateOperationsInput | boolean
+    address?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -44680,19 +47348,14 @@ export namespace Prisma {
 
   export type DebtorCreateInput = {
     id?: string
-    fullname: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
-    collection_cases?: CollectionCaseCreateNestedManyWithoutDebtorInput
     tenant: TenantCreateNestedOneWithoutDebtorsInput
+    person: PersonCreateNestedOneWithoutDebtorsInput
     user?: UserCreateNestedOneWithoutDebtorsInput
+    collection_cases?: CollectionCaseCreateNestedManyWithoutDebtorInput
     incomes?: DebtorIncomeCreateNestedManyWithoutDebtorInput
     verdicts?: VerdictCreateNestedManyWithoutDebtorInput
     agreements?: AgreementCreateNestedManyWithoutDebtorInput
@@ -44702,15 +47365,10 @@ export namespace Prisma {
   export type DebtorUncheckedCreateInput = {
     id?: string
     tenant_id: string
+    person_id: string
     user_id?: string | null
-    fullname: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
     collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutDebtorInput
@@ -44722,19 +47380,14 @@ export namespace Prisma {
 
   export type DebtorUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    collection_cases?: CollectionCaseUpdateManyWithoutDebtorNestedInput
     tenant?: TenantUpdateOneRequiredWithoutDebtorsNestedInput
+    person?: PersonUpdateOneRequiredWithoutDebtorsNestedInput
     user?: UserUpdateOneWithoutDebtorsNestedInput
+    collection_cases?: CollectionCaseUpdateManyWithoutDebtorNestedInput
     incomes?: DebtorIncomeUpdateManyWithoutDebtorNestedInput
     verdicts?: VerdictUpdateManyWithoutDebtorNestedInput
     agreements?: AgreementUpdateManyWithoutDebtorNestedInput
@@ -44744,15 +47397,10 @@ export namespace Prisma {
   export type DebtorUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     tenant_id?: StringFieldUpdateOperationsInput | string
+    person_id?: StringFieldUpdateOperationsInput | string
     user_id?: NullableStringFieldUpdateOperationsInput | string | null
-    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     collection_cases?: CollectionCaseUncheckedUpdateManyWithoutDebtorNestedInput
@@ -44765,29 +47413,18 @@ export namespace Prisma {
   export type DebtorCreateManyInput = {
     id?: string
     tenant_id: string
+    person_id: string
     user_id?: string | null
-    fullname: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
   }
 
   export type DebtorUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -44795,15 +47432,10 @@ export namespace Prisma {
   export type DebtorUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     tenant_id?: StringFieldUpdateOperationsInput | string
+    person_id?: StringFieldUpdateOperationsInput | string
     user_id?: NullableStringFieldUpdateOperationsInput | string | null
-    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -45617,12 +48249,6 @@ export namespace Prisma {
     none?: VerdictWhereInput
   }
 
-  export type UserListRelationFilter = {
-    every?: UserWhereInput
-    some?: UserWhereInput
-    none?: UserWhereInput
-  }
-
   export type ChatRoomListRelationFilter = {
     every?: ChatRoomWhereInput
     some?: ChatRoomWhereInput
@@ -45653,6 +48279,12 @@ export namespace Prisma {
     none?: DebtWhereInput
   }
 
+  export type MembershipListRelationFilter = {
+    every?: MembershipWhereInput
+    some?: MembershipWhereInput
+    none?: MembershipWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -45678,10 +48310,6 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
-  export type UserOrderByRelationAggregateInput = {
-    _count?: SortOrder
-  }
-
   export type ChatRoomOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -45699,6 +48327,10 @@ export namespace Prisma {
   }
 
   export type DebtOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type MembershipOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -45847,11 +48479,103 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
-  export type EnumroleEnumFilter<$PrismaModel = never> = {
-    equals?: $Enums.roleEnum | EnumroleEnumFieldRefInput<$PrismaModel>
-    in?: $Enums.roleEnum[] | ListEnumroleEnumFieldRefInput<$PrismaModel>
-    notIn?: $Enums.roleEnum[] | ListEnumroleEnumFieldRefInput<$PrismaModel>
-    not?: NestedEnumroleEnumFilter<$PrismaModel> | $Enums.roleEnum
+  export type ChatMessageListRelationFilter = {
+    every?: ChatMessageWhereInput
+    some?: ChatMessageWhereInput
+    none?: ChatMessageWhereInput
+  }
+
+  export type ChatMessageOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type UserCountOrderByAggregateInput = {
+    id?: SortOrder
+    email?: SortOrder
+    password_hash?: SortOrder
+    fullname?: SortOrder
+    phone?: SortOrder
+    is_active?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type UserMaxOrderByAggregateInput = {
+    id?: SortOrder
+    email?: SortOrder
+    password_hash?: SortOrder
+    fullname?: SortOrder
+    phone?: SortOrder
+    is_active?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type UserMinOrderByAggregateInput = {
+    id?: SortOrder
+    email?: SortOrder
+    password_hash?: SortOrder
+    fullname?: SortOrder
+    phone?: SortOrder
+    is_active?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type EnumUserRoleFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
+  }
+
+  export type UserScalarRelationFilter = {
+    is?: UserWhereInput
+    isNot?: UserWhereInput
+  }
+
+  export type TenantScalarRelationFilter = {
+    is?: TenantWhereInput
+    isNot?: TenantWhereInput
+  }
+
+  export type MembershipUser_idTenant_idCompoundUniqueInput = {
+    user_id: string
+    tenant_id: string
+  }
+
+  export type MembershipCountOrderByAggregateInput = {
+    id?: SortOrder
+    user_id?: SortOrder
+    tenant_id?: SortOrder
+    role?: SortOrder
+    created_at?: SortOrder
+  }
+
+  export type MembershipMaxOrderByAggregateInput = {
+    id?: SortOrder
+    user_id?: SortOrder
+    tenant_id?: SortOrder
+    role?: SortOrder
+    created_at?: SortOrder
+  }
+
+  export type MembershipMinOrderByAggregateInput = {
+    id?: SortOrder
+    user_id?: SortOrder
+    tenant_id?: SortOrder
+    role?: SortOrder
+    created_at?: SortOrder
+  }
+
+  export type EnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleWithAggregatesFilter<$PrismaModel> | $Enums.UserRole
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumUserRoleFilter<$PrismaModel>
+    _max?: NestedEnumUserRoleFilter<$PrismaModel>
   }
 
   export type DateTimeNullableFilter<$PrismaModel = never> = {
@@ -45863,11 +48587,6 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
-  }
-
-  export type TenantScalarRelationFilter = {
-    is?: TenantWhereInput
-    isNot?: TenantWhereInput
   }
 
   export type TenantInvitationCountOrderByAggregateInput = {
@@ -45912,16 +48631,6 @@ export namespace Prisma {
     used_at?: SortOrder
   }
 
-  export type EnumroleEnumWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.roleEnum | EnumroleEnumFieldRefInput<$PrismaModel>
-    in?: $Enums.roleEnum[] | ListEnumroleEnumFieldRefInput<$PrismaModel>
-    notIn?: $Enums.roleEnum[] | ListEnumroleEnumFieldRefInput<$PrismaModel>
-    not?: NestedEnumroleEnumWithAggregatesFilter<$PrismaModel> | $Enums.roleEnum
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumroleEnumFilter<$PrismaModel>
-    _max?: NestedEnumroleEnumFilter<$PrismaModel>
-  }
-
   export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -45936,53 +48645,83 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
-  export type ChatMessageListRelationFilter = {
-    every?: ChatMessageWhereInput
-    some?: ChatMessageWhereInput
-    none?: ChatMessageWhereInput
+  export type EnumPersonTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.PersonType | EnumPersonTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.PersonType[] | ListEnumPersonTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PersonType[] | ListEnumPersonTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumPersonTypeFilter<$PrismaModel> | $Enums.PersonType
   }
 
-  export type ChatMessageOrderByRelationAggregateInput = {
-    _count?: SortOrder
+  export type EnumIdentificationTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.IdentificationType | EnumIdentificationTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.IdentificationType[] | ListEnumIdentificationTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.IdentificationType[] | ListEnumIdentificationTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumIdentificationTypeFilter<$PrismaModel> | $Enums.IdentificationType
   }
 
-  export type UserCountOrderByAggregateInput = {
+  export type PersonCountOrderByAggregateInput = {
     id?: SortOrder
+    person_type?: SortOrder
+    identification_type?: SortOrder
+    identification?: SortOrder
+    first_name?: SortOrder
+    last_name?: SortOrder
+    business_name?: SortOrder
     email?: SortOrder
-    password_hash?: SortOrder
-    fullname?: SortOrder
     phone?: SortOrder
-    tenant_id?: SortOrder
-    role?: SortOrder
-    is_active?: SortOrder
+    address?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
 
-  export type UserMaxOrderByAggregateInput = {
+  export type PersonMaxOrderByAggregateInput = {
     id?: SortOrder
+    person_type?: SortOrder
+    identification_type?: SortOrder
+    identification?: SortOrder
+    first_name?: SortOrder
+    last_name?: SortOrder
+    business_name?: SortOrder
     email?: SortOrder
-    password_hash?: SortOrder
-    fullname?: SortOrder
     phone?: SortOrder
-    tenant_id?: SortOrder
-    role?: SortOrder
-    is_active?: SortOrder
+    address?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
 
-  export type UserMinOrderByAggregateInput = {
+  export type PersonMinOrderByAggregateInput = {
     id?: SortOrder
+    person_type?: SortOrder
+    identification_type?: SortOrder
+    identification?: SortOrder
+    first_name?: SortOrder
+    last_name?: SortOrder
+    business_name?: SortOrder
     email?: SortOrder
-    password_hash?: SortOrder
-    fullname?: SortOrder
     phone?: SortOrder
-    tenant_id?: SortOrder
-    role?: SortOrder
-    is_active?: SortOrder
+    address?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
+  }
+
+  export type EnumPersonTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PersonType | EnumPersonTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.PersonType[] | ListEnumPersonTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PersonType[] | ListEnumPersonTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumPersonTypeWithAggregatesFilter<$PrismaModel> | $Enums.PersonType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumPersonTypeFilter<$PrismaModel>
+    _max?: NestedEnumPersonTypeFilter<$PrismaModel>
+  }
+
+  export type EnumIdentificationTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.IdentificationType | EnumIdentificationTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.IdentificationType[] | ListEnumIdentificationTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.IdentificationType[] | ListEnumIdentificationTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumIdentificationTypeWithAggregatesFilter<$PrismaModel> | $Enums.IdentificationType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumIdentificationTypeFilter<$PrismaModel>
+    _max?: NestedEnumIdentificationTypeFilter<$PrismaModel>
   }
 
   export type FloatFilter<$PrismaModel = never> = {
@@ -47283,18 +50022,9 @@ export namespace Prisma {
     _max?: NestedEnumNotificationTypeFilter<$PrismaModel>
   }
 
-  export type EnumPersonTypeFilter<$PrismaModel = never> = {
-    equals?: $Enums.PersonType | EnumPersonTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.PersonType[] | ListEnumPersonTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PersonType[] | ListEnumPersonTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumPersonTypeFilter<$PrismaModel> | $Enums.PersonType
-  }
-
-  export type EnumIdentificationTypeNullableFilter<$PrismaModel = never> = {
-    equals?: $Enums.IdentificationType | EnumIdentificationTypeFieldRefInput<$PrismaModel> | null
-    in?: $Enums.IdentificationType[] | ListEnumIdentificationTypeFieldRefInput<$PrismaModel> | null
-    notIn?: $Enums.IdentificationType[] | ListEnumIdentificationTypeFieldRefInput<$PrismaModel> | null
-    not?: NestedEnumIdentificationTypeNullableFilter<$PrismaModel> | $Enums.IdentificationType | null
+  export type PersonScalarRelationFilter = {
+    is?: PersonWhereInput
+    isNot?: PersonWhereInput
   }
 
   export type UserNullableScalarRelationFilter = {
@@ -47317,22 +50047,12 @@ export namespace Prisma {
     email: string
   }
 
-  export type DebtorTenant_idIdentificationCompoundUniqueInput = {
-    tenant_id: string
-    identification: string
-  }
-
   export type DebtorCountOrderByAggregateInput = {
     id?: SortOrder
     tenant_id?: SortOrder
+    person_id?: SortOrder
     user_id?: SortOrder
-    fullname?: SortOrder
     email?: SortOrder
-    phone?: SortOrder
-    address?: SortOrder
-    person_type?: SortOrder
-    identification_type?: SortOrder
-    identification?: SortOrder
     total_income?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
@@ -47345,14 +50065,9 @@ export namespace Prisma {
   export type DebtorMaxOrderByAggregateInput = {
     id?: SortOrder
     tenant_id?: SortOrder
+    person_id?: SortOrder
     user_id?: SortOrder
-    fullname?: SortOrder
     email?: SortOrder
-    phone?: SortOrder
-    address?: SortOrder
-    person_type?: SortOrder
-    identification_type?: SortOrder
-    identification?: SortOrder
     total_income?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
@@ -47361,14 +50076,9 @@ export namespace Prisma {
   export type DebtorMinOrderByAggregateInput = {
     id?: SortOrder
     tenant_id?: SortOrder
+    person_id?: SortOrder
     user_id?: SortOrder
-    fullname?: SortOrder
     email?: SortOrder
-    phone?: SortOrder
-    address?: SortOrder
-    person_type?: SortOrder
-    identification_type?: SortOrder
-    identification?: SortOrder
     total_income?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
@@ -47376,26 +50086,6 @@ export namespace Prisma {
 
   export type DebtorSumOrderByAggregateInput = {
     total_income?: SortOrder
-  }
-
-  export type EnumPersonTypeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.PersonType | EnumPersonTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.PersonType[] | ListEnumPersonTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PersonType[] | ListEnumPersonTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumPersonTypeWithAggregatesFilter<$PrismaModel> | $Enums.PersonType
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumPersonTypeFilter<$PrismaModel>
-    _max?: NestedEnumPersonTypeFilter<$PrismaModel>
-  }
-
-  export type EnumIdentificationTypeNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.IdentificationType | EnumIdentificationTypeFieldRefInput<$PrismaModel> | null
-    in?: $Enums.IdentificationType[] | ListEnumIdentificationTypeFieldRefInput<$PrismaModel> | null
-    notIn?: $Enums.IdentificationType[] | ListEnumIdentificationTypeFieldRefInput<$PrismaModel> | null
-    not?: NestedEnumIdentificationTypeNullableWithAggregatesFilter<$PrismaModel> | $Enums.IdentificationType | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedEnumIdentificationTypeNullableFilter<$PrismaModel>
-    _max?: NestedEnumIdentificationTypeNullableFilter<$PrismaModel>
   }
 
   export type DebtorIncomeCountOrderByAggregateInput = {
@@ -47535,11 +50225,6 @@ export namespace Prisma {
   export type ChatRoomScalarRelationFilter = {
     is?: ChatRoomWhereInput
     isNot?: ChatRoomWhereInput
-  }
-
-  export type UserScalarRelationFilter = {
-    is?: UserWhereInput
-    isNot?: UserWhereInput
   }
 
   export type ChatMessageCountOrderByAggregateInput = {
@@ -47908,13 +50593,6 @@ export namespace Prisma {
     connect?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
   }
 
-  export type UserCreateNestedManyWithoutTenantInput = {
-    create?: XOR<UserCreateWithoutTenantInput, UserUncheckedCreateWithoutTenantInput> | UserCreateWithoutTenantInput[] | UserUncheckedCreateWithoutTenantInput[]
-    connectOrCreate?: UserCreateOrConnectWithoutTenantInput | UserCreateOrConnectWithoutTenantInput[]
-    createMany?: UserCreateManyTenantInputEnvelope
-    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
-  }
-
   export type ChatRoomCreateNestedManyWithoutTenantInput = {
     create?: XOR<ChatRoomCreateWithoutTenantInput, ChatRoomUncheckedCreateWithoutTenantInput> | ChatRoomCreateWithoutTenantInput[] | ChatRoomUncheckedCreateWithoutTenantInput[]
     connectOrCreate?: ChatRoomCreateOrConnectWithoutTenantInput | ChatRoomCreateOrConnectWithoutTenantInput[]
@@ -47948,6 +50626,13 @@ export namespace Prisma {
     connectOrCreate?: DebtCreateOrConnectWithoutTenantInput | DebtCreateOrConnectWithoutTenantInput[]
     createMany?: DebtCreateManyTenantInputEnvelope
     connect?: DebtWhereUniqueInput | DebtWhereUniqueInput[]
+  }
+
+  export type MembershipCreateNestedManyWithoutTenantInput = {
+    create?: XOR<MembershipCreateWithoutTenantInput, MembershipUncheckedCreateWithoutTenantInput> | MembershipCreateWithoutTenantInput[] | MembershipUncheckedCreateWithoutTenantInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutTenantInput | MembershipCreateOrConnectWithoutTenantInput[]
+    createMany?: MembershipCreateManyTenantInputEnvelope
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
   }
 
   export type BillingInvoiceUncheckedCreateNestedManyWithoutTenantInput = {
@@ -47985,13 +50670,6 @@ export namespace Prisma {
     connect?: VerdictWhereUniqueInput | VerdictWhereUniqueInput[]
   }
 
-  export type UserUncheckedCreateNestedManyWithoutTenantInput = {
-    create?: XOR<UserCreateWithoutTenantInput, UserUncheckedCreateWithoutTenantInput> | UserCreateWithoutTenantInput[] | UserUncheckedCreateWithoutTenantInput[]
-    connectOrCreate?: UserCreateOrConnectWithoutTenantInput | UserCreateOrConnectWithoutTenantInput[]
-    createMany?: UserCreateManyTenantInputEnvelope
-    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
-  }
-
   export type ChatRoomUncheckedCreateNestedManyWithoutTenantInput = {
     create?: XOR<ChatRoomCreateWithoutTenantInput, ChatRoomUncheckedCreateWithoutTenantInput> | ChatRoomCreateWithoutTenantInput[] | ChatRoomUncheckedCreateWithoutTenantInput[]
     connectOrCreate?: ChatRoomCreateOrConnectWithoutTenantInput | ChatRoomCreateOrConnectWithoutTenantInput[]
@@ -48025,6 +50703,13 @@ export namespace Prisma {
     connectOrCreate?: DebtCreateOrConnectWithoutTenantInput | DebtCreateOrConnectWithoutTenantInput[]
     createMany?: DebtCreateManyTenantInputEnvelope
     connect?: DebtWhereUniqueInput | DebtWhereUniqueInput[]
+  }
+
+  export type MembershipUncheckedCreateNestedManyWithoutTenantInput = {
+    create?: XOR<MembershipCreateWithoutTenantInput, MembershipUncheckedCreateWithoutTenantInput> | MembershipCreateWithoutTenantInput[] | MembershipUncheckedCreateWithoutTenantInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutTenantInput | MembershipCreateOrConnectWithoutTenantInput[]
+    createMany?: MembershipCreateManyTenantInputEnvelope
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -48121,20 +50806,6 @@ export namespace Prisma {
     deleteMany?: VerdictScalarWhereInput | VerdictScalarWhereInput[]
   }
 
-  export type UserUpdateManyWithoutTenantNestedInput = {
-    create?: XOR<UserCreateWithoutTenantInput, UserUncheckedCreateWithoutTenantInput> | UserCreateWithoutTenantInput[] | UserUncheckedCreateWithoutTenantInput[]
-    connectOrCreate?: UserCreateOrConnectWithoutTenantInput | UserCreateOrConnectWithoutTenantInput[]
-    upsert?: UserUpsertWithWhereUniqueWithoutTenantInput | UserUpsertWithWhereUniqueWithoutTenantInput[]
-    createMany?: UserCreateManyTenantInputEnvelope
-    set?: UserWhereUniqueInput | UserWhereUniqueInput[]
-    disconnect?: UserWhereUniqueInput | UserWhereUniqueInput[]
-    delete?: UserWhereUniqueInput | UserWhereUniqueInput[]
-    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
-    update?: UserUpdateWithWhereUniqueWithoutTenantInput | UserUpdateWithWhereUniqueWithoutTenantInput[]
-    updateMany?: UserUpdateManyWithWhereWithoutTenantInput | UserUpdateManyWithWhereWithoutTenantInput[]
-    deleteMany?: UserScalarWhereInput | UserScalarWhereInput[]
-  }
-
   export type ChatRoomUpdateManyWithoutTenantNestedInput = {
     create?: XOR<ChatRoomCreateWithoutTenantInput, ChatRoomUncheckedCreateWithoutTenantInput> | ChatRoomCreateWithoutTenantInput[] | ChatRoomUncheckedCreateWithoutTenantInput[]
     connectOrCreate?: ChatRoomCreateOrConnectWithoutTenantInput | ChatRoomCreateOrConnectWithoutTenantInput[]
@@ -48203,6 +50874,20 @@ export namespace Prisma {
     update?: DebtUpdateWithWhereUniqueWithoutTenantInput | DebtUpdateWithWhereUniqueWithoutTenantInput[]
     updateMany?: DebtUpdateManyWithWhereWithoutTenantInput | DebtUpdateManyWithWhereWithoutTenantInput[]
     deleteMany?: DebtScalarWhereInput | DebtScalarWhereInput[]
+  }
+
+  export type MembershipUpdateManyWithoutTenantNestedInput = {
+    create?: XOR<MembershipCreateWithoutTenantInput, MembershipUncheckedCreateWithoutTenantInput> | MembershipCreateWithoutTenantInput[] | MembershipUncheckedCreateWithoutTenantInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutTenantInput | MembershipCreateOrConnectWithoutTenantInput[]
+    upsert?: MembershipUpsertWithWhereUniqueWithoutTenantInput | MembershipUpsertWithWhereUniqueWithoutTenantInput[]
+    createMany?: MembershipCreateManyTenantInputEnvelope
+    set?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    disconnect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    delete?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    update?: MembershipUpdateWithWhereUniqueWithoutTenantInput | MembershipUpdateWithWhereUniqueWithoutTenantInput[]
+    updateMany?: MembershipUpdateManyWithWhereWithoutTenantInput | MembershipUpdateManyWithWhereWithoutTenantInput[]
+    deleteMany?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
   }
 
   export type BillingInvoiceUncheckedUpdateManyWithoutTenantNestedInput = {
@@ -48275,20 +50960,6 @@ export namespace Prisma {
     deleteMany?: VerdictScalarWhereInput | VerdictScalarWhereInput[]
   }
 
-  export type UserUncheckedUpdateManyWithoutTenantNestedInput = {
-    create?: XOR<UserCreateWithoutTenantInput, UserUncheckedCreateWithoutTenantInput> | UserCreateWithoutTenantInput[] | UserUncheckedCreateWithoutTenantInput[]
-    connectOrCreate?: UserCreateOrConnectWithoutTenantInput | UserCreateOrConnectWithoutTenantInput[]
-    upsert?: UserUpsertWithWhereUniqueWithoutTenantInput | UserUpsertWithWhereUniqueWithoutTenantInput[]
-    createMany?: UserCreateManyTenantInputEnvelope
-    set?: UserWhereUniqueInput | UserWhereUniqueInput[]
-    disconnect?: UserWhereUniqueInput | UserWhereUniqueInput[]
-    delete?: UserWhereUniqueInput | UserWhereUniqueInput[]
-    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
-    update?: UserUpdateWithWhereUniqueWithoutTenantInput | UserUpdateWithWhereUniqueWithoutTenantInput[]
-    updateMany?: UserUpdateManyWithWhereWithoutTenantInput | UserUpdateManyWithWhereWithoutTenantInput[]
-    deleteMany?: UserScalarWhereInput | UserScalarWhereInput[]
-  }
-
   export type ChatRoomUncheckedUpdateManyWithoutTenantNestedInput = {
     create?: XOR<ChatRoomCreateWithoutTenantInput, ChatRoomUncheckedCreateWithoutTenantInput> | ChatRoomCreateWithoutTenantInput[] | ChatRoomUncheckedCreateWithoutTenantInput[]
     connectOrCreate?: ChatRoomCreateOrConnectWithoutTenantInput | ChatRoomCreateOrConnectWithoutTenantInput[]
@@ -48359,32 +51030,25 @@ export namespace Prisma {
     deleteMany?: DebtScalarWhereInput | DebtScalarWhereInput[]
   }
 
-  export type TenantCreateNestedOneWithoutInvitationsInput = {
-    create?: XOR<TenantCreateWithoutInvitationsInput, TenantUncheckedCreateWithoutInvitationsInput>
-    connectOrCreate?: TenantCreateOrConnectWithoutInvitationsInput
-    connect?: TenantWhereUniqueInput
+  export type MembershipUncheckedUpdateManyWithoutTenantNestedInput = {
+    create?: XOR<MembershipCreateWithoutTenantInput, MembershipUncheckedCreateWithoutTenantInput> | MembershipCreateWithoutTenantInput[] | MembershipUncheckedCreateWithoutTenantInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutTenantInput | MembershipCreateOrConnectWithoutTenantInput[]
+    upsert?: MembershipUpsertWithWhereUniqueWithoutTenantInput | MembershipUpsertWithWhereUniqueWithoutTenantInput[]
+    createMany?: MembershipCreateManyTenantInputEnvelope
+    set?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    disconnect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    delete?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    update?: MembershipUpdateWithWhereUniqueWithoutTenantInput | MembershipUpdateWithWhereUniqueWithoutTenantInput[]
+    updateMany?: MembershipUpdateManyWithWhereWithoutTenantInput | MembershipUpdateManyWithWhereWithoutTenantInput[]
+    deleteMany?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
   }
 
-  export type EnumroleEnumFieldUpdateOperationsInput = {
-    set?: $Enums.roleEnum
-  }
-
-  export type NullableDateTimeFieldUpdateOperationsInput = {
-    set?: Date | string | null
-  }
-
-  export type TenantUpdateOneRequiredWithoutInvitationsNestedInput = {
-    create?: XOR<TenantCreateWithoutInvitationsInput, TenantUncheckedCreateWithoutInvitationsInput>
-    connectOrCreate?: TenantCreateOrConnectWithoutInvitationsInput
-    upsert?: TenantUpsertWithoutInvitationsInput
-    connect?: TenantWhereUniqueInput
-    update?: XOR<XOR<TenantUpdateToOneWithWhereWithoutInvitationsInput, TenantUpdateWithoutInvitationsInput>, TenantUncheckedUpdateWithoutInvitationsInput>
-  }
-
-  export type TenantCreateNestedOneWithoutUsersInput = {
-    create?: XOR<TenantCreateWithoutUsersInput, TenantUncheckedCreateWithoutUsersInput>
-    connectOrCreate?: TenantCreateOrConnectWithoutUsersInput
-    connect?: TenantWhereUniqueInput
+  export type MembershipCreateNestedManyWithoutUserInput = {
+    create?: XOR<MembershipCreateWithoutUserInput, MembershipUncheckedCreateWithoutUserInput> | MembershipCreateWithoutUserInput[] | MembershipUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutUserInput | MembershipCreateOrConnectWithoutUserInput[]
+    createMany?: MembershipCreateManyUserInputEnvelope
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
   }
 
   export type DebtorCreateNestedManyWithoutUserInput = {
@@ -48408,6 +51072,13 @@ export namespace Prisma {
     connect?: ChatMessageWhereUniqueInput | ChatMessageWhereUniqueInput[]
   }
 
+  export type MembershipUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<MembershipCreateWithoutUserInput, MembershipUncheckedCreateWithoutUserInput> | MembershipCreateWithoutUserInput[] | MembershipUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutUserInput | MembershipCreateOrConnectWithoutUserInput[]
+    createMany?: MembershipCreateManyUserInputEnvelope
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+  }
+
   export type DebtorUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<DebtorCreateWithoutUserInput, DebtorUncheckedCreateWithoutUserInput> | DebtorCreateWithoutUserInput[] | DebtorUncheckedCreateWithoutUserInput[]
     connectOrCreate?: DebtorCreateOrConnectWithoutUserInput | DebtorCreateOrConnectWithoutUserInput[]
@@ -48429,12 +51100,18 @@ export namespace Prisma {
     connect?: ChatMessageWhereUniqueInput | ChatMessageWhereUniqueInput[]
   }
 
-  export type TenantUpdateOneRequiredWithoutUsersNestedInput = {
-    create?: XOR<TenantCreateWithoutUsersInput, TenantUncheckedCreateWithoutUsersInput>
-    connectOrCreate?: TenantCreateOrConnectWithoutUsersInput
-    upsert?: TenantUpsertWithoutUsersInput
-    connect?: TenantWhereUniqueInput
-    update?: XOR<XOR<TenantUpdateToOneWithWhereWithoutUsersInput, TenantUpdateWithoutUsersInput>, TenantUncheckedUpdateWithoutUsersInput>
+  export type MembershipUpdateManyWithoutUserNestedInput = {
+    create?: XOR<MembershipCreateWithoutUserInput, MembershipUncheckedCreateWithoutUserInput> | MembershipCreateWithoutUserInput[] | MembershipUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutUserInput | MembershipCreateOrConnectWithoutUserInput[]
+    upsert?: MembershipUpsertWithWhereUniqueWithoutUserInput | MembershipUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: MembershipCreateManyUserInputEnvelope
+    set?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    disconnect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    delete?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    update?: MembershipUpdateWithWhereUniqueWithoutUserInput | MembershipUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: MembershipUpdateManyWithWhereWithoutUserInput | MembershipUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
   }
 
   export type DebtorUpdateManyWithoutUserNestedInput = {
@@ -48479,6 +51156,20 @@ export namespace Prisma {
     deleteMany?: ChatMessageScalarWhereInput | ChatMessageScalarWhereInput[]
   }
 
+  export type MembershipUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<MembershipCreateWithoutUserInput, MembershipUncheckedCreateWithoutUserInput> | MembershipCreateWithoutUserInput[] | MembershipUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: MembershipCreateOrConnectWithoutUserInput | MembershipCreateOrConnectWithoutUserInput[]
+    upsert?: MembershipUpsertWithWhereUniqueWithoutUserInput | MembershipUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: MembershipCreateManyUserInputEnvelope
+    set?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    disconnect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    delete?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    connect?: MembershipWhereUniqueInput | MembershipWhereUniqueInput[]
+    update?: MembershipUpdateWithWhereUniqueWithoutUserInput | MembershipUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: MembershipUpdateManyWithWhereWithoutUserInput | MembershipUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
+  }
+
   export type DebtorUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<DebtorCreateWithoutUserInput, DebtorUncheckedCreateWithoutUserInput> | DebtorCreateWithoutUserInput[] | DebtorUncheckedCreateWithoutUserInput[]
     connectOrCreate?: DebtorCreateOrConnectWithoutUserInput | DebtorCreateOrConnectWithoutUserInput[]
@@ -48519,6 +51210,106 @@ export namespace Prisma {
     update?: ChatMessageUpdateWithWhereUniqueWithoutSenderInput | ChatMessageUpdateWithWhereUniqueWithoutSenderInput[]
     updateMany?: ChatMessageUpdateManyWithWhereWithoutSenderInput | ChatMessageUpdateManyWithWhereWithoutSenderInput[]
     deleteMany?: ChatMessageScalarWhereInput | ChatMessageScalarWhereInput[]
+  }
+
+  export type UserCreateNestedOneWithoutMembershipsInput = {
+    create?: XOR<UserCreateWithoutMembershipsInput, UserUncheckedCreateWithoutMembershipsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutMembershipsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type TenantCreateNestedOneWithoutMembershipsInput = {
+    create?: XOR<TenantCreateWithoutMembershipsInput, TenantUncheckedCreateWithoutMembershipsInput>
+    connectOrCreate?: TenantCreateOrConnectWithoutMembershipsInput
+    connect?: TenantWhereUniqueInput
+  }
+
+  export type EnumUserRoleFieldUpdateOperationsInput = {
+    set?: $Enums.UserRole
+  }
+
+  export type UserUpdateOneRequiredWithoutMembershipsNestedInput = {
+    create?: XOR<UserCreateWithoutMembershipsInput, UserUncheckedCreateWithoutMembershipsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutMembershipsInput
+    upsert?: UserUpsertWithoutMembershipsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutMembershipsInput, UserUpdateWithoutMembershipsInput>, UserUncheckedUpdateWithoutMembershipsInput>
+  }
+
+  export type TenantUpdateOneRequiredWithoutMembershipsNestedInput = {
+    create?: XOR<TenantCreateWithoutMembershipsInput, TenantUncheckedCreateWithoutMembershipsInput>
+    connectOrCreate?: TenantCreateOrConnectWithoutMembershipsInput
+    upsert?: TenantUpsertWithoutMembershipsInput
+    connect?: TenantWhereUniqueInput
+    update?: XOR<XOR<TenantUpdateToOneWithWhereWithoutMembershipsInput, TenantUpdateWithoutMembershipsInput>, TenantUncheckedUpdateWithoutMembershipsInput>
+  }
+
+  export type TenantCreateNestedOneWithoutInvitationsInput = {
+    create?: XOR<TenantCreateWithoutInvitationsInput, TenantUncheckedCreateWithoutInvitationsInput>
+    connectOrCreate?: TenantCreateOrConnectWithoutInvitationsInput
+    connect?: TenantWhereUniqueInput
+  }
+
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
+  }
+
+  export type TenantUpdateOneRequiredWithoutInvitationsNestedInput = {
+    create?: XOR<TenantCreateWithoutInvitationsInput, TenantUncheckedCreateWithoutInvitationsInput>
+    connectOrCreate?: TenantCreateOrConnectWithoutInvitationsInput
+    upsert?: TenantUpsertWithoutInvitationsInput
+    connect?: TenantWhereUniqueInput
+    update?: XOR<XOR<TenantUpdateToOneWithWhereWithoutInvitationsInput, TenantUpdateWithoutInvitationsInput>, TenantUncheckedUpdateWithoutInvitationsInput>
+  }
+
+  export type DebtorCreateNestedManyWithoutPersonInput = {
+    create?: XOR<DebtorCreateWithoutPersonInput, DebtorUncheckedCreateWithoutPersonInput> | DebtorCreateWithoutPersonInput[] | DebtorUncheckedCreateWithoutPersonInput[]
+    connectOrCreate?: DebtorCreateOrConnectWithoutPersonInput | DebtorCreateOrConnectWithoutPersonInput[]
+    createMany?: DebtorCreateManyPersonInputEnvelope
+    connect?: DebtorWhereUniqueInput | DebtorWhereUniqueInput[]
+  }
+
+  export type DebtorUncheckedCreateNestedManyWithoutPersonInput = {
+    create?: XOR<DebtorCreateWithoutPersonInput, DebtorUncheckedCreateWithoutPersonInput> | DebtorCreateWithoutPersonInput[] | DebtorUncheckedCreateWithoutPersonInput[]
+    connectOrCreate?: DebtorCreateOrConnectWithoutPersonInput | DebtorCreateOrConnectWithoutPersonInput[]
+    createMany?: DebtorCreateManyPersonInputEnvelope
+    connect?: DebtorWhereUniqueInput | DebtorWhereUniqueInput[]
+  }
+
+  export type EnumPersonTypeFieldUpdateOperationsInput = {
+    set?: $Enums.PersonType
+  }
+
+  export type EnumIdentificationTypeFieldUpdateOperationsInput = {
+    set?: $Enums.IdentificationType
+  }
+
+  export type DebtorUpdateManyWithoutPersonNestedInput = {
+    create?: XOR<DebtorCreateWithoutPersonInput, DebtorUncheckedCreateWithoutPersonInput> | DebtorCreateWithoutPersonInput[] | DebtorUncheckedCreateWithoutPersonInput[]
+    connectOrCreate?: DebtorCreateOrConnectWithoutPersonInput | DebtorCreateOrConnectWithoutPersonInput[]
+    upsert?: DebtorUpsertWithWhereUniqueWithoutPersonInput | DebtorUpsertWithWhereUniqueWithoutPersonInput[]
+    createMany?: DebtorCreateManyPersonInputEnvelope
+    set?: DebtorWhereUniqueInput | DebtorWhereUniqueInput[]
+    disconnect?: DebtorWhereUniqueInput | DebtorWhereUniqueInput[]
+    delete?: DebtorWhereUniqueInput | DebtorWhereUniqueInput[]
+    connect?: DebtorWhereUniqueInput | DebtorWhereUniqueInput[]
+    update?: DebtorUpdateWithWhereUniqueWithoutPersonInput | DebtorUpdateWithWhereUniqueWithoutPersonInput[]
+    updateMany?: DebtorUpdateManyWithWhereWithoutPersonInput | DebtorUpdateManyWithWhereWithoutPersonInput[]
+    deleteMany?: DebtorScalarWhereInput | DebtorScalarWhereInput[]
+  }
+
+  export type DebtorUncheckedUpdateManyWithoutPersonNestedInput = {
+    create?: XOR<DebtorCreateWithoutPersonInput, DebtorUncheckedCreateWithoutPersonInput> | DebtorCreateWithoutPersonInput[] | DebtorUncheckedCreateWithoutPersonInput[]
+    connectOrCreate?: DebtorCreateOrConnectWithoutPersonInput | DebtorCreateOrConnectWithoutPersonInput[]
+    upsert?: DebtorUpsertWithWhereUniqueWithoutPersonInput | DebtorUpsertWithWhereUniqueWithoutPersonInput[]
+    createMany?: DebtorCreateManyPersonInputEnvelope
+    set?: DebtorWhereUniqueInput | DebtorWhereUniqueInput[]
+    disconnect?: DebtorWhereUniqueInput | DebtorWhereUniqueInput[]
+    delete?: DebtorWhereUniqueInput | DebtorWhereUniqueInput[]
+    connect?: DebtorWhereUniqueInput | DebtorWhereUniqueInput[]
+    update?: DebtorUpdateWithWhereUniqueWithoutPersonInput | DebtorUpdateWithWhereUniqueWithoutPersonInput[]
+    updateMany?: DebtorUpdateManyWithWhereWithoutPersonInput | DebtorUpdateManyWithWhereWithoutPersonInput[]
+    deleteMany?: DebtorScalarWhereInput | DebtorScalarWhereInput[]
   }
 
   export type FloatFieldUpdateOperationsInput = {
@@ -49515,23 +52306,29 @@ export namespace Prisma {
     update?: XOR<XOR<CollectionCaseUpdateToOneWithWhereWithoutCollectionCaseNotificationInput, CollectionCaseUpdateWithoutCollectionCaseNotificationInput>, CollectionCaseUncheckedUpdateWithoutCollectionCaseNotificationInput>
   }
 
-  export type CollectionCaseCreateNestedManyWithoutDebtorInput = {
-    create?: XOR<CollectionCaseCreateWithoutDebtorInput, CollectionCaseUncheckedCreateWithoutDebtorInput> | CollectionCaseCreateWithoutDebtorInput[] | CollectionCaseUncheckedCreateWithoutDebtorInput[]
-    connectOrCreate?: CollectionCaseCreateOrConnectWithoutDebtorInput | CollectionCaseCreateOrConnectWithoutDebtorInput[]
-    createMany?: CollectionCaseCreateManyDebtorInputEnvelope
-    connect?: CollectionCaseWhereUniqueInput | CollectionCaseWhereUniqueInput[]
-  }
-
   export type TenantCreateNestedOneWithoutDebtorsInput = {
     create?: XOR<TenantCreateWithoutDebtorsInput, TenantUncheckedCreateWithoutDebtorsInput>
     connectOrCreate?: TenantCreateOrConnectWithoutDebtorsInput
     connect?: TenantWhereUniqueInput
   }
 
+  export type PersonCreateNestedOneWithoutDebtorsInput = {
+    create?: XOR<PersonCreateWithoutDebtorsInput, PersonUncheckedCreateWithoutDebtorsInput>
+    connectOrCreate?: PersonCreateOrConnectWithoutDebtorsInput
+    connect?: PersonWhereUniqueInput
+  }
+
   export type UserCreateNestedOneWithoutDebtorsInput = {
     create?: XOR<UserCreateWithoutDebtorsInput, UserUncheckedCreateWithoutDebtorsInput>
     connectOrCreate?: UserCreateOrConnectWithoutDebtorsInput
     connect?: UserWhereUniqueInput
+  }
+
+  export type CollectionCaseCreateNestedManyWithoutDebtorInput = {
+    create?: XOR<CollectionCaseCreateWithoutDebtorInput, CollectionCaseUncheckedCreateWithoutDebtorInput> | CollectionCaseCreateWithoutDebtorInput[] | CollectionCaseUncheckedCreateWithoutDebtorInput[]
+    connectOrCreate?: CollectionCaseCreateOrConnectWithoutDebtorInput | CollectionCaseCreateOrConnectWithoutDebtorInput[]
+    createMany?: CollectionCaseCreateManyDebtorInputEnvelope
+    connect?: CollectionCaseWhereUniqueInput | CollectionCaseWhereUniqueInput[]
   }
 
   export type DebtorIncomeCreateNestedManyWithoutDebtorInput = {
@@ -49597,12 +52394,30 @@ export namespace Prisma {
     connect?: DebtWhereUniqueInput | DebtWhereUniqueInput[]
   }
 
-  export type EnumPersonTypeFieldUpdateOperationsInput = {
-    set?: $Enums.PersonType
+  export type TenantUpdateOneRequiredWithoutDebtorsNestedInput = {
+    create?: XOR<TenantCreateWithoutDebtorsInput, TenantUncheckedCreateWithoutDebtorsInput>
+    connectOrCreate?: TenantCreateOrConnectWithoutDebtorsInput
+    upsert?: TenantUpsertWithoutDebtorsInput
+    connect?: TenantWhereUniqueInput
+    update?: XOR<XOR<TenantUpdateToOneWithWhereWithoutDebtorsInput, TenantUpdateWithoutDebtorsInput>, TenantUncheckedUpdateWithoutDebtorsInput>
   }
 
-  export type NullableEnumIdentificationTypeFieldUpdateOperationsInput = {
-    set?: $Enums.IdentificationType | null
+  export type PersonUpdateOneRequiredWithoutDebtorsNestedInput = {
+    create?: XOR<PersonCreateWithoutDebtorsInput, PersonUncheckedCreateWithoutDebtorsInput>
+    connectOrCreate?: PersonCreateOrConnectWithoutDebtorsInput
+    upsert?: PersonUpsertWithoutDebtorsInput
+    connect?: PersonWhereUniqueInput
+    update?: XOR<XOR<PersonUpdateToOneWithWhereWithoutDebtorsInput, PersonUpdateWithoutDebtorsInput>, PersonUncheckedUpdateWithoutDebtorsInput>
+  }
+
+  export type UserUpdateOneWithoutDebtorsNestedInput = {
+    create?: XOR<UserCreateWithoutDebtorsInput, UserUncheckedCreateWithoutDebtorsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutDebtorsInput
+    upsert?: UserUpsertWithoutDebtorsInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutDebtorsInput, UserUpdateWithoutDebtorsInput>, UserUncheckedUpdateWithoutDebtorsInput>
   }
 
   export type CollectionCaseUpdateManyWithoutDebtorNestedInput = {
@@ -49617,24 +52432,6 @@ export namespace Prisma {
     update?: CollectionCaseUpdateWithWhereUniqueWithoutDebtorInput | CollectionCaseUpdateWithWhereUniqueWithoutDebtorInput[]
     updateMany?: CollectionCaseUpdateManyWithWhereWithoutDebtorInput | CollectionCaseUpdateManyWithWhereWithoutDebtorInput[]
     deleteMany?: CollectionCaseScalarWhereInput | CollectionCaseScalarWhereInput[]
-  }
-
-  export type TenantUpdateOneRequiredWithoutDebtorsNestedInput = {
-    create?: XOR<TenantCreateWithoutDebtorsInput, TenantUncheckedCreateWithoutDebtorsInput>
-    connectOrCreate?: TenantCreateOrConnectWithoutDebtorsInput
-    upsert?: TenantUpsertWithoutDebtorsInput
-    connect?: TenantWhereUniqueInput
-    update?: XOR<XOR<TenantUpdateToOneWithWhereWithoutDebtorsInput, TenantUpdateWithoutDebtorsInput>, TenantUncheckedUpdateWithoutDebtorsInput>
-  }
-
-  export type UserUpdateOneWithoutDebtorsNestedInput = {
-    create?: XOR<UserCreateWithoutDebtorsInput, UserUncheckedCreateWithoutDebtorsInput>
-    connectOrCreate?: UserCreateOrConnectWithoutDebtorsInput
-    upsert?: UserUpsertWithoutDebtorsInput
-    disconnect?: UserWhereInput | boolean
-    delete?: UserWhereInput | boolean
-    connect?: UserWhereUniqueInput
-    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutDebtorsInput, UserUpdateWithoutDebtorsInput>, UserUncheckedUpdateWithoutDebtorsInput>
   }
 
   export type DebtorIncomeUpdateManyWithoutDebtorNestedInput = {
@@ -50414,11 +53211,21 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
-  export type NestedEnumroleEnumFilter<$PrismaModel = never> = {
-    equals?: $Enums.roleEnum | EnumroleEnumFieldRefInput<$PrismaModel>
-    in?: $Enums.roleEnum[] | ListEnumroleEnumFieldRefInput<$PrismaModel>
-    notIn?: $Enums.roleEnum[] | ListEnumroleEnumFieldRefInput<$PrismaModel>
-    not?: NestedEnumroleEnumFilter<$PrismaModel> | $Enums.roleEnum
+  export type NestedEnumUserRoleFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
+  }
+
+  export type NestedEnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleWithAggregatesFilter<$PrismaModel> | $Enums.UserRole
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumUserRoleFilter<$PrismaModel>
+    _max?: NestedEnumUserRoleFilter<$PrismaModel>
   }
 
   export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
@@ -50430,16 +53237,6 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
-  }
-
-  export type NestedEnumroleEnumWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.roleEnum | EnumroleEnumFieldRefInput<$PrismaModel>
-    in?: $Enums.roleEnum[] | ListEnumroleEnumFieldRefInput<$PrismaModel>
-    notIn?: $Enums.roleEnum[] | ListEnumroleEnumFieldRefInput<$PrismaModel>
-    not?: NestedEnumroleEnumWithAggregatesFilter<$PrismaModel> | $Enums.roleEnum
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumroleEnumFilter<$PrismaModel>
-    _max?: NestedEnumroleEnumFilter<$PrismaModel>
   }
 
   export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -50454,6 +53251,40 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type NestedEnumPersonTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.PersonType | EnumPersonTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.PersonType[] | ListEnumPersonTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PersonType[] | ListEnumPersonTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumPersonTypeFilter<$PrismaModel> | $Enums.PersonType
+  }
+
+  export type NestedEnumIdentificationTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.IdentificationType | EnumIdentificationTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.IdentificationType[] | ListEnumIdentificationTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.IdentificationType[] | ListEnumIdentificationTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumIdentificationTypeFilter<$PrismaModel> | $Enums.IdentificationType
+  }
+
+  export type NestedEnumPersonTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PersonType | EnumPersonTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.PersonType[] | ListEnumPersonTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PersonType[] | ListEnumPersonTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumPersonTypeWithAggregatesFilter<$PrismaModel> | $Enums.PersonType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumPersonTypeFilter<$PrismaModel>
+    _max?: NestedEnumPersonTypeFilter<$PrismaModel>
+  }
+
+  export type NestedEnumIdentificationTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.IdentificationType | EnumIdentificationTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.IdentificationType[] | ListEnumIdentificationTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.IdentificationType[] | ListEnumIdentificationTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumIdentificationTypeWithAggregatesFilter<$PrismaModel> | $Enums.IdentificationType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumIdentificationTypeFilter<$PrismaModel>
+    _max?: NestedEnumIdentificationTypeFilter<$PrismaModel>
   }
 
   export type NestedFloatFilter<$PrismaModel = never> = {
@@ -50705,40 +53536,6 @@ export namespace Prisma {
     _max?: NestedEnumNotificationTypeFilter<$PrismaModel>
   }
 
-  export type NestedEnumPersonTypeFilter<$PrismaModel = never> = {
-    equals?: $Enums.PersonType | EnumPersonTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.PersonType[] | ListEnumPersonTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PersonType[] | ListEnumPersonTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumPersonTypeFilter<$PrismaModel> | $Enums.PersonType
-  }
-
-  export type NestedEnumIdentificationTypeNullableFilter<$PrismaModel = never> = {
-    equals?: $Enums.IdentificationType | EnumIdentificationTypeFieldRefInput<$PrismaModel> | null
-    in?: $Enums.IdentificationType[] | ListEnumIdentificationTypeFieldRefInput<$PrismaModel> | null
-    notIn?: $Enums.IdentificationType[] | ListEnumIdentificationTypeFieldRefInput<$PrismaModel> | null
-    not?: NestedEnumIdentificationTypeNullableFilter<$PrismaModel> | $Enums.IdentificationType | null
-  }
-
-  export type NestedEnumPersonTypeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.PersonType | EnumPersonTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.PersonType[] | ListEnumPersonTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.PersonType[] | ListEnumPersonTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumPersonTypeWithAggregatesFilter<$PrismaModel> | $Enums.PersonType
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumPersonTypeFilter<$PrismaModel>
-    _max?: NestedEnumPersonTypeFilter<$PrismaModel>
-  }
-
-  export type NestedEnumIdentificationTypeNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.IdentificationType | EnumIdentificationTypeFieldRefInput<$PrismaModel> | null
-    in?: $Enums.IdentificationType[] | ListEnumIdentificationTypeFieldRefInput<$PrismaModel> | null
-    notIn?: $Enums.IdentificationType[] | ListEnumIdentificationTypeFieldRefInput<$PrismaModel> | null
-    not?: NestedEnumIdentificationTypeNullableWithAggregatesFilter<$PrismaModel> | $Enums.IdentificationType | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedEnumIdentificationTypeNullableFilter<$PrismaModel>
-    _max?: NestedEnumIdentificationTypeNullableFilter<$PrismaModel>
-  }
-
   export type NestedEnumAgreementStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.AgreementStatus | EnumAgreementStatusFieldRefInput<$PrismaModel>
     in?: $Enums.AgreementStatus[] | ListEnumAgreementStatusFieldRefInput<$PrismaModel>
@@ -50907,18 +53704,13 @@ export namespace Prisma {
 
   export type DebtorCreateWithoutTenantInput = {
     id?: string
-    fullname: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
-    collection_cases?: CollectionCaseCreateNestedManyWithoutDebtorInput
+    person: PersonCreateNestedOneWithoutDebtorsInput
     user?: UserCreateNestedOneWithoutDebtorsInput
+    collection_cases?: CollectionCaseCreateNestedManyWithoutDebtorInput
     incomes?: DebtorIncomeCreateNestedManyWithoutDebtorInput
     verdicts?: VerdictCreateNestedManyWithoutDebtorInput
     agreements?: AgreementCreateNestedManyWithoutDebtorInput
@@ -50927,15 +53719,10 @@ export namespace Prisma {
 
   export type DebtorUncheckedCreateWithoutTenantInput = {
     id?: string
+    person_id: string
     user_id?: string | null
-    fullname: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
     collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutDebtorInput
@@ -51039,46 +53826,6 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type UserCreateWithoutTenantInput = {
-    id?: string
-    email: string
-    password_hash?: string | null
-    fullname?: string | null
-    phone?: string | null
-    role?: $Enums.roleEnum
-    is_active?: boolean
-    created_at?: Date | string
-    updated_at?: Date | string
-    debtors?: DebtorCreateNestedManyWithoutUserInput
-    bailiffs?: BailiffCreateNestedManyWithoutUserInput
-    messages?: ChatMessageCreateNestedManyWithoutSenderInput
-  }
-
-  export type UserUncheckedCreateWithoutTenantInput = {
-    id?: string
-    email: string
-    password_hash?: string | null
-    fullname?: string | null
-    phone?: string | null
-    role?: $Enums.roleEnum
-    is_active?: boolean
-    created_at?: Date | string
-    updated_at?: Date | string
-    debtors?: DebtorUncheckedCreateNestedManyWithoutUserInput
-    bailiffs?: BailiffUncheckedCreateNestedManyWithoutUserInput
-    messages?: ChatMessageUncheckedCreateNestedManyWithoutSenderInput
-  }
-
-  export type UserCreateOrConnectWithoutTenantInput = {
-    where: UserWhereUniqueInput
-    create: XOR<UserCreateWithoutTenantInput, UserUncheckedCreateWithoutTenantInput>
-  }
-
-  export type UserCreateManyTenantInputEnvelope = {
-    data: UserCreateManyTenantInput | UserCreateManyTenantInput[]
-    skipDuplicates?: boolean
-  }
-
   export type ChatRoomCreateWithoutTenantInput = {
     id?: string
     name: string
@@ -51112,7 +53859,7 @@ export namespace Prisma {
     email: string
     fullname?: string | null
     token: string
-    role?: $Enums.roleEnum
+    role?: $Enums.UserRole
     debtor_id?: string | null
     created_at?: Date | string
     expires_at: Date | string
@@ -51125,7 +53872,7 @@ export namespace Prisma {
     email: string
     fullname?: string | null
     token: string
-    role?: $Enums.roleEnum
+    role?: $Enums.UserRole
     debtor_id?: string | null
     created_at?: Date | string
     expires_at: Date | string
@@ -51263,6 +54010,30 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type MembershipCreateWithoutTenantInput = {
+    id?: string
+    role: $Enums.UserRole
+    created_at?: Date | string
+    user: UserCreateNestedOneWithoutMembershipsInput
+  }
+
+  export type MembershipUncheckedCreateWithoutTenantInput = {
+    id?: string
+    user_id: string
+    role: $Enums.UserRole
+    created_at?: Date | string
+  }
+
+  export type MembershipCreateOrConnectWithoutTenantInput = {
+    where: MembershipWhereUniqueInput
+    create: XOR<MembershipCreateWithoutTenantInput, MembershipUncheckedCreateWithoutTenantInput>
+  }
+
+  export type MembershipCreateManyTenantInputEnvelope = {
+    data: MembershipCreateManyTenantInput | MembershipCreateManyTenantInput[]
+    skipDuplicates?: boolean
+  }
+
   export type BillingInvoiceUpsertWithWhereUniqueWithoutTenantInput = {
     where: BillingInvoiceWhereUniqueInput
     update: XOR<BillingInvoiceUpdateWithoutTenantInput, BillingInvoiceUncheckedUpdateWithoutTenantInput>
@@ -51360,15 +54131,10 @@ export namespace Prisma {
     NOT?: DebtorScalarWhereInput | DebtorScalarWhereInput[]
     id?: StringFilter<"Debtor"> | string
     tenant_id?: StringFilter<"Debtor"> | string
+    person_id?: StringFilter<"Debtor"> | string
     user_id?: StringNullableFilter<"Debtor"> | string | null
-    fullname?: StringFilter<"Debtor"> | string
     email?: StringFilter<"Debtor"> | string
-    phone?: StringNullableFilter<"Debtor"> | string | null
-    address?: StringNullableFilter<"Debtor"> | string | null
-    person_type?: EnumPersonTypeFilter<"Debtor"> | $Enums.PersonType
-    identification_type?: EnumIdentificationTypeNullableFilter<"Debtor"> | $Enums.IdentificationType | null
-    identification?: StringNullableFilter<"Debtor"> | string | null
-    total_income?: FloatNullableFilter<"Debtor"> | number | null
+    total_income?: FloatFilter<"Debtor"> | number
     created_at?: DateTimeFilter<"Debtor"> | Date | string
     updated_at?: DateTimeFilter<"Debtor"> | Date | string
   }
@@ -51440,38 +54206,6 @@ export namespace Prisma {
     bailiff_id?: StringFilter<"Verdict"> | string
   }
 
-  export type UserUpsertWithWhereUniqueWithoutTenantInput = {
-    where: UserWhereUniqueInput
-    update: XOR<UserUpdateWithoutTenantInput, UserUncheckedUpdateWithoutTenantInput>
-    create: XOR<UserCreateWithoutTenantInput, UserUncheckedCreateWithoutTenantInput>
-  }
-
-  export type UserUpdateWithWhereUniqueWithoutTenantInput = {
-    where: UserWhereUniqueInput
-    data: XOR<UserUpdateWithoutTenantInput, UserUncheckedUpdateWithoutTenantInput>
-  }
-
-  export type UserUpdateManyWithWhereWithoutTenantInput = {
-    where: UserScalarWhereInput
-    data: XOR<UserUpdateManyMutationInput, UserUncheckedUpdateManyWithoutTenantInput>
-  }
-
-  export type UserScalarWhereInput = {
-    AND?: UserScalarWhereInput | UserScalarWhereInput[]
-    OR?: UserScalarWhereInput[]
-    NOT?: UserScalarWhereInput | UserScalarWhereInput[]
-    id?: StringFilter<"User"> | string
-    email?: StringFilter<"User"> | string
-    password_hash?: StringNullableFilter<"User"> | string | null
-    fullname?: StringNullableFilter<"User"> | string | null
-    phone?: StringNullableFilter<"User"> | string | null
-    tenant_id?: StringFilter<"User"> | string
-    role?: EnumroleEnumFilter<"User"> | $Enums.roleEnum
-    is_active?: BoolFilter<"User"> | boolean
-    created_at?: DateTimeFilter<"User"> | Date | string
-    updated_at?: DateTimeFilter<"User"> | Date | string
-  }
-
   export type ChatRoomUpsertWithWhereUniqueWithoutTenantInput = {
     where: ChatRoomWhereUniqueInput
     update: XOR<ChatRoomUpdateWithoutTenantInput, ChatRoomUncheckedUpdateWithoutTenantInput>
@@ -51525,7 +54259,7 @@ export namespace Prisma {
     email?: StringFilter<"TenantInvitation"> | string
     fullname?: StringNullableFilter<"TenantInvitation"> | string | null
     token?: StringFilter<"TenantInvitation"> | string
-    role?: EnumroleEnumFilter<"TenantInvitation"> | $Enums.roleEnum
+    role?: EnumUserRoleFilter<"TenantInvitation"> | $Enums.UserRole
     debtor_id?: StringNullableFilter<"TenantInvitation"> | string | null
     created_at?: DateTimeFilter<"TenantInvitation"> | Date | string
     expires_at?: DateTimeFilter<"TenantInvitation"> | Date | string
@@ -51631,227 +54365,66 @@ export namespace Prisma {
     updated_at?: DateTimeFilter<"Debt"> | Date | string
   }
 
-  export type TenantCreateWithoutInvitationsInput = {
+  export type MembershipUpsertWithWhereUniqueWithoutTenantInput = {
+    where: MembershipWhereUniqueInput
+    update: XOR<MembershipUpdateWithoutTenantInput, MembershipUncheckedUpdateWithoutTenantInput>
+    create: XOR<MembershipCreateWithoutTenantInput, MembershipUncheckedCreateWithoutTenantInput>
+  }
+
+  export type MembershipUpdateWithWhereUniqueWithoutTenantInput = {
+    where: MembershipWhereUniqueInput
+    data: XOR<MembershipUpdateWithoutTenantInput, MembershipUncheckedUpdateWithoutTenantInput>
+  }
+
+  export type MembershipUpdateManyWithWhereWithoutTenantInput = {
+    where: MembershipScalarWhereInput
+    data: XOR<MembershipUpdateManyMutationInput, MembershipUncheckedUpdateManyWithoutTenantInput>
+  }
+
+  export type MembershipScalarWhereInput = {
+    AND?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
+    OR?: MembershipScalarWhereInput[]
+    NOT?: MembershipScalarWhereInput | MembershipScalarWhereInput[]
+    id?: StringFilter<"Membership"> | string
+    user_id?: StringFilter<"Membership"> | string
+    tenant_id?: StringFilter<"Membership"> | string
+    role?: EnumUserRoleFilter<"Membership"> | $Enums.UserRole
+    created_at?: DateTimeFilter<"Membership"> | Date | string
+  }
+
+  export type MembershipCreateWithoutUserInput = {
     id?: string
-    name: string
-    code: string
-    subdomain: string
-    contact_email: string
-    country_code: string
-    kvk?: string | null
-    legal_name?: string | null
-    address?: string | null
-    city?: string | null
-    logo_url?: string | null
-    number_of_employees?: number | null
-    phone?: string | null
-    website?: string | null
-    terms_accepted?: boolean
-    is_active?: boolean
+    role: $Enums.UserRole
     created_at?: Date | string
-    updated_at?: Date | string
-    billing_invoice?: BillingInvoiceCreateNestedManyWithoutTenantInput
-    collection_cases?: CollectionCaseCreateNestedManyWithoutTenantInput
-    debtors?: DebtorCreateNestedManyWithoutTenantInput
-    bailiffs?: BailiffCreateNestedManyWithoutTenantInput
-    verdicts?: VerdictCreateNestedManyWithoutTenantInput
-    users?: UserCreateNestedManyWithoutTenantInput
-    chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
-    employees?: EmployeeCreateNestedManyWithoutTenantInput
-    agreements?: AgreementCreateNestedManyWithoutTenantInput
-    debts?: DebtCreateNestedManyWithoutTenantInput
+    tenant: TenantCreateNestedOneWithoutMembershipsInput
   }
 
-  export type TenantUncheckedCreateWithoutInvitationsInput = {
+  export type MembershipUncheckedCreateWithoutUserInput = {
     id?: string
-    name: string
-    code: string
-    subdomain: string
-    contact_email: string
-    country_code: string
-    kvk?: string | null
-    legal_name?: string | null
-    address?: string | null
-    city?: string | null
-    logo_url?: string | null
-    number_of_employees?: number | null
-    phone?: string | null
-    website?: string | null
-    terms_accepted?: boolean
-    is_active?: boolean
+    tenant_id: string
+    role: $Enums.UserRole
     created_at?: Date | string
-    updated_at?: Date | string
-    billing_invoice?: BillingInvoiceUncheckedCreateNestedManyWithoutTenantInput
-    collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutTenantInput
-    debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
-    bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
-    verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
-    users?: UserUncheckedCreateNestedManyWithoutTenantInput
-    chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
-    employees?: EmployeeUncheckedCreateNestedManyWithoutTenantInput
-    agreements?: AgreementUncheckedCreateNestedManyWithoutTenantInput
-    debts?: DebtUncheckedCreateNestedManyWithoutTenantInput
   }
 
-  export type TenantCreateOrConnectWithoutInvitationsInput = {
-    where: TenantWhereUniqueInput
-    create: XOR<TenantCreateWithoutInvitationsInput, TenantUncheckedCreateWithoutInvitationsInput>
+  export type MembershipCreateOrConnectWithoutUserInput = {
+    where: MembershipWhereUniqueInput
+    create: XOR<MembershipCreateWithoutUserInput, MembershipUncheckedCreateWithoutUserInput>
   }
 
-  export type TenantUpsertWithoutInvitationsInput = {
-    update: XOR<TenantUpdateWithoutInvitationsInput, TenantUncheckedUpdateWithoutInvitationsInput>
-    create: XOR<TenantCreateWithoutInvitationsInput, TenantUncheckedCreateWithoutInvitationsInput>
-    where?: TenantWhereInput
-  }
-
-  export type TenantUpdateToOneWithWhereWithoutInvitationsInput = {
-    where?: TenantWhereInput
-    data: XOR<TenantUpdateWithoutInvitationsInput, TenantUncheckedUpdateWithoutInvitationsInput>
-  }
-
-  export type TenantUpdateWithoutInvitationsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    code?: StringFieldUpdateOperationsInput | string
-    subdomain?: StringFieldUpdateOperationsInput | string
-    contact_email?: StringFieldUpdateOperationsInput | string
-    country_code?: StringFieldUpdateOperationsInput | string
-    kvk?: NullableStringFieldUpdateOperationsInput | string | null
-    legal_name?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    city?: NullableStringFieldUpdateOperationsInput | string | null
-    logo_url?: NullableStringFieldUpdateOperationsInput | string | null
-    number_of_employees?: NullableIntFieldUpdateOperationsInput | number | null
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    website?: NullableStringFieldUpdateOperationsInput | string | null
-    terms_accepted?: BoolFieldUpdateOperationsInput | boolean
-    is_active?: BoolFieldUpdateOperationsInput | boolean
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    billing_invoice?: BillingInvoiceUpdateManyWithoutTenantNestedInput
-    collection_cases?: CollectionCaseUpdateManyWithoutTenantNestedInput
-    debtors?: DebtorUpdateManyWithoutTenantNestedInput
-    bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
-    verdicts?: VerdictUpdateManyWithoutTenantNestedInput
-    users?: UserUpdateManyWithoutTenantNestedInput
-    chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
-    employees?: EmployeeUpdateManyWithoutTenantNestedInput
-    agreements?: AgreementUpdateManyWithoutTenantNestedInput
-    debts?: DebtUpdateManyWithoutTenantNestedInput
-  }
-
-  export type TenantUncheckedUpdateWithoutInvitationsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    code?: StringFieldUpdateOperationsInput | string
-    subdomain?: StringFieldUpdateOperationsInput | string
-    contact_email?: StringFieldUpdateOperationsInput | string
-    country_code?: StringFieldUpdateOperationsInput | string
-    kvk?: NullableStringFieldUpdateOperationsInput | string | null
-    legal_name?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    city?: NullableStringFieldUpdateOperationsInput | string | null
-    logo_url?: NullableStringFieldUpdateOperationsInput | string | null
-    number_of_employees?: NullableIntFieldUpdateOperationsInput | number | null
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    website?: NullableStringFieldUpdateOperationsInput | string | null
-    terms_accepted?: BoolFieldUpdateOperationsInput | boolean
-    is_active?: BoolFieldUpdateOperationsInput | boolean
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    billing_invoice?: BillingInvoiceUncheckedUpdateManyWithoutTenantNestedInput
-    collection_cases?: CollectionCaseUncheckedUpdateManyWithoutTenantNestedInput
-    debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
-    bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
-    verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
-    users?: UserUncheckedUpdateManyWithoutTenantNestedInput
-    chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
-    employees?: EmployeeUncheckedUpdateManyWithoutTenantNestedInput
-    agreements?: AgreementUncheckedUpdateManyWithoutTenantNestedInput
-    debts?: DebtUncheckedUpdateManyWithoutTenantNestedInput
-  }
-
-  export type TenantCreateWithoutUsersInput = {
-    id?: string
-    name: string
-    code: string
-    subdomain: string
-    contact_email: string
-    country_code: string
-    kvk?: string | null
-    legal_name?: string | null
-    address?: string | null
-    city?: string | null
-    logo_url?: string | null
-    number_of_employees?: number | null
-    phone?: string | null
-    website?: string | null
-    terms_accepted?: boolean
-    is_active?: boolean
-    created_at?: Date | string
-    updated_at?: Date | string
-    billing_invoice?: BillingInvoiceCreateNestedManyWithoutTenantInput
-    collection_cases?: CollectionCaseCreateNestedManyWithoutTenantInput
-    debtors?: DebtorCreateNestedManyWithoutTenantInput
-    bailiffs?: BailiffCreateNestedManyWithoutTenantInput
-    verdicts?: VerdictCreateNestedManyWithoutTenantInput
-    chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
-    invitations?: TenantInvitationCreateNestedManyWithoutTenantInput
-    employees?: EmployeeCreateNestedManyWithoutTenantInput
-    agreements?: AgreementCreateNestedManyWithoutTenantInput
-    debts?: DebtCreateNestedManyWithoutTenantInput
-  }
-
-  export type TenantUncheckedCreateWithoutUsersInput = {
-    id?: string
-    name: string
-    code: string
-    subdomain: string
-    contact_email: string
-    country_code: string
-    kvk?: string | null
-    legal_name?: string | null
-    address?: string | null
-    city?: string | null
-    logo_url?: string | null
-    number_of_employees?: number | null
-    phone?: string | null
-    website?: string | null
-    terms_accepted?: boolean
-    is_active?: boolean
-    created_at?: Date | string
-    updated_at?: Date | string
-    billing_invoice?: BillingInvoiceUncheckedCreateNestedManyWithoutTenantInput
-    collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutTenantInput
-    debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
-    bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
-    verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
-    chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
-    invitations?: TenantInvitationUncheckedCreateNestedManyWithoutTenantInput
-    employees?: EmployeeUncheckedCreateNestedManyWithoutTenantInput
-    agreements?: AgreementUncheckedCreateNestedManyWithoutTenantInput
-    debts?: DebtUncheckedCreateNestedManyWithoutTenantInput
-  }
-
-  export type TenantCreateOrConnectWithoutUsersInput = {
-    where: TenantWhereUniqueInput
-    create: XOR<TenantCreateWithoutUsersInput, TenantUncheckedCreateWithoutUsersInput>
+  export type MembershipCreateManyUserInputEnvelope = {
+    data: MembershipCreateManyUserInput | MembershipCreateManyUserInput[]
+    skipDuplicates?: boolean
   }
 
   export type DebtorCreateWithoutUserInput = {
     id?: string
-    fullname: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
-    collection_cases?: CollectionCaseCreateNestedManyWithoutDebtorInput
     tenant: TenantCreateNestedOneWithoutDebtorsInput
+    person: PersonCreateNestedOneWithoutDebtorsInput
+    collection_cases?: CollectionCaseCreateNestedManyWithoutDebtorInput
     incomes?: DebtorIncomeCreateNestedManyWithoutDebtorInput
     verdicts?: VerdictCreateNestedManyWithoutDebtorInput
     agreements?: AgreementCreateNestedManyWithoutDebtorInput
@@ -51861,14 +54434,9 @@ export namespace Prisma {
   export type DebtorUncheckedCreateWithoutUserInput = {
     id?: string
     tenant_id: string
-    fullname: string
+    person_id: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
     collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutDebtorInput
@@ -51952,77 +54520,20 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type TenantUpsertWithoutUsersInput = {
-    update: XOR<TenantUpdateWithoutUsersInput, TenantUncheckedUpdateWithoutUsersInput>
-    create: XOR<TenantCreateWithoutUsersInput, TenantUncheckedCreateWithoutUsersInput>
-    where?: TenantWhereInput
+  export type MembershipUpsertWithWhereUniqueWithoutUserInput = {
+    where: MembershipWhereUniqueInput
+    update: XOR<MembershipUpdateWithoutUserInput, MembershipUncheckedUpdateWithoutUserInput>
+    create: XOR<MembershipCreateWithoutUserInput, MembershipUncheckedCreateWithoutUserInput>
   }
 
-  export type TenantUpdateToOneWithWhereWithoutUsersInput = {
-    where?: TenantWhereInput
-    data: XOR<TenantUpdateWithoutUsersInput, TenantUncheckedUpdateWithoutUsersInput>
+  export type MembershipUpdateWithWhereUniqueWithoutUserInput = {
+    where: MembershipWhereUniqueInput
+    data: XOR<MembershipUpdateWithoutUserInput, MembershipUncheckedUpdateWithoutUserInput>
   }
 
-  export type TenantUpdateWithoutUsersInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    code?: StringFieldUpdateOperationsInput | string
-    subdomain?: StringFieldUpdateOperationsInput | string
-    contact_email?: StringFieldUpdateOperationsInput | string
-    country_code?: StringFieldUpdateOperationsInput | string
-    kvk?: NullableStringFieldUpdateOperationsInput | string | null
-    legal_name?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    city?: NullableStringFieldUpdateOperationsInput | string | null
-    logo_url?: NullableStringFieldUpdateOperationsInput | string | null
-    number_of_employees?: NullableIntFieldUpdateOperationsInput | number | null
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    website?: NullableStringFieldUpdateOperationsInput | string | null
-    terms_accepted?: BoolFieldUpdateOperationsInput | boolean
-    is_active?: BoolFieldUpdateOperationsInput | boolean
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    billing_invoice?: BillingInvoiceUpdateManyWithoutTenantNestedInput
-    collection_cases?: CollectionCaseUpdateManyWithoutTenantNestedInput
-    debtors?: DebtorUpdateManyWithoutTenantNestedInput
-    bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
-    verdicts?: VerdictUpdateManyWithoutTenantNestedInput
-    chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
-    invitations?: TenantInvitationUpdateManyWithoutTenantNestedInput
-    employees?: EmployeeUpdateManyWithoutTenantNestedInput
-    agreements?: AgreementUpdateManyWithoutTenantNestedInput
-    debts?: DebtUpdateManyWithoutTenantNestedInput
-  }
-
-  export type TenantUncheckedUpdateWithoutUsersInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    code?: StringFieldUpdateOperationsInput | string
-    subdomain?: StringFieldUpdateOperationsInput | string
-    contact_email?: StringFieldUpdateOperationsInput | string
-    country_code?: StringFieldUpdateOperationsInput | string
-    kvk?: NullableStringFieldUpdateOperationsInput | string | null
-    legal_name?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    city?: NullableStringFieldUpdateOperationsInput | string | null
-    logo_url?: NullableStringFieldUpdateOperationsInput | string | null
-    number_of_employees?: NullableIntFieldUpdateOperationsInput | number | null
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    website?: NullableStringFieldUpdateOperationsInput | string | null
-    terms_accepted?: BoolFieldUpdateOperationsInput | boolean
-    is_active?: BoolFieldUpdateOperationsInput | boolean
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    billing_invoice?: BillingInvoiceUncheckedUpdateManyWithoutTenantNestedInput
-    collection_cases?: CollectionCaseUncheckedUpdateManyWithoutTenantNestedInput
-    debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
-    bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
-    verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
-    chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
-    invitations?: TenantInvitationUncheckedUpdateManyWithoutTenantNestedInput
-    employees?: EmployeeUncheckedUpdateManyWithoutTenantNestedInput
-    agreements?: AgreementUncheckedUpdateManyWithoutTenantNestedInput
-    debts?: DebtUncheckedUpdateManyWithoutTenantNestedInput
+  export type MembershipUpdateManyWithWhereWithoutUserInput = {
+    where: MembershipScalarWhereInput
+    data: XOR<MembershipUpdateManyMutationInput, MembershipUncheckedUpdateManyWithoutUserInput>
   }
 
   export type DebtorUpsertWithWhereUniqueWithoutUserInput = {
@@ -52086,6 +54597,414 @@ export namespace Prisma {
     timestamp?: DateTimeFilter<"ChatMessage"> | Date | string
     created_at?: DateTimeFilter<"ChatMessage"> | Date | string
     updated_at?: DateTimeFilter<"ChatMessage"> | Date | string
+  }
+
+  export type UserCreateWithoutMembershipsInput = {
+    id?: string
+    email: string
+    password_hash?: string | null
+    fullname?: string | null
+    phone?: string | null
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    debtors?: DebtorCreateNestedManyWithoutUserInput
+    bailiffs?: BailiffCreateNestedManyWithoutUserInput
+    messages?: ChatMessageCreateNestedManyWithoutSenderInput
+  }
+
+  export type UserUncheckedCreateWithoutMembershipsInput = {
+    id?: string
+    email: string
+    password_hash?: string | null
+    fullname?: string | null
+    phone?: string | null
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    debtors?: DebtorUncheckedCreateNestedManyWithoutUserInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutUserInput
+    messages?: ChatMessageUncheckedCreateNestedManyWithoutSenderInput
+  }
+
+  export type UserCreateOrConnectWithoutMembershipsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutMembershipsInput, UserUncheckedCreateWithoutMembershipsInput>
+  }
+
+  export type TenantCreateWithoutMembershipsInput = {
+    id?: string
+    name: string
+    code: string
+    subdomain: string
+    contact_email: string
+    country_code: string
+    kvk?: string | null
+    legal_name?: string | null
+    address?: string | null
+    city?: string | null
+    logo_url?: string | null
+    number_of_employees?: number | null
+    phone?: string | null
+    website?: string | null
+    terms_accepted?: boolean
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    billing_invoice?: BillingInvoiceCreateNestedManyWithoutTenantInput
+    collection_cases?: CollectionCaseCreateNestedManyWithoutTenantInput
+    debtors?: DebtorCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffCreateNestedManyWithoutTenantInput
+    verdicts?: VerdictCreateNestedManyWithoutTenantInput
+    chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
+    invitations?: TenantInvitationCreateNestedManyWithoutTenantInput
+    employees?: EmployeeCreateNestedManyWithoutTenantInput
+    agreements?: AgreementCreateNestedManyWithoutTenantInput
+    debts?: DebtCreateNestedManyWithoutTenantInput
+  }
+
+  export type TenantUncheckedCreateWithoutMembershipsInput = {
+    id?: string
+    name: string
+    code: string
+    subdomain: string
+    contact_email: string
+    country_code: string
+    kvk?: string | null
+    legal_name?: string | null
+    address?: string | null
+    city?: string | null
+    logo_url?: string | null
+    number_of_employees?: number | null
+    phone?: string | null
+    website?: string | null
+    terms_accepted?: boolean
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    billing_invoice?: BillingInvoiceUncheckedCreateNestedManyWithoutTenantInput
+    collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutTenantInput
+    debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
+    verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
+    chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
+    invitations?: TenantInvitationUncheckedCreateNestedManyWithoutTenantInput
+    employees?: EmployeeUncheckedCreateNestedManyWithoutTenantInput
+    agreements?: AgreementUncheckedCreateNestedManyWithoutTenantInput
+    debts?: DebtUncheckedCreateNestedManyWithoutTenantInput
+  }
+
+  export type TenantCreateOrConnectWithoutMembershipsInput = {
+    where: TenantWhereUniqueInput
+    create: XOR<TenantCreateWithoutMembershipsInput, TenantUncheckedCreateWithoutMembershipsInput>
+  }
+
+  export type UserUpsertWithoutMembershipsInput = {
+    update: XOR<UserUpdateWithoutMembershipsInput, UserUncheckedUpdateWithoutMembershipsInput>
+    create: XOR<UserCreateWithoutMembershipsInput, UserUncheckedCreateWithoutMembershipsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutMembershipsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutMembershipsInput, UserUncheckedUpdateWithoutMembershipsInput>
+  }
+
+  export type UserUpdateWithoutMembershipsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    fullname?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    debtors?: DebtorUpdateManyWithoutUserNestedInput
+    bailiffs?: BailiffUpdateManyWithoutUserNestedInput
+    messages?: ChatMessageUpdateManyWithoutSenderNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutMembershipsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    fullname?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    debtors?: DebtorUncheckedUpdateManyWithoutUserNestedInput
+    bailiffs?: BailiffUncheckedUpdateManyWithoutUserNestedInput
+    messages?: ChatMessageUncheckedUpdateManyWithoutSenderNestedInput
+  }
+
+  export type TenantUpsertWithoutMembershipsInput = {
+    update: XOR<TenantUpdateWithoutMembershipsInput, TenantUncheckedUpdateWithoutMembershipsInput>
+    create: XOR<TenantCreateWithoutMembershipsInput, TenantUncheckedCreateWithoutMembershipsInput>
+    where?: TenantWhereInput
+  }
+
+  export type TenantUpdateToOneWithWhereWithoutMembershipsInput = {
+    where?: TenantWhereInput
+    data: XOR<TenantUpdateWithoutMembershipsInput, TenantUncheckedUpdateWithoutMembershipsInput>
+  }
+
+  export type TenantUpdateWithoutMembershipsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    subdomain?: StringFieldUpdateOperationsInput | string
+    contact_email?: StringFieldUpdateOperationsInput | string
+    country_code?: StringFieldUpdateOperationsInput | string
+    kvk?: NullableStringFieldUpdateOperationsInput | string | null
+    legal_name?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    logo_url?: NullableStringFieldUpdateOperationsInput | string | null
+    number_of_employees?: NullableIntFieldUpdateOperationsInput | number | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    terms_accepted?: BoolFieldUpdateOperationsInput | boolean
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    billing_invoice?: BillingInvoiceUpdateManyWithoutTenantNestedInput
+    collection_cases?: CollectionCaseUpdateManyWithoutTenantNestedInput
+    debtors?: DebtorUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
+    verdicts?: VerdictUpdateManyWithoutTenantNestedInput
+    chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
+    invitations?: TenantInvitationUpdateManyWithoutTenantNestedInput
+    employees?: EmployeeUpdateManyWithoutTenantNestedInput
+    agreements?: AgreementUpdateManyWithoutTenantNestedInput
+    debts?: DebtUpdateManyWithoutTenantNestedInput
+  }
+
+  export type TenantUncheckedUpdateWithoutMembershipsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    subdomain?: StringFieldUpdateOperationsInput | string
+    contact_email?: StringFieldUpdateOperationsInput | string
+    country_code?: StringFieldUpdateOperationsInput | string
+    kvk?: NullableStringFieldUpdateOperationsInput | string | null
+    legal_name?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    logo_url?: NullableStringFieldUpdateOperationsInput | string | null
+    number_of_employees?: NullableIntFieldUpdateOperationsInput | number | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    terms_accepted?: BoolFieldUpdateOperationsInput | boolean
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    billing_invoice?: BillingInvoiceUncheckedUpdateManyWithoutTenantNestedInput
+    collection_cases?: CollectionCaseUncheckedUpdateManyWithoutTenantNestedInput
+    debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
+    verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
+    chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
+    invitations?: TenantInvitationUncheckedUpdateManyWithoutTenantNestedInput
+    employees?: EmployeeUncheckedUpdateManyWithoutTenantNestedInput
+    agreements?: AgreementUncheckedUpdateManyWithoutTenantNestedInput
+    debts?: DebtUncheckedUpdateManyWithoutTenantNestedInput
+  }
+
+  export type TenantCreateWithoutInvitationsInput = {
+    id?: string
+    name: string
+    code: string
+    subdomain: string
+    contact_email: string
+    country_code: string
+    kvk?: string | null
+    legal_name?: string | null
+    address?: string | null
+    city?: string | null
+    logo_url?: string | null
+    number_of_employees?: number | null
+    phone?: string | null
+    website?: string | null
+    terms_accepted?: boolean
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    billing_invoice?: BillingInvoiceCreateNestedManyWithoutTenantInput
+    collection_cases?: CollectionCaseCreateNestedManyWithoutTenantInput
+    debtors?: DebtorCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffCreateNestedManyWithoutTenantInput
+    verdicts?: VerdictCreateNestedManyWithoutTenantInput
+    chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
+    employees?: EmployeeCreateNestedManyWithoutTenantInput
+    agreements?: AgreementCreateNestedManyWithoutTenantInput
+    debts?: DebtCreateNestedManyWithoutTenantInput
+    memberships?: MembershipCreateNestedManyWithoutTenantInput
+  }
+
+  export type TenantUncheckedCreateWithoutInvitationsInput = {
+    id?: string
+    name: string
+    code: string
+    subdomain: string
+    contact_email: string
+    country_code: string
+    kvk?: string | null
+    legal_name?: string | null
+    address?: string | null
+    city?: string | null
+    logo_url?: string | null
+    number_of_employees?: number | null
+    phone?: string | null
+    website?: string | null
+    terms_accepted?: boolean
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    billing_invoice?: BillingInvoiceUncheckedCreateNestedManyWithoutTenantInput
+    collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutTenantInput
+    debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
+    verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
+    chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
+    employees?: EmployeeUncheckedCreateNestedManyWithoutTenantInput
+    agreements?: AgreementUncheckedCreateNestedManyWithoutTenantInput
+    debts?: DebtUncheckedCreateNestedManyWithoutTenantInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutTenantInput
+  }
+
+  export type TenantCreateOrConnectWithoutInvitationsInput = {
+    where: TenantWhereUniqueInput
+    create: XOR<TenantCreateWithoutInvitationsInput, TenantUncheckedCreateWithoutInvitationsInput>
+  }
+
+  export type TenantUpsertWithoutInvitationsInput = {
+    update: XOR<TenantUpdateWithoutInvitationsInput, TenantUncheckedUpdateWithoutInvitationsInput>
+    create: XOR<TenantCreateWithoutInvitationsInput, TenantUncheckedCreateWithoutInvitationsInput>
+    where?: TenantWhereInput
+  }
+
+  export type TenantUpdateToOneWithWhereWithoutInvitationsInput = {
+    where?: TenantWhereInput
+    data: XOR<TenantUpdateWithoutInvitationsInput, TenantUncheckedUpdateWithoutInvitationsInput>
+  }
+
+  export type TenantUpdateWithoutInvitationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    subdomain?: StringFieldUpdateOperationsInput | string
+    contact_email?: StringFieldUpdateOperationsInput | string
+    country_code?: StringFieldUpdateOperationsInput | string
+    kvk?: NullableStringFieldUpdateOperationsInput | string | null
+    legal_name?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    logo_url?: NullableStringFieldUpdateOperationsInput | string | null
+    number_of_employees?: NullableIntFieldUpdateOperationsInput | number | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    terms_accepted?: BoolFieldUpdateOperationsInput | boolean
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    billing_invoice?: BillingInvoiceUpdateManyWithoutTenantNestedInput
+    collection_cases?: CollectionCaseUpdateManyWithoutTenantNestedInput
+    debtors?: DebtorUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
+    verdicts?: VerdictUpdateManyWithoutTenantNestedInput
+    chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
+    employees?: EmployeeUpdateManyWithoutTenantNestedInput
+    agreements?: AgreementUpdateManyWithoutTenantNestedInput
+    debts?: DebtUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUpdateManyWithoutTenantNestedInput
+  }
+
+  export type TenantUncheckedUpdateWithoutInvitationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    subdomain?: StringFieldUpdateOperationsInput | string
+    contact_email?: StringFieldUpdateOperationsInput | string
+    country_code?: StringFieldUpdateOperationsInput | string
+    kvk?: NullableStringFieldUpdateOperationsInput | string | null
+    legal_name?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    logo_url?: NullableStringFieldUpdateOperationsInput | string | null
+    number_of_employees?: NullableIntFieldUpdateOperationsInput | number | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    terms_accepted?: BoolFieldUpdateOperationsInput | boolean
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    billing_invoice?: BillingInvoiceUncheckedUpdateManyWithoutTenantNestedInput
+    collection_cases?: CollectionCaseUncheckedUpdateManyWithoutTenantNestedInput
+    debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
+    bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
+    verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
+    chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
+    employees?: EmployeeUncheckedUpdateManyWithoutTenantNestedInput
+    agreements?: AgreementUncheckedUpdateManyWithoutTenantNestedInput
+    debts?: DebtUncheckedUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutTenantNestedInput
+  }
+
+  export type DebtorCreateWithoutPersonInput = {
+    id?: string
+    email: string
+    total_income?: number
+    created_at?: Date | string
+    updated_at?: Date | string
+    tenant: TenantCreateNestedOneWithoutDebtorsInput
+    user?: UserCreateNestedOneWithoutDebtorsInput
+    collection_cases?: CollectionCaseCreateNestedManyWithoutDebtorInput
+    incomes?: DebtorIncomeCreateNestedManyWithoutDebtorInput
+    verdicts?: VerdictCreateNestedManyWithoutDebtorInput
+    agreements?: AgreementCreateNestedManyWithoutDebtorInput
+    debts?: DebtCreateNestedManyWithoutDebtorInput
+  }
+
+  export type DebtorUncheckedCreateWithoutPersonInput = {
+    id?: string
+    tenant_id: string
+    user_id?: string | null
+    email: string
+    total_income?: number
+    created_at?: Date | string
+    updated_at?: Date | string
+    collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutDebtorInput
+    incomes?: DebtorIncomeUncheckedCreateNestedManyWithoutDebtorInput
+    verdicts?: VerdictUncheckedCreateNestedManyWithoutDebtorInput
+    agreements?: AgreementUncheckedCreateNestedManyWithoutDebtorInput
+    debts?: DebtUncheckedCreateNestedManyWithoutDebtorInput
+  }
+
+  export type DebtorCreateOrConnectWithoutPersonInput = {
+    where: DebtorWhereUniqueInput
+    create: XOR<DebtorCreateWithoutPersonInput, DebtorUncheckedCreateWithoutPersonInput>
+  }
+
+  export type DebtorCreateManyPersonInputEnvelope = {
+    data: DebtorCreateManyPersonInput | DebtorCreateManyPersonInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type DebtorUpsertWithWhereUniqueWithoutPersonInput = {
+    where: DebtorWhereUniqueInput
+    update: XOR<DebtorUpdateWithoutPersonInput, DebtorUncheckedUpdateWithoutPersonInput>
+    create: XOR<DebtorCreateWithoutPersonInput, DebtorUncheckedCreateWithoutPersonInput>
+  }
+
+  export type DebtorUpdateWithWhereUniqueWithoutPersonInput = {
+    where: DebtorWhereUniqueInput
+    data: XOR<DebtorUpdateWithoutPersonInput, DebtorUncheckedUpdateWithoutPersonInput>
+  }
+
+  export type DebtorUpdateManyWithWhereWithoutPersonInput = {
+    where: DebtorScalarWhereInput
+    data: XOR<DebtorUpdateManyMutationInput, DebtorUncheckedUpdateManyWithoutPersonInput>
   }
 
   export type DebtCreateWithoutVerdictsInput = {
@@ -52154,19 +55073,14 @@ export namespace Prisma {
 
   export type DebtorCreateWithoutVerdictsInput = {
     id?: string
-    fullname: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
-    collection_cases?: CollectionCaseCreateNestedManyWithoutDebtorInput
     tenant: TenantCreateNestedOneWithoutDebtorsInput
+    person: PersonCreateNestedOneWithoutDebtorsInput
     user?: UserCreateNestedOneWithoutDebtorsInput
+    collection_cases?: CollectionCaseCreateNestedManyWithoutDebtorInput
     incomes?: DebtorIncomeCreateNestedManyWithoutDebtorInput
     agreements?: AgreementCreateNestedManyWithoutDebtorInput
     debts?: DebtCreateNestedManyWithoutDebtorInput
@@ -52175,15 +55089,10 @@ export namespace Prisma {
   export type DebtorUncheckedCreateWithoutVerdictsInput = {
     id?: string
     tenant_id: string
+    person_id: string
     user_id?: string | null
-    fullname: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
     collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutDebtorInput
@@ -52220,12 +55129,12 @@ export namespace Prisma {
     collection_cases?: CollectionCaseCreateNestedManyWithoutTenantInput
     debtors?: DebtorCreateNestedManyWithoutTenantInput
     bailiffs?: BailiffCreateNestedManyWithoutTenantInput
-    users?: UserCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
     invitations?: TenantInvitationCreateNestedManyWithoutTenantInput
     employees?: EmployeeCreateNestedManyWithoutTenantInput
     agreements?: AgreementCreateNestedManyWithoutTenantInput
     debts?: DebtCreateNestedManyWithoutTenantInput
+    memberships?: MembershipCreateNestedManyWithoutTenantInput
   }
 
   export type TenantUncheckedCreateWithoutVerdictsInput = {
@@ -52251,12 +55160,12 @@ export namespace Prisma {
     collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutTenantInput
     debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
     bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
-    users?: UserUncheckedCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
     invitations?: TenantInvitationUncheckedCreateNestedManyWithoutTenantInput
     employees?: EmployeeUncheckedCreateNestedManyWithoutTenantInput
     agreements?: AgreementUncheckedCreateNestedManyWithoutTenantInput
     debts?: DebtUncheckedCreateNestedManyWithoutTenantInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutTenantInput
   }
 
   export type TenantCreateOrConnectWithoutVerdictsInput = {
@@ -52483,19 +55392,14 @@ export namespace Prisma {
 
   export type DebtorUpdateWithoutVerdictsInput = {
     id?: StringFieldUpdateOperationsInput | string
-    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    collection_cases?: CollectionCaseUpdateManyWithoutDebtorNestedInput
     tenant?: TenantUpdateOneRequiredWithoutDebtorsNestedInput
+    person?: PersonUpdateOneRequiredWithoutDebtorsNestedInput
     user?: UserUpdateOneWithoutDebtorsNestedInput
+    collection_cases?: CollectionCaseUpdateManyWithoutDebtorNestedInput
     incomes?: DebtorIncomeUpdateManyWithoutDebtorNestedInput
     agreements?: AgreementUpdateManyWithoutDebtorNestedInput
     debts?: DebtUpdateManyWithoutDebtorNestedInput
@@ -52504,15 +55408,10 @@ export namespace Prisma {
   export type DebtorUncheckedUpdateWithoutVerdictsInput = {
     id?: StringFieldUpdateOperationsInput | string
     tenant_id?: StringFieldUpdateOperationsInput | string
+    person_id?: StringFieldUpdateOperationsInput | string
     user_id?: NullableStringFieldUpdateOperationsInput | string | null
-    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     collection_cases?: CollectionCaseUncheckedUpdateManyWithoutDebtorNestedInput
@@ -52555,12 +55454,12 @@ export namespace Prisma {
     collection_cases?: CollectionCaseUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUpdateManyWithoutTenantNestedInput
     bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
-    users?: UserUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUpdateManyWithoutTenantNestedInput
     employees?: EmployeeUpdateManyWithoutTenantNestedInput
     agreements?: AgreementUpdateManyWithoutTenantNestedInput
     debts?: DebtUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUpdateManyWithoutTenantNestedInput
   }
 
   export type TenantUncheckedUpdateWithoutVerdictsInput = {
@@ -52586,12 +55485,12 @@ export namespace Prisma {
     collection_cases?: CollectionCaseUncheckedUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
     bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
-    users?: UserUncheckedUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUncheckedUpdateManyWithoutTenantNestedInput
     employees?: EmployeeUncheckedUpdateManyWithoutTenantNestedInput
     agreements?: AgreementUncheckedUpdateManyWithoutTenantNestedInput
     debts?: DebtUncheckedUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutTenantNestedInput
   }
 
   export type VerdictAttachmentUpsertWithWhereUniqueWithoutVerdictInput = {
@@ -53372,12 +56271,12 @@ export namespace Prisma {
     debtors?: DebtorCreateNestedManyWithoutTenantInput
     bailiffs?: BailiffCreateNestedManyWithoutTenantInput
     verdicts?: VerdictCreateNestedManyWithoutTenantInput
-    users?: UserCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
     invitations?: TenantInvitationCreateNestedManyWithoutTenantInput
     employees?: EmployeeCreateNestedManyWithoutTenantInput
     agreements?: AgreementCreateNestedManyWithoutTenantInput
     debts?: DebtCreateNestedManyWithoutTenantInput
+    memberships?: MembershipCreateNestedManyWithoutTenantInput
   }
 
   export type TenantUncheckedCreateWithoutBilling_invoiceInput = {
@@ -53403,12 +56302,12 @@ export namespace Prisma {
     debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
     bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
     verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
-    users?: UserUncheckedCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
     invitations?: TenantInvitationUncheckedCreateNestedManyWithoutTenantInput
     employees?: EmployeeUncheckedCreateNestedManyWithoutTenantInput
     agreements?: AgreementUncheckedCreateNestedManyWithoutTenantInput
     debts?: DebtUncheckedCreateNestedManyWithoutTenantInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutTenantInput
   }
 
   export type TenantCreateOrConnectWithoutBilling_invoiceInput = {
@@ -53518,12 +56417,12 @@ export namespace Prisma {
     debtors?: DebtorUpdateManyWithoutTenantNestedInput
     bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUpdateManyWithoutTenantNestedInput
-    users?: UserUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUpdateManyWithoutTenantNestedInput
     employees?: EmployeeUpdateManyWithoutTenantNestedInput
     agreements?: AgreementUpdateManyWithoutTenantNestedInput
     debts?: DebtUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUpdateManyWithoutTenantNestedInput
   }
 
   export type TenantUncheckedUpdateWithoutBilling_invoiceInput = {
@@ -53549,12 +56448,12 @@ export namespace Prisma {
     debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
     bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
-    users?: UserUncheckedUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUncheckedUpdateManyWithoutTenantNestedInput
     employees?: EmployeeUncheckedUpdateManyWithoutTenantNestedInput
     agreements?: AgreementUncheckedUpdateManyWithoutTenantNestedInput
     debts?: DebtUncheckedUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutTenantNestedInput
   }
 
   export type BillingInvoiceDetailUpsertWithWhereUniqueWithoutBilling_invoiceInput = {
@@ -53775,19 +56674,14 @@ export namespace Prisma {
 
   export type DebtorCreateWithoutDebtsInput = {
     id?: string
-    fullname: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
-    collection_cases?: CollectionCaseCreateNestedManyWithoutDebtorInput
     tenant: TenantCreateNestedOneWithoutDebtorsInput
+    person: PersonCreateNestedOneWithoutDebtorsInput
     user?: UserCreateNestedOneWithoutDebtorsInput
+    collection_cases?: CollectionCaseCreateNestedManyWithoutDebtorInput
     incomes?: DebtorIncomeCreateNestedManyWithoutDebtorInput
     verdicts?: VerdictCreateNestedManyWithoutDebtorInput
     agreements?: AgreementCreateNestedManyWithoutDebtorInput
@@ -53796,15 +56690,10 @@ export namespace Prisma {
   export type DebtorUncheckedCreateWithoutDebtsInput = {
     id?: string
     tenant_id: string
+    person_id: string
     user_id?: string | null
-    fullname: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
     collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutDebtorInput
@@ -53842,11 +56731,11 @@ export namespace Prisma {
     debtors?: DebtorCreateNestedManyWithoutTenantInput
     bailiffs?: BailiffCreateNestedManyWithoutTenantInput
     verdicts?: VerdictCreateNestedManyWithoutTenantInput
-    users?: UserCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
     invitations?: TenantInvitationCreateNestedManyWithoutTenantInput
     employees?: EmployeeCreateNestedManyWithoutTenantInput
     agreements?: AgreementCreateNestedManyWithoutTenantInput
+    memberships?: MembershipCreateNestedManyWithoutTenantInput
   }
 
   export type TenantUncheckedCreateWithoutDebtsInput = {
@@ -53873,11 +56762,11 @@ export namespace Prisma {
     debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
     bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
     verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
-    users?: UserUncheckedCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
     invitations?: TenantInvitationUncheckedCreateNestedManyWithoutTenantInput
     employees?: EmployeeUncheckedCreateNestedManyWithoutTenantInput
     agreements?: AgreementUncheckedCreateNestedManyWithoutTenantInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutTenantInput
   }
 
   export type TenantCreateOrConnectWithoutDebtsInput = {
@@ -54120,19 +57009,14 @@ export namespace Prisma {
 
   export type DebtorUpdateWithoutDebtsInput = {
     id?: StringFieldUpdateOperationsInput | string
-    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    collection_cases?: CollectionCaseUpdateManyWithoutDebtorNestedInput
     tenant?: TenantUpdateOneRequiredWithoutDebtorsNestedInput
+    person?: PersonUpdateOneRequiredWithoutDebtorsNestedInput
     user?: UserUpdateOneWithoutDebtorsNestedInput
+    collection_cases?: CollectionCaseUpdateManyWithoutDebtorNestedInput
     incomes?: DebtorIncomeUpdateManyWithoutDebtorNestedInput
     verdicts?: VerdictUpdateManyWithoutDebtorNestedInput
     agreements?: AgreementUpdateManyWithoutDebtorNestedInput
@@ -54141,15 +57025,10 @@ export namespace Prisma {
   export type DebtorUncheckedUpdateWithoutDebtsInput = {
     id?: StringFieldUpdateOperationsInput | string
     tenant_id?: StringFieldUpdateOperationsInput | string
+    person_id?: StringFieldUpdateOperationsInput | string
     user_id?: NullableStringFieldUpdateOperationsInput | string | null
-    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     collection_cases?: CollectionCaseUncheckedUpdateManyWithoutDebtorNestedInput
@@ -54193,11 +57072,11 @@ export namespace Prisma {
     debtors?: DebtorUpdateManyWithoutTenantNestedInput
     bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUpdateManyWithoutTenantNestedInput
-    users?: UserUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUpdateManyWithoutTenantNestedInput
     employees?: EmployeeUpdateManyWithoutTenantNestedInput
     agreements?: AgreementUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUpdateManyWithoutTenantNestedInput
   }
 
   export type TenantUncheckedUpdateWithoutDebtsInput = {
@@ -54224,11 +57103,11 @@ export namespace Prisma {
     debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
     bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
-    users?: UserUncheckedUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUncheckedUpdateManyWithoutTenantNestedInput
     employees?: EmployeeUncheckedUpdateManyWithoutTenantNestedInput
     agreements?: AgreementUncheckedUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutTenantNestedInput
   }
 
   export type PaymentUpsertWithWhereUniqueWithoutDebtInput = {
@@ -54460,17 +57339,12 @@ export namespace Prisma {
 
   export type DebtorCreateWithoutCollection_casesInput = {
     id?: string
-    fullname: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
     tenant: TenantCreateNestedOneWithoutDebtorsInput
+    person: PersonCreateNestedOneWithoutDebtorsInput
     user?: UserCreateNestedOneWithoutDebtorsInput
     incomes?: DebtorIncomeCreateNestedManyWithoutDebtorInput
     verdicts?: VerdictCreateNestedManyWithoutDebtorInput
@@ -54481,15 +57355,10 @@ export namespace Prisma {
   export type DebtorUncheckedCreateWithoutCollection_casesInput = {
     id?: string
     tenant_id: string
+    person_id: string
     user_id?: string | null
-    fullname: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
     incomes?: DebtorIncomeUncheckedCreateNestedManyWithoutDebtorInput
@@ -54526,12 +57395,12 @@ export namespace Prisma {
     debtors?: DebtorCreateNestedManyWithoutTenantInput
     bailiffs?: BailiffCreateNestedManyWithoutTenantInput
     verdicts?: VerdictCreateNestedManyWithoutTenantInput
-    users?: UserCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
     invitations?: TenantInvitationCreateNestedManyWithoutTenantInput
     employees?: EmployeeCreateNestedManyWithoutTenantInput
     agreements?: AgreementCreateNestedManyWithoutTenantInput
     debts?: DebtCreateNestedManyWithoutTenantInput
+    memberships?: MembershipCreateNestedManyWithoutTenantInput
   }
 
   export type TenantUncheckedCreateWithoutCollection_casesInput = {
@@ -54557,12 +57426,12 @@ export namespace Prisma {
     debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
     bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
     verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
-    users?: UserUncheckedCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
     invitations?: TenantInvitationUncheckedCreateNestedManyWithoutTenantInput
     employees?: EmployeeUncheckedCreateNestedManyWithoutTenantInput
     agreements?: AgreementUncheckedCreateNestedManyWithoutTenantInput
     debts?: DebtUncheckedCreateNestedManyWithoutTenantInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutTenantInput
   }
 
   export type TenantCreateOrConnectWithoutCollection_casesInput = {
@@ -54684,17 +57553,12 @@ export namespace Prisma {
 
   export type DebtorUpdateWithoutCollection_casesInput = {
     id?: StringFieldUpdateOperationsInput | string
-    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     tenant?: TenantUpdateOneRequiredWithoutDebtorsNestedInput
+    person?: PersonUpdateOneRequiredWithoutDebtorsNestedInput
     user?: UserUpdateOneWithoutDebtorsNestedInput
     incomes?: DebtorIncomeUpdateManyWithoutDebtorNestedInput
     verdicts?: VerdictUpdateManyWithoutDebtorNestedInput
@@ -54705,15 +57569,10 @@ export namespace Prisma {
   export type DebtorUncheckedUpdateWithoutCollection_casesInput = {
     id?: StringFieldUpdateOperationsInput | string
     tenant_id?: StringFieldUpdateOperationsInput | string
+    person_id?: StringFieldUpdateOperationsInput | string
     user_id?: NullableStringFieldUpdateOperationsInput | string | null
-    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     incomes?: DebtorIncomeUncheckedUpdateManyWithoutDebtorNestedInput
@@ -54756,12 +57615,12 @@ export namespace Prisma {
     debtors?: DebtorUpdateManyWithoutTenantNestedInput
     bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUpdateManyWithoutTenantNestedInput
-    users?: UserUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUpdateManyWithoutTenantNestedInput
     employees?: EmployeeUpdateManyWithoutTenantNestedInput
     agreements?: AgreementUpdateManyWithoutTenantNestedInput
     debts?: DebtUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUpdateManyWithoutTenantNestedInput
   }
 
   export type TenantUncheckedUpdateWithoutCollection_casesInput = {
@@ -54787,12 +57646,12 @@ export namespace Prisma {
     debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
     bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
-    users?: UserUncheckedUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUncheckedUpdateManyWithoutTenantNestedInput
     employees?: EmployeeUncheckedUpdateManyWithoutTenantNestedInput
     agreements?: AgreementUncheckedUpdateManyWithoutTenantNestedInput
     debts?: DebtUncheckedUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutTenantNestedInput
   }
 
   export type ChatRoomUpsertWithWhereUniqueWithoutCollection_caseInput = {
@@ -54953,6 +57812,141 @@ export namespace Prisma {
     chat_rooms?: ChatRoomUncheckedUpdateManyWithoutCollection_caseNestedInput
   }
 
+  export type TenantCreateWithoutDebtorsInput = {
+    id?: string
+    name: string
+    code: string
+    subdomain: string
+    contact_email: string
+    country_code: string
+    kvk?: string | null
+    legal_name?: string | null
+    address?: string | null
+    city?: string | null
+    logo_url?: string | null
+    number_of_employees?: number | null
+    phone?: string | null
+    website?: string | null
+    terms_accepted?: boolean
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    billing_invoice?: BillingInvoiceCreateNestedManyWithoutTenantInput
+    collection_cases?: CollectionCaseCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffCreateNestedManyWithoutTenantInput
+    verdicts?: VerdictCreateNestedManyWithoutTenantInput
+    chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
+    invitations?: TenantInvitationCreateNestedManyWithoutTenantInput
+    employees?: EmployeeCreateNestedManyWithoutTenantInput
+    agreements?: AgreementCreateNestedManyWithoutTenantInput
+    debts?: DebtCreateNestedManyWithoutTenantInput
+    memberships?: MembershipCreateNestedManyWithoutTenantInput
+  }
+
+  export type TenantUncheckedCreateWithoutDebtorsInput = {
+    id?: string
+    name: string
+    code: string
+    subdomain: string
+    contact_email: string
+    country_code: string
+    kvk?: string | null
+    legal_name?: string | null
+    address?: string | null
+    city?: string | null
+    logo_url?: string | null
+    number_of_employees?: number | null
+    phone?: string | null
+    website?: string | null
+    terms_accepted?: boolean
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    billing_invoice?: BillingInvoiceUncheckedCreateNestedManyWithoutTenantInput
+    collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutTenantInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
+    verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
+    chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
+    invitations?: TenantInvitationUncheckedCreateNestedManyWithoutTenantInput
+    employees?: EmployeeUncheckedCreateNestedManyWithoutTenantInput
+    agreements?: AgreementUncheckedCreateNestedManyWithoutTenantInput
+    debts?: DebtUncheckedCreateNestedManyWithoutTenantInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutTenantInput
+  }
+
+  export type TenantCreateOrConnectWithoutDebtorsInput = {
+    where: TenantWhereUniqueInput
+    create: XOR<TenantCreateWithoutDebtorsInput, TenantUncheckedCreateWithoutDebtorsInput>
+  }
+
+  export type PersonCreateWithoutDebtorsInput = {
+    id?: string
+    person_type: $Enums.PersonType
+    identification_type: $Enums.IdentificationType
+    identification: string
+    first_name?: string | null
+    last_name?: string | null
+    business_name?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type PersonUncheckedCreateWithoutDebtorsInput = {
+    id?: string
+    person_type: $Enums.PersonType
+    identification_type: $Enums.IdentificationType
+    identification: string
+    first_name?: string | null
+    last_name?: string | null
+    business_name?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type PersonCreateOrConnectWithoutDebtorsInput = {
+    where: PersonWhereUniqueInput
+    create: XOR<PersonCreateWithoutDebtorsInput, PersonUncheckedCreateWithoutDebtorsInput>
+  }
+
+  export type UserCreateWithoutDebtorsInput = {
+    id?: string
+    email: string
+    password_hash?: string | null
+    fullname?: string | null
+    phone?: string | null
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    memberships?: MembershipCreateNestedManyWithoutUserInput
+    bailiffs?: BailiffCreateNestedManyWithoutUserInput
+    messages?: ChatMessageCreateNestedManyWithoutSenderInput
+  }
+
+  export type UserUncheckedCreateWithoutDebtorsInput = {
+    id?: string
+    email: string
+    password_hash?: string | null
+    fullname?: string | null
+    phone?: string | null
+    is_active?: boolean
+    created_at?: Date | string
+    updated_at?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
+    bailiffs?: BailiffUncheckedCreateNestedManyWithoutUserInput
+    messages?: ChatMessageUncheckedCreateNestedManyWithoutSenderInput
+  }
+
+  export type UserCreateOrConnectWithoutDebtorsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutDebtorsInput, UserUncheckedCreateWithoutDebtorsInput>
+  }
+
   export type CollectionCaseCreateWithoutDebtorInput = {
     id?: string
     reference_number?: string | null
@@ -55009,108 +58003,6 @@ export namespace Prisma {
   export type CollectionCaseCreateManyDebtorInputEnvelope = {
     data: CollectionCaseCreateManyDebtorInput | CollectionCaseCreateManyDebtorInput[]
     skipDuplicates?: boolean
-  }
-
-  export type TenantCreateWithoutDebtorsInput = {
-    id?: string
-    name: string
-    code: string
-    subdomain: string
-    contact_email: string
-    country_code: string
-    kvk?: string | null
-    legal_name?: string | null
-    address?: string | null
-    city?: string | null
-    logo_url?: string | null
-    number_of_employees?: number | null
-    phone?: string | null
-    website?: string | null
-    terms_accepted?: boolean
-    is_active?: boolean
-    created_at?: Date | string
-    updated_at?: Date | string
-    billing_invoice?: BillingInvoiceCreateNestedManyWithoutTenantInput
-    collection_cases?: CollectionCaseCreateNestedManyWithoutTenantInput
-    bailiffs?: BailiffCreateNestedManyWithoutTenantInput
-    verdicts?: VerdictCreateNestedManyWithoutTenantInput
-    users?: UserCreateNestedManyWithoutTenantInput
-    chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
-    invitations?: TenantInvitationCreateNestedManyWithoutTenantInput
-    employees?: EmployeeCreateNestedManyWithoutTenantInput
-    agreements?: AgreementCreateNestedManyWithoutTenantInput
-    debts?: DebtCreateNestedManyWithoutTenantInput
-  }
-
-  export type TenantUncheckedCreateWithoutDebtorsInput = {
-    id?: string
-    name: string
-    code: string
-    subdomain: string
-    contact_email: string
-    country_code: string
-    kvk?: string | null
-    legal_name?: string | null
-    address?: string | null
-    city?: string | null
-    logo_url?: string | null
-    number_of_employees?: number | null
-    phone?: string | null
-    website?: string | null
-    terms_accepted?: boolean
-    is_active?: boolean
-    created_at?: Date | string
-    updated_at?: Date | string
-    billing_invoice?: BillingInvoiceUncheckedCreateNestedManyWithoutTenantInput
-    collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutTenantInput
-    bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
-    verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
-    users?: UserUncheckedCreateNestedManyWithoutTenantInput
-    chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
-    invitations?: TenantInvitationUncheckedCreateNestedManyWithoutTenantInput
-    employees?: EmployeeUncheckedCreateNestedManyWithoutTenantInput
-    agreements?: AgreementUncheckedCreateNestedManyWithoutTenantInput
-    debts?: DebtUncheckedCreateNestedManyWithoutTenantInput
-  }
-
-  export type TenantCreateOrConnectWithoutDebtorsInput = {
-    where: TenantWhereUniqueInput
-    create: XOR<TenantCreateWithoutDebtorsInput, TenantUncheckedCreateWithoutDebtorsInput>
-  }
-
-  export type UserCreateWithoutDebtorsInput = {
-    id?: string
-    email: string
-    password_hash?: string | null
-    fullname?: string | null
-    phone?: string | null
-    role?: $Enums.roleEnum
-    is_active?: boolean
-    created_at?: Date | string
-    updated_at?: Date | string
-    tenant: TenantCreateNestedOneWithoutUsersInput
-    bailiffs?: BailiffCreateNestedManyWithoutUserInput
-    messages?: ChatMessageCreateNestedManyWithoutSenderInput
-  }
-
-  export type UserUncheckedCreateWithoutDebtorsInput = {
-    id?: string
-    email: string
-    password_hash?: string | null
-    fullname?: string | null
-    phone?: string | null
-    tenant_id: string
-    role?: $Enums.roleEnum
-    is_active?: boolean
-    created_at?: Date | string
-    updated_at?: Date | string
-    bailiffs?: BailiffUncheckedCreateNestedManyWithoutUserInput
-    messages?: ChatMessageUncheckedCreateNestedManyWithoutSenderInput
-  }
-
-  export type UserCreateOrConnectWithoutDebtorsInput = {
-    where: UserWhereUniqueInput
-    create: XOR<UserCreateWithoutDebtorsInput, UserUncheckedCreateWithoutDebtorsInput>
   }
 
   export type DebtorIncomeCreateWithoutDebtorInput = {
@@ -55277,22 +58169,6 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type CollectionCaseUpsertWithWhereUniqueWithoutDebtorInput = {
-    where: CollectionCaseWhereUniqueInput
-    update: XOR<CollectionCaseUpdateWithoutDebtorInput, CollectionCaseUncheckedUpdateWithoutDebtorInput>
-    create: XOR<CollectionCaseCreateWithoutDebtorInput, CollectionCaseUncheckedCreateWithoutDebtorInput>
-  }
-
-  export type CollectionCaseUpdateWithWhereUniqueWithoutDebtorInput = {
-    where: CollectionCaseWhereUniqueInput
-    data: XOR<CollectionCaseUpdateWithoutDebtorInput, CollectionCaseUncheckedUpdateWithoutDebtorInput>
-  }
-
-  export type CollectionCaseUpdateManyWithWhereWithoutDebtorInput = {
-    where: CollectionCaseScalarWhereInput
-    data: XOR<CollectionCaseUpdateManyMutationInput, CollectionCaseUncheckedUpdateManyWithoutDebtorInput>
-  }
-
   export type TenantUpsertWithoutDebtorsInput = {
     update: XOR<TenantUpdateWithoutDebtorsInput, TenantUncheckedUpdateWithoutDebtorsInput>
     create: XOR<TenantCreateWithoutDebtorsInput, TenantUncheckedCreateWithoutDebtorsInput>
@@ -55327,12 +58203,12 @@ export namespace Prisma {
     collection_cases?: CollectionCaseUpdateManyWithoutTenantNestedInput
     bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUpdateManyWithoutTenantNestedInput
-    users?: UserUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUpdateManyWithoutTenantNestedInput
     employees?: EmployeeUpdateManyWithoutTenantNestedInput
     agreements?: AgreementUpdateManyWithoutTenantNestedInput
     debts?: DebtUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUpdateManyWithoutTenantNestedInput
   }
 
   export type TenantUncheckedUpdateWithoutDebtorsInput = {
@@ -55358,12 +58234,53 @@ export namespace Prisma {
     collection_cases?: CollectionCaseUncheckedUpdateManyWithoutTenantNestedInput
     bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
-    users?: UserUncheckedUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUncheckedUpdateManyWithoutTenantNestedInput
     employees?: EmployeeUncheckedUpdateManyWithoutTenantNestedInput
     agreements?: AgreementUncheckedUpdateManyWithoutTenantNestedInput
     debts?: DebtUncheckedUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutTenantNestedInput
+  }
+
+  export type PersonUpsertWithoutDebtorsInput = {
+    update: XOR<PersonUpdateWithoutDebtorsInput, PersonUncheckedUpdateWithoutDebtorsInput>
+    create: XOR<PersonCreateWithoutDebtorsInput, PersonUncheckedCreateWithoutDebtorsInput>
+    where?: PersonWhereInput
+  }
+
+  export type PersonUpdateToOneWithWhereWithoutDebtorsInput = {
+    where?: PersonWhereInput
+    data: XOR<PersonUpdateWithoutDebtorsInput, PersonUncheckedUpdateWithoutDebtorsInput>
+  }
+
+  export type PersonUpdateWithoutDebtorsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
+    identification_type?: EnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType
+    identification?: StringFieldUpdateOperationsInput | string
+    first_name?: NullableStringFieldUpdateOperationsInput | string | null
+    last_name?: NullableStringFieldUpdateOperationsInput | string | null
+    business_name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PersonUncheckedUpdateWithoutDebtorsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
+    identification_type?: EnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType
+    identification?: StringFieldUpdateOperationsInput | string
+    first_name?: NullableStringFieldUpdateOperationsInput | string | null
+    last_name?: NullableStringFieldUpdateOperationsInput | string | null
+    business_name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type UserUpsertWithoutDebtorsInput = {
@@ -55383,11 +58300,10 @@ export namespace Prisma {
     password_hash?: NullableStringFieldUpdateOperationsInput | string | null
     fullname?: NullableStringFieldUpdateOperationsInput | string | null
     phone?: NullableStringFieldUpdateOperationsInput | string | null
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    tenant?: TenantUpdateOneRequiredWithoutUsersNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     bailiffs?: BailiffUpdateManyWithoutUserNestedInput
     messages?: ChatMessageUpdateManyWithoutSenderNestedInput
   }
@@ -55398,13 +58314,28 @@ export namespace Prisma {
     password_hash?: NullableStringFieldUpdateOperationsInput | string | null
     fullname?: NullableStringFieldUpdateOperationsInput | string | null
     phone?: NullableStringFieldUpdateOperationsInput | string | null
-    tenant_id?: StringFieldUpdateOperationsInput | string
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     bailiffs?: BailiffUncheckedUpdateManyWithoutUserNestedInput
     messages?: ChatMessageUncheckedUpdateManyWithoutSenderNestedInput
+  }
+
+  export type CollectionCaseUpsertWithWhereUniqueWithoutDebtorInput = {
+    where: CollectionCaseWhereUniqueInput
+    update: XOR<CollectionCaseUpdateWithoutDebtorInput, CollectionCaseUncheckedUpdateWithoutDebtorInput>
+    create: XOR<CollectionCaseCreateWithoutDebtorInput, CollectionCaseUncheckedCreateWithoutDebtorInput>
+  }
+
+  export type CollectionCaseUpdateWithWhereUniqueWithoutDebtorInput = {
+    where: CollectionCaseWhereUniqueInput
+    data: XOR<CollectionCaseUpdateWithoutDebtorInput, CollectionCaseUncheckedUpdateWithoutDebtorInput>
+  }
+
+  export type CollectionCaseUpdateManyWithWhereWithoutDebtorInput = {
+    where: CollectionCaseScalarWhereInput
+    data: XOR<CollectionCaseUpdateManyMutationInput, CollectionCaseUncheckedUpdateManyWithoutDebtorInput>
   }
 
   export type DebtorIncomeUpsertWithWhereUniqueWithoutDebtorInput = {
@@ -55485,19 +58416,14 @@ export namespace Prisma {
 
   export type DebtorCreateWithoutIncomesInput = {
     id?: string
-    fullname: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
-    collection_cases?: CollectionCaseCreateNestedManyWithoutDebtorInput
     tenant: TenantCreateNestedOneWithoutDebtorsInput
+    person: PersonCreateNestedOneWithoutDebtorsInput
     user?: UserCreateNestedOneWithoutDebtorsInput
+    collection_cases?: CollectionCaseCreateNestedManyWithoutDebtorInput
     verdicts?: VerdictCreateNestedManyWithoutDebtorInput
     agreements?: AgreementCreateNestedManyWithoutDebtorInput
     debts?: DebtCreateNestedManyWithoutDebtorInput
@@ -55506,15 +58432,10 @@ export namespace Prisma {
   export type DebtorUncheckedCreateWithoutIncomesInput = {
     id?: string
     tenant_id: string
+    person_id: string
     user_id?: string | null
-    fullname: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
     collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutDebtorInput
@@ -55541,19 +58462,14 @@ export namespace Prisma {
 
   export type DebtorUpdateWithoutIncomesInput = {
     id?: StringFieldUpdateOperationsInput | string
-    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    collection_cases?: CollectionCaseUpdateManyWithoutDebtorNestedInput
     tenant?: TenantUpdateOneRequiredWithoutDebtorsNestedInput
+    person?: PersonUpdateOneRequiredWithoutDebtorsNestedInput
     user?: UserUpdateOneWithoutDebtorsNestedInput
+    collection_cases?: CollectionCaseUpdateManyWithoutDebtorNestedInput
     verdicts?: VerdictUpdateManyWithoutDebtorNestedInput
     agreements?: AgreementUpdateManyWithoutDebtorNestedInput
     debts?: DebtUpdateManyWithoutDebtorNestedInput
@@ -55562,15 +58478,10 @@ export namespace Prisma {
   export type DebtorUncheckedUpdateWithoutIncomesInput = {
     id?: StringFieldUpdateOperationsInput | string
     tenant_id?: StringFieldUpdateOperationsInput | string
+    person_id?: StringFieldUpdateOperationsInput | string
     user_id?: NullableStringFieldUpdateOperationsInput | string | null
-    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     collection_cases?: CollectionCaseUncheckedUpdateManyWithoutDebtorNestedInput
@@ -55602,12 +58513,12 @@ export namespace Prisma {
     collection_cases?: CollectionCaseCreateNestedManyWithoutTenantInput
     debtors?: DebtorCreateNestedManyWithoutTenantInput
     verdicts?: VerdictCreateNestedManyWithoutTenantInput
-    users?: UserCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
     invitations?: TenantInvitationCreateNestedManyWithoutTenantInput
     employees?: EmployeeCreateNestedManyWithoutTenantInput
     agreements?: AgreementCreateNestedManyWithoutTenantInput
     debts?: DebtCreateNestedManyWithoutTenantInput
+    memberships?: MembershipCreateNestedManyWithoutTenantInput
   }
 
   export type TenantUncheckedCreateWithoutBailiffsInput = {
@@ -55633,12 +58544,12 @@ export namespace Prisma {
     collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutTenantInput
     debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
     verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
-    users?: UserUncheckedCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
     invitations?: TenantInvitationUncheckedCreateNestedManyWithoutTenantInput
     employees?: EmployeeUncheckedCreateNestedManyWithoutTenantInput
     agreements?: AgreementUncheckedCreateNestedManyWithoutTenantInput
     debts?: DebtUncheckedCreateNestedManyWithoutTenantInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutTenantInput
   }
 
   export type TenantCreateOrConnectWithoutBailiffsInput = {
@@ -55652,11 +58563,10 @@ export namespace Prisma {
     password_hash?: string | null
     fullname?: string | null
     phone?: string | null
-    role?: $Enums.roleEnum
     is_active?: boolean
     created_at?: Date | string
     updated_at?: Date | string
-    tenant: TenantCreateNestedOneWithoutUsersInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     debtors?: DebtorCreateNestedManyWithoutUserInput
     messages?: ChatMessageCreateNestedManyWithoutSenderInput
   }
@@ -55667,11 +58577,10 @@ export namespace Prisma {
     password_hash?: string | null
     fullname?: string | null
     phone?: string | null
-    tenant_id: string
-    role?: $Enums.roleEnum
     is_active?: boolean
     created_at?: Date | string
     updated_at?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     debtors?: DebtorUncheckedCreateNestedManyWithoutUserInput
     messages?: ChatMessageUncheckedCreateNestedManyWithoutSenderInput
   }
@@ -55767,12 +58676,12 @@ export namespace Prisma {
     collection_cases?: CollectionCaseUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUpdateManyWithoutTenantNestedInput
-    users?: UserUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUpdateManyWithoutTenantNestedInput
     employees?: EmployeeUpdateManyWithoutTenantNestedInput
     agreements?: AgreementUpdateManyWithoutTenantNestedInput
     debts?: DebtUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUpdateManyWithoutTenantNestedInput
   }
 
   export type TenantUncheckedUpdateWithoutBailiffsInput = {
@@ -55798,12 +58707,12 @@ export namespace Prisma {
     collection_cases?: CollectionCaseUncheckedUpdateManyWithoutTenantNestedInput
     debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
-    users?: UserUncheckedUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUncheckedUpdateManyWithoutTenantNestedInput
     employees?: EmployeeUncheckedUpdateManyWithoutTenantNestedInput
     agreements?: AgreementUncheckedUpdateManyWithoutTenantNestedInput
     debts?: DebtUncheckedUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutTenantNestedInput
   }
 
   export type UserUpsertWithoutBailiffsInput = {
@@ -55823,11 +58732,10 @@ export namespace Prisma {
     password_hash?: NullableStringFieldUpdateOperationsInput | string | null
     fullname?: NullableStringFieldUpdateOperationsInput | string | null
     phone?: NullableStringFieldUpdateOperationsInput | string | null
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    tenant?: TenantUpdateOneRequiredWithoutUsersNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     debtors?: DebtorUpdateManyWithoutUserNestedInput
     messages?: ChatMessageUpdateManyWithoutSenderNestedInput
   }
@@ -55838,11 +58746,10 @@ export namespace Prisma {
     password_hash?: NullableStringFieldUpdateOperationsInput | string | null
     fullname?: NullableStringFieldUpdateOperationsInput | string | null
     phone?: NullableStringFieldUpdateOperationsInput | string | null
-    tenant_id?: StringFieldUpdateOperationsInput | string
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     debtors?: DebtorUncheckedUpdateManyWithoutUserNestedInput
     messages?: ChatMessageUncheckedUpdateManyWithoutSenderNestedInput
   }
@@ -55887,11 +58794,11 @@ export namespace Prisma {
     debtors?: DebtorCreateNestedManyWithoutTenantInput
     bailiffs?: BailiffCreateNestedManyWithoutTenantInput
     verdicts?: VerdictCreateNestedManyWithoutTenantInput
-    users?: UserCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
     invitations?: TenantInvitationCreateNestedManyWithoutTenantInput
     agreements?: AgreementCreateNestedManyWithoutTenantInput
     debts?: DebtCreateNestedManyWithoutTenantInput
+    memberships?: MembershipCreateNestedManyWithoutTenantInput
   }
 
   export type TenantUncheckedCreateWithoutEmployeesInput = {
@@ -55918,11 +58825,11 @@ export namespace Prisma {
     debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
     bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
     verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
-    users?: UserUncheckedCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
     invitations?: TenantInvitationUncheckedCreateNestedManyWithoutTenantInput
     agreements?: AgreementUncheckedCreateNestedManyWithoutTenantInput
     debts?: DebtUncheckedCreateNestedManyWithoutTenantInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutTenantInput
   }
 
   export type TenantCreateOrConnectWithoutEmployeesInput = {
@@ -55965,11 +58872,11 @@ export namespace Prisma {
     debtors?: DebtorUpdateManyWithoutTenantNestedInput
     bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUpdateManyWithoutTenantNestedInput
-    users?: UserUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUpdateManyWithoutTenantNestedInput
     agreements?: AgreementUpdateManyWithoutTenantNestedInput
     debts?: DebtUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUpdateManyWithoutTenantNestedInput
   }
 
   export type TenantUncheckedUpdateWithoutEmployeesInput = {
@@ -55996,11 +58903,11 @@ export namespace Prisma {
     debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
     bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
-    users?: UserUncheckedUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUncheckedUpdateManyWithoutTenantNestedInput
     agreements?: AgreementUncheckedUpdateManyWithoutTenantNestedInput
     debts?: DebtUncheckedUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutTenantNestedInput
   }
 
   export type TenantCreateWithoutChat_roomsInput = {
@@ -56027,11 +58934,11 @@ export namespace Prisma {
     debtors?: DebtorCreateNestedManyWithoutTenantInput
     bailiffs?: BailiffCreateNestedManyWithoutTenantInput
     verdicts?: VerdictCreateNestedManyWithoutTenantInput
-    users?: UserCreateNestedManyWithoutTenantInput
     invitations?: TenantInvitationCreateNestedManyWithoutTenantInput
     employees?: EmployeeCreateNestedManyWithoutTenantInput
     agreements?: AgreementCreateNestedManyWithoutTenantInput
     debts?: DebtCreateNestedManyWithoutTenantInput
+    memberships?: MembershipCreateNestedManyWithoutTenantInput
   }
 
   export type TenantUncheckedCreateWithoutChat_roomsInput = {
@@ -56058,11 +58965,11 @@ export namespace Prisma {
     debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
     bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
     verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
-    users?: UserUncheckedCreateNestedManyWithoutTenantInput
     invitations?: TenantInvitationUncheckedCreateNestedManyWithoutTenantInput
     employees?: EmployeeUncheckedCreateNestedManyWithoutTenantInput
     agreements?: AgreementUncheckedCreateNestedManyWithoutTenantInput
     debts?: DebtUncheckedCreateNestedManyWithoutTenantInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutTenantInput
   }
 
   export type TenantCreateOrConnectWithoutChat_roomsInput = {
@@ -56190,11 +59097,11 @@ export namespace Prisma {
     debtors?: DebtorUpdateManyWithoutTenantNestedInput
     bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUpdateManyWithoutTenantNestedInput
-    users?: UserUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUpdateManyWithoutTenantNestedInput
     employees?: EmployeeUpdateManyWithoutTenantNestedInput
     agreements?: AgreementUpdateManyWithoutTenantNestedInput
     debts?: DebtUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUpdateManyWithoutTenantNestedInput
   }
 
   export type TenantUncheckedUpdateWithoutChat_roomsInput = {
@@ -56221,11 +59128,11 @@ export namespace Prisma {
     debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
     bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
-    users?: UserUncheckedUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUncheckedUpdateManyWithoutTenantNestedInput
     employees?: EmployeeUncheckedUpdateManyWithoutTenantNestedInput
     agreements?: AgreementUncheckedUpdateManyWithoutTenantNestedInput
     debts?: DebtUncheckedUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutTenantNestedInput
   }
 
   export type CollectionCaseUpsertWithoutChat_roomsInput = {
@@ -56332,11 +59239,10 @@ export namespace Prisma {
     password_hash?: string | null
     fullname?: string | null
     phone?: string | null
-    role?: $Enums.roleEnum
     is_active?: boolean
     created_at?: Date | string
     updated_at?: Date | string
-    tenant: TenantCreateNestedOneWithoutUsersInput
+    memberships?: MembershipCreateNestedManyWithoutUserInput
     debtors?: DebtorCreateNestedManyWithoutUserInput
     bailiffs?: BailiffCreateNestedManyWithoutUserInput
   }
@@ -56347,11 +59253,10 @@ export namespace Prisma {
     password_hash?: string | null
     fullname?: string | null
     phone?: string | null
-    tenant_id: string
-    role?: $Enums.roleEnum
     is_active?: boolean
     created_at?: Date | string
     updated_at?: Date | string
+    memberships?: MembershipUncheckedCreateNestedManyWithoutUserInput
     debtors?: DebtorUncheckedCreateNestedManyWithoutUserInput
     bailiffs?: BailiffUncheckedCreateNestedManyWithoutUserInput
   }
@@ -56407,11 +59312,10 @@ export namespace Prisma {
     password_hash?: NullableStringFieldUpdateOperationsInput | string | null
     fullname?: NullableStringFieldUpdateOperationsInput | string | null
     phone?: NullableStringFieldUpdateOperationsInput | string | null
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    tenant?: TenantUpdateOneRequiredWithoutUsersNestedInput
+    memberships?: MembershipUpdateManyWithoutUserNestedInput
     debtors?: DebtorUpdateManyWithoutUserNestedInput
     bailiffs?: BailiffUpdateManyWithoutUserNestedInput
   }
@@ -56422,11 +59326,10 @@ export namespace Prisma {
     password_hash?: NullableStringFieldUpdateOperationsInput | string | null
     fullname?: NullableStringFieldUpdateOperationsInput | string | null
     phone?: NullableStringFieldUpdateOperationsInput | string | null
-    tenant_id?: StringFieldUpdateOperationsInput | string
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
     is_active?: BoolFieldUpdateOperationsInput | boolean
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    memberships?: MembershipUncheckedUpdateManyWithoutUserNestedInput
     debtors?: DebtorUncheckedUpdateManyWithoutUserNestedInput
     bailiffs?: BailiffUncheckedUpdateManyWithoutUserNestedInput
   }
@@ -56492,11 +59395,11 @@ export namespace Prisma {
     debtors?: DebtorCreateNestedManyWithoutTenantInput
     bailiffs?: BailiffCreateNestedManyWithoutTenantInput
     verdicts?: VerdictCreateNestedManyWithoutTenantInput
-    users?: UserCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomCreateNestedManyWithoutTenantInput
     invitations?: TenantInvitationCreateNestedManyWithoutTenantInput
     employees?: EmployeeCreateNestedManyWithoutTenantInput
     debts?: DebtCreateNestedManyWithoutTenantInput
+    memberships?: MembershipCreateNestedManyWithoutTenantInput
   }
 
   export type TenantUncheckedCreateWithoutAgreementsInput = {
@@ -56523,11 +59426,11 @@ export namespace Prisma {
     debtors?: DebtorUncheckedCreateNestedManyWithoutTenantInput
     bailiffs?: BailiffUncheckedCreateNestedManyWithoutTenantInput
     verdicts?: VerdictUncheckedCreateNestedManyWithoutTenantInput
-    users?: UserUncheckedCreateNestedManyWithoutTenantInput
     chat_rooms?: ChatRoomUncheckedCreateNestedManyWithoutTenantInput
     invitations?: TenantInvitationUncheckedCreateNestedManyWithoutTenantInput
     employees?: EmployeeUncheckedCreateNestedManyWithoutTenantInput
     debts?: DebtUncheckedCreateNestedManyWithoutTenantInput
+    memberships?: MembershipUncheckedCreateNestedManyWithoutTenantInput
   }
 
   export type TenantCreateOrConnectWithoutAgreementsInput = {
@@ -56537,19 +59440,14 @@ export namespace Prisma {
 
   export type DebtorCreateWithoutAgreementsInput = {
     id?: string
-    fullname: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
-    collection_cases?: CollectionCaseCreateNestedManyWithoutDebtorInput
     tenant: TenantCreateNestedOneWithoutDebtorsInput
+    person: PersonCreateNestedOneWithoutDebtorsInput
     user?: UserCreateNestedOneWithoutDebtorsInput
+    collection_cases?: CollectionCaseCreateNestedManyWithoutDebtorInput
     incomes?: DebtorIncomeCreateNestedManyWithoutDebtorInput
     verdicts?: VerdictCreateNestedManyWithoutDebtorInput
     debts?: DebtCreateNestedManyWithoutDebtorInput
@@ -56558,15 +59456,10 @@ export namespace Prisma {
   export type DebtorUncheckedCreateWithoutAgreementsInput = {
     id?: string
     tenant_id: string
+    person_id: string
     user_id?: string | null
-    fullname: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
     collection_cases?: CollectionCaseUncheckedCreateNestedManyWithoutDebtorInput
@@ -56726,11 +59619,11 @@ export namespace Prisma {
     debtors?: DebtorUpdateManyWithoutTenantNestedInput
     bailiffs?: BailiffUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUpdateManyWithoutTenantNestedInput
-    users?: UserUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUpdateManyWithoutTenantNestedInput
     employees?: EmployeeUpdateManyWithoutTenantNestedInput
     debts?: DebtUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUpdateManyWithoutTenantNestedInput
   }
 
   export type TenantUncheckedUpdateWithoutAgreementsInput = {
@@ -56757,11 +59650,11 @@ export namespace Prisma {
     debtors?: DebtorUncheckedUpdateManyWithoutTenantNestedInput
     bailiffs?: BailiffUncheckedUpdateManyWithoutTenantNestedInput
     verdicts?: VerdictUncheckedUpdateManyWithoutTenantNestedInput
-    users?: UserUncheckedUpdateManyWithoutTenantNestedInput
     chat_rooms?: ChatRoomUncheckedUpdateManyWithoutTenantNestedInput
     invitations?: TenantInvitationUncheckedUpdateManyWithoutTenantNestedInput
     employees?: EmployeeUncheckedUpdateManyWithoutTenantNestedInput
     debts?: DebtUncheckedUpdateManyWithoutTenantNestedInput
+    memberships?: MembershipUncheckedUpdateManyWithoutTenantNestedInput
   }
 
   export type DebtorUpsertWithoutAgreementsInput = {
@@ -56777,19 +59670,14 @@ export namespace Prisma {
 
   export type DebtorUpdateWithoutAgreementsInput = {
     id?: StringFieldUpdateOperationsInput | string
-    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    collection_cases?: CollectionCaseUpdateManyWithoutDebtorNestedInput
     tenant?: TenantUpdateOneRequiredWithoutDebtorsNestedInput
+    person?: PersonUpdateOneRequiredWithoutDebtorsNestedInput
     user?: UserUpdateOneWithoutDebtorsNestedInput
+    collection_cases?: CollectionCaseUpdateManyWithoutDebtorNestedInput
     incomes?: DebtorIncomeUpdateManyWithoutDebtorNestedInput
     verdicts?: VerdictUpdateManyWithoutDebtorNestedInput
     debts?: DebtUpdateManyWithoutDebtorNestedInput
@@ -56798,15 +59686,10 @@ export namespace Prisma {
   export type DebtorUncheckedUpdateWithoutAgreementsInput = {
     id?: StringFieldUpdateOperationsInput | string
     tenant_id?: StringFieldUpdateOperationsInput | string
+    person_id?: StringFieldUpdateOperationsInput | string
     user_id?: NullableStringFieldUpdateOperationsInput | string | null
-    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     collection_cases?: CollectionCaseUncheckedUpdateManyWithoutDebtorNestedInput
@@ -57382,15 +60265,10 @@ export namespace Prisma {
 
   export type DebtorCreateManyTenantInput = {
     id?: string
+    person_id: string
     user_id?: string | null
-    fullname: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -57422,18 +60300,6 @@ export namespace Prisma {
     bailiff_id: string
   }
 
-  export type UserCreateManyTenantInput = {
-    id?: string
-    email: string
-    password_hash?: string | null
-    fullname?: string | null
-    phone?: string | null
-    role?: $Enums.roleEnum
-    is_active?: boolean
-    created_at?: Date | string
-    updated_at?: Date | string
-  }
-
   export type ChatRoomCreateManyTenantInput = {
     id?: string
     collection_case_id: string
@@ -57447,7 +60313,7 @@ export namespace Prisma {
     email: string
     fullname?: string | null
     token: string
-    role?: $Enums.roleEnum
+    role?: $Enums.UserRole
     debtor_id?: string | null
     created_at?: Date | string
     expires_at: Date | string
@@ -57491,6 +60357,13 @@ export namespace Prisma {
     status: $Enums.DebtStatus
     created_at?: Date | string
     updated_at?: Date | string
+  }
+
+  export type MembershipCreateManyTenantInput = {
+    id?: string
+    user_id: string
+    role: $Enums.UserRole
+    created_at?: Date | string
   }
 
   export type BillingInvoiceUpdateWithoutTenantInput = {
@@ -57608,18 +60481,13 @@ export namespace Prisma {
 
   export type DebtorUpdateWithoutTenantInput = {
     id?: StringFieldUpdateOperationsInput | string
-    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    collection_cases?: CollectionCaseUpdateManyWithoutDebtorNestedInput
+    person?: PersonUpdateOneRequiredWithoutDebtorsNestedInput
     user?: UserUpdateOneWithoutDebtorsNestedInput
+    collection_cases?: CollectionCaseUpdateManyWithoutDebtorNestedInput
     incomes?: DebtorIncomeUpdateManyWithoutDebtorNestedInput
     verdicts?: VerdictUpdateManyWithoutDebtorNestedInput
     agreements?: AgreementUpdateManyWithoutDebtorNestedInput
@@ -57628,15 +60496,10 @@ export namespace Prisma {
 
   export type DebtorUncheckedUpdateWithoutTenantInput = {
     id?: StringFieldUpdateOperationsInput | string
+    person_id?: StringFieldUpdateOperationsInput | string
     user_id?: NullableStringFieldUpdateOperationsInput | string | null
-    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     collection_cases?: CollectionCaseUncheckedUpdateManyWithoutDebtorNestedInput
@@ -57648,15 +60511,10 @@ export namespace Prisma {
 
   export type DebtorUncheckedUpdateManyWithoutTenantInput = {
     id?: StringFieldUpdateOperationsInput | string
+    person_id?: StringFieldUpdateOperationsInput | string
     user_id?: NullableStringFieldUpdateOperationsInput | string | null
-    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -57752,48 +60610,6 @@ export namespace Prisma {
     bailiff_id?: StringFieldUpdateOperationsInput | string
   }
 
-  export type UserUpdateWithoutTenantInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    password_hash?: NullableStringFieldUpdateOperationsInput | string | null
-    fullname?: NullableStringFieldUpdateOperationsInput | string | null
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
-    is_active?: BoolFieldUpdateOperationsInput | boolean
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    debtors?: DebtorUpdateManyWithoutUserNestedInput
-    bailiffs?: BailiffUpdateManyWithoutUserNestedInput
-    messages?: ChatMessageUpdateManyWithoutSenderNestedInput
-  }
-
-  export type UserUncheckedUpdateWithoutTenantInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    password_hash?: NullableStringFieldUpdateOperationsInput | string | null
-    fullname?: NullableStringFieldUpdateOperationsInput | string | null
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
-    is_active?: BoolFieldUpdateOperationsInput | boolean
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    debtors?: DebtorUncheckedUpdateManyWithoutUserNestedInput
-    bailiffs?: BailiffUncheckedUpdateManyWithoutUserNestedInput
-    messages?: ChatMessageUncheckedUpdateManyWithoutSenderNestedInput
-  }
-
-  export type UserUncheckedUpdateManyWithoutTenantInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    password_hash?: NullableStringFieldUpdateOperationsInput | string | null
-    fullname?: NullableStringFieldUpdateOperationsInput | string | null
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
-    is_active?: BoolFieldUpdateOperationsInput | boolean
-    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
   export type ChatRoomUpdateWithoutTenantInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
@@ -57825,7 +60641,7 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     fullname?: NullableStringFieldUpdateOperationsInput | string | null
     token?: StringFieldUpdateOperationsInput | string
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     debtor_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     expires_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -57838,7 +60654,7 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     fullname?: NullableStringFieldUpdateOperationsInput | string | null
     token?: StringFieldUpdateOperationsInput | string
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     debtor_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     expires_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -57851,7 +60667,7 @@ export namespace Prisma {
     email?: StringFieldUpdateOperationsInput | string
     fullname?: NullableStringFieldUpdateOperationsInput | string | null
     token?: StringFieldUpdateOperationsInput | string
-    role?: EnumroleEnumFieldUpdateOperationsInput | $Enums.roleEnum
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     debtor_id?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     expires_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -57987,17 +60803,40 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type MembershipUpdateWithoutTenantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutMembershipsNestedInput
+  }
+
+  export type MembershipUncheckedUpdateWithoutTenantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    user_id?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipUncheckedUpdateManyWithoutTenantInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    user_id?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipCreateManyUserInput = {
+    id?: string
+    tenant_id: string
+    role: $Enums.UserRole
+    created_at?: Date | string
+  }
+
   export type DebtorCreateManyUserInput = {
     id?: string
     tenant_id: string
-    fullname: string
+    person_id: string
     email: string
-    phone?: string | null
-    address?: string | null
-    person_type?: $Enums.PersonType
-    identification_type?: $Enums.IdentificationType | null
-    identification?: string | null
-    total_income?: number | null
+    total_income?: number
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -58023,20 +60862,36 @@ export namespace Prisma {
     updated_at?: Date | string
   }
 
+  export type MembershipUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    tenant?: TenantUpdateOneRequiredWithoutMembershipsNestedInput
+  }
+
+  export type MembershipUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tenant_id?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MembershipUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tenant_id?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type DebtorUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
-    fullname?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
-    collection_cases?: CollectionCaseUpdateManyWithoutDebtorNestedInput
     tenant?: TenantUpdateOneRequiredWithoutDebtorsNestedInput
+    person?: PersonUpdateOneRequiredWithoutDebtorsNestedInput
+    collection_cases?: CollectionCaseUpdateManyWithoutDebtorNestedInput
     incomes?: DebtorIncomeUpdateManyWithoutDebtorNestedInput
     verdicts?: VerdictUpdateManyWithoutDebtorNestedInput
     agreements?: AgreementUpdateManyWithoutDebtorNestedInput
@@ -58046,14 +60901,9 @@ export namespace Prisma {
   export type DebtorUncheckedUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     tenant_id?: StringFieldUpdateOperationsInput | string
-    fullname?: StringFieldUpdateOperationsInput | string
+    person_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     collection_cases?: CollectionCaseUncheckedUpdateManyWithoutDebtorNestedInput
@@ -58066,14 +60916,9 @@ export namespace Prisma {
   export type DebtorUncheckedUpdateManyWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     tenant_id?: StringFieldUpdateOperationsInput | string
-    fullname?: StringFieldUpdateOperationsInput | string
+    person_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    person_type?: EnumPersonTypeFieldUpdateOperationsInput | $Enums.PersonType
-    identification_type?: NullableEnumIdentificationTypeFieldUpdateOperationsInput | $Enums.IdentificationType | null
-    identification?: NullableStringFieldUpdateOperationsInput | string | null
-    total_income?: NullableFloatFieldUpdateOperationsInput | number | null
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -58139,6 +60984,56 @@ export namespace Prisma {
     file_url?: NullableStringFieldUpdateOperationsInput | string | null
     file_name?: NullableStringFieldUpdateOperationsInput | string | null
     timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DebtorCreateManyPersonInput = {
+    id?: string
+    tenant_id: string
+    user_id?: string | null
+    email: string
+    total_income?: number
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type DebtorUpdateWithoutPersonInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    total_income?: FloatFieldUpdateOperationsInput | number
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    tenant?: TenantUpdateOneRequiredWithoutDebtorsNestedInput
+    user?: UserUpdateOneWithoutDebtorsNestedInput
+    collection_cases?: CollectionCaseUpdateManyWithoutDebtorNestedInput
+    incomes?: DebtorIncomeUpdateManyWithoutDebtorNestedInput
+    verdicts?: VerdictUpdateManyWithoutDebtorNestedInput
+    agreements?: AgreementUpdateManyWithoutDebtorNestedInput
+    debts?: DebtUpdateManyWithoutDebtorNestedInput
+  }
+
+  export type DebtorUncheckedUpdateWithoutPersonInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tenant_id?: StringFieldUpdateOperationsInput | string
+    user_id?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    total_income?: FloatFieldUpdateOperationsInput | number
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    collection_cases?: CollectionCaseUncheckedUpdateManyWithoutDebtorNestedInput
+    incomes?: DebtorIncomeUncheckedUpdateManyWithoutDebtorNestedInput
+    verdicts?: VerdictUncheckedUpdateManyWithoutDebtorNestedInput
+    agreements?: AgreementUncheckedUpdateManyWithoutDebtorNestedInput
+    debts?: DebtUncheckedUpdateManyWithoutDebtorNestedInput
+  }
+
+  export type DebtorUncheckedUpdateManyWithoutPersonInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tenant_id?: StringFieldUpdateOperationsInput | string
+    user_id?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: StringFieldUpdateOperationsInput | string
+    total_income?: FloatFieldUpdateOperationsInput | number
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }

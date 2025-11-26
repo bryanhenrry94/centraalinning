@@ -291,7 +291,7 @@ const CollectionTable = () => {
                   {formatDate(invoice.due_date?.toString() || "")}
                 </TableCell>
                 <TableCell sx={{ textAlign: "center" }}>
-                  {invoice.debtor?.fullname}
+                  {invoice.debtor.email}
                 </TableCell>
                 <TableCell sx={{ textAlign: "right" }}>
                   {formatCurrency(invoice.amount_original)}

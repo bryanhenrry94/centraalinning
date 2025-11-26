@@ -141,6 +141,25 @@ exports.Prisma.TenantScalarFieldEnum = {
   updated_at: 'updated_at'
 };
 
+exports.Prisma.UserScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  password_hash: 'password_hash',
+  fullname: 'fullname',
+  phone: 'phone',
+  is_active: 'is_active',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.MembershipScalarFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  tenant_id: 'tenant_id',
+  role: 'role',
+  created_at: 'created_at'
+};
+
 exports.Prisma.TenantInvitationScalarFieldEnum = {
   id: 'id',
   tenant_id: 'tenant_id',
@@ -155,15 +174,17 @@ exports.Prisma.TenantInvitationScalarFieldEnum = {
   used_at: 'used_at'
 };
 
-exports.Prisma.UserScalarFieldEnum = {
+exports.Prisma.PersonScalarFieldEnum = {
   id: 'id',
+  person_type: 'person_type',
+  identification_type: 'identification_type',
+  identification: 'identification',
+  first_name: 'first_name',
+  last_name: 'last_name',
+  business_name: 'business_name',
   email: 'email',
-  password_hash: 'password_hash',
-  fullname: 'fullname',
   phone: 'phone',
-  tenant_id: 'tenant_id',
-  role: 'role',
-  is_active: 'is_active',
+  address: 'address',
   created_at: 'created_at',
   updated_at: 'updated_at'
 };
@@ -394,14 +415,9 @@ exports.Prisma.CollectionCaseNotificationScalarFieldEnum = {
 exports.Prisma.DebtorScalarFieldEnum = {
   id: 'id',
   tenant_id: 'tenant_id',
+  person_id: 'person_id',
   user_id: 'user_id',
-  fullname: 'fullname',
   email: 'email',
-  phone: 'phone',
-  address: 'address',
-  person_type: 'person_type',
-  identification_type: 'identification_type',
-  identification: 'identification',
   total_income: 'total_income',
   created_at: 'created_at',
   updated_at: 'updated_at'
@@ -523,12 +539,26 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
-exports.roleEnum = exports.$Enums.roleEnum = {
+exports.UserRole = exports.$Enums.UserRole = {
   PLATFORM_OWNER: 'PLATFORM_OWNER',
   TENANT_ADMIN: 'TENANT_ADMIN',
   AGENT: 'AGENT',
   DEBTOR: 'DEBTOR',
   BAILIFF: 'BAILIFF'
+};
+
+exports.PersonType = exports.$Enums.PersonType = {
+  INDIVIDUAL: 'INDIVIDUAL',
+  COMPANY: 'COMPANY'
+};
+
+exports.IdentificationType = exports.$Enums.IdentificationType = {
+  DNI: 'DNI',
+  PASSPORT: 'PASSPORT',
+  NIE: 'NIE',
+  CIF: 'CIF',
+  KVK: 'KVK',
+  OTHER: 'OTHER'
 };
 
 exports.VerdictStatus = exports.$Enums.VerdictStatus = {
@@ -583,20 +613,6 @@ exports.NotificationType = exports.$Enums.NotificationType = {
   BLOKKADE: 'BLOKKADE'
 };
 
-exports.PersonType = exports.$Enums.PersonType = {
-  INDIVIDUAL: 'INDIVIDUAL',
-  COMPANY: 'COMPANY'
-};
-
-exports.IdentificationType = exports.$Enums.IdentificationType = {
-  DNI: 'DNI',
-  PASSPORT: 'PASSPORT',
-  NIE: 'NIE',
-  CIF: 'CIF',
-  KVK: 'KVK',
-  OTHER: 'OTHER'
-};
-
 exports.AgreementStatus = exports.$Enums.AgreementStatus = {
   PENDING: 'PENDING',
   IN_NEGOTIATION: 'IN_NEGOTIATION',
@@ -628,8 +644,10 @@ exports.PaymentComponent = exports.$Enums.PaymentComponent = {
 
 exports.Prisma.ModelName = {
   Tenant: 'Tenant',
-  TenantInvitation: 'TenantInvitation',
   User: 'User',
+  Membership: 'Membership',
+  TenantInvitation: 'TenantInvitation',
+  Person: 'Person',
   Parameter: 'Parameter',
   Verdict: 'Verdict',
   VerdictInterest: 'VerdictInterest',

@@ -90,6 +90,7 @@ export const sendAanmaning = async (
     // Obtiene datos del deudor
     const debtor = await prisma.debtor.findUnique({
       where: { id: collection.debtor_id },
+      include: { person: true },
     });
     if (!debtor) {
       throw new Error("No se encontró el deudor");
@@ -101,6 +102,10 @@ export const sendAanmaning = async (
     if (!debtor.email) {
       throw new Error("El deudor no tiene email");
     }
+
+    const debtorName =
+      `${debtor.person?.first_name} ${debtor.person?.last_name}`.trim() ||
+      debtor.person?.business_name;
 
     // Si el deudor no tiene usuario, enviar invitación para registrarse
     let invitationLink: string = `${protocol}://${rootDomain}/`;
@@ -115,7 +120,7 @@ export const sendAanmaning = async (
         tenantId: debtor.tenant_id,
         email: debtor.email,
         role: "DEBTOR",
-        fullname: debtor.fullname,
+        fullname: debtorName || "Debtor",
         debtor_id: debtor.id,
       });
 

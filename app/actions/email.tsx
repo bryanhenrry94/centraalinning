@@ -105,7 +105,7 @@ export const sendNewClitentEmail = async (
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
-      subject: `New Client Registered - ${clientName}`,
+      subject: `Nieuwe geregistreerde klant - ${clientName}`,
       react: <NewClientEmail {...params} />,
     });
 
@@ -192,7 +192,12 @@ export const sendAanmaningEmail = async (
     // Generar el PDF de la aanmaning
     const collection = await prisma.collectionCase.findUnique({
       where: { id: caseId },
-      include: { tenant: true, debtor: true },
+      include: {
+        tenant: true,
+        debtor: {
+          include: { person: true },
+        },
+      },
     });
 
     if (!collection) {
@@ -207,11 +212,17 @@ export const sendAanmaningEmail = async (
 
     const island = getNameCountry(collection.tenant.country_code);
 
+    const debtorName =
+      `${collection.debtor.person?.first_name} ${collection.debtor.person?.last_name}`.trim() ||
+      collection.debtor.person?.business_name;
+
+    const debtorAddress = collection.debtor.person?.address || "";
+
     const params: AanmaningPDFProps = {
       logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
       date: formatDate(collection.issue_date.toString()),
-      debtorName: collection.debtor.fullname || "Debtor",
-      debtorAddress: collection.debtor.address || "",
+      debtorName: debtorName || "Debtor",
+      debtorAddress: debtorAddress,
       island: island || "Bonaire",
       reference_number: collection.reference_number || "",
       total_amount: collection.total_due.toFixed(2),
@@ -241,7 +252,7 @@ export const sendAanmaningEmail = async (
       react: (
         <AanmanningEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
-          fullname={collection.debtor.fullname || "Debtor"}
+          fullname={debtorName || "Debtor"}
           invitationLink={
             invitationLink ? invitationLink : "https://centraalinning.com/"
           }
@@ -270,7 +281,10 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
   try {
     const collection = await prisma.collectionCase.findUnique({
       where: { id: caseId },
-      include: { tenant: true, debtor: true },
+      include: {
+        tenant: true,
+        debtor: { include: { person: true } },
+      },
     });
 
     if (!collection) {
@@ -279,11 +293,17 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
 
     const island = getNameCountry(collection.tenant.country_code);
 
+    const debtorName =
+      `${collection.debtor.person?.first_name} ${collection.debtor.person?.last_name}`.trim() ||
+      collection.debtor.person?.business_name;
+
+    const debtorAddress = collection.debtor.person?.address || "";
+
     const params: SommatiePDFProps = {
       logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
       date: formatDate(collection.issue_date.toString()),
-      debtorName: collection.debtor.fullname || "Debtor",
-      debtorAddress: collection.debtor.address || "",
+      debtorName: debtorName || "Debtor",
+      debtorAddress: debtorAddress,
       island: island || "Bonaire",
       invoice_number: collection.reference_number || "",
       invoiceAmount: collection.total_due.toFixed(2),
@@ -307,7 +327,7 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
       react: (
         <SommatieMail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
-          fullname={collection.debtor.fullname || "Debtor"}
+          fullname={debtorName || "Debtor"}
         />
       ),
       attachments: attachments,
@@ -328,7 +348,10 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
   try {
     const collection = await prisma.collectionCase.findUnique({
       where: { id: caseId },
-      include: { tenant: true, debtor: true },
+      include: {
+        tenant: true,
+        debtor: { include: { person: true } },
+      },
     });
 
     if (!collection) {
@@ -342,6 +365,12 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
     }
 
     const island = getNameCountry(collection.tenant.country_code);
+
+    const debtorName =
+      `${collection.debtor.person?.first_name} ${collection.debtor.person?.last_name}`.trim() ||
+      collection.debtor.person?.business_name;
+
+    const debtorAddress = collection.debtor.person?.address || "";
 
     const firstReminderDate = await prisma.collectionCaseNotification.findFirst(
       {
@@ -373,8 +402,8 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
     const params: IngebrekestellingProps = {
       logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
       date: formatDate(collection.issue_date.toString()),
-      debtorName: collection.debtor.fullname || "Debtor",
-      debtorAddress: collection.debtor.address || "",
+      debtorName: debtorName || "Debtor",
+      debtorAddress: debtorAddress || "",
       island: island || "Bonaire",
       firstReminderDate: formatDate(firstReminderDate.sent_at.toString()),
       secondReminderDate: formatDate(secondReminderDate.sent_at.toString()),
@@ -402,7 +431,7 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
       react: (
         <IngebrekestellingEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
-          fullname={collection.debtor.fullname || "Debtor"}
+          fullname={debtorName || "Debtor"}
         />
       ),
       attachments: attachments,
@@ -423,7 +452,7 @@ export const sendBlokkadeMail = async (to: string, caseId: string) => {
   try {
     const collection = await prisma.collectionCase.findUnique({
       where: { id: caseId },
-      include: { tenant: true, debtor: true },
+      include: { tenant: true, debtor: { include: { person: true } } },
     });
 
     if (!collection) {
@@ -438,11 +467,17 @@ export const sendBlokkadeMail = async (to: string, caseId: string) => {
 
     const island = getNameCountry(collection.tenant.country_code);
 
+    const debtorName =
+      `${collection.debtor.person?.first_name} ${collection.debtor.person?.last_name}`.trim() ||
+      collection.debtor.person?.business_name;
+
+    const debtorAddress = collection.debtor.person?.address || "";
+
     const params: BlokkadePDFProps = {
       logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
       date: formatDate(collection.issue_date.toString()),
-      debtorName: collection.debtor.fullname || "Debtor",
-      debtorAddress: collection.debtor.address || "",
+      debtorName: debtorName || "Debtor",
+      debtorAddress: debtorAddress || "",
       island: island || "Bonaire",
       total_amount: collection.total_due.toFixed(2),
       amountRegister: collection.amount_original.toFixed(2),
@@ -469,7 +504,7 @@ export const sendBlokkadeMail = async (to: string, caseId: string) => {
       react: (
         <BlokkadeEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
-          fullname={collection.debtor.fullname || "Debtor"}
+          fullname={debtorName || "Debtor"}
         />
       ),
       attachments: attachments,

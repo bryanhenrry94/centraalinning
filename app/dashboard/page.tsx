@@ -17,19 +17,19 @@ const CompanyHomePage = () => {
 
   if (!isAuthenticated) return <>No autorizado. Por favor, inicie sesión.</>;
 
-  if (user?.role === $Enums.roleEnum.PLATFORM_OWNER) {
+  if (user?.role === $Enums.UserRole.PLATFORM_OWNER) {
     return <DashboardSuperAdmin />;
   }
 
-  if (user?.role === $Enums.roleEnum.TENANT_ADMIN) {
+  if (user?.role === $Enums.UserRole.TENANT_ADMIN) {
     return <DashboardAdmin />;
   }
 
-  if (user?.role === $Enums.roleEnum.DEBTOR) {
+  if (user?.role === $Enums.UserRole.DEBTOR) {
     return <DashboardDebtor />;
   }
 
-  if (user?.role === $Enums.roleEnum.BAILIFF) {
+  if (user?.role === $Enums.UserRole.BAILIFF) {
     return <DashboardBailiff />;
   }
 

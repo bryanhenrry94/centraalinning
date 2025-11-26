@@ -11,9 +11,11 @@ export const getTenantByEmail = async (
 
   const tenants = await prisma.tenant.findMany({
     where: {
-      users: {
+      memberships: {
         some: {
-          email: email,
+          user: {
+            email: email,
+          },
         },
       },
       is_active: true,

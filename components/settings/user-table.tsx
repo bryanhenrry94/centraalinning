@@ -19,9 +19,7 @@ import { notifyError } from "@/lib/notifications";
 
 type Props = {
   tenant_id: string;
-  // opcional: lista inicial para renderizar inmediatamente sin esperar fetch
   initialUsers?: User[];
-  // opcional: callback cuando la lista cambia
   onChange?: (users: User[]) => void;
 };
 
@@ -117,7 +115,6 @@ export default function UserTable({
               <TableRow>
                 <TableCell>Naam</TableCell>
                 <TableCell>E-mail</TableCell>
-                <TableCell>Rol</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Acties</TableCell>
               </TableRow>
@@ -127,8 +124,9 @@ export default function UserTable({
                 <TableRow key={user.id}>
                   <TableCell>{user.fullname ?? "—"}</TableCell>
                   <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.role ?? "—"}</TableCell>
-                  <TableCell>{user.is_active ? "Actief" : "Inactief"}</TableCell>
+                  <TableCell>
+                    {user.is_active ? "Actief" : "Inactief"}
+                  </TableCell>
                   <TableCell>
                     <Button
                       variant="outlined"

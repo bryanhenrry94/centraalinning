@@ -12,7 +12,7 @@ import { revalidatePath } from "next/cache";
 type InvitationParams = {
   tenantId: string;
   email: string;
-  role: $Enums.roleEnum;
+  role: $Enums.UserRole;
   fullname?: string;
   debtor_id?: string;
 };
@@ -21,7 +21,7 @@ type InvitationDetails = {
   token: string;
   tenantId: string;
   email: string;
-  role: $Enums.roleEnum;
+  role: $Enums.UserRole;
   fullname?: string;
   debtor_id?: string;
 };
@@ -131,7 +131,7 @@ export const getInvitationDetails = async (
     token: invitation.token,
     tenantId: invitation.tenant_id,
     email: invitation.email,
-    role: invitation.role as $Enums.roleEnum,
+    role: invitation.role as $Enums.UserRole,
     fullname: invitation.fullname || undefined,
     debtor_id: invitation.debtor_id || undefined,
   };
@@ -174,9 +174,16 @@ export const completeRegistration = async (
         email: validatedData.email,
         fullname: validatedData.fullname,
         password_hash,
-        role: invitation.role as $Enums.roleEnum,
-        tenant_id: invitation.tenant_id,
         is_active: true,
+      },
+    });
+
+    const membership = await prisma.membership.create({
+      data: {
+        user_id: user.id,
+        tenant_id: invitation.tenant_id,
+        role: invitation.role as $Enums.UserRole,
+        created_at: new Date(),
       },
     });
 
@@ -185,7 +192,6 @@ export const completeRegistration = async (
       await prisma.debtor.update({
         where: { id: invitation.debtor_id },
         data: {
-          fullname: validatedData.fullname,
           email: validatedData.email,
           user_id: user.id, // Asignar el user_id si es necesario
         },

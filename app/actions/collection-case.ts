@@ -29,7 +29,12 @@ export const getAllCollectionCases = async (
   const collectionCases = await prisma.collectionCase.findMany({
     where: { ...params },
     include: {
-      debtor: true,
+      debtor: {
+        include: {
+          debts: true,
+          person: true,
+        },
+      },
     },
   });
 
@@ -55,22 +60,14 @@ export const getAllCollectionCases = async (
     updated_at: collection.updated_at,
     debtor: {
       id: collection.debtor?.id ?? "",
-      fullname: collection.debtor?.fullname ?? "",
+      fullname:
+        (collection.debtor.person?.first_name +
+          " " +
+          collection.debtor.person?.last_name ||
+          collection.debtor?.person?.business_name) ??
+        "",
+      total_income: Number(collection.debtor?.total_income) || 0,
       email: collection.debtor?.email ?? "",
-      identification_type: collection.debtor
-        ?.identification_type as $Enums.IdentificationType,
-      ...(collection.debtor?.phone ? { phone: collection.debtor.phone } : {}),
-      ...(collection.debtor?.address
-        ? { address: collection.debtor.address }
-        : {}),
-      ...(collection.debtor?.person_type
-        ? {
-            person_type: collection.debtor.person_type as $Enums.PersonType,
-          }
-        : {}),
-      ...(collection.debtor?.identification
-        ? { identification: collection.debtor.identification }
-        : {}),
     },
   }));
 };
@@ -111,7 +108,7 @@ export const getCollectionViewById = async (
 ): Promise<CollectionCaseView> => {
   const collection = await prisma.collectionCase.findUnique({
     where: { id },
-    include: { debtor: true },
+    include: { debtor: { include: { person: true } } },
   });
   if (!collection) throw new Error("Collection not found");
 
@@ -138,22 +135,13 @@ export const getCollectionViewById = async (
     updated_at: collection.updated_at,
     debtor: {
       id: collection.debtor?.id ?? "",
-      fullname: collection.debtor?.fullname ?? "",
+      fullname:
+        (collection.debtor.person?.first_name +
+          " " +
+          collection.debtor.person?.last_name ||
+          collection.debtor?.person?.business_name) ??
+        "",
       email: collection.debtor?.email ?? "",
-      identification_type: collection.debtor
-        ?.identification_type as $Enums.IdentificationType,
-      ...(collection.debtor?.phone ? { phone: collection.debtor.phone } : {}),
-      ...(collection.debtor?.address
-        ? { address: collection.debtor.address }
-        : {}),
-      ...(collection.debtor?.person_type
-        ? {
-            person_type: collection.debtor.person_type as $Enums.PersonType,
-          }
-        : {}),
-      ...(collection.debtor?.identification
-        ? { identification: collection.debtor.identification }
-        : {}),
     },
   };
 };
@@ -183,6 +171,7 @@ export const createCollectionCase = async (
   // Obtener el deudor
   const debtor = await prisma.debtor.findUnique({
     where: { id: parsedData.debtor_id },
+    include: { person: true },
   });
   if (!debtor) throw new Error("Debtor not found");
 
@@ -210,7 +199,7 @@ export const createCollectionCase = async (
   // Calcular fechas de recordatorio
   const day_term = await getNotificationDays(
     parsedData.status as $Enums.CollectionCaseStatus,
-    debtor.person_type
+    debtor.person?.person_type || "INDIVIDUAL"
   );
 
   const daysToAdd =
@@ -269,7 +258,7 @@ export const createCollectionCase = async (
     data: {
       tenant_id: tenant.id,
       collection_case_id: newCollectionCase.id,
-      name: `${debtor.fullname} ${newCollectionCase.reference_number}`,
+      name: `${debtor.person?.first_name} ${debtor.person?.last_name} ${newCollectionCase.reference_number}`,
     },
   });
 

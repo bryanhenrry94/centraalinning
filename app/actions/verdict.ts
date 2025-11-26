@@ -48,7 +48,11 @@ export const getAllVerdicts = async (
     const verdicts = await prisma.verdict.findMany({
       where: whereClause,
       include: {
-        debtor: true,
+        debtor: {
+          include: {
+            person: true,
+          },
+        },
         verdict_embargo: true,
         verdict_interest: {
           include: {
@@ -68,28 +72,14 @@ export const getAllVerdicts = async (
         ? {
             ...verdict.debtor,
             user_id:
-              verdict.debtor.user_id === null
-                ? undefined
-                : verdict.debtor.user_id,
-            phone:
-              verdict.debtor.phone === null ? undefined : verdict.debtor.phone,
-            address:
-              verdict.debtor.address === null
-                ? undefined
-                : verdict.debtor.address,
-            person_type:
-              verdict.debtor.person_type === null
-                ? "INDIVIDUAL"
-                : (verdict.debtor.person_type as $Enums.PersonType),
-            identification_type:
-              verdict.debtor.identification_type === null
-                ? "OTHER"
-                : (verdict.debtor
-                    .identification_type as $Enums.IdentificationType),
-            identification:
-              verdict.debtor.identification === null
-                ? undefined
-                : verdict.debtor.identification,
+              verdict.debtor.user_id === null ? null : verdict.debtor.user_id,
+            email: verdict.debtor.email,
+            person_id: verdict.debtor.person_id,
+            fullname:
+              verdict.debtor.person?.first_name &&
+              verdict.debtor.person?.last_name
+                ? `${verdict.debtor.person.first_name} ${verdict.debtor.person.last_name}`
+                : "Debtor",
             total_income:
               verdict.debtor.total_income === null
                 ? undefined
@@ -121,7 +111,11 @@ export const getVerdictById = async (
     const verdict = await prisma.verdict.findUnique({
       where: { id },
       include: {
-        debtor: true,
+        debtor: {
+          include: {
+            person: true,
+          },
+        },
         verdict_embargo: true,
         verdict_interest: {
           include: {
@@ -142,35 +136,16 @@ export const getVerdictById = async (
       debt_id: verdict.debt_id ?? undefined,
       debtor: verdict.debtor
         ? {
-            ...verdict.debtor,
-            user_id:
-              verdict.debtor.user_id === null
-                ? undefined
-                : verdict.debtor.user_id,
-            phone:
-              verdict.debtor.phone === null ? undefined : verdict.debtor.phone,
-            address:
-              verdict.debtor.address === null
-                ? undefined
-                : verdict.debtor.address,
-            person_type:
-              verdict.debtor.person_type === null
-                ? undefined
-                : (verdict.debtor.person_type as "INDIVIDUAL" | "COMPANY"),
-            identification_type:
-              verdict.debtor.identification_type === null
-                ? "OTHER"
-                : (verdict.debtor.identification_type as
-                    | "DNI"
-                    | "PASSPORT"
-                    | "NIE"
-                    | "CIF"
-                    | "KVK"
-                    | "OTHER"),
-            identification:
-              verdict.debtor.identification === null
-                ? undefined
-                : verdict.debtor.identification,
+            id: verdict.debtor.id,
+            tenant_id: verdict.debtor.tenant_id,
+            user_id: verdict.debtor.user_id ? verdict.debtor.user_id : null,
+            email: verdict.debtor.email ?? undefined,
+            person_id: verdict.debtor.person_id ?? null,
+            fullname:
+              verdict.debtor.person?.first_name &&
+              verdict.debtor.person?.last_name
+                ? `${verdict.debtor.person.first_name} ${verdict.debtor.person.last_name}`
+                : "Debtor",
             total_income:
               verdict.debtor.total_income === null
                 ? undefined
@@ -841,7 +816,7 @@ export const approveVerdict = async (id: string): Promise<boolean> => {
 
     const debtor = await prisma.debtor.findUnique({
       where: { id: VerdictUpdated.debtor_id },
-      include: { tenant: true },
+      include: { tenant: true, person: true },
     });
 
     if (!debtor) {
@@ -896,9 +871,13 @@ export const approveVerdict = async (id: string): Promise<boolean> => {
     //   invoiceData
     // );
 
+    const debtorName = debtor.person
+      ? `${debtor.person.first_name} ${debtor.person.last_name}`
+      : "Debtor";
+
     const verdictDebtorData: VerdictDebtorPDFProps = {
       logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
-      debtorName: debtor.fullname || "Debtor",
+      debtorName: debtorName || "Debtor",
       reference: VerdictUpdated.registration_number || "Reference",
       sentence_date: formatDate(
         VerdictUpdated.sentence_date

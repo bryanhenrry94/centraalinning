@@ -40,14 +40,49 @@ model Tenant {
   debtors          Debtor[]
   bailiffs         Bailiff[]
   verdicts         Verdict[]
-  users            User[]
   chat_rooms       ChatRoom[]
   invitations      TenantInvitation[]
   employees        Employee[]
   agreements       Agreement[]
   debts            Debt[]
+  memberships      Membership[]
 
   @@map("tenant")
+}
+
+model User {
+  id            String  @id @default(uuid())
+  email         String  @unique @db.VarChar(80)
+  password_hash String? @db.VarChar(120)
+  fullname      String? @db.VarChar(80)
+  phone         String? @db.VarChar(25)
+  is_active     Boolean @default(true)
+
+  memberships Membership[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  debtors  Debtor[]
+  bailiffs Bailiff[]
+  messages ChatMessage[]
+
+  @@map("user")
+}
+
+model Membership {
+  id        String   @id @default(uuid())
+  user_id   String
+  tenant_id String
+  role      UserRole
+
+  user   User   @relation(fields: [user_id], references: [id])
+  tenant Tenant @relation(fields: [tenant_id], references: [id])
+
+  created_at DateTime @default(now())
+
+  @@unique([user_id, tenant_id]) // evita duplicados
+  @@map("membership")
 }
 
 model TenantInvitation {
@@ -56,7 +91,7 @@ model TenantInvitation {
   email      String
   fullname   String?
   token      String    @unique
-  role       roleEnum  @default(DEBTOR)
+  role       UserRole  @default(DEBTOR)
   debtor_id  String?
   created_at DateTime  @default(now())
   expires_at DateTime
@@ -69,23 +104,29 @@ model TenantInvitation {
   @@map("tenant_invitation")
 }
 
-model User {
-  id            String        @id @default(uuid())
-  email         String        @db.VarChar(80)
-  password_hash String?       @db.VarChar(120)
-  fullname      String?       @db.VarChar(80)
-  phone         String?       @db.VarChar(25)
-  tenant_id     String
-  tenant        Tenant        @relation(fields: [tenant_id], references: [id])
-  role          roleEnum      @default(TENANT_ADMIN)
-  is_active     Boolean       @default(true)
-  created_at    DateTime      @default(now())
-  updated_at    DateTime      @updatedAt
-  debtors       Debtor[]
-  bailiffs      Bailiff[]
-  messages      ChatMessage[]
+model Person {
+  id          String     @id @default(uuid())
+  person_type PersonType
 
-  @@map("user")
+  identification_type IdentificationType
+  identification      String             @unique
+
+  first_name    String?
+  last_name     String?
+  business_name String?
+
+  email   String? @unique
+  phone   String?
+  address String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  debtors Debtor[]
+  // bailiff             Bailiff?
+  // employee            Employee?
+
+  @@map("person")
 }
 
 model Parameter {
@@ -395,29 +436,30 @@ model CollectionCaseNotification {
 }
 
 model Debtor {
-  id                  String              @id @default(uuid())
-  tenant_id           String
-  user_id             String?
-  fullname            String
-  email               String
-  phone               String?
-  address             String?
-  person_type         PersonType          @default(INDIVIDUAL)
-  identification_type IdentificationType?
-  identification      String?
-  total_income        Float?
-  created_at          DateTime            @default(now())
-  updated_at          DateTime            @updatedAt
-  collection_cases    CollectionCase[]
-  tenant              Tenant              @relation(fields: [tenant_id], references: [id])
-  user                User?               @relation(fields: [user_id], references: [id])
-  incomes             DebtorIncome[]
-  verdicts            Verdict[]
-  agreements          Agreement[]
-  debts               Debt[]
+  id String @id @default(uuid())
+
+  tenant_id String
+  tenant    Tenant @relation(fields: [tenant_id], references: [id])
+
+  person_id String
+  person    Person @relation(fields: [person_id], references: [id])
+
+  user_id String?
+  user    User?   @relation(fields: [user_id], references: [id])
+
+  email        String
+  total_income Float  @default(0)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  collection_cases CollectionCase[]
+  incomes          DebtorIncome[]
+  verdicts         Verdict[]
+  agreements       Agreement[]
+  debts            Debt[]
 
   @@unique([tenant_id, email])
-  @@unique([tenant_id, identification])
   @@map("debtor")
 }
 
@@ -624,7 +666,7 @@ enum IdentificationType {
   OTHER
 }
 
-enum roleEnum {
+enum UserRole {
   PLATFORM_OWNER
   TENANT_ADMIN
   AGENT

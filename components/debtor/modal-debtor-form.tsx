@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useForm, FormProvider, Resolver } from "react-hook-form";
+import { useForm, FormProvider, Resolver, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DebtorCreateSchema, DebtorCreate } from "@/lib/validations/debtor";
 
@@ -12,6 +12,8 @@ import {
   Modal,
   Paper,
   Typography,
+  TextField,
+  MenuItem,
 } from "@mui/material";
 import InputHookForm from "@/components/ui/InputHookForm";
 import SelectHookForm from "@/components/ui/SelectHookForm";
@@ -22,9 +24,11 @@ import {
   updateDebtor,
 } from "@/app/actions/debtor";
 import { useTenant } from "@/hooks/useTenant";
-import { notifyError, notifySuccess } from "@/lib/notifications";
+import { notifyError, notifyInfo, notifySuccess } from "@/lib/notifications";
 import CloseIcon from "@mui/icons-material/Close";
 import { $Enums } from "@/prisma/generated/prisma";
+import { DebtorIncomeCreate } from "@/lib/validations/debtor-incomes";
+import { getPersonById, getPersonByIdentification } from "@/app/actions/person";
 
 interface ModalFormDebtorProps {
   open: boolean;
@@ -40,6 +44,8 @@ const identificationTypeOptions = [
   { value: $Enums.IdentificationType.OTHER, label: "OTHER " },
 ];
 
+const incomes: DebtorIncomeCreate[] = [];
+
 export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
   open,
   onClose,
@@ -51,47 +57,53 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
   const [loading, setLoading] = useState(false);
 
   const methods = useForm<DebtorCreate>({
-    resolver: zodResolver(
-      DebtorCreateSchema
-    ) as unknown as Resolver<DebtorCreate>,
+    resolver: zodResolver(DebtorCreateSchema),
     defaultValues: {
       email: "",
-      fullname: "",
-      address: "",
-      phone: "",
-      person_type: $Enums.PersonType.INDIVIDUAL,
-      identification_type: $Enums.IdentificationType.DNI,
-      identification: "",
-      total_income: 0,
-      incomes: [],
+      person_id: "",
+      total_income: 1,
+      incomes: incomes,
+      person: {
+        person_type: "INDIVIDUAL",
+        identification_type: "DNI",
+        identification: "",
+        email: "",
+        address: "",
+        phone: "",
+        first_name: "",
+        last_name: "",
+        business_name: "",
+      },
     },
   });
 
-  const { handleSubmit, reset } = methods;
+  const {
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+    setValue,
+  } = methods;
 
   const fetchDebtor = async () => {
     if (!id) {
-      throw new Error("ID is required");
+      notifyError("ID is required");
+      return;
     }
 
     const debtor = await getDebtorById(id);
+    if (!debtor) {
+      notifyError("Debtor not found");
+      return;
+    }
 
+    const person = await getPersonById(debtor.person_id);
     if (!debtor) {
       throw new Error("Debtor not found");
     }
 
-    reset({
-      fullname: debtor.fullname,
-      email: debtor.email,
-      phone: debtor.phone || "",
-      address: debtor.address || "",
-      identification: debtor.identification,
-      identification_type: debtor.identification_type,
-      person_type:
-        debtor.person_type === "INDIVIDUAL" || debtor.person_type === "COMPANY"
-          ? debtor.person_type
-          : "INDIVIDUAL",
-    });
+    reset({ ...debtor, person: { ...person } });
   };
 
   useEffect(() => {
@@ -112,15 +124,7 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
   }, [id, open]);
 
   const handleClearForm = () => {
-    reset({
-      fullname: "",
-      email: "",
-      phone: "",
-      address: "",
-      identification: "",
-      identification_type: "DNI",
-      person_type: "INDIVIDUAL",
-    });
+    reset({ person_id: "" });
   };
 
   const onSubmit = async (values: DebtorCreate) => {
@@ -131,12 +135,22 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
 
       if (id) {
         const updDebtor = await updateDebtor(values, tenant.id, id);
-        onSave(updDebtor);
+
+        if (!updDebtor.success) {
+          notifyError("Error updating debtor");
+          return;
+        }
+
+        onSave(updDebtor.data);
       } else {
         const newDebtor = await createDebtor(values, tenant.id);
-        if (newDebtor) {
-          onSave(newDebtor);
+
+        if (!newDebtor.success) {
+          notifyError(newDebtor.error || "Error creating debtor");
+          return;
         }
+
+        onSave(newDebtor.data);
       }
 
       notifySuccess(`Debtor ${id ? "updated" : "created"} successfully`);
@@ -146,6 +160,26 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
       console.error("Error creating debtor:", error);
       notifyError(error instanceof Error ? error.message : "An error occurred");
     }
+  };
+
+  const handleLoadPerson = async (identification: string) => {
+    if (!identification) return;
+
+    const person = await getPersonByIdentification(identification);
+
+    reset({
+      ...methods.getValues(),
+      person: {
+        ...methods.getValues().person,
+        id: person?.id || undefined,
+        first_name: person?.first_name || "",
+        last_name: person?.last_name || "",
+        email: person?.email || "",
+        phone: person?.phone || "",
+        address: person?.address || "",
+      },
+      total_income: 1,
+    });
   };
 
   return (
@@ -195,30 +229,150 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
           <FormProvider {...methods}>
             <form onSubmit={handleSubmit(onSubmit)} id="debtor-form">
               <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                <SelectHookForm
-                  name="person_type"
-                  label="Person Type"
-                  options={personTypeOptions}
-                  required={true}
+                {/* {JSON.stringify(errors)} */}
+                <Controller
+                  control={control}
+                  name="person.id"
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="id"
+                      type="text"
+                      required={true}
+                      size="small"
+                      value={field.value || ""}
+                      disabled={true}
+                    />
+                  )}
                 />
+
+                <Controller
+                  control={control}
+                  name="person.person_type"
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Person Type"
+                      select
+                      required={true}
+                      size="small"
+                      value={field.value || ""}
+                      onChange={(e: any) => {
+                        field.onChange(e);
+                        const value = e.target.value;
+                        console.log("Person Type changed to:", value);
+                      }}
+                    >
+                      {personTypeOptions.map((option) => (
+                        <MenuItem key={option.value} value={option.value}>
+                          {option.label}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+                />
+
                 <SelectHookForm
-                  name="identification_type"
+                  name="person.identification_type"
                   label="Identification Type"
                   options={identificationTypeOptions}
                 />
+
+                <Controller
+                  control={control}
+                  name="person.identification"
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Identification"
+                      type="text"
+                      required={true}
+                      size="small"
+                      value={field.value || ""}
+                      onChange={(e: any) => {
+                        const value = e.target.value.toUpperCase();
+                        field.onChange(value);
+                        console.log("Identification changed to:", value);
+                      }}
+                      onBlur={(e: any) => {
+                        const value = e.target.value.toUpperCase();
+                        handleLoadPerson(value);
+                      }}
+                    />
+                  )}
+                />
+
+                {watch("person.person_type") === "INDIVIDUAL" && (
+                  <>
+                    <InputHookForm
+                      name="person.first_name"
+                      label="First Name"
+                      required={true}
+                    />
+                    <InputHookForm
+                      name="person.last_name"
+                      label="Last Name"
+                      required={true}
+                    />
+                  </>
+                )}
+                {watch("person.person_type") === "COMPANY" && (
+                  <InputHookForm
+                    name="business_name"
+                    label="Business Name"
+                    required={true}
+                  />
+                )}
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Email"
+                      type="email"
+                      required={true}
+                      size="small"
+                      value={field.value || ""}
+                      onChange={(e: any) => {
+                        const value = e.target.value;
+                        field.onChange(value);
+                        console.log("Email changed to:", value);
+                        setValue("person.email", value);
+                      }}
+                    />
+                  )}
+                />
                 <InputHookForm
-                  name="identification"
-                  label="Identification"
+                  name="person.phone"
+                  label="Phone"
                   required={true}
                 />
                 <InputHookForm
-                  name="fullname"
-                  label="Full Name"
+                  name="person.address"
+                  label="Address"
                   required={true}
                 />
-                <InputHookForm name="email" label="Email" required={true} />
-                <InputHookForm name="phone" label="Phone" required={true} />
-                <InputHookForm name="address" label="Address" required={true} />
+                <Controller
+                  control={control}
+                  name="total_income"
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Total Income"
+                      type="number"
+                      required={true}
+                      size="small"
+                      value={field.value || 1}
+                      onChange={(e: any) => {
+                        const value = parseFloat(e.target.value);
+                        field.onChange(isNaN(value) ? 0 : value);
+                        console.log("Total Income changed to:", value);
+                      }}
+                    />
+                  )}
+                />
+
                 <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
                   <Button onClick={onClose} color="secondary" fullWidth>
                     ANNULEREN

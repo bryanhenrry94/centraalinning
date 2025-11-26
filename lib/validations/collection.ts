@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DebtorSchema } from "@/lib/validations/debtor";
+import { DebtorSchema, DebtorSummarySchema } from "@/lib/validations/debtor";
 import { PaymentSchema } from "@/lib/validations/payment";
 import { $Enums } from "@/prisma/generated/prisma";
 
@@ -46,11 +46,15 @@ export const CollectionCaseUpdateSchema = CollectionCaseSchema.partial().omit({
 });
 
 export const CollectionCaseResponseSchema = CollectionCaseSchema.extend({
-  debtor: DebtorSchema,
+  debtor: DebtorSummarySchema,
 });
 
 export const CollectionCaseViewSchema = CollectionCaseSchema.extend({
-  debtor: DebtorSchema,
+  debtor: z.object({
+    id: z.string(),
+    fullname: z.string(),
+    email: z.string(),
+  }),
 });
 
 export type CollectionCase = z.infer<typeof CollectionCaseSchema>;

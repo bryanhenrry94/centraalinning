@@ -14,11 +14,15 @@ export const getUserByEmail = async (email: string) => {
 };
 
 export const getUsersByRole = async (
-  roleName: $Enums.roleEnum
+  roleName: $Enums.UserRole
 ): Promise<User[]> => {
   const users = await prisma.user.findMany({
     where: {
-      role: roleName,
+      memberships: {
+        some: {
+          role: roleName,
+        },
+      },
     },
   });
 
@@ -52,10 +56,16 @@ export const updateUserProfile = async (
   return updatedUser;
 };
 
-export const getUsersByTenantId = async (tenant_id: string): Promise<User[]> => {
+export const getUsersByTenantId = async (
+  tenant_id: string
+): Promise<User[]> => {
   const users = await prisma.user.findMany({
     where: {
-      tenant_id: tenant_id,
+      memberships: {
+        some: {
+          tenant_id: tenant_id,
+        },
+      },
     },
   });
 

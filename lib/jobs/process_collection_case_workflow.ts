@@ -27,7 +27,14 @@ export async function processCollectionCaseWorkflow() {
         },
       },
     },
-    include: { debtor: true, collectionCaseNotification: true },
+    include: {
+      debtor: {
+        include: {
+          person: true,
+        },
+      },
+      collectionCaseNotification: true,
+    },
   });
 
   // Obtener parámetros generales
@@ -46,17 +53,17 @@ export async function processCollectionCaseWorkflow() {
 
     // Calcular días entre notificaciones según el tipo de persona
     const days_between_aanmaning_sommatie =
-      c.debtor.person_type === $Enums.PersonType.INDIVIDUAL
+      c.debtor.person?.person_type === $Enums.PersonType.INDIVIDUAL
         ? Number(parameter?.consumer_aanmaning_term_days)
         : Number(parameter?.company_aanmaning_term_days);
 
     const days_between_sommatie_ingebrekestelling =
-      c.debtor.person_type === $Enums.PersonType.INDIVIDUAL
+      c.debtor.person?.person_type === $Enums.PersonType.INDIVIDUAL
         ? Number(parameter?.consumer_sommatie_term_days)
         : Number(parameter?.company_sommatie_term_days);
 
     const days_between_ingebrekestelling_blokkade =
-      c.debtor.person_type === $Enums.PersonType.INDIVIDUAL
+      c.debtor.person?.person_type === $Enums.PersonType.INDIVIDUAL
         ? Number(parameter?.consumer_aanmaning_term_days)
         : Number(parameter?.company_aanmaning_term_days);
 
@@ -116,14 +123,14 @@ export async function processCollectionCaseWorkflow() {
 
         if (c.status === $Enums.CollectionCaseStatus.AANMANING) {
           penalty_amount =
-            c.debtor.person_type === $Enums.PersonType.COMPANY
+            c.debtor.person?.person_type === $Enums.PersonType.COMPANY
               ? Number(parameter?.company_aanmaning_penalty)
               : Number(parameter?.natural_aanmaning_penalty);
         }
 
         if (c.status === $Enums.CollectionCaseStatus.SOMMATIE) {
           penalty_amount =
-            c.debtor.person_type === $Enums.PersonType.COMPANY
+            c.debtor.person?.person_type === $Enums.PersonType.COMPANY
               ? Number(parameter?.company_sommatie_penalty)
               : Number(parameter?.natural_sommatie_penalty);
         }

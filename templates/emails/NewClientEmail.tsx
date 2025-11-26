@@ -6,7 +6,6 @@ import {
   Heading,
   Html,
   Preview,
-  Section,
   Text,
   Img,
 } from "@react-email/components";
@@ -62,7 +61,7 @@ export default function NewClientEmail({
               // border: "1px solid #e5e8eb",
             }}
           >
-            <Img src={logoUrl} width="50" height="60" alt="Plaid" />
+            <Img src={logoUrl} width="100" height="60" alt="Plaid" />
           </div>
           <Heading
             style={{

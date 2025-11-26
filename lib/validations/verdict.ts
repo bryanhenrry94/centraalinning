@@ -75,7 +75,24 @@ export const VerdictCreateFormSchema = z.object({
 export const VerdictUpdateSchema = VerdictBaseSchema.partial().extend({});
 
 export const VerdictResponseSchema = VerdictBaseSchema.extend({
-  debtor: DebtorBaseSchema,
+  debtor: z
+    .object({
+      id: z.string(),
+      tenant_id: z.string(),
+      user_id: z.string().nullable(),
+      person_id: z.string().nullable(),
+      email: z
+        .string()
+        .email({ message: "El correo electrónico no es válido." }),
+      fullname: z.string(),
+      total_income: z
+        .preprocess(
+          (val) => (typeof val === "string" ? Number(val) : val),
+          z.number()
+        )
+        .optional(),
+    })
+    .optional(),
   verdict_interest: z.array(VerdictInterestCreateSchema),
   verdict_embargo: z.array(VerdictEmbargoBaseSchema),
 });

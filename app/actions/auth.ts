@@ -18,22 +18,15 @@ import { sendNewClitentEmail, sendWelcomeEmail } from "./email";
 export const signInWithPassword = async (
   params: LoginFormData
 ): Promise<{ success: boolean; data?: IdTokenInput }> => {
-  // Validar los datos de entrada
+  // Validar inputs
   const validated = loginSchema.parse(params);
-
-  console.log("Datos validados:", validated);
-
-  if (!validated) {
-    throw new Error("Invalid input data");
-  }
-
   const { email, password, subdomain } = validated;
 
   if (!email || !password || !subdomain) {
     throw new Error("Email, password, and subdomain are required");
   }
 
-  // Buscar el tenant por subdominio
+  // Buscar el Tenant
   const tenant = await prisma.tenant.findUnique({
     where: { subdomain },
   });
@@ -42,29 +35,38 @@ export const signInWithPassword = async (
     throw new Error("Invalid subdomain");
   }
 
-  // Buscar el usuario por email y tenant_id
-  const user = await prisma.user.findFirst({
-    where: {
-      email,
-      is_active: true,
-      tenant_id: tenant.id,
-    },
+  // Buscar el usuario POR EMAIL (sin tenant)
+  const user = await prisma.user.findUnique({
+    where: { email },
   });
 
-  if (!user) {
-    throw new Error("Invalid email or user not found in this tenant");
+  if (!user || !user.is_active) {
+    throw new Error("Invalid email or inactive user");
   }
 
   if (!user.password_hash) {
     throw new Error("User has no password set");
   }
 
-  // Verificar la contraseña
+  // 3️⃣ Buscar Membership (UserTenant) para este tenant
+  const membership = await prisma.membership.findFirst({
+    where: {
+      user_id: user.id,
+      tenant_id: tenant.id,
+    },
+  });
+
+  if (!membership) {
+    throw new Error("You do not have access to this tenant");
+  }
+
+  // 4️⃣ Validar contraseña
   const isPasswordValid = await bcrypt.compare(password, user.password_hash);
   if (!isPasswordValid) {
     throw new Error("Credentials are invalid");
   }
 
+  // 5️⃣ Crear el token con el rol del membership
   const idToken: IdTokenInput = {
     id: user.id,
     fullname: user.fullname || "",
@@ -73,8 +75,8 @@ export const signInWithPassword = async (
     tenant_id: tenant.id,
     subdomain: tenant.subdomain,
     company: tenant.name,
-    role: user.role || "",
-    email_verified: user.is_active || false,
+    role: membership.role, // 👈 rol correcto tomado de membership
+    email_verified: user.is_active,
   };
 
   revalidatePath("/auth/login");
@@ -99,6 +101,24 @@ export async function createAccount(
   try {
     // ✅ 1. Validar datos de entrada
     const validatedData = AuthSignUpSchema.parse(payload);
+
+    // valida si existe el email
+    const existingUser = await prisma.user.findFirst({
+      where: { email: validatedData.user.email, is_active: true },
+    });
+
+    if (existingUser) {
+      throw new Error("El correo electrónico ya está en uso");
+    }
+
+    // valida si existe el kvk
+    const existingTenant = await prisma.tenant.findFirst({
+      where: { kvk: validatedData.company.kvk },
+    });
+
+    if (existingTenant) {
+      throw new Error("El KVK ya está registrado");
+    }
 
     // Obtener parámetro necesario
     const parameter = await getParameter();
@@ -138,13 +158,19 @@ export async function createAccount(
           fullname: validatedData.user.fullname,
           password_hash,
           phone: validatedData.user.phone,
-          role: $Enums.roleEnum.TENANT_ADMIN,
-          tenant_id: tenant.id,
           is_active: true,
         },
       });
 
-      return { tenant, user };
+      const membership = await tx.membership.create({
+        data: {
+          tenant_id: tenant.id,
+          user_id: user.id,
+          role: $Enums.UserRole.TENANT_ADMIN,
+        },
+      });
+
+      return { tenant, user, membership };
     });
 
     let pricePlan = 0;
