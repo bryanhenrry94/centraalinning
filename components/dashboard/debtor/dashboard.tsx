@@ -26,9 +26,9 @@ import { formatCurrency, formatDate } from "@/utils/formatters";
 import { AgreementResponse } from "@/lib/validations/agreement";
 import { notifyError } from "@/lib/notifications";
 
-import { getAgreementsByDebtId } from "@/app/actions/agreement";
+import { getAgreementsByDebtId } from "@/actions/agreement";
 
-import { getDebtorByUserId, getDebts } from "@/app/actions/debtor";
+import { getDebtorByUserId, getDebts } from "@/actions/debtor";
 import { DebtorSummary } from "@/types/DebtorSummary";
 import { AgreementDialog } from "@/components/agreements/agreement-dialog";
 import { PaymentsDialog } from "@/components/payment/payments-dialog";

@@ -8,7 +8,7 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { initialTenantSignUp, ITenantSignUp } from "@/lib/validations/signup";
 import { notifyInfo, notifyWarning } from "@/lib/notifications";
 import useClientRouter from "@/hooks/useNavigations";
-import { createAccount } from "@/app/actions/auth";
+import { createAccount } from "@/actions/auth";
 
 // components
 import AccountInfoCard from "@/components/signup/account-info-card";
@@ -17,7 +17,7 @@ import TermsAndConditionsCard from "@/components/signup/terms-and-conditions-car
 import OnboardingLayout from "@/components/onboarding/onboarding-layout";
 import CardContainer from "@/components/signup/card-container";
 import HeaderInfoCard from "@/components/signup/header-info-card";
-import { userExistsByEmail } from "@/app/actions/user";
+import { userExistsByEmail } from "@/actions/user";
 
 export default function SignUpPage() {
   const [step, setStep] = React.useState(0);

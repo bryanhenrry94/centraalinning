@@ -19,14 +19,14 @@ import {
 } from "@mui/material";
 import { CollectionCaseView } from "@/lib/validations/collection";
 import { Payment } from "@/lib/validations/payment";
-import { getCollectionViewById } from "@/app/actions/collection-case";
+import { getCollectionViewById } from "@/actions/collection-case";
 import { notifyError, notifyInfo } from "@/lib/notifications";
 import { formatCurrency } from "@/utils/formatters";
-import { getPaymentsByInvoice } from "@/app/actions/payment";
+import { getPaymentsByInvoice } from "@/actions/payment";
 import {
   getAllNotificationsByCollectionCase,
   sendNotification,
-} from "@/app/actions/notification";
+} from "@/actions/notification";
 import { Notification } from "@/lib/validations/notification";
 import TabPanel from "@/components/ui/tab-panel";
 

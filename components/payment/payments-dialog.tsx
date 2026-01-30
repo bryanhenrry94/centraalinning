@@ -16,7 +16,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { formatCurrency } from "@/utils/formatters";
 import React, { useEffect } from "react";
 import { Payment } from "@/lib/validations/payment";
-import { getPayments } from "@/app/actions/payment";
+import { getPayments } from "@/actions/payment";
 
 interface PaymentsDialogProps {
   open: boolean;

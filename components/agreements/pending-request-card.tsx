@@ -5,7 +5,7 @@ import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import PersonIcon from "@mui/icons-material/Person";
 // action & validations
-import { getCollectionViewById } from "@/app/actions/collection-case";
+import { getCollectionViewById } from "@/actions/collection-case";
 import { CollectionCaseView } from "@/lib/validations/collection";
 import { Agreement } from "@/lib/validations/agreement";
 import { formatCurrency, formatDate } from "@/utils/formatters";

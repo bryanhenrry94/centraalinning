@@ -1,14 +1,14 @@
 import prisma from "@/lib/prisma";
 import { $Enums } from "@/prisma/generated/prisma";
-import { updateCollectionStatusAndSendNotification } from "@/app/actions/collection-case";
+import { updateCollectionStatusAndSendNotification } from "@/actions/collection-case";
 import {
   cancelAgreementsByCollectionCase,
   hasAgreement,
   hasPaymentsUpToDate,
-} from "@/app/actions/agreement";
-import { applyFine } from "@/app/actions/debt-fine";
-import { getParameter } from "@/app/actions/parameter";
-import { getLastNotificationDate } from "@/app/actions/notification";
+} from "@/actions/agreement";
+import { applyFine } from "@/actions/debt-fine";
+import { getParameter } from "@/actions/parameter";
+import { getLastNotificationDate } from "@/actions/notification";
 
 export async function processCollectionCaseWorkflow() {
   // Obtener todos los casos de cobranza en estados específicos sin notificación de bloqueo

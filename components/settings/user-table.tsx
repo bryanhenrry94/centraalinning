@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getUsersByTenantId, updateUserActiveStatus } from "@/app/actions/user";
+import { getUsersByTenantId, updateUserActiveStatus } from "@/actions/user";
 import { User } from "@/lib/validations/user";
 import {
   Box,

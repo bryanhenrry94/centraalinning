@@ -26,7 +26,7 @@ import { VerdictEmbargo } from "@/lib/validations/verdict-embargo";
 import { embargoTipos } from "@/constants/embargo";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { User } from "@/lib/validations/user";
-import { getUsersByRole } from "@/app/actions/user";
+import { getUsersByRole } from "@/actions/user";
 
 const TotalCell = ({ control, index }: { control: any; index: number }) => {
   const { setValue } = useFormContext();

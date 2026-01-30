@@ -13,7 +13,7 @@ import {
 import { AccountForm } from "@/components/settings/account-form";
 import ProfileForm from "@/components/settings/profile-form";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { updateUserProfile } from "@/app/actions/user";
+import { updateUserProfile } from "@/actions/user";
 import { notifyInfo } from "@/lib/notifications";
 import UserTable from "@/components/settings/user-table";
 import { EmployeeForm } from "@/components/employees/employee-form";

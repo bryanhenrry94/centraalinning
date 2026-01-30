@@ -1,6 +1,6 @@
 "use server";
 import prisma from "@/lib/prisma";
-import { createCollectionInvoice } from "@/app/actions/billing-invoice";
+import { createCollectionInvoice } from "@/actions/billing-invoice";
 
 import {
   CollectionCase,
@@ -14,7 +14,7 @@ import { $Enums } from "@/prisma/generated/prisma";
 import {
   getNotificationDays,
   sendNotification,
-} from "@/app/actions/notification";
+} from "@/actions/notification";
 import { getParameter } from "./parameter";
 
 type CollectionCaseFilter = {

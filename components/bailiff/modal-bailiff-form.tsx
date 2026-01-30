@@ -22,7 +22,7 @@ import {
   createBailiff,
   getBailiffById,
   updateBailiff,
-} from "@/app/actions/bailiff";
+} from "@/actions/bailiff";
 import { useTenant } from "@/hooks/useTenant";
 import { notifyError, notifySuccess } from "@/lib/notifications";
 import CloseIcon from "@mui/icons-material/Close";

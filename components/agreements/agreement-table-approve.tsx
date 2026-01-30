@@ -23,7 +23,7 @@ import {
 } from "@/lib/validations/agreement";
 import { $Enums } from "@/prisma/generated/prisma";
 import { AlertService } from "@/lib/alerts";
-import { updatePaymentAgreement } from "@/app/actions/agreement";
+import { updatePaymentAgreement } from "@/actions/agreement";
 import { notifyInfo } from "@/lib/notifications";
 import { AgreementFormDialog } from "./agreement-form-dialog";
 

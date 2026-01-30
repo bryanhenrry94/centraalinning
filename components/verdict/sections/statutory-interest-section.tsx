@@ -28,7 +28,7 @@ import {
   IVerdictInterest,
   IVerdictInterestCreate,
 } from "@/lib/validations/verdict-interest";
-import { getAllInterestTypes } from "@/app/actions/interest-type";
+import { getAllInterestTypes } from "@/actions/interest-type";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";

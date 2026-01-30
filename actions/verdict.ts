@@ -7,7 +7,7 @@ import {
 } from "@/lib/validations/verdict";
 import { VerdictInterestDetailCreate } from "@/lib/validations/verdict-interest-details";
 import { InterestDetail } from "@/lib/validations/interest-type";
-import { getInterestTypeById } from "@/app/actions/interest-type";
+import { getInterestTypeById } from "@/actions/interest-type";
 import { notifyError } from "@/lib/notifications";
 import { protocol, rootDomain } from "@/lib/config";
 import path from "path";

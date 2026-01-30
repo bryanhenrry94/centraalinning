@@ -4,7 +4,7 @@ import VerdictFormPage from "@/components/verdict/verdict-form";
 import { VerdictProvider } from "@/contexts/verdictContext";
 import { Box } from "@mui/material";
 import { useParams } from "next/navigation";
-import { getVerdictById } from "@/app/actions/verdict";
+import { getVerdictById } from "@/actions/verdict";
 
 const VerdictPageEdit: React.FC = () => {
   const params = useParams();

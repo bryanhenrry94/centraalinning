@@ -6,8 +6,8 @@ import { EmailFormData } from "@/lib/validations/auth";
 import useClientRouter from "@/hooks/useNavigations";
 import { notifyError, notifyWarning } from "@/lib/notifications";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
-import { emailExists } from "./actions/auth";
-import { getTenantByEmail } from "./actions/tenant";
+import { emailExists } from "@/actions/auth";
+import { getTenantByEmail } from "@/actions/tenant";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
@@ -42,7 +42,7 @@ export default function Home() {
         redirectToSlugLoginCompany(tenants[0].subdomain, payload.email);
       } else {
         notifyWarning(
-          "We konden geen gekoppelde bedrijven vinden voor dit e-mailadres."
+          "We konden geen gekoppelde bedrijven vinden voor dit e-mailadres.",
         );
       }
     } catch (error) {

@@ -27,8 +27,9 @@ import CloseIcon from "@mui/icons-material/Close";
 import CollectionForm from "./collection-form";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { formatCurrency, formatDate } from "@/utils/formatters";
-import { getAllCollectionCases } from "@/app/actions/collection-case";
-import { notifyError } from "@/lib/notifications";
+import { getAllCollectionCases } from "@/actions/collection-case";
+import { notifyError, notifyInfo, notifyWarning } from "@/lib/notifications";
+import { createSentooPayment } from "@/actions/sentoo.actions";
 
 const CollectionTable = () => {
   const router = useRouter();
@@ -74,6 +75,24 @@ const CollectionTable = () => {
     fetchInvoices();
   };
 
+  const handleNewPayment = async () => {
+    const res = await createSentooPayment({
+      amount: 2500,
+      description: "Pago suscripción",
+      reference: crypto.randomUUID(),
+    });
+
+    if (!res.success) {
+      notifyWarning("El banco rechazó el pago. Intenta otro monto.");
+      return;
+    }
+
+    console.log("payment created:", res.payment);
+
+    notifyInfo("Redirigiendo al portal de pagos...");
+    window.location.href = res.payment?.url || "";
+  };
+
   return (
     <Box mt={2}>
       <Box
@@ -107,6 +126,13 @@ const CollectionTable = () => {
             <IconButton onClick={fetchInvoices} color="primary">
               <RefresIcon />
             </IconButton>
+            <Button
+              onClick={handleNewPayment}
+              variant="contained"
+              color="primary"
+            >
+              NUEVO PAGO
+            </Button>
             <Button onClick={handleOpen} variant="contained" color="primary">
               NIEUWE VORDERING
             </Button>

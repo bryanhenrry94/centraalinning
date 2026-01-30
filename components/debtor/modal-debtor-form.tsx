@@ -22,13 +22,13 @@ import {
   createDebtor,
   getDebtorById,
   updateDebtor,
-} from "@/app/actions/debtor";
+} from "@/actions/debtor";
 import { useTenant } from "@/hooks/useTenant";
 import { notifyError, notifyInfo, notifySuccess } from "@/lib/notifications";
 import CloseIcon from "@mui/icons-material/Close";
 import { $Enums } from "@/prisma/generated/prisma";
 import { DebtorIncomeCreate } from "@/lib/validations/debtor-incomes";
-import { getPersonById, getPersonByIdentification } from "@/app/actions/person";
+import { getPersonById, getPersonByIdentification } from "@/actions/person";
 
 interface ModalFormDebtorProps {
   open: boolean;

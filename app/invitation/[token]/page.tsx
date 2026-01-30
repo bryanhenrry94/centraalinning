@@ -10,13 +10,13 @@ import useClientRouter from "@/hooks/useNavigations";
 // components
 import OnboardingLayout from "@/components/onboarding/onboarding-layout";
 import HeaderInfoCard from "@/components/signup/header-info-card";
-import { userExistsByEmail } from "@/app/actions/user";
+import { userExistsByEmail } from "@/actions/user";
 import {
   completeRegistration,
   getInvitationDetails,
   invitationIsUsed,
   isInvitationValid,
-} from "@/app/actions/tenant-invitation";
+} from "@/actions/tenant-invitation";
 import { useParams } from "next/navigation";
 import LoadingUI from "@/components/ui/loading-ui";
 

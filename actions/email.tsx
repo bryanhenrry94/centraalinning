@@ -88,7 +88,7 @@ export const sendNewClitentEmail = async (
   to: string,
   clientName: string,
   registeredAt: string,
-  totalClients: number
+  totalClients: number,
 ) => {
   try {
     const recipient = await getEmailByEnv(to);
@@ -123,7 +123,9 @@ export const sendNewClitentEmail = async (
 
 export const sendInvoiceEmail = async (
   to: string,
-  invoice_id: string
+  invoice_id: string,
+  payment_url?: string,
+  qr_code?: string,
 ): Promise<boolean> => {
   try {
     if (!to) {
@@ -157,8 +159,6 @@ export const sendInvoiceEmail = async (
       },
     ];
 
-    const paymentLink = `https://portalci.net/pay-invoice/${billing.id}`;
-
     const recipient = await getEmailByEnv(to);
 
     await resend.emails.send({
@@ -169,7 +169,7 @@ export const sendInvoiceEmail = async (
         <InvoiceEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
           fullname={billing.tenant.name || "Customer"}
-          paymentLink={paymentLink}
+          paymentLink={payment_url}
         />
       ),
       attachments: attachments,
@@ -186,7 +186,7 @@ export const sendInvoiceEmail = async (
 export const sendAanmaningEmail = async (
   to: string,
   caseId: string,
-  invitationLink?: string
+  invitationLink?: string,
 ) => {
   try {
     // Generar el PDF de la aanmaning
@@ -267,7 +267,7 @@ export const sendAanmaningEmail = async (
 
     console.log(
       "Send_Aanmaning: Aanmaning email sent successfully to XXX:",
-      to
+      to,
     );
 
     return Response.json(data);
@@ -378,7 +378,7 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
           collection_case_id: collection.id,
           type: "AANMANING",
         },
-      }
+      },
     );
 
     // console.log("firstReminderDate", firstReminderDate);
@@ -412,7 +412,7 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
     };
 
     const pdfBase64 = await generatePdfBase64(
-      <IngebrekestellingPDF {...params} />
+      <IngebrekestellingPDF {...params} />,
     );
 
     const attachments = [
@@ -524,7 +524,7 @@ export const sendBlokkadeMail = async (to: string, caseId: string) => {
 export const sendVerdictApprovalEmail = async (
   to: string,
   fullname: string,
-  verdictId: string
+  verdictId: string,
 ) => {
   try {
     const recipient = await getEmailByEnv(to);
@@ -553,7 +553,7 @@ export const sendVerdictApprovalEmail = async (
       sentence_date: formatDate(
         verdict.sentence_date
           ? verdict.sentence_date.toISOString()
-          : new Date().toISOString()
+          : new Date().toISOString(),
       ),
       sentence_amount: verdict.sentence_amount
         ? verdict.sentence_amount.toFixed(2)
@@ -561,7 +561,7 @@ export const sendVerdictApprovalEmail = async (
     };
 
     const pdfBase64 = await generatePdfBase64(
-      <VerdictApprovalPDF {...params} />
+      <VerdictApprovalPDF {...params} />,
     );
 
     const attachments = [
@@ -602,13 +602,13 @@ export const sendVerdictApprovalEmail = async (
 
 export const sendMailVerdictDebtor = async (
   to: string,
-  verdictData: VerdictDebtorPDFProps
+  verdictData: VerdictDebtorPDFProps,
 ) => {
   try {
     const recipient = await getEmailByEnv(to);
 
     const pdfBase64 = await generatePdfBase64(
-      <VerdictDebtorPDF {...verdictData} />
+      <VerdictDebtorPDF {...verdictData} />,
     );
 
     const attachments = [
@@ -652,16 +652,16 @@ export const sendMailVerdictDebtor = async (
 export const sendMailVerdictCreditor = async (
   to: string,
   verdictData: VerdictCreditorPDFProps,
-  invoiceData: InvoicePDFProps
+  invoiceData: InvoicePDFProps,
 ) => {
   try {
     const recipient = await getEmailByEnv(to);
 
     const pdfBase64 = await generatePdfBase64(
-      <VerdictCreditorPDF {...verdictData} />
+      <VerdictCreditorPDF {...verdictData} />,
     );
     const pdfInvoiceBase64 = await generatePdfBase64(
-      <InvoicePDF {...invoiceData} />
+      <InvoicePDF {...invoiceData} />,
     );
 
     const attachments = [
@@ -711,7 +711,7 @@ type VerdictRegisterEmailParams = {
 };
 
 export const sendMailRegisterVerdict = async (
-  params: VerdictRegisterEmailParams
+  params: VerdictRegisterEmailParams,
 ) => {
   try {
     const recipient = await getEmailByEnv(params.to);

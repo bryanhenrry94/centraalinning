@@ -13,8 +13,8 @@ import {
   IUser,
   iValidateSlugResponse,
 } from "@/lib/validations/signup";
-import { validaSubdomain } from "@/app/actions/tenant";
-import { createAccount } from "@/app/actions/auth";
+import { validaSubdomain } from "@/actions/tenant";
+import { createAccount } from "@/actions/auth";
 
 interface AuthContextProps {
   step: number;

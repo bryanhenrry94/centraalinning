@@ -34,7 +34,7 @@ import { AlertService } from "@/lib/alerts";
 import { formatCurrency } from "@/utils/formatters";
 // hooks and services
 import { useTenant } from "@/hooks/useTenant";
-import { getAllInvoices } from "@/app/actions/billing-invoice";
+import { getAllInvoices } from "@/actions/billing-invoice";
 import {
   BillingInvoiceBase,
   BillingInvoiceResponse,

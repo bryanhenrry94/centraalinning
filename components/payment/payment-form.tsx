@@ -10,11 +10,11 @@ import {
   PaymentCreateSchema,
   PaymentCreate,
 } from "@/lib/validations/payment";
-import { registerPayment } from "@/app/actions/payment";
+import { registerPayment } from "@/actions/payment";
 import { $Enums } from "@/prisma/generated/prisma";
 import { DebtorSummary } from "@/types/DebtorSummary";
 import { useSession } from "next-auth/react";
-import { getDebts } from "@/app/actions/debtor";
+import { getDebts } from "@/actions/debtor";
 import { formatCurrency } from "@/utils/formatters";
 
 const initialState: PaymentCreate = {

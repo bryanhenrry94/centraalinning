@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Box, Tab, Tabs, Typography } from "@mui/material";
 import { AgreementResponse } from "@/lib/validations/agreement";
-import { getPaymentAgreements } from "@/app/actions/agreement";
+import { getPaymentAgreements } from "@/actions/agreement";
 import TabPanel from "@/components/ui/tab-panel";
 import { useSession } from "next-auth/react";
 import { AgreementTableApprove } from "@/components/agreements/agreement-table-approve";

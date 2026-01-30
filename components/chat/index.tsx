@@ -23,7 +23,7 @@ import {
   getAllChatRoomsByTenantId,
   getMessagesByRoomId,
   saveMessage,
-} from "@/app/actions/chat";
+} from "@/actions/chat";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { ChatWindowProps, ISelectedRoom, Sender } from "./types";
 import { IChatMessage, IChatMessageCreate } from "@/lib/validations/chat";

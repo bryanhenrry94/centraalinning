@@ -1,5 +1,5 @@
 import { IdTokenInput, LoginFormData } from "@/lib/validations/auth";
-import { signInWithPassword } from "@/app/actions/auth";
+import { signInWithPassword } from "@/actions/auth";
 import { type AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 

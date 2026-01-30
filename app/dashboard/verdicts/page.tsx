@@ -1,7 +1,7 @@
 "use client";
 import React, { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { deleteVerdict, getAllVerdicts } from "@/app/actions/verdict";
+import { deleteVerdict, getAllVerdicts } from "@/actions/verdict";
 import { VerdictResponse } from "@/lib/validations/verdict";
 import {
   Box,
@@ -34,7 +34,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { formatCurrency } from "@/utils/formatters";
 import { useTenant } from "@/hooks/useTenant";
 import { useSession } from "next-auth/react";
-import { getBailiffByUserId } from "@/app/actions/bailiff";
+import { getBailiffByUserId } from "@/actions/bailiff";
 
 interface TablePaginationActionsProps {
   count: number;

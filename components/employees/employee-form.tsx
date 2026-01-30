@@ -28,7 +28,7 @@ import {
   deleteEmployee,
   getAllEmployeesByTenantId,
   updateEmployee,
-} from "@/app/actions/employee";
+} from "@/actions/employee";
 import {
   CreateEmployee,
   createEmployeeSchema,

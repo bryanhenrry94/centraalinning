@@ -5,7 +5,7 @@ import LoadingUI from "@/components/ui/loading-ui";
 import { StatsCards } from "@/components/dashboard/superadmin/stats-cards";
 import { Box, Container } from "@mui/material";
 import { RecentInvoices } from "@/components/dashboard/superadmin/recent-invoices";
-import { getDashboardStats } from "@/app/actions/dashboard";
+import { getDashboardStats } from "@/actions/dashboard";
 
 const DashboardSuperAdmin = () => {
   const { isAuthenticated, isLoading, user } = useAuthSession();

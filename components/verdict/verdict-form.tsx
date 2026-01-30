@@ -16,7 +16,7 @@ import {
   approveVerdict,
   createVerdict,
   updateVerdict,
-} from "@/app/actions/verdict";
+} from "@/actions/verdict";
 import { DebtorBase } from "@/lib/validations/debtor";
 // hooks and libs
 import { useTenant } from "@/hooks/useTenant";
@@ -30,9 +30,9 @@ import AttachmentSection from "./sections/attachment-section";
 import ServiceCostsSection from "./sections/service-costs-section";
 import AttachmentsSection from "./sections/attachments-section";
 import { ModalFormDebtor } from "../debtor/modal-debtor-form";
-import { getAllDebtorsByTenantId } from "@/app/actions/debtor";
+import { getAllDebtorsByTenantId } from "@/actions/debtor";
 import { ModalFormBailiff } from "../bailiff/modal-bailiff-form";
-import { getAllBailiffs } from "@/app/actions/bailiff";
+import { getAllBailiffs } from "@/actions/bailiff";
 import { Bailiff } from "@/lib/validations/bailiff";
 import { useSession } from "next-auth/react";
 import { FormProvider, useForm } from "react-hook-form";

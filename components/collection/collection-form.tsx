@@ -16,11 +16,11 @@ import SaveIcon from "@mui/icons-material/Save";
 import { CollectionCaseCreate } from "@/lib/validations/collection";
 import { ModalFormDebtor } from "@/components/debtor/modal-debtor-form";
 import { DebtorBase, DebtorResponse } from "@/lib/validations/debtor";
-import { getParameter } from "@/app/actions/parameter";
-import { createCollectionCase } from "@/app/actions/collection-case";
+import { getParameter } from "@/actions/parameter";
+import { createCollectionCase } from "@/actions/collection-case";
 import { notifyError, notifySuccess } from "@/lib/notifications";
 import { useTenant } from "@/hooks/useTenant";
-import { getAllDebtorsByTenantId } from "@/app/actions/debtor";
+import { getAllDebtorsByTenantId } from "@/actions/debtor";
 import { IParamGeneral } from "@/lib/validations/parameter";
 import { $Enums } from "@/prisma/generated/prisma";
 

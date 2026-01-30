@@ -18,7 +18,7 @@ import {
 } from "@mui/material";
 
 import EditIcon from "@mui/icons-material/Edit";
-import { getAllDebtors } from "@/app/actions/debtor";
+import { getAllDebtors } from "@/actions/debtor";
 import {
   DebtorBase,
   DebtorCreate as DebtorCreateBase,

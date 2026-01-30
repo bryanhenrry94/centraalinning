@@ -6,10 +6,11 @@ import {
   BillingInvoiceCreate,
   BillingInvoiceResponse,
 } from "@/lib/validations/billing-invoice";
-import { getParameter } from "@/app/actions/parameter";
+import { getParameter } from "@/actions/parameter";
 import { getNameCountry } from "@/utils/location";
 import { sendInvoiceEmail } from "./email";
 import { InvoicePDFProps } from "@/templates/pdfs/InvoicePDF";
+import { createSentooPayment } from "./sentoo.actions";
 
 interface ActivationInvoiceInput {
   tenant_id: string;
@@ -19,7 +20,7 @@ interface ActivationInvoiceInput {
 }
 
 export const createActivationInvoice = async (
-  params: ActivationInvoiceInput
+  params: ActivationInvoiceInput,
 ) => {
   const tenant = await prisma.tenant.findUnique({
     where: { id: params.tenant_id },
@@ -83,7 +84,7 @@ export const createActivationInvoice = async (
 };
 
 export const createCollectionInvoice = async (
-  params: ActivationInvoiceInput
+  params: ActivationInvoiceInput,
 ) => {
   const tenant = await prisma.tenant.findUnique({
     where: { id: params.tenant_id },
@@ -130,13 +131,43 @@ export const createCollectionInvoice = async (
     },
   });
 
+  // Convierte dólares a centavos de forma segura
+  const amountSentoo = toCents(activationFee);
+
+  // Validación requerida por Sentoo
+  if (amountSentoo < 100) {
+    throw new Error("Sentoo amount must be at least 100 cents ($1.00)");
+  }
+
+  // Crear el pago en Sentoo
+  const res = await createSentooPayment({
+    amount: amountSentoo, // YA en centavos
+    description: `Factura ${invoice_number} - Activation fee`,
+    reference: invoice.id,
+  });
+
+  if (!res.success) {
+    throw new Error("Hubo un error al crear el pago en Sentoo");
+  }
+
+  console.log("payment created:", res.payment);
+
   // Enviar correo con la factura al email de contacto del tenant
   if (tenant.contact_email) {
-    await sendInvoiceEmail(tenant.contact_email, invoice.id);
+    await sendInvoiceEmail(
+      tenant.contact_email,
+      invoice.id,
+      res.payment?.url,
+      res.payment?.qrCode,
+    );
   }
 
   return invoice;
 };
+
+function toCents(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100);
+}
 
 export const generateInvoiceNumber = async (): Promise<string> => {
   const lastInvoice = await prisma.billingInvoice.findFirst({
@@ -162,7 +193,7 @@ export const generateInvoiceNumber = async (): Promise<string> => {
 };
 
 export const getDataInvoicePDF = async (
-  id: string
+  id: string,
 ): Promise<InvoicePDFProps> => {
   const invoice = await prisma.billingInvoice.findUnique({
     where: { id },
@@ -206,7 +237,7 @@ export const getDataInvoicePDF = async (
     total: Number(
       invoice.details
         .reduce((acc, detail) => acc + detail.item_total_with_tax, 0)
-        .toFixed(2)
+        .toFixed(2),
     ),
   };
 
@@ -254,7 +285,7 @@ export const getAllInvoices = async (): Promise<BillingInvoiceResponse[]> => {
 };
 
 export const getInvoiceById = async (
-  id: string
+  id: string,
 ): Promise<BillingInvoiceBase | null> => {
   try {
     const invoice = await prisma.billingInvoice.findUnique({
@@ -277,7 +308,7 @@ export const getInvoiceById = async (
 
 export const createInvoice = async (
   invoice: BillingInvoiceCreate,
-  tenant_id: string
+  tenant_id: string,
 ): Promise<BillingInvoiceBase> => {
   try {
     const newInvoice = await prisma.billingInvoice.create({
@@ -318,7 +349,7 @@ export const createInvoice = async (
 
 export const updateInvoice = async (
   id: string,
-  invoice: Partial<BillingInvoiceCreate>
+  invoice: Partial<BillingInvoiceCreate>,
 ): Promise<boolean> => {
   try {
     const updatedInvoice = await prisma.billingInvoice.update({
@@ -370,7 +401,7 @@ export const deleteInvoice = async (id: string): Promise<boolean> => {
 };
 
 export const getNextInvoiceNumber = async (
-  tenant_id: string
+  tenant_id: string,
 ): Promise<string> => {
   try {
     const parameter = await getParameter();
@@ -392,7 +423,7 @@ export const getNextInvoiceNumber = async (
     }
 
     const nextInvoiceNumber = `${parameter.invoice_prefix || ""}${String(
-      nextNumber
+      nextNumber,
     ).padStart(parameter.invoice_number_length || 5, "0")}`;
 
     return nextInvoiceNumber;

@@ -7,12 +7,12 @@ import { CreateAgreement, UpdateAgreement } from "@/lib/validations/agreement";
 import { formatCurrency, formatDate } from "@/utils/formatters";
 import { notifyError, notifyInfo } from "@/lib/notifications";
 import { useSession } from "next-auth/react";
-import { getDebtorByUserId } from "@/app/actions/debtor";
+import { getDebtorByUserId } from "@/actions/debtor";
 import {
   createPaymentAgreement,
   existsPaymentAgreement,
   updatePaymentAgreement,
-} from "@/app/actions/agreement";
+} from "@/actions/agreement";
 import { $Enums } from "@/prisma/generated/prisma";
 
 interface AgreementFormProps {

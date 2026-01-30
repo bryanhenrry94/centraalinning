@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { getTenantById } from "@/app/actions/tenant";
+import { getTenantById } from "@/actions/tenant";
 import { Tenant } from "@/lib/validations/tenant";
 
 export function useTenant() {

@@ -48,8 +48,8 @@ import {
   getInvoiceById,
   getNextInvoiceNumber,
   updateInvoice,
-} from "@/app/actions/billing-invoice";
-import { getAllTenants } from "@/app/actions/tenant";
+} from "@/actions/billing-invoice";
+import { getAllTenants } from "@/actions/tenant";
 // libs
 import { notifyError, notifyInfo } from "@/lib/notifications";
 import { AlertService } from "@/lib/alerts";

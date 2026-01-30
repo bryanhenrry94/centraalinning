@@ -1,9 +1,9 @@
 "use server";
 import prisma from "@/lib/prisma";
 import { CollectionCase } from "@/lib/validations/collection";
-import { getCollectionById } from "@/app/actions/collection-case";
+import { getCollectionById } from "@/actions/collection-case";
 import { Notification } from "@/lib/validations/notification";
-import { getParameter } from "@/app/actions/parameter";
+import { getParameter } from "@/actions/parameter";
 import { NotificationType } from "@/lib/validations/notification";
 
 import { registerInvitation } from "./tenant-invitation";

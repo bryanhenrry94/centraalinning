@@ -3,7 +3,7 @@ import {
   DownloadVerdictAttachment,
   getAttachmentsByVerdictId,
   UploadAttachmentToVerdict,
-} from "@/app/actions/verdict";
+} from "@/actions/verdict";
 import { useTenant } from "@/hooks/useTenant";
 import { AlertService } from "@/lib/alerts";
 import { notifyError, notifyInfo } from "@/lib/notifications";

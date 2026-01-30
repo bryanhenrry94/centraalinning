@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Box, Container, Stack, Button } from "@mui/material";
 import { usePathname } from "next/navigation";
 import Modal from "@mui/material/Modal";
-import { sendFinancialSummaryEmail } from "@/app/actions/debtor";
+import { sendFinancialSummaryEmail } from "@/actions/debtor";
 import { notifyInfo } from "@/lib/notifications";
 import PaymentCard from "@/components/financial-report/payment-card";
 
