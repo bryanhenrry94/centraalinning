@@ -22,7 +22,7 @@ const initialState: PaymentCreate = {
   total_amount: 0,
   method: $Enums.PaymentMethod.TRANSFER,
   reference_number: "",
-  payment_date: new Date().toISOString().slice(0, 16), // Format for datetime-local input
+  paid_at: new Date().toISOString().slice(0, 16), // Format for datetime-local input
 };
 
 interface PaymentFormProps {
@@ -169,15 +169,15 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({ debtId, onSave }) => {
         )}
       />
       <Controller
-        name="payment_date"
+        name="paid_at"
         control={control}
         render={({ field }) => (
           <TextField
             {...field}
             label="Paid At"
             type="datetime-local"
-            error={!!errors.payment_date}
-            helperText={errors.payment_date?.message}
+            error={!!errors.paid_at}
+            helperText={errors.paid_at?.message}
             required
             InputLabelProps={{ shrink: true }}
           />

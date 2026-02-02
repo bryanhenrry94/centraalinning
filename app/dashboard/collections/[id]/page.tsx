@@ -38,11 +38,11 @@ const CollectionViewPage: React.FC = () => {
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
   const [collection, setCollection] = React.useState<CollectionCaseView | null>(
-    null
+    null,
   );
   const [payments, setPayments] = useState<Payment[]>([]);
   const [notifications, setNotifications] = useState<Notification[] | null>(
-    null
+    null,
   );
   const [value, setValue] = React.useState(0);
 
@@ -113,7 +113,7 @@ const CollectionViewPage: React.FC = () => {
       }
 
       const data = await getAllNotificationsByCollectionCase(
-        params.id as string
+        params.id as string,
       );
       console.log("Notifications Data:", data);
       setNotifications(data);
@@ -191,7 +191,7 @@ const CollectionViewPage: React.FC = () => {
             <Typography variant="body1" color="text.secondary">
               Te betalen:{" "}
               {formatCurrency(
-                (collection?.fee_amount || 0) + (collection?.abb_amount || 0)
+                (collection?.fee_amount || 0) + (collection?.abb_amount || 0),
               )}
             </Typography>
             <Typography variant="body1" color="text.secondary">
@@ -241,7 +241,7 @@ const CollectionViewPage: React.FC = () => {
                       sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                     >
                       <TableCell component="th" scope="row">
-                        {new Date(payment.payment_date).toLocaleDateString()}
+                        {new Date(payment.paid_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell align="right">
                         {formatCurrency(payment.total_amount)}

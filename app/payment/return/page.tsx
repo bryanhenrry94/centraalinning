@@ -1,8 +1,8 @@
 "use client";
-import React from "react";
+import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function ReturnPage() {
+function ReturnPageContent() {
   const status = useSearchParams().get("status");
 
   let icon = "⏳";
@@ -50,5 +50,13 @@ export default function ReturnPage() {
         Puedes cerrar esta ventana o regresar a la aplicación.
       </p>
     </div>
+  );
+}
+
+export default function ReturnPage() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <ReturnPageContent />
+    </Suspense>
   );
 }

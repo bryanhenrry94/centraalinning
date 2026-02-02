@@ -7,7 +7,7 @@ export const registerPayment = async (payload: PaymentCreate) => {
   await prisma.payment.create({
     data: {
       ...payload,
-      payment_date: new Date(payload.payment_date),
+      paid_at: new Date(payload.paid_at),
       created_at: new Date(),
     },
   });
@@ -170,7 +170,7 @@ interface PaymentFilter {
 }
 
 export const getPayments = async (
-  filter: PaymentFilter
+  filter: PaymentFilter,
 ): Promise<{ success: boolean; error?: string; data?: Payment[] }> => {
   try {
     const payments = await prisma.payment.findMany({
@@ -191,7 +191,7 @@ export const getPayments = async (
         payment.method === "CREDIT_CARD"
           ? "CREDIT_CARD"
           : (payment.method as "TRANSFER" | "CREDIT_CARD"),
-      payment_date: payment.payment_date.toISOString(),
+      paid_at: payment.paid_at ? payment.paid_at.toISOString() : "",
       reference_number: payment.reference_number ?? undefined,
       created_at: payment.created_at,
       updated_at: payment.updated_at,
@@ -205,7 +205,7 @@ export const getPayments = async (
 };
 
 export const getPaymentsByInvoice = async (
-  debt_id: string
+  debt_id: string,
 ): Promise<Payment[]> => {
   const payments = await prisma.payment.findMany({
     where: { debt_id: debt_id },
@@ -223,7 +223,7 @@ export const getPaymentsByInvoice = async (
       payment.method === "CREDIT_CARD"
         ? "CREDIT_CARD"
         : (payment.method as "TRANSFER" | "CREDIT_CARD"),
-    payment_date: payment.payment_date.toISOString(),
+    paid_at: payment.paid_at ? payment.paid_at.toISOString() : "",
     reference_number: payment.reference_number ?? undefined,
     created_at: payment.created_at,
     updated_at: payment.updated_at,
@@ -232,7 +232,7 @@ export const getPaymentsByInvoice = async (
 
 export const getPaymentsByDebtor = async (
   tenant_id: string,
-  debtor_id: string
+  debtor_id: string,
 ) => {
   // const payments = await prisma.paymentDetail.findMany({
   //   where: {
@@ -268,7 +268,7 @@ export const getPaymentById = async (paymentId: string) => {
 export const updatePayment = async (
   tenant_id: string,
   paymentId: string,
-  data: any
+  data: any,
 ) => {
   // const payment = await prisma.paymentDetail.findUnique({
   //   where: { id: paymentId, accountsReceivable: { tenant_id: tenant_id } },
@@ -303,7 +303,7 @@ export const deletePayment = async (tenant_id: string, paymentId: string) => {
 // 9. Validar consistencia: Recalcular automáticamente el saldo pendiente de una factura
 export const recalculateInvoiceBalance = async (
   tenant_id: string,
-  debt_id: string
+  debt_id: string,
 ) => {
   //
   // const payments = await prisma.paymentDetail.findMany({
@@ -347,7 +347,7 @@ export const recalculateInvoiceBalance = async (
 // Recalcular los valores de PaymentAgreement
 export const recalculatePaymentAgreement = async (
   tenant_id: string,
-  paymentAgreementId: string
+  paymentAgreementId: string,
 ) => {
   // Obtener el acuerdo de pago
   // const collectionCaseAgreement = await prisma.collectionCaseAgreement.findUnique({
