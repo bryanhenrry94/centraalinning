@@ -139,6 +139,8 @@ export const createCollectionInvoice = async (
     throw new Error("Sentoo amount must be at least 100 cents ($1.00)");
   }
 
+  console.log("Creating Sentoo payment for amount (cents):", amountSentoo);
+
   // Crear el pago en Sentoo
   const res = await createSentooPayment({
     amount: amountSentoo, // YA en centavos

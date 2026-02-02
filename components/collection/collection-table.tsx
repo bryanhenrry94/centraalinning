@@ -75,24 +75,6 @@ const CollectionTable = () => {
     fetchInvoices();
   };
 
-  const handleNewPayment = async () => {
-    const res = await createSentooPayment({
-      amount: 2500,
-      description: "Pago suscripción",
-      reference: crypto.randomUUID(),
-    });
-
-    if (!res.success) {
-      notifyWarning("El banco rechazó el pago. Intenta otro monto.");
-      return;
-    }
-
-    console.log("payment created:", res.payment);
-
-    notifyInfo("Redirigiendo al portal de pagos...");
-    window.location.href = res.payment?.url || "";
-  };
-
   return (
     <Box mt={2}>
       <Box
@@ -126,13 +108,6 @@ const CollectionTable = () => {
             <IconButton onClick={fetchInvoices} color="primary">
               <RefresIcon />
             </IconButton>
-            <Button
-              onClick={handleNewPayment}
-              variant="contained"
-              color="primary"
-            >
-              NUEVO PAGO
-            </Button>
             <Button onClick={handleOpen} variant="contained" color="primary">
               NIEUWE VORDERING
             </Button>

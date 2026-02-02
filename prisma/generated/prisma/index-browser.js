@@ -510,7 +510,12 @@ exports.Prisma.PaymentScalarFieldEnum = {
   debt_id: 'debt_id',
   method: 'method',
   total_amount: 'total_amount',
-  payment_date: 'payment_date',
+  paid_at: 'paid_at',
+  status: 'status',
+  provider: 'provider',
+  provider_ref: 'provider_ref',
+  provider_status: 'provider_status',
+  provider_payload: 'provider_payload',
   reference_number: 'reference_number',
   agreement_id: 'agreement_id',
   created_at: 'created_at',
@@ -530,6 +535,11 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
 exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
@@ -538,6 +548,12 @@ exports.Prisma.QueryMode = {
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
 };
 exports.UserRole = exports.$Enums.UserRole = {
   PLATFORM_OWNER: 'PLATFORM_OWNER',
@@ -632,6 +648,14 @@ exports.InstallmentStatus = exports.$Enums.InstallmentStatus = {
 exports.PaymentMethod = exports.$Enums.PaymentMethod = {
   TRANSFER: 'TRANSFER',
   CREDIT_CARD: 'CREDIT_CARD'
+};
+
+exports.PaymentStatus = exports.$Enums.PaymentStatus = {
+  pending: 'pending',
+  paid: 'paid',
+  failed: 'failed',
+  expired: 'expired',
+  reversed: 'reversed'
 };
 
 exports.PaymentComponent = exports.$Enums.PaymentComponent = {

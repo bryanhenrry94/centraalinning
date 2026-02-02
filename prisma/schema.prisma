@@ -591,7 +591,17 @@ model Payment {
   debt             Debt?                  @relation(fields: [debt_id], references: [id])
   method           PaymentMethod
   total_amount     Decimal                 @db.Decimal(10, 2)
-  payment_date     DateTime
+  paid_at          DateTime?               @db.Date
+
+  // Estado financiero real
+  status           PaymentStatus           @default(pending)
+
+  // Sentoo / Pasarela
+  provider         String                  @default("manual") // sentoo | stripe | cash | etc
+  provider_ref     String?                 @unique
+  provider_status  PaymentSentooStatus     @default(pending)
+  provider_payload Json?
+
   reference_number String?
   agreement_id     String?
   created_at       DateTime                @default(now())
@@ -602,6 +612,22 @@ model Payment {
   agreements       Agreement?             @relation(fields: [agreement_id], references: [id])
 
   @@map("payment")
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  failed
+  expired
+  reversed
+}
+
+enum PaymentSentooStatus {
+  success
+  pending
+  failed
+  cancelled
+  expired
 }
 
 model PaymentAllocation {

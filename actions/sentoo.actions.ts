@@ -1,6 +1,7 @@
 "use server";
-
-import { sentooRequest } from "@/lib/sentoo";
+import prisma from "@/lib/prisma";
+import { getPaymentStatus, sentooRequest } from "@/lib/sentoo";
+import { Prisma } from "@/prisma/generated/prisma";
 
 export async function createSentooPayment(input: {
   amount: number;
@@ -14,8 +15,10 @@ export async function createSentooPayment(input: {
       sentoo_amount: input.amount.toString(),
       sentoo_description: input.description,
       sentoo_expires: "2026-12-31T23:59:59+00:00",
-      sentoo_return_url: `${process.env.APP_URL}/payment/?return=`,
+      sentoo_return_url: `${process.env.APP_URL}/payment/return?status=`,
     });
+
+    const providerPayload = Object.fromEntries(body.entries());
 
     const result = await sentooRequest("/v1/payment/new", body);
 
@@ -44,6 +47,19 @@ export async function createSentooPayment(input: {
       };
     }
 
+    await prisma.payment.create({
+      data: {
+        method: "TRANSFER",
+        provider: "sentoo",
+        provider_ref: sentooSuccess.message,
+        provider_status: "pending",
+        total_amount: new Prisma.Decimal(input.amount),
+        status: "pending",
+        provider_payload: providerPayload,
+        paid_at: null,
+      },
+    });
+
     // ✅ Datos reales del pago
     const payment = {
       id: sentooSuccess.message, // este es el paymentId
@@ -66,8 +82,24 @@ export async function createSentooPayment(input: {
   }
 }
 
-export async function verifyPayment(reference: string) {
-  const body = new URLSearchParams({ reference });
+export async function verifySentooPayment(transactionId: string) {
+  const url = `/v1/payment/status/${process.env.SENTOO_MERCHANT!}/${transactionId}`;
 
-  return sentooRequest("/v1/payment/status", body);
+  const res = await getPaymentStatus(url);
+  if (!res.ok) {
+    throw new Error("Failed to verify Sentoo payment");
+  }
+
+  console.log("Sentoo payment status data:", JSON.stringify(res.data, null, 2));
+  const sentooStatus = res.data.success.message;
+
+  // Sincronizar con DB
+  await prisma.payment.update({
+    where: { provider_ref: transactionId },
+    data: { provider_status: sentooStatus },
+  });
+
+  return {
+    status: sentooStatus,
+  };
 }

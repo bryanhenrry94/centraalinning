@@ -1,40 +1,66 @@
+import { verifySentooPayment } from "@/actions/sentoo.actions";
+import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const signature = req.headers.get("x-sentoo-signature");
+  try {
+    const form = await req.formData();
 
-  if (signature !== process.env.SENTOO_WEBHOOK_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+    const transactionId = form.get("transaction_id");
 
-  const payload = await req.json();
+    console.log("📩 Sentoo webhook received:", {
+      transactionId,
+      raw: Object.fromEntries(form),
+    });
 
-  /*
-    payload ejemplo:
-    {
-      "reference": "ST-123",
-      "status": "paid" | "failed" | "expired",
-      "amount": 2500,
-      "currency": "USD"
+    if (!transactionId) {
+      console.warn("⚠️ Missing transaction_id");
+      return NextResponse.json({ success: true });
     }
-  */
 
-  const { reference, status } = payload;
+    const payment = await prisma.payment.findUnique({
+      where: { provider_ref: transactionId.toString() },
+    });
 
-  // 🔒 Buscar pago en DB por reference
-  // const payment = await db.payment.findUnique(...)
+    if (!payment) {
+      console.warn("⚠️ Payment not found:", transactionId);
+      return NextResponse.json({ success: true });
+    }
 
-  switch (status) {
-    case "paid":
-      // marcar como pagado
-      // await db.payment.update({ status: "paid" })
-      break;
+    if (payment.status === "paid") {
+      console.log("Already processed:", transactionId);
+      return NextResponse.json({ success: true });
+    }
 
-    case "failed":
-    case "expired":
-      // marcar como fallido
-      break;
+    // 🔒 Reconciliar contra Sentoo
+    const verification = await verifySentooPayment(transactionId.toString());
+
+    const status = verification.status;
+
+    if (status === "success") {
+      await prisma.payment.update({
+        where: { id: payment.id },
+        data: {
+          status: "paid",
+          provider_status: "success",
+          paid_at: new Date(),
+        },
+      });
+    } else {
+      await prisma.payment.update({
+        where: { id: payment.id },
+        data: {
+          status: status,
+          provider_status: status,
+        },
+      });
+    }
+
+    console.log("✅ Sentoo payment synced:", transactionId);
+  } catch (err) {
+    console.error("🔥 Sentoo webhook error:", err);
   }
 
-  return NextResponse.json({ received: true });
+  // ⚠️ Sentoo exige 200 siempre
+  return NextResponse.json({ success: true });
 }
