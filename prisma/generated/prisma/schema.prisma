@@ -596,9 +596,9 @@ model Payment {
   status PaymentStatus @default(pending)
 
   // Sentoo / Pasarela
-  provider         String  @default("manual") // sentoo | stripe | cash | etc
-  provider_ref     String? @unique
-  provider_status  String?
+  provider         String              @default("manual") // sentoo | stripe | cash | etc
+  provider_ref     String?             @unique
+  provider_status  PaymentSentooStatus @default(pending)
   provider_payload Json?
 
   reference_number String?
@@ -619,6 +619,14 @@ enum PaymentStatus {
   failed
   expired
   reversed
+}
+
+enum PaymentSentooStatus {
+  success
+  pending
+  failed
+  cancelled
+  expired
 }
 
 model PaymentAllocation {

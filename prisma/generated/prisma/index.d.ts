@@ -184,6 +184,17 @@ export namespace $Enums {
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus]
 
 
+export const PaymentSentooStatus: {
+  success: 'success',
+  pending: 'pending',
+  failed: 'failed',
+  cancelled: 'cancelled',
+  expired: 'expired'
+};
+
+export type PaymentSentooStatus = (typeof PaymentSentooStatus)[keyof typeof PaymentSentooStatus]
+
+
 export const PaymentComponent: {
   PRINCIPAL: 'PRINCIPAL',
   FINE: 'FINE',
@@ -345,6 +356,10 @@ export type FineStatus = (typeof FineStatus)[keyof typeof FineStatus]
 export type PaymentStatus = $Enums.PaymentStatus
 
 export const PaymentStatus: typeof $Enums.PaymentStatus
+
+export type PaymentSentooStatus = $Enums.PaymentSentooStatus
+
+export const PaymentSentooStatus: typeof $Enums.PaymentSentooStatus
 
 export type PaymentComponent = $Enums.PaymentComponent
 
@@ -39367,7 +39382,7 @@ export namespace Prisma {
     status: $Enums.PaymentStatus | null
     provider: string | null
     provider_ref: string | null
-    provider_status: string | null
+    provider_status: $Enums.PaymentSentooStatus | null
     reference_number: string | null
     agreement_id: string | null
     created_at: Date | null
@@ -39383,7 +39398,7 @@ export namespace Prisma {
     status: $Enums.PaymentStatus | null
     provider: string | null
     provider_ref: string | null
-    provider_status: string | null
+    provider_status: $Enums.PaymentSentooStatus | null
     reference_number: string | null
     agreement_id: string | null
     created_at: Date | null
@@ -39562,7 +39577,7 @@ export namespace Prisma {
     status: $Enums.PaymentStatus
     provider: string
     provider_ref: string | null
-    provider_status: string | null
+    provider_status: $Enums.PaymentSentooStatus
     provider_payload: JsonValue | null
     reference_number: string | null
     agreement_id: string | null
@@ -39700,7 +39715,7 @@ export namespace Prisma {
       status: $Enums.PaymentStatus
       provider: string
       provider_ref: string | null
-      provider_status: string | null
+      provider_status: $Enums.PaymentSentooStatus
       provider_payload: Prisma.JsonValue | null
       reference_number: string | null
       agreement_id: string | null
@@ -40141,7 +40156,7 @@ export namespace Prisma {
     readonly status: FieldRef<"Payment", 'PaymentStatus'>
     readonly provider: FieldRef<"Payment", 'String'>
     readonly provider_ref: FieldRef<"Payment", 'String'>
-    readonly provider_status: FieldRef<"Payment", 'String'>
+    readonly provider_status: FieldRef<"Payment", 'PaymentSentooStatus'>
     readonly provider_payload: FieldRef<"Payment", 'Json'>
     readonly reference_number: FieldRef<"Payment", 'String'>
     readonly agreement_id: FieldRef<"Payment", 'String'>
@@ -42600,6 +42615,20 @@ export namespace Prisma {
    * Reference to a field of type 'PaymentStatus[]'
    */
   export type ListEnumPaymentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentStatus[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'PaymentSentooStatus'
+   */
+  export type EnumPaymentSentooStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentSentooStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'PaymentSentooStatus[]'
+   */
+  export type ListEnumPaymentSentooStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentSentooStatus[]'>
     
 
 
@@ -45196,7 +45225,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFilter<"Payment"> | $Enums.PaymentStatus
     provider?: StringFilter<"Payment"> | string
     provider_ref?: StringNullableFilter<"Payment"> | string | null
-    provider_status?: StringNullableFilter<"Payment"> | string | null
+    provider_status?: EnumPaymentSentooStatusFilter<"Payment"> | $Enums.PaymentSentooStatus
     provider_payload?: JsonNullableFilter<"Payment">
     reference_number?: StringNullableFilter<"Payment"> | string | null
     agreement_id?: StringNullableFilter<"Payment"> | string | null
@@ -45217,7 +45246,7 @@ export namespace Prisma {
     status?: SortOrder
     provider?: SortOrder
     provider_ref?: SortOrderInput | SortOrder
-    provider_status?: SortOrderInput | SortOrder
+    provider_status?: SortOrder
     provider_payload?: SortOrderInput | SortOrder
     reference_number?: SortOrderInput | SortOrder
     agreement_id?: SortOrderInput | SortOrder
@@ -45241,7 +45270,7 @@ export namespace Prisma {
     paid_at?: DateTimeNullableFilter<"Payment"> | Date | string | null
     status?: EnumPaymentStatusFilter<"Payment"> | $Enums.PaymentStatus
     provider?: StringFilter<"Payment"> | string
-    provider_status?: StringNullableFilter<"Payment"> | string | null
+    provider_status?: EnumPaymentSentooStatusFilter<"Payment"> | $Enums.PaymentSentooStatus
     provider_payload?: JsonNullableFilter<"Payment">
     reference_number?: StringNullableFilter<"Payment"> | string | null
     agreement_id?: StringNullableFilter<"Payment"> | string | null
@@ -45262,7 +45291,7 @@ export namespace Prisma {
     status?: SortOrder
     provider?: SortOrder
     provider_ref?: SortOrderInput | SortOrder
-    provider_status?: SortOrderInput | SortOrder
+    provider_status?: SortOrder
     provider_payload?: SortOrderInput | SortOrder
     reference_number?: SortOrderInput | SortOrder
     agreement_id?: SortOrderInput | SortOrder
@@ -45287,7 +45316,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusWithAggregatesFilter<"Payment"> | $Enums.PaymentStatus
     provider?: StringWithAggregatesFilter<"Payment"> | string
     provider_ref?: StringNullableWithAggregatesFilter<"Payment"> | string | null
-    provider_status?: StringNullableWithAggregatesFilter<"Payment"> | string | null
+    provider_status?: EnumPaymentSentooStatusWithAggregatesFilter<"Payment"> | $Enums.PaymentSentooStatus
     provider_payload?: JsonNullableWithAggregatesFilter<"Payment">
     reference_number?: StringNullableWithAggregatesFilter<"Payment"> | string | null
     agreement_id?: StringNullableWithAggregatesFilter<"Payment"> | string | null
@@ -48176,7 +48205,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider?: string
     provider_ref?: string | null
-    provider_status?: string | null
+    provider_status?: $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: string | null
     created_at?: Date | string
@@ -48196,7 +48225,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider?: string
     provider_ref?: string | null
-    provider_status?: string | null
+    provider_status?: $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: string | null
     agreement_id?: string | null
@@ -48214,7 +48243,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: StringFieldUpdateOperationsInput | string
     provider_ref?: NullableStringFieldUpdateOperationsInput | string | null
-    provider_status?: NullableStringFieldUpdateOperationsInput | string | null
+    provider_status?: EnumPaymentSentooStatusFieldUpdateOperationsInput | $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -48234,7 +48263,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: StringFieldUpdateOperationsInput | string
     provider_ref?: NullableStringFieldUpdateOperationsInput | string | null
-    provider_status?: NullableStringFieldUpdateOperationsInput | string | null
+    provider_status?: EnumPaymentSentooStatusFieldUpdateOperationsInput | $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: NullableStringFieldUpdateOperationsInput | string | null
     agreement_id?: NullableStringFieldUpdateOperationsInput | string | null
@@ -48253,7 +48282,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider?: string
     provider_ref?: string | null
-    provider_status?: string | null
+    provider_status?: $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: string | null
     agreement_id?: string | null
@@ -48269,7 +48298,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: StringFieldUpdateOperationsInput | string
     provider_ref?: NullableStringFieldUpdateOperationsInput | string | null
-    provider_status?: NullableStringFieldUpdateOperationsInput | string | null
+    provider_status?: EnumPaymentSentooStatusFieldUpdateOperationsInput | $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -48285,7 +48314,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: StringFieldUpdateOperationsInput | string
     provider_ref?: NullableStringFieldUpdateOperationsInput | string | null
-    provider_status?: NullableStringFieldUpdateOperationsInput | string | null
+    provider_status?: EnumPaymentSentooStatusFieldUpdateOperationsInput | $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: NullableStringFieldUpdateOperationsInput | string | null
     agreement_id?: NullableStringFieldUpdateOperationsInput | string | null
@@ -50627,6 +50656,13 @@ export namespace Prisma {
     notIn?: $Enums.PaymentStatus[] | ListEnumPaymentStatusFieldRefInput<$PrismaModel>
     not?: NestedEnumPaymentStatusFilter<$PrismaModel> | $Enums.PaymentStatus
   }
+
+  export type EnumPaymentSentooStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentSentooStatus | EnumPaymentSentooStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentSentooStatus[] | ListEnumPaymentSentooStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PaymentSentooStatus[] | ListEnumPaymentSentooStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumPaymentSentooStatusFilter<$PrismaModel> | $Enums.PaymentSentooStatus
+  }
   export type JsonNullableFilter<$PrismaModel = never> =
     | PatchUndefined<
         Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
@@ -50741,6 +50777,16 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumPaymentStatusFilter<$PrismaModel>
     _max?: NestedEnumPaymentStatusFilter<$PrismaModel>
+  }
+
+  export type EnumPaymentSentooStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentSentooStatus | EnumPaymentSentooStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentSentooStatus[] | ListEnumPaymentSentooStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PaymentSentooStatus[] | ListEnumPaymentSentooStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumPaymentSentooStatusWithAggregatesFilter<$PrismaModel> | $Enums.PaymentSentooStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumPaymentSentooStatusFilter<$PrismaModel>
+    _max?: NestedEnumPaymentSentooStatusFilter<$PrismaModel>
   }
   export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -53237,6 +53283,10 @@ export namespace Prisma {
     set?: $Enums.PaymentStatus
   }
 
+  export type EnumPaymentSentooStatusFieldUpdateOperationsInput = {
+    set?: $Enums.PaymentSentooStatus
+  }
+
   export type DebtUpdateOneWithoutPaymentsNestedInput = {
     create?: XOR<DebtCreateWithoutPaymentsInput, DebtUncheckedCreateWithoutPaymentsInput>
     connectOrCreate?: DebtCreateOrConnectWithoutPaymentsInput
@@ -53853,6 +53903,13 @@ export namespace Prisma {
     not?: NestedEnumPaymentStatusFilter<$PrismaModel> | $Enums.PaymentStatus
   }
 
+  export type NestedEnumPaymentSentooStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentSentooStatus | EnumPaymentSentooStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentSentooStatus[] | ListEnumPaymentSentooStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PaymentSentooStatus[] | ListEnumPaymentSentooStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumPaymentSentooStatusFilter<$PrismaModel> | $Enums.PaymentSentooStatus
+  }
+
   export type NestedEnumPaymentMethodWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.PaymentMethod | EnumPaymentMethodFieldRefInput<$PrismaModel>
     in?: $Enums.PaymentMethod[] | ListEnumPaymentMethodFieldRefInput<$PrismaModel>
@@ -53871,6 +53928,16 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumPaymentStatusFilter<$PrismaModel>
     _max?: NestedEnumPaymentStatusFilter<$PrismaModel>
+  }
+
+  export type NestedEnumPaymentSentooStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.PaymentSentooStatus | EnumPaymentSentooStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.PaymentSentooStatus[] | ListEnumPaymentSentooStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.PaymentSentooStatus[] | ListEnumPaymentSentooStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumPaymentSentooStatusWithAggregatesFilter<$PrismaModel> | $Enums.PaymentSentooStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumPaymentSentooStatusFilter<$PrismaModel>
+    _max?: NestedEnumPaymentSentooStatusFilter<$PrismaModel>
   }
   export type NestedJsonNullableFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -57091,7 +57158,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider?: string
     provider_ref?: string | null
-    provider_status?: string | null
+    provider_status?: $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: string | null
     created_at?: Date | string
@@ -57109,7 +57176,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider?: string
     provider_ref?: string | null
-    provider_status?: string | null
+    provider_status?: $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: string | null
     agreement_id?: string | null
@@ -57457,7 +57524,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFilter<"Payment"> | $Enums.PaymentStatus
     provider?: StringFilter<"Payment"> | string
     provider_ref?: StringNullableFilter<"Payment"> | string | null
-    provider_status?: StringNullableFilter<"Payment"> | string | null
+    provider_status?: EnumPaymentSentooStatusFilter<"Payment"> | $Enums.PaymentSentooStatus
     provider_payload?: JsonNullableFilter<"Payment">
     reference_number?: StringNullableFilter<"Payment"> | string | null
     agreement_id?: StringNullableFilter<"Payment"> | string | null
@@ -59837,7 +59904,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider?: string
     provider_ref?: string | null
-    provider_status?: string | null
+    provider_status?: $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: string | null
     created_at?: Date | string
@@ -59856,7 +59923,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider?: string
     provider_ref?: string | null
-    provider_status?: string | null
+    provider_status?: $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: string | null
     created_at?: Date | string
@@ -60126,7 +60193,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider?: string
     provider_ref?: string | null
-    provider_status?: string | null
+    provider_status?: $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: string | null
     created_at?: Date | string
@@ -60145,7 +60212,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider?: string
     provider_ref?: string | null
-    provider_status?: string | null
+    provider_status?: $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: string | null
     agreement_id?: string | null
@@ -60223,7 +60290,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: StringFieldUpdateOperationsInput | string
     provider_ref?: NullableStringFieldUpdateOperationsInput | string | null
-    provider_status?: NullableStringFieldUpdateOperationsInput | string | null
+    provider_status?: EnumPaymentSentooStatusFieldUpdateOperationsInput | $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -60242,7 +60309,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: StringFieldUpdateOperationsInput | string
     provider_ref?: NullableStringFieldUpdateOperationsInput | string | null
-    provider_status?: NullableStringFieldUpdateOperationsInput | string | null
+    provider_status?: EnumPaymentSentooStatusFieldUpdateOperationsInput | $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: NullableStringFieldUpdateOperationsInput | string | null
     agreement_id?: NullableStringFieldUpdateOperationsInput | string | null
@@ -60522,7 +60589,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider?: string
     provider_ref?: string | null
-    provider_status?: string | null
+    provider_status?: $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: string | null
     created_at?: Date | string
@@ -60541,7 +60608,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider?: string
     provider_ref?: string | null
-    provider_status?: string | null
+    provider_status?: $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: string | null
     agreement_id?: string | null
@@ -60574,7 +60641,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: StringFieldUpdateOperationsInput | string
     provider_ref?: NullableStringFieldUpdateOperationsInput | string | null
-    provider_status?: NullableStringFieldUpdateOperationsInput | string | null
+    provider_status?: EnumPaymentSentooStatusFieldUpdateOperationsInput | $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -60593,7 +60660,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: StringFieldUpdateOperationsInput | string
     provider_ref?: NullableStringFieldUpdateOperationsInput | string | null
-    provider_status?: NullableStringFieldUpdateOperationsInput | string | null
+    provider_status?: EnumPaymentSentooStatusFieldUpdateOperationsInput | $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: NullableStringFieldUpdateOperationsInput | string | null
     agreement_id?: NullableStringFieldUpdateOperationsInput | string | null
@@ -61778,7 +61845,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider?: string
     provider_ref?: string | null
-    provider_status?: string | null
+    provider_status?: $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: string | null
     agreement_id?: string | null
@@ -61859,7 +61926,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: StringFieldUpdateOperationsInput | string
     provider_ref?: NullableStringFieldUpdateOperationsInput | string | null
-    provider_status?: NullableStringFieldUpdateOperationsInput | string | null
+    provider_status?: EnumPaymentSentooStatusFieldUpdateOperationsInput | $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -61877,7 +61944,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: StringFieldUpdateOperationsInput | string
     provider_ref?: NullableStringFieldUpdateOperationsInput | string | null
-    provider_status?: NullableStringFieldUpdateOperationsInput | string | null
+    provider_status?: EnumPaymentSentooStatusFieldUpdateOperationsInput | $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: NullableStringFieldUpdateOperationsInput | string | null
     agreement_id?: NullableStringFieldUpdateOperationsInput | string | null
@@ -61895,7 +61962,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: StringFieldUpdateOperationsInput | string
     provider_ref?: NullableStringFieldUpdateOperationsInput | string | null
-    provider_status?: NullableStringFieldUpdateOperationsInput | string | null
+    provider_status?: EnumPaymentSentooStatusFieldUpdateOperationsInput | $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: NullableStringFieldUpdateOperationsInput | string | null
     agreement_id?: NullableStringFieldUpdateOperationsInput | string | null
@@ -62646,7 +62713,7 @@ export namespace Prisma {
     status?: $Enums.PaymentStatus
     provider?: string
     provider_ref?: string | null
-    provider_status?: string | null
+    provider_status?: $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: string | null
     created_at?: Date | string
@@ -62694,7 +62761,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: StringFieldUpdateOperationsInput | string
     provider_ref?: NullableStringFieldUpdateOperationsInput | string | null
-    provider_status?: NullableStringFieldUpdateOperationsInput | string | null
+    provider_status?: EnumPaymentSentooStatusFieldUpdateOperationsInput | $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -62713,7 +62780,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: StringFieldUpdateOperationsInput | string
     provider_ref?: NullableStringFieldUpdateOperationsInput | string | null
-    provider_status?: NullableStringFieldUpdateOperationsInput | string | null
+    provider_status?: EnumPaymentSentooStatusFieldUpdateOperationsInput | $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -62731,7 +62798,7 @@ export namespace Prisma {
     status?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     provider?: StringFieldUpdateOperationsInput | string
     provider_ref?: NullableStringFieldUpdateOperationsInput | string | null
-    provider_status?: NullableStringFieldUpdateOperationsInput | string | null
+    provider_status?: EnumPaymentSentooStatusFieldUpdateOperationsInput | $Enums.PaymentSentooStatus
     provider_payload?: NullableJsonNullValueInput | InputJsonValue
     reference_number?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string

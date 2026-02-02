@@ -658,6 +658,14 @@ exports.PaymentStatus = exports.$Enums.PaymentStatus = {
   reversed: 'reversed'
 };
 
+exports.PaymentSentooStatus = exports.$Enums.PaymentSentooStatus = {
+  success: 'success',
+  pending: 'pending',
+  failed: 'failed',
+  cancelled: 'cancelled',
+  expired: 'expired'
+};
+
 exports.PaymentComponent = exports.$Enums.PaymentComponent = {
   PRINCIPAL: 'PRINCIPAL',
   FINE: 'FINE',
