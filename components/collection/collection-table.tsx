@@ -75,6 +75,21 @@ const CollectionTable = () => {
     fetchInvoices();
   };
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "AANMANING":
+        return "Aanmaning";
+      case "SOMMATIE":
+        return "Sommaties";
+      case "INGEBREKESTELLING":
+        return "Ingebrekestelling";
+      case "BLOKKADE":
+        return "Blokkade";
+      default:
+        return status;
+    }
+  };
+
   return (
     <Box mt={2}>
       <Box
@@ -304,7 +319,7 @@ const CollectionTable = () => {
                   {formatCurrency(invoice.total_to_receive)}
                 </TableCell>
                 <TableCell sx={{ textAlign: "center" }}>
-                  {invoice.status}
+                  {getStatusLabel(invoice.status)}
                 </TableCell>
                 {/* <TableCell>{actions(invoice)}</TableCell> */}
                 <TableCell sx={{ textAlign: "center" }}>

@@ -38,6 +38,8 @@ export async function createSentooPayment(input: {
 
     const sentooSuccess = result.data?.success;
 
+    console.log("Sentoo payment success data:", sentooSuccess);
+
     // 🛑 Respuesta inválida o inesperada
     if (!sentooSuccess || sentooSuccess.code !== 200) {
       return {
@@ -51,7 +53,7 @@ export async function createSentooPayment(input: {
       data: {
         method: "TRANSFER",
         provider: "sentoo",
-        provider_ref: sentooSuccess.message,
+        provider_ref: sentooSuccess.message || "",
         provider_status: "pending",
         total_amount: new Prisma.Decimal(input.amount),
         status: "pending",
