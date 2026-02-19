@@ -35,7 +35,7 @@ export const companyInfoSchema = z.object({
     .min(2, "Company name must be at least 2 characters long")
     .regex(
       /^[a-zA-Z0-9]+([a-zA-Z0-9- ]*[a-zA-Z0-9])?$/,
-      "Company name can only contain letters, numbers, hyphens, and spaces, and cannot start or end with a space"
+      "Company name can only contain letters, numbers, hyphens, and spaces, and cannot start or end with a space",
     ),
   contact_email: z
     .string()
@@ -178,11 +178,20 @@ export interface ICompany {
   country: string;
   number_of_employees: number;
   terms_accepted: boolean;
+  role: string;
+}
+
+export interface ISubscription {
+  subscription_type: string;
+  subscription_price: number;
+  price: number;
 }
 
 export interface ITenantSignUp {
   user: IUser;
   company: ICompany;
+  subscription: ISubscription;
+  total_price: number;
 }
 
 export const initialTenantSignUp: ITenantSignUp = {
@@ -191,7 +200,7 @@ export const initialTenantSignUp: ITenantSignUp = {
     email: "",
     password: "",
     phone: "",
-    country: "",
+    country: "BQ",
     identification_type: "",
     identification: "",
   },
@@ -203,7 +212,14 @@ export const initialTenantSignUp: ITenantSignUp = {
     country: "",
     number_of_employees: 1,
     terms_accepted: false,
+    role: "",
   },
+  subscription: {
+    price: 150,
+    subscription_type: "",
+    subscription_price: 0,
+  },
+  total_price: 0,
 };
 
 export interface iValidateSlugResponse {

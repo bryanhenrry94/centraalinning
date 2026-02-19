@@ -26,11 +26,12 @@ import { BillingInvoiceCreate } from "@/lib/validations/billing-invoice";
 import { BillingInvoiceDetailCreate } from "@/lib/validations/billing-invoice-detail";
 import { getParameter } from "./parameter";
 import { VerdictDebtorPDFProps } from "@/templates/pdfs/VerdictDebtorPDF";
+import { createSentooPayment } from "./sentoo.actions";
 
 export const getAllVerdicts = async (
   tenant_id: string,
   status?: string,
-  debtor_id?: string
+  debtor_id?: string,
 ): Promise<VerdictResponse[]> => {
   try {
     const whereClause: any = { tenant_id };
@@ -105,7 +106,7 @@ export const getAllVerdicts = async (
 };
 
 export const getVerdictById = async (
-  id: string
+  id: string,
 ): Promise<VerdictResponse | null> => {
   try {
     const verdict = await prisma.verdict.findUnique({
@@ -169,7 +170,7 @@ export const getVerdictById = async (
 };
 
 export const getAttachmentsByVerdictId = async (
-  verdict_id: string
+  verdict_id: string,
 ): Promise<VerdictAttachment[]> => {
   try {
     const attachments = await prisma.verdictAttachment.findMany({
@@ -184,7 +185,7 @@ export const getAttachmentsByVerdictId = async (
 
 export const createVerdict = async (
   data: VerdictCreate,
-  tenant_id: string
+  tenant_id: string,
 ): Promise<VerdictResponse | null> => {
   try {
     console.log("iniciando transaccion verdict");
@@ -238,7 +239,7 @@ export const createVerdict = async (
         // Calculate total_due interest from all verdict interests
         const totalInterest = data.verdict_interest.reduce(
           (sum, item) => sum + item.total_interest,
-          0
+          0,
         );
 
         total_due += totalInterest;
@@ -265,7 +266,7 @@ export const createVerdict = async (
 
         const totalEmbargo = data.verdict_embargo.reduce(
           (sum, item) => sum + item.total_amount,
-          0
+          0,
         );
 
         total_due += totalEmbargo;
@@ -312,7 +313,7 @@ export const createVerdict = async (
         await sendVerdictApprovalEmail(
           bailiff.email,
           bailiff.fullname || "Bailiff",
-          createdVerdict.id
+          createdVerdict.id,
         );
       }
 
@@ -328,7 +329,7 @@ export const createVerdict = async (
 
 export const updateVerdict = async (
   verdict_id: string,
-  data: VerdictUpdate
+  data: VerdictUpdate,
 ): Promise<VerdictResponse | null> => {
   try {
     console.log("updateVerdict ID: ", verdict_id);
@@ -404,7 +405,7 @@ export const updateVerdict = async (
 
         const totalInterest = data.verdict_interest.reduce(
           (sum, item) => sum + item.total_interest,
-          0
+          0,
         );
 
         total_due += totalInterest;
@@ -447,7 +448,7 @@ export const updateVerdict = async (
 
         const totalEmbargo = data.verdict_embargo.reduce(
           (sum, item) => sum + item.total_amount,
-          0
+          0,
         );
 
         total_due += totalEmbargo;
@@ -497,7 +498,7 @@ export const calculateInterestDetail = async (
   base_amount: number,
   calculated_interest: number,
   calculation_start: Date,
-  calculation_end: Date
+  calculation_end: Date,
 ): Promise<VerdictInterestDetailCreate[]> => {
   try {
     const verdictInterestDetails: VerdictInterestDetailCreate[] = [];
@@ -541,7 +542,7 @@ export const calculateInterestDetail = async (
     while (fechaInicio < fechaFinCalculo && montoCalculo > 0) {
       // Buscar el detalle aplicable para la fecha actual
       const objInteresDetalle = details.find(
-        (det) => new Date(det.date) > fechaInicio
+        (det) => new Date(det.date) > fechaInicio,
       );
       let tasaAnual = 0;
       let fechaFinTramo: Date;
@@ -549,7 +550,7 @@ export const calculateInterestDetail = async (
       if (!objInteresDetalle) {
         // Si no hay un detalle futuro, usar la tasa del último detalle anterior a la fecha fin ingresada
         const prevDetalles = details.filter(
-          (det) => new Date(det.date) <= fechaInicio
+          (det) => new Date(det.date) <= fechaInicio,
         );
         const lastPrevDetalle =
           prevDetalles.length > 0
@@ -560,7 +561,7 @@ export const calculateInterestDetail = async (
       } else {
         // Buscar el último detalle menor o igual a la fecha actual
         const prevDetalles = details.filter(
-          (det) => new Date(det.date) <= new Date(fechaInicio)
+          (det) => new Date(det.date) <= new Date(fechaInicio),
         );
         const lastPrevDetalle =
           prevDetalles.length > 0
@@ -576,7 +577,7 @@ export const calculateInterestDetail = async (
 
       // Calcular días del tramo
       const dias: number = Math.ceil(
-        (fechaFinTramo.getTime() - fechaInicio.getTime()) / (1000 * 3600 * 24)
+        (fechaFinTramo.getTime() - fechaInicio.getTime()) / (1000 * 3600 * 24),
       );
 
       const proporcional = (tasaAnual / 365) * dias;
@@ -665,7 +666,7 @@ export const deleteVerdict = async (id: string): Promise<boolean> => {
 };
 
 export const handleSendMailNotificationBailiff = async (
-  id: string
+  id: string,
 ): Promise<boolean> => {
   try {
     const createdVerdict = await prisma.verdict.findUnique({
@@ -684,7 +685,7 @@ export const handleSendMailNotificationBailiff = async (
     await sendVerdictApprovalEmail(
       createdVerdict.bailiff.email,
       createdVerdict.bailiff.fullname || "Bailiff",
-      createdVerdict.id
+      createdVerdict.id,
     );
 
     return false;
@@ -697,7 +698,7 @@ export const handleSendMailNotificationBailiff = async (
 export const UploadAttachmentToVerdict = async (
   file: File,
   verdict_id: string,
-  subdomain: string
+  subdomain: string,
 ) => {
   try {
     const fd = new FormData();
@@ -786,6 +787,8 @@ export const approveVerdict = async (id: string): Promise<boolean> => {
       },
     ];
 
+    const totalInvoice: number = 90;
+
     const invoice: BillingInvoiceCreate = {
       invoice_number: invoice_number,
       issue_date: new Date(),
@@ -794,14 +797,14 @@ export const approveVerdict = async (id: string): Promise<boolean> => {
       status: "unpaid",
       tenant_id: VerdictUpdated.tenant_id,
       currency: "USD",
-      amount: 90,
+      amount: totalInvoice,
       invoice_details: details,
     };
 
     // Crear la factura en la base de datos
     const invoiceCreated = await createInvoice(
       invoice,
-      VerdictUpdated.tenant_id
+      VerdictUpdated.tenant_id,
     );
 
     // cliente del veredicto
@@ -858,11 +861,26 @@ export const approveVerdict = async (id: string): Promise<boolean> => {
     //   bank_account: parameter.bank_account,
     // };
 
-    // Si no viene de sistema se debe cobrar el 10% de servicio.
-    await sendInvoiceEmail(
-      debtor.tenant?.contact_email || "",
-      invoiceCreated.id
-    );
+    // Crear el pago en Sentoo
+    const res = await createSentooPayment({
+      amount: totalInvoice, // YA en centavos
+      description: `Factura ${invoice_number} - Vonnis ${VerdictUpdated.registration_number}`,
+      reference: invoiceCreated.id,
+    });
+
+    if (!res.success) {
+      throw new Error("Hubo un error al crear el pago en Sentoo");
+    }
+
+    // Enviar correo con la factura al email de contacto del tenant
+    if (debtor.tenant?.contact_email) {
+      await sendInvoiceEmail(
+        debtor.tenant?.contact_email,
+        invoiceCreated.id,
+        res.payment?.url,
+        res.payment?.qrCode,
+      );
+    }
 
     // Enviar notificación al acreedor y deudor
     // await sendMailVerdictCreditor(
@@ -882,7 +900,7 @@ export const approveVerdict = async (id: string): Promise<boolean> => {
       sentence_date: formatDate(
         VerdictUpdated.sentence_date
           ? VerdictUpdated.sentence_date.toISOString()
-          : new Date().toISOString()
+          : new Date().toISOString(),
       ),
       sentence_amount: VerdictUpdated.sentence_amount
         ? VerdictUpdated.sentence_amount.toFixed(2)
@@ -929,7 +947,7 @@ export const DeleteVerdictAttachment = async (id: string): Promise<boolean> => {
     const absoluteFilePath = path.join(
       process.cwd(),
       "public",
-      attachment.file_path
+      attachment.file_path,
     );
 
     // Eliminar el archivo del sistema de archivos
@@ -954,7 +972,7 @@ export const DeleteVerdictAttachment = async (id: string): Promise<boolean> => {
 };
 
 export const DownloadVerdictAttachment = async (
-  id: string
+  id: string,
 ): Promise<{ success: boolean; file?: string; file_name?: string }> => {
   try {
     // Buscar el attachment en la base de datos
@@ -971,7 +989,7 @@ export const DownloadVerdictAttachment = async (
     const absoluteFilePath = path.join(
       process.cwd(),
       "public",
-      attachment.file_path
+      attachment.file_path,
     );
 
     console.log("Attempting to read file at:", absoluteFilePath);

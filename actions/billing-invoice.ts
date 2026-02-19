@@ -61,6 +61,8 @@ export const createActivationInvoice = async (
     },
   });
 
+  const totalWithTax = activationFee * (1 + parameter.abb_rate / 100);
+
   // Crear el detalle de factura
   await prisma.billingInvoiceDetail.create({
     data: {
@@ -71,13 +73,31 @@ export const createActivationInvoice = async (
       item_total_price: activationFee,
       item_tax_rate: parameter.abb_rate / 100, // 6% ejemplo
       item_tax_amount: activationFee * (parameter.abb_rate / 100),
-      item_total_with_tax: activationFee * (1 + parameter.abb_rate / 100),
+      item_total_with_tax: totalWithTax,
     },
   });
 
+  // Crear el pago en Sentoo
+  const res = await createSentooPayment({
+    amount: totalWithTax, // YA en centavos
+    description: `Factura ${invoice_number} - Registratiekosten`,
+    reference: invoice.id,
+  });
+
+  if (!res.success) {
+    throw new Error("Hubo un error al crear el pago en Sentoo");
+  }
+
+  console.log("payment created:", res.payment);
+
   // Enviar correo con la factura al email de contacto del tenant
   if (tenant.contact_email) {
-    await sendInvoiceEmail(tenant.contact_email, invoice.id);
+    await sendInvoiceEmail(
+      tenant.contact_email,
+      invoice.id,
+      res.payment?.url,
+      res.payment?.qrCode,
+    );
   }
 
   return invoice;
@@ -117,6 +137,8 @@ export const createCollectionInvoice = async (
     },
   });
 
+  const totalWithTax = activationFee * 1.06; // Suponiendo una tasa de impuesto del 6%
+
   // Crear el detalle de factura
   await prisma.billingInvoiceDetail.create({
     data: {
@@ -127,23 +149,13 @@ export const createCollectionInvoice = async (
       item_total_price: activationFee,
       item_tax_rate: 0.06, // 6% ejemplo
       item_tax_amount: activationFee * 0.06,
-      item_total_with_tax: activationFee * 1.06,
+      item_total_with_tax: totalWithTax,
     },
   });
 
-  // Convierte dólares a centavos de forma segura
-  const amountSentoo = toCents(activationFee);
-
-  // Validación requerida por Sentoo
-  if (amountSentoo < 100) {
-    throw new Error("Sentoo amount must be at least 100 cents ($1.00)");
-  }
-
-  console.log("Creating Sentoo payment for amount (cents):", amountSentoo);
-
   // Crear el pago en Sentoo
   const res = await createSentooPayment({
-    amount: amountSentoo, // YA en centavos
+    amount: totalWithTax, // YA en centavos
     description: `Factura ${invoice_number} - Activation fee`,
     reference: invoice.id,
   });
@@ -166,10 +178,6 @@ export const createCollectionInvoice = async (
 
   return invoice;
 };
-
-function toCents(value: number): number {
-  return Math.round((value + Number.EPSILON) * 100);
-}
 
 export const generateInvoiceNumber = async (): Promise<string> => {
   const lastInvoice = await prisma.billingInvoice.findFirst({

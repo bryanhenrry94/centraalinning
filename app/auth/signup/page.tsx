@@ -18,6 +18,7 @@ import OnboardingLayout from "@/components/onboarding/onboarding-layout";
 import CardContainer from "@/components/signup/card-container";
 import HeaderInfoCard from "@/components/signup/header-info-card";
 import { userExistsByEmail } from "@/actions/user";
+import SubscriptionCard from "@/components/signup/subscription-card";
 
 export default function SignUpPage() {
   const [step, setStep] = React.useState(0);
@@ -65,6 +66,11 @@ export default function SignUpPage() {
     }
 
     if (step === 2) {
+      handleNext();
+      return;
+    }
+
+    if (step === 3) {
       //final submission
       try {
         setLoading(true);
@@ -76,7 +82,7 @@ export default function SignUpPage() {
         }
 
         notifyInfo(
-          `Account created successfully! Your subdomain is: ${newAccount.subdomain}`
+          `Account created successfully! Your subdomain is: ${newAccount.subdomain}`,
         );
         //redirect to login or dashboard
         redirectToSlugLoginCompany(newAccount.subdomain, formData.user.email);
@@ -95,6 +101,8 @@ export default function SignUpPage() {
       case 1:
         return "Bedrijfsinformatie";
       case 2:
+        return "Facturering";
+      case 3:
         return "Algemene voorwaarden";
       default:
         return "";
@@ -108,6 +116,8 @@ export default function SignUpPage() {
       case 1:
         return "Vul de gegevens in om door te gaan";
       case 2:
+        return "Selecteer uw abonnement";
+      case 3:
         return "Lees en accepteer de algemene voorwaarden om door te gaan";
       default:
         return "";
@@ -119,7 +129,7 @@ export default function SignUpPage() {
       <OnboardingLayout backgroundImageUrl={"/static/images/auth/sign_up.jpg"}>
         <Box component={"form"} onSubmit={handleSubmit}>
           <CardContainer>
-            {step < 2 && (
+            {step < 3 && (
               <HeaderInfoCard
                 title={getTitleByStep(step)}
                 subtitle={getSubtitleByStep(step)}
@@ -137,6 +147,10 @@ export default function SignUpPage() {
             )}
 
             {step === 2 && (
+              <SubscriptionCard initial={formData} setFormData={setFormData} />
+            )}
+
+            {step === 3 && (
               <TermsAndConditionsCard
                 initial={formData}
                 setFormData={setFormData}
@@ -153,7 +167,7 @@ export default function SignUpPage() {
                   fullWidth
                   variant="outlined"
                 >
-                  Rug
+                  Terug
                 </Button>
               )}
 
@@ -163,10 +177,10 @@ export default function SignUpPage() {
                 variant="contained"
                 color="primary"
                 loading={loading}
-                disabled={step === 2 && !formData.company.terms_accepted}
+                disabled={step === 3 && !formData.company.terms_accepted}
                 endIcon={<NavigateNextIcon />}
               >
-                {step === 2 ? "Maak account aan" : "Volgende"}
+                {step === 3 ? "Maak account aan" : "Volgende"}
               </Button>
             </Stack>
             <Box

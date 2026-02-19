@@ -16,7 +16,7 @@ import { CountryList } from "@/constants/country";
 import { sendNewClitentEmail, sendWelcomeEmail } from "./email";
 
 export const signInWithPassword = async (
-  params: LoginFormData
+  params: LoginFormData,
 ): Promise<{ success: boolean; data?: IdTokenInput }> => {
   // Validar inputs
   const validated = loginSchema.parse(params);
@@ -96,7 +96,7 @@ export const emailExists = async (email: string): Promise<boolean> => {
 };
 
 export async function createAccount(
-  payload: ITenantSignUp
+  payload: ITenantSignUp,
 ): Promise<{ status: boolean; subdomain: string; error?: string }> {
   try {
     // ✅ 1. Validar datos de entrada
@@ -129,7 +129,7 @@ export async function createAccount(
     // ✅ 2. Crear Tenant, User y Subscription en transacción
     const result = await prisma.$transaction(async (tx) => {
       const subdomain = await generateUniqueSubdomain(
-        validatedData.company.name
+        validatedData.company.name,
       );
 
       const code = await generateCode(validatedData.company.country);
@@ -158,7 +158,7 @@ export async function createAccount(
           fullname: validatedData.user.fullname,
           password_hash,
           phone: validatedData.user.phone,
-          is_active: true,
+          is_active: false, // El usuario estará inactivo hasta que pague la factura de activación o se verifique su correo
         },
       });
 
@@ -166,23 +166,29 @@ export async function createAccount(
         data: {
           tenant_id: tenant.id,
           user_id: user.id,
-          role: $Enums.UserRole.TENANT_ADMIN,
+          role:
+            payload.company.role &&
+            Object.values($Enums.UserRole).includes(
+              payload.company.role as $Enums.UserRole,
+            )
+              ? (payload.company.role as $Enums.UserRole)
+              : $Enums.UserRole.TENANT_ADMIN,
         },
       });
 
       return { tenant, user, membership };
     });
 
-    let pricePlan = 0;
+    let pricePlan = payload.total_price;
 
-    if (
-      payload.company.number_of_employees &&
-      payload.company.number_of_employees > 50
-    ) {
-      pricePlan = parameter.large_company_price;
-    } else {
-      pricePlan = parameter.small_company_price;
-    }
+    // if (
+    //   payload.company.number_of_employees &&
+    //   payload.company.number_of_employees > 50
+    // ) {
+    //   pricePlan = parameter.large_company_price;
+    // } else {
+    //   pricePlan = parameter.small_company_price;
+    // }
 
     // ✅ 3. Crear factura de activación (fuera de la transacción)
     await createActivationInvoice({
@@ -213,7 +219,7 @@ export async function createAccount(
         result.user.email || "",
         result.tenant.name,
         new Date().toLocaleDateString(),
-        await prisma.tenant.count()
+        await prisma.tenant.count(),
       );
     }, 4000);
 

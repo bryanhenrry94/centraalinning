@@ -27,7 +27,7 @@ type InvitationDetails = {
 };
 
 export const registerInvitation = async (
-  params: InvitationParams
+  params: InvitationParams,
 ): Promise<{ status: boolean; message: string; token?: string }> => {
   const { tenantId, email, role, fullname, debtor_id } = params;
 
@@ -60,6 +60,8 @@ export const registerInvitation = async (
     },
   });
 
+  console.log("Existing invitation check:", existingInvitation);
+
   if (existingInvitation) {
     return {
       status: false,
@@ -79,6 +81,8 @@ export const registerInvitation = async (
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Expires in 7 days
     },
   });
+
+  console.log("New invitation created:", invitation);
 
   return {
     status: true,
@@ -112,7 +116,7 @@ export const invitationIsUsed = async (token: string): Promise<boolean> => {
 };
 
 export const getInvitationDetails = async (
-  token: string
+  token: string,
 ): Promise<InvitationDetails | null> => {
   const invitation = await prisma.tenantInvitation.findFirst({
     where: {
@@ -138,7 +142,7 @@ export const getInvitationDetails = async (
 };
 
 export const completeRegistration = async (
-  payload: InvitationRegistration
+  payload: InvitationRegistration,
 ): Promise<{ status: boolean; subdomain?: string; error?: string }> => {
   try {
     // ✅ 1. Validar datos de entrada

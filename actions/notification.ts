@@ -47,7 +47,7 @@ export const createNotification = async (
   caseId: string,
   type: NotificationType,
   title: string,
-  message: string
+  message: string,
 ): Promise<Notification> => {
   if (!caseId) {
     throw new Error("Notification caseId is required");
@@ -74,12 +74,12 @@ export const createNotification = async (
 };
 
 export const sendAanmaning = async (
-  collection: CollectionCase
+  collection: CollectionCase,
 ): Promise<string> => {
   try {
     console.log(
       "Send_Aanmaning: Starting process for collection ID:",
-      collection.id
+      collection.id,
     );
     // valida el tenant
     if (!collection.tenant_id) {
@@ -124,6 +124,8 @@ export const sendAanmaning = async (
         debtor_id: debtor.id,
       });
 
+      console.log("Send_Aanmaning: Invitation created:", invitation);
+
       if (invitation.status === true && invitation.token) {
         invitationLink = `${protocol}://${rootDomain}/invitation/${invitation.token}`;
       }
@@ -138,7 +140,7 @@ export const sendAanmaning = async (
 
     console.log(
       "Send_Aanmaning: Sending Aanmaning email to debtor at",
-      debtor.email
+      debtor.email,
     );
 
     if (debtor?.email) {
@@ -149,11 +151,11 @@ export const sendAanmaning = async (
         collection.id,
         NotificationType.AANMANING,
         "Eerste incassoaankondiging",
-        "De eerste incassoaankondiging is verzonden."
+        "De eerste incassoaankondiging is verzonden.",
       );
       console.log(
         "Send_Aanmaning: Aanmaning email sent successfully to",
-        debtor.email
+        debtor.email,
       );
     }
 
@@ -165,7 +167,7 @@ export const sendAanmaning = async (
 };
 
 export const sendSommatie = async (
-  collection: CollectionCase
+  collection: CollectionCase,
 ): Promise<string> => {
   try {
     const debtor = await prisma.debtor.findUnique({
@@ -181,7 +183,7 @@ export const sendSommatie = async (
         collection.id,
         NotificationType.SOMMATIE,
         "Tweede incassobericht",
-        "De tweede incassoaankondiging is verzonden."
+        "De tweede incassoaankondiging is verzonden.",
       );
     }
 
@@ -193,7 +195,7 @@ export const sendSommatie = async (
 };
 
 export const sendIngebrekestelling = async (
-  collection: CollectionCase
+  collection: CollectionCase,
 ): Promise<string> => {
   try {
     const debtor = await prisma.debtor.findUnique({
@@ -215,7 +217,7 @@ export const sendIngebrekestelling = async (
         collection.id,
         NotificationType.INGEBREKESTELLING,
         "Derde incassoaankondiging",
-        "De derde incassoaankondiging is verzonden."
+        "De derde incassoaankondiging is verzonden.",
       );
     }
 
@@ -227,7 +229,7 @@ export const sendIngebrekestelling = async (
 };
 
 export const sendBlokkade = async (
-  collection: CollectionCase
+  collection: CollectionCase,
 ): Promise<string> => {
   try {
     const debtor = await prisma.debtor.findUnique({
@@ -249,7 +251,7 @@ export const sendBlokkade = async (
         collection.id,
         NotificationType.BLOKKADE,
         "Notificatie van financiële blokkade",
-        "De notificatie van financiële blokkade is verzonden."
+        "De notificatie van financiële blokkade is verzonden.",
       );
     }
 
@@ -262,7 +264,7 @@ export const sendBlokkade = async (
 
 export const getNotificationDays = async (
   status: $Enums.CollectionCaseStatus,
-  person_type: $Enums.PersonType
+  person_type: $Enums.PersonType,
 ): Promise<number> => {
   const _parameter = await getParameter();
 
@@ -287,7 +289,7 @@ export const getNotificationDays = async (
 
 export const getLastNotificationDate = async (
   caseId: string,
-  type: $Enums.CollectionCaseStatus
+  type: $Enums.CollectionCaseStatus,
 ): Promise<Date> => {
   // Fetch the notification collection record based on collection and type
   const notificationRecord = await prisma.collectionCaseNotification.findFirst({
@@ -308,7 +310,7 @@ export const getLastNotificationDate = async (
 };
 
 export const getLastNotificationByCollectionCase = async (
-  collection_case_id: string
+  collection_case_id: string,
 ): Promise<Notification | null> => {
   const notification = await prisma.collectionCaseNotification.findFirst({
     where: { collection_case_id },
@@ -326,7 +328,7 @@ export const getLastNotificationByCollectionCase = async (
 };
 
 export const getAllNotificationsByCollectionCase = async (
-  collection_case_id: string
+  collection_case_id: string,
 ): Promise<Notification[]> => {
   const notifications = await prisma.collectionCaseNotification.findMany({
     where: { collection_case_id },

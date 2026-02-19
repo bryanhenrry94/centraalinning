@@ -9,10 +9,21 @@ export async function createSentooPayment(input: {
   reference: string;
 }) {
   try {
+    // Convierte dólares a centavos de forma segura
+    console.log("activationFee: ", input.amount);
+    const amountSentoo = await toCents(input.amount);
+
+    // Validación requerida por Sentoo
+    if (amountSentoo < 100) {
+      throw new Error("Sentoo amount must be at least 100 cents ($1.00)");
+    }
+
+    console.log("amountSentoo: ", amountSentoo);
+
     const body = new URLSearchParams({
       sentoo_merchant: process.env.SENTOO_MERCHANT!,
       sentoo_currency: "USD",
-      sentoo_amount: input.amount.toString(),
+      sentoo_amount: amountSentoo.toString(),
       sentoo_description: input.description,
       sentoo_expires: "2026-12-31T23:59:59+00:00",
       sentoo_return_url: `${process.env.APP_URL}/payment/return?status=`,
@@ -83,6 +94,14 @@ export async function createSentooPayment(input: {
     };
   }
 }
+
+export const toCents = async (amount: string | number): Promise<number> => {
+  const [whole, decimal = "00"] = amount.toString().split(".");
+
+  const cents = decimal.padEnd(2, "0").slice(0, 2);
+
+  return parseInt(whole, 10) * 100 + parseInt(cents, 10);
+};
 
 export async function verifySentooPayment(transactionId: string) {
   const url = `/v1/payment/status/${process.env.SENTOO_MERCHANT!}/${transactionId}`;

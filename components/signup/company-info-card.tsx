@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Slider, Typography, TextField, MenuItem } from "@mui/material";
 import { ITenantSignUp } from "@/lib/validations/signup";
 import { CountryList } from "@/constants/country";
+import { RoleList } from "@/constants/role-list";
 
 interface AccountInfoCardProps {
   initial: ITenantSignUp;
@@ -25,6 +26,42 @@ export default function AccountInfoCard(props: AccountInfoCardProps) {
         gap: 2,
       }}
     >
+      <Box>
+        {/* <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+          1. Systeemactivering
+        </Typography> */}
+
+        <TextField
+          name="role"
+          fullWidth
+          label="Rol"
+          placeholder="Rol"
+          value={initial.company?.role || "PLATFORM_OWNER"}
+          type="text"
+          select
+          required
+          onChange={(e) =>
+            setFormData({
+              ...initial,
+              company: {
+                ...initial.company,
+                role: e.target.value,
+              },
+            })
+          }
+        >
+          {RoleList.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </TextField>
+
+        <Typography variant="caption" color="text.secondary">
+          Selecteer de registratierol.
+        </Typography>
+      </Box>
+
       <TextField
         name="name"
         fullWidth
@@ -84,7 +121,7 @@ export default function AccountInfoCard(props: AccountInfoCardProps) {
         fullWidth
         label="Land"
         placeholder="Land"
-        value={initial.company?.country || ""}
+        value={initial.company?.country || "BQ"}
         type="text"
         select
         required
