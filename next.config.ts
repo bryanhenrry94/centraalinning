@@ -1,14 +1,9 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  // experimental: {
-  //   turbopack: {
-  //     // Evita que ciertos módulos se traten como externos
-  //     serverExternalPackages: ["prettier", "puppeteer", "rimraf", "emitter"],
-  //   },
-  // },
-  experimental: {
-    esmExternals: "loose",
-  },
+import type { NextConfig } from "next";
+
+const config: NextConfig = {
+  output: "standalone",
+  reactStrictMode: true,
+  poweredByHeader: false,
 };
 
-export default nextConfig;
+export default config;
