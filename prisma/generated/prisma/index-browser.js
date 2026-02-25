@@ -560,7 +560,9 @@ exports.UserRole = exports.$Enums.UserRole = {
   TENANT_ADMIN: 'TENANT_ADMIN',
   AGENT: 'AGENT',
   DEBTOR: 'DEBTOR',
-  BAILIFF: 'BAILIFF'
+  BAILIFF: 'BAILIFF',
+  LAWYER: 'LAWYER',
+  BANK: 'BANK'
 };
 
 exports.PersonType = exports.$Enums.PersonType = {

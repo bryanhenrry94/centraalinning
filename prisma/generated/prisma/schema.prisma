@@ -9,10 +9,10 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-generator erd {
-  provider = "prisma-erd-generator"
-  output   = "./erd.svg"
-}
+// generator erd {
+//   provider = "prisma-erd-generator"
+//   output   = "./erd.svg"
+// }
 
 model Tenant {
   id                  String  @id @default(uuid())
@@ -698,6 +698,8 @@ enum UserRole {
   AGENT
   DEBTOR
   BAILIFF
+  LAWYER
+  BANK
 }
 
 enum PaymentMethod {

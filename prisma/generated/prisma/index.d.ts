@@ -273,7 +273,9 @@ export const UserRole: {
   TENANT_ADMIN: 'TENANT_ADMIN',
   AGENT: 'AGENT',
   DEBTOR: 'DEBTOR',
-  BAILIFF: 'BAILIFF'
+  BAILIFF: 'BAILIFF',
+  LAWYER: 'LAWYER',
+  BANK: 'BANK'
 };
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
