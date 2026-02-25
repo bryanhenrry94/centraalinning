@@ -540,20 +540,266 @@ exports.Prisma.NullableJsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
-exports.Prisma.QueryMode = {
-  default: 'default',
-  insensitive: 'insensitive'
-};
-
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
+};
+
+exports.Prisma.TenantOrderByRelevanceFieldEnum = {
+  id: 'id',
+  name: 'name',
+  code: 'code',
+  subdomain: 'subdomain',
+  contact_email: 'contact_email',
+  country_code: 'country_code',
+  kvk: 'kvk',
+  legal_name: 'legal_name',
+  address: 'address',
+  city: 'city',
+  logo_url: 'logo_url',
+  phone: 'phone',
+  website: 'website'
+};
+
+exports.Prisma.UserOrderByRelevanceFieldEnum = {
+  id: 'id',
+  email: 'email',
+  password_hash: 'password_hash',
+  fullname: 'fullname',
+  phone: 'phone'
+};
+
+exports.Prisma.MembershipOrderByRelevanceFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  tenant_id: 'tenant_id'
+};
+
+exports.Prisma.TenantInvitationOrderByRelevanceFieldEnum = {
+  id: 'id',
+  tenant_id: 'tenant_id',
+  email: 'email',
+  fullname: 'fullname',
+  token: 'token',
+  debtor_id: 'debtor_id'
+};
+
+exports.Prisma.PersonOrderByRelevanceFieldEnum = {
+  id: 'id',
+  identification: 'identification',
+  first_name: 'first_name',
+  last_name: 'last_name',
+  business_name: 'business_name',
+  email: 'email',
+  phone: 'phone',
+  address: 'address'
+};
+
+exports.Prisma.ParameterOrderByRelevanceFieldEnum = {
+  id: 'id',
+  invoice_prefix: 'invoice_prefix',
+  bank_account: 'bank_account',
+  bank_name: 'bank_name'
+};
+
+exports.Prisma.VerdictOrderByRelevanceFieldEnum = {
+  id: 'id',
+  invoice_number: 'invoice_number',
+  creditor_name: 'creditor_name',
+  debtor_id: 'debtor_id',
+  debt_id: 'debt_id',
+  registration_number: 'registration_number',
+  tenant_id: 'tenant_id',
+  notes: 'notes',
+  bailiff_id: 'bailiff_id'
+};
+
+exports.Prisma.VerdictInterestOrderByRelevanceFieldEnum = {
+  id: 'id',
+  interest_type: 'interest_type',
+  verdict_id: 'verdict_id'
+};
+
+exports.Prisma.VerdictInterestDetailsOrderByRelevanceFieldEnum = {
+  id: 'id',
+  period: 'period',
+  verdict_interest_id: 'verdict_interest_id'
+};
+
+exports.Prisma.VerdictEmbargoOrderByRelevanceFieldEnum = {
+  id: 'id',
+  verdict_id: 'verdict_id',
+  company_name: 'company_name',
+  company_phone: 'company_phone',
+  company_email: 'company_email',
+  company_address: 'company_address',
+  embargo_type: 'embargo_type'
+};
+
+exports.Prisma.VerdictBailiffServicesOrderByRelevanceFieldEnum = {
+  id: 'id',
+  verdict_id: 'verdict_id',
+  service_invoice_number: 'service_invoice_number',
+  service_type: 'service_type'
+};
+
+exports.Prisma.VerdictAttachmentOrderByRelevanceFieldEnum = {
+  id: 'id',
+  verdict_id: 'verdict_id',
+  file_path: 'file_path',
+  file_name: 'file_name'
+};
+
+exports.Prisma.InterestTypeOrderByRelevanceFieldEnum = {
+  id: 'id',
+  name: 'name'
+};
+
+exports.Prisma.InterestDetailOrderByRelevanceFieldEnum = {
+  id: 'id',
+  date: 'date',
+  interest_type_id: 'interest_type_id'
+};
+
+exports.Prisma.BillingInvoiceOrderByRelevanceFieldEnum = {
+  id: 'id',
+  tenant_id: 'tenant_id',
+  invoice_number: 'invoice_number',
+  currency: 'currency',
+  description: 'description',
+  status: 'status'
+};
+
+exports.Prisma.BillingInvoiceDetailOrderByRelevanceFieldEnum = {
+  id: 'id',
+  item_description: 'item_description',
+  billing_invoice_id: 'billing_invoice_id'
+};
+
+exports.Prisma.BillingPaymentOrderByRelevanceFieldEnum = {
+  id: 'id',
+  payment_method: 'payment_method',
+  transaction_id: 'transaction_id',
+  status: 'status',
+  billing_invoice_id: 'billing_invoice_id'
+};
+
+exports.Prisma.DebtOrderByRelevanceFieldEnum = {
+  id: 'id',
+  debtor_id: 'debtor_id',
+  tenant_id: 'tenant_id',
+  source_id: 'source_id'
+};
+
+exports.Prisma.DebtFineOrderByRelevanceFieldEnum = {
+  id: 'id',
+  debt_id: 'debt_id',
+  description: 'description'
+};
+
+exports.Prisma.CollectionCaseOrderByRelevanceFieldEnum = {
+  id: 'id',
+  debt_id: 'debt_id',
+  reference_number: 'reference_number',
+  tenant_id: 'tenant_id',
+  debtor_id: 'debtor_id'
+};
+
+exports.Prisma.CollectionCaseNotificationOrderByRelevanceFieldEnum = {
+  id: 'id',
+  collection_case_id: 'collection_case_id',
+  title: 'title',
+  message: 'message'
+};
+
+exports.Prisma.DebtorOrderByRelevanceFieldEnum = {
+  id: 'id',
+  tenant_id: 'tenant_id',
+  person_id: 'person_id',
+  user_id: 'user_id',
+  email: 'email'
+};
+
+exports.Prisma.DebtorIncomeOrderByRelevanceFieldEnum = {
+  id: 'id',
+  debtor_id: 'debtor_id',
+  source: 'source'
+};
+
+exports.Prisma.BailiffOrderByRelevanceFieldEnum = {
+  id: 'id',
+  fullname: 'fullname',
+  email: 'email',
+  phone: 'phone',
+  tenant_id: 'tenant_id',
+  user_id: 'user_id'
+};
+
+exports.Prisma.EmployeeOrderByRelevanceFieldEnum = {
+  id: 'id',
+  identification: 'identification',
+  first_name: 'first_name',
+  last_name: 'last_name',
+  email: 'email',
+  address: 'address',
+  phone: 'phone',
+  tenant_id: 'tenant_id'
+};
+
+exports.Prisma.ChatRoomOrderByRelevanceFieldEnum = {
+  id: 'id',
+  tenant_id: 'tenant_id',
+  collection_case_id: 'collection_case_id',
+  name: 'name'
+};
+
+exports.Prisma.ChatMessageOrderByRelevanceFieldEnum = {
+  id: 'id',
+  room_id: 'room_id',
+  sender_id: 'sender_id',
+  message: 'message',
+  file_url: 'file_url',
+  file_name: 'file_name'
+};
+
+exports.Prisma.AgreementOrderByRelevanceFieldEnum = {
+  id: 'id',
+  debtor_id: 'debtor_id',
+  debt_id: 'debt_id',
+  tenant_id: 'tenant_id',
+  comment: 'comment'
+};
+
+exports.Prisma.AgreementInstallmentOrderByRelevanceFieldEnum = {
+  id: 'id',
+  agreement_id: 'agreement_id',
+  payment_id: 'payment_id'
 };
 
 exports.Prisma.JsonNullValueFilter = {
   DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull,
   AnyNull: Prisma.AnyNull
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+};
+
+exports.Prisma.PaymentOrderByRelevanceFieldEnum = {
+  id: 'id',
+  debt_id: 'debt_id',
+  provider: 'provider',
+  provider_ref: 'provider_ref',
+  reference_number: 'reference_number',
+  agreement_id: 'agreement_id'
+};
+
+exports.Prisma.PaymentAllocationOrderByRelevanceFieldEnum = {
+  id: 'id',
+  payment_id: 'payment_id',
+  debt_id: 'debt_id'
 };
 exports.UserRole = exports.$Enums.UserRole = {
   PLATFORM_OWNER: 'PLATFORM_OWNER',

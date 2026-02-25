@@ -513,20 +513,266 @@ exports.Prisma.NullableJsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
-exports.Prisma.QueryMode = {
-  default: 'default',
-  insensitive: 'insensitive'
-};
-
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
+};
+
+exports.Prisma.TenantOrderByRelevanceFieldEnum = {
+  id: 'id',
+  name: 'name',
+  code: 'code',
+  subdomain: 'subdomain',
+  contact_email: 'contact_email',
+  country_code: 'country_code',
+  kvk: 'kvk',
+  legal_name: 'legal_name',
+  address: 'address',
+  city: 'city',
+  logo_url: 'logo_url',
+  phone: 'phone',
+  website: 'website'
+};
+
+exports.Prisma.UserOrderByRelevanceFieldEnum = {
+  id: 'id',
+  email: 'email',
+  password_hash: 'password_hash',
+  fullname: 'fullname',
+  phone: 'phone'
+};
+
+exports.Prisma.MembershipOrderByRelevanceFieldEnum = {
+  id: 'id',
+  user_id: 'user_id',
+  tenant_id: 'tenant_id'
+};
+
+exports.Prisma.TenantInvitationOrderByRelevanceFieldEnum = {
+  id: 'id',
+  tenant_id: 'tenant_id',
+  email: 'email',
+  fullname: 'fullname',
+  token: 'token',
+  debtor_id: 'debtor_id'
+};
+
+exports.Prisma.PersonOrderByRelevanceFieldEnum = {
+  id: 'id',
+  identification: 'identification',
+  first_name: 'first_name',
+  last_name: 'last_name',
+  business_name: 'business_name',
+  email: 'email',
+  phone: 'phone',
+  address: 'address'
+};
+
+exports.Prisma.ParameterOrderByRelevanceFieldEnum = {
+  id: 'id',
+  invoice_prefix: 'invoice_prefix',
+  bank_account: 'bank_account',
+  bank_name: 'bank_name'
+};
+
+exports.Prisma.VerdictOrderByRelevanceFieldEnum = {
+  id: 'id',
+  invoice_number: 'invoice_number',
+  creditor_name: 'creditor_name',
+  debtor_id: 'debtor_id',
+  debt_id: 'debt_id',
+  registration_number: 'registration_number',
+  tenant_id: 'tenant_id',
+  notes: 'notes',
+  bailiff_id: 'bailiff_id'
+};
+
+exports.Prisma.VerdictInterestOrderByRelevanceFieldEnum = {
+  id: 'id',
+  interest_type: 'interest_type',
+  verdict_id: 'verdict_id'
+};
+
+exports.Prisma.VerdictInterestDetailsOrderByRelevanceFieldEnum = {
+  id: 'id',
+  period: 'period',
+  verdict_interest_id: 'verdict_interest_id'
+};
+
+exports.Prisma.VerdictEmbargoOrderByRelevanceFieldEnum = {
+  id: 'id',
+  verdict_id: 'verdict_id',
+  company_name: 'company_name',
+  company_phone: 'company_phone',
+  company_email: 'company_email',
+  company_address: 'company_address',
+  embargo_type: 'embargo_type'
+};
+
+exports.Prisma.VerdictBailiffServicesOrderByRelevanceFieldEnum = {
+  id: 'id',
+  verdict_id: 'verdict_id',
+  service_invoice_number: 'service_invoice_number',
+  service_type: 'service_type'
+};
+
+exports.Prisma.VerdictAttachmentOrderByRelevanceFieldEnum = {
+  id: 'id',
+  verdict_id: 'verdict_id',
+  file_path: 'file_path',
+  file_name: 'file_name'
+};
+
+exports.Prisma.InterestTypeOrderByRelevanceFieldEnum = {
+  id: 'id',
+  name: 'name'
+};
+
+exports.Prisma.InterestDetailOrderByRelevanceFieldEnum = {
+  id: 'id',
+  date: 'date',
+  interest_type_id: 'interest_type_id'
+};
+
+exports.Prisma.BillingInvoiceOrderByRelevanceFieldEnum = {
+  id: 'id',
+  tenant_id: 'tenant_id',
+  invoice_number: 'invoice_number',
+  currency: 'currency',
+  description: 'description',
+  status: 'status'
+};
+
+exports.Prisma.BillingInvoiceDetailOrderByRelevanceFieldEnum = {
+  id: 'id',
+  item_description: 'item_description',
+  billing_invoice_id: 'billing_invoice_id'
+};
+
+exports.Prisma.BillingPaymentOrderByRelevanceFieldEnum = {
+  id: 'id',
+  payment_method: 'payment_method',
+  transaction_id: 'transaction_id',
+  status: 'status',
+  billing_invoice_id: 'billing_invoice_id'
+};
+
+exports.Prisma.DebtOrderByRelevanceFieldEnum = {
+  id: 'id',
+  debtor_id: 'debtor_id',
+  tenant_id: 'tenant_id',
+  source_id: 'source_id'
+};
+
+exports.Prisma.DebtFineOrderByRelevanceFieldEnum = {
+  id: 'id',
+  debt_id: 'debt_id',
+  description: 'description'
+};
+
+exports.Prisma.CollectionCaseOrderByRelevanceFieldEnum = {
+  id: 'id',
+  debt_id: 'debt_id',
+  reference_number: 'reference_number',
+  tenant_id: 'tenant_id',
+  debtor_id: 'debtor_id'
+};
+
+exports.Prisma.CollectionCaseNotificationOrderByRelevanceFieldEnum = {
+  id: 'id',
+  collection_case_id: 'collection_case_id',
+  title: 'title',
+  message: 'message'
+};
+
+exports.Prisma.DebtorOrderByRelevanceFieldEnum = {
+  id: 'id',
+  tenant_id: 'tenant_id',
+  person_id: 'person_id',
+  user_id: 'user_id',
+  email: 'email'
+};
+
+exports.Prisma.DebtorIncomeOrderByRelevanceFieldEnum = {
+  id: 'id',
+  debtor_id: 'debtor_id',
+  source: 'source'
+};
+
+exports.Prisma.BailiffOrderByRelevanceFieldEnum = {
+  id: 'id',
+  fullname: 'fullname',
+  email: 'email',
+  phone: 'phone',
+  tenant_id: 'tenant_id',
+  user_id: 'user_id'
+};
+
+exports.Prisma.EmployeeOrderByRelevanceFieldEnum = {
+  id: 'id',
+  identification: 'identification',
+  first_name: 'first_name',
+  last_name: 'last_name',
+  email: 'email',
+  address: 'address',
+  phone: 'phone',
+  tenant_id: 'tenant_id'
+};
+
+exports.Prisma.ChatRoomOrderByRelevanceFieldEnum = {
+  id: 'id',
+  tenant_id: 'tenant_id',
+  collection_case_id: 'collection_case_id',
+  name: 'name'
+};
+
+exports.Prisma.ChatMessageOrderByRelevanceFieldEnum = {
+  id: 'id',
+  room_id: 'room_id',
+  sender_id: 'sender_id',
+  message: 'message',
+  file_url: 'file_url',
+  file_name: 'file_name'
+};
+
+exports.Prisma.AgreementOrderByRelevanceFieldEnum = {
+  id: 'id',
+  debtor_id: 'debtor_id',
+  debt_id: 'debt_id',
+  tenant_id: 'tenant_id',
+  comment: 'comment'
+};
+
+exports.Prisma.AgreementInstallmentOrderByRelevanceFieldEnum = {
+  id: 'id',
+  agreement_id: 'agreement_id',
+  payment_id: 'payment_id'
 };
 
 exports.Prisma.JsonNullValueFilter = {
   DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull,
   AnyNull: Prisma.AnyNull
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+};
+
+exports.Prisma.PaymentOrderByRelevanceFieldEnum = {
+  id: 'id',
+  debt_id: 'debt_id',
+  provider: 'provider',
+  provider_ref: 'provider_ref',
+  reference_number: 'reference_number',
+  agreement_id: 'agreement_id'
+};
+
+exports.Prisma.PaymentAllocationOrderByRelevanceFieldEnum = {
+  id: 'id',
+  payment_id: 'payment_id',
+  debt_id: 'debt_id'
 };
 exports.PaymentStatus = exports.$Enums.PaymentStatus = {
   pending: 'pending',
@@ -726,8 +972,7 @@ const config = {
   "datasourceNames": [
     "db"
   ],
-  "activeProvider": "postgresql",
-  "postinstall": false,
+  "activeProvider": "mysql",
   "inlineDatasources": {
     "db": {
       "url": {
@@ -736,8 +981,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"./generated/prisma\"\n}\n\ndatasource db {\n  provider  = \"postgresql\"\n  url       = env(\"DATABASE_URL\")\n  directUrl = env(\"DIRECT_URL\")\n}\n\n// generator erd {\n//   provider = \"prisma-erd-generator\"\n//   output   = \"./erd.svg\"\n// }\n\nmodel Tenant {\n  id                  String  @id @default(uuid())\n  name                String\n  code                String  @unique\n  subdomain           String  @unique\n  contact_email       String\n  country_code        String\n  kvk                 String?\n  legal_name          String?\n  address             String?\n  city                String?\n  logo_url            String?\n  number_of_employees Int?\n  phone               String?\n  website             String?\n  terms_accepted      Boolean @default(false)\n  is_active           Boolean @default(false)\n\n  created_at DateTime @default(now())\n  updated_at DateTime @updatedAt\n\n  billing_invoice  BillingInvoice[]\n  collection_cases CollectionCase[]\n  debtors          Debtor[]\n  bailiffs         Bailiff[]\n  verdicts         Verdict[]\n  chat_rooms       ChatRoom[]\n  invitations      TenantInvitation[]\n  employees        Employee[]\n  agreements       Agreement[]\n  debts            Debt[]\n  memberships      Membership[]\n\n  @@map(\"tenant\")\n}\n\nmodel User {\n  id            String  @id @default(uuid())\n  email         String  @unique @db.VarChar(80)\n  password_hash String? @db.VarChar(120)\n  fullname      String? @db.VarChar(80)\n  phone         String? @db.VarChar(25)\n  is_active     Boolean @default(true)\n\n  memberships Membership[]\n\n  created_at DateTime @default(now())\n  updated_at DateTime @updatedAt\n\n  debtors  Debtor[]\n  bailiffs Bailiff[]\n  messages ChatMessage[]\n\n  @@map(\"user\")\n}\n\nmodel Membership {\n  id        String   @id @default(uuid())\n  user_id   String\n  tenant_id String\n  role      UserRole\n\n  user   User   @relation(fields: [user_id], references: [id])\n  tenant Tenant @relation(fields: [tenant_id], references: [id])\n\n  created_at DateTime @default(now())\n\n  @@unique([user_id, tenant_id]) // evita duplicados\n  @@map(\"membership\")\n}\n\nmodel TenantInvitation {\n  id         String    @id @default(uuid())\n  tenant_id  String\n  email      String\n  fullname   String?\n  token      String    @unique\n  role       UserRole  @default(DEBTOR)\n  debtor_id  String?\n  created_at DateTime  @default(now())\n  expires_at DateTime\n  used       Boolean   @default(false)\n  used_at    DateTime?\n  tenant     Tenant    @relation(fields: [tenant_id], references: [id])\n\n  @@index([tenant_id, email])\n  @@index([tenant_id, token])\n  @@map(\"tenant_invitation\")\n}\n\nmodel Person {\n  id          String     @id @default(uuid())\n  person_type PersonType\n\n  identification_type IdentificationType\n  identification      String             @unique\n\n  first_name    String?\n  last_name     String?\n  business_name String?\n\n  email   String? @unique\n  phone   String?\n  address String?\n\n  created_at DateTime @default(now())\n  updated_at DateTime @updatedAt\n\n  debtors Debtor[]\n  // bailiff             Bailiff?\n  // employee            Employee?\n\n  @@map(\"person\")\n}\n\nmodel Parameter {\n  id String @id @default(uuid())\n\n  collection_fee_rate Float @default(0)\n  abb_rate            Float @default(0)\n\n  company_aanmaning_term_days  Int @default(0)\n  consumer_aanmaning_term_days Int @default(0)\n  company_sommatie_term_days   Int @default(0)\n  consumer_sommatie_term_days  Int @default(0)\n\n  small_company_price            Float @default(0)\n  small_company_pfc_contribution Float @default(0)\n  large_company_price            Float @default(0)\n  large_company_pfc_contribution Float @default(0)\n\n  company_aanmaning_penalty Float @default(0)\n  natural_aanmaning_penalty Float @default(0)\n  company_sommatie_penalty  Float @default(0)\n  natural_sommatie_penalty  Float @default(0)\n\n  company_reaction_limit_days Int   @default(0)\n  company_no_reaction_penalty Float @default(0)\n  natural_no_reaction_penalty Float @default(0)\n\n  company_payment_agreement_fee Float @default(0)\n  natural_payment_agreement_fee Float @default(0)\n\n  invoice_number_length Int    @default(8)\n  invoice_prefix        String @default(\"\")\n  invoice_sequence      Int    @default(0)\n\n  bank_account String @default(\"\")\n  bank_name    String @default(\"\")\n\n  created_at DateTime @default(now())\n  updated_at DateTime @updatedAt\n\n  @@map(\"parameter\")\n}\n\nmodel Verdict {\n  id                  String                   @id @default(uuid())\n  invoice_number      String                   @db.VarChar(100)\n  creditor_name       String                   @db.VarChar(100)\n  debtor_id           String\n  debt_id             String?\n  debt                Debt?                    @relation(fields: [debt_id], references: [id])\n  registration_number String                   @db.VarChar(100)\n  sentence_amount     Float\n  sentence_date       DateTime\n  status              VerdictStatus            @default(DRAFT)\n  created_at          DateTime                 @default(now())\n  updated_at          DateTime                 @updatedAt\n  procesal_cost       Float?                   @default(0)\n  tenant_id           String\n  notes               String?\n  bailiff_id          String\n  bailiff             Bailiff?                 @relation(\"BailiffToVerdict\", fields: [bailiff_id], references: [id])\n  debtor              Debtor                   @relation(fields: [debtor_id], references: [id])\n  tenant              Tenant                   @relation(fields: [tenant_id], references: [id])\n  attachments         VerdictAttachment[]\n  bailiff_services    VerdictBailiffServices[]\n  verdict_embargo     VerdictEmbargo[]\n  verdict_interest    VerdictInterest[]\n\n  @@map(\"verdict\")\n}\n\nmodel VerdictInterest {\n  id                  String                   @id @default(uuid())\n  interest_type       String\n  base_amount         Float\n  calculated_interest Float?\n  calculation_start   DateTime\n  calculation_end     DateTime\n  total_interest      Float\n  created_at          DateTime                 @default(now())\n  updated_at          DateTime                 @updatedAt\n  verdict_id          String?\n  verdict             Verdict?                 @relation(fields: [verdict_id], references: [id])\n  details             VerdictInterestDetails[]\n\n  @@map(\"verdict_interest\")\n}\n\nmodel VerdictInterestDetails {\n  id                  String          @id @default(uuid())\n  period              String\n  period_start        DateTime\n  period_end          DateTime\n  days                Int\n  annual_rate         Float\n  proportional_rate   Float\n  base_amount         Float\n  interest            Float\n  total               Float\n  verdict_interest_id String\n  created_at          DateTime        @default(now())\n  updated_at          DateTime        @updatedAt\n  verdict_interest    VerdictInterest @relation(fields: [verdict_interest_id], references: [id])\n\n  @@map(\"verdict_interest_details\")\n}\n\nmodel VerdictEmbargo {\n  id              String   @id @default(uuid())\n  verdict_id      String\n  company_name    String\n  company_phone   String\n  company_email   String\n  company_address String\n  embargo_type    String\n  embargo_date    DateTime\n  embargo_amount  Float\n  total_amount    Float\n  created_at      DateTime @default(now())\n  updated_at      DateTime @updatedAt\n  verdict         Verdict  @relation(fields: [verdict_id], references: [id])\n\n  @@map(\"verdict_embargo\")\n}\n\nmodel VerdictBailiffServices {\n  id                     String   @id @default(uuid())\n  verdict_id             String\n  service_invoice_number String\n  service_type           String\n  service_cost           Float\n  created_at             DateTime @default(now())\n  updated_at             DateTime @updatedAt\n  verdict                Verdict  @relation(fields: [verdict_id], references: [id])\n\n  @@map(\"verdict_bailiff_services\")\n}\n\nmodel VerdictAttachment {\n  id         String   @id @default(uuid())\n  verdict_id String\n  file_path  String\n  file_size  BigInt\n  created_at DateTime @default(now())\n  updated_at DateTime @updatedAt\n  file_name  String\n  verdict    Verdict  @relation(fields: [verdict_id], references: [id])\n\n  @@map(\"verdict_attachment\")\n}\n\nmodel InterestType {\n  id               String              @id @default(uuid())\n  name             String\n  calculation_type CalculationTypeEnum\n  details          InterestDetail[]\n\n  @@map(\"interest_type\")\n}\n\nmodel InterestDetail {\n  id               String       @id @default(uuid())\n  date             String\n  rate             Float\n  interest_type_id String\n  interest_type    InterestType @relation(fields: [interest_type_id], references: [id])\n\n  @@map(\"interest_detail\")\n}\n\nmodel BillingInvoice {\n  id             String                 @id @default(uuid())\n  tenant_id      String\n  invoice_number String                 @unique\n  amount         Float\n  currency       String                 @default(\"USD\")\n  issue_date     DateTime\n  due_date       DateTime\n  description    String?\n  status         String                 @default(\"unpaid\")\n  created_at     DateTime               @default(now())\n  updated_at     DateTime               @updatedAt\n  tenant         Tenant                 @relation(fields: [tenant_id], references: [id])\n  details        BillingInvoiceDetail[]\n  payments       BillingPayment[]\n\n  @@map(\"billing_invoice\")\n}\n\nmodel BillingInvoiceDetail {\n  id                  String          @id @default(uuid())\n  item_description    String\n  item_quantity       Int\n  item_unit_price     Float\n  item_total_price    Float\n  item_tax_rate       Float\n  item_tax_amount     Float\n  item_total_with_tax Float\n  created_at          DateTime        @default(now())\n  updated_at          DateTime        @updatedAt\n  billing_invoice_id  String?\n  billing_invoice     BillingInvoice? @relation(fields: [billing_invoice_id], references: [id])\n\n  @@map(\"billing_invoice_detail\")\n}\n\nmodel BillingPayment {\n  id                 String          @id @default(uuid())\n  payment_date       DateTime\n  amount             Float\n  payment_method     String\n  transaction_id     String?\n  status             String\n  created_at         DateTime        @default(now())\n  updated_at         DateTime        @updatedAt\n  billing_invoice_id String?\n  billing_invoice    BillingInvoice? @relation(fields: [billing_invoice_id], references: [id])\n\n  @@map(\"billing_payment\")\n}\n\nmodel Debt {\n  id               String         @id @default(cuid())\n  debtor_id        String\n  tenant_id        String\n  source_type      DebtSourceType\n  source_id        String\n  principal_amount Decimal        @db.Decimal(10, 2)\n\n  status     DebtStatus\n  created_at DateTime   @default(now())\n  updated_at DateTime   @updatedAt\n\n  debtor           Debtor           @relation(fields: [debtor_id], references: [id])\n  tenant           Tenant           @relation(fields: [tenant_id], references: [id])\n  payments         Payment[]\n  agreements       Agreement[]\n  fines            DebtFine[]\n  collection_cases CollectionCase[]\n  verdicts         Verdict[]\n\n  @@map(\"debt\")\n}\n\nmodel DebtFine {\n  id      String @id @default(cuid())\n  debt_id String\n  debt    Debt   @relation(fields: [debt_id], references: [id])\n\n  type        FineType // MORA | PENALTY | INTEREST | JUDICIAL_FEE | OTHER\n  description String?\n\n  amount     Decimal  @db.Decimal(10, 2)\n  applied_at DateTime @default(now())\n\n  status       FineStatus // ACTIVE | CANCELLED | REVERSED\n  cancelled_at DateTime?\n\n  created_at DateTime @default(now())\n\n  @@map(\"debt_fine\")\n}\n\nmodel CollectionCase {\n  id               String               @id @default(cuid())\n  debt_id          String?\n  debt             Debt?                @relation(fields: [debt_id], references: [id])\n  reference_number String?\n  issue_date       DateTime\n  due_date         DateTime\n  tenant_id        String\n  debtor_id        String\n  amount_original  Decimal              @db.Decimal(10, 2)\n  fee_rate         Decimal              @db.Decimal(5, 2)\n  fee_amount       Decimal              @db.Decimal(10, 2)\n  abb_rate         Decimal              @db.Decimal(5, 2)\n  abb_amount       Decimal              @db.Decimal(10, 2)\n  total_fined      Decimal              @default(0) @db.Decimal(10, 2) // total de multas\n  total_due        Decimal              @default(0) @db.Decimal(10, 2) // total con impuestos y multas\n  total_to_receive Decimal              @default(0) @db.Decimal(10, 2) // neto después de retención\n  total_paid       Decimal              @default(0) @db.Decimal(10, 2)\n  balance          Decimal              @default(0) @db.Decimal(10, 2)\n  status           CollectionCaseStatus @default(AANMANING)\n  created_at       DateTime             @default(now())\n  updated_at       DateTime             @updatedAt\n  debtor           Debtor               @relation(fields: [debtor_id], references: [id])\n  tenant           Tenant               @relation(fields: [tenant_id], references: [id])\n\n  chat_rooms                 ChatRoom[]\n  collectionCaseNotification CollectionCaseNotification[]\n\n  @@map(\"collection_case\")\n}\n\nmodel CollectionCaseNotification {\n  id                 String           @id @default(cuid())\n  collection_case_id String\n  type               NotificationType\n  title              String\n  message            String\n  sent_at            DateTime         @default(now())\n  read               Boolean          @default(false)\n  created_at         DateTime         @default(now())\n  collection_case    CollectionCase   @relation(fields: [collection_case_id], references: [id])\n\n  @@map(\"collection_case_notification\")\n}\n\nmodel Debtor {\n  id String @id @default(uuid())\n\n  tenant_id String\n  tenant    Tenant @relation(fields: [tenant_id], references: [id])\n\n  person_id String\n  person    Person @relation(fields: [person_id], references: [id])\n\n  user_id String?\n  user    User?   @relation(fields: [user_id], references: [id])\n\n  email        String\n  total_income Float  @default(0)\n\n  created_at DateTime @default(now())\n  updated_at DateTime @updatedAt\n\n  collection_cases CollectionCase[]\n  incomes          DebtorIncome[]\n  verdicts         Verdict[]\n  agreements       Agreement[]\n  debts            Debt[]\n\n  @@unique([tenant_id, email])\n  @@map(\"debtor\")\n}\n\nmodel DebtorIncome {\n  id         String   @id @default(uuid())\n  debtor_id  String\n  amount     Float\n  source     String\n  created_at DateTime @default(now())\n  updated_at DateTime @updatedAt\n  debtor     Debtor   @relation(fields: [debtor_id], references: [id])\n\n  @@map(\"debtor_incomes\")\n}\n\nmodel Bailiff {\n  id         String   @id @default(uuid())\n  fullname   String\n  email      String   @unique\n  phone      String?\n  tenant_id  String\n  user_id    String?\n  created_at DateTime @default(now())\n  updated_at DateTime @updatedAt\n\n  tenant   Tenant    @relation(fields: [tenant_id], references: [id])\n  user     User?     @relation(fields: [user_id], references: [id])\n  verdicts Verdict[] @relation(\"BailiffToVerdict\")\n\n  @@map(\"bailiff\")\n}\n\nmodel Employee {\n  id             String   @id @default(uuid())\n  identification String\n  first_name     String\n  last_name      String\n  email          String\n  address        String?\n  phone          String?\n  tenant_id      String\n  tenant         Tenant   @relation(fields: [tenant_id], references: [id])\n  created_at     DateTime @default(now())\n  updated_at     DateTime @updatedAt\n\n  @@unique([identification])\n  @@map(\"employee\")\n}\n\nmodel ChatRoom {\n  id                 String         @id @default(cuid())\n  tenant_id          String\n  tenant             Tenant         @relation(fields: [tenant_id], references: [id])\n  collection_case_id String\n  collection_case    CollectionCase @relation(fields: [collection_case_id], references: [id])\n  name               String\n  created_at         DateTime       @default(now())\n  updated_at         DateTime       @updatedAt\n  messages           ChatMessage[]\n\n  @@map(\"chat_room\")\n}\n\nmodel ChatMessage {\n  id      String   @id @default(cuid())\n  room_id String\n  room    ChatRoom @relation(fields: [room_id], references: [id])\n\n  sender_id String\n  sender    User    @relation(fields: [sender_id], references: [id])\n  message   String\n  file_url  String?\n  file_name String?\n\n  timestamp  DateTime @default(now())\n  created_at DateTime @default(now())\n  updated_at DateTime @updatedAt\n\n  @@map(\"chat_message\")\n}\n\nmodel Agreement {\n  id                 String          @id @default(cuid())\n  debtor_id          String?\n  debt_id            String\n  debt               Debt            @relation(fields: [debt_id], references: [id])\n  total_amount       Decimal         @db.Decimal(10, 2)\n  installment_amount Decimal         @db.Decimal(10, 2)\n  installments_count Int\n  start_date         DateTime\n  end_date           DateTime\n  status             AgreementStatus @default(PENDING)\n  tenant_id          String\n  tenant             Tenant          @relation(fields: [tenant_id], references: [id])\n  comment            String?\n  created_at         DateTime        @default(now())\n  updated_at         DateTime        @updatedAt\n\n  //                 Relaciones\n  debtor       Debtor?                @relation(fields: [debtor_id], references: [id])\n  installments AgreementInstallment[]\n  payment      Payment[]\n\n  @@map(\"agreement\")\n}\n\nmodel AgreementInstallment {\n  id           String            @id @default(cuid())\n  agreement_id String\n  number       Int\n  due_date     DateTime\n  amount       Decimal           @db.Decimal(10, 2)\n  status       InstallmentStatus @default(PENDING)\n  payment_id   String?\n  created_at   DateTime          @default(now())\n  updated_at   DateTime          @updatedAt\n\n  //           Relaciones\n  agreement Agreement @relation(fields: [agreement_id], references: [id])\n  payment   Payment?  @relation(fields: [payment_id], references: [id])\n\n  @@map(\"agreement_installment\")\n}\n\nmodel Payment {\n  id           String        @id @default(cuid())\n  debt_id      String?\n  debt         Debt?         @relation(fields: [debt_id], references: [id])\n  method       PaymentMethod\n  total_amount Decimal       @db.Decimal(10, 2)\n  paid_at      DateTime?     @db.Date\n\n  // Estado financiero real\n  status PaymentStatus @default(pending)\n\n  // Sentoo / Pasarela\n  provider         String              @default(\"manual\") // sentoo | stripe | cash | etc\n  provider_ref     String?             @unique\n  provider_status  PaymentSentooStatus @default(pending)\n  provider_payload Json?\n\n  reference_number String?\n  agreement_id     String?\n  created_at       DateTime @default(now())\n  updated_at       DateTime @updatedAt\n\n  allocations  PaymentAllocation[]\n  installments AgreementInstallment[]\n  agreements   Agreement?             @relation(fields: [agreement_id], references: [id])\n\n  @@map(\"payment\")\n}\n\nenum PaymentStatus {\n  pending\n  paid\n  failed\n  expired\n  reversed\n}\n\nenum PaymentSentooStatus {\n  success\n  pending\n  failed\n  cancelled\n  expired\n}\n\nmodel PaymentAllocation {\n  id         String           @id @default(cuid())\n  payment_id String\n  payment    Payment          @relation(fields: [payment_id], references: [id])\n  debt_id    String?\n  component  PaymentComponent // PRINCIPAL | FINE | INTEREST | OTHER | INSTALLMENT\n  amount     Decimal          @db.Decimal(10, 2)\n\n  @@map(\"payment_allocation\")\n}\n\nenum PaymentComponent {\n  PRINCIPAL\n  FINE\n  INTEREST\n  INSTALLMENT\n  OTHER\n}\n\nenum InstallmentStatus {\n  PENDING\n  PAID\n  OVERDUE\n}\n\nenum AgreementStatus {\n  PENDING\n  IN_NEGOTIATION\n  COUNTEROFFER\n  ACCEPTED\n  REJECTED\n  CANCELLED\n  CLOSED\n}\n\nenum CalculationTypeEnum {\n  FIXED\n  VARIABLE\n}\n\nenum VerdictStatus {\n  DRAFT\n  PENDING\n  APPROVED\n  REJECTED\n}\n\nenum NotificationType {\n  AANMANING\n  SOMMATIE\n  INGEBREKESTELLING\n  BLOKKADE\n}\n\nenum IdentificationType {\n  DNI\n  PASSPORT\n  NIE\n  CIF\n  KVK\n  OTHER\n}\n\nenum UserRole {\n  PLATFORM_OWNER\n  TENANT_ADMIN\n  AGENT\n  DEBTOR\n  BAILIFF\n  LAWYER\n  BANK\n}\n\nenum PaymentMethod {\n  TRANSFER\n  CREDIT_CARD\n}\n\nenum CollectionCaseStatus {\n  AANMANING\n  SOMMATIE\n  INGEBREKESTELLING\n  BLOKKADE\n}\n\nenum PersonType {\n  INDIVIDUAL\n  COMPANY\n}\n\nenum InvitationRole {\n  DEBTOR\n  AGENT\n  SHERIFF\n}\n\nenum DebtSourceType {\n  VERDICT\n  COLLECTION_CASE\n}\n\nenum DebtStatus {\n  OPEN\n  PARTIALLY_PAID\n  PAID\n  CANCELLED\n}\n\nenum FineType {\n  MORA\n  PENALTY\n  INTEREST\n  JUDICIAL_FEE\n  OTHER\n}\n\nenum FineStatus {\n  ACTIVE\n  CANCELLED\n  REVERSED\n}\n",
-  "inlineSchemaHash": "8451ebb51a76f74988390bca8c1a775d72fa54477c1a10809ed24f60ca5cdc55",
+  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"./generated/prisma\"\n}\n\ndatasource db {\n  provider = \"mysql\"\n  url      = env(\"DATABASE_URL\")\n}\n\n// generator erd {\n//   provider = \"prisma-erd-generator\"\n//   output   = \"./erd.svg\"\n// }\n\nmodel Tenant {\n  id                  String  @id @default(uuid())\n  name                String\n  code                String  @unique\n  subdomain           String  @unique\n  contact_email       String\n  country_code        String\n  kvk                 String?\n  legal_name          String?\n  address             String?\n  city                String?\n  logo_url            String?\n  number_of_employees Int?\n  phone               String?\n  website             String?\n  terms_accepted      Boolean @default(false)\n  is_active           Boolean @default(false)\n\n  created_at DateTime @default(now())\n  updated_at DateTime @updatedAt\n\n  billing_invoice  BillingInvoice[]\n  collection_cases CollectionCase[]\n  debtors          Debtor[]\n  bailiffs         Bailiff[]\n  verdicts         Verdict[]\n  chat_rooms       ChatRoom[]\n  invitations      TenantInvitation[]\n  employees        Employee[]\n  agreements       Agreement[]\n  debts            Debt[]\n  memberships      Membership[]\n\n  @@map(\"tenant\")\n}\n\nmodel User {\n  id            String  @id @default(uuid())\n  email         String  @unique @db.VarChar(80)\n  password_hash String? @db.VarChar(120)\n  fullname      String? @db.VarChar(80)\n  phone         String? @db.VarChar(25)\n  is_active     Boolean @default(true)\n\n  memberships Membership[]\n\n  created_at DateTime @default(now())\n  updated_at DateTime @updatedAt\n\n  debtors  Debtor[]\n  bailiffs Bailiff[]\n  messages ChatMessage[]\n\n  @@map(\"user\")\n}\n\nmodel Membership {\n  id        String   @id @default(uuid())\n  user_id   String\n  tenant_id String\n  role      UserRole\n\n  user   User   @relation(fields: [user_id], references: [id])\n  tenant Tenant @relation(fields: [tenant_id], references: [id])\n\n  created_at DateTime @default(now())\n\n  @@unique([user_id, tenant_id]) // evita duplicados\n  @@map(\"membership\")\n}\n\nmodel TenantInvitation {\n  id         String    @id @default(uuid())\n  tenant_id  String\n  email      String\n  fullname   String?\n  token      String    @unique\n  role       UserRole  @default(DEBTOR)\n  debtor_id  String?\n  created_at DateTime  @default(now())\n  expires_at DateTime\n  used       Boolean   @default(false)\n  used_at    DateTime?\n  tenant     Tenant    @relation(fields: [tenant_id], references: [id])\n\n  @@index([tenant_id, email])\n  @@index([tenant_id, token])\n  @@map(\"tenant_invitation\")\n}\n\nmodel Person {\n  id          String     @id @default(uuid())\n  person_type PersonType\n\n  identification_type IdentificationType\n  identification      String             @unique\n\n  first_name    String?\n  last_name     String?\n  business_name String?\n\n  email   String? @unique\n  phone   String?\n  address String?\n\n  created_at DateTime @default(now())\n  updated_at DateTime @updatedAt\n\n  debtors Debtor[]\n  // bailiff             Bailiff?\n  // employee            Employee?\n\n  @@map(\"person\")\n}\n\nmodel Parameter {\n  id String @id @default(uuid())\n\n  collection_fee_rate Float @default(0)\n  abb_rate            Float @default(0)\n\n  company_aanmaning_term_days  Int @default(0)\n  consumer_aanmaning_term_days Int @default(0)\n  company_sommatie_term_days   Int @default(0)\n  consumer_sommatie_term_days  Int @default(0)\n\n  small_company_price            Float @default(0)\n  small_company_pfc_contribution Float @default(0)\n  large_company_price            Float @default(0)\n  large_company_pfc_contribution Float @default(0)\n\n  company_aanmaning_penalty Float @default(0)\n  natural_aanmaning_penalty Float @default(0)\n  company_sommatie_penalty  Float @default(0)\n  natural_sommatie_penalty  Float @default(0)\n\n  company_reaction_limit_days Int   @default(0)\n  company_no_reaction_penalty Float @default(0)\n  natural_no_reaction_penalty Float @default(0)\n\n  company_payment_agreement_fee Float @default(0)\n  natural_payment_agreement_fee Float @default(0)\n\n  invoice_number_length Int    @default(8)\n  invoice_prefix        String @default(\"\")\n  invoice_sequence      Int    @default(0)\n\n  bank_account String @default(\"\")\n  bank_name    String @default(\"\")\n\n  created_at DateTime @default(now())\n  updated_at DateTime @updatedAt\n\n  @@map(\"parameter\")\n}\n\nmodel Verdict {\n  id                  String                   @id @default(uuid())\n  invoice_number      String                   @db.VarChar(100)\n  creditor_name       String                   @db.VarChar(100)\n  debtor_id           String\n  debt_id             String?\n  debt                Debt?                    @relation(fields: [debt_id], references: [id])\n  registration_number String                   @db.VarChar(100)\n  sentence_amount     Float\n  sentence_date       DateTime\n  status              VerdictStatus            @default(DRAFT)\n  created_at          DateTime                 @default(now())\n  updated_at          DateTime                 @updatedAt\n  procesal_cost       Float?                   @default(0)\n  tenant_id           String\n  notes               String?\n  bailiff_id          String\n  bailiff             Bailiff?                 @relation(\"BailiffToVerdict\", fields: [bailiff_id], references: [id])\n  debtor              Debtor                   @relation(fields: [debtor_id], references: [id])\n  tenant              Tenant                   @relation(fields: [tenant_id], references: [id])\n  attachments         VerdictAttachment[]\n  bailiff_services    VerdictBailiffServices[]\n  verdict_embargo     VerdictEmbargo[]\n  verdict_interest    VerdictInterest[]\n\n  @@map(\"verdict\")\n}\n\nmodel VerdictInterest {\n  id                  String                   @id @default(uuid())\n  interest_type       String\n  base_amount         Float\n  calculated_interest Float?\n  calculation_start   DateTime\n  calculation_end     DateTime\n  total_interest      Float\n  created_at          DateTime                 @default(now())\n  updated_at          DateTime                 @updatedAt\n  verdict_id          String?\n  verdict             Verdict?                 @relation(fields: [verdict_id], references: [id])\n  details             VerdictInterestDetails[]\n\n  @@map(\"verdict_interest\")\n}\n\nmodel VerdictInterestDetails {\n  id                  String          @id @default(uuid())\n  period              String\n  period_start        DateTime\n  period_end          DateTime\n  days                Int\n  annual_rate         Float\n  proportional_rate   Float\n  base_amount         Float\n  interest            Float\n  total               Float\n  verdict_interest_id String\n  created_at          DateTime        @default(now())\n  updated_at          DateTime        @updatedAt\n  verdict_interest    VerdictInterest @relation(fields: [verdict_interest_id], references: [id])\n\n  @@map(\"verdict_interest_details\")\n}\n\nmodel VerdictEmbargo {\n  id              String   @id @default(uuid())\n  verdict_id      String\n  company_name    String\n  company_phone   String\n  company_email   String\n  company_address String\n  embargo_type    String\n  embargo_date    DateTime\n  embargo_amount  Float\n  total_amount    Float\n  created_at      DateTime @default(now())\n  updated_at      DateTime @updatedAt\n  verdict         Verdict  @relation(fields: [verdict_id], references: [id])\n\n  @@map(\"verdict_embargo\")\n}\n\nmodel VerdictBailiffServices {\n  id                     String   @id @default(uuid())\n  verdict_id             String\n  service_invoice_number String\n  service_type           String\n  service_cost           Float\n  created_at             DateTime @default(now())\n  updated_at             DateTime @updatedAt\n  verdict                Verdict  @relation(fields: [verdict_id], references: [id])\n\n  @@map(\"verdict_bailiff_services\")\n}\n\nmodel VerdictAttachment {\n  id         String   @id @default(uuid())\n  verdict_id String\n  file_path  String\n  file_size  BigInt\n  created_at DateTime @default(now())\n  updated_at DateTime @updatedAt\n  file_name  String\n  verdict    Verdict  @relation(fields: [verdict_id], references: [id])\n\n  @@map(\"verdict_attachment\")\n}\n\nmodel InterestType {\n  id               String              @id @default(uuid())\n  name             String\n  calculation_type CalculationTypeEnum\n  details          InterestDetail[]\n\n  @@map(\"interest_type\")\n}\n\nmodel InterestDetail {\n  id               String       @id @default(uuid())\n  date             String\n  rate             Float\n  interest_type_id String\n  interest_type    InterestType @relation(fields: [interest_type_id], references: [id])\n\n  @@map(\"interest_detail\")\n}\n\nmodel BillingInvoice {\n  id             String                 @id @default(uuid())\n  tenant_id      String\n  invoice_number String                 @unique\n  amount         Float\n  currency       String                 @default(\"USD\")\n  issue_date     DateTime\n  due_date       DateTime\n  description    String?\n  status         String                 @default(\"unpaid\")\n  created_at     DateTime               @default(now())\n  updated_at     DateTime               @updatedAt\n  tenant         Tenant                 @relation(fields: [tenant_id], references: [id])\n  details        BillingInvoiceDetail[]\n  payments       BillingPayment[]\n\n  @@map(\"billing_invoice\")\n}\n\nmodel BillingInvoiceDetail {\n  id                  String          @id @default(uuid())\n  item_description    String\n  item_quantity       Int\n  item_unit_price     Float\n  item_total_price    Float\n  item_tax_rate       Float\n  item_tax_amount     Float\n  item_total_with_tax Float\n  created_at          DateTime        @default(now())\n  updated_at          DateTime        @updatedAt\n  billing_invoice_id  String?\n  billing_invoice     BillingInvoice? @relation(fields: [billing_invoice_id], references: [id])\n\n  @@map(\"billing_invoice_detail\")\n}\n\nmodel BillingPayment {\n  id                 String          @id @default(uuid())\n  payment_date       DateTime\n  amount             Float\n  payment_method     String\n  transaction_id     String?\n  status             String\n  created_at         DateTime        @default(now())\n  updated_at         DateTime        @updatedAt\n  billing_invoice_id String?\n  billing_invoice    BillingInvoice? @relation(fields: [billing_invoice_id], references: [id])\n\n  @@map(\"billing_payment\")\n}\n\nmodel Debt {\n  id               String         @id @default(cuid())\n  debtor_id        String\n  tenant_id        String\n  source_type      DebtSourceType\n  source_id        String\n  principal_amount Decimal        @db.Decimal(10, 2)\n\n  status     DebtStatus\n  created_at DateTime   @default(now())\n  updated_at DateTime   @updatedAt\n\n  debtor           Debtor           @relation(fields: [debtor_id], references: [id])\n  tenant           Tenant           @relation(fields: [tenant_id], references: [id])\n  payments         Payment[]\n  agreements       Agreement[]\n  fines            DebtFine[]\n  collection_cases CollectionCase[]\n  verdicts         Verdict[]\n\n  @@map(\"debt\")\n}\n\nmodel DebtFine {\n  id      String @id @default(cuid())\n  debt_id String\n  debt    Debt   @relation(fields: [debt_id], references: [id])\n\n  type        FineType // MORA | PENALTY | INTEREST | JUDICIAL_FEE | OTHER\n  description String?\n\n  amount     Decimal  @db.Decimal(10, 2)\n  applied_at DateTime @default(now())\n\n  status       FineStatus // ACTIVE | CANCELLED | REVERSED\n  cancelled_at DateTime?\n\n  created_at DateTime @default(now())\n\n  @@map(\"debt_fine\")\n}\n\nmodel CollectionCase {\n  id               String               @id @default(cuid())\n  debt_id          String?\n  debt             Debt?                @relation(fields: [debt_id], references: [id])\n  reference_number String?\n  issue_date       DateTime\n  due_date         DateTime\n  tenant_id        String\n  debtor_id        String\n  amount_original  Decimal              @db.Decimal(10, 2)\n  fee_rate         Decimal              @db.Decimal(5, 2)\n  fee_amount       Decimal              @db.Decimal(10, 2)\n  abb_rate         Decimal              @db.Decimal(5, 2)\n  abb_amount       Decimal              @db.Decimal(10, 2)\n  total_fined      Decimal              @default(0) @db.Decimal(10, 2) // total de multas\n  total_due        Decimal              @default(0) @db.Decimal(10, 2) // total con impuestos y multas\n  total_to_receive Decimal              @default(0) @db.Decimal(10, 2) // neto después de retención\n  total_paid       Decimal              @default(0) @db.Decimal(10, 2)\n  balance          Decimal              @default(0) @db.Decimal(10, 2)\n  status           CollectionCaseStatus @default(AANMANING)\n  created_at       DateTime             @default(now())\n  updated_at       DateTime             @updatedAt\n  debtor           Debtor               @relation(fields: [debtor_id], references: [id])\n  tenant           Tenant               @relation(fields: [tenant_id], references: [id])\n\n  chat_rooms                 ChatRoom[]\n  collectionCaseNotification CollectionCaseNotification[]\n\n  @@map(\"collection_case\")\n}\n\nmodel CollectionCaseNotification {\n  id                 String           @id @default(cuid())\n  collection_case_id String\n  type               NotificationType\n  title              String\n  message            String\n  sent_at            DateTime         @default(now())\n  read               Boolean          @default(false)\n  created_at         DateTime         @default(now())\n  collection_case    CollectionCase   @relation(fields: [collection_case_id], references: [id])\n\n  @@map(\"collection_case_notification\")\n}\n\nmodel Debtor {\n  id String @id @default(uuid())\n\n  tenant_id String\n  tenant    Tenant @relation(fields: [tenant_id], references: [id])\n\n  person_id String\n  person    Person @relation(fields: [person_id], references: [id])\n\n  user_id String?\n  user    User?   @relation(fields: [user_id], references: [id])\n\n  email        String\n  total_income Float  @default(0)\n\n  created_at DateTime @default(now())\n  updated_at DateTime @updatedAt\n\n  collection_cases CollectionCase[]\n  incomes          DebtorIncome[]\n  verdicts         Verdict[]\n  agreements       Agreement[]\n  debts            Debt[]\n\n  @@unique([tenant_id, email])\n  @@map(\"debtor\")\n}\n\nmodel DebtorIncome {\n  id         String   @id @default(uuid())\n  debtor_id  String\n  amount     Float\n  source     String\n  created_at DateTime @default(now())\n  updated_at DateTime @updatedAt\n  debtor     Debtor   @relation(fields: [debtor_id], references: [id])\n\n  @@map(\"debtor_incomes\")\n}\n\nmodel Bailiff {\n  id         String   @id @default(uuid())\n  fullname   String\n  email      String   @unique\n  phone      String?\n  tenant_id  String\n  user_id    String?\n  created_at DateTime @default(now())\n  updated_at DateTime @updatedAt\n\n  tenant   Tenant    @relation(fields: [tenant_id], references: [id])\n  user     User?     @relation(fields: [user_id], references: [id])\n  verdicts Verdict[] @relation(\"BailiffToVerdict\")\n\n  @@map(\"bailiff\")\n}\n\nmodel Employee {\n  id             String   @id @default(uuid())\n  identification String\n  first_name     String\n  last_name      String\n  email          String\n  address        String?\n  phone          String?\n  tenant_id      String\n  tenant         Tenant   @relation(fields: [tenant_id], references: [id])\n  created_at     DateTime @default(now())\n  updated_at     DateTime @updatedAt\n\n  @@unique([identification])\n  @@map(\"employee\")\n}\n\nmodel ChatRoom {\n  id                 String         @id @default(cuid())\n  tenant_id          String\n  tenant             Tenant         @relation(fields: [tenant_id], references: [id])\n  collection_case_id String\n  collection_case    CollectionCase @relation(fields: [collection_case_id], references: [id])\n  name               String\n  created_at         DateTime       @default(now())\n  updated_at         DateTime       @updatedAt\n  messages           ChatMessage[]\n\n  @@map(\"chat_room\")\n}\n\nmodel ChatMessage {\n  id      String   @id @default(cuid())\n  room_id String\n  room    ChatRoom @relation(fields: [room_id], references: [id])\n\n  sender_id String\n  sender    User    @relation(fields: [sender_id], references: [id])\n  message   String\n  file_url  String?\n  file_name String?\n\n  timestamp  DateTime @default(now())\n  created_at DateTime @default(now())\n  updated_at DateTime @updatedAt\n\n  @@map(\"chat_message\")\n}\n\nmodel Agreement {\n  id                 String          @id @default(cuid())\n  debtor_id          String?\n  debt_id            String\n  debt               Debt            @relation(fields: [debt_id], references: [id])\n  total_amount       Decimal         @db.Decimal(10, 2)\n  installment_amount Decimal         @db.Decimal(10, 2)\n  installments_count Int\n  start_date         DateTime\n  end_date           DateTime\n  status             AgreementStatus @default(PENDING)\n  tenant_id          String\n  tenant             Tenant          @relation(fields: [tenant_id], references: [id])\n  comment            String?\n  created_at         DateTime        @default(now())\n  updated_at         DateTime        @updatedAt\n\n  //                 Relaciones\n  debtor       Debtor?                @relation(fields: [debtor_id], references: [id])\n  installments AgreementInstallment[]\n  payment      Payment[]\n\n  @@map(\"agreement\")\n}\n\nmodel AgreementInstallment {\n  id           String            @id @default(cuid())\n  agreement_id String\n  number       Int\n  due_date     DateTime\n  amount       Decimal           @db.Decimal(10, 2)\n  status       InstallmentStatus @default(PENDING)\n  payment_id   String?\n  created_at   DateTime          @default(now())\n  updated_at   DateTime          @updatedAt\n\n  //           Relaciones\n  agreement Agreement @relation(fields: [agreement_id], references: [id])\n  payment   Payment?  @relation(fields: [payment_id], references: [id])\n\n  @@map(\"agreement_installment\")\n}\n\nmodel Payment {\n  id           String        @id @default(cuid())\n  debt_id      String?\n  debt         Debt?         @relation(fields: [debt_id], references: [id])\n  method       PaymentMethod\n  total_amount Decimal       @db.Decimal(10, 2)\n  paid_at      DateTime?     @db.Date\n\n  // Estado financiero real\n  status PaymentStatus @default(pending)\n\n  // Sentoo / Pasarela\n  provider         String              @default(\"manual\") // sentoo | stripe | cash | etc\n  provider_ref     String?             @unique\n  provider_status  PaymentSentooStatus @default(pending)\n  provider_payload Json?\n\n  reference_number String?\n  agreement_id     String?\n  created_at       DateTime @default(now())\n  updated_at       DateTime @updatedAt\n\n  allocations  PaymentAllocation[]\n  installments AgreementInstallment[]\n  agreements   Agreement?             @relation(fields: [agreement_id], references: [id])\n\n  @@map(\"payment\")\n}\n\nenum PaymentStatus {\n  pending\n  paid\n  failed\n  expired\n  reversed\n}\n\nenum PaymentSentooStatus {\n  success\n  pending\n  failed\n  cancelled\n  expired\n}\n\nmodel PaymentAllocation {\n  id         String           @id @default(cuid())\n  payment_id String\n  payment    Payment          @relation(fields: [payment_id], references: [id])\n  debt_id    String?\n  component  PaymentComponent // PRINCIPAL | FINE | INTEREST | OTHER | INSTALLMENT\n  amount     Decimal          @db.Decimal(10, 2)\n\n  @@map(\"payment_allocation\")\n}\n\nenum PaymentComponent {\n  PRINCIPAL\n  FINE\n  INTEREST\n  INSTALLMENT\n  OTHER\n}\n\nenum InstallmentStatus {\n  PENDING\n  PAID\n  OVERDUE\n}\n\nenum AgreementStatus {\n  PENDING\n  IN_NEGOTIATION\n  COUNTEROFFER\n  ACCEPTED\n  REJECTED\n  CANCELLED\n  CLOSED\n}\n\nenum CalculationTypeEnum {\n  FIXED\n  VARIABLE\n}\n\nenum VerdictStatus {\n  DRAFT\n  PENDING\n  APPROVED\n  REJECTED\n}\n\nenum NotificationType {\n  AANMANING\n  SOMMATIE\n  INGEBREKESTELLING\n  BLOKKADE\n}\n\nenum IdentificationType {\n  DNI\n  PASSPORT\n  NIE\n  CIF\n  KVK\n  OTHER\n}\n\nenum UserRole {\n  PLATFORM_OWNER\n  TENANT_ADMIN\n  AGENT\n  DEBTOR\n  BAILIFF\n  LAWYER\n  BANK\n}\n\nenum PaymentMethod {\n  TRANSFER\n  CREDIT_CARD\n}\n\nenum CollectionCaseStatus {\n  AANMANING\n  SOMMATIE\n  INGEBREKESTELLING\n  BLOKKADE\n}\n\nenum PersonType {\n  INDIVIDUAL\n  COMPANY\n}\n\nenum InvitationRole {\n  DEBTOR\n  AGENT\n  SHERIFF\n}\n\nenum DebtSourceType {\n  VERDICT\n  COLLECTION_CASE\n}\n\nenum DebtStatus {\n  OPEN\n  PARTIALLY_PAID\n  PAID\n  CANCELLED\n}\n\nenum FineType {\n  MORA\n  PENALTY\n  INTEREST\n  JUDICIAL_FEE\n  OTHER\n}\n\nenum FineStatus {\n  ACTIVE\n  CANCELLED\n  REVERSED\n}\n",
+  "inlineSchemaHash": "341f62e01076bbe0ccd75eb42dcefc8fedb31d70fea6426a310206290781095b",
   "copyEngine": true
 }
 
