@@ -1,6 +1,13 @@
+// Macbook chip M1/M2 requires specific binary targets for Prisma Client to work properly. The "native" target is a special alias that Prisma uses to automatically select the correct binary for the current platform. The "debian-openssl-1.1.x" target is included to ensure compatibility with Debian-based Linux distributions that use OpenSSL 1.1.x, which is common in many server environments.
+// generator client {
+//   provider = "prisma-client-js"
+//   output   = "./generated/prisma"
+// }
+
+// Production configuration for Prisma Client
 generator client {
-  provider = "prisma-client-js"
-  output   = "./generated/prisma"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
 }
 
 datasource db {
