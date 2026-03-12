@@ -131,6 +131,7 @@ export const sendAanmaning = async (
       }
     }
 
+    
     const tenant = await prisma.tenant.findUnique({
       where: { id: collection.tenant_id },
     });
