@@ -22,7 +22,7 @@ import { notifyError, notifySuccess } from "@/lib/notifications";
 import { useTenant } from "@/hooks/useTenant";
 import { getAllDebtorsByTenantId } from "@/actions/debtor";
 import { IParamGeneral } from "@/lib/validations/parameter";
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 
 const InitialCollectionCaseCreate: CollectionCaseCreate = {
   debtor_id: "",

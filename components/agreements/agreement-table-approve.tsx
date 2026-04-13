@@ -21,7 +21,7 @@ import {
   AgreementResponse,
   CreateAgreement,
 } from "@/lib/validations/agreement";
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 import { AlertService } from "@/lib/alerts";
 import { updatePaymentAgreement } from "@/actions/agreement";
 import { notifyInfo } from "@/lib/notifications";

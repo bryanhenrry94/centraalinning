@@ -1,7 +1,7 @@
 "use server";
 import prisma from "@/lib/prisma";
 import { getPaymentStatus, sentooRequest } from "@/lib/sentoo";
-import { Prisma } from "@/prisma/generated/prisma";
+import { Prisma } from "@prisma/client";
 
 export async function createSentooPayment(input: {
   amount: number;

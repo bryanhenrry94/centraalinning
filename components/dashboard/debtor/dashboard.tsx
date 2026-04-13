@@ -34,7 +34,7 @@ import { AgreementDialog } from "@/components/agreements/agreement-dialog";
 import { PaymentsDialog } from "@/components/payment/payments-dialog";
 import { AgreementFormDialog } from "@/components/agreements/agreement-form-dialog";
 import { PaymentFormDialog } from "@/components/payment/payment-form-dialog";
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 
 const DashboardDebtor = () => {
   const { data: session } = useSession();

@@ -26,7 +26,7 @@ import {
 import { useTenant } from "@/hooks/useTenant";
 import { notifyError, notifyInfo, notifySuccess } from "@/lib/notifications";
 import CloseIcon from "@mui/icons-material/Close";
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 import { DebtorIncomeCreate } from "@/lib/validations/debtor-incomes";
 import { getPersonById, getPersonByIdentification } from "@/actions/person";
 

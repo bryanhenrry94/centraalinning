@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 import { updateCollectionStatusAndSendNotification } from "@/actions/collection-case";
 import {
   cancelAgreementsByCollectionCase,

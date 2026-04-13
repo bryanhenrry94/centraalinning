@@ -1,6 +1,6 @@
 "use server";
 import prisma from "@/lib/prisma";
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 
 export const applyFine = async (
   debt_id: string,

@@ -14,7 +14,7 @@ import {
   sendIngebrekestellingMail,
   sendSommatieEmail,
 } from "./email";
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 
 export const sendNotification = async (caseId: string) => {
   if (!caseId) {

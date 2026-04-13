@@ -1,4 +1,4 @@
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 import { Chip } from "@mui/material";
 
 const PaymentAgreementStatusChip = ({

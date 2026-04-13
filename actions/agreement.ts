@@ -6,7 +6,7 @@ import {
   CreateAgreement,
   AgreementResponse,
 } from "@/lib/validations/agreement";
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 
 type PaymentAgreementFilter = {
   debt_id?: string;

@@ -10,7 +10,7 @@ import { CollectionCaseView } from "@/lib/validations/collection";
 import { Agreement } from "@/lib/validations/agreement";
 import { formatCurrency, formatDate } from "@/utils/formatters";
 import PaymentAgreementStatusChip from "../ui/payment-agreement-status-chip";
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 
 interface PendingRequestCardProps {
   agreement: Agreement;

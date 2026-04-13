@@ -1,7 +1,7 @@
 "use server";
 import prisma from "@/lib/prisma";
 import { User } from "@/lib/validations/user";
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 
 export const getUserByEmail = async (email: string) => {
   const user = await prisma.user.findFirst({

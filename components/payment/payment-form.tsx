@@ -11,7 +11,7 @@ import {
   PaymentCreate,
 } from "@/lib/validations/payment";
 import { registerPayment } from "@/actions/payment";
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 import { DebtorSummary } from "@/types/DebtorSummary";
 import { useSession } from "next-auth/react";
 import { getDebts } from "@/actions/debtor";

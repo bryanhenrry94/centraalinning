@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { DebtorSchema, DebtorSummarySchema } from "@/lib/validations/debtor";
 import { PaymentSchema } from "@/lib/validations/payment";
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 
 export const CollectionCaseSchema = z.object({
   id: z.cuid(),

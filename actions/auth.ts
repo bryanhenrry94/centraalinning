@@ -8,7 +8,7 @@ import {
   loginSchema,
 } from "@/lib/validations/auth";
 import { createActivationInvoice } from "./billing-invoice";
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 import { generateUniqueSubdomain } from "./tenant";
 import { AuthSignUpSchema, ITenantSignUp } from "@/lib/validations/signup";
 import { getParameter } from "./parameter";

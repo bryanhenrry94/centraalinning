@@ -13,7 +13,7 @@ import {
   existsPaymentAgreement,
   updatePaymentAgreement,
 } from "@/actions/agreement";
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 
 interface AgreementFormProps {
   id?: string;

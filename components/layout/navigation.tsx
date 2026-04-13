@@ -9,7 +9,7 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import GavelIcon from "@mui/icons-material/Gavel";
 import ChatIcon from "@mui/icons-material/Chat";
 import HandshakeIcon from "@mui/icons-material/Handshake";
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 
 type MenuItem = {
   label: string;

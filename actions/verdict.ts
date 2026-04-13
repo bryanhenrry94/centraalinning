@@ -14,7 +14,7 @@ import path from "path";
 import fs from "fs/promises";
 import { formatDate } from "@/utils/formatters";
 import { VerdictAttachment } from "@/lib/validations/verdict-attachments";
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 import {
   sendInvoiceEmail,
   sendMailRegisterVerdict,

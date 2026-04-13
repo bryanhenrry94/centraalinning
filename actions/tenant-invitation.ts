@@ -5,7 +5,7 @@ import {
   InvitationRegistrationSchema,
 } from "@/lib/validations/tenant-invitation";
 import { hash } from "bcryptjs";
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 
 import { revalidatePath } from "next/cache";
 

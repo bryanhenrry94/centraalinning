@@ -8,7 +8,7 @@ import {
   DebtorResponse,
   DebtorResponseSchema,
 } from "@/lib/validations/debtor";
-import { $Enums } from "@/prisma/generated/prisma";
+import { $Enums } from "@prisma/client";
 import { DebtorSummary } from "@/types/DebtorSummary";
 
 export const getAllDebtorsByTenantId = async (
