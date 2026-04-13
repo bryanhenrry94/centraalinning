@@ -17,6 +17,7 @@ export default function Home() {
     email: "",
   });
 
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
