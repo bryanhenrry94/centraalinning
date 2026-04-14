@@ -8,7 +8,7 @@ import { resend } from "@/lib/email";
 export async function GET() {
   const result = await sendInvoiceEmail(
     "bryanhenrry94@gmail.com",
-    "c1f459d9-a2d6-4254-a8eb-a98c53b02f13"
+    "c1f459d9-a2d6-4254-a8eb-a98c53b02f13",
   );
 
   return NextResponse.json({ message: "Send Email API is running", result });
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     const html = await render(React.createElement(TestEmail, { name }));
 
     const data = await resend.emails.send({
-      from: `PortalCI <${process.env.MAIL_FROM || "no-reply@portalci.net"}>`, // Debe ser un dominio verificado en Resend
+      from: `PortalCI <${process.env.MAIL_FROM || "no-reply@centraalinning.com"}>`, // Debe ser un dominio verificado en Resend
       to,
       subject: "Correo de prueba desde Next.js",
       html,
