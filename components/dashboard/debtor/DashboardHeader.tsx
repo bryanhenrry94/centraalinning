@@ -53,12 +53,25 @@ const StatCard = ({ title, value, subtitle, icon, color, type }: any) => (
   </Card>
 );
 
+type TenantTypes = {
+  id: string;
+  name: string;
+};
+
 const DashboardHeader = ({
   total,
   count,
+  tenants,
+  onSearch,
+  onTenantChange,
+  onStatusChange,
 }: {
   total: number;
   count: number;
+  tenants: TenantTypes[];
+  onSearch: (query: string) => void;
+  onTenantChange: (tenantId: string) => void;
+  onStatusChange: (status: string) => void;
 }) => {
   return (
     <Box>
@@ -110,12 +123,13 @@ const DashboardHeader = ({
             {/* Buscar */}
             <Grid size={{ xs: 12, md: 4 }}>
               <Typography variant="body2" mb={0.5}>
-                Buscar referencia
+                Zoeken
               </Typography>
               <TextField
                 fullWidth
                 size="small"
-                placeholder="Buscar por código o descripción..."
+                placeholder="Zoeken op referentie..."
+                onChange={(e) => onSearch(e.target.value)}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -129,24 +143,41 @@ const DashboardHeader = ({
             {/* Acreedor */}
             <Grid size={{ xs: 12, md: 3 }}>
               <Typography variant="body2" mb={0.5}>
-                Acreedor
+                Schuldeiser
               </Typography>
-              <TextField select fullWidth size="small" defaultValue="">
-                <MenuItem value="">Todos los acreedores</MenuItem>
-                <MenuItem value="1">Acreedor 1</MenuItem>
-                <MenuItem value="2">Acreedor 2</MenuItem>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                defaultValue=""
+                onChange={(e) => onTenantChange(e.target.value)}
+              >
+                <MenuItem value="">Alles</MenuItem>
+                {tenants.map((tenant: TenantTypes) => (
+                  <MenuItem key={tenant.id} value={tenant.id}>
+                    {tenant.name}
+                  </MenuItem>
+                ))}
               </TextField>
             </Grid>
 
             {/* Estado */}
             <Grid size={{ xs: 12, md: 3 }}>
               <Typography variant="body2" mb={0.5}>
-                Estado
+                Status
               </Typography>
-              <TextField select fullWidth size="small" defaultValue="">
-                <MenuItem value="">Todos los estados</MenuItem>
-                <MenuItem value="active">Activos</MenuItem>
-                <MenuItem value="inactive">Inactivos</MenuItem>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                defaultValue=""
+                onChange={(e) => onStatusChange(e.target.value)}
+              >
+                <MenuItem value="">Alles</MenuItem>
+                <MenuItem value="AANMANING">Aanmaning</MenuItem>
+                <MenuItem value="SOMMATIE">Sommatie</MenuItem>
+                <MenuItem value="INGEBREKESTELLING">Ingebrekestelling</MenuItem>
+                <MenuItem value="BLOKKADE">Blokkade</MenuItem>
               </TextField>
             </Grid>
 
@@ -157,9 +188,9 @@ const DashboardHeader = ({
                 variant="outlined"
                 startIcon={<FilterAltOffIcon />}
                 sx={{ mt: { xs: 1, md: 3 } }}
-                color="secondary"                
+                color="secondary"
               >
-                Limpiar filtros
+                Filters wissen
               </Button>
             </Grid>
           </Grid>

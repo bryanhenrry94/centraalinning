@@ -55,6 +55,11 @@ import {
 } from "@/actions/payment";
 import DashboardHeader from "./DashboardHeader";
 
+type TenantTypes = {
+  id: string;
+  name: string;
+};
+
 const DashboardDebtor = () => {
   const { data: session } = useSession();
   const user = session?.user;
@@ -70,6 +75,37 @@ const DashboardDebtor = () => {
 
   const [loadingPayment, setLoadingPayment] = useState(false);
 
+  const [tenants, setTenants] = useState<TenantTypes[]>([]);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [tenantFilter, setTenantFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
+  const [filteredDebts, setFilteredDebts] = useState<DebtorSummary[]>([]);
+
+  useEffect(() => {
+    // filtra debts según searchQuery, tenantFilter y statusFilter
+    let filtered = [...debts];
+
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (d) =>
+          d.reference &&
+          d.reference.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
+    }
+
+    if (tenantFilter) {
+      filtered = filtered.filter((d) => d.tenant_id === tenantFilter);
+    }
+
+    if (statusFilter) {
+      filtered = filtered.filter((d) => d.source_status === statusFilter);
+    }
+
+    setFilteredDebts(filtered);
+  }, [searchQuery, tenantFilter, statusFilter]);
+
   /** ---------------------------------------------------------------------
    * FETCH DEBTS
    * -------------------------------------------------------------------- */
@@ -84,7 +120,24 @@ const DashboardDebtor = () => {
       if (!session?.user?.tenant_id) return;
       const response = await getDebts({ person_id: debtor.person_id });
 
-      if (response.success) setDebts(response.data || []);
+      if (response.success) {
+        setDebts(response.data || []);
+
+        // Extraer tenants únicos
+        const uniqueTenants: TenantTypes[] = [];
+        response.data?.forEach((debt) => {
+          if (
+            debt.tenant_id &&
+            !uniqueTenants.some((t) => t.id === debt.tenant_id)
+          ) {
+            uniqueTenants.push({
+              id: debt.tenant_id,
+              name: debt.tenant_name || "Desconocido",
+            });
+          }
+        });
+        setTenants(uniqueTenants);
+      }
     } catch (error) {
       console.error("Error fetching debts:", error);
       notifyError("Error al obtener deudas");
@@ -294,6 +347,53 @@ const DashboardDebtor = () => {
     }
   };
 
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    // Implementar lógica de búsqueda aquí (ej. filtrar deudas por referencia o descripción)
+  };
+
+  const handleTenantChange = (tenantId: string) => {
+    setTenantFilter(tenantId);
+    // Implementar lógica de filtrado por tenant aquí
+  };
+
+  const handleStatusChange = (status: string) => {
+    setStatusFilter(status);
+    // Implementar lógica de filtrado por estado aquí
+  };
+
+  const ReactietermijnLabel = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+
+    const diffTime = date.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays > 0) {
+      return `${diffDays} dagen`;
+    }
+
+    if (diffDays === 0) {
+      return (
+        <Chip
+          label="Vandaag"
+          size="small"
+          color="error"
+          sx={{ fontWeight: 600 }}
+        />
+      );
+    }
+
+    return (
+      <Chip
+        label={`${Math.abs(diffDays)} dagen geleden`}
+        size="small"
+        color="error"
+        variant="filled"
+      />
+    );
+  };
+
   /** ---------------------------------------------------------------------
    * RENDER
    * -------------------------------------------------------------------- */
@@ -302,12 +402,16 @@ const DashboardDebtor = () => {
       <DashboardHeader
         total={parseFloat(
           (
-            debts.reduce((t, d) => t + (d.amount || 0), 0) +
-            debts.reduce((t, d) => t + (d.total_fined || 0), 0) -
-            debts.reduce((t, d) => t + (d.total_paid || 0), 0)
+            filteredDebts.reduce((t, d) => t + (d.amount || 0), 0) +
+            filteredDebts.reduce((t, d) => t + (d.total_fined || 0), 0) -
+            filteredDebts.reduce((t, d) => t + (d.total_paid || 0), 0)
           ).toFixed(2),
         )}
-        count={debts.length}
+        count={filteredDebts.length}
+        tenants={tenants}
+        onSearch={handleSearch}
+        onTenantChange={handleTenantChange}
+        onStatusChange={handleStatusChange}
       />
 
       <Box
@@ -355,10 +459,6 @@ const DashboardDebtor = () => {
                   "Totaal",
                   "Boet",
                   "Betaling",
-                  "Termijn",
-                  "Aflosbedrag",
-                  "Startdatum",
-                  "Einddatum",
                   "Open",
                   "Actie",
                 ].map((col) => (
@@ -379,14 +479,20 @@ const DashboardDebtor = () => {
             </TableHead>
 
             <TableBody>
-              {debts.map((debt) => (
+              {filteredDebts.map((debt) => (
                 <TableRow key={debt.id}>
                   <TableCell>{debt.tenant_name}</TableCell>
                   <TableCell>{debt.reference}</TableCell>
                   <TableCell align="center">
                     {(() => {
                       const status = formatStatus(debt.source_status);
-                      return <Chip label={status.label} color={status.color} />;
+                      return (
+                        <Chip
+                          label={status.label}
+                          color={status.color}
+                          sx={{ color: "#000" }}
+                        />
+                      );
                     })()}
                   </TableCell>
                   <TableCell align="center">
@@ -395,7 +501,9 @@ const DashboardDebtor = () => {
                       : "-"}
                   </TableCell>
                   <TableCell align="center">
-                    {debt.due_date ? formatDate(debt.due_date.toString()) : "-"}
+                    {debt.due_date
+                      ? ReactietermijnLabel(debt.due_date.toString())
+                      : "-"}
                   </TableCell>
                   <TableCell align="right">
                     {debt.amount ? formatCurrency(debt.amount) : "-"}
@@ -405,24 +513,6 @@ const DashboardDebtor = () => {
                   </TableCell>
                   <TableCell align="right">
                     {formatCurrency(debt.total_paid || 0)}
-                  </TableCell>
-                  <TableCell align="center">
-                    {debt.agreement_installments_count || "-"}
-                  </TableCell>
-                  <TableCell align="center">
-                    {debt.agreement_installment_amount
-                      ? formatCurrency(debt.agreement_installment_amount)
-                      : "-"}
-                  </TableCell>
-                  <TableCell align="center">
-                    {debt.agreement_start_date
-                      ? formatDate(debt.agreement_start_date.toString())
-                      : "-"}
-                  </TableCell>
-                  <TableCell align="center">
-                    {debt.agreement_end_date
-                      ? formatDate(debt.agreement_end_date.toString())
-                      : "-"}
                   </TableCell>
                   <TableCell align="right">
                     {formatCurrency(debt.balance)}
