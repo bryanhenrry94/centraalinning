@@ -155,7 +155,9 @@ export const PaymentsDialog: React.FC<PaymentsDialogProps> = ({
                       {payment.reference_number}
                     </TableCell>
                     <TableCell align="center">
-                      {new Date(payment.paid_at).toLocaleDateString()}
+                      {payment.paid_at
+                        ? new Date(payment.paid_at).toLocaleDateString()
+                        : "-"}
                     </TableCell>
                     <TableCell align="center">
                       {formatCurrency(payment.total_amount)}

@@ -23,6 +23,10 @@ const initialState: PaymentCreate = {
   method: $Enums.PaymentMethod.TRANSFER,
   reference_number: "",
   paid_at: new Date().toISOString().slice(0, 16), // Format for datetime-local input
+  status: "pending",
+  provider: "",
+  provider_payload: null,
+  provider_ref: null,
 };
 
 interface PaymentFormProps {

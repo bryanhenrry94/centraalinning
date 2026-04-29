@@ -241,7 +241,9 @@ const CollectionViewPage: React.FC = () => {
                       sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                     >
                       <TableCell component="th" scope="row">
-                        {new Date(payment.paid_at).toLocaleDateString()}
+                        {payment.paid_at
+                          ? new Date(payment.paid_at).toLocaleDateString()
+                          : "N/A"}
                       </TableCell>
                       <TableCell align="right">
                         {formatCurrency(payment.total_amount)}

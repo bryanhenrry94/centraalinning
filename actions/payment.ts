@@ -201,6 +201,9 @@ export const getPayments = async (
           : (payment.method as "TRANSFER" | "CREDIT_CARD"),
       paid_at: payment.paid_at ? payment.paid_at.toISOString() : "",
       reference_number: payment.reference_number ?? undefined,
+      status: payment.status as any,
+      provider_status: payment.provider_status as any,
+      provider_payload: payment.provider_payload as any,
       created_at: payment.created_at,
       updated_at: payment.updated_at,
     }));
@@ -233,6 +236,9 @@ export const getPaymentsByInvoice = async (
         : (payment.method as "TRANSFER" | "CREDIT_CARD"),
     paid_at: payment.paid_at ? payment.paid_at.toISOString() : "",
     reference_number: payment.reference_number ?? undefined,
+    status: payment.status as any,
+    provider_status: payment.provider_status as any,
+    provider_payload: payment.provider_payload as any,
     created_at: payment.created_at,
     updated_at: payment.updated_at,
   }));
