@@ -7,6 +7,9 @@ import {
   AgreementResponse,
 } from "@/lib/validations/agreement";
 import { $Enums } from "@prisma/client";
+// import AgreementApprovalEmail from "@/templates/emails/AgreementApprovalEmail";
+import { sendEmail } from "@/lib/email";
+// import { Resend } from "resend";
 
 type PaymentAgreementFilter = {
   debt_id?: string;
@@ -15,8 +18,10 @@ type PaymentAgreementFilter = {
   debtor_id?: string;
 };
 
+// export const resend = new Resend(process.env.RESEND_API_KEY);
+
 export const getPaymentAgreements = async (
-  filter?: Partial<PaymentAgreementFilter>
+  filter?: Partial<PaymentAgreementFilter>,
 ): Promise<AgreementResponse[]> => {
   const agreements = await prisma.agreement.findMany({
     where: { ...filter },
@@ -62,7 +67,7 @@ export const getPaymentAgreements = async (
 
 export const createPaymentAgreement = async (
   tenant_id: string,
-  data: CreateAgreement
+  data: CreateAgreement,
 ) => {
   const newAgreement = await prisma.agreement.create({
     data: {
@@ -126,7 +131,7 @@ export const deletePaymentAgreement = async (id: string) => {
 
 export const updatePaymentAgreement = async (
   id: string,
-  data: Partial<Agreement>
+  data: Partial<Agreement>,
 ) => {
   // Build an update object with only the fields that Prisma allows to be updated
   const updateData: {
@@ -166,7 +171,7 @@ export const updatePaymentAgreement = async (
     // recorre el numero de cuotas y crea las cuotas correspondientes
     for (let i = 0; i < updateData.installments_count; i++) {
       const installmentDate = new Date(
-        updateData.start_date || updatedAgreement.start_date
+        updateData.start_date || updatedAgreement.start_date,
       );
       installmentDate.setMonth(installmentDate.getMonth() + i);
 
@@ -199,7 +204,7 @@ export const updatePaymentAgreement = async (
 };
 
 export const existsPaymentAgreement = async (
-  debt_id: string
+  debt_id: string,
 ): Promise<boolean> => {
   const count = await prisma.agreement.count({
     where: { debt_id, status: $Enums.AgreementStatus.ACCEPTED },
@@ -209,7 +214,7 @@ export const existsPaymentAgreement = async (
 };
 
 export const getPaymentAgreementById = async (
-  id: string
+  id: string,
 ): Promise<Agreement | null> => {
   const agreement = await prisma.agreement.findUnique({
     where: { id },
@@ -236,7 +241,7 @@ export const getPaymentAgreementById = async (
 };
 
 export const countPaymentAgreementsByCollection = async (
-  debt_id: string
+  debt_id: string,
 ): Promise<number> => {
   const count = await prisma.agreement.count({
     where: { debt_id },
@@ -280,7 +285,7 @@ export const hasAgreement = async (debt_id: string): Promise<boolean> => {
 
 // tiene pagos al dia del acuerdo de pago
 export const hasPaymentsUpToDate = async (
-  debt_id: string
+  debt_id: string,
 ): Promise<boolean> => {
   try {
     const agreement = await prisma.agreement.findFirst({
@@ -324,7 +329,7 @@ export const cancelAgreementsByCollectionCase = async (debt_id: string) => {
 };
 
 export const getAgreementsByDebtId = async (
-  debt_id: string
+  debt_id: string,
 ): Promise<AgreementResponse[]> => {
   const agreements = await prisma.agreement.findMany({
     where: { debt_id },
@@ -365,4 +370,105 @@ export const getAgreementsByDebtId = async (
         }
       : undefined,
   }));
+};
+
+export const getAgreementByDebtId = async (
+  debt_id: string,
+): Promise<AgreementResponse | null> => {
+  const agreement = await prisma.agreement.findFirst({
+    where: { debt_id },
+    include: {
+      debtor: {
+        include: {
+          person: true,
+        },
+      },
+      debt: true,
+    },
+  });
+
+  if (!agreement) return null;
+
+  return {
+    id: agreement.id,
+    tenant_id: agreement.tenant_id,
+    debt_id: agreement.debt_id ?? undefined,
+    total_amount: Number(agreement.total_amount),
+    installment_amount: Number(agreement.installment_amount),
+    installments_count: agreement.installments_count,
+    start_date: agreement.start_date,
+    end_date: agreement.end_date,
+    status: String(agreement.status),
+    created_at: agreement.created_at ?? undefined,
+    updated_at: agreement.updated_at ?? undefined,
+    debtor_id: agreement.debtor_id ?? undefined,
+    comment: agreement.comment ?? undefined,
+    debtor: agreement.debtor
+      ? {
+          id: agreement.debtor.id,
+          fullname:
+            agreement.debtor.person?.first_name +
+              " " +
+              agreement.debtor.person?.last_name ||
+            agreement.debtor.person?.business_name ||
+            "",
+          email: agreement.debtor.email ?? undefined,
+        }
+      : undefined,
+  };
+};
+
+export const notifyApprovalAgreement = async (agreement_id: string) => {
+  const agreement = await getPaymentAgreementById(agreement_id);
+
+  if (!agreement) {
+    throw new Error("Agreement not found");
+  }
+
+  if (!agreement.debtor_id) {
+    throw new Error("Agreement has no debtor associated");
+  }
+
+  const debtor = await prisma.debtor.findUnique({
+    where: { id: agreement.debtor_id },
+    include: { person: true },
+  });
+
+  if (!debtor) {
+    throw new Error("Debtor not found");
+  }
+
+  if (!debtor.email) {
+    throw new Error("Debtor has no email");
+  }
+
+  const debtorName =
+    debtor.person?.first_name || debtor.person?.last_name
+      ? `${debtor.person?.first_name ?? ""} ${debtor.person?.last_name ?? ""}`.trim()
+      : debtor.person?.business_name || "Debtor";
+
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL || "https://centraalinning.com";
+  const logoUrl = process.env.NEXT_PUBLIC_LOGO_URL || "";
+
+  const invitationLink = `${baseUrl}/login?debt_id=${agreement.debt_id}`;
+
+  // const { data, error } = await resend.emails.send({
+  //   from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
+  //   to: [debtor.email],
+  //   subject: `Agreement Approved: ${agreement.total_amount} over ${agreement.installments_count} installments`,
+  //   react: AgreementApprovalEmail({
+  //     logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
+  //     fullname: debtorName || "Debtor",
+  //     invitationLink: invitationLink
+  //       ? invitationLink
+  //       : "https://centraalinning.com/",
+  //   }),
+  // });
+
+  sendEmail({
+    to: debtor.email,
+    subject: `Betalingsovereenkomst Goedgekeurd: ${agreement.total_amount} over ${agreement.installments_count} termijnen`,
+    html: "Aprobado",
+  });
 };

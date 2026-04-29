@@ -11,10 +11,7 @@ import {
   CollectionCaseView,
 } from "@/lib/validations/collection";
 import { $Enums } from "@prisma/client";
-import {
-  getNotificationDays,
-  sendNotification,
-} from "@/actions/notification";
+import { getNotificationDays, sendNotification } from "@/actions/notification";
 import { getParameter } from "./parameter";
 
 type CollectionCaseFilter = {
@@ -24,10 +21,13 @@ type CollectionCaseFilter = {
 };
 
 export const getAllCollectionCases = async (
-  params: CollectionCaseFilter
+  params: CollectionCaseFilter,
 ): Promise<CollectionCaseResponse[]> => {
   const collectionCases = await prisma.collectionCase.findMany({
     where: { ...params },
+    orderBy: {
+      created_at: "desc", // 👈 más reciente primero
+    },
     include: {
       debtor: {
         include: {
@@ -73,7 +73,7 @@ export const getAllCollectionCases = async (
 };
 
 export const getCollectionById = async (
-  id: string
+  id: string,
 ): Promise<CollectionCase> => {
   const collection = await prisma.collectionCase.findUnique({
     where: { id },
@@ -104,7 +104,7 @@ export const getCollectionById = async (
 };
 
 export const getCollectionViewById = async (
-  id: string
+  id: string,
 ): Promise<CollectionCaseView> => {
   const collection = await prisma.collectionCase.findUnique({
     where: { id },
@@ -148,7 +148,7 @@ export const getCollectionViewById = async (
 
 export const createCollectionCase = async (
   data: Partial<CollectionCaseCreate>,
-  tenant_id: string
+  tenant_id: string,
 ) => {
   const parsedData = CollectionCaseCreateSchema.parse(data);
 
@@ -180,18 +180,18 @@ export const createCollectionCase = async (
 
   // Calcular montos
   const fee_amount = Number(
-    ((parsedData.amount_original * fee_rate) / 100).toFixed(2)
+    ((parsedData.amount_original * fee_rate) / 100).toFixed(2),
   );
   const abb_amount = Number(((fee_amount * abb_rate) / 100).toFixed(2));
 
   // total con impuestos y multas
   const total_due = Number(
-    (parsedData.amount_original + fee_amount + abb_amount).toFixed(2)
+    (parsedData.amount_original + fee_amount + abb_amount).toFixed(2),
   );
 
   // neto después de retención
   const total_to_receive = Number(
-    (parsedData.amount_original - fee_amount - abb_amount).toFixed(2)
+    (parsedData.amount_original - fee_amount - abb_amount).toFixed(2),
   );
 
   const balance = parsedData.amount_original + fee_amount + abb_amount;
@@ -199,14 +199,14 @@ export const createCollectionCase = async (
   // Calcular fechas de recordatorio
   const day_term = await getNotificationDays(
     parsedData.status as $Enums.CollectionCaseStatus,
-    debtor.person?.person_type || "INDIVIDUAL"
+    debtor.person?.person_type || "INDIVIDUAL",
   );
 
   const daysToAdd =
     typeof day_term === "number" && !isNaN(day_term) ? day_term : 0;
 
   const due_date = new Date(
-    parsedData.issue_date.getTime() + daysToAdd * 24 * 60 * 60 * 1000
+    parsedData.issue_date.getTime() + daysToAdd * 24 * 60 * 60 * 1000,
   );
 
   // Crear el caso de cobranza
@@ -278,7 +278,7 @@ export const createCollectionCase = async (
 
 export const updateCollection = async (
   id: string,
-  data: Partial<typeof CollectionCaseSchema>
+  data: Partial<typeof CollectionCaseSchema>,
 ) => {
   const parsedData = CollectionCaseSchema.partial().parse(data);
 
@@ -287,7 +287,7 @@ export const updateCollection = async (
 
   // Remove undefined properties to match Prisma types
   const filteredUpdateData = Object.fromEntries(
-    Object.entries(updateData).filter(([_, v]) => v !== undefined)
+    Object.entries(updateData).filter(([_, v]) => v !== undefined),
   );
   const updatedCollection = await prisma.collectionCase.update({
     where: { id },
@@ -298,7 +298,7 @@ export const updateCollection = async (
 
 export const updateCollectionStatusAndSendNotification = async (
   id: string,
-  status: $Enums.CollectionCaseStatus
+  status: $Enums.CollectionCaseStatus,
 ) => {
   await prisma.collectionCase.update({
     where: {

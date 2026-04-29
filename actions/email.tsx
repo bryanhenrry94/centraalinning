@@ -48,6 +48,14 @@ const getEmailByEnv = async (to: string) => {
 
   if (isDev && devRedirect) {
     console.log(`🔸 [DEV MODE] Redirecting email to: ${devRedirect}`);
+
+    if (process.env.OWNER_EMAIL_ADDRESS) {
+      console.log(
+        `🔸 [DEV MODE] Also sending email to owner: ${process.env.OWNER_EMAIL_ADDRESS}`,
+      );
+      return [devRedirect, process.env.OWNER_EMAIL_ADDRESS];
+    }
+
     return [devRedirect];
   }
 

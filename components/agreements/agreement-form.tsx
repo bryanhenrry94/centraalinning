@@ -14,6 +14,7 @@ import {
   updatePaymentAgreement,
 } from "@/actions/agreement";
 import { $Enums } from "@prisma/client";
+import { notifyTenantNewAgreement } from "@/actions/tenant";
 
 interface AgreementFormProps {
   id?: string;
@@ -94,7 +95,7 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
         const exists = await existsPaymentAgreement(debt_id);
         if (exists) {
           return notifyError(
-            "Ya existe un acuerdo de pago para esta collection"
+            "Ya existe un acuerdo de pago para esta collection",
           );
         }
       }
@@ -134,6 +135,11 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
 
       await createPaymentAgreement(session.user.tenant_id, payload);
       notifyInfo("Acuerdo de pago creado correctamente");
+
+      // notifica al tenant que se ha creado un nuevo acuerdo de pago (para que pueda revisar y aceptar/rechazar)
+      await notifyTenantNewAgreement(session.user.tenant_id, payload);
+      notifyInfo("El tenant ha sido notificado sobre el nuevo acuerdo de pago");
+
       onSave?.();
     } catch (err) {
       console.error(err);

@@ -1,9 +1,11 @@
 "use server";
+import { sendEmail } from "@/lib/email";
 import prisma from "@/lib/prisma";
+import { CreateAgreement } from "@/lib/validations/agreement";
 import { Tenant } from "@/lib/validations/tenant";
 
 export const getTenantByEmail = async (
-  email: string
+  email: string,
 ): Promise<{ subdomain: string; clientName: string }[]> => {
   if (!email) {
     throw new Error("Email is required");
@@ -29,7 +31,7 @@ export const getTenantByEmail = async (
 };
 
 export const getTenantById = async (
-  id: string
+  id: string,
 ): Promise<{ tenant: Tenant } | null> => {
   if (!id) {
     throw new Error("Tenant ID is required");
@@ -94,7 +96,7 @@ export const validaSubdomain = async (subdomain: string) => {
 };
 
 export const generateUniqueSubdomain = async (
-  company_name: string
+  company_name: string,
 ): Promise<string> => {
   // sanitize: lowercase, remove accents/diacritics, remove symbols except spaces and hyphens,
   // trim, replace spaces with single hyphen and collapse multiple hyphens
@@ -125,4 +127,28 @@ export const generateUniqueSubdomain = async (
   }
 
   return subdomain;
+};
+
+export const notifyTenantNewAgreement = async (
+  tenant_id: string,
+  agreementData: CreateAgreement,
+) => {
+  // Aquí podrías implementar la lógica para enviar una notificación al tenant.
+  // Esto podría ser a través de un correo electrónico, una notificación push, o cualquier otro método que prefieras.
+  // Por ejemplo, podrías usar un servicio de correo electrónico como SendGrid o Amazon SES para enviar un email al tenant.
+
+  // Ejemplo de pseudo-código para enviar un email:
+  const tenant = await prisma.tenant.findUnique({ where: { id: tenant_id } });
+  if (tenant) {
+    await sendEmail({
+      to: tenant.contact_email,
+      subject: "Nuevo Acuerdo de Pago Creado",
+      html: `Se ha creado un nuevo acuerdo de pago con los siguientes detalles: ${JSON.stringify(agreementData)}`,
+    });
+  }
+
+  console.log(
+    `Notificación enviada al tenant ${tenant_id} sobre el nuevo acuerdo de pago:`,
+    agreementData,
+  );
 };

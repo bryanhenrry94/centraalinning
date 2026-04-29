@@ -12,7 +12,7 @@ import { $Enums } from "@prisma/client";
 import { DebtorSummary } from "@/types/DebtorSummary";
 
 export const getAllDebtorsByTenantId = async (
-  tenant_id: string
+  tenant_id: string,
 ): Promise<DebtorResponse[]> => {
   try {
     const debtors = await prisma.debtor.findMany({
@@ -25,7 +25,7 @@ export const getAllDebtorsByTenantId = async (
     });
 
     const debtorsParsed = debtors.map((debtor) =>
-      DebtorResponseSchema.parse(debtor)
+      DebtorResponseSchema.parse(debtor),
     ) as DebtorResponse[];
 
     console.log("Debtors parsed:", debtorsParsed);
@@ -62,7 +62,7 @@ export const getDebtorById = async (id: string): Promise<DebtorBase | null> => {
 };
 
 export const getDebtorByUserId = async (
-  user_id: string
+  user_id: string,
 ): Promise<DebtorBase | null> => {
   try {
     const debtor = await prisma.debtor.findFirst({
@@ -80,7 +80,7 @@ export const getDebtorByUserId = async (
 
 export const createDebtor = async (
   debtor: DebtorCreate,
-  tenant_id: string
+  tenant_id: string,
 ): Promise<{ success: boolean; error?: string; data?: DebtorBase }> => {
   try {
     const debtorFormatted = DebtorCreateSchema.parse(debtor);
@@ -161,7 +161,7 @@ export const createDebtor = async (
 export const updateDebtor = async (
   debtor: DebtorCreate,
   tenant_id: string,
-  id: string
+  id: string,
 ): Promise<{ success: boolean; error?: string; data?: DebtorBase }> => {
   try {
     const updatedDebtor = await prisma.$transaction(async (tx) => {
@@ -211,7 +211,7 @@ export const updateDebtor = async (
 
 export const getDebtorInfo = async (
   tenant_id: string,
-  identification: string
+  identification: string,
 ): Promise<DebtorBase> => {
   const debtor = await prisma.debtor.findFirst({
     where: {
@@ -227,7 +227,7 @@ export const getDebtorInfo = async (
 
   if (!debtor) {
     throw new Error(
-      `Debtor with ID ${identification} not found for tenant ${tenant_id}`
+      `Debtor with ID ${identification} not found for tenant ${tenant_id}`,
     );
   }
 
@@ -240,7 +240,7 @@ export const getDebtorInfo = async (
 
 export const createDebtorIfNotExists = async (
   tenant_id: string,
-  debtor: DebtorCreate
+  debtor: DebtorCreate,
 ): Promise<DebtorCreate | null> => {
   return null;
 
@@ -305,7 +305,7 @@ export const createDebtorIfNotExists = async (
 export const validaEmailDebtorUserExist = async (
   email: string,
   tenant_id: string,
-  debtor_id: string
+  debtor_id: string,
 ): Promise<boolean> => {
   if (email) {
     // Busca el usuario por email y tenant
@@ -334,7 +334,7 @@ export const validaEmailDebtorUserExist = async (
 };
 
 export const sendFinancialSummaryEmail = async (
-  debtor_id: string
+  debtor_id: string,
 ): Promise<boolean> => {
   try {
     const debtor = await prisma.debtor.findUnique({
@@ -367,23 +367,29 @@ export const sendFinancialSummaryEmail = async (
 interface DebtFilters {
   tenant_id?: string;
   debtor_id?: string;
+  person_id?: string;
 }
 
 export const getDebts = async (
-  filters: DebtFilters
+  filters: DebtFilters,
 ): Promise<{ success: boolean; data?: DebtorSummary[]; message?: string }> => {
   try {
     const whereClauses: string[] = [];
     const params: any[] = [];
 
     if (filters.tenant_id) {
-      whereClauses.push(`tenant_id = $${params.length + 1}`);
+      whereClauses.push(`tenant_id = ?`);
       params.push(filters.tenant_id);
     }
 
     if (filters.debtor_id) {
-      whereClauses.push(`debtor_id = $${params.length + 1}`);
+      whereClauses.push(`debtor_id = ?`);
       params.push(filters.debtor_id);
+    }
+
+    if (filters.person_id) {
+      whereClauses.push(`person_id = ?`);
+      params.push(filters.person_id);
     }
 
     const whereSQL =
@@ -397,7 +403,6 @@ export const getDebts = async (
 
     const raw = await prisma.$queryRawUnsafe<any[]>(query, ...params);
 
-    // Convertir todos los Decimal a number
     const summary = raw.map((row) => {
       const result: any = {};
 
@@ -416,7 +421,7 @@ export const getDebts = async (
 
     summary.sort(
       (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
 
     return { success: true, data: summary };

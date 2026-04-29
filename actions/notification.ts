@@ -303,7 +303,8 @@ export const getLastNotificationDate = async (
   });
 
   if (!notificationRecord) {
-    throw new Error(`Notification of type ${type} not found`);
+    // throw new Error(`Notification of type ${type} not found`);
+    return new Date(0); // Retorna una fecha muy antigua si no se encuentra la notificación
   }
 
   return notificationRecord.sent_at;

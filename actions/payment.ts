@@ -1,14 +1,22 @@
 "use server";
 import prisma from "@/lib/prisma";
 import { Payment, PaymentCreate } from "@/lib/validations/payment";
+import { $Enums, Prisma } from "@prisma/client";
 
 export const registerPayment = async (payload: PaymentCreate) => {
   // Create payment
+
   await prisma.payment.create({
     data: {
-      ...payload,
-      paid_at: new Date(payload.paid_at),
-      created_at: new Date(),
+      debt_id: payload.debt_id,
+      method: payload.method || "TRANSFER",
+      provider: payload.provider || "manual",
+      provider_ref: payload.provider_ref || "",
+      provider_status: "pending",
+      total_amount: new Prisma.Decimal(payload.total_amount),
+      status: (payload.status as any) || "pending",
+      provider_payload: payload.provider_payload || "",
+      paid_at: null,
     },
   });
 
@@ -574,4 +582,78 @@ export const distributePayment = async (paymentDetailId: string) => {
   //   }
   // }
   // return { success: true, paymentApplications };
+};
+
+export const hasPendingPayments = async (debt_id: string): Promise<boolean> => {
+  const pendingPayments = await prisma.payment.findMany({
+    where: {
+      debt_id: debt_id,
+      provider_status: "pending",
+    },
+  });
+
+  return pendingPayments.length > 0;
+};
+
+export const getLinkToPayment = async (
+  paymentId: string,
+): Promise<string | null> => {
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId },
+  });
+
+  if (!payment) {
+    return null;
+  }
+
+  // Aquí asumimos que el payload tiene una URL, esto dependerá de cómo se guarde el payload
+  const payload =
+    typeof payment.provider_payload === "string"
+      ? JSON.parse(payment.provider_payload)
+      : (payment.provider_payload as any);
+
+  return payload?.url || null;
+};
+
+export const getPaymentByDebtId = async (
+  debt_id: string,
+): Promise<Payment | null> => {
+  const payment = await prisma.payment.findFirst({
+    where: { debt_id: debt_id },
+  });
+
+  if (!payment) {
+    return null;
+  }
+
+  const statusMap: {
+    [key: string]: "pending" | "failed" | "cancelled" | "completed";
+  } = {
+    pending: "pending",
+    failed: "failed",
+    cancelled: "cancelled",
+    completed: "completed",
+    paid: "completed",
+  };
+
+  return {
+    ...payment,
+    debt_id: payment.debt_id ?? "",
+    total_amount:
+      typeof payment.total_amount === "object" &&
+      "toNumber" in payment.total_amount
+        ? payment.total_amount.toNumber()
+        : Number(payment.total_amount),
+    method:
+      payment.method === "CREDIT_CARD"
+        ? "CREDIT_CARD"
+        : (payment.method as "TRANSFER" | "CREDIT_CARD"),
+    status: statusMap[payment.status] || "pending",
+    paid_at: payment.paid_at ? payment.paid_at.toISOString() : "",
+    reference_number: payment.reference_number ?? undefined,
+    created_at: payment.created_at,
+    updated_at: payment.updated_at,
+    provider_status: payment.provider_status as any,
+    provider_payload: payment.provider_payload as any,
+  };
 };

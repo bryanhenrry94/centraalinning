@@ -73,6 +73,8 @@ export async function processCollectionCaseWorkflow() {
     // Obtener la fecha de la última notificación relevante
     const lastNotificationDate = await getLastNotificationDate(c.id, c.status);
 
+    console.log("lastNotificationDate: ", lastNotificationDate);
+
     // Calcular la próxima fecha de notificación
     if (lastNotificationDate) {
       const nextNotificationDate = new Date(lastNotificationDate);

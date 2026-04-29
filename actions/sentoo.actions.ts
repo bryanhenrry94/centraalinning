@@ -10,7 +10,7 @@ export async function createSentooPayment(input: {
 }) {
   try {
     // Convierte dólares a centavos de forma segura
-    console.log("activationFee: ", input.amount);
+    console.log("before amountSentoo: ", input.amount);
     const amountSentoo = await toCents(input.amount);
 
     // Validación requerida por Sentoo
@@ -18,7 +18,12 @@ export async function createSentooPayment(input: {
       throw new Error("Sentoo amount must be at least 100 cents ($1.00)");
     }
 
-    console.log("amountSentoo: ", amountSentoo);
+    console.log("after amountSentoo: ", amountSentoo);
+
+    const reference =
+      input.reference && input.reference.trim() !== ""
+        ? input.reference
+        : `debt_${Date.now()}`;
 
     const body = new URLSearchParams({
       sentoo_merchant: process.env.SENTOO_MERCHANT!,
@@ -26,10 +31,13 @@ export async function createSentooPayment(input: {
       sentoo_amount: amountSentoo.toString(),
       sentoo_description: input.description,
       sentoo_expires: "2026-12-31T23:59:59+00:00",
-      sentoo_return_url: `${process.env.APP_URL}/payment/return?status=`,
+      sentoo_reference: reference,
+      sentoo_return_url: `${process.env.APP_URL}/payment/return`,
+      sentoo_callback_url: `${process.env.APP_URL}/api/sentoo/webhook`,
     });
 
-    const providerPayload = Object.fromEntries(body.entries());
+    console.log("BODY STRING:", body.toString());
+    console.log("BODY OBJECT:", Object.fromEntries(body.entries()));
 
     const result = await sentooRequest("/v1/payment/new", body);
 
@@ -60,24 +68,12 @@ export async function createSentooPayment(input: {
       };
     }
 
-    await prisma.payment.create({
-      data: {
-        method: "TRANSFER",
-        provider: "sentoo",
-        provider_ref: sentooSuccess.message || "",
-        provider_status: "pending",
-        total_amount: new Prisma.Decimal(input.amount),
-        status: "pending",
-        provider_payload: providerPayload,
-        paid_at: null,
-      },
-    });
-
     // ✅ Datos reales del pago
     const payment = {
       id: sentooSuccess.message, // este es el paymentId
       url: sentooSuccess.data.url,
       qrCode: sentooSuccess.data.qr_code,
+      payload: Object.fromEntries(body.entries()),
     };
 
     return {

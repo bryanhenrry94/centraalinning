@@ -124,7 +124,7 @@ export const PaymentCXForm = ({
         disabled={disabled || loading}
         loading={loading}
       >
-        Pagar
+        Betalen
       </Button>
       <Typography
         variant="caption"

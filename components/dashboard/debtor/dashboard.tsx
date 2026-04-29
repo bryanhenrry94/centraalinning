@@ -16,17 +16,27 @@ import {
   Stack,
   Tooltip,
   Button,
+  TextField,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Chip,
 } from "@mui/material";
 
 import HandshakeIcon from "@mui/icons-material/Handshake";
+import PaymentsIcon from "@mui/icons-material/Payments";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 
 import { formatCurrency, formatDate } from "@/utils/formatters";
 import { AgreementResponse } from "@/lib/validations/agreement";
-import { notifyError } from "@/lib/notifications";
+import { notifyError, notifyInfo, notifyWarning } from "@/lib/notifications";
 
-import { getAgreementsByDebtId } from "@/actions/agreement";
+import {
+  getAgreementByDebtId,
+  getAgreementsByDebtId,
+} from "@/actions/agreement";
 
 import { getDebtorByUserId, getDebts } from "@/actions/debtor";
 import { DebtorSummary } from "@/types/DebtorSummary";
@@ -35,6 +45,15 @@ import { PaymentsDialog } from "@/components/payment/payments-dialog";
 import { AgreementFormDialog } from "@/components/agreements/agreement-form-dialog";
 import { PaymentFormDialog } from "@/components/payment/payment-form-dialog";
 import { $Enums } from "@prisma/client";
+import { createSentooPayment } from "@/actions/sentoo.actions";
+import { AlertService } from "@/lib/alerts";
+import { PaymentCreate } from "@/lib/validations/payment";
+import {
+  getPaymentByDebtId,
+  hasPendingPayments,
+  registerPayment,
+} from "@/actions/payment";
+import DashboardHeader from "./DashboardHeader";
 
 const DashboardDebtor = () => {
   const { data: session } = useSession();
@@ -49,6 +68,8 @@ const DashboardDebtor = () => {
   const [openModalPayment, setOpenModalPayment] = useState(false);
   const [openModalPaymentForm, setOpenModalPaymentForm] = useState(false);
 
+  const [loadingPayment, setLoadingPayment] = useState(false);
+
   /** ---------------------------------------------------------------------
    * FETCH DEBTS
    * -------------------------------------------------------------------- */
@@ -61,7 +82,7 @@ const DashboardDebtor = () => {
       }
 
       if (!session?.user?.tenant_id) return;
-      const response = await getDebts({ debtor_id: debtor.id });
+      const response = await getDebts({ person_id: debtor.person_id });
 
       if (response.success) setDebts(response.data || []);
     } catch (error) {
@@ -119,11 +140,176 @@ const DashboardDebtor = () => {
     await fetchDebts();
   };
 
+  const handlePaymentDebtor = async (debt: DebtorSummary) => {
+    if (!debt) {
+      notifyError("No se seleccionó una deuda para pagar");
+      return;
+    }
+
+    setLoadingPayment(true);
+
+    try {
+      const collectionCaseId = debt.source_id;
+
+      if (!collectionCaseId) {
+        notifyError("No se encontró el caso de cobranza asociado a esta deuda");
+        return;
+      }
+
+      // 1. Validar pagos pendientes
+      const existingPayment = await getPendingPayment(debt.id);
+      if (existingPayment) {
+        handleExistingPayment(existingPayment);
+        return;
+      }
+
+      // 2. Validar acuerdos
+      const agreement = await getAgreementByDebtId(debt.id);
+
+      if (agreement?.status === $Enums.AgreementStatus.PENDING) {
+        notifyWarning(
+          "Tu solicitud de acuerdo de pago está pendiente de aprobación.",
+        );
+        return;
+      }
+
+      const amountToPay = agreement?.installment_amount ?? debt.balance;
+
+      // 3. Confirmación usuario (await real)
+      const confirmed = await AlertService.showConfirm(
+        "¿Estás seguro?",
+        `Vas a pagar ${formatCurrency(amountToPay)} para la deuda ${debt.reference}.`,
+        "Sí, pagar",
+        "Cancelar",
+      );
+
+      if (!confirmed) return;
+
+      // 4. Crear pago
+      await processPayment({
+        debt,
+        amountToPay,
+        collectionCaseId,
+      });
+    } catch (error) {
+      console.error(error);
+      notifyError("Error al procesar el pago");
+    } finally {
+      setLoadingPayment(false);
+    }
+  };
+
+  const getPendingPayment = async (debtId: string) => {
+    const hasPending = await hasPendingPayments(debtId);
+    if (!hasPending) return null;
+
+    return await getPaymentByDebtId(debtId);
+  };
+
+  const handleExistingPayment = (payment: any) => {
+    notifyWarning("Tienes un pago pendiente. Redirigiendo al proveedor...");
+
+    if (payment?.provider === "sentoo") {
+      try {
+        const payload = JSON.parse(payment.provider_payload || "{}");
+        const url = payload?.success?.data?.url;
+
+        if (url) window.location.href = url;
+      } catch {
+        notifyError("No se pudo recuperar el link de pago");
+      }
+    }
+  };
+
+  const processPayment = async ({
+    debt,
+    amountToPay,
+    collectionCaseId,
+  }: {
+    debt: DebtorSummary;
+    amountToPay: number;
+    collectionCaseId: string;
+  }) => {
+    const newTab = window.open("", "_blank");
+
+    try {
+      const res = await createSentooPayment({
+        amount: amountToPay,
+        description: `Pago deuda ${debt.reference}`,
+        reference: `debt-${debt.id}-case-${collectionCaseId}-${Date.now()}`,
+      });
+
+      if (!res.success || !res.payment?.url) {
+        throw new Error("Error al crear el pago en Sentoo");
+      }
+
+      const payment: PaymentCreate = {
+        debt_id: debt.id,
+        method: "TRANSFER",
+        total_amount: amountToPay,
+        paid_at: null,
+        status: "pending",
+        provider: "sentoo",
+        provider_ref: res.payment.id,
+        provider_payload: JSON.stringify(res.raw),
+        reference_number: "",
+        agreement_id: null,
+      };
+
+      const paymentRes = await registerPayment(payment);
+
+      if (!paymentRes.success) {
+        notifyError("Error al registrar el pago");
+        newTab?.close();
+        return;
+      }
+
+      notifyInfo("Redirigiendo a la pasarela de pago...");
+
+      if (newTab) {
+        newTab.location.href = res.payment.url;
+      } else {
+        window.location.href = res.payment.url;
+      }
+    } catch (error) {
+      console.error(error);
+      notifyError("Error al crear el pago");
+      newTab?.close();
+    }
+  };
+
+  const formatStatus = (status: string) => {
+    // AANMANING, SOMMATIE, ETC
+    switch (status) {
+      case "AANMANING":
+        return { label: "Aanmaning", color: "info" as const };
+      case "SOMMATIE":
+        return { label: "Sommatie", color: "warning" as const };
+      case "INGEBREKESTELLING":
+        return { label: "Ingebrekestelling", color: "warning" as const };
+      case "BLOKKADE":
+        return { label: "Blokkade", color: "error" as const };
+      default:
+        return { label: status, color: "default" as const };
+    }
+  };
+
   /** ---------------------------------------------------------------------
    * RENDER
    * -------------------------------------------------------------------- */
   return (
     <Container maxWidth="xl">
+      <DashboardHeader
+        total={parseFloat(
+          (
+            debts.reduce((t, d) => t + (d.amount || 0), 0) +
+            debts.reduce((t, d) => t + (d.total_fined || 0), 0) -
+            debts.reduce((t, d) => t + (d.total_paid || 0), 0)
+          ).toFixed(2),
+        )}
+        count={debts.length}
+      />
+
       <Box
         sx={{
           display: "flex",
@@ -136,13 +322,13 @@ const DashboardDebtor = () => {
         <Typography variant="h4" gutterBottom sx={{ mt: 1 }}>
           Mijn schulden
         </Typography>
-        <Button
+        {/* <Button
           variant="contained"
           size="small"
           onClick={handleOpenPaymentForm}
         >
           Betalen
-        </Button>
+        </Button> */}
       </Box>
 
       <Suspense fallback={<h1>Loading collection cases...</h1>}>
@@ -161,7 +347,7 @@ const DashboardDebtor = () => {
             <TableHead>
               <TableRow>
                 {[
-                  "Zaaktype",
+                  "Schuldeiser",
                   "Referentie",
                   "Status",
                   "Datum",
@@ -195,9 +381,14 @@ const DashboardDebtor = () => {
             <TableBody>
               {debts.map((debt) => (
                 <TableRow key={debt.id}>
-                  <TableCell>{debt.type}</TableCell>
+                  <TableCell>{debt.tenant_name}</TableCell>
                   <TableCell>{debt.reference}</TableCell>
-                  <TableCell align="center">{debt.status}</TableCell>
+                  <TableCell align="center">
+                    {(() => {
+                      const status = formatStatus(debt.source_status);
+                      return <Chip label={status.label} color={status.color} />;
+                    })()}
+                  </TableCell>
                   <TableCell align="center">
                     {debt.issue_date
                       ? formatDate(debt.issue_date.toString())
@@ -243,7 +434,7 @@ const DashboardDebtor = () => {
                           size="small"
                           onClick={() => openAgreementModal(debt)}
                         >
-                          <HandshakeIcon color="primary" fontSize="small" />
+                          <HandshakeIcon color="info" fontSize="small" />
                         </IconButton>
                       </Tooltip>
 
@@ -252,7 +443,7 @@ const DashboardDebtor = () => {
                           size="small"
                           onClick={() => openPaymentModal(debt)}
                         >
-                          <AttachMoneyIcon fontSize="small" />
+                          <PaymentsIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
 
@@ -264,7 +455,23 @@ const DashboardDebtor = () => {
                           <VisibilityIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
+
+                      <Tooltip title="Betalen">
+                        <Button
+                          size="small"
+                          onClick={() => handlePaymentDebtor(debt)}
+                          variant="contained"
+                          color="error"
+                          startIcon={<AttachMoneyIcon fontSize="small" />}
+                          disabled={debt.balance <= 0 || loadingPayment}
+                          loading={loadingPayment}
+                        >
+                          Betalen
+                        </Button>
+                      </Tooltip>
                     </Stack>
+
+                    {/* {JSON.stringify(debt)} */}
                   </TableCell>
                 </TableRow>
               ))}
@@ -272,25 +479,6 @@ const DashboardDebtor = () => {
           </Table>
         </TableContainer>
       </Suspense>
-
-      {/* TOTAL DEBTS */}
-      <Box sx={{ mt: 6, display: "flex", justifyContent: "flex-end" }}>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <Typography variant="h6" sx={{ fontWeight: 500 }}>
-            Totale schulden:
-          </Typography>
-
-          <Box sx={{ bgcolor: "grey.100", px: 2, py: 1, borderRadius: 1 }}>
-            <Typography variant="h4" color="primary.main">
-              {formatCurrency(
-                debts.reduce((t, d) => t + (d.amount || 0), 0) +
-                  debts.reduce((t, d) => t + (d.total_fined || 0), 0) -
-                  debts.reduce((t, d) => t + (d.total_paid || 0), 0)
-              )}
-            </Typography>
-          </Box>
-        </Stack>
-      </Box>
 
       <AgreementFormDialog
         open={openModalAgreement}
@@ -304,7 +492,7 @@ const DashboardDebtor = () => {
           installments_count: 1,
           installment_amount: 0,
           start_date: new Date(
-            new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+            new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
           ),
           end_date: new Date(),
           status: $Enums.AgreementStatus.PENDING,

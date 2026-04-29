@@ -3,8 +3,11 @@ export type DebtorSummary = {
   type: string;
   debtor_id: string;
   tenant_id: string;
+  tenant_name: string;
+  person_id: string;
   source_type: string;
   source_id: string;
+  source_status: string;
   principal_amount: number;
   total_paid: number | null;
   total_fined: number | null;

@@ -19,6 +19,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import TablePagination from "@mui/material/TablePagination";
 import { useTenant } from "@/hooks/useTenant";
 import { CollectionCaseResponse } from "@/lib/validations/collection";
 import SearchIcon from "@mui/icons-material/Search";
@@ -28,8 +29,7 @@ import CollectionForm from "./collection-form";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { formatCurrency, formatDate } from "@/utils/formatters";
 import { getAllCollectionCases } from "@/actions/collection-case";
-import { notifyError, notifyInfo, notifyWarning } from "@/lib/notifications";
-import { createSentooPayment } from "@/actions/sentoo.actions";
+import { notifyError } from "@/lib/notifications";
 
 const CollectionTable = () => {
   const router = useRouter();
@@ -39,6 +39,16 @@ const CollectionTable = () => {
   >([]);
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [selectedRow, setSelectedRow] = React.useState<string | null>(null);
+
+  // pagination
+  const [page, setPage] = React.useState(0);
+  const rowsPerPage = 5;
+
+  const paginatedData = collectionCases.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage,
+  );
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -52,6 +62,10 @@ const CollectionTable = () => {
         tenant_id: tenant.id,
       };
       const data = await getAllCollectionCases(params);
+
+      // selecciona por default el primer elemento de la tabla
+      setSelectedRow(data[0]?.id || null);
+
       setCollectionCases(data);
     } catch (error) {
       console.error("Error fetching collection cases:", error);
@@ -180,7 +194,7 @@ const CollectionTable = () => {
       </Box>
       {loading && <Typography>Loading...</Typography>}
       <TableContainer component={"div"}>
-        <Table stickyHeader aria-label="sticky table">
+        <Table size="small" stickyHeader aria-label="sticky table">
           <TableHead>
             <TableRow>
               <TableCell
@@ -295,8 +309,25 @@ const CollectionTable = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {collectionCases.map((invoice) => (
-              <TableRow key={invoice.id}>
+            {paginatedData.map((invoice) => (
+              <TableRow
+                key={invoice.id}
+                hover
+                selected={selectedRow === invoice.id}
+                onClick={() => setSelectedRow(invoice.id)}
+                sx={{
+                  cursor: "pointer",
+                  "&:hover": {
+                    backgroundColor: (theme) => theme.palette.primary.light,
+                  },
+                  "&.Mui-selected": {
+                    backgroundColor: (theme) => theme.palette.primary.light,
+                  },
+                  "&.Mui-selected:hover": {
+                    backgroundColor: (theme) => theme.palette.primary.light,
+                  },
+                }}
+              >
                 <TableCell sx={{ textAlign: "center" }}>
                   {formatDate(invoice.issue_date?.toString() || "")}
                 </TableCell>
@@ -335,6 +366,14 @@ const CollectionTable = () => {
             ))}
           </TableBody>
         </Table>
+        <TablePagination
+          component="div"
+          count={collectionCases.length}
+          page={page}
+          onPageChange={(_, newPage) => setPage(newPage)}
+          rowsPerPage={rowsPerPage}
+          rowsPerPageOptions={[5]} // fijo en 5
+        />
       </TableContainer>
     </Box>
   );

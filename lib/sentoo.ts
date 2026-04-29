@@ -11,6 +11,9 @@ export async function sentooRequest(endpoint: string, body: URLSearchParams) {
 
   const data = await res.json();
 
+  console.log("data: ");
+  console.log(data);
+
   // ❌ Errores técnicos reales
   if (!res.ok && res.status !== 402) {
     console.error("Sentoo technical error:", data);

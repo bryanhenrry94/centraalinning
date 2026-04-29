@@ -23,7 +23,10 @@ import {
 } from "@/lib/validations/agreement";
 import { $Enums } from "@prisma/client";
 import { AlertService } from "@/lib/alerts";
-import { updatePaymentAgreement } from "@/actions/agreement";
+import {
+  notifyApprovalAgreement,
+  updatePaymentAgreement,
+} from "@/actions/agreement";
 import { notifyInfo } from "@/lib/notifications";
 import { AgreementFormDialog } from "./agreement-form-dialog";
 
@@ -51,7 +54,7 @@ export const AgreementTableApprove = ({
       "¿Wilt u deze betalingsregeling accepteren?",
       "",
       "JA",
-      "NEE"
+      "NEE",
     ).then(async (confirmed) => {
       if (confirmed) {
         await updatePaymentAgreement(id, {
@@ -59,6 +62,12 @@ export const AgreementTableApprove = ({
         });
         await notifyInfo("Betalingsregeling succesvol goedgekeurd.");
         // await fetchAgreements();
+
+        await notifyApprovalAgreement(id);
+        notifyInfo(
+          "De debiteur is op de hoogte gebracht van de goedkeuring van de betalingsregeling.",
+        );
+
         onApprove();
       }
     });
@@ -69,7 +78,7 @@ export const AgreementTableApprove = ({
       "¿Bent u zeker dat u deze wilt annuleren?",
       "",
       "JA",
-      "NEE"
+      "NEE",
     ).then(async (confirmed) => {
       if (confirmed) {
         await updatePaymentAgreement(id, {
