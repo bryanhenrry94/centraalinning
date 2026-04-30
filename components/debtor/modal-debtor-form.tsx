@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useForm, FormProvider, Resolver, Controller } from "react-hook-form";
+import { useForm, FormProvider, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DebtorCreateSchema, DebtorCreate } from "@/lib/validations/debtor";
 
@@ -18,13 +18,9 @@ import {
 import InputHookForm from "@/components/ui/InputHookForm";
 import SelectHookForm from "@/components/ui/SelectHookForm";
 import { personTypeOptions } from "@/constants/identification";
-import {
-  createDebtor,
-  getDebtorById,
-  updateDebtor,
-} from "@/actions/debtor";
+import { createDebtor, getDebtorById, updateDebtor } from "@/actions/debtor";
 import { useTenant } from "@/hooks/useTenant";
-import { notifyError, notifyInfo, notifySuccess } from "@/lib/notifications";
+import { notifyError, notifySuccess } from "@/lib/notifications";
 import CloseIcon from "@mui/icons-material/Close";
 import { $Enums } from "@prisma/client";
 import { DebtorIncomeCreate } from "@/lib/validations/debtor-incomes";
@@ -38,10 +34,10 @@ interface ModalFormDebtorProps {
 }
 
 const identificationTypeOptions = [
-  { value: $Enums.IdentificationType.DNI, label: "DNI" },
+  { value: $Enums.IdentificationType.KVK, label: "KVK" },
+  { value: $Enums.IdentificationType.CEDULA, label: "CEDULA" },
   { value: $Enums.IdentificationType.PASSPORT, label: "PASPOORT" },
-  { value: $Enums.IdentificationType.NIE, label: "NIE" },
-  { value: $Enums.IdentificationType.OTHER, label: "OTHER " },
+  { value: $Enums.IdentificationType.RIJBEWIJS, label: "RIJBEWIJS" },
 ];
 
 const incomes: DebtorIncomeCreate[] = [];
@@ -65,7 +61,7 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
       incomes: incomes,
       person: {
         person_type: "INDIVIDUAL",
-        identification_type: "DNI",
+        identification_type: "CEDULA",
         identification: "",
         email: "",
         address: "",
@@ -275,7 +271,14 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
                 <SelectHookForm
                   name="person.identification_type"
                   label="Identification Type"
-                  options={identificationTypeOptions}
+                  options={
+                    watch("person.person_type") === "COMPANY"
+                      ? [{ value: $Enums.IdentificationType.KVK, label: "KVK" }]
+                      : identificationTypeOptions.filter(
+                          (option) =>
+                            option.value !== $Enums.IdentificationType.KVK,
+                        )
+                  }
                 />
 
                 <Controller

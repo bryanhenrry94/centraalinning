@@ -692,12 +692,10 @@ enum NotificationType {
 }
 
 enum IdentificationType {
-  DNI
-  PASSPORT
-  NIE
-  CIF
   KVK
-  OTHER
+  CEDULA
+  PASSPORT
+  RIJBEWIJS
 }
 
 enum UserRole {

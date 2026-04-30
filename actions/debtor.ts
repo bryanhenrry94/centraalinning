@@ -104,7 +104,7 @@ export const createDebtor = async (
         data: {
           person_type: debtorFormatted.person?.person_type as $Enums.PersonType,
           identification_type:
-            debtorFormatted.person?.identification_type || "DNI",
+            debtorFormatted.person?.identification_type || $Enums.IdentificationType.CEDULA,
           identification: debtorFormatted.person?.identification || "",
           first_name: debtorFormatted.person?.first_name || "",
           last_name: debtorFormatted.person?.last_name || "",
