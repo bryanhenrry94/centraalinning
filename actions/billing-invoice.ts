@@ -1,5 +1,5 @@
 "use server";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { addDays } from "date-fns";
 import {
   BillingInvoiceBase,
@@ -231,7 +231,7 @@ export const getDataInvoicePDF = async (
     description: invoice.description,
     bank_name: parameter.bank_name || "MCB",
     bank_account: parameter.bank_account || "418.825.10",
-    details: invoice.details.map((detail) => ({
+    details: invoice.details.map((detail: any) => ({
       item_description: detail.item_description,
       item_quantity: detail.item_quantity,
       item_unit_price: Number(detail.item_unit_price.toFixed(2)),
@@ -246,7 +246,7 @@ export const getDataInvoicePDF = async (
     //   .toFixed(2),
     total: Number(
       invoice.details
-        .reduce((acc, detail) => acc + detail.item_total_with_tax, 0)
+        .reduce((acc: any, detail: any) => acc + detail.item_total_with_tax, 0)
         .toFixed(2),
     ),
   };
@@ -263,7 +263,7 @@ export const getAllInvoices = async (): Promise<BillingInvoiceResponse[]> => {
     });
 
     // Map invoices to match the expected type, renaming details to invoice_details and ensuring 'island' is present
-    return invoices.map((invoice) => ({
+    return invoices.map((invoice: any) => ({
       tenant_id: invoice.tenant_id,
       id: invoice.id,
       invoice_number: invoice.invoice_number,
@@ -275,7 +275,7 @@ export const getAllInvoices = async (): Promise<BillingInvoiceResponse[]> => {
       created_at: invoice.created_at,
       updated_at: invoice.updated_at,
       description: invoice.description,
-      invoice_details: invoice.details.map((detail) => ({
+      invoice_details: invoice.details.map((detail: any) => ({
         id: detail.id,
         invoice_id: detail.billing_invoice_id ?? invoice.id,
         item_description: detail.item_description,
@@ -335,7 +335,7 @@ export const createInvoice = async (
     });
 
     await prisma.billingInvoiceDetail.createMany({
-      data: (invoice.invoice_details ?? []).map((detail) => ({
+      data: (invoice.invoice_details ?? []).map((detail: any) => ({
         item_description: detail.item_description,
         item_quantity: detail.item_quantity,
         item_unit_price: detail.item_unit_price,
@@ -380,7 +380,7 @@ export const updateInvoice = async (
 
     // Re-create invoice details
     await prisma.billingInvoiceDetail.createMany({
-      data: (invoice.invoice_details ?? []).map((detail) => ({
+      data: (invoice.invoice_details ?? []).map((detail: any) => ({
         item_description: detail.item_description,
         item_quantity: detail.item_quantity,
         item_unit_price: detail.item_unit_price,

@@ -1,6 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { IChatMessage, IChatMessageCreate } from "@/lib/validations/chat";
 
 export const createChatRoom = async (
@@ -103,7 +103,7 @@ export const getMessagesByRoomId = async (
     },
   });
 
-  return messages.map((msg) => ({
+  return messages.map((msg: any) => ({
     id: msg.id,
     room_id: msg.room_id,
     sender_id: msg.sender_id,

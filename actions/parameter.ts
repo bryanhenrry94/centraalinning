@@ -1,5 +1,5 @@
 "use server";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { IParamGeneral } from "@/lib/validations/parameter";
 
 export const getParameter = async () => {

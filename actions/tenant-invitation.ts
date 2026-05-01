@@ -1,18 +1,18 @@
 "use server";
-import prisma from "@/lib/prisma";
+import { UserRole } from "@/constants/user-role";
+import { prisma } from "@/lib/prisma";
 import {
   InvitationRegistration,
   InvitationRegistrationSchema,
 } from "@/lib/validations/tenant-invitation";
-import { hash } from "bcryptjs";
-import { $Enums } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 import { revalidatePath } from "next/cache";
 
 type InvitationParams = {
   tenantId: string;
   email: string;
-  role: $Enums.UserRole;
+  role: UserRole;
   fullname?: string;
   debtor_id?: string;
 };
@@ -21,7 +21,7 @@ type InvitationDetails = {
   token: string;
   tenantId: string;
   email: string;
-  role: $Enums.UserRole;
+  role: UserRole;
   fullname?: string;
   debtor_id?: string;
 };
@@ -135,7 +135,7 @@ export const getInvitationDetails = async (
     token: invitation.token,
     tenantId: invitation.tenant_id,
     email: invitation.email,
-    role: invitation.role as $Enums.UserRole,
+    role: invitation.role as UserRole,
     fullname: invitation.fullname || undefined,
     debtor_id: invitation.debtor_id || undefined,
   };
@@ -170,7 +170,7 @@ export const completeRegistration = async (
       throw new Error("Tenant not found or inactive");
     }
 
-    const password_hash = await hash(validatedData.password, 10);
+    const password_hash = await bcrypt.hash(validatedData.password, 10);
 
     // ✅ 2. Crear usuario deudor
     const user = await prisma.user.create({
@@ -186,12 +186,12 @@ export const completeRegistration = async (
       data: {
         user_id: user.id,
         tenant_id: invitation.tenant_id,
-        role: invitation.role as $Enums.UserRole,
+        role: invitation.role as UserRole,
         created_at: new Date(),
       },
     });
 
-    if (invitation.role === "DEBTOR" && invitation.debtor_id) {
+    if (invitation.role === UserRole.DEBTOR && invitation.debtor_id) {
       // 3. Actualizar información del deudor si es necesario
       await prisma.debtor.update({
         where: { id: invitation.debtor_id },

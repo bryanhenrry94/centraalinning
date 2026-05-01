@@ -1,14 +1,13 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import prisma from "@/lib/prisma";
-import bcrypt, { hash } from "bcryptjs";
+import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 import {
   IdTokenInput,
   LoginFormData,
   loginSchema,
 } from "@/lib/validations/auth";
 import { createActivationInvoice } from "./billing-invoice";
-import { $Enums } from "@prisma/client";
 import { generateUniqueSubdomain } from "./tenant";
 import { AuthSignUpSchema, ITenantSignUp } from "@/lib/validations/signup";
 import { getParameter } from "./parameter";
@@ -127,7 +126,7 @@ export async function createAccount(
     }
 
     // ✅ 2. Crear Tenant, User y Subscription en transacción
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       const subdomain = await generateUniqueSubdomain(
         validatedData.company.name,
       );
@@ -150,7 +149,7 @@ export async function createAccount(
         },
       });
 
-      const password_hash = await hash(validatedData.user.password, 10);
+      const password_hash = await bcrypt.hash(validatedData.user.password, 10);
 
       const user = await tx.user.create({
         data: {
@@ -166,13 +165,7 @@ export async function createAccount(
         data: {
           tenant_id: tenant.id,
           user_id: user.id,
-          role:
-            payload.company.role &&
-            Object.values($Enums.UserRole).includes(
-              payload.company.role as $Enums.UserRole,
-            )
-              ? (payload.company.role as $Enums.UserRole)
-              : $Enums.UserRole.TENANT_ADMIN,
+          role: "TENANT_ADMIN" as any, 
         },
       });
 

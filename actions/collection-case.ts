@@ -1,5 +1,5 @@
 "use server";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { createCollectionInvoice } from "@/actions/billing-invoice";
 
 import {
@@ -10,13 +10,14 @@ import {
   CollectionCaseSchema,
   CollectionCaseView,
 } from "@/lib/validations/collection";
-import { $Enums } from "@prisma/client";
 import { getNotificationDays, sendNotification } from "@/actions/notification";
 import { getParameter } from "./parameter";
+import { CollectionCaseStatus } from "@/constants/collection-case-status";
+import { PersonType } from "@/constants/person-type";
 
 type CollectionCaseFilter = {
   tenant_id: string;
-  status?: $Enums.CollectionCaseStatus;
+  status?: CollectionCaseStatus;
   debtor_id?: string;
 };
 
@@ -38,7 +39,7 @@ export const getAllCollectionCases = async (
     },
   });
 
-  return collectionCases.map((collection) => ({
+  return collectionCases.map((collection: any) => ({
     id: collection.id,
     reference_number: collection.reference_number || "",
     issue_date: collection.issue_date,
@@ -55,7 +56,7 @@ export const getAllCollectionCases = async (
     total_to_receive: collection.total_to_receive.toNumber(),
     total_paid: collection.total_paid.toNumber(),
     balance: collection.balance.toNumber(),
-    status: collection.status as $Enums.CollectionCaseStatus,
+    status: collection.status as CollectionCaseStatus,
     created_at: collection.created_at,
     updated_at: collection.updated_at,
     debtor: {
@@ -97,7 +98,7 @@ export const getCollectionById = async (
     total_to_receive: collection.total_to_receive.toNumber(),
     total_paid: collection.total_paid.toNumber(),
     balance: collection.balance.toNumber(),
-    status: collection.status as $Enums.CollectionCaseStatus,
+    status: collection.status as CollectionCaseStatus,
     created_at: collection.created_at,
     updated_at: collection.updated_at,
   };
@@ -130,7 +131,7 @@ export const getCollectionViewById = async (
     total_to_receive: collection.total_to_receive.toNumber(),
     total_paid: collection.total_paid.toNumber(),
     balance: collection.balance.toNumber(),
-    status: collection.status as $Enums.CollectionCaseStatus,
+    status: collection.status as CollectionCaseStatus,
     created_at: collection.created_at,
     updated_at: collection.updated_at,
     debtor: {
@@ -198,8 +199,8 @@ export const createCollectionCase = async (
 
   // Calcular fechas de recordatorio
   const day_term = await getNotificationDays(
-    parsedData.status as $Enums.CollectionCaseStatus,
-    debtor.person?.person_type || "INDIVIDUAL",
+    parsedData.status as CollectionCaseStatus,
+    (debtor.person?.person_type as PersonType) || PersonType.INDIVIDUAL,
   );
 
   const daysToAdd =
@@ -226,9 +227,7 @@ export const createCollectionCase = async (
       total_to_receive: total_to_receive, // neto después de retención
       total_paid: 0,
       balance: balance,
-      status:
-        (parsedData.status as $Enums.CollectionCaseStatus) ||
-        $Enums.CollectionCaseStatus.AANMANING,
+      status: (parsedData.status as CollectionCaseStatus) || "AANMANING",
       tenant_id: tenant_id,
     },
   });
@@ -238,10 +237,10 @@ export const createCollectionCase = async (
     data: {
       debtor_id: debtor.id,
       tenant_id: tenant.id,
-      source_type: $Enums.DebtSourceType.COLLECTION_CASE,
+      source_type: "COLLECTION_CASE",
       source_id: newCollectionCase.id,
       principal_amount: total_due,
-      status: $Enums.DebtStatus.OPEN,
+      status: "OPEN",
     },
   });
 
@@ -298,7 +297,7 @@ export const updateCollection = async (
 
 export const updateCollectionStatusAndSendNotification = async (
   id: string,
-  status: $Enums.CollectionCaseStatus,
+  status: CollectionCaseStatus,
 ) => {
   await prisma.collectionCase.update({
     where: {

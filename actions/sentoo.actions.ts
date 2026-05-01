@@ -1,5 +1,5 @@
 "use server";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { getPaymentStatus, sentooRequest } from "@/lib/sentoo";
 import { Prisma } from "@prisma/client";
 

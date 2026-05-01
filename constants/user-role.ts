@@ -1,0 +1,9 @@
+export enum UserRole {
+  PLATFORM_OWNER = "PLATFORM_OWNER",
+  TENANT_ADMIN = "TENANT_ADMIN",
+  AGENT = "AGENT",
+  DEBTOR = "DEBTOR",
+  BAILIFF = "BAILIFF",
+  LAWYER = "LAWYER",
+  BANK= "BANK",
+}

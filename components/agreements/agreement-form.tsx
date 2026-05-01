@@ -13,8 +13,8 @@ import {
   existsPaymentAgreement,
   updatePaymentAgreement,
 } from "@/actions/agreement";
-import { $Enums } from "@prisma/client";
 import { notifyTenantNewAgreement } from "@/actions/tenant";
+import { AgreementStatus } from "@/constants/agreement-status";
 
 interface AgreementFormProps {
   id?: string;
@@ -109,7 +109,7 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
           installment_amount: Number(data.installment_amount),
           start_date: data.start_date,
           end_date: data.end_date,
-          status: data.status ?? $Enums.AgreementStatus.COUNTEROFFER,
+          status: data.status ?? AgreementStatus.COUNTEROFFER,
         };
 
         await updatePaymentAgreement(id, payload);

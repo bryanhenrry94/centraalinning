@@ -1,0 +1,7 @@
+export enum FineType {
+  MORA = "MORA",
+  PENALTY = "PENALTY",
+  INTEREST = "INTEREST",
+  JUDICIAL_FEE = "JUDICIAL_FEE",
+  OTHER = "OTHER",
+}

@@ -1,5 +1,5 @@
 "use server";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 
 export const getPersonById = async (id: string) => {
   const person = await prisma.person.findFirst({

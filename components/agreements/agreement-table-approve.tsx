@@ -17,11 +17,7 @@ import EditIcon from "@mui/icons-material/Edit";
 
 // components
 import { formatCurrency, formatDate } from "@/utils/formatters";
-import {
-  AgreementResponse,
-  CreateAgreement,
-} from "@/lib/validations/agreement";
-import { $Enums } from "@prisma/client";
+import { AgreementResponse } from "@/lib/validations/agreement";
 import { AlertService } from "@/lib/alerts";
 import {
   notifyApprovalAgreement,
@@ -29,6 +25,7 @@ import {
 } from "@/actions/agreement";
 import { notifyInfo } from "@/lib/notifications";
 import { AgreementFormDialog } from "./agreement-form-dialog";
+import { AgreementStatus } from "@/constants/agreement-status";
 
 interface AgreementTableApproveProps {
   agreements: AgreementResponse[];
@@ -58,7 +55,7 @@ export const AgreementTableApprove = ({
     ).then(async (confirmed) => {
       if (confirmed) {
         await updatePaymentAgreement(id, {
-          status: $Enums.AgreementStatus.ACCEPTED,
+          status: AgreementStatus.ACCEPTED,
         });
         await notifyInfo("Betalingsregeling succesvol goedgekeurd.");
         // await fetchAgreements();
@@ -82,7 +79,7 @@ export const AgreementTableApprove = ({
     ).then(async (confirmed) => {
       if (confirmed) {
         await updatePaymentAgreement(id, {
-          status: $Enums.AgreementStatus.REJECTED,
+          status: AgreementStatus.REJECTED,
         });
         await notifyInfo("Betalingsregeling afgewezen.");
         // await fetchAgreements();
@@ -318,7 +315,7 @@ export const AgreementTableApprove = ({
           installments_count: agreementSelected?.installments_count || 0,
           start_date: agreementSelected?.start_date || new Date(),
           end_date: agreementSelected?.end_date || new Date(),
-          status: $Enums.AgreementStatus.COUNTEROFFER,
+          status: AgreementStatus.COUNTEROFFER,
         }}
         onSave={onUpdate}
       />

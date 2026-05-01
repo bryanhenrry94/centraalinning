@@ -11,16 +11,16 @@ import {
   PaymentCreate,
 } from "@/lib/validations/payment";
 import { registerPayment } from "@/actions/payment";
-import { $Enums } from "@prisma/client";
 import { DebtorSummary } from "@/types/DebtorSummary";
 import { useSession } from "next-auth/react";
 import { getDebts } from "@/actions/debtor";
 import { formatCurrency } from "@/utils/formatters";
+import { PaymentMethod } from "@/constants/payment-method";
 
 const initialState: PaymentCreate = {
   debt_id: "",
   total_amount: 0,
-  method: $Enums.PaymentMethod.TRANSFER,
+  method: PaymentMethod.TRANSFER,
   reference_number: "",
   paid_at: new Date().toISOString().slice(0, 16), // Format for datetime-local input
   status: "pending",

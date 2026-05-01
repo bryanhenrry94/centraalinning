@@ -1,6 +1,6 @@
 "use server";
 
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 
 export async function getDashboardStats() {
   try {
@@ -40,7 +40,7 @@ export async function getDashboardStats() {
     });
 
     const incomeMonth = facturasDelMes.reduce(
-      (total, factura) => total + factura.amount,
+      (total: number, factura: any) => total + factura.amount,
       0
     );
 

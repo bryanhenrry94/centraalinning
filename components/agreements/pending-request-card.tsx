@@ -10,7 +10,7 @@ import { CollectionCaseView } from "@/lib/validations/collection";
 import { Agreement } from "@/lib/validations/agreement";
 import { formatCurrency, formatDate } from "@/utils/formatters";
 import PaymentAgreementStatusChip from "../ui/payment-agreement-status-chip";
-import { $Enums } from "@prisma/client";
+import { AgreementStatus } from "@/constants/agreement-status";
 
 interface PendingRequestCardProps {
   agreement: Agreement;
@@ -64,7 +64,7 @@ const PendingRequestCard: React.FC<PendingRequestCardProps> = ({
           </Box>
         </Box>
         <PaymentAgreementStatusChip
-          status={agreement.status as $Enums.AgreementStatus}
+          status={agreement.status as AgreementStatus}
         />
       </Box>
 

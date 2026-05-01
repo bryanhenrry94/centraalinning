@@ -1,7 +1,6 @@
 import { z } from "zod";
-import { DebtorSchema, DebtorSummarySchema } from "@/lib/validations/debtor";
-import { PaymentSchema } from "@/lib/validations/payment";
-import { $Enums } from "@prisma/client";
+import { DebtorSummarySchema } from "@/lib/validations/debtor";
+import { CollectionCaseStatus } from "@/constants/collection-case-status";
 
 export const CollectionCaseSchema = z.object({
   id: z.cuid(),
@@ -22,12 +21,12 @@ export const CollectionCaseSchema = z.object({
   balance: z.number().default(0),
   status: z
     .enum([
-      $Enums.CollectionCaseStatus.AANMANING,
-      $Enums.CollectionCaseStatus.SOMMATIE,
-      $Enums.CollectionCaseStatus.INGEBREKESTELLING,
-      $Enums.CollectionCaseStatus.BLOKKADE,
+      CollectionCaseStatus.AANMANING,
+      CollectionCaseStatus.SOMMATIE,
+      CollectionCaseStatus.INGEBREKESTELLING,
+      CollectionCaseStatus.BLOKKADE,
     ])
-    .default($Enums.CollectionCaseStatus.AANMANING),
+    .default(CollectionCaseStatus.AANMANING),
   created_at: z.date(),
   updated_at: z.date(),
 });

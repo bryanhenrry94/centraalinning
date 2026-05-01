@@ -1,5 +1,5 @@
 "use server";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import {
   VerdictCreate,
   VerdictResponse,
@@ -14,7 +14,6 @@ import path from "path";
 import fs from "fs/promises";
 import { formatDate } from "@/utils/formatters";
 import { VerdictAttachment } from "@/lib/validations/verdict-attachments";
-import { $Enums } from "@prisma/client";
 import {
   sendInvoiceEmail,
   sendMailRegisterVerdict,
@@ -64,7 +63,7 @@ export const getAllVerdicts = async (
     });
 
     // Map the verdicts to match the VerdictResponse type
-    const mappedVerdicts: VerdictResponse[] = verdicts.map((verdict) => ({
+    const mappedVerdicts: VerdictResponse[] = verdicts.map((verdict: any) => ({
       ...verdict,
       debt_id: verdict.debt_id ?? undefined,
       procesal_cost:
@@ -87,7 +86,7 @@ export const getAllVerdicts = async (
                 : verdict.debtor.total_income,
           }
         : verdict.debtor,
-      verdict_interest: verdict.verdict_interest.map((vi) => ({
+      verdict_interest: verdict.verdict_interest.map((vi: any) => ({
         interest_type: vi.interest_type,
         base_amount: vi.base_amount,
         calculation_start: vi.calculation_start,
@@ -153,7 +152,7 @@ export const getVerdictById = async (
                 : verdict.debtor.total_income,
           }
         : verdict.debtor,
-      verdict_interest: verdict.verdict_interest.map((vi) => ({
+      verdict_interest: verdict.verdict_interest.map((vi: any) => ({
         interest_type: vi.interest_type,
         base_amount: vi.base_amount,
         calculation_start: vi.calculation_start,
@@ -190,7 +189,7 @@ export const createVerdict = async (
   try {
     console.log("iniciando transaccion verdict");
     // initialize transaction
-    const createdVerdict = await prisma.$transaction(async (tx) => {
+    const createdVerdict = await prisma.$transaction(async (tx: any) => {
       let total_due: number = data.sentence_amount + (data.procesal_cost || 0);
 
       // create new verdict
@@ -229,7 +228,7 @@ export const createVerdict = async (
 
           // create verdict interest details
           await tx.verdictInterestDetails.createMany({
-            data: item.details.map((detail) => ({
+            data: item.details.map((detail: any) => ({
               ...detail,
               verdict_interest_id: verdict_interest.id,
             })),
@@ -238,7 +237,7 @@ export const createVerdict = async (
 
         // Calculate total_due interest from all verdict interests
         const totalInterest = data.verdict_interest.reduce(
-          (sum, item) => sum + item.total_interest,
+          (sum: number, item: any) => sum + item.total_interest,
           0,
         );
 
@@ -265,7 +264,7 @@ export const createVerdict = async (
         }
 
         const totalEmbargo = data.verdict_embargo.reduce(
-          (sum, item) => sum + item.total_amount,
+          (sum: number, item: any) => sum + item.total_amount,
           0,
         );
 
@@ -277,10 +276,10 @@ export const createVerdict = async (
         data: {
           debtor_id: data.debtor_id,
           tenant_id: tenant_id,
-          source_type: $Enums.DebtSourceType.VERDICT,
+          source_type: "VERDICT",
           source_id: newVerdict.id,
           principal_amount: total_due,
-          status: $Enums.DebtStatus.OPEN,
+          status: "OPEN",
         },
       });
 
@@ -338,7 +337,7 @@ export const updateVerdict = async (
     let total_due: number = 0;
     total_due += (data.sentence_amount || 0) + (data.procesal_cost || 0);
 
-    const updatedVerdict = await prisma.$transaction(async (tx) => {
+    const updatedVerdict = await prisma.$transaction(async (tx: any ) => {
       const verdict = await prisma.verdict.update({
         where: { id: verdict_id },
         data: {
@@ -364,7 +363,7 @@ export const updateVerdict = async (
             where: { verdict_id: verdict_id },
             select: { id: true },
           })
-        ).map((vi) => vi.id);
+        ).map((vi: any) => vi.id);
 
         // Eliminar los detalles relacionados a esos verdict_interest
         await tx.verdictInterestDetails.deleteMany({
@@ -396,7 +395,7 @@ export const updateVerdict = async (
 
           // create verdict interest details
           await tx.verdictInterestDetails.createMany({
-            data: item.details.map((detail) => ({
+            data: item.details.map((detail: any) => ({
               ...detail,
               verdict_interest_id: verdict_interest.id,
             })),
@@ -404,7 +403,7 @@ export const updateVerdict = async (
         }
 
         const totalInterest = data.verdict_interest.reduce(
-          (sum, item) => sum + item.total_interest,
+          (sum: number, item: any) => sum + item.total_interest,
           0,
         );
 
@@ -419,7 +418,7 @@ export const updateVerdict = async (
             where: { verdict_id: verdict_id },
             select: { id: true },
           })
-        ).map((vi) => vi.id);
+        ).map((vi: any) => vi.id);
 
         await tx.verdictEmbargo.deleteMany({
           where: {
@@ -447,7 +446,7 @@ export const updateVerdict = async (
         }
 
         const totalEmbargo = data.verdict_embargo.reduce(
-          (sum, item) => sum + item.total_amount,
+          (sum: number, item: any) => sum + item.total_amount,
           0,
         );
 
@@ -535,7 +534,7 @@ export const calculateInterestDetail = async (
     // Ordenar los details por fecha ascendente
     const details: InterestDetail[] = (objInterestType.details || [])
       .slice()
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     let tramoIndex = 1;
 
@@ -616,13 +615,13 @@ export const calculateInterestDetail = async (
 
 export const deleteVerdict = async (id: string): Promise<boolean> => {
   try {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       const verdictInterestIds = (
         await tx.verdictInterest.findMany({
           where: { verdict_id: id },
           select: { id: true },
         })
-      ).map((vi) => vi.id);
+      ).map((vi: any) => vi.id);
 
       // Eliminar los detalles relacionados a esos verdict_interest
       await tx.verdictInterestDetails.deleteMany({
@@ -643,7 +642,7 @@ export const deleteVerdict = async (id: string): Promise<boolean> => {
           where: { verdict_id: id },
           select: { id: true },
         })
-      ).map((vi) => vi.id);
+      ).map((vi: any) => vi.id);
 
       await tx.verdictEmbargo.deleteMany({
         where: {

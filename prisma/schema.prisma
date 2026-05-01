@@ -1,25 +1,17 @@
-// Macbook chip M1/M2 requires specific binary targets for Prisma Client to work properly. The "native" target is a special alias that Prisma uses to automatically select the correct binary for the current platform. The "debian-openssl-1.1.x" target is included to ensure compatibility with Debian-based Linux distributions that use OpenSSL 1.1.x, which is common in many server environments.
-// generator client {
-//   provider = "prisma-client-js"
-//   output   = "./generated/prisma"
-// }
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Production configuration for Prisma Client
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
 generator client {
-  provider      = "prisma-client-js"
-  // binaryTargets = ["native", "debian-openssl-1.1.x"]
-  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+  provider = "prisma-client"
+  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
-
-// generator erd {
-//   provider = "prisma-erd-generator"
-//   output   = "./erd.svg"
-// }
 
 model Tenant {
   id                  String              @id @default(uuid())
@@ -648,6 +640,34 @@ model PaymentAllocation {
   @@map("payment_allocation")
 }
 
+model BlokCheckRequest {
+  id                                                            String              @id @default(cuid())
+  tenant_id                                                     String
+  debtor_id         String?  // opcional si viene de tu sistema
+
+  // 🔍 Datos de búsqueda
+  document_type                                                 IdentificationType
+  document_number                                               String
+
+  // 💳 Pago (Sentoo)
+  payment_id        String?  // id externo (sentoo)
+  payment_status                                                PaymentStatus       @default(pending)
+  amount                                                        Decimal             @db.Decimal(10,2)
+
+  // 📊 Resultado
+  has_block                                                     Boolean?
+  block_reason                                                  String?
+  checked_at                                                    DateTime?
+
+  // 🧾 Control
+  created_at                                                    DateTime            @default(now())
+  updated_at                                                    DateTime            @updatedAt
+
+  @@index([tenant_id])
+  @@index([document_number])
+  @@map("blok_check_request")
+}
+
 enum PaymentComponent {
   PRINCIPAL
   FINE
@@ -756,3 +776,4 @@ enum FineStatus {
   CANCELLED
   REVERSED
 }
+

@@ -1,7 +1,7 @@
 "use server";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { Payment, PaymentCreate } from "@/lib/validations/payment";
-import { $Enums, Prisma } from "@prisma/client";
+import { Decimal } from "@prisma/client/runtime/library";
 
 export const registerPayment = async (payload: PaymentCreate) => {
   // Create payment
@@ -13,7 +13,7 @@ export const registerPayment = async (payload: PaymentCreate) => {
       provider: payload.provider || "manual",
       provider_ref: payload.provider_ref || "",
       provider_status: "pending",
-      total_amount: new Prisma.Decimal(payload.total_amount),
+      total_amount: new Decimal(payload.total_amount),
       status: (payload.status as any) || "pending",
       provider_payload: payload.provider_payload || "",
       paid_at: null,
@@ -187,7 +187,7 @@ export const getPayments = async (
       },
     });
 
-    const formattedPayments: Payment[] = payments.map((payment) => ({
+    const formattedPayments: Payment[] = payments.map((payment: any) => ({
       ...payment,
       debt_id: payment.debt_id ?? "",
       total_amount:
@@ -222,7 +222,7 @@ export const getPaymentsByInvoice = async (
     where: { debt_id: debt_id },
   });
 
-  return payments.map((payment) => ({
+  return payments.map((payment: any) => ({
     ...payment,
     debt_id: payment.debt_id ?? "",
     total_amount:

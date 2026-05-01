@@ -1,7 +1,7 @@
 "use server";
-import prisma from "@/lib/prisma";
+import { UserRole } from "@/constants/user-role";
+import { prisma } from "@/lib/prisma";
 import { User } from "@/lib/validations/user";
-import { $Enums } from "@prisma/client";
 
 export const getUserByEmail = async (email: string) => {
   const user = await prisma.user.findFirst({
@@ -14,7 +14,7 @@ export const getUserByEmail = async (email: string) => {
 };
 
 export const getUsersByRole = async (
-  roleName: $Enums.UserRole
+  roleName: UserRole
 ): Promise<User[]> => {
   const users = await prisma.user.findMany({
     where: {

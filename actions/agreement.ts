@@ -1,15 +1,14 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import {
   Agreement,
   CreateAgreement,
   AgreementResponse,
 } from "@/lib/validations/agreement";
-import { $Enums } from "@prisma/client";
 // import AgreementApprovalEmail from "@/templates/emails/AgreementApprovalEmail";
 import { sendEmail } from "@/lib/email";
-// import { Resend } from "resend";
+import { $Enums, AgreementInstallment } from "@/generated/prisma/browser";
 
 type PaymentAgreementFilter = {
   debt_id?: string;
@@ -36,7 +35,7 @@ export const getPaymentAgreements = async (
   });
 
   revalidatePath("/dashboard/agreements");
-  return agreements.map((agreement) => ({
+  return agreements.map((agreement: any) => ({
     id: agreement.id,
     tenant_id: agreement.tenant_id,
     debt_id: agreement.debt_id ?? undefined,
@@ -255,7 +254,7 @@ export const getInstallmentsByAgreement = async (agreement_id: string) => {
     where: { agreement_id },
   });
 
-  return installments.map((installment) => ({
+  return installments.map((installment: AgreementInstallment) => ({
     id: installment.id,
     agreement_id: installment.agreement_id,
     number: installment.number,
@@ -343,7 +342,7 @@ export const getAgreementsByDebtId = async (
     },
   });
 
-  return agreements.map((agreement) => ({
+  return agreements.map((agreement: any) => ({
     id: agreement.id,
     tenant_id: agreement.tenant_id,
     debt_id: agreement.debt_id ?? undefined,

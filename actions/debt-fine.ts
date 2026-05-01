@@ -1,12 +1,13 @@
 "use server";
-import prisma from "@/lib/prisma";
-import { $Enums } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+
+type FineType = "MORA" | "PENALTY" | "INTEREST" | "JUDICIAL_FEE" | "OTHER";
 
 export const applyFine = async (
   debt_id: string,
   amount: number,
   description: string,
-  type: $Enums.FineType
+  type: FineType
 ) => {
   const fine = await prisma.debtFine.create({
     data: {
@@ -14,7 +15,7 @@ export const applyFine = async (
       amount,
       type,
       description,
-      status: $Enums.FineStatus.ACTIVE,
+      status: "ACTIVE",
       applied_at: new Date(),
     },
   });

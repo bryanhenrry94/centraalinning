@@ -1,8 +1,7 @@
 import { Typography } from "@mui/material";
 import { useWatch } from "react-hook-form";
-import type { Control } from "react-hook-form";
 
-const TotalInterest: React.FC<{ control: Control<any> }> = ({ control }) => {
+const TotalInterest: React.FC<{ control: any }> = ({ control }) => {
   interface VerdictInterestItem {
     total_interest?: number;
     [key: string]: any;
@@ -17,7 +16,7 @@ const TotalInterest: React.FC<{ control: Control<any> }> = ({ control }) => {
     verdictInterest?.reduce(
       (sum: number, item: VerdictInterestItem) =>
         sum + (item?.total_interest ?? 0),
-      0
+      0,
     ) ?? 0;
 
   return (

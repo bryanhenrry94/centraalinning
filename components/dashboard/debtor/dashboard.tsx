@@ -16,11 +16,6 @@ import {
   Stack,
   Tooltip,
   Button,
-  TextField,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
   Chip,
 } from "@mui/material";
 
@@ -44,7 +39,6 @@ import { AgreementDialog } from "@/components/agreements/agreement-dialog";
 import { PaymentsDialog } from "@/components/payment/payments-dialog";
 import { AgreementFormDialog } from "@/components/agreements/agreement-form-dialog";
 import { PaymentFormDialog } from "@/components/payment/payment-form-dialog";
-import { $Enums } from "@prisma/client";
 import { createSentooPayment } from "@/actions/sentoo.actions";
 import { AlertService } from "@/lib/alerts";
 import { PaymentCreate } from "@/lib/validations/payment";
@@ -54,6 +48,7 @@ import {
   registerPayment,
 } from "@/actions/payment";
 import DashboardHeader from "./DashboardHeader";
+import { AgreementStatus } from "@/constants/agreement-status";
 
 type TenantTypes = {
   id: string;
@@ -219,7 +214,7 @@ const DashboardDebtor = () => {
       // 2. Validar acuerdos
       const agreement = await getAgreementByDebtId(debt.id);
 
-      if (agreement?.status === $Enums.AgreementStatus.PENDING) {
+      if (agreement?.status === AgreementStatus.PENDING) {
         notifyWarning(
           "Tu solicitud de acuerdo de pago está pendiente de aprobación.",
         );
@@ -585,7 +580,7 @@ const DashboardDebtor = () => {
             new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
           ),
           end_date: new Date(),
-          status: $Enums.AgreementStatus.PENDING,
+          status: AgreementStatus.PENDING,
           debtor_id: debtSelected?.debtor_id,
         }}
       />

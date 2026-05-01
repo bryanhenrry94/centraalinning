@@ -1,5 +1,5 @@
 "use server";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { CreateEmployee, Employee } from "@/lib/validations/employee";
 
 export async function getAllEmployeesByTenantId(

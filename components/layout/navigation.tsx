@@ -5,11 +5,12 @@ import { usePathname } from "next/navigation";
 import { BottomNavigation, BottomNavigationAction, Paper } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
+import ShieldIcon from "@mui/icons-material/Shield";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import GavelIcon from "@mui/icons-material/Gavel";
 import ChatIcon from "@mui/icons-material/Chat";
 import HandshakeIcon from "@mui/icons-material/Handshake";
-import { $Enums } from "@prisma/client";
+import { UserRole } from "@/constants/user-role";
 
 type MenuItem = {
   label: string;
@@ -24,41 +25,47 @@ const menus: MenuItem[] = [
     href: "/dashboard",
     icon: <DashboardIcon fontSize="small" />,
     role: [
-      $Enums.UserRole.TENANT_ADMIN,
-      $Enums.UserRole.PLATFORM_OWNER,
-      $Enums.UserRole.DEBTOR,
-      $Enums.UserRole.BAILIFF,
+      UserRole.TENANT_ADMIN,
+      UserRole.PLATFORM_OWNER,
+      UserRole.DEBTOR,
+      UserRole.BAILIFF,
     ],
   },
   {
     label: "Buitengerechtelijk",
     href: "/dashboard/collections",
     icon: <ReceiptOutlinedIcon fontSize="small" />,
-    role: [$Enums.UserRole.TENANT_ADMIN],
+    role: [UserRole.TENANT_ADMIN],
+  },
+  {
+    label: "Blok-Check",
+    href: "/dashboard/blok-checks",
+    icon: <ShieldIcon fontSize="small" />,
+    role: [UserRole.TENANT_ADMIN],
   },
   {
     label: "Gerechtelijk Vonnis",
     href: "/dashboard/verdicts",
     icon: <GavelIcon fontSize="small" />,
-    role: [$Enums.UserRole.TENANT_ADMIN, $Enums.UserRole.BAILIFF],
+    role: [UserRole.TENANT_ADMIN, UserRole.BAILIFF],
   },
   {
     label: "Betalingsregeling",
     href: "/dashboard/agreements",
     icon: <HandshakeIcon fontSize="small" />,
-    role: [$Enums.UserRole.TENANT_ADMIN],
+    role: [UserRole.TENANT_ADMIN],
   },
   {
     label: "Invoices",
     href: "/dashboard/invoices",
     icon: <ReceiptOutlinedIcon fontSize="small" />,
-    role: [$Enums.UserRole.PLATFORM_OWNER],
+    role: [UserRole.PLATFORM_OWNER],
   },
   {
     label: "Chat",
     href: "/dashboard/chat",
     icon: <ChatIcon fontSize="small" />,
-    role: [$Enums.UserRole.TENANT_ADMIN, $Enums.UserRole.DEBTOR],
+    role: [UserRole.TENANT_ADMIN, UserRole.DEBTOR],
   },
 ];
 

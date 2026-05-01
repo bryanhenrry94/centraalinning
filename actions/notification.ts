@@ -1,5 +1,5 @@
 "use server";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { CollectionCase } from "@/lib/validations/collection";
 import { getCollectionById } from "@/actions/collection-case";
 import { Notification } from "@/lib/validations/notification";
@@ -14,7 +14,9 @@ import {
   sendIngebrekestellingMail,
   sendSommatieEmail,
 } from "./email";
-import { $Enums } from "@prisma/client";
+import { CollectionCaseStatus } from "@/constants/collection-case-status";
+import { PersonType } from "@/constants/person-type";
+import { UserRole } from "@/constants/user-role";
 
 export const sendNotification = async (caseId: string) => {
   if (!caseId) {
@@ -29,14 +31,14 @@ export const sendNotification = async (caseId: string) => {
 
   // Get the last notification for the collection case
   switch (collection.status) {
-    case $Enums.CollectionCaseStatus.AANMANING:
+    case CollectionCaseStatus.AANMANING:
       console.log("Sending Aanmaning...");
       return await sendAanmaning(collection);
-    case $Enums.CollectionCaseStatus.SOMMATIE:
+    case CollectionCaseStatus.SOMMATIE:
       return await sendSommatie(collection);
-    case $Enums.CollectionCaseStatus.INGEBREKESTELLING:
+    case CollectionCaseStatus.INGEBREKESTELLING:
       return await sendIngebrekestelling(collection);
-    case $Enums.CollectionCaseStatus.BLOKKADE:
+    case CollectionCaseStatus.BLOKKADE:
       return await sendBlokkade(collection);
     default:
       return;
@@ -119,7 +121,7 @@ export const sendAanmaning = async (
       const invitation = await registerInvitation({
         tenantId: debtor.tenant_id,
         email: debtor.email,
-        role: "DEBTOR",
+        role: UserRole.DEBTOR,
         fullname: debtorName || "Debtor",
         debtor_id: debtor.id,
       });
@@ -263,8 +265,8 @@ export const sendBlokkade = async (
 };
 
 export const getNotificationDays = async (
-  status: $Enums.CollectionCaseStatus,
-  person_type: $Enums.PersonType,
+  status: CollectionCaseStatus,
+  person_type: PersonType,
 ): Promise<number> => {
   const _parameter = await getParameter();
 
@@ -272,14 +274,14 @@ export const getNotificationDays = async (
     throw new Error("Parameter not found");
   }
 
-  if (status === $Enums.CollectionCaseStatus.AANMANING) {
-    return person_type === $Enums.PersonType.INDIVIDUAL
+  if (status === CollectionCaseStatus.AANMANING) {
+    return person_type === PersonType.INDIVIDUAL
       ? _parameter.consumer_aanmaning_term_days
       : _parameter.company_aanmaning_term_days;
   }
 
-  if (status === $Enums.CollectionCaseStatus.SOMMATIE) {
-    return person_type === $Enums.PersonType.INDIVIDUAL
+  if (status === CollectionCaseStatus.SOMMATIE) {
+    return person_type === PersonType.INDIVIDUAL
       ? _parameter.consumer_sommatie_term_days
       : _parameter.company_sommatie_term_days;
   }
@@ -289,7 +291,7 @@ export const getNotificationDays = async (
 
 export const getLastNotificationDate = async (
   caseId: string,
-  type: $Enums.CollectionCaseStatus,
+  type: CollectionCaseStatus,
 ): Promise<Date> => {
   // Fetch the notification collection record based on collection and type
   const notificationRecord = await prisma.collectionCaseNotification.findFirst({
@@ -337,7 +339,7 @@ export const getAllNotificationsByCollectionCase = async (
   });
 
   // Map the Prisma result to your Notification type if needed
-  return notifications.map((n) => ({
+  return notifications.map((n: any) => ({
     ...n,
     type: n.type as Notification["type"],
   }));

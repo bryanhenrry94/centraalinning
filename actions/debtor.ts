@@ -1,5 +1,7 @@
 "use server";
-import prisma from "@/lib/prisma";
+import { IdentificationType } from "@/constants/identification-type";
+import { PersonType } from "@/constants/person-type";
+import { prisma } from "@/lib/prisma";
 import {
   DebtorBase,
   DebtorBaseSchema,
@@ -8,7 +10,6 @@ import {
   DebtorResponse,
   DebtorResponseSchema,
 } from "@/lib/validations/debtor";
-import { $Enums } from "@prisma/client";
 import { DebtorSummary } from "@/types/DebtorSummary";
 
 export const getAllDebtorsByTenantId = async (
@@ -24,7 +25,7 @@ export const getAllDebtorsByTenantId = async (
       },
     });
 
-    const debtorsParsed = debtors.map((debtor) =>
+    const debtorsParsed = debtors.map((debtor: any) =>
       DebtorResponseSchema.parse(debtor),
     ) as DebtorResponse[];
 
@@ -40,7 +41,7 @@ export const getAllDebtors = async (): Promise<DebtorBase[]> => {
   try {
     const debtors = await prisma.debtor.findMany();
 
-    return debtors.map((debtor) => debtor as DebtorBase);
+    return debtors.map((debtor: any) => debtor as DebtorBase);
   } catch (error) {
     throw new Error("Error fetching debtors");
   }
@@ -102,9 +103,9 @@ export const createDebtor = async (
       // Crear la persona si no existe
       const newPerson = await prisma.person.create({
         data: {
-          person_type: debtorFormatted.person?.person_type as $Enums.PersonType,
+          person_type: debtorFormatted.person?.person_type as PersonType,
           identification_type:
-            debtorFormatted.person?.identification_type || $Enums.IdentificationType.CEDULA,
+            debtorFormatted.person?.identification_type || IdentificationType.CEDULA,
           identification: debtorFormatted.person?.identification || "",
           first_name: debtorFormatted.person?.first_name || "",
           last_name: debtorFormatted.person?.last_name || "",
@@ -164,7 +165,7 @@ export const updateDebtor = async (
   id: string,
 ): Promise<{ success: boolean; error?: string; data?: DebtorBase }> => {
   try {
-    const updatedDebtor = await prisma.$transaction(async (tx) => {
+    const updatedDebtor = await prisma.$transaction(async (tx: any) => {
       // Update debtor
       const debtorResult = await tx.debtor.update({
         where: { id },
@@ -401,7 +402,7 @@ export const getDebts = async (
       ${whereSQL}
     `;
 
-    const raw = await prisma.$queryRawUnsafe<any[]>(query, ...params);
+    const raw = await prisma.$queryRawUnsafe(query, ...params) as any[];
 
     const summary = raw.map((row) => {
       const result: any = {};

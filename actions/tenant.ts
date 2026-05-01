@@ -1,6 +1,6 @@
 "use server";
 import { sendEmail } from "@/lib/email";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { CreateAgreement } from "@/lib/validations/agreement";
 import { Tenant } from "@/lib/validations/tenant";
 
@@ -24,7 +24,7 @@ export const getTenantByEmail = async (
     },
   });
 
-  return tenants.map((tenant) => ({
+  return tenants.map((tenant: Tenant) => ({
     subdomain: tenant.subdomain,
     clientName: tenant.name,
   }));
@@ -81,7 +81,7 @@ export const validateTenantById = async (id: string) => {
 export const getAllTenants = async (): Promise<Tenant[]> => {
   const tenants = await prisma.tenant.findMany();
 
-  return tenants.map((tenant) => ({
+  return tenants.map((tenant: Tenant) => ({
     ...tenant,
     country_code: tenant.country_code as "BQ" | "CW" | "AW",
   }));

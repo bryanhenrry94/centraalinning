@@ -22,7 +22,7 @@ import { notifyError, notifySuccess } from "@/lib/notifications";
 import { useTenant } from "@/hooks/useTenant";
 import { getAllDebtorsByTenantId } from "@/actions/debtor";
 import { IParamGeneral } from "@/lib/validations/parameter";
-import { $Enums } from "@prisma/client";
+import { CollectionCaseStatus } from "@/constants/collection-case-status";
 
 const InitialCollectionCaseCreate: CollectionCaseCreate = {
   debtor_id: "",
@@ -39,7 +39,7 @@ const InitialCollectionCaseCreate: CollectionCaseCreate = {
   total_paid: 0,
   total_to_receive: 0,
   balance: 0,
-  status: $Enums.CollectionCaseStatus.AANMANING,
+  status: CollectionCaseStatus.AANMANING,
 };
 
 interface IRegisterInvoiceProps {
@@ -50,7 +50,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
   const { tenant } = useTenant();
 
   const [formData, setFormData] = useState<CollectionCaseCreate>(
-    InitialCollectionCaseCreate
+    InitialCollectionCaseCreate,
   );
   const [loading, setLoading] = useState(false);
 
@@ -134,7 +134,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
     } catch (error) {
       console.error("Error: ", error);
       notifyError(
-        "Er is een fout opgetreden bij het registreren van de verzameltaak"
+        "Er is een fout opgetreden bij het registreren van de verzameltaak",
       );
     } finally {
       setLoading(false);
@@ -255,7 +255,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
                   <Box display="flex" justifyContent="space-between">
                     <Typography>Factuur:</Typography>
                     <Typography>{`-${formatUSD(
-                      cobranza + abbValue
+                      cobranza + abbValue,
                     )}`}</Typography>
                   </Box>
 

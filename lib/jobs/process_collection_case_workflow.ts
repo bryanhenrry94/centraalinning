@@ -1,5 +1,4 @@
-import prisma from "@/lib/prisma";
-import { $Enums } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { updateCollectionStatusAndSendNotification } from "@/actions/collection-case";
 import {
   cancelAgreementsByCollectionCase,
@@ -9,6 +8,9 @@ import {
 import { applyFine } from "@/actions/debt-fine";
 import { getParameter } from "@/actions/parameter";
 import { getLastNotificationDate } from "@/actions/notification";
+import { CollectionCaseStatus } from "@/constants/collection-case-status";
+import { PersonType } from "@/constants/person-type";
+import { FineType } from "@/constants/fine-type";
 
 export async function processCollectionCaseWorkflow() {
   // Obtener todos los casos de cobranza en estados específicos sin notificación de bloqueo
@@ -16,9 +18,9 @@ export async function processCollectionCaseWorkflow() {
     where: {
       status: {
         in: [
-          $Enums.CollectionCaseStatus.AANMANING,
-          $Enums.CollectionCaseStatus.SOMMATIE,
-          $Enums.CollectionCaseStatus.INGEBREKESTELLING,
+          CollectionCaseStatus.AANMANING,
+          CollectionCaseStatus.SOMMATIE,
+          CollectionCaseStatus.INGEBREKESTELLING,
         ],
       },
       collectionCaseNotification: {
@@ -48,22 +50,22 @@ export async function processCollectionCaseWorkflow() {
     today.setHours(0, 0, 0, 0);
 
     console.log(
-      `Procesando caso de cobranza ID: ${c.id}, Estado: ${c.status}, Fecha de vencimiento: ${c.due_date.toISOString().split("T")[0]}, Hoy: ${today.toISOString().split("T")[0]}`
+      `Procesando caso de cobranza ID: ${c.id}, Estado: ${c.status}, Fecha de vencimiento: ${c.due_date.toISOString().split("T")[0]}, Hoy: ${today.toISOString().split("T")[0]}`,
     );
 
     // Calcular días entre notificaciones según el tipo de persona
     const days_between_aanmaning_sommatie =
-      c.debtor.person?.person_type === $Enums.PersonType.INDIVIDUAL
+      c.debtor.person?.person_type === PersonType.INDIVIDUAL
         ? Number(parameter?.consumer_aanmaning_term_days)
         : Number(parameter?.company_aanmaning_term_days);
 
     const days_between_sommatie_ingebrekestelling =
-      c.debtor.person?.person_type === $Enums.PersonType.INDIVIDUAL
+      c.debtor.person?.person_type === PersonType.INDIVIDUAL
         ? Number(parameter?.consumer_sommatie_term_days)
         : Number(parameter?.company_sommatie_term_days);
 
     const days_between_ingebrekestelling_blokkade =
-      c.debtor.person?.person_type === $Enums.PersonType.INDIVIDUAL
+      c.debtor.person?.person_type === PersonType.INDIVIDUAL
         ? Number(parameter?.consumer_aanmaning_term_days)
         : Number(parameter?.company_aanmaning_term_days);
 
@@ -71,7 +73,10 @@ export async function processCollectionCaseWorkflow() {
     if (c.due_date >= today) continue;
 
     // Obtener la fecha de la última notificación relevante
-    const lastNotificationDate = await getLastNotificationDate(c.id, c.status);
+    const lastNotificationDate = await getLastNotificationDate(
+      c.id,
+      c.status as CollectionCaseStatus,
+    );
 
     console.log("lastNotificationDate: ", lastNotificationDate);
 
@@ -79,19 +84,19 @@ export async function processCollectionCaseWorkflow() {
     if (lastNotificationDate) {
       const nextNotificationDate = new Date(lastNotificationDate);
 
-      if (c.status === $Enums.CollectionCaseStatus.AANMANING) {
+      if (c.status === CollectionCaseStatus.AANMANING) {
         nextNotificationDate.setDate(
-          nextNotificationDate.getDate() + days_between_aanmaning_sommatie
+          nextNotificationDate.getDate() + days_between_aanmaning_sommatie,
         );
-      } else if (c.status === $Enums.CollectionCaseStatus.SOMMATIE) {
+      } else if (c.status === CollectionCaseStatus.SOMMATIE) {
         nextNotificationDate.setDate(
           nextNotificationDate.getDate() +
-            days_between_sommatie_ingebrekestelling
+            days_between_sommatie_ingebrekestelling,
         );
-      } else if (c.status === $Enums.CollectionCaseStatus.INGEBREKESTELLING) {
+      } else if (c.status === CollectionCaseStatus.INGEBREKESTELLING) {
         nextNotificationDate.setDate(
           nextNotificationDate.getDate() +
-            days_between_ingebrekestelling_blokkade
+            days_between_ingebrekestelling_blokkade,
         );
       }
 
@@ -101,7 +106,7 @@ export async function processCollectionCaseWorkflow() {
       // Si la próxima fecha de notificación es mayor a hoy, no hacer nada
       if (nextNotificationDate > today) {
         console.log(
-          `Próxima notificación para el caso de cobranza ID: ${c.id} es el ${nextNotificationDate.toISOString().split("T")[0]}`
+          `Próxima notificación para el caso de cobranza ID: ${c.id} es el ${nextNotificationDate.toISOString().split("T")[0]}`,
         );
 
         continue;
@@ -109,7 +114,7 @@ export async function processCollectionCaseWorkflow() {
     }
 
     console.log(
-      `El caso de cobranza ID: ${c.id} es elegible para avanzar en el flujo.`
+      `El caso de cobranza ID: ${c.id} es elegible para avanzar en el flujo.`,
     );
 
     // Verificar si tiene acuerdo de pago
@@ -123,16 +128,16 @@ export async function processCollectionCaseWorkflow() {
       if (!has_payments_up_to_date) {
         let penalty_amount = 0;
 
-        if (c.status === $Enums.CollectionCaseStatus.AANMANING) {
+        if (c.status === CollectionCaseStatus.AANMANING) {
           penalty_amount =
-            c.debtor.person?.person_type === $Enums.PersonType.COMPANY
+            c.debtor.person?.person_type === PersonType.COMPANY
               ? Number(parameter?.company_aanmaning_penalty)
               : Number(parameter?.natural_aanmaning_penalty);
         }
 
-        if (c.status === $Enums.CollectionCaseStatus.SOMMATIE) {
+        if (c.status === CollectionCaseStatus.SOMMATIE) {
           penalty_amount =
-            c.debtor.person?.person_type === $Enums.PersonType.COMPANY
+            c.debtor.person?.person_type === PersonType.COMPANY
               ? Number(parameter?.company_sommatie_penalty)
               : Number(parameter?.natural_sommatie_penalty);
         }
@@ -144,7 +149,7 @@ export async function processCollectionCaseWorkflow() {
               c.debt_id,
               penalty_amount,
               `Multa por pago atrasado en estado ${c.status}`,
-              $Enums.FineType.PENALTY
+              FineType.PENALTY,
             );
           }
         }
@@ -154,26 +159,26 @@ export async function processCollectionCaseWorkflow() {
       }
     }
 
-    if (c.status === $Enums.CollectionCaseStatus.AANMANING) {
+    if (c.status === CollectionCaseStatus.AANMANING) {
       await updateCollectionStatusAndSendNotification(
         c.id,
-        $Enums.CollectionCaseStatus.SOMMATIE
+        CollectionCaseStatus.SOMMATIE,
       );
       sent++;
     }
 
-    if (c.status === $Enums.CollectionCaseStatus.SOMMATIE) {
+    if (c.status === CollectionCaseStatus.SOMMATIE) {
       await updateCollectionStatusAndSendNotification(
         c.id,
-        $Enums.CollectionCaseStatus.INGEBREKESTELLING
+        CollectionCaseStatus.INGEBREKESTELLING,
       );
       sent++;
     }
 
-    if (c.status === $Enums.CollectionCaseStatus.INGEBREKESTELLING) {
+    if (c.status === CollectionCaseStatus.INGEBREKESTELLING) {
       await updateCollectionStatusAndSendNotification(
         c.id,
-        $Enums.CollectionCaseStatus.BLOKKADE
+        CollectionCaseStatus.BLOKKADE,
       );
       sent++;
     }

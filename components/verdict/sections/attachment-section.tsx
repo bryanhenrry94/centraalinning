@@ -14,7 +14,6 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import TotalInterest from "../total-interest";
 import {
   Controller,
   useFieldArray,
@@ -27,6 +26,7 @@ import { embargoTipos } from "@/constants/embargo";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { User } from "@/lib/validations/user";
 import { getUsersByRole } from "@/actions/user";
+import { UserRole } from "@/constants/user-role";
 
 const TotalCell = ({ control, index }: { control: any; index: number }) => {
   const { setValue } = useFormContext();
@@ -78,7 +78,7 @@ const AttachmentSection: React.FC = () => {
   useEffect(() => {
     const fetchBailiffs = async () => {
       // Fetch bailiffs from the API or any other source
-      const data = await getUsersByRole("BAILIFF");
+      const data = await getUsersByRole(UserRole.BAILIFF);
 
       if (data) {
         setBailiffs(data);
@@ -226,7 +226,7 @@ const AttachmentSection: React.FC = () => {
                 }
                 onChange={(e) => {
                   field.onChange(
-                    e.target.value ? new Date(e.target.value) : null
+                    e.target.value ? new Date(e.target.value) : null,
                   );
                 }}
               />

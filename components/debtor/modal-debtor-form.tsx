@@ -22,9 +22,9 @@ import { createDebtor, getDebtorById, updateDebtor } from "@/actions/debtor";
 import { useTenant } from "@/hooks/useTenant";
 import { notifyError, notifySuccess } from "@/lib/notifications";
 import CloseIcon from "@mui/icons-material/Close";
-import { $Enums } from "@prisma/client";
 import { DebtorIncomeCreate } from "@/lib/validations/debtor-incomes";
 import { getPersonById, getPersonByIdentification } from "@/actions/person";
+import { IdentificationType } from "@/constants/identification-type";
 
 interface ModalFormDebtorProps {
   open: boolean;
@@ -34,10 +34,10 @@ interface ModalFormDebtorProps {
 }
 
 const identificationTypeOptions = [
-  { value: $Enums.IdentificationType.KVK, label: "KVK" },
-  { value: $Enums.IdentificationType.CEDULA, label: "CEDULA" },
-  { value: $Enums.IdentificationType.PASSPORT, label: "PASPOORT" },
-  { value: $Enums.IdentificationType.RIJBEWIJS, label: "RIJBEWIJS" },
+  { value: IdentificationType.KVK, label: "KVK" },
+  { value: IdentificationType.CEDULA, label: "CEDULA" },
+  { value: IdentificationType.PASSPORT, label: "PASPOORT" },
+  { value: IdentificationType.RIJBEWIJS, label: "RIJBEWIJS" },
 ];
 
 const incomes: DebtorIncomeCreate[] = [];
@@ -273,10 +273,9 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
                   label="Identification Type"
                   options={
                     watch("person.person_type") === "COMPANY"
-                      ? [{ value: $Enums.IdentificationType.KVK, label: "KVK" }]
+                      ? [{ value: IdentificationType.KVK, label: "KVK" }]
                       : identificationTypeOptions.filter(
-                          (option) =>
-                            option.value !== $Enums.IdentificationType.KVK,
+                          (option) => option.value !== IdentificationType.KVK,
                         )
                   }
                 />
