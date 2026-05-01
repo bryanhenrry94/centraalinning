@@ -306,7 +306,7 @@ const DashboardDebtor = () => {
 
       const paymentRes = await registerPayment(payment);
 
-      if (!paymentRes.success) {
+      if (!paymentRes.id) {
         notifyError("Error al registrar el pago");
         newTab?.close();
         return;

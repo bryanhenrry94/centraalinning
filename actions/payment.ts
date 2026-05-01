@@ -6,7 +6,7 @@ import { Decimal } from "@prisma/client/runtime/library";
 export const registerPayment = async (payload: PaymentCreate) => {
   // Create payment
 
-  await prisma.payment.create({
+  const paymentRes = await prisma.payment.create({
     data: {
       debt_id: payload.debt_id,
       method: payload.method || "TRANSFER",
@@ -170,7 +170,7 @@ export const registerPayment = async (payload: PaymentCreate) => {
   //   console.error("Error sending Betalingsbewijs:", error);
   // });
 
-  return { success: true };
+  return paymentRes;
 };
 
 interface PaymentFilter {

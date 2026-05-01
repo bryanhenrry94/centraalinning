@@ -17,30 +17,160 @@ import {
   TableHead,
   TableRow,
   TableCell,
+  TableBody,
+  Chip,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import {
+  createBlokCheckRequest,
+  createPaymentForBlokCheckRequest,
+  getBlokCheckRequest,
+  listBlokCheckRequests,
+  updateBlokCheckRequest,
+} from "@/actions/blok-check-request";
+import { useSession } from "next-auth/react";
+import { notifyError, notifyInfo } from "@/lib/notifications";
+import { IdentificationType } from "@/generated/prisma/enums";
+import { BlokCheckRequest } from "@/lib/validations/blok-check-request";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import { formatDate, formatDateTime, formatTime } from "@/utils/formatters";
+import { PaymentCreate } from "@/lib/validations/payment";
+import { createSentooPayment } from "@/actions/sentoo.actions";
+import { registerPayment } from "@/actions/payment";
 
 const BlokCheckPage = () => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<null | boolean>(null);
   const [error, setError] = useState("");
+  const { data: session } = useSession();
+  const [blokCheckRequests, setBlokCheckRequests] = useState<
+    BlokCheckRequest[]
+  >([]);
+  const serviceAmount = 30;
 
   const handleSearch = async () => {
+    const tenantId = session?.user?.tenant_id;
+
+    if (!tenantId) {
+      setError("No tenant ID found in session");
+      return;
+    }
+
     if (!search.trim()) {
       setError("Ingrese un valor para buscar");
       return;
     }
 
-    setLoading(true);
-    setError("");
-    setResult(null);
+    try {
+      setLoading(true);
+      setError("");
 
-    // Simulación API
-    setTimeout(() => {
-      setResult(Math.random() > 0.5);
+      const newBlokCheckRequest = {
+        document_type: IdentificationType.CEDULA,
+        document_number: search,
+        amount: serviceAmount, // Costo fijo por bloque-check
+      };
+
+      // 1. Crear solicitud de blok-check
+      await createBlokCheckRequest(tenantId, newBlokCheckRequest);
+      // 2. Recargar lista de solicitudes
+      await loadBlokCheckRequests();
+
+      notifyInfo(
+        "Blok-Check aanvraag is ingediend. Resultaat volgt binnen enkele minuten.",
+      );
+      setSearch("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
+  };
+
+  const handleRefresh = async () => {
+    await loadBlokCheckRequests();
+  };
+
+  const loadBlokCheckRequests = async () => {
+    const tenantId = session?.user?.tenant_id;
+    if (!tenantId) {
+      setError("No tenant ID found in session");
+      return;
+    }
+
+    try {
+      const requests = await listBlokCheckRequests(tenantId);
+      console.log("Fetched Blok-Check Requests:", requests);
+      setBlokCheckRequests(requests);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    }
+  };
+
+  const handlePayment = async (requestId: string) => {
+    const tenantId = session?.user?.tenant_id;
+    if (!tenantId) {
+      setError("No tenant ID found in session");
+      return;
+    }
+
+    const blokCheckRequest = await getBlokCheckRequest(requestId);
+    if (!blokCheckRequest) {
+      setError("Blok-Check aanvraag niet gevonden");
+      return;
+    }
+
+    // 2. Crear pago en Sentoo
+    const res = await createSentooPayment({
+      amount: blokCheckRequest.amount,
+      description: `Blok-Check voor document ${blokCheckRequest.document_number}`,
+      reference: `blok-check-${blokCheckRequest.document_number}-${Date.now()}`,
+    });
+
+    if (!res.success || !res.payment?.url) {
+      throw new Error("Error al crear el pago en Sentoo");
+    }
+
+    const payment: PaymentCreate = {
+      debt_id: blokCheckRequest.debtor_id,
+      method: "TRANSFER",
+      total_amount: blokCheckRequest.amount,
+      paid_at: null,
+      status: "pending",
+      provider: "sentoo",
+      provider_ref: res.payment.id,
+      provider_payload: JSON.stringify(res.raw),
+      reference_number: "",
+      agreement_id: null,
+    };
+
+    const paymentRes = await registerPayment(payment);
+
+    const blokCheckRequestUpdateData: Partial<BlokCheckRequest> = {
+      payment_id: paymentRes.id,
+      payment_status: "pending",
+    };
+
+    await updateBlokCheckRequest(
+      blokCheckRequest.id,
+      blokCheckRequestUpdateData,
+    );
+
+    const newTab = window.open("", "_blank");
+
+    if (!paymentRes.id) {
+      notifyError("Error al registrar el pago");
+      newTab?.close();
+      return;
+    }
+
+    notifyInfo("Redirigiendo a la pasarela de pago...");
+
+    if (newTab) {
+      newTab.location.href = res.payment.url;
+    } else {
+      window.location.href = res.payment.url;
+    }
   };
 
   return (
@@ -67,7 +197,7 @@ const BlokCheckPage = () => {
               De Blok-Check is een controlemiddel waarmee u kunt nagaan of een
               debiteur een actieve economische blokkade of registraties heeft
               binnen de CFSB-samenwerking.{" "}
-              <strong>Kosten: $30 per controle</strong>
+              <strong>Kosten: ${serviceAmount} per controle</strong>
             </Typography>
           </Box>
         </CardContent>
@@ -125,19 +255,6 @@ const BlokCheckPage = () => {
               {error}
             </Alert>
           )}
-
-          {/* RESULT */}
-          {result !== null && (
-            <Box mt={3}>
-              {result ? (
-                <Alert severity="error">
-                  ⚠️ Er is een blokkade gevonden voor deze debiteur
-                </Alert>
-              ) : (
-                <Alert severity="success">✅ Geen blokkade gevonden</Alert>
-              )}
-            </Box>
-          )}
         </CardContent>
       </Card>
 
@@ -150,9 +267,26 @@ const BlokCheckPage = () => {
         }}
       >
         <CardContent>
-          <Typography variant="h6" fontWeight={600} mb={3}>
-            Uw Blok-Check aanvragen
-          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Typography variant="h6" fontWeight={600} mb={3}>
+              Uw Blok-Check aanvragen
+            </Typography>
+            <Button
+              startIcon={<RefreshIcon />}
+              sx={{ textTransform: "none" }}
+              onClick={handleRefresh}
+              disabled={loading}
+              loading={loading}
+            >
+              {loading ? <CircularProgress size={20} /> : "Vernieuwen"}
+            </Button>
+          </Box>
 
           <TableContainer sx={{ mt: 2 }}>
             <Table sx={{ minWidth: 650 }} aria-label="simple table">
@@ -166,6 +300,55 @@ const BlokCheckPage = () => {
                   <TableCell align="right">Actie</TableCell>
                 </TableRow>
               </TableHead>
+              <TableBody>
+                {blokCheckRequests.map((request) => (
+                  <TableRow key={request.id}>
+                    <TableCell>{request.id.slice(0, 8)}</TableCell>
+                    <TableCell>{request.document_number}</TableCell>
+                    <TableCell>
+                      {formatDateTime(request.created_at.toString())}
+                    </TableCell>
+                    <TableCell>
+                      {request.has_block === true ? (
+                        <Chip label="Blokkade" color="error" />
+                      ) : request.has_block === false ? (
+                        <Chip label="Geen blokkade" color="success" />
+                      ) : null}
+                    </TableCell>
+                    <TableCell align="right">${serviceAmount}</TableCell>
+                    <TableCell align="right">
+                      {request.has_block === null && (
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          sx={{ textTransform: "none" }}
+                          href={
+                            request.debtor_id
+                              ? `/debtors/${request.debtor_id}`
+                              : "#"
+                          }
+                          disabled={!request.debtor_id}
+                        >
+                          {request.debtor_id
+                            ? "Bekijk debiteur"
+                            : "Geen debiteur"}
+                        </Button>
+                      )}
+                      {request.payment_status === "pending" && (
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          size="small"
+                          sx={{ textTransform: "none" }}
+                          onClick={() => handlePayment(request.id)}
+                        >
+                          Betalen
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
             </Table>
           </TableContainer>
         </CardContent>
