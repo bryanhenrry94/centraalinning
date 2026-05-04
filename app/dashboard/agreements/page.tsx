@@ -7,6 +7,7 @@ import TabPanel from "@/components/ui/tab-panel";
 import { useSession } from "next-auth/react";
 import { AgreementTableApprove } from "@/components/agreements/agreement-table-approve";
 import AgreementTable from "@/components/agreements/agreement-table";
+import { AgreementStatus } from "@/constants/agreement-status";
 
 const PaymentAgreementsPage = () => {
   const { data: session } = useSession();
@@ -27,7 +28,7 @@ const PaymentAgreementsPage = () => {
 
     const pending = await getPaymentAgreements({
       tenant_id: session.user.tenant_id,
-      status: "PENDING",
+      status: AgreementStatus.PENDING,
     });
 
     const processed = await getPaymentAgreements({

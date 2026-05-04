@@ -8,12 +8,13 @@ import {
 } from "@/lib/validations/agreement";
 // import AgreementApprovalEmail from "@/templates/emails/AgreementApprovalEmail";
 import { sendEmail } from "@/lib/email";
-import { $Enums, AgreementInstallment } from "@/generated/prisma/browser";
+import { AgreementStatus } from "@/constants/agreement-status";
+import { InstallmentStatus } from "@/constants/installment-status";
 
 type PaymentAgreementFilter = {
   debt_id?: string;
   tenant_id?: string;
-  status?: $Enums.AgreementStatus;
+  status?: AgreementStatus;
   debtor_id?: string;
 };
 
@@ -77,7 +78,7 @@ export const createPaymentAgreement = async (
       installments_count: data.installments_count,
       start_date: data.start_date,
       end_date: data.end_date,
-      status: $Enums.AgreementStatus.PENDING,
+      status: AgreementStatus.PENDING,
       debtor_id: data.debtor_id,
     },
   });
@@ -93,7 +94,7 @@ export const createPaymentAgreement = async (
         number: i + 1,
         due_date: installmentDate,
         amount: data.installment_amount,
-        status: $Enums.InstallmentStatus.PENDING,
+        status: InstallmentStatus.PENDING,
       },
     });
   }
@@ -138,7 +139,7 @@ export const updatePaymentAgreement = async (
     installment_amount?: number;
     installments_count?: number;
     start_date?: Date;
-    status?: $Enums.AgreementStatus;
+    status?: AgreementStatus;
     debtor_id?: string | null;
     comment?: string;
   } = {};
@@ -151,7 +152,7 @@ export const updatePaymentAgreement = async (
     updateData.installments_count = data.installments_count;
   if (data.start_date !== undefined) updateData.start_date = data.start_date;
   if (data.status !== undefined)
-    updateData.status = data.status as unknown as $Enums.AgreementStatus;
+    updateData.status = data.status as unknown as AgreementStatus;
   if (data.debtor_id !== undefined)
     updateData.debtor_id = data.debtor_id ?? null;
   if (data.comment !== undefined) updateData.comment = data.comment ?? "";
@@ -180,7 +181,7 @@ export const updatePaymentAgreement = async (
           number: i + 1,
           due_date: installmentDate,
           amount: Number(updateData.installment_amount),
-          status: $Enums.InstallmentStatus.PENDING,
+          status: InstallmentStatus.PENDING,
         },
       });
     }
@@ -206,7 +207,7 @@ export const existsPaymentAgreement = async (
   debt_id: string,
 ): Promise<boolean> => {
   const count = await prisma.agreement.count({
-    where: { debt_id, status: $Enums.AgreementStatus.ACCEPTED },
+    where: { debt_id, status: AgreementStatus.ACCEPTED },
   });
 
   return count > 0;
@@ -254,7 +255,7 @@ export const getInstallmentsByAgreement = async (agreement_id: string) => {
     where: { agreement_id },
   });
 
-  return installments.map((installment: AgreementInstallment) => ({
+  return installments.map((installment: any) => ({
     id: installment.id,
     agreement_id: installment.agreement_id,
     number: installment.number,
@@ -271,7 +272,7 @@ export const hasAgreement = async (debt_id: string): Promise<boolean> => {
     const agreement = await prisma.agreement.findFirst({
       where: {
         debt_id: debt_id,
-        status: $Enums.AgreementStatus.ACCEPTED,
+        status: AgreementStatus.ACCEPTED,
       },
     });
 
@@ -290,7 +291,7 @@ export const hasPaymentsUpToDate = async (
     const agreement = await prisma.agreement.findFirst({
       where: {
         debt_id: debt_id,
-        status: $Enums.AgreementStatus.ACCEPTED,
+        status: AgreementStatus.ACCEPTED,
       },
       include: {
         installments: true,
@@ -303,7 +304,7 @@ export const hasPaymentsUpToDate = async (
     for (const installment of agreement.installments) {
       if (
         installment.due_date <= today &&
-        installment.status !== $Enums.InstallmentStatus.PAID
+        installment.status !== InstallmentStatus.PAID
       ) {
         return false;
       }
@@ -319,10 +320,10 @@ export const cancelAgreementsByCollectionCase = async (debt_id: string) => {
   await prisma.agreement.updateMany({
     where: {
       debt_id,
-      status: $Enums.AgreementStatus.ACCEPTED,
+      status: AgreementStatus.ACCEPTED,
     },
     data: {
-      status: $Enums.AgreementStatus.CANCELLED,
+      status: AgreementStatus.CANCELLED,
     },
   });
 };

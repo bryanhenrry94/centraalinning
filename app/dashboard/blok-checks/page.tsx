@@ -30,13 +30,13 @@ import {
 } from "@/actions/blok-check-request";
 import { useSession } from "next-auth/react";
 import { notifyError, notifyInfo } from "@/lib/notifications";
-import { IdentificationType } from "@/generated/prisma/enums";
 import { BlokCheckRequest } from "@/lib/validations/blok-check-request";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { formatDate, formatDateTime, formatTime } from "@/utils/formatters";
+import { formatDateTime } from "@/utils/formatters";
 import { PaymentCreate } from "@/lib/validations/payment";
 import { createSentooPayment } from "@/actions/sentoo.actions";
 import { registerPayment } from "@/actions/payment";
+import { IdentificationType } from "@/constants/identification-type";
 
 const BlokCheckPage = () => {
   const [search, setSearch] = useState("");
