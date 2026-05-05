@@ -17,13 +17,16 @@ import { MembershipStatus } from "@prisma/client";
 
 export const signInWithPassword = async (
   params: LoginFormData,
-): Promise<{ success: boolean; data?: IdTokenInput }> => {
+): Promise<{ success: boolean; error?: string; data?: IdTokenInput }> => {
   // Validar inputs
   const validated = loginSchema.parse(params);
   const { email, password, subdomain } = validated;
 
   if (!email || !password || !subdomain) {
-    throw new Error("Email, password, and subdomain are required");
+    return {
+      success: false,
+      error: "Email, password, and subdomain are required",
+    };
   }
 
   // Buscar el Tenant
@@ -32,7 +35,10 @@ export const signInWithPassword = async (
   });
 
   if (!tenant) {
-    throw new Error("Invalid subdomain");
+    return {
+      success: false,
+      error: "Tenant not found",
+    };
   }
 
   // Buscar el usuario POR EMAIL (sin tenant)
@@ -41,29 +47,59 @@ export const signInWithPassword = async (
   });
 
   if (!user || !user.is_active) {
-    throw new Error("Invalid email or inactive user");
+    return {
+      success: false,
+      error: "Invalid email or inactive user",
+    };
   }
 
   if (!user.password_hash) {
-    throw new Error("User has no password set");
+    return {
+      success: false,
+      error: "User has no password set",
+    };
   }
 
   // 3️⃣ Buscar Membership (UserTenant) para este tenant
+  const membershipPending = await prisma.membership.findFirst({
+    where: {
+      user_id: user.id,
+      tenant_id: tenant.id,
+      status: MembershipStatus.PENDING,
+    },
+  });
+
+  if (!membershipPending) {
+    return {
+      success: false,
+      error: "No pending membership found for this user and tenant",
+    };
+  }
+
   const membership = await prisma.membership.findFirst({
     where: {
       user_id: user.id,
       tenant_id: tenant.id,
+      status: {
+        not: MembershipStatus.PENDING,
+      },
     },
   });
 
   if (!membership) {
-    throw new Error("You do not have access to this tenant");
+    return {
+      success: false,
+      error: "You do not have access to this tenant",
+    };
   }
 
   // 4️⃣ Validar contraseña
   const isPasswordValid = await bcrypt.compare(password, user.password_hash);
   if (!isPasswordValid) {
-    throw new Error("Credentials are invalid");
+    return {
+      success: false,
+      error: "Credentials are invalid",
+    };
   }
 
   // 5️⃣ Crear el token con el rol del membership
@@ -204,7 +240,7 @@ export async function createAccount(
     //     t.contact_email || "",
     //     result.tenant.name,
     //     new Date().toLocaleDateString(),
-    //     await prisma.tenant.count()
+    //     await prisma.tenant.count(),
     //   );
     // });
 

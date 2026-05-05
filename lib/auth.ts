@@ -37,10 +37,17 @@ export const authOptions: AuthOptions = {
           // llama logica para validar las credenciales
           const response = await signInWithPassword(params);
 
+          if (!response.success) {
+            console.error("Error en signInWithPassword:", response.error);
+
+            throw new Error(response.error || "Authentication failed");
+          }
+
           // Si la autenticación es exitosa, devuelve el usuario
           if (response && response.success === true) {
             if (!response.data) {
-              return null;
+              console.error("No data returned from signInWithPassword");
+              throw new Error("Authentication failed: No user data");
             }
 
             // Ensure all expected properties exist, even if undefined
@@ -52,11 +59,14 @@ export const authOptions: AuthOptions = {
               email_verified: response.data.email_verified ?? false,
             };
           } else {
-            return null;
+            console.error("Authentication failed");
+            throw new Error("Authentication failed");
           }
         } catch (error) {
           console.error("Error en authorize:", error);
-          return null;
+          throw error instanceof Error
+            ? error
+            : new Error("Authentication error");
         }
       },
     }),
