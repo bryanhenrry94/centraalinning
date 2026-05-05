@@ -69,10 +69,10 @@ export const signInWithPassword = async (
     },
   });
 
-  if (!membershipPending) {
+  if (membershipPending) {
     return {
       success: false,
-      error: "No pending membership found for this user and tenant",
+      error: "Betaling in behandeling. Voltooi alstublieft het betalingsproces om toegang te krijgen.",
     };
   }
 
@@ -89,7 +89,7 @@ export const signInWithPassword = async (
   if (!membership) {
     return {
       success: false,
-      error: "You do not have access to this tenant",
+      error: "No tienes acceso a este tenant. Contacta al administrador.",
     };
   }
 
@@ -98,7 +98,7 @@ export const signInWithPassword = async (
   if (!isPasswordValid) {
     return {
       success: false,
-      error: "Credentials are invalid",
+      error: "Credenciales inválidas",
     };
   }
 
