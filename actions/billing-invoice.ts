@@ -11,6 +11,8 @@ import { getNameCountry } from "@/utils/location";
 import { sendInvoiceEmail } from "./email";
 import { InvoicePDFProps } from "@/templates/pdfs/InvoicePDF";
 import { createSentooPayment } from "./sentoo.actions";
+import { PaymentCreate } from "@/lib/validations/payment";
+import { registerPayment } from "./payment";
 
 interface ActivationInvoiceInput {
   tenant_id: string;
@@ -89,6 +91,23 @@ export const createActivationInvoice = async (
   }
 
   console.log("payment created:", res.payment);
+
+  // Crea el registro de pago en la base de datos
+  const payment: PaymentCreate = {
+    debt_id: null, // No hay una deuda previa, este es un pago directo por activación
+    method: "TRANSFER",
+    total_amount: totalWithTax,
+    paid_at: null,
+    status: "pending",
+    provider: "sentoo",
+    provider_ref: res?.payment?.id,
+    provider_payload: JSON.stringify(res.raw),
+    reference_number: "",
+    agreement_id: null,
+  };
+
+  const paymentRes = await registerPayment(tenant.id, payment);
+  console.log("Payment registered in DB:", paymentRes);
 
   // Enviar correo con la factura al email de contacto del tenant
   if (tenant.contact_email) {
