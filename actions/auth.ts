@@ -158,7 +158,7 @@ export async function createAccount(
           fullname: validatedData.user.fullname,
           password_hash,
           phone: validatedData.user.phone,
-          is_active: false, // El usuario estará inactivo hasta que pague la factura de activación o se verifique su correo
+          is_active: true, // este campo se podra usar luego si queremos implementar email verification
         },
       });
 
