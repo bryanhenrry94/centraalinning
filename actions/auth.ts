@@ -174,7 +174,7 @@ export async function createAccount(
       return { tenant, user, membership };
     });
 
-    let pricePlan = payload.total_price;
+    let pricePlan = payload.total_price || 150;
 
     // if (
     //   payload.company.number_of_employees &&

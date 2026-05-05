@@ -74,6 +74,8 @@ export default function SignUpPage() {
       //final submission
       try {
         setLoading(true);
+        
+        console.log("Submitting form data:", formData);
         const newAccount = await createAccount(formData);
 
         if (!newAccount.status) {
