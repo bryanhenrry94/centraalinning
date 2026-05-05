@@ -23,7 +23,6 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import {
   createBlokCheckRequest,
-  createPaymentForBlokCheckRequest,
   getBlokCheckRequest,
   listBlokCheckRequests,
   updateBlokCheckRequest,
@@ -131,7 +130,7 @@ const BlokCheckPage = () => {
       throw new Error("Error al crear el pago en Sentoo");
     }
 
-    const payment: PaymentCreate = {
+    const payment: PaymentCreate = {      
       debt_id: blokCheckRequest.debtor_id,
       method: "TRANSFER",
       total_amount: blokCheckRequest.amount,
@@ -144,7 +143,7 @@ const BlokCheckPage = () => {
       agreement_id: null,
     };
 
-    const paymentRes = await registerPayment(payment);
+    const paymentRes = await registerPayment(tenantId, payment);
 
     const blokCheckRequestUpdateData: Partial<BlokCheckRequest> = {
       payment_id: paymentRes.id,
@@ -309,15 +308,15 @@ const BlokCheckPage = () => {
                       {formatDateTime(request.created_at.toString())}
                     </TableCell>
                     <TableCell>
-                      {request.has_block === true ? (
+                      {request.has_blockade === true ? (
                         <Chip label="Blokkade" color="error" />
-                      ) : request.has_block === false ? (
+                      ) : request.has_blockade === false ? (
                         <Chip label="Geen blokkade" color="success" />
                       ) : null}
                     </TableCell>
                     <TableCell align="right">${serviceAmount}</TableCell>
                     <TableCell align="right">
-                      {request.has_block === null && (
+                      {request.has_blockade === null && (
                         <Button
                           variant="outlined"
                           size="small"

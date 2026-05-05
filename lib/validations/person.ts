@@ -11,6 +11,7 @@ export const personSchema = z.object({
   email: z.email().optional().nullable(),
   phone: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
+  has_blockade: z.boolean().optional(),
 });
 
 export const personSummarySchema = personSchema.pick({

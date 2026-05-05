@@ -1,4 +1,5 @@
 import { verifySentooPayment } from "@/actions/sentoo.actions";
+import { MembershipStatus } from "@/constants/membership-status";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -46,6 +47,31 @@ export async function POST(req: NextRequest) {
           paid_at: new Date(),
         },
       });
+
+      // Busca si tiene un Membership pendiente y actívalo
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: payment.tenant_id },
+        include: {
+          memberships: {
+            where: { status: "PENDING" },
+          },
+        },
+      });
+
+      if (tenant?.memberships.length) {
+        await prisma.membership.update({
+          where: { id: tenant.memberships[0].id },
+          data: {
+            status: MembershipStatus.ACTIVE,
+            current_period_end: new Date(
+              Date.now() + 30 * 24 * 60 * 60 * 1000
+            ), // +30 días
+          },
+        });
+
+        console.log("✅ Membership activated for tenant:", tenant.id);
+      }
+
     } else {
       await prisma.payment.update({
         where: { id: payment.id },

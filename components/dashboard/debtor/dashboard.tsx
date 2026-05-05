@@ -304,7 +304,7 @@ const DashboardDebtor = () => {
         agreement_id: null,
       };
 
-      const paymentRes = await registerPayment(payment);
+      const paymentRes = await registerPayment(debt.tenant_id, payment);
 
       if (!paymentRes.id) {
         notifyError("Error al registrar el pago");

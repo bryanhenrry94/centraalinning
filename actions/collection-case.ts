@@ -308,5 +308,39 @@ export const updateCollectionStatusAndSendNotification = async (
     },
   });
 
+  if (status === CollectionCaseStatus.BLOKKADE) {
+    // Actualiza la tabla person y cambia el estado de has_blockade a true
+    const collectionCase = await prisma.collectionCase.findUnique({
+      where: { id },
+      include: {
+        debtor: {
+          include: {
+            person: true,
+          },
+        },
+      },
+    });
+
+    if (!collectionCase) {
+      console.error(`Collection case with ID ${id} not found.`);
+      return;
+    }
+
+    const personId = collectionCase.debtor?.person?.id;
+
+    if (!personId) {
+      console.error(
+        `Person associated with collection case ID ${id} not found.`,
+      );
+      return;
+    }
+
+    await prisma.person.update({
+      where: { id: personId },
+      data: { has_blockade: true },
+    });
+    return;
+  }
+
   await sendNotification(id);
 };

@@ -24,10 +24,12 @@ export const createBlokCheckRequest = async (
 };
 
 export const createPaymentForBlokCheckRequest = async (
+  tenant_id: string,
   payload: PaymentCreate,
 ) => {
   const payment = await prisma.payment.create({
     data: {
+      tenant_id: tenant_id,
       debt_id: payload.debt_id,
       method: payload.method || "TRANSFER",
       provider: payload.provider || "sentoo",
@@ -58,7 +60,7 @@ export const getBlokCheckRequest = async (
         payment_status: request.payment_status.toString(),
         debtor_id: request.debtor_id ?? undefined,
         payment_id: request.payment_id ?? undefined,
-        has_block: request.has_block ?? undefined,
+        has_blockade: request.has_blockade ?? undefined,
         block_reason: request.block_reason ?? undefined,
         checked_at: request.checked_at ?? undefined,
       }
@@ -80,7 +82,7 @@ export const updateBlokCheckRequest = async (
         : undefined,
       debtor_id: data.debtor_id,
       payment_id: data.payment_id,
-      has_block: data.has_block,
+      has_blockade: data.has_blockade,
       block_reason: data.block_reason,
       checked_at: data.checked_at,
     },
@@ -109,7 +111,7 @@ export const listBlokCheckRequests = async (
     payment_status: request.payment_status.toString(),
     debtor_id: request.debtor_id ?? undefined,
     payment_id: request.payment_id ?? undefined,
-    has_block: request.has_block ?? undefined,
+    has_blockade: request.has_blockade ?? undefined,
     block_reason: request.block_reason ?? undefined,
     checked_at: request.checked_at ?? undefined,
   }));

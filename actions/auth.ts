@@ -165,7 +165,8 @@ export async function createAccount(
         data: {
           tenant_id: tenant.id,
           user_id: user.id,
-          role: "TENANT_ADMIN" as any, 
+          role: "TENANT_ADMIN" as any,  
+          status: ""        
         },
       });
 

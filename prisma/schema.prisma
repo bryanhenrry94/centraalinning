@@ -45,6 +45,7 @@ model Tenant {
   agreements          Agreement[]
   debts               Debt[]
   memberships         Membership[]
+  payments            Payment[]
 
   @@map("tenant")
 }
@@ -70,19 +71,32 @@ model User {
 }
 
 model Membership {
-  id         String    @id @default(uuid())
-  user_id    String
-  tenant_id  String
-  role       UserRole
+  id                 String            @id @default(uuid())
+  user_id            String
+  tenant_id          String
+  role               UserRole
 
-  user       User     @relation(fields: [user_id], references: [id])
-  tenant     Tenant   @relation(fields: [tenant_id], references: [id])
+  status             MembershipStatus  @default(PENDING)
 
-  created_at DateTime  @default(now())
+  // 👇 control de facturación
+  current_period_end DateTime?
+  last_invoice_at    DateTime?
+
+  user               User             @relation(fields: [user_id], references: [id])
+  tenant             Tenant           @relation(fields: [tenant_id], references: [id])
+
+  created_at         DateTime          @default(now())
 
   @@unique([user_id, tenant_id]) // evita duplicados
 
   @@map("membership")
+}
+
+enum MembershipStatus {
+  PENDING
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
 }
 
 model TenantInvitation {
@@ -118,6 +132,8 @@ model Person {
   email               String?             @unique
   phone               String?
   address             String?
+
+  has_blockade        Boolean             @default(false)
 
   created_at          DateTime            @default(now())
   updated_at          DateTime            @updatedAt
@@ -586,6 +602,10 @@ model AgreementInstallment {
 
 model Payment {
   id               String                  @id @default(cuid())
+
+  tenant_id        String
+  tenant           Tenant                 @relation(fields: [tenant_id], references: [id])
+
   debt_id          String?
   debt             Debt?                  @relation(fields: [debt_id], references: [id])
   method           PaymentMethod
@@ -655,7 +675,7 @@ model BlokCheckRequest {
   amount                                                        Decimal             @db.Decimal(10,2)
 
   // 📊 Resultado
-  has_block                                                     Boolean?
+  has_blockade                                                  Boolean?
   block_reason                                                  String?
   checked_at                                                    DateTime?
 

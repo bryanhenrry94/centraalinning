@@ -63,8 +63,15 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({ debtId, onSave }) => {
 
   const onSubmit = async (data: PaymentCreate) => {
     try {
+      const tenantId = session?.user?.tenant_id;
+      if (!tenantId) {
+        notifyError("Tenant ID is missing");
+        return;
+      }
+
       console.log("Payment Data:", data);
-      await registerPayment(data);
+      await registerPayment(tenantId, data);
+
       notifyInfo("Payment registered successfully");
       await fetchDebts();
       reset(initialState);

@@ -3,11 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { Payment, PaymentCreate } from "@/lib/validations/payment";
 import { Decimal } from "@prisma/client/runtime/library";
 
-export const registerPayment = async (payload: PaymentCreate) => {
+export const registerPayment = async (
+  tenant_id: string,
+  payload: PaymentCreate,
+) => {
   // Create payment
 
   const paymentRes = await prisma.payment.create({
     data: {
+      tenant_id: tenant_id,
       debt_id: payload.debt_id,
       method: payload.method || "TRANSFER",
       provider: payload.provider || "manual",

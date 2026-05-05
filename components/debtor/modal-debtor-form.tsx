@@ -69,6 +69,7 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
         first_name: "",
         last_name: "",
         business_name: "",
+        has_blockade: false,
       },
     },
   });

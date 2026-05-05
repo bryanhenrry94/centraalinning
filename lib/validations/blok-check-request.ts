@@ -29,7 +29,7 @@ export const blokCheckRequestSchema = z.object({
   amount: z.number().positive(),
 
   // 📊 resultado
-  has_block: z.boolean().optional(),
+  has_blockade: z.boolean().optional(),
   block_reason: z.string().optional(),
   checked_at: z.date().optional(),
 
@@ -43,7 +43,7 @@ export const blokCheckRequestCreateSchema = blokCheckRequestSchema.omit({
   debtor_id: true,
   payment_id: true,
   payment_status: true,
-  has_block: true,
+  has_blockade: true,
   block_reason: true,
   checked_at: true,
   created_at: true,
