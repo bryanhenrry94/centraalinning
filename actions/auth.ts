@@ -13,6 +13,7 @@ import { AuthSignUpSchema, ITenantSignUp } from "@/lib/validations/signup";
 import { getParameter } from "./parameter";
 import { CountryList } from "@/constants/country";
 import { sendNewClitentEmail, sendWelcomeEmail } from "./email";
+import { MembershipStatus } from "@prisma/client";
 
 export const signInWithPassword = async (
   params: LoginFormData,
@@ -165,8 +166,8 @@ export async function createAccount(
         data: {
           tenant_id: tenant.id,
           user_id: user.id,
-          role: "TENANT_ADMIN" as any,  
-          status: ""        
+          role: "TENANT_ADMIN" as any,
+          status: MembershipStatus.PENDING, // El membership estará pendiente hasta que se confirme el pago
         },
       });
 
