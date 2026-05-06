@@ -63,15 +63,35 @@ export async function POST(req: NextRequest) {
           where: { id: tenant.memberships[0].id },
           data: {
             status: MembershipStatus.ACTIVE,
-            current_period_end: new Date(
-              Date.now() + 30 * 24 * 60 * 60 * 1000
-            ), // +30 días
+            current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // +30 días
           },
         });
 
         console.log("✅ Membership activated for tenant:", tenant.id);
       }
 
+      // Valida si el pago tiene una solicitud de blok-check y actualiza el estado del has_blokcheck
+      const blokCheck = await prisma.blokCheckRequest.findFirst({
+        where: { payment_id: payment.id },
+      });
+
+      if (blokCheck) {
+        let _has_blockade: boolean = false;
+
+        // consulta en la tabla person por la identificacion y obtiene si la persona tiene un bloqueo
+        const person = await prisma.person.findUnique({
+          where: { identification: blokCheck.document_number },
+        });
+
+        if (person) {
+          _has_blockade = person.has_blockade ? person.has_blockade : false;
+        }
+
+        await prisma.blokCheckRequest.update({
+          where: { id: blokCheck.id },
+          data: { has_blockade: _has_blockade },
+        });
+      }
     } else {
       await prisma.payment.update({
         where: { id: payment.id },
