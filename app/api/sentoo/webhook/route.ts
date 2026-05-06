@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
 
         await prisma.blokCheckRequest.update({
           where: { id: blokCheck.id },
-          data: { has_blockade: _has_blockade },
+          data: { has_blockade: _has_blockade, payment_status: "paid" },
         });
       }
     } else {

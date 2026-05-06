@@ -130,7 +130,7 @@ const BlokCheckPage = () => {
       throw new Error("Error al crear el pago en Sentoo");
     }
 
-    const payment: PaymentCreate = {      
+    const payment: PaymentCreate = {
       debt_id: blokCheckRequest.debtor_id,
       method: "TRANSFER",
       total_amount: blokCheckRequest.amount,
@@ -309,41 +309,31 @@ const BlokCheckPage = () => {
                     </TableCell>
                     <TableCell>
                       {request.has_blockade === true ? (
-                        <Chip label="Blokkade" color="error" />
+                        <Chip
+                          label="Blokkade"
+                          color="error"
+                          sx={{ minWidth: 125 }}
+                        />
                       ) : request.has_blockade === false ? (
-                        <Chip label="Geen blokkade" color="success" />
+                        <Chip
+                          label="Geen blokkade"
+                          color="success"
+                          sx={{ minWidth: 125 }}
+                        />
                       ) : null}
                     </TableCell>
                     <TableCell align="right">${serviceAmount}</TableCell>
                     <TableCell align="right">
-                      {request.has_blockade === null && (
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          sx={{ textTransform: "none" }}
-                          href={
-                            request.debtor_id
-                              ? `/debtors/${request.debtor_id}`
-                              : "#"
-                          }
-                          disabled={!request.debtor_id}
-                        >
-                          {request.debtor_id
-                            ? "Bekijk debiteur"
-                            : "Geen debiteur"}
-                        </Button>
-                      )}
-                      {request.payment_status === "pending" && (
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          size="small"
-                          sx={{ textTransform: "none" }}
-                          onClick={() => handlePayment(request.id)}
-                        >
-                          Betalen
-                        </Button>
-                      )}
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        sx={{ textTransform: "none" }}
+                        onClick={() => handlePayment(request.id)}
+                        disabled={request.payment_status === "paid"}
+                      >
+                        Betalen
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
