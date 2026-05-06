@@ -95,7 +95,8 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
   const subtotal = Number(invoiceAmount);
   const cobranza = (subtotal * collection_fee_rate) / 100; // 0.15
   const abbValue = (cobranza * abb_rate) / 100;
-  const totalFinal = subtotal - cobranza - abbValue;
+  const aditionalCosts = _parameter?.digital_file_costs || 0;
+  const totalFinal = subtotal - cobranza - abbValue - aditionalCosts;
 
   const formatUSD = (value: number) =>
     new Intl.NumberFormat("en-US", {
@@ -255,7 +256,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
                   <Box display="flex" justifyContent="space-between">
                     <Typography>Factuur:</Typography>
                     <Typography>{`-${formatUSD(
-                      cobranza + abbValue,
+                      cobranza + abbValue + aditionalCosts,
                     )}`}</Typography>
                   </Box>
 

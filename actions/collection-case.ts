@@ -178,6 +178,7 @@ export const createCollectionCase = async (
 
   const fee_rate = parameter.collection_fee_rate;
   const abb_rate = parameter.abb_rate;
+  const digital_file_costs = parameter.digital_file_costs;
 
   // Calcular montos
   const fee_amount = Number(
@@ -187,15 +188,29 @@ export const createCollectionCase = async (
 
   // total con impuestos y multas
   const total_due = Number(
-    (parsedData.amount_original + fee_amount + abb_amount).toFixed(2),
+    (
+      parsedData.amount_original +
+      fee_amount +
+      abb_amount +
+      digital_file_costs
+    ).toFixed(2),
   );
 
   // neto después de retención
   const total_to_receive = Number(
-    (parsedData.amount_original - fee_amount - abb_amount).toFixed(2),
+    (
+      parsedData.amount_original -
+      fee_amount -
+      abb_amount -
+      digital_file_costs
+    ).toFixed(2),
   );
 
-  const balance = parsedData.amount_original + fee_amount + abb_amount;
+  const balance =
+    parsedData.amount_original +
+    fee_amount +
+    abb_amount +
+    digital_file_costs;
 
   // Calcular fechas de recordatorio
   const day_term = await getNotificationDays(
@@ -265,8 +280,10 @@ export const createCollectionCase = async (
   await createCollectionInvoice({
     tenant_id: tenant.id,
     island: tenant.country_code,
-    address: tenant.address,
-    amount: fee_amount,
+    address: tenant.address,    
+    fee_amount: fee_amount,
+    abb_amount: abb_amount,
+    digital_file_costs: digital_file_costs,
   });
 
   console.log("Portal CI - Caso de cobranza creado: ", newCollectionCase.id);

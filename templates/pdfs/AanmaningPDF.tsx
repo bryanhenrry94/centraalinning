@@ -111,6 +111,7 @@ export interface AanmaningPDFProps {
   total_amount: string;
   bankName: string;
   accountNumber: string;
+  digitalFileCosts: string;
   amount_original: string;
   extraCosts: string;
   calculatedABB: string;
@@ -127,6 +128,7 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
   total_amount,
   bankName,
   accountNumber,
+  digitalFileCosts,
   amount_original,
   extraCosts,
   calculatedABB,
@@ -172,6 +174,10 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
 
         {/* Table */}
         <View style={styles.table}>
+          <View style={styles.tableRow}>
+            <Text style={styles.tableCell}>Digitale dossierkosten</Text>
+            <Text style={styles.tableCellRight}>${digitalFileCosts}</Text>
+          </View>
           <View style={styles.tableRow}>
             <Text style={styles.tableCell}>Hoofdsom</Text>
             <Text style={styles.tableCellRight}>${amount_original}</Text>

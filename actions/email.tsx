@@ -233,6 +233,9 @@ export const sendAanmaningEmail = async (
       debtorAddress: debtorAddress,
       island: island || "Bonaire",
       reference_number: collection.reference_number || "",
+      digitalFileCosts: parameter.digital_file_costs
+        ? parameter.digital_file_costs.toFixed(2)
+        : "0.00",
       total_amount: collection.total_due.toFixed(2),
       bankName: parameter.bank_name || "Bank Name",
       accountNumber: parameter.bank_account || "Account Number",

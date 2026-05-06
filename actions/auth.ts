@@ -72,7 +72,8 @@ export const signInWithPassword = async (
   if (membershipPending) {
     return {
       success: false,
-      error: "Betaling in behandeling. Voltooi alstublieft het betalingsproces om toegang te krijgen.",
+      error:
+        "Betaling in behandeling. Voltooi alstublieft het betalingsproces om toegang te krijgen.",
     };
   }
 
@@ -221,12 +222,16 @@ export async function createAccount(
     //   pricePlan = parameter.small_company_price;
     // }
 
+    const abb_amount = pricePlan * parameter.abb_rate;
+
     // ✅ 3. Crear factura de activación (fuera de la transacción)
     await createActivationInvoice({
       tenant_id: result.tenant.id,
       island: validatedData.company.country,
       address: validatedData.company.address,
-      amount: pricePlan,
+      fee_amount: pricePlan,
+      abb_amount: abb_amount, // Suponiendo que abb_rate es el valor correcto
+      digital_file_costs: parameter.digital_file_costs, // Suponiendo que digital_file_costs es el valor correcto
     });
 
     await sendWelcomeEmail(result.user.email, result.user.fullname || "");

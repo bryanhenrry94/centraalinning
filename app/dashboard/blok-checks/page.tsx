@@ -273,7 +273,7 @@ const BlokCheckPage = () => {
               alignItems: "center",
             }}
           >
-            <Typography variant="h6" fontWeight={600} mb={3}>
+            <Typography variant="h6" fontWeight={600}>
               Uw Blok-Check aanvragen
             </Typography>
             <Button
@@ -287,27 +287,110 @@ const BlokCheckPage = () => {
             </Button>
           </Box>
 
-          <TableContainer sx={{ mt: 2 }}>
-            <Table sx={{ minWidth: 650 }} aria-label="simple table">
+          <TableContainer
+            sx={{
+              mt: 2,
+              border: "1px solid #e0e0e0",
+              overflow: "hidden",
+            }}
+          >
+            <Table
+              sx={{
+                minWidth: 650,
+                borderCollapse: "separate",
+                borderSpacing: 0,
+              }}
+              aria-label="simple table"
+            >
               <TableHead>
-                <TableRow>
-                  <TableCell>Referentie</TableCell>
-                  <TableCell>Identificatie</TableCell>
-                  <TableCell>Datum</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell align="right">Kosten</TableCell>
-                  <TableCell align="right">Actie</TableCell>
+                <TableRow
+                  sx={{
+                    backgroundColor: (theme) => theme.palette.grey[200],
+                  }}
+                >
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: 600,
+                      color: (theme) => theme.palette.grey[900],
+                    }}
+                  >
+                    Referentie
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: 600,
+                      color: (theme) => theme.palette.grey[900],
+                    }}
+                  >
+                    Identificatie
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: 600,
+                      color: (theme) => theme.palette.grey[900],
+                    }}
+                  >
+                    Datum
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: 600,
+                      color: (theme) => theme.palette.grey[900],
+                    }}
+                  >
+                    Status
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: 600,
+                      color: (theme) => theme.palette.grey[900],
+                    }}
+                  >
+                    Kosten
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontWeight: 600,
+                      color: (theme) => theme.palette.grey[900],
+                    }}
+                  >
+                    Actie
+                  </TableCell>
                 </TableRow>
               </TableHead>
+
               <TableBody>
                 {blokCheckRequests.map((request) => (
-                  <TableRow key={request.id}>
-                    <TableCell>{request.id.slice(0, 8)}</TableCell>
-                    <TableCell>{request.document_number}</TableCell>
-                    <TableCell>
+                  <TableRow
+                    key={request.id}
+                    sx={{
+                      "& td": {
+                        borderBottom: "1px solid #B5B5B5",
+                      },
+                      "&:hover": {
+                        backgroundColor: "#fafafa",
+                      },
+                      "&:last-child td": {
+                        borderBottom: "none",
+                      },
+                    }}
+                  >
+                    <TableCell align="center">
+                      {request.id.slice(0, 8)}
+                    </TableCell>
+                    <TableCell align="center">
+                      {request.document_number}
+                    </TableCell>
+                    <TableCell align="center">
                       {formatDateTime(request.created_at.toString())}
                     </TableCell>
-                    <TableCell>
+                    <TableCell align="center">
                       {request.has_blockade === true ? (
                         <Chip
                           label="Blokkade"
@@ -318,12 +401,16 @@ const BlokCheckPage = () => {
                         <Chip
                           label="Geen blokkade"
                           color="success"
-                          sx={{ minWidth: 125 }}
+                          sx={{
+                            minWidth: 125,
+                            backgroundColor: "#2e7d32",
+                            color: "white",
+                          }}
                         />
                       ) : null}
                     </TableCell>
-                    <TableCell align="right">${serviceAmount}</TableCell>
-                    <TableCell align="right">
+                    <TableCell align="center">${serviceAmount}</TableCell>
+                    <TableCell align="center">
                       <Button
                         variant="contained"
                         color="primary"

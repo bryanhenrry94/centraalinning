@@ -18,7 +18,9 @@ interface ActivationInvoiceInput {
   tenant_id: string;
   island: string;
   address?: string | null;
-  amount: number;
+  fee_amount: number;
+  abb_amount: number;
+  digital_file_costs: number;
 }
 
 export const createActivationInvoice = async (
@@ -43,7 +45,7 @@ export const createActivationInvoice = async (
   }
 
   // Costo base de activación
-  const activationFee = params.amount;
+  const activationFee = params.fee_amount;
 
   // Generar número de factura único
   const invoice_number = await generateInvoiceNumber();
@@ -136,7 +138,7 @@ export const createCollectionInvoice = async (
   // Definir valores base
   const issue_date = new Date();
   const due_date = addDays(issue_date, 7);
-  const activationFee = params.amount; // Costo base de activación
+  const activationFee = params.fee_amount; // Costo base de activación
 
   // Generar número de factura único
   const invoice_number = await generateInvoiceNumber();
@@ -156,7 +158,7 @@ export const createCollectionInvoice = async (
     },
   });
 
-  const totalWithTax = activationFee * 1.06; // Suponiendo una tasa de impuesto del 6%
+  const totalWithTax = activationFee + params.abb_amount; // Suponiendo una tasa de impuesto del 6%
 
   // Crear el detalle de factura
   await prisma.billingInvoiceDetail.create({
@@ -167,8 +169,21 @@ export const createCollectionInvoice = async (
       item_unit_price: activationFee,
       item_total_price: activationFee,
       item_tax_rate: 0.06, // 6% ejemplo
-      item_tax_amount: activationFee * 0.06,
+      item_tax_amount: params.abb_amount,
       item_total_with_tax: totalWithTax,
+    },
+  });
+
+  await prisma.billingInvoiceDetail.create({
+    data: {
+      billing_invoice_id: invoice.id,
+      item_description: "Digitale dossierkosten",
+      item_quantity: 1,
+      item_unit_price: params.digital_file_costs,
+      item_total_price: params.digital_file_costs,
+      item_tax_rate: 0, // 6% ejemplo
+      item_tax_amount: 0,
+      item_total_with_tax: params.digital_file_costs,
     },
   });
 

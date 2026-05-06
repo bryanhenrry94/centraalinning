@@ -180,6 +180,9 @@ model Parameter {
   bank_account                   String    @default("")
   bank_name                      String    @default("")
 
+  digital_file_costs             Float     @default(0)
+  extra_administrative_costs     Float     @default(0)
+
   created_at                     DateTime  @default(now())
   updated_at                     DateTime  @updatedAt
 
