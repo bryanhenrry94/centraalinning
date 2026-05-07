@@ -35,7 +35,7 @@ import {
   BlokCheckRequestResponse,
 } from "@/lib/validations/blok-check-request";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { formatDateTime } from "@/utils/formatters";
+import { formatDate, formatDateTime } from "@/utils/formatters";
 import { PaymentCreate } from "@/lib/validations/payment";
 import { createSentooPayment } from "@/actions/sentoo.actions";
 import { registerPayment } from "@/actions/payment";
@@ -200,34 +200,6 @@ const BlokCheckPage = () => {
 
   return (
     <Container maxWidth="md" sx={{ py: 6 }}>
-      {/* HEADER & INFO CARD */}
-      <Card
-        sx={{
-          mb: 4,
-          borderRadius: 4,
-          backgroundColor: "#f5f7fb",
-          boxShadow: "none",
-        }}
-      >
-        <CardContent sx={{ display: "flex", gap: 2 }}>
-          <Box>
-            <Typography variant="h4" fontWeight={700} mb={1}>
-              Blok-Check
-            </Typography>
-            <Typography color="text.secondary" mb={2}>
-              Controleer of een debiteur een actieve blokkade heeft.
-            </Typography>
-
-            <Typography color="text.secondary">
-              De Blok-Check is een controlemiddel waarmee u kunt nagaan of een
-              debiteur een actieve economische blokkade of registraties heeft
-              binnen de CFSB-samenwerking.{" "}
-              <strong>Kosten: ${serviceAmount} per controle</strong>
-            </Typography>
-          </Box>
-        </CardContent>
-      </Card>
-
       {/* SEARCH CARD */}
       <Card
         sx={{
@@ -236,8 +208,15 @@ const BlokCheckPage = () => {
         }}
       >
         <CardContent>
-          <Typography variant="h6" fontWeight={600} mb={3}>
+          <Typography variant="h4" fontWeight={600} mb={1}>
             Debiteur zoeken
+          </Typography>
+
+          <Typography color="text.secondary" mb={10}>
+            De Blok-Check is een controlemiddel waarmee u kunt nagaan of een
+            debiteur een actieve economische blokkade of registraties heeft
+            binnen de CFSB-samenwerking.{" "}
+            <strong>Kosten: ${serviceAmount} per controle</strong>
           </Typography>
 
           <Box display="flex" gap={2}>
@@ -265,12 +244,11 @@ const BlokCheckPage = () => {
               disabled={loading}
               sx={{
                 px: 4,
-                borderRadius: 3,
                 textTransform: "none",
                 fontWeight: 600,
               }}
             >
-              {loading ? <CircularProgress size={20} /> : "Controleren"}
+              {loading ? <CircularProgress size={20} /> : "Zoeken"}
             </Button>
           </Box>
 
@@ -292,9 +270,9 @@ const BlokCheckPage = () => {
                 request.payment_status === "pending"
                   ? "#ff9800"
                   : request.has_blockade
-                    ? "#d32f2f"
+                    ? "#E80909"
                     : "#2e7d32",
-              color: "white",              
+              color: "white",
               p: 2,
               display: "flex",
               alignItems: "center",
@@ -317,19 +295,12 @@ const BlokCheckPage = () => {
               </Typography>
             </Box>
             <Box>
-              <Typography variant="body1" fontWeight={700}>
+              <Typography variant="h6" fontWeight={700}>
                 {request.payment_status === "pending"
-                  ? "PAGO PENDIENTE"
+                  ? "BETALING OPENSTAANDE"
                   : request.has_blockade
-                    ? "CON BLOQUEOS"
-                    : "SIN BLOQUEOS"}
-              </Typography>
-              <Typography variant="caption" sx={{ fontSize: "0.85rem" }}>
-                {request.payment_status === "pending"
-                  ? "Realice el pago para ver el resultado de la consulta"
-                  : request.has_blockade
-                    ? "Se encontraron restricciones activas"
-                    : "No se encontraron restricciones activas"}
+                    ? "MET BLOKKADES"
+                    : "Geen Blokkade"}
               </Typography>
             </Box>
           </Box>
@@ -337,7 +308,7 @@ const BlokCheckPage = () => {
           {/* Content Card */}
           {loading ? (
             <Typography variant="body1" sx={{ p: 2 }}>
-              Cargando detalles...
+              Details laden...
             </Typography>
           ) : (
             <Card
@@ -362,7 +333,7 @@ const BlokCheckPage = () => {
                       fontWeight={600}
                       sx={{ fontSize: "1.05rem" }}
                     >
-                      Informacion del Deudor
+                      Informatie
                     </Typography>
                   </Box>
 
@@ -375,9 +346,10 @@ const BlokCheckPage = () => {
                   >
                     <Box
                       sx={{
-                        backgroundColor: "#E8E6E6",
+                        backgroundColor: `${request.has_blockade ? "#F5E8E8" : "#E8F5E9"}`,
                         p: 1.5,
                         borderRadius: 1,
+                        border: `1px solid ${request.has_blockade ? "#F89191" : "#81C784"}`,
                       }}
                     >
                       <Typography
@@ -385,12 +357,12 @@ const BlokCheckPage = () => {
                         color="textSecondary"
                         sx={{ mb: 0.25, fontWeight: 500, fontSize: "0.8rem" }}
                       >
-                        Tipo
+                        ID
                       </Typography>
                       <Typography
                         variant="body2"
-                        fontWeight={600}
-                        sx={{ fontSize: "0.95rem" }}
+                        // fontWeight={600}
+                        sx={{ fontSize: "1.5rem" }}
                       >
                         {request.identification_type}
                       </Typography>
@@ -398,9 +370,10 @@ const BlokCheckPage = () => {
 
                     <Box
                       sx={{
-                        backgroundColor: "#E8E6E6",
+                        backgroundColor: `${request.has_blockade ? "#F5E8E8" : "#E8F5E9"}`,
                         p: 1.5,
                         borderRadius: 1,
+                        border: `1px solid ${request.has_blockade ? "#F89191" : "#81C784"}`,
                       }}
                     >
                       <Typography
@@ -408,12 +381,12 @@ const BlokCheckPage = () => {
                         color="textSecondary"
                         sx={{ mb: 0.25, fontWeight: 500, fontSize: "0.8rem" }}
                       >
-                        Numero
+                        Nummer
                       </Typography>
                       <Typography
                         variant="body2"
-                        fontWeight={600}
-                        sx={{ fontSize: "0.95rem" }}
+                        // fontWeight={600}
+                        sx={{ fontSize: "1.5rem" }}
                       >
                         {request.document_number}
                       </Typography>
@@ -422,9 +395,10 @@ const BlokCheckPage = () => {
                     <Box
                       sx={{
                         gridColumn: "1 / -1",
-                        backgroundColor: "#E8E6E6",
+                        backgroundColor: `${request.has_blockade ? "#F5E8E8" : "#E8F5E9"}`,
                         p: 1.5,
                         borderRadius: 1,
+                        border: `1px solid ${request.has_blockade ? "#F89191" : "#81C784"}`,
                       }}
                     >
                       <Typography
@@ -432,12 +406,12 @@ const BlokCheckPage = () => {
                         color="textSecondary"
                         sx={{ mb: 0.25, fontWeight: 500, fontSize: "0.8rem" }}
                       >
-                        Nombre Completo
+                        Naam
                       </Typography>
                       <Typography
                         variant="body2"
-                        fontWeight={600}
-                        sx={{ fontSize: "0.95rem" }}
+                        // fontWeight={600}
+                        sx={{ fontSize: "1.5rem" }}
                       >
                         {request.fullname}
                       </Typography>
@@ -445,9 +419,10 @@ const BlokCheckPage = () => {
 
                     <Box
                       sx={{
-                        backgroundColor: "#E8E6E6",
+                        backgroundColor: `${request.has_blockade ? "#F5E8E8" : "#E8F5E9"}`,
                         p: 1.5,
                         borderRadius: 1,
+                        border: `1px solid ${request.has_blockade ? "#F89191" : "#81C784"}`,
                       }}
                     >
                       <Typography
@@ -455,64 +430,46 @@ const BlokCheckPage = () => {
                         color="textSecondary"
                         sx={{ mb: 0.25, fontWeight: 500, fontSize: "0.8rem" }}
                       >
-                        Fecha de Consulta
+                        Datum
                       </Typography>
                       <Typography
                         variant="body2"
-                        fontWeight={600}
-                        sx={{ fontSize: "0.95rem" }}
+                        // fontWeight={600}
+                        sx={{ fontSize: "1.5rem" }}
                       >
-                        {formatDateTime(request.created_at.toString())}
+                        {formatDate(request.created_at.toString())}
                       </Typography>
                     </Box>
-                  </Box>
-                </Box>
 
-                {/* Payment Status */}
-                {request.payment_status === "paid" && (
-                  <Box
-                    sx={{
-                      backgroundColor: "#e8f5e9",
-                      border: "1px solid #4caf50",
-                      borderRadius: 1,
-                      p: 1.5,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1.5,
-                    }}
-                  >
-                    <Typography sx={{ color: "#2e7d32" }}>✓</Typography>
-                    <Box>
-                      <Typography
-                        variant="caption"
+                    {request.has_blockade ? (
+                      <Alert
+                        variant="filled"
+                        severity="warning"
                         sx={{
-                          color: "#2e7d32",
-                          fontWeight: 500,
-                          fontSize: "0.9rem",
+                          gridColumn: "1 / -1",
+                          fontSize: "1.2rem",
+                          borderRadius: 0,
                         }}
                       >
-                        Pago confirmado
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        sx={{ color: "#1b5e20", fontSize: "0.75rem" }}
+                        Verzoek aan schuldenaar om een aanvraag in te dienen
+                        voor financieel rapport bij de CFSB om een gedetailleerd
+                        rapport van blokkades en beperkingen te verkrijgen.
+                      </Alert>
+                    ) : (
+                      <Alert
+                        variant="filled"
+                        severity="success"
+                        sx={{
+                          gridColumn: "1 / -1",
+                          fontSize: "1.2rem",
+                          borderRadius: 0,
+                        }}
                       >
-                        Sentoo
-                      </Typography>
-                    </Box>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        ml: "auto",
-                        color: "#2e7d32",
-                        fontWeight: 700,
-                        fontSize: "0.95rem",
-                      }}
-                    >
-                      ${serviceAmount}.00
-                    </Typography>
+                        Geen actieve blokkades in het systeem aangetroffen.
+                      </Alert>
+                    )}
                   </Box>
-                )}
+                </Box>
 
                 {request.payment_status !== "paid" && (
                   <Box
@@ -533,7 +490,7 @@ const BlokCheckPage = () => {
                       }}
                       onClick={() => handlePayment(request.id)}
                     >
-                      Pagar ${serviceAmount}.00
+                      Betaal ${serviceAmount}.00
                     </Button>
                     <Button
                       variant="outlined"
@@ -547,7 +504,7 @@ const BlokCheckPage = () => {
                       onClick={handleRefresh}
                       startIcon={<RefreshIcon />}
                     >
-                      Ya hice el pago
+                      Ik heb al betaald
                     </Button>
                   </Box>
                 )}
