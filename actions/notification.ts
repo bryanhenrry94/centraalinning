@@ -39,6 +39,7 @@ export const sendNotification = async (caseId: string) => {
     case CollectionCaseStatus.INGEBREKESTELLING:
       return await sendIngebrekestelling(collection);
     case CollectionCaseStatus.BLOKKADE:
+      console.log("Sending Blokkade...");
       return await sendBlokkade(collection);
     default:
       return;
@@ -246,7 +247,16 @@ export const sendBlokkade = async (
       throw new Error("El deudor no tiene email");
     }
 
+    console.log(
+      "Send_Blokkade: Preparing to send Blokkade email to",
+      debtor.email,
+    );
+
     if (debtor?.email) {
+      console.log(
+        "Send_Blokkade: Preparing to send Blokkade email to",
+        debtor.email,
+      );
       await sendBlokkadeMail(debtor?.email, collection.id);
 
       await createNotification(

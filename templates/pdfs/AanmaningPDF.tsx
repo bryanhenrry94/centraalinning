@@ -183,7 +183,7 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
             <Text style={styles.tableCellRight}>${amount_original}</Text>
           </View>
           <View style={styles.tableRow}>
-            <Text style={styles.tableCell}>Incassokosten 15%</Text>
+            <Text style={styles.tableCell}>Incassokosten 15% / min. $40</Text>
             <Text style={styles.tableCellRight}>${extraCosts}</Text>
           </View>
           <View style={styles.tableRow}>

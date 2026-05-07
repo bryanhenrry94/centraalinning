@@ -16,7 +16,7 @@ export const blokCheckRequestSchema = z.object({
   id: z.string().cuid(),
 
   tenant_id: z.string().min(1),
-  debtor_id: z.string().optional(),
+  person_id: z.string().optional(),
 
   // 🔍 búsqueda
   document_type: z.enum(identificationValues),
@@ -40,7 +40,7 @@ export const blokCheckRequestSchema = z.object({
 export const blokCheckRequestCreateSchema = blokCheckRequestSchema.omit({
   id: true,
   tenant_id: true,
-  debtor_id: true,
+  person_id: true,
   payment_id: true,
   payment_status: true,
   has_blockade: true,
@@ -55,14 +55,16 @@ export const blokCheckRequestUpdateSchema = blokCheckRequestSchema
   .omit({
     id: true,
     tenant_id: true,
-    debtor_id: true,
+    person_id: true,
     payment_id: true,
     created_at: true,
   });
 
 export const blokCheckRequestResponseSchema = blokCheckRequestSchema.extend({
   tenant_id: z.string(),
-  debtor_id: z.string().nullable(),
+  person_id: z.string().nullable(),
+  identification_type: z.enum(identificationValues),
+  fullname: z.string().optional(),
 });
 
 export type BlokCheckRequest = z.infer<typeof blokCheckRequestSchema>;

@@ -4,6 +4,7 @@ export const paramGeneralSchema = z.object({
   // Percentages
   collection_fee_rate: z.number().min(0).max(100),
   abb_rate: z.number().min(0).max(100),
+  collection_fee_minimum_amount: z.number().min(0),
 
   // Terms (days)
   company_aanmaning_term_days: z.number().int().min(0),

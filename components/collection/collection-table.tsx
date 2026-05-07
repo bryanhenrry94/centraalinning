@@ -337,8 +337,8 @@ const CollectionTable = () => {
                 <TableCell sx={{ textAlign: "center" }}>
                   {formatDate(invoice.due_date?.toString() || "")}
                 </TableCell>
-                <TableCell sx={{ textAlign: "center" }}>
-                  {invoice.debtor.email}
+                <TableCell sx={{ textAlign: "left" }}>                  
+                  {invoice.debtor.fullname || "Onbekend"}
                 </TableCell>
                 <TableCell sx={{ textAlign: "right" }}>
                   {formatCurrency(invoice.amount_original)}

@@ -181,9 +181,14 @@ export const createCollectionCase = async (
   const digital_file_costs = parameter.digital_file_costs;
 
   // Calcular montos
-  const fee_amount = Number(
+  let fee_amount = Number(
     ((parsedData.amount_original * fee_rate) / 100).toFixed(2),
   );
+
+  if (fee_amount < parameter.collection_fee_minimum_amount) {
+    fee_amount = parameter.collection_fee_minimum_amount;
+  }
+
   const abb_amount = Number(((fee_amount * abb_rate) / 100).toFixed(2));
 
   // total con impuestos y multas
@@ -207,10 +212,7 @@ export const createCollectionCase = async (
   );
 
   const balance =
-    parsedData.amount_original +
-    fee_amount +
-    abb_amount +
-    digital_file_costs;
+    parsedData.amount_original + fee_amount + abb_amount + digital_file_costs;
 
   // Calcular fechas de recordatorio
   const day_term = await getNotificationDays(
@@ -280,7 +282,7 @@ export const createCollectionCase = async (
   await createCollectionInvoice({
     tenant_id: tenant.id,
     island: tenant.country_code,
-    address: tenant.address,    
+    address: tenant.address,
     fee_amount: fee_amount,
     abb_amount: abb_amount,
     digital_file_costs: digital_file_costs,
@@ -355,8 +357,7 @@ export const updateCollectionStatusAndSendNotification = async (
     await prisma.person.update({
       where: { id: personId },
       data: { has_blockade: true },
-    });
-    return;
+    });    
   }
 
   await sendNotification(id);

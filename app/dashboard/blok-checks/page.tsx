@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Container,
   Box,
@@ -23,13 +23,17 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import {
   createBlokCheckRequest,
+  existBlokCheckRequestForDocument,
   getBlokCheckRequest,
   listBlokCheckRequests,
   updateBlokCheckRequest,
 } from "@/actions/blok-check-request";
 import { useSession } from "next-auth/react";
 import { notifyError, notifyInfo } from "@/lib/notifications";
-import { BlokCheckRequest } from "@/lib/validations/blok-check-request";
+import {
+  BlokCheckRequest,
+  BlokCheckRequestResponse,
+} from "@/lib/validations/blok-check-request";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { formatDateTime } from "@/utils/formatters";
 import { PaymentCreate } from "@/lib/validations/payment";
@@ -43,9 +47,15 @@ const BlokCheckPage = () => {
   const [error, setError] = useState("");
   const { data: session } = useSession();
   const [blokCheckRequests, setBlokCheckRequests] = useState<
-    BlokCheckRequest[]
+    BlokCheckRequestResponse[]
   >([]);
   const serviceAmount = 30;
+
+  const [pagoRealizado, setPagoRealizado] = useState(false);
+
+  const handlePagoRealizado = () => {
+    setPagoRealizado(true);
+  };
 
   const handleSearch = async () => {
     const tenantId = session?.user?.tenant_id;
@@ -69,6 +79,18 @@ const BlokCheckPage = () => {
         document_number: search,
         amount: serviceAmount, // Costo fijo por bloque-check
       };
+
+      const existingPerson = await existBlokCheckRequestForDocument(
+        newBlokCheckRequest.document_number,
+      );
+
+      if (!existingPerson) {
+        setError(
+          "Het documentnummer is niet geregistreerd in het systeem. Controleer het en probeer het opnieuw.",
+        );
+        setLoading(false);
+        return;
+      }
 
       // 1. Crear solicitud de blok-check
       await createBlokCheckRequest(tenantId, newBlokCheckRequest);
@@ -99,12 +121,16 @@ const BlokCheckPage = () => {
 
     try {
       const requests = await listBlokCheckRequests(tenantId);
-      console.log("Fetched Blok-Check Requests:", requests);
+      console.log("Loading Blok-Check Requests:", requests);
       setBlokCheckRequests(requests);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     }
   };
+
+  useEffect(() => {
+    loadBlokCheckRequests();
+  }, [session]);
 
   const handlePayment = async (requestId: string) => {
     const tenantId = session?.user?.tenant_id;
@@ -131,7 +157,7 @@ const BlokCheckPage = () => {
     }
 
     const payment: PaymentCreate = {
-      debt_id: blokCheckRequest.debtor_id,
+      debt_id: null,
       method: "TRANSFER",
       total_amount: blokCheckRequest.amount,
       paid_at: null,
@@ -257,178 +283,279 @@ const BlokCheckPage = () => {
         </CardContent>
       </Card>
 
-      {/* Card Uw Blok-Check aanvragen */}
-      <Card
-        sx={{
-          borderRadius: 4,
-          boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
-          mt: 4,
-        }}
-      >
-        <CardContent>
+      {blokCheckRequests.map((request) => (
+        <Box key={request.id} sx={{ mt: 2 }}>
+          {/* Status Banner */}
           <Box
             sx={{
+              backgroundColor:
+                request.payment_status === "pending"
+                  ? "#ff9800"
+                  : request.has_blockade
+                    ? "#d32f2f"
+                    : "#2e7d32",
+              color: "white",              
+              p: 2,
               display: "flex",
-              justifyContent: "space-between",
               alignItems: "center",
+              gap: 2,
             }}
           >
-            <Typography variant="h6" fontWeight={600}>
-              Uw Blok-Check aanvragen
-            </Typography>
-            <Button
-              startIcon={<RefreshIcon />}
-              sx={{ textTransform: "none" }}
-              onClick={handleRefresh}
-              disabled={loading}
-              loading={loading}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 40,
+                height: 40,
+                borderRadius: "50%",
+                backgroundColor: "rgba(255, 255, 255, 0.3)",
+              }}
             >
-              {loading ? <CircularProgress size={20} /> : "Vernieuwen"}
-            </Button>
+              <Typography variant="body1">
+                {request.payment_status === "pending" ? "!" : "✓"}
+              </Typography>
+            </Box>
+            <Box>
+              <Typography variant="body1" fontWeight={700}>
+                {request.payment_status === "pending"
+                  ? "PAGO PENDIENTE"
+                  : request.has_blockade
+                    ? "CON BLOQUEOS"
+                    : "SIN BLOQUEOS"}
+              </Typography>
+              <Typography variant="caption" sx={{ fontSize: "0.85rem" }}>
+                {request.payment_status === "pending"
+                  ? "Realice el pago para ver el resultado de la consulta"
+                  : request.has_blockade
+                    ? "Se encontraron restricciones activas"
+                    : "No se encontraron restricciones activas"}
+              </Typography>
+            </Box>
           </Box>
 
-          <TableContainer
-            sx={{
-              mt: 2,
-              border: "1px solid #e0e0e0",
-              overflow: "hidden",
-            }}
-          >
-            <Table
+          {/* Content Card */}
+          {loading ? (
+            <Typography variant="body1" sx={{ p: 2 }}>
+              Cargando detalles...
+            </Typography>
+          ) : (
+            <Card
               sx={{
-                minWidth: 650,
-                borderCollapse: "separate",
-                borderSpacing: 0,
+                borderRadius: "0 0 8px 8px",
+                boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
               }}
-              aria-label="simple table"
             >
-              <TableHead>
-                <TableRow
-                  sx={{
-                    backgroundColor: (theme) => theme.palette.grey[200],
-                  }}
-                >
-                  <TableCell
-                    align="center"
+              <CardContent sx={{ p: 2 }}>
+                {/* Debtor Information Section */}
+                <Box sx={{ mb: 2 }}>
+                  <Box
                     sx={{
-                      fontWeight: 600,
-                      color: (theme) => theme.palette.grey[900],
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      mb: 1.5,
                     }}
                   >
-                    Referentie
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{
-                      fontWeight: 600,
-                      color: (theme) => theme.palette.grey[900],
-                    }}
-                  >
-                    Identificatie
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{
-                      fontWeight: 600,
-                      color: (theme) => theme.palette.grey[900],
-                    }}
-                  >
-                    Datum
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{
-                      fontWeight: 600,
-                      color: (theme) => theme.palette.grey[900],
-                    }}
-                  >
-                    Status
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{
-                      fontWeight: 600,
-                      color: (theme) => theme.palette.grey[900],
-                    }}
-                  >
-                    Kosten
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{
-                      fontWeight: 600,
-                      color: (theme) => theme.palette.grey[900],
-                    }}
-                  >
-                    Actie
-                  </TableCell>
-                </TableRow>
-              </TableHead>
+                    <Typography
+                      variant="body1"
+                      fontWeight={600}
+                      sx={{ fontSize: "1.05rem" }}
+                    >
+                      Informacion del Deudor
+                    </Typography>
+                  </Box>
 
-              <TableBody>
-                {blokCheckRequests.map((request) => (
-                  <TableRow
-                    key={request.id}
+                  <Box
                     sx={{
-                      "& td": {
-                        borderBottom: "1px solid #B5B5B5",
-                      },
-                      "&:hover": {
-                        backgroundColor: "#fafafa",
-                      },
-                      "&:last-child td": {
-                        borderBottom: "none",
-                      },
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 2,
                     }}
                   >
-                    <TableCell align="center">
-                      {request.id.slice(0, 8)}
-                    </TableCell>
-                    <TableCell align="center">
-                      {request.document_number}
-                    </TableCell>
-                    <TableCell align="center">
-                      {formatDateTime(request.created_at.toString())}
-                    </TableCell>
-                    <TableCell align="center">
-                      {request.has_blockade === true ? (
-                        <Chip
-                          label="Blokkade"
-                          color="error"
-                          sx={{ minWidth: 125 }}
-                        />
-                      ) : request.has_blockade === false ? (
-                        <Chip
-                          label="Geen blokkade"
-                          color="success"
-                          sx={{
-                            minWidth: 125,
-                            backgroundColor: "#2e7d32",
-                            color: "white",
-                          }}
-                        />
-                      ) : null}
-                    </TableCell>
-                    <TableCell align="center">${serviceAmount}</TableCell>
-                    <TableCell align="center">
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        size="small"
-                        sx={{ textTransform: "none" }}
-                        onClick={() => handlePayment(request.id)}
-                        disabled={request.payment_status === "paid"}
+                    <Box
+                      sx={{
+                        backgroundColor: "#E8E6E6",
+                        p: 1.5,
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        color="textSecondary"
+                        sx={{ mb: 0.25, fontWeight: 500, fontSize: "0.8rem" }}
                       >
-                        Betalen
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
+                        Tipo
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight={600}
+                        sx={{ fontSize: "0.95rem" }}
+                      >
+                        {request.identification_type}
+                      </Typography>
+                    </Box>
+
+                    <Box
+                      sx={{
+                        backgroundColor: "#E8E6E6",
+                        p: 1.5,
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        color="textSecondary"
+                        sx={{ mb: 0.25, fontWeight: 500, fontSize: "0.8rem" }}
+                      >
+                        Numero
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight={600}
+                        sx={{ fontSize: "0.95rem" }}
+                      >
+                        {request.document_number}
+                      </Typography>
+                    </Box>
+
+                    <Box
+                      sx={{
+                        gridColumn: "1 / -1",
+                        backgroundColor: "#E8E6E6",
+                        p: 1.5,
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        color="textSecondary"
+                        sx={{ mb: 0.25, fontWeight: 500, fontSize: "0.8rem" }}
+                      >
+                        Nombre Completo
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight={600}
+                        sx={{ fontSize: "0.95rem" }}
+                      >
+                        {request.fullname}
+                      </Typography>
+                    </Box>
+
+                    <Box
+                      sx={{
+                        backgroundColor: "#E8E6E6",
+                        p: 1.5,
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        color="textSecondary"
+                        sx={{ mb: 0.25, fontWeight: 500, fontSize: "0.8rem" }}
+                      >
+                        Fecha de Consulta
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight={600}
+                        sx={{ fontSize: "0.95rem" }}
+                      >
+                        {formatDateTime(request.created_at.toString())}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+
+                {/* Payment Status */}
+                {request.payment_status === "paid" && (
+                  <Box
+                    sx={{
+                      backgroundColor: "#e8f5e9",
+                      border: "1px solid #4caf50",
+                      borderRadius: 1,
+                      p: 1.5,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1.5,
+                    }}
+                  >
+                    <Typography sx={{ color: "#2e7d32" }}>✓</Typography>
+                    <Box>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: "#2e7d32",
+                          fontWeight: 500,
+                          fontSize: "0.9rem",
+                        }}
+                      >
+                        Pago confirmado
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: "#1b5e20", fontSize: "0.75rem" }}
+                      >
+                        Sentoo
+                      </Typography>
+                    </Box>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        ml: "auto",
+                        color: "#2e7d32",
+                        fontWeight: 700,
+                        fontSize: "0.95rem",
+                      }}
+                    >
+                      ${serviceAmount}.00
+                    </Typography>
+                  </Box>
+                )}
+
+                {request.payment_status !== "paid" && (
+                  <Box
+                    sx={{
+                      mt: 1.5,
+                      display: "flex",
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      sx={{
+                        textTransform: "none",
+                        px: 2,
+                        py: 0.75,
+                        fontSize: "0.9rem",
+                      }}
+                      onClick={() => handlePayment(request.id)}
+                    >
+                      Pagar ${serviceAmount}.00
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      sx={{
+                        textTransform: "none",
+                        px: 2,
+                        py: 0.75,
+                        fontSize: "0.9rem",
+                      }}
+                      onClick={handleRefresh}
+                      startIcon={<RefreshIcon />}
+                    >
+                      Ya hice el pago
+                    </Button>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </Box>
+      ))}
     </Container>
   );
 };

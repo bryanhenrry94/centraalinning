@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import {
   BlokCheckRequest,
   BlokCheckRequestCreate,
+  BlokCheckRequestResponse,
 } from "@/lib/validations/blok-check-request";
 import { PaymentCreate } from "@/lib/validations/payment";
 import { Decimal } from "@prisma/client/runtime/library";
@@ -12,12 +13,22 @@ export const createBlokCheckRequest = async (
   tenantId: string,
   data: BlokCheckRequestCreate,
 ) => {
+  const person = await prisma.person.findFirst({
+    where: {
+      // identification_type: data.document_type as IdentificationType,
+      identification: data.document_number,
+    },
+  });
+
+  const personId = person ? person.id : null;
+
   const request = await prisma.blokCheckRequest.create({
     data: {
       tenant_id: tenantId,
       document_type: data.document_type as IdentificationType,
       document_number: data.document_number,
       amount: data.amount,
+      person_id: personId,
     },
   });
   return request;
@@ -58,7 +69,7 @@ export const getBlokCheckRequest = async (
         amount: request.amount.toNumber(),
         document_type: request.document_type.toString(),
         payment_status: request.payment_status.toString(),
-        debtor_id: request.debtor_id ?? undefined,
+        person_id: request.person_id ?? undefined,
         payment_id: request.payment_id ?? undefined,
         has_blockade: request.has_blockade ?? undefined,
         block_reason: request.block_reason ?? undefined,
@@ -80,7 +91,7 @@ export const updateBlokCheckRequest = async (
       payment_status: data.payment_status
         ? (data.payment_status as any)
         : undefined,
-      debtor_id: data.debtor_id,
+      person_id: data.person_id,
       payment_id: data.payment_id,
       has_blockade: data.has_blockade,
       block_reason: data.block_reason,
@@ -98,21 +109,48 @@ export const deleteBlokCheckRequest = async (id: string) => {
 
 export const listBlokCheckRequests = async (
   tenantId: string,
-): Promise<BlokCheckRequest[]> => {
+): Promise<BlokCheckRequestResponse[]> => {
   const requests = await prisma.blokCheckRequest.findMany({
     where: { tenant_id: tenantId },
+    include: {
+      person: true,
+    },
     orderBy: { created_at: "desc" },
+    take: 1,
   });
 
   return requests.map((request) => ({
     ...request,
+
     amount: request.amount.toNumber(),
-    document_type: request.document_type.toString(),
-    payment_status: request.payment_status.toString(),
-    debtor_id: request.debtor_id ?? undefined,
+
+    document_type: request.document_type,
+    payment_status: request.payment_status,
+
+    person_id: request.person_id,
+
     payment_id: request.payment_id ?? undefined,
+
     has_blockade: request.has_blockade ?? undefined,
     block_reason: request.block_reason ?? undefined,
     checked_at: request.checked_at ?? undefined,
+
+    identification_type: request.document_type as IdentificationType,
+
+    fullname: request.person
+      ? `${request.person.first_name} ${request.person.last_name}`
+      : undefined,
   }));
+};
+
+export const existBlokCheckRequestForDocument = async (
+  documentNumber: string,
+): Promise<boolean> => {
+  const count = await prisma.person.count({
+    where: {
+      identification: documentNumber,
+    },
+  });
+
+  return count > 0;
 };

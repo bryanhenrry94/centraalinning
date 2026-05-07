@@ -182,9 +182,15 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({
           <View key={index} style={styles.tableRow}>
             <Text style={styles.description}>{item.item_description}</Text>
             <Text style={styles.tableCellCenter}>{item.item_quantity}</Text>
-            <Text style={styles.tableCellRight}>${item.item_unit_price}</Text>
-            <Text style={styles.tableCellRight}>${item.item_tax_rate}</Text>
-            <Text style={styles.tableCellRight}>${item.item_subtotal}</Text>
+            <Text style={styles.tableCellRight}>
+              ${item.item_unit_price.toFixed(2)}
+            </Text>
+            <Text style={styles.tableCellRight}>
+              {item.item_tax_rate.toFixed(2)}
+            </Text>
+            <Text style={styles.tableCellRight}>
+              ${item.item_subtotal.toFixed(2)}
+            </Text>
           </View>
         ))}
       </View>
@@ -194,7 +200,7 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({
         <View style={styles.totalsBox}>
           <View style={styles.totalRow}>
             <Text style={{ fontWeight: "bold" }}>Te betalen:</Text>
-            <Text style={{ fontWeight: "bold" }}>${total}</Text>
+            <Text style={{ fontWeight: "bold" }}>${total.toFixed(2)}</Text>
           </View>
         </View>
       </View>

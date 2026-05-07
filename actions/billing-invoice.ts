@@ -164,19 +164,6 @@ export const createCollectionInvoice = async (
   await prisma.billingInvoiceDetail.create({
     data: {
       billing_invoice_id: invoice.id,
-      item_description: "Servicekosten",
-      item_quantity: 1,
-      item_unit_price: activationFee,
-      item_total_price: activationFee,
-      item_tax_rate: 0.06, // 6% ejemplo
-      item_tax_amount: params.abb_amount,
-      item_total_with_tax: totalWithTax,
-    },
-  });
-
-  await prisma.billingInvoiceDetail.create({
-    data: {
-      billing_invoice_id: invoice.id,
       item_description: "Digitale dossierkosten",
       item_quantity: 1,
       item_unit_price: params.digital_file_costs,
@@ -184,6 +171,20 @@ export const createCollectionInvoice = async (
       item_tax_rate: 0, // 6% ejemplo
       item_tax_amount: 0,
       item_total_with_tax: params.digital_file_costs,
+    },
+  });
+
+  // Crear el detalle de factura
+  await prisma.billingInvoiceDetail.create({
+    data: {
+      billing_invoice_id: invoice.id,
+      item_description: "Servicekosten",
+      item_quantity: 1,
+      item_unit_price: activationFee,
+      item_total_price: activationFee,
+      item_tax_rate: 0.06, // 6% ejemplo
+      item_tax_amount: params.abb_amount,
+      item_total_with_tax: totalWithTax,
     },
   });
 

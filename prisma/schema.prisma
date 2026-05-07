@@ -139,6 +139,7 @@ model Person {
   updated_at          DateTime            @updatedAt
 
   debtors             Debtor[]
+  blok_check_requests BlokCheckRequest[]
   // bailiff             Bailiff?
   // employee            Employee?
 
@@ -150,6 +151,7 @@ model Parameter {
 
   collection_fee_rate            Float     @default(0)
   abb_rate                       Float     @default(0)
+  collection_fee_minimum_amount  Float     @default(0)
 
   company_aanmaning_term_days    Int       @default(0)
   consumer_aanmaning_term_days   Int       @default(0)
@@ -664,27 +666,28 @@ model PaymentAllocation {
 }
 
 model BlokCheckRequest {
-  id                                                            String              @id @default(cuid())
-  tenant_id                                                     String
-  debtor_id         String?  // opcional si viene de tu sistema
+  id                                                String              @id @default(cuid())
+  tenant_id                                         String
+  person_id                                         String?
+  person                                            Person?            @relation(fields: [person_id], references: [id])
 
   // 🔍 Datos de búsqueda
-  document_type                                                 IdentificationType
-  document_number                                               String
+  document_type                                     IdentificationType
+  document_number                                   String
 
   // 💳 Pago (Sentoo)
   payment_id        String?  // id externo (sentoo)
-  payment_status                                                PaymentStatus       @default(pending)
-  amount                                                        Decimal             @db.Decimal(10,2)
+  payment_status                                    PaymentStatus       @default(pending)
+  amount                                            Decimal             @db.Decimal(10,2)
 
   // 📊 Resultado
-  has_blockade                                                  Boolean?
-  block_reason                                                  String?
-  checked_at                                                    DateTime?
+  has_blockade                                      Boolean?
+  block_reason                                      String?
+  checked_at                                        DateTime?
 
   // 🧾 Control
-  created_at                                                    DateTime            @default(now())
-  updated_at                                                    DateTime            @updatedAt
+  created_at                                        DateTime            @default(now())
+  updated_at                                        DateTime            @updatedAt
 
   @@index([tenant_id])
   @@index([document_number])

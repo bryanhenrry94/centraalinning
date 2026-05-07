@@ -66,8 +66,13 @@ export async function processCollectionCaseWorkflow() {
 
     const days_between_ingebrekestelling_blokkade =
       c.debtor.person?.person_type === PersonType.INDIVIDUAL
-        ? Number(parameter?.consumer_aanmaning_term_days)
-        : Number(parameter?.company_aanmaning_term_days);
+        ? Number(0)
+        : Number(0);
+
+    console.log(
+      " Días entre ingebrekestelling y blokkade: ",
+      days_between_ingebrekestelling_blokkade,
+    );
 
     // Si la fecha de vencimiento es mayor o igual a hoy, no hacer nada
     if (c.due_date >= today) continue;

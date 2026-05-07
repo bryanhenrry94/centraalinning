@@ -93,7 +93,14 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
 
   const invoiceAmount = formData.amount_original || 0;
   const subtotal = Number(invoiceAmount);
-  const cobranza = (subtotal * collection_fee_rate) / 100; // 0.15
+  let cobranza = (subtotal * collection_fee_rate) / 100; // 0.15
+
+  if (_parameter?.collection_fee_minimum_amount) {
+    if (cobranza < _parameter?.collection_fee_minimum_amount) {
+      cobranza = _parameter?.collection_fee_minimum_amount ?? 0;
+    }
+  }
+
   const abbValue = (cobranza * abb_rate) / 100;
   const aditionalCosts = _parameter?.digital_file_costs || 0;
   const totalFinal = subtotal - cobranza - abbValue - aditionalCosts;
