@@ -128,7 +128,7 @@ export default function SignUpPage() {
 
   return (
     <>
-      <OnboardingLayout backgroundImageUrl={"/static/images/auth/sign_up.jpg"}>
+      <OnboardingLayout backgroundImageUrl={"/static/images/auth/bonaire-isla-final.png"}>
         <Box component={"form"} onSubmit={handleSubmit}>
           <CardContainer>
             {step < 3 && (
