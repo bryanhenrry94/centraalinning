@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import {
   Box,
   Button,
+  Container,
   InputAdornment,
   Paper,
   Stack,
@@ -64,7 +65,7 @@ export default function Home() {
   };
 
   return (
-    <>
+    <Container maxWidth="sm">
       <Box
         minHeight="calc(100vh - 32px)"
         display="flex"
@@ -201,6 +202,6 @@ export default function Home() {
           </Box>
         </Paper>
       </Box>
-    </>
+    </Container>
   );
 }
