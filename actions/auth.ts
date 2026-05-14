@@ -95,16 +95,17 @@ export const signInWithPassword = async (
   if (!membership) {
     return {
       success: false,
-      error: "No tienes acceso a este tenant. Contacta al administrador.",
+      error:
+        "Je hebt geen toegang tot deze tenant. Neem contact op met de beheerder.",
     };
   }
 
-  // 4️⃣ Validar contraseña
+  // 4️⃣ Wachtwoord valideren
   const isPasswordValid = await bcrypt.compare(password, user.password_hash);
   if (!isPasswordValid) {
     return {
       success: false,
-      error: "Credenciales inválidas",
+      error: "Ongeldige referenties",
     };
   }
 

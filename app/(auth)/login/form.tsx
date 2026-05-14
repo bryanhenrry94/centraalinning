@@ -171,7 +171,7 @@ export default function LoginForm() {
             <Link
               href="/forgot-password"
               underline="hover"
-              sx={{ color: "#E67E22", fontSize: 14, fontWeight: 500 }}
+              sx={{ color: "primary.main", fontSize: 14, fontWeight: 500 }}
             >
               Wachtwoord vergeten?
             </Link>
@@ -211,7 +211,7 @@ export default function LoginForm() {
             sx={{ textTransform: "none" }}
           >
             Nog geen account?{" "}
-            <Box component="span" sx={{ color: "#E67E22", ml: 0.5 }}>
+            <Box component="span" sx={{ color: "primary.main", ml: 0.5 }}>
               Registreer
             </Box>
           </Button>

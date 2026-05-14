@@ -132,7 +132,7 @@ export default function Home() {
                 variant="h4"
                 sx={{
                   fontWeight: 700,
-                  color: "#E67E22",
+                  color: "primary.main",
                 }}
               >
                 terug!

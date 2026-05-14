@@ -52,7 +52,7 @@ export default function ForgotPasswordPage() {
         <Card
           sx={{
             width: "100%",
-            borderRadius: 4,
+            bgcolor: "#F3F2F2",
           }}
         >
           <CardContent sx={{ p: 4 }}>
@@ -100,7 +100,6 @@ export default function ForgotPasswordPage() {
                 disabled={isPending}
                 sx={{
                   height: 50,
-                  borderRadius: 3,
                 }}
               >
                 {isPending ? "Verzenden..." : "Herstelkoppeling verzenden"}
