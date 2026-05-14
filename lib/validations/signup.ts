@@ -4,29 +4,37 @@ export const signUpSchema = z
   .object({
     fullname: z
       .string()
-      .min(2, "Name must be at least 2 characters long")
-      .regex(/^\S.*\S$/, "Name cannot start or end with a space"),
+      .regex(/^\S.*\S$/, "Naam kan niet beginnen of eindigen met een spatie"),
     email: z
       .string()
-      .nonempty("Email is required")
-      .email("Invalid email format")
-      .regex(/^\S.*\S$/, "Email cannot start or end with a space"),
+      .nonempty("E-mail is verplicht")
+      .email("Ongeldig e-mailformaat")
+      .regex(/^\S.*\S$/, "E-mail kan niet beginnen of eindigen met een spatie"),
     password: z
       .string()
-      .min(8, "Password must be at least 8 characters long")
-      .regex(/^\S.*\S$/, "Password cannot start or end with a space"),
+      .min(8, "Wachtwoord moet minstens 8 tekens lang zijn")
+      .regex(
+        /^\S.*\S$/,
+        "Wachtwoord kan niet beginnen of eindigen met een spatie",
+      ),
     confirm_password: z
       .string()
-      .nonempty("Confirm password is required")
-      .regex(/^\S.*\S$/, "Confirm password cannot start or end with a space"),
-    phone: z
-      .string()
-      .nonempty("Phone number is required")
-      .regex(/^\S.*\S$/, "Phone number cannot start or end with a space"),
+      .nonempty("Wachtwoord bevestigen is verplicht")
+      .regex(
+        /^\S.*\S$/,
+        "Bevestigingswachtwoord kan niet beginnen of eindigen met een spatie",
+      ),
+    phone: z.string().optional(),
+    kvk: z.string().nonempty("KVK is verplicht"),
+    company_name: z.string().nonempty("Bedrijfsnaam is verplicht"),
+    country: z.string().nonempty("Land is verplicht"),
+    accept_terms: z.boolean().refine((val) => val === true, {
+      message: "U moet de algemene voorwaarden accepteren",
+    }),
   })
   .refine((data) => data.password === data.confirm_password, {
     path: ["confirm_password"],
-    message: "Passwords must match",
+    message: "Wachtwoorden moeten overeenkomen",
   });
 
 export const companyInfoSchema = z.object({
@@ -128,6 +136,8 @@ export {
   ResendVerificationEmailSchema,
   EmailVerificationResponseSchema,
 };
+
+export type iSignup = z.infer<typeof signUpSchema>;
 
 export type iAuthUser = z.infer<typeof AuthUserSchema>;
 export type iAuthUserResponse = z.infer<typeof AuthUsersResponseSchema>;

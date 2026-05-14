@@ -9,7 +9,12 @@ import {
 } from "@/lib/validations/auth";
 import { createActivationInvoice } from "./billing-invoice";
 import { generateUniqueSubdomain } from "./tenant";
-import { AuthSignUpSchema, ITenantSignUp } from "@/lib/validations/signup";
+import {
+  AuthSignUpSchema,
+  iSignup,
+  ITenantSignUp,
+  signUpSchema,
+} from "@/lib/validations/signup";
 import { getParameter } from "./parameter";
 import { CountryList } from "@/constants/country";
 import { sendNewClitentEmail, sendWelcomeEmail } from "./email";
@@ -42,7 +47,7 @@ export const signInWithPassword = async (
   }
 
   // Buscar el usuario POR EMAIL (sin tenant)
-  const user = await prisma.user.findUnique({
+  const user = await prisma.user.findFirst({
     where: { email },
   });
 
@@ -211,7 +216,7 @@ export async function createAccount(
       return { tenant, user, membership };
     });
 
-    let pricePlan = payload.total_price || 150;
+    let pricePlan: number = payload.total_price || 150;
 
     // if (
     //   payload.company.number_of_employees &&
@@ -266,6 +271,241 @@ export async function createAccount(
   } catch (error: any) {
     console.error("Error creating account:", error);
     return { status: false, subdomain: "", error: error.message };
+  }
+}
+
+export async function createAccountV2(
+  payload: iSignup,
+  planId: string,
+  cycle: "monthly" | "yearly",
+): Promise<{
+  status: boolean;
+  subdomain: string;
+  error?: string;
+}> {
+  try {
+    // =========================
+    // 1. VALIDATE INPUT
+    // =========================
+
+    const validatedData = signUpSchema.parse(payload);
+
+    const normalizedEmail = validatedData.email.trim().toLowerCase();
+
+    // =========================
+    // 2. VALIDATE TENANT DATA
+    // =========================
+
+    const existingTenant = await prisma.tenant.findFirst({
+      where: {
+        kvk: validatedData.kvk,
+      },
+    });
+
+    if (existingTenant) {
+      throw new Error("El KVK ya está registrado");
+    }
+
+    // =========================
+    // 3. GET PARAMETERS
+    // =========================
+
+    const parameter = await getParameter();
+
+    if (!parameter) {
+      throw new Error("No se encontró la configuración");
+    }
+
+    // =========================
+    // 4. GET PLAN
+    // =========================
+
+    const plan = await prisma.plan.findUnique({
+      where: {
+        id: planId,
+      },
+    });
+
+    if (!plan) {
+      throw new Error("Plan no encontrado");
+    }
+
+    const pricePlan: number =
+      cycle === "yearly"
+        ? Number(plan.yearly_price)
+        : Number(plan.monthly_price);
+
+    if (!pricePlan) {
+      throw new Error("No se encontró el precio del plan");
+    }
+
+    // =========================
+    // 5. HASH PASSWORD
+    // =========================
+
+    const password_hash = await bcrypt.hash(validatedData.password, 10);
+
+    // =========================
+    // 6. TRANSACTION
+    // =========================
+
+    const result = await prisma.$transaction(
+      async (tx) => {
+        // -----------------------------------
+        // CREATE TENANT
+        // -----------------------------------
+
+        const subdomain = await generateUniqueSubdomain(
+          validatedData.company_name,
+        );
+
+        const code = await generateCode(validatedData.country);
+
+        const tenant = await tx.tenant.create({
+          data: {
+            name: validatedData.company_name,
+            legal_name: validatedData.company_name,
+
+            subdomain,
+            kvk: validatedData.kvk,
+
+            code,
+
+            country_code: validatedData.country,
+
+            contact_email: normalizedEmail,
+
+            address: "",
+
+            number_of_employees: 0,
+
+            terms_accepted: validatedData.accept_terms,
+
+            is_active: true,
+          },
+        });
+
+        // -----------------------------------
+        // FIND OR CREATE GLOBAL USER
+        // -----------------------------------
+
+        let user = await tx.user.findFirst({
+          where: {
+            email: normalizedEmail,
+          },
+        });
+
+        if (!user) {
+          user = await tx.user.create({
+            data: {
+              email: normalizedEmail,
+
+              fullname: validatedData.fullname,
+
+              password_hash,
+
+              phone: validatedData.phone,
+
+              is_active: true,
+            },
+          });
+        }
+
+        // -----------------------------------
+        // VALIDATE MEMBERSHIP
+        // -----------------------------------
+
+        const existingMembership = await tx.membership.findFirst({
+          where: {
+            tenant_id: tenant.id,
+            user_id: user.id,
+          },
+        });
+
+        if (existingMembership) {
+          throw new Error("El usuario ya pertenece a esta organización");
+        }
+
+        // -----------------------------------
+        // CREATE MEMBERSHIP
+        // -----------------------------------
+
+        const membership = await tx.membership.create({
+          data: {
+            tenant_id: tenant.id,
+
+            user_id: user.id,
+
+            role: "TENANT_ADMIN",
+
+            status: MembershipStatus.PENDING,
+          },
+        });
+
+        return {
+          tenant,
+          user,
+          membership,
+        };
+      },
+      {
+        timeout: 20000,
+      },
+    );
+
+    // =========================
+    // 7. CREATE ACTIVATION INVOICE
+    // =========================
+
+    const abb_amount = pricePlan * (parameter.abb_rate || 0);
+
+    await createActivationInvoice({
+      tenant_id: result.tenant.id,
+
+      island: validatedData.country,
+
+      address: "",
+
+      fee_amount: pricePlan,
+
+      abb_amount,
+
+      digital_file_costs: parameter.digital_file_costs,
+    });
+
+    // =========================
+    // 8. SEND EMAILS
+    // =========================
+
+    await Promise.all([
+      sendWelcomeEmail(result.user.email, result.user.fullname || ""),
+
+      sendNewClitentEmail(
+        result.user.email || "",
+        result.tenant.name,
+        new Date().toLocaleDateString(),
+        await prisma.tenant.count(),
+      ),
+    ]);
+
+    // =========================
+    // 9. REVALIDATE
+    // =========================
+
+    revalidatePath("/auth/signup");
+
+    return {
+      status: true,
+      subdomain: result.tenant.subdomain,
+    };
+  } catch (error: any) {
+    console.error("Error creating account:", error);
+
+    return {
+      status: false,
+      subdomain: "",
+      error: error?.message || "Error creating account",
+    };
   }
 }
 

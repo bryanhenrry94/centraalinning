@@ -47,27 +47,45 @@ model Tenant {
   memberships         Membership[]
   payments            Payment[]
 
+  subscription        Subscription?
+
   @@map("tenant")
 }
 
 model User {
-  id            String         @id @default(uuid())
-  email         String         @db.VarChar(80) @unique
-  password_hash String?        @db.VarChar(120)
-  fullname      String?        @db.VarChar(80)
-  phone         String?        @db.VarChar(25)
-  is_active     Boolean        @default(true)
+  id                    String                @id @default(uuid())
+  email                 String                @db.VarChar(80)
+  password_hash         String?               @db.VarChar(120)
+  fullname              String?               @db.VarChar(80)
+  phone                 String?               @db.VarChar(25)
+  is_active             Boolean               @default(true)
 
-  memberships   Membership[]
+  memberships           Membership[]
 
-  created_at    DateTime       @default(now())
-  updated_at    DateTime       @updatedAt
+  created_at            DateTime              @default(now())
+  updated_at            DateTime              @updatedAt
 
-  debtors       Debtor[]
-  bailiffs      Bailiff[]
-  messages      ChatMessage[]
+  debtors               Debtor[]
+  bailiffs              Bailiff[]
+  messages              ChatMessage[]
+  password_reset_tokens PasswordResetToken[]
 
   @@map("user")
+}
+
+model PasswordResetToken {
+  id         String     @id @default(cuid())
+  user_id    String
+  user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  token_hash String     @unique
+  expires_at DateTime
+  used_at    DateTime?
+  created_at DateTime   @default(now())
+
+
+  @@index([user_id])
+  @@index([expires_at])
+  @@map("password_reset_token")
 }
 
 model Membership {
@@ -692,6 +710,54 @@ model BlokCheckRequest {
   @@index([tenant_id])
   @@index([document_number])
   @@map("blok_check_request")
+}
+
+model Plan {
+  id                 String          @id @default(uuid())
+  name               String
+  description        String?
+
+  monthly_price      Decimal         @db.Decimal(10, 2)
+  yearly_price       Decimal         @db.Decimal(10, 2)
+
+  features           Json
+  reactivation_price Decimal         @db.Decimal(10, 2)
+  created_at         DateTime        @default(now())
+  updated_at         DateTime        @updatedAt
+  is_active          Boolean         @default(true)
+
+  subscription       Subscription[]
+
+  @@map("plan")
+}
+
+model Subscription {
+  id                 String              @id @default(uuid())
+  tenant_id          String              @unique
+  tenant             Tenant             @relation(fields: [tenant_id], references: [id])
+  plan_id            String
+  plan               Plan               @relation(fields: [plan_id], references: [id])
+
+  billing_cycle      BillingCycle
+
+  status             SubscriptionStatus  @default(ACTIVE)
+  current_period_end DateTime
+  created_at         DateTime            @default(now())
+  updated_at         DateTime            @updatedAt
+
+  @@map("subscription")
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
 }
 
 enum PaymentComponent {

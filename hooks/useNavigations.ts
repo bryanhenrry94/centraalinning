@@ -18,7 +18,7 @@ const useClientRouter = () => {
   };
 
   const redirectToSlugLoginCompany = (subdomain: string, email?: string) => {
-    let baseUrl = `${protocol}://${subdomain}.${rootDomain}/auth/login`;
+    let baseUrl = `${protocol}://${subdomain}.${rootDomain}/login`;
     // Si se proporciona un correo electrónico, lo agregamos como parámetro de consulta
     if (email) {
       baseUrl += `?email=${email}`;
@@ -27,7 +27,7 @@ const useClientRouter = () => {
   };
 
   const redirectToSignUp = () => {
-    router.push(`${protocol}://auth.${rootDomain}/auth/signup`);
+    router.push(`${protocol}://auth.${rootDomain}/signup`);
   };
 
   const redirectToDashboardByRole = (role: string) => {

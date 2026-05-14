@@ -11,11 +11,11 @@ const LogoComponent: React.FC = () => {
   const LogoCIO =
     theme.palette.mode === "dark"
       ? "/static/LogoCIO.svg"
-      : "/static/LogoCIO.png";
+      : "/static/logo-cfsb.png";
 
   return (
     <Box>
-      <Image src={LogoCIO} alt="Logo" height={120} width={200} />
+      <Image src={LogoCIO} alt="Logo" height={100} width={150} />
     </Box>
   );
 };

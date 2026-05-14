@@ -32,7 +32,7 @@ export default function AppTheme(props: AppThemeProps) {
         secondary: {
           light: secondary[200],
           main: secondary[700],
-          dark: secondary[600],
+          dark: secondary[900],
           contrastText: secondary[200],
         },
         info: {
