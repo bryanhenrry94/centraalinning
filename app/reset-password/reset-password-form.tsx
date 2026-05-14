@@ -81,7 +81,7 @@ export default function ResetPasswordForm() {
   }
 
   return (
-    <Container maxWidth="sm">
+    <Container maxWidth="xs">
       <Box
         sx={{
           minHeight: "100vh",
