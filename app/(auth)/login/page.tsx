@@ -1,7 +1,7 @@
 "use client";
 
-import { Box, Typography, Paper, Container } from "@mui/material";
-import { Shield } from "@mui/icons-material";
+import { Box, Typography, Container } from "@mui/material";
+import GppGoodIcon from "@mui/icons-material/GppGood";
 import LogoComponent from "@/components/ui/logo-app";
 import Image from "next/image";
 import LoginForm from "./form";
@@ -29,11 +29,12 @@ export default function RegistroPage() {
         }}
       >
         <Container
-          maxWidth="xs"
+          maxWidth="sm"
           disableGutters
           sx={{
             width: "100%",
             bgcolor: "white",
+            p: 6,
           }}
         >
           <Box
@@ -139,7 +140,7 @@ export default function RegistroPage() {
                     flexShrink: 0,
                   }}
                 >
-                  <Shield
+                  <GppGoodIcon
                     sx={{
                       color: "gray",
                       fontSize: 16,
