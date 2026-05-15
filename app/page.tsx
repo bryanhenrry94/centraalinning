@@ -67,148 +67,166 @@ export default function Home() {
       sx={{
         minHeight: "100dvh",
         width: "100%",
-        overflowX: "hidden",
-        display: "flex",
         bgcolor: "#f5f5f5",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        overflow: "hidden",
+        p: 2,
+        boxSizing: "border-box",
       }}
     >
-      <Container maxWidth="xs">
+      <Paper
+        elevation={0}
+        sx={{
+          width: "100%",
+          maxWidth: 380,
+          maxHeight: "95dvh",
+          bgcolor: "white",
+          display: "flex",
+          flexDirection: "column",
+          border: "1px solid #ececec",
+          overflow: "hidden",
+        }}
+      >
+        {/* HEADER */}
         <Box
-          minHeight="calc(100vh - 32px)"
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
+          sx={{
+            px: 2,
+            py: 1,
+            borderBottom: "1px solid #f0f0f0",
+            flexShrink: 0,
+          }}
         >
-          <Paper
-            elevation={0}
-            sx={{
-              width: "100%",
-              height: "100%",
-              bgcolor: "white",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-              border: "1px solid #ececec",
-              p: 1,
-            }}
-          >
-            {/* HEADER */}
-            <Box
+          <Box sx={{ ml: -1 }}>
+            <LogoComponent />
+          </Box>
+        </Box>
+
+        {/* CONTENT */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            px: 2,
+            py: 3,
+          }}
+        >
+          {/* TITLE */}
+          <Box sx={{ mb: 3 }}>
+            <Typography
               sx={{
-                px: 2,
-                py: 1,
-                borderBottom: "1px solid #f0f0f0",
-                flexShrink: 0,
+                fontWeight: 700,
+                color: "#1a365d",
+                fontSize: {
+                  xs: "1.6rem",
+                  sm: "1.6rem",
+                },
+                lineHeight: 1.1,
               }}
             >
-              <Box sx={{ ml: -1 }}>
-                <LogoComponent />
-              </Box>
-            </Box>
-
-            {/* SCROLLABLE CONTENT */}
-            <Box
-              sx={{
-                flex: 1,
-                overflowY: "auto",
-                px: 2,
-                py: 1,
-                "&::-webkit-scrollbar": {
-                  width: 6,
-                },
-
-                "&::-webkit-scrollbar-thumb": {
-                  backgroundColor: "#d1d5db",
-                  borderRadius: 10,
-                },
-              }}
-            >
+              Welkom{" "}
               <Typography
-                variant="h4"
+                component="span"
                 sx={{
                   fontWeight: 700,
-                  color: "#1a365d",
-                  mb: 0.5,
+                  color: "primary.main",
+                  fontSize: "inherit",
                 }}
               >
-                Welkom{" "}
-                <Typography
-                  component="span"
-                  variant="h4"
-                  sx={{
-                    fontWeight: 700,
-                    color: "primary.main",
-                  }}
-                >
-                  terug!
-                </Typography>
+                terug!
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-                Toegang met uw zakelijke e-mailadres
-              </Typography>
+            </Typography>
 
-              {/* FORM */}
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                mt: 1,
+                fontSize: 13,
+              }}
+            >
+              Toegang met uw zakelijke e-mailadres
+            </Typography>
+          </Box>
+
+          {/* FORM */}
+          <form onSubmit={handleSubmit}>
+            <Stack spacing={1.5}>
+              <TextField
+                fullWidth
+                type="email"
+                size="small"
+                placeholder="E-mailadres of gebruikersnaam"
+                value={formData.email ?? ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                required
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Person
+                        sx={{
+                          color: "text.secondary",
+                          fontSize: 20,
+                        }}
+                      />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                disabled={isLoading}
+                startIcon={<ArrowRightAltIcon />}
+                sx={{
+                  mt: 1,
+                  height: 42,
+                  textTransform: "none",
+                  fontWeight: 600,
+                }}
+              >
+                {isLoading ? "Laden..." : "Doorgaan"}
+              </Button>
+
               <Box
                 sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 2.5,
+                  pt: 1,
+                  textAlign: "center",
                 }}
               >
-                {/* TODOS TUS INPUTS */}
-                <form onSubmit={handleSubmit}>
-                  <Stack spacing={1.5}>
-                    <TextField
-                      fullWidth
-                      type="email"
-                      size="small"
-                      placeholder="E-mailadres of gebruikersnaam"
-                      value={formData.email ?? ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
-                      required
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Person sx={{ color: "text.secondary" }} />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
+                <Typography
+                  variant="body2"
+                  component="span"
+                  sx={{ fontSize: 13 }}
+                >
+                  Heeft u geen account?{" "}
+                </Typography>
 
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      fullWidth
-                      sx={{ mt: 2 }}
-                      disabled={isLoading}
-                      startIcon={<ArrowRightAltIcon />}
-                    >
-                      {isLoading ? "Laden..." : "Doorgaan"}
-                    </Button>
-
-                    <Box mt={3} mb={3} textAlign="center">
-                      <Typography variant="body2" component="span">
-                        ¿Heeft u geen account?{" "}
-                      </Typography>
-                      <Button
-                        variant="text"
-                        color="primary"
-                        onClick={redirectToSignUp}
-                        sx={{ textTransform: "none", p: 0, minWidth: "auto" }}
-                      >
-                        Schrijf je in
-                      </Button>
-                    </Box>
-                  </Stack>
-                </form>
+                <Button
+                  variant="text"
+                  color="primary"
+                  onClick={redirectToSignUp}
+                  sx={{
+                    textTransform: "none",
+                    p: 0,
+                    minWidth: "auto",
+                    fontSize: 13,
+                    fontWeight: 600,
+                  }}
+                >
+                  Schrijf je in
+                </Button>
               </Box>
-            </Box>
-          </Paper>
+            </Stack>
+          </form>
         </Box>
-      </Container>
+      </Paper>
     </Box>
   );
 }
