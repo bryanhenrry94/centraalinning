@@ -102,7 +102,13 @@ export default function LoginForm() {
   return (
     <Box>
       {/* Login Form */}
-      <form onSubmit={handleSubmit} style={{ minWidth: 300 }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          width: "100%",
+          minWidth: 0,
+        }}
+      >
         <Stack spacing={2}>
           {/* Email/Username Field */}
           <TextField

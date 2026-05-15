@@ -10,8 +10,9 @@ export default function RegistroPage() {
   return (
     <Box
       sx={{
-        height: "100vh",
-        overflow: "hidden",
+        minHeight: "100dvh",
+        width: "100%",
+        overflowX: "hidden",
         display: "flex",
         bgcolor: "#f5f5f5",
       }}
@@ -19,26 +20,28 @@ export default function RegistroPage() {
       {/* LEFT SIDE */}
       <Box
         sx={{
-          flex: 1,
+          width: { xs: "100%", lg: "40%" },
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
           p: 2,
           overflow: "hidden",
+          bgcolor: "white",
         }}
       >
-        <Container maxWidth="xs" sx={{ bgcolor: "white" }}>
-          <Paper
-            elevation={0}
+        <Container
+          maxWidth="sm"
+          disableGutters
+          sx={{
+            width: "100%",
+            bgcolor: "white",
+          }}
+        >
+          <Box
             sx={{
               width: "100%",
-              height: "100%",
-              bgcolor: "white",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-              border: "1px solid #ececec",
-              my: 2,
+              p: { xs: 2, md: 4 },
+              boxSizing: "border-box",
             }}
           >
             {/* HEADER */}
@@ -93,7 +96,11 @@ export default function RegistroPage() {
                   terug!
                 </Typography>
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mb: 2, mt: -1 }}
+              >
                 Log in op uw account om toegang te krijgen tot uw dashboard.
               </Typography>
 
@@ -103,7 +110,7 @@ export default function RegistroPage() {
                   display: "flex",
                   flexDirection: "column",
                   gap: 2.5,
-                  mt: 4,
+                  mt: 6,
                 }}
               >
                 {/* TODOS TUS INPUTS */}
@@ -111,18 +118,16 @@ export default function RegistroPage() {
               </Box>
 
               {/* SECURITY NOTICE */}
-              <Paper
+              <Box
                 sx={{
-                  mt: 4,
+                  mt: 6,
                   p: 2,
                   display: "flex",
                   alignItems: "flex-start",
                   gap: 2,
-                  bgcolor: "#f8f9fa",
                   border: "1px solid #e0e0e0",
                   borderRadius: 2,
                 }}
-                elevation={0}
               >
                 <Box
                   sx={{
@@ -136,7 +141,7 @@ export default function RegistroPage() {
                     flexShrink: 0,
                   }}
                 >
-                  <Shield sx={{ color: "#1a365d", fontSize: 20 }} />
+                  <Shield sx={{ color: "gray", fontSize: 20 }} />
                 </Box>
 
                 <Box>
@@ -144,30 +149,29 @@ export default function RegistroPage() {
                     variant="body2"
                     sx={{
                       fontWeight: 600,
-                      color: "#1a365d",
+                      color: "gray",
                       mb: 0.5,
                     }}
                   >
                     Uw gegevens zijn veilig bij CFSB.
                   </Typography>
 
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" color="gray">
                     Wij gebruiken beveiligde technologie om uw informatie te
                     beschermen.
                   </Typography>
                 </Box>
-              </Paper>
+              </Box>
             </Box>
-          </Paper>
+          </Box>
         </Container>
       </Box>
 
       {/* RIGHT SIDE */}
       <Box
         sx={{
-          flex: 1,
+          width: { xs: "0%", lg: "60%" },
           position: "relative",
-          width: "100%",
           height: "100vh",
           overflow: "hidden",
           display: { xs: "none", lg: "block" },
