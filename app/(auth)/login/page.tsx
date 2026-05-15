@@ -33,8 +33,7 @@ export default function RegistroPage() {
           disableGutters
           sx={{
             width: "100%",
-            bgcolor: "white",
-            p: 6,
+            bgcolor: "white",            
           }}
         >
           <Box
