@@ -20,7 +20,7 @@ export default function RegistroPage() {
       {/* LEFT SIDE */}
       <Box
         sx={{
-          width: { xs: "100%", lg: "40%" },
+          width: { xs: "100%", lg: "50%" },
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
@@ -109,8 +109,7 @@ export default function RegistroPage() {
                 sx={{
                   display: "flex",
                   flexDirection: "column",
-                  gap: 2.5,
-                  mt: 6,
+                  gap: 2.5,                  
                 }}
               >
                 {/* TODOS TUS INPUTS */}
@@ -120,7 +119,7 @@ export default function RegistroPage() {
               {/* SECURITY NOTICE */}
               <Box
                 sx={{
-                  mt: 6,
+                  mt: 2,
                   p: 2,
                   display: "flex",
                   alignItems: "flex-start",
@@ -170,7 +169,7 @@ export default function RegistroPage() {
       {/* RIGHT SIDE */}
       <Box
         sx={{
-          width: { xs: "0%", lg: "60%" },
+          width: { xs: "0%", lg: "50%" },
           position: "relative",
           height: "100vh",
           overflow: "hidden",
@@ -178,7 +177,7 @@ export default function RegistroPage() {
         }}
       >
         <Image
-          src="/static/registro-image3.svg"
+          src="/static/registro-1200x1440.svg"
           alt="Registro Image"
           fill
           priority
