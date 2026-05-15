@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Typography, Paper } from "@mui/material";
+import { Box, Typography, Paper, Container } from "@mui/material";
 import { Shield } from "@mui/icons-material";
 import LogoComponent from "@/components/ui/logo-app";
 import Image from "next/image";
@@ -27,137 +27,138 @@ export default function RegistroPage() {
           overflow: "hidden",
         }}
       >
-        <Paper
-          elevation={0}
-          sx={{
-            width: "100%",
-            maxWidth: 620,
-            height: "100%",
-            borderRadius: 4,
-            bgcolor: "white",
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-            border: "1px solid #ececec",
-          }}
-        >
-          {/* HEADER */}
-          <Box
+        <Container maxWidth="xs" sx={{ bgcolor: "white" }}>
+          <Paper
+            elevation={0}
             sx={{
-              px: 4,
-              py: 3,
-              borderBottom: "1px solid #f0f0f0",
-              flexShrink: 0,
+              width: "100%",
+              height: "100%",
+              bgcolor: "white",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              border: "1px solid #ececec",
+              my: 2,
             }}
           >
-            <Box sx={{ width: 100, height: 50 }}>
-              <LogoComponent />
-            </Box>
-          </Box>
-
-          {/* SCROLLABLE CONTENT */}
-          <Box
-            sx={{
-              flex: 1,
-              overflowY: "auto",
-              px: 4,
-              py: 4,
-
-              "&::-webkit-scrollbar": {
-                width: 6,
-              },
-
-              "&::-webkit-scrollbar-thumb": {
-                backgroundColor: "#d1d5db",
-                borderRadius: 10,
-              },
-            }}
-          >
-            <Typography
-              variant="h4"
+            {/* HEADER */}
+            <Box
               sx={{
-                fontWeight: 700,
-                color: "#1a365d",
-                mb: 0.5,
+                px: 2,
+                py: 1,
+                borderBottom: "1px solid #f0f0f0",
+                flexShrink: 0,
               }}
             >
-              Welkom{" "}
+              <Box sx={{ ml: -1 }}>
+                <LogoComponent />
+              </Box>
+            </Box>
+
+            {/* SCROLLABLE CONTENT */}
+            <Box
+              sx={{
+                flex: 1,
+                overflowY: "auto",
+                px: 2,
+                py: 1,
+
+                "&::-webkit-scrollbar": {
+                  width: 6,
+                },
+
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "#d1d5db",
+                  borderRadius: 10,
+                },
+              }}
+            >
               <Typography
-                component="span"
                 variant="h4"
                 sx={{
                   fontWeight: 700,
-                  color: "#E67E22",
+                  color: "#1a365d",
+                  mb: 0.5,
                 }}
               >
-                terug!
-              </Typography>
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-              Log in op uw account om toegang te krijgen tot uw dashboard.
-            </Typography>
-
-            {/* FORM */}
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 2.5,
-              }}
-            >
-              {/* TODOS TUS INPUTS */}
-              <LoginForm />
-            </Box>
-
-            {/* SECURITY NOTICE */}
-            <Paper
-              sx={{
-                mt: 4,
-                p: 2,
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 2,
-                bgcolor: "#f8f9fa",
-                border: "1px solid #e0e0e0",
-                borderRadius: 2,
-              }}
-              elevation={0}
-            >
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  bgcolor: "rgba(26, 54, 93, 0.1)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <Shield sx={{ color: "#1a365d", fontSize: 20 }} />
-              </Box>
-
-              <Box>
+                Welkom{" "}
                 <Typography
-                  variant="body2"
+                  component="span"
+                  variant="h4"
                   sx={{
-                    fontWeight: 600,
-                    color: "#1a365d",
-                    mb: 0.5,
+                    fontWeight: 700,
+                    color: "#E67E22",
                   }}
                 >
-                  Uw gegevens zijn veilig bij CFSB.
+                  terug!
                 </Typography>
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Log in op uw account om toegang te krijgen tot uw dashboard.
+              </Typography>
 
-                <Typography variant="caption" color="text.secondary">
-                  Wij gebruiken beveiligde technologie om uw informatie te
-                  beschermen.
-                </Typography>
+              {/* FORM */}
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2.5,
+                }}
+              >
+                {/* TODOS TUS INPUTS */}
+                <LoginForm />
               </Box>
-            </Paper>
-          </Box>
-        </Paper>
+
+              {/* SECURITY NOTICE */}
+              <Paper
+                sx={{
+                  mt: 4,
+                  p: 2,
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 2,
+                  bgcolor: "#f8f9fa",
+                  border: "1px solid #e0e0e0",
+                  borderRadius: 2,
+                }}
+                elevation={0}
+              >
+                <Box
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: "50%",
+                    bgcolor: "rgba(26, 54, 93, 0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Shield sx={{ color: "#1a365d", fontSize: 20 }} />
+                </Box>
+
+                <Box>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 600,
+                      color: "#1a365d",
+                      mb: 0.5,
+                    }}
+                  >
+                    Uw gegevens zijn veilig bij CFSB.
+                  </Typography>
+
+                  <Typography variant="caption" color="text.secondary">
+                    Wij gebruiken beveiligde technologie om uw informatie te
+                    beschermen.
+                  </Typography>
+                </Box>
+              </Paper>
+            </Box>
+          </Paper>
+        </Container>
       </Box>
 
       {/* RIGHT SIDE */}

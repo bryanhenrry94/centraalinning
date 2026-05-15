@@ -65,20 +65,19 @@ export default function Home() {
   };
 
   return (
-    <Container maxWidth="sm">
+    <Container maxWidth="xs" sx={{ bgcolor: "white" }}>
       <Box
         minHeight="calc(100vh - 32px)"
         display="flex"
         flexDirection="column"
         alignItems="center"
         justifyContent="center"
-        sx={{ p: 4, bgcolor: "background.default", color: "text.primary" }}
+        sx={{ p: 2, bgcolor: "background.default", color: "text.primary" }}
       >
         <Paper
           elevation={0}
           sx={{
             width: "100%",
-            maxWidth: 620,
             height: "100%",
             bgcolor: "white",
             display: "flex",
