@@ -23,7 +23,7 @@ export default function RegistroPage() {
           width: { xs: "100%", lg: "50%" },
           display: "flex",
           justifyContent: "center",
-          alignItems: "center",          
+          alignItems: "center",
           overflow: "hidden",
           bgcolor: "white",
         }}
@@ -47,7 +47,7 @@ export default function RegistroPage() {
             <Box
               sx={{
                 px: 2,
-                py: 1,                
+                py: 1,
                 flexShrink: 0,
               }}
             >
@@ -107,7 +107,7 @@ export default function RegistroPage() {
                 sx={{
                   display: "flex",
                   flexDirection: "column",
-                  gap: 2.5,                  
+                  gap: 2.5,
                 }}
               >
                 {/* TODOS TUS INPUTS */}
@@ -118,42 +118,58 @@ export default function RegistroPage() {
               <Box
                 sx={{
                   mt: 2,
-                  p: 2,
+                  p: 1,
                   display: "flex",
-                  alignItems: "flex-start",
-                  gap: 2,
-                  border: "1px solid #e0e0e0",
+                  alignItems: "center",
+                  gap: 1,
+                  border: "1px solid #e5e7eb",
                   borderRadius: 2,
+                  minWidth: 0,
                 }}
               >
                 <Box
                   sx={{
-                    width: 40,
-                    height: 40,
+                    width: 30,
+                    height: 30,
                     borderRadius: "50%",
-                    bgcolor: "rgba(26, 54, 93, 0.1)",
+                    bgcolor: "rgba(26, 54, 93, 0.08)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     flexShrink: 0,
                   }}
                 >
-                  <Shield sx={{ color: "gray", fontSize: 20 }} />
+                  <Shield
+                    sx={{
+                      color: "gray",
+                      fontSize: 16,
+                    }}
+                  />
                 </Box>
 
-                <Box>
+                <Box sx={{ minWidth: 0 }}>
                   <Typography
                     variant="body2"
                     sx={{
                       fontWeight: 600,
                       color: "gray",
-                      mb: 0.5,
+                      fontSize: 13,
+                      lineHeight: 1.2,
+                      mb: 0.2,
                     }}
                   >
                     Uw gegevens zijn veilig bij CFSB.
                   </Typography>
 
-                  <Typography variant="caption" color="gray">
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "gray",
+                      fontSize: 11,
+                      lineHeight: 1.3,
+                      display: "block",
+                    }}
+                  >
                     Wij gebruiken beveiligde technologie om uw informatie te
                     beschermen.
                   </Typography>
