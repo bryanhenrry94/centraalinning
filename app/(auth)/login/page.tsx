@@ -29,7 +29,7 @@ export default function RegistroPage() {
         }}
       >
         <Container
-          maxWidth="sm"
+          maxWidth="xs"
           disableGutters
           sx={{
             width: "100%",
