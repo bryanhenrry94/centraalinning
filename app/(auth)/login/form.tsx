@@ -103,12 +103,13 @@ export default function LoginForm() {
     <Box>
       {/* Login Form */}
       <form onSubmit={handleSubmit} style={{ minWidth: 300 }}>
-        <Stack spacing={1}>
+        <Stack spacing={2}>
           {/* Email/Username Field */}
           <TextField
             fullWidth
             placeholder="E-mailadres of gebruikersnaam"
             value={formData.email}
+            size="small"
             onChange={(e) =>
               setFormData({ ...formData, email: e.target.value })
             }
@@ -125,6 +126,7 @@ export default function LoginForm() {
           <TextField
             fullWidth
             type={showPassword ? "text" : "password"}
+            size="small"
             placeholder="Wachtwoord"
             value={formData.password}
             onChange={(e) =>

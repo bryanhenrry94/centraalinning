@@ -103,6 +103,7 @@ export default function RegistroPage() {
                   display: "flex",
                   flexDirection: "column",
                   gap: 2.5,
+                  mt: 4,
                 }}
               >
                 {/* TODOS TUS INPUTS */}
