@@ -63,143 +63,152 @@ export default function Home() {
   };
 
   return (
-    <Container maxWidth="xs" sx={{ bgcolor: "white" }}>
-      <Box
-        minHeight="calc(100vh - 32px)"
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        sx={{ bgcolor: "background.default", color: "text.primary" }}
-      >
-        <Paper
-          elevation={0}
-          sx={{
-            width: "100%",
-            height: "100%",
-            bgcolor: "white",
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-            border: "1px solid #ececec",
-            p: 2,
-          }}
+    <Box
+      sx={{
+        minHeight: "100dvh",
+        width: "100%",
+        overflowX: "hidden",
+        display: "flex",
+        bgcolor: "#f5f5f5",
+      }}
+    >
+      <Container maxWidth="xs">
+        <Box
+          minHeight="calc(100vh - 32px)"
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
         >
-          {/* HEADER */}
-          <Box
+          <Paper
+            elevation={0}
             sx={{
-              px: 2,
-              py: 1,
-              borderBottom: "1px solid #f0f0f0",
-              flexShrink: 0,
+              width: "100%",
+              height: "100%",
+              bgcolor: "white",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              border: "1px solid #ececec",
+              p: 2,
             }}
           >
-            <Box sx={{ ml: -1 }}>
-              <LogoComponent />
-            </Box>
-          </Box>
-
-          {/* SCROLLABLE CONTENT */}
-          <Box
-            sx={{
-              flex: 1,
-              overflowY: "auto",
-              px: 2,
-              py: 1,
-              "&::-webkit-scrollbar": {
-                width: 6,
-              },
-
-              "&::-webkit-scrollbar-thumb": {
-                backgroundColor: "#d1d5db",
-                borderRadius: 10,
-              },
-            }}
-          >
-            <Typography
-              variant="h4"
+            {/* HEADER */}
+            <Box
               sx={{
-                fontWeight: 700,
-                color: "#1a365d",
-                mb: 0.5,
+                px: 2,
+                py: 1,
+                borderBottom: "1px solid #f0f0f0",
+                flexShrink: 0,
               }}
             >
-              Welkom{" "}
+              <Box sx={{ ml: -1 }}>
+                <LogoComponent />
+              </Box>
+            </Box>
+
+            {/* SCROLLABLE CONTENT */}
+            <Box
+              sx={{
+                flex: 1,
+                overflowY: "auto",
+                px: 2,
+                py: 1,
+                "&::-webkit-scrollbar": {
+                  width: 6,
+                },
+
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "#d1d5db",
+                  borderRadius: 10,
+                },
+              }}
+            >
               <Typography
-                component="span"
                 variant="h4"
                 sx={{
                   fontWeight: 700,
-                  color: "primary.main",
+                  color: "#1a365d",
+                  mb: 0.5,
                 }}
               >
-                terug!
+                Welkom{" "}
+                <Typography
+                  component="span"
+                  variant="h4"
+                  sx={{
+                    fontWeight: 700,
+                    color: "primary.main",
+                  }}
+                >
+                  terug!
+                </Typography>
               </Typography>
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-              Toegang met uw zakelijke e-mailadres
-            </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+                Toegang met uw zakelijke e-mailadres
+              </Typography>
 
-            {/* FORM */}
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 2.5,
-              }}
-            >
-              {/* TODOS TUS INPUTS */}
-              <form onSubmit={handleSubmit}>
-                <Stack spacing={1.5}>
-                  <TextField
-                    fullWidth
-                    type="email"
-                    size="small"
-                    placeholder="E-mailadres of gebruikersnaam"
-                    value={formData.email ?? ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    required
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Person sx={{ color: "text.secondary" }} />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
+              {/* FORM */}
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2.5,
+                }}
+              >
+                {/* TODOS TUS INPUTS */}
+                <form onSubmit={handleSubmit}>
+                  <Stack spacing={1.5}>
+                    <TextField
+                      fullWidth
+                      type="email"
+                      size="small"
+                      placeholder="E-mailadres of gebruikersnaam"
+                      value={formData.email ?? ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      required
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Person sx={{ color: "text.secondary" }} />
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
 
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    fullWidth
-                    sx={{ mt: 2 }}
-                    disabled={isLoading}
-                    startIcon={<ArrowRightAltIcon />}
-                  >
-                    {isLoading ? "Laden..." : "Doorgaan"}
-                  </Button>
-
-                  <Box mt={3} mb={3} textAlign="center">
-                    <Typography variant="body2" component="span">
-                      ¿Heeft u geen account?{" "}
-                    </Typography>
                     <Button
-                      variant="text"
-                      color="primary"
-                      onClick={redirectToSignUp}
-                      sx={{ textTransform: "none", p: 0, minWidth: "auto" }}
+                      type="submit"
+                      variant="contained"
+                      fullWidth
+                      sx={{ mt: 2 }}
+                      disabled={isLoading}
+                      startIcon={<ArrowRightAltIcon />}
                     >
-                      Schrijf je in
+                      {isLoading ? "Laden..." : "Doorgaan"}
                     </Button>
-                  </Box>
-                </Stack>
-              </form>
+
+                    <Box mt={3} mb={3} textAlign="center">
+                      <Typography variant="body2" component="span">
+                        ¿Heeft u geen account?{" "}
+                      </Typography>
+                      <Button
+                        variant="text"
+                        color="primary"
+                        onClick={redirectToSignUp}
+                        sx={{ textTransform: "none", p: 0, minWidth: "auto" }}
+                      >
+                        Schrijf je in
+                      </Button>
+                    </Box>
+                  </Stack>
+                </form>
+              </Box>
             </Box>
-          </Box>
-        </Paper>
-      </Box>
-    </Container>
+          </Paper>
+        </Box>
+      </Container>
+    </Box>
   );
 }
