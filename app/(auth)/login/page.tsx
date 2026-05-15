@@ -191,7 +191,7 @@ export default function RegistroPage() {
         }}
       >
         <Image
-          src="/static/registro-1200x1440.svg"
+          src="/static/registro-1200x1200.svg"
           alt="Registro Image"
           fill
           priority
