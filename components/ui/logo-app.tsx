@@ -15,7 +15,7 @@ const LogoComponent: React.FC = () => {
 
   return (
     <Box>
-      <Image src={LogoCIO} alt="Logo" height={100} width={150} />
+      <Image src={LogoCIO} alt="Logo" height={60} width={60} />
     </Box>
   );
 };

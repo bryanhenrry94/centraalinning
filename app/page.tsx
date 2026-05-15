@@ -91,12 +91,12 @@ export default function Home() {
           <Box
             sx={{
               px: 4,
-              py: 3,
+              py: 1,
               borderBottom: "1px solid #f0f0f0",
               flexShrink: 0,
             }}
           >
-            <Box sx={{ width: 100, height: 50 }}>
+            <Box sx={{ ml: -1 }}>
               <LogoComponent />
             </Box>
           </Box>
@@ -107,8 +107,7 @@ export default function Home() {
               flex: 1,
               overflowY: "auto",
               px: 4,
-              py: 4,
-
+              py: 1,
               "&::-webkit-scrollbar": {
                 width: 6,
               },
