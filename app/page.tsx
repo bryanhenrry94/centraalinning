@@ -90,7 +90,7 @@ export default function Home() {
               flexDirection: "column",
               overflow: "hidden",
               border: "1px solid #ececec",
-              p: 2,
+              p: 1,
             }}
           >
             {/* HEADER */}
