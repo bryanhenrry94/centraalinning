@@ -8,6 +8,7 @@ import {
   Card,
   CardContent,
   Container,
+  Paper,
   TextField,
   Typography,
 } from "@mui/material";
@@ -81,91 +82,102 @@ export default function ResetPasswordForm() {
   }
 
   return (
-    <Container maxWidth="xs">
-      <Box
+    <Box
+      sx={{
+        minHeight: "100dvh",
+        width: "100%",
+        bgcolor: "#f5f5f5",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        overflow: "hidden",
+        p: 2,
+        boxSizing: "border-box",
+      }}
+    >
+      <Paper
+        elevation={0}
         sx={{
-          minHeight: "100vh",
+          width: "100%",
+          maxWidth: 380,
+          maxHeight: "95dvh",
+          bgcolor: "white",
           display: "flex",
-          alignItems: "center",
+          flexDirection: "column",
+          border: "1px solid #ececec",
+          overflow: "hidden",
         }}
       >
-        <Card
-          sx={{
-            width: "100%",
-            bgcolor: "#F3F2F2",
-          }}
-        >
-          <CardContent sx={{ p: 4 }}>
-            <Typography variant="h4" fontWeight={700} mb={1}>
-              Nieuw wachtwoord
-            </Typography>
+        <CardContent sx={{ p: 4 }}>
+          <Typography variant="h4" fontWeight={700} mb={1}>
+            Nieuw wachtwoord
+          </Typography>
 
-            <Typography color="text.secondary" mb={4}>
-              Voer je nieuwe wachtwoord in.
-            </Typography>
+          <Typography color="text.secondary" mb={4}>
+            Voer je nieuwe wachtwoord in.
+          </Typography>
 
-            {errorMessage && (
-              <Alert severity="error" sx={{ mb: 3 }}>
-                {errorMessage}
-              </Alert>
-            )}
+          {errorMessage && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {errorMessage}
+            </Alert>
+          )}
 
-            {successMessage && (
-              <Alert severity="success" sx={{ mb: 3 }}>
-                {successMessage}
-              </Alert>
-            )}
+          {successMessage && (
+            <Alert severity="success" sx={{ mb: 3 }}>
+              {successMessage}
+            </Alert>
+          )}
 
-            <Box
-              component="form"
-              onSubmit={handleSubmit(onSubmit)}
-              display="flex"
-              flexDirection="column"
-              gap={3}
+          <Box
+            component="form"
+            onSubmit={handleSubmit(onSubmit)}
+            display="flex"
+            flexDirection="column"
+            gap={3}
+          >
+            <TextField
+              label="Nieuw wachtwoord"
+              type="password"
+              fullWidth
+              error={!!errors.password}
+              helperText={errors.password?.message}
+              {...register("password", {
+                required: "Het wachtwoord is vereist",
+                minLength: {
+                  value: 6,
+                  message: "Moet minstens 6 tekens bevatten",
+                },
+              })}
+            />
+
+            <TextField
+              label="Wachtwoord bevestigen"
+              type="password"
+              fullWidth
+              error={!!errors.confirmPassword}
+              helperText={errors.confirmPassword?.message}
+              {...register("confirmPassword", {
+                required: "U moet het wachtwoord bevestigen",
+                validate: (value) =>
+                  value === password || "Wachtwoorden komen niet overeen",
+              })}
+            />
+
+            <Button
+              type="submit"
+              variant="contained"
+              size="large"
+              disabled={isPending}
+              sx={{
+                height: 50,
+              }}
             >
-              <TextField
-                label="Nieuw wachtwoord"
-                type="password"
-                fullWidth
-                error={!!errors.password}
-                helperText={errors.password?.message}
-                {...register("password", {
-                  required: "Het wachtwoord is vereist",
-                  minLength: {
-                    value: 6,
-                    message: "Moet minstens 6 tekens bevatten",
-                  },
-                })}
-              />
-
-              <TextField
-                label="Wachtwoord bevestigen"
-                type="password"
-                fullWidth
-                error={!!errors.confirmPassword}
-                helperText={errors.confirmPassword?.message}
-                {...register("confirmPassword", {
-                  required: "U moet het wachtwoord bevestigen",
-                  validate: (value) =>
-                    value === password || "Wachtwoorden komen niet overeen",
-                })}
-              />
-
-              <Button
-                type="submit"
-                variant="contained"
-                size="large"
-                disabled={isPending}
-                sx={{
-                  height: 50,
-                }}
-              >
-                {isPending ? "Bijwerken..." : "Wachtwoord bijwerken"}
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-      </Box>
-    </Container>
+              {isPending ? "Bijwerken..." : "Wachtwoord bijwerken"}
+            </Button>
+          </Box>
+        </CardContent>
+      </Paper>
+    </Box>
   );
 }
