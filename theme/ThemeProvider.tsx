@@ -4,6 +4,7 @@ import * as React from "react";
 import { ThemeProvider, alpha, createTheme } from "@mui/material/styles";
 import type { ThemeOptions } from "@mui/material/styles";
 import { brand, secondary, blue, orange, red, green, gray } from "./colors";
+import { Box } from "@mui/material";
 
 interface AppThemeProps {
   children: React.ReactNode;
@@ -135,7 +136,14 @@ export default function AppTheme(props: AppThemeProps) {
 
   return (
     <ThemeProvider theme={theme} disableTransitionOnChange>
-      {children}
+      <Box
+        sx={{
+          width: "100%",
+          minWidth: 0,
+        }}
+      >
+        {children}
+      </Box>
     </ThemeProvider>
   );
 }

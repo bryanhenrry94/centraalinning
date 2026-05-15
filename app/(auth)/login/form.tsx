@@ -160,9 +160,16 @@ export default function LoginForm() {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              gap: 1,
+              flexWrap: "wrap",
             }}
           >
             <FormControlLabel
+              sx={{
+                minWidth: 0,
+                flex: 1,
+                mr: 0,
+              }}
               control={
                 <Checkbox
                   checked={rememberMe}

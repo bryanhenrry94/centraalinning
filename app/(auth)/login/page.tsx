@@ -23,8 +23,7 @@ export default function RegistroPage() {
           width: { xs: "100%", lg: "50%" },
           display: "flex",
           justifyContent: "center",
-          alignItems: "center",
-          p: 2,
+          alignItems: "center",          
           overflow: "hidden",
           bgcolor: "white",
         }}
@@ -48,8 +47,7 @@ export default function RegistroPage() {
             <Box
               sx={{
                 px: 2,
-                py: 1,
-                borderBottom: "1px solid #f0f0f0",
+                py: 1,                
                 flexShrink: 0,
               }}
             >
@@ -64,7 +62,7 @@ export default function RegistroPage() {
                 flex: 1,
                 overflowY: "auto",
                 px: 2,
-                py: 1,
+                py: 2,
 
                 "&::-webkit-scrollbar": {
                   width: 6,

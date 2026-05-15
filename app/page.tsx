@@ -18,12 +18,10 @@ import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import { emailExists } from "@/actions/auth";
 import { getTenantByEmail } from "@/actions/tenant";
 import { Person } from "@mui/icons-material";
-import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const { redirectToSignUp, redirectToSlugLoginCompany } = useClientRouter();
-  const router = useRouter();
 
   const [formData, setFormData] = useState<EmailFormData>({
     email: "",
@@ -72,7 +70,7 @@ export default function Home() {
         flexDirection="column"
         alignItems="center"
         justifyContent="center"
-        sx={{ p: 2, bgcolor: "background.default", color: "text.primary" }}
+        sx={{ bgcolor: "background.default", color: "text.primary" }}
       >
         <Paper
           elevation={0}
@@ -84,12 +82,13 @@ export default function Home() {
             flexDirection: "column",
             overflow: "hidden",
             border: "1px solid #ececec",
+            p: 2,
           }}
         >
           {/* HEADER */}
           <Box
             sx={{
-              px: 4,
+              px: 2,
               py: 1,
               borderBottom: "1px solid #f0f0f0",
               flexShrink: 0,
@@ -105,7 +104,7 @@ export default function Home() {
             sx={{
               flex: 1,
               overflowY: "auto",
-              px: 4,
+              px: 2,
               py: 1,
               "&::-webkit-scrollbar": {
                 width: 6,
@@ -150,11 +149,12 @@ export default function Home() {
               }}
             >
               {/* TODOS TUS INPUTS */}
-              <form onSubmit={handleSubmit} style={{ minWidth: 300 }}>
-                <Stack spacing={2}>
+              <form onSubmit={handleSubmit}>
+                <Stack spacing={1.5}>
                   <TextField
                     fullWidth
                     type="email"
+                    size="small"
                     placeholder="E-mailadres of gebruikersnaam"
                     value={formData.email ?? ""}
                     onChange={(e) =>
