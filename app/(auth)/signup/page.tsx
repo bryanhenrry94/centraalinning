@@ -274,18 +274,15 @@ export default function RegistrationPage() {
             component="h1"
             sx={{ fontWeight: 700, color: "#1a365d", mb: 2 }}
           >
-            Registratiekosten
+            Registratieplan
           </Typography>
           <Typography
-            variant="body1"
+            variant="subtitle2"
             color="text.secondary"
-            sx={{ maxWidth: 650, mx: "auto" }}
+            sx={{ maxWidth: 650, mx: "auto", fontSize: "1rem" }}
           >
-            Elke registratie is gekoppeld aan een abonnement dat aansluit bij uw
-            organisatie of rol.
-            <br />
-            Kies uw plan en betaal maandelijks of jaarlijks, afhankelijk van uw
-            voorkeur.
+            Elke registratie is gekoppeld aan een registratieplan dat aansluit
+            bij uw organisatie of rol.
           </Typography>
 
           <Box
@@ -378,89 +375,53 @@ export default function RegistrationPage() {
         </Grid>
 
         {/* Info Boxes */}
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Paper
+        <Paper
+          sx={{
+            p: 3,
+            border: "1px solid #e0e0e0",
+            borderRadius: 2,
+            mx: "auto",
+            textAlign: "center",
+          }}
+          elevation={0}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1.5,
+              mb: 1,
+            }}
+          >
+            <Box
               sx={{
-                p: 3,
+                width: 40,
+                height: 40,
+                borderRadius: "50%",
+                bgcolor: "rgba(230, 126, 34, 0.1)",
                 display: "flex",
-                alignItems: "flex-start",
-                gap: 2,
-                border: "1px solid #e0e0e0",
-                borderRadius: 2,
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
               }}
-              elevation={0}
             >
-              <Box
-                sx={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: "50%",
-                  bgcolor: "rgba(230, 126, 34, 0.1)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <Shield sx={{ color: "#E67E22" }} />
-              </Box>
-              <Box>
-                <Typography
-                  variant="subtitle1"
-                  sx={{ fontWeight: 700, color: "#1a365d", mb: 0.5 }}
-                >
-                  Transparant en zonder verborgen kosten
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Alle prijzen zijn exclusief BTW en gelden per registratie.
-                  <br />U betaalt éénmalig. Geen terugkerende kosten.
-                </Typography>
-              </Box>
-            </Paper>
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Paper
-              sx={{
-                p: 3,
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 2,
-                border: "1px solid #e0e0e0",
-                borderRadius: 2,
-              }}
-              elevation={0}
+              <VerifiedUser sx={{ color: "#E67E22", fontSize: 22 }} />
+            </Box>
+
+            <Typography
+              variant="subtitle1"
+              sx={{ fontWeight: 700, color: "#1a365d" }}
             >
-              <Box
-                sx={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: "50%",
-                  bgcolor: "rgba(230, 126, 34, 0.1)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <VerifiedUser sx={{ color: "#E67E22" }} />
-              </Box>
-              <Box>
-                <Typography
-                  variant="subtitle1"
-                  sx={{ fontWeight: 700, color: "#1a365d", mb: 0.5 }}
-                >
-                  Veilig en vertrouwd
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Uw gegevens zijn veilig en worden alleen gebruikt
-                  <br />
-                  voor toegestane doeleinden.
-                </Typography>
-              </Box>
-            </Paper>
-          </Grid>
-        </Grid>
+              Veilig en vertrouwd
+            </Typography>
+          </Box>
+
+          <Typography variant="body2" color="text.secondary">
+            Uw gegevens zijn veilig en worden alleen gebruikt voor toegestane
+            doeleinden.
+          </Typography>
+        </Paper>
       </Container>
 
       {/* Footer */}
@@ -471,75 +432,22 @@ export default function RegistrationPage() {
           borderTop: "1px solid #e0e0e0",
           py: 3,
           mt: "auto",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          width: "100%",
+          zIndex: 100,
         }}
       >
         <Container maxWidth="lg">
           <Box
             sx={{
               display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "space-between",
+              flexDirection: { xs: "column", sm: "row" },
+              justifyContent: "center",
               alignItems: "center",
-              gap: 3,
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  bgcolor: "rgba(26, 54, 93, 0.1)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Lock sx={{ color: "white", fontSize: 20 }} />
-              </Box>
-              <Box>
-                <Typography
-                  variant="body2"
-                  sx={{ color: "white", fontWeight: 500 }}
-                >
-                  Uw gegevens zijn veilig bij CFSB.
-                </Typography>
-                <Typography variant="caption" sx={{ color: "white" }}>
-                  Wij gebruiken beveiligde technologie
-                  <br />
-                  om uw informatie te beschermen.
-                </Typography>
-              </Box>
-            </Box>
-
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                flexWrap: "wrap",
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Lock sx={{ fontSize: 18, color: "white" }} />
-                <Typography variant="body2" sx={{ color: "white" }}>
-                  Privacyverklaring
-                </Typography>
-              </Box>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Description sx={{ fontSize: 18, color: "white" }} />
-                <Typography variant="body2" sx={{ color: "white" }}>
-                  Gebruiksvoorwaarden
-                </Typography>
-              </Box>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Help sx={{ fontSize: 18, color: "white" }} />
-                <Typography variant="body2" sx={{ color: "white" }}>
-                  Help & Contact
-                </Typography>
-              </Box>
-            </Box>
-
             <Typography variant="caption" sx={{ color: "white" }}>
               © 2026 CFSB Group. Alle rechten voorbehouden.
             </Typography>
