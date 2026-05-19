@@ -419,15 +419,8 @@ const DashboardDebtor = () => {
         }}
       >
         <Typography variant="h4" gutterBottom sx={{ mt: 1 }}>
-          Mijn schulden
+          Mijn verplichtingen
         </Typography>
-        {/* <Button
-          variant="contained"
-          size="small"
-          onClick={handleOpenPaymentForm}
-        >
-          Betalen
-        </Button> */}
       </Box>
 
       <Suspense fallback={<h1>Loading collection cases...</h1>}>

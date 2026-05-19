@@ -1,15 +1,18 @@
 "use client";
+
 import React from "react";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
-import { BottomNavigation, BottomNavigationAction, Paper } from "@mui/material";
+import { Box, Paper, Stack, Typography, alpha } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+
 import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
-import ShieldIcon from "@mui/icons-material/Shield";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import GavelIcon from "@mui/icons-material/Gavel";
-import ChatIcon from "@mui/icons-material/Chat";
-import HandshakeIcon from "@mui/icons-material/Handshake";
+import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
+import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
+import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
+import HandshakeOutlinedIcon from "@mui/icons-material/HandshakeOutlined";
+
 import { UserRole } from "@/constants/user-role";
 
 type MenuItem = {
@@ -23,7 +26,7 @@ const menus: MenuItem[] = [
   {
     label: "Dashboard",
     href: "/dashboard",
-    icon: <DashboardIcon fontSize="small" />,
+    icon: <DashboardOutlinedIcon fontSize="small" />,
     role: [
       UserRole.TENANT_ADMIN,
       UserRole.PLATFORM_OWNER,
@@ -40,19 +43,19 @@ const menus: MenuItem[] = [
   {
     label: "Blok-Check",
     href: "/dashboard/blok-checks",
-    icon: <ShieldIcon fontSize="small" />,
+    icon: <ShieldOutlinedIcon fontSize="small" />,
     role: [UserRole.TENANT_ADMIN],
   },
   {
     label: "Gerechtelijk Vonnis",
     href: "/dashboard/verdicts",
-    icon: <GavelIcon fontSize="small" />,
+    icon: <GavelOutlinedIcon fontSize="small" />,
     role: [UserRole.TENANT_ADMIN, UserRole.BAILIFF],
   },
   {
     label: "Betalingsregeling",
     href: "/dashboard/agreements",
-    icon: <HandshakeIcon fontSize="small" />,
+    icon: <HandshakeOutlinedIcon fontSize="small" />,
     role: [UserRole.TENANT_ADMIN],
   },
   {
@@ -64,59 +67,113 @@ const menus: MenuItem[] = [
   {
     label: "Chat",
     href: "/dashboard/chat",
-    icon: <ChatIcon fontSize="small" />,
+    icon: <ChatOutlinedIcon fontSize="small" />,
     role: [UserRole.TENANT_ADMIN, UserRole.DEBTOR],
   },
 ];
 
 const Navigation = ({ role }: { role: string }) => {
-  const theme = useTheme();
   const pathname = usePathname();
+  const theme = useTheme();
+
   const items = menus.filter((item) => item.role?.includes(role));
-  const navValue = items.findIndex((item) => item.href === pathname);
 
   return (
-    <Paper elevation={0} sx={{ borderRadius: 0 }}>
-      <BottomNavigation
-        value={navValue === -1 ? 0 : navValue}
-        showLabels
+    <Paper
+      elevation={0}
+      sx={{
+        borderRadius: 0,
+        borderBottom: "1px solid",
+        borderColor: "divider",
+        bgcolor: "#fff",
+        px: {
+          xs: 1,
+          md: 4,
+        },
+      }}
+    >
+      <Stack
+        direction="row"
+        spacing={{
+          xs: 1,
+          md: 2,
+        }}
         sx={{
-          justifyContent: "space-around",
-          py: 1,
-          "& .MuiBottomNavigationAction-root.Mui-selected": {
-            borderBottom: `2px solid ${theme.palette.primary.main}`,
-            fontWeight: "bold",
+          overflowX: "auto",
+          scrollbarWidth: "none",
+          "&::-webkit-scrollbar": {
+            display: "none",
           },
-          "& .MuiBottomNavigationAction-label": {
-            borderBottom: "none",
-          },
+          minHeight: 72,
+          alignItems: "center",
         }}
       >
-        {items.map((item, idx) => (
-          <BottomNavigationAction
-            key={item.label}
-            label={item.label}
-            icon={item.icon}
-            value={idx}
-            component={NextLink}
-            href={item.href}
-            sx={{
-              minWidth: 0,
-              mx: 1,
-              px: 1,
-              py: 0.5,
-              fontSize: "0.9rem",
-              maxWidth: 200,
-              width: "100%",
-              textAlign: "center",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          />
-        ))}
-      </BottomNavigation>
+        {items.map((item) => {
+          const active =
+            pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+          return (
+            <Box
+              key={item.label}
+              component={NextLink}
+              href={item.href}
+              sx={{
+                position: "relative",
+                minWidth: "fit-content",
+                textDecoration: "none",
+                px: 2,
+                py: 2,
+                borderRadius: 2,
+                transition: "all .2s ease",
+                color: active ? theme.palette.secondary.main : "text.secondary",
+
+                "&:hover": {
+                  bgcolor: alpha(theme.palette.secondary.main, 0.05),
+                  color: theme.palette.secondary.main,
+                },
+
+                "&::after": active
+                  ? {
+                      content: '""',
+                      position: "absolute",
+                      left: 0,
+                      bottom: 0,
+                      width: "100%",
+                      height: "3px",
+                      borderRadius: "999px",
+                      backgroundColor: theme.palette.secondary.main,
+                    }
+                  : {},
+              }}
+            >
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    "& svg": {
+                      fontSize: 20,
+                    },
+                  }}
+                >
+                  {item.icon}
+                </Box>
+
+                <Typography
+                  sx={{
+                    fontSize: "0.95rem",
+                    fontWeight: active ? 700 : 500,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {item.label}
+                </Typography>
+              </Stack>
+            </Box>
+          );
+        })}
+      </Stack>
     </Paper>
   );
 };

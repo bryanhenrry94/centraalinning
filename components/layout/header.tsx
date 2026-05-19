@@ -7,8 +7,10 @@ import {
   Box,
   Divider,
   Stack,
+  Button,
 } from "@mui/material";
 import { Avatar, IconButton, Menu, MenuItem } from "@mui/material";
+import ChatIcon from "@mui/icons-material/Chat";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import { signOut, useSession } from "next-auth/react";
@@ -102,29 +104,68 @@ const Header = () => {
 
   return (
     <>
-      <AppBar position="static" elevation={0} color="secondary">
+      <AppBar
+        position="static"
+        elevation={0}
+        sx={{ bgcolor: "#0C284C", px: 4 }}
+      >
         <Toolbar sx={{ justifyContent: "space-between" }}>
           <Box display="flex" alignItems="center" gap={2}>
-            <Image
-              src="/static/LogoCIO.svg"
-              alt="Logo"
-              height={70}
-              width={130}
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Image
+                src="/static/logo-cfsb-white.png"
+                alt="Logo"
+                width={75}
+                height={75}
+              />
+            </Stack>
+
+            <Divider
+              orientation="vertical"
+              flexItem
+              sx={{ borderColor: "rgba(255, 255, 255, 0.5)" }}
             />
+
+            <Typography
+              variant="h6"
+              fontWeight="bold"
+              sx={{
+                textAlign: "center",
+                flexGrow: 1,
+                display: { xs: "none", md: "block" },
+              }}
+            >
+              CI Systeem
+            </Typography>
           </Box>
-          <Typography
-            variant="h4"
-            fontWeight="bold"
-            sx={{
-              textAlign: "center",
-              flexGrow: 1,
-              display: { xs: "none", md: "block" },
-            }}
-          >
-            CI Systeem
-          </Typography>
+
           <Box>
-            <UserAvatar />
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Box>
+                <Button
+                  startIcon={<ChatIcon />}
+                  variant="text"
+                  sx={{ color: "white", textTransform: "none" }}
+                >
+                  Chat
+                </Button>
+              </Box>
+              <Divider
+                orientation="vertical"
+                flexItem
+                sx={{ borderColor: "rgba(255, 255, 255, 0.5)" }}
+              />
+
+              <Box display="flex" alignItems="center" gap={1}>
+                <UserAvatar />
+                <Typography
+                  variant="body1"
+                  sx={{ color: "white", fontWeight: "bold" }}
+                >
+                  {session?.user?.name}
+                </Typography>
+              </Box>
+            </Stack>
           </Box>
         </Toolbar>
       </AppBar>

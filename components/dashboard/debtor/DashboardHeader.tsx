@@ -22,8 +22,8 @@ import { formatCurrency } from "@/utils/formatters";
 import { AttachMoney, Pause } from "@mui/icons-material";
 
 const StatCard = ({ title, value, subtitle, icon, color, type }: any) => (
-  <Card elevation={1} sx={{ borderRadius: 3 }}>
-    <CardContent>
+  <Card elevation={1}>
+    <CardContent sx={{ bgcolor: "secondary.light" }}>
       <Box display="flex" alignItems="center" gap={2}>
         <Box
           sx={{
@@ -79,7 +79,7 @@ const DashboardHeader = ({
       <Grid container spacing={2} mb={2}>
         <Grid size={{ xs: 12, md: 3 }}>
           <StatCard
-            title="Totale schulden"
+            title="Totale openstaand"
             value={total}
             type="currency"
             color="#1976d2"
@@ -89,7 +89,7 @@ const DashboardHeader = ({
 
         <Grid size={{ xs: 12, md: 3 }}>
           <StatCard
-            title="Totaal bestanden"
+            title="Totaal dossiers"
             value={count}
             color="#2e7d32"
             icon={<CheckCircleIcon sx={{ color: "#2e7d32" }} />}
@@ -109,7 +109,7 @@ const DashboardHeader = ({
         <Grid size={{ xs: 12, md: 3 }}>
           <StatCard
             title="Economische Blokkade"
-            value="JA / NEE"
+            value="Actief / Niet actief"
             color="#d32f2f"
             icon={<Pause sx={{ color: "#d32f2f" }} />}
           />
