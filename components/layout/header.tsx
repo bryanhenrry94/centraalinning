@@ -110,13 +110,13 @@ const Header = () => {
         sx={{ bgcolor: "#0C284C", px: 4 }}
       >
         <Toolbar sx={{ justifyContent: "space-between" }}>
-          <Box display="flex" alignItems="center" gap={2}>
+          <Box display="flex" alignItems="center" gap={3}>
             <Stack direction="row" spacing={1} alignItems="center">
               <Image
-                src="/static/logo-cfsb-white.png"
+                src="/static/logo-cfsb-light.png"
                 alt="Logo"
-                width={75}
-                height={75}
+                width={50}
+                height={50}
               />
             </Stack>
 

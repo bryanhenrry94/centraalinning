@@ -7,7 +7,7 @@ import InvoiceEmail from "@/templates/emails/InvoiceEmail";
 import AanmanningEmail from "@/templates/emails/AanmanningEmail";
 import SommatieMail from "@/templates/emails/SommatieEmail";
 import { InvoicePDF, InvoicePDFProps } from "@/templates/pdfs/InvoicePDF";
-import AanmaningPDF, { AanmaningPDFProps } from "@/templates/pdfs/AanmaningPDF";
+import AanmaningPDF, { AanmaningPDFProps } from "@/components/pdf/AanmaningPDF";
 import SommatiePDF, { SommatiePDFProps } from "@/templates/pdfs/SommatiePDF";
 import IngebrekestellingPDF, {
   IngebrekestellingProps,
