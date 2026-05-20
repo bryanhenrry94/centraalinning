@@ -25,13 +25,7 @@ const TestSommatiePage = () => {
 
     amount_original: "1,250.00",
 
-    extraCosts: "250.00",
-
     calculatedABB: "75.50",
-
-    bankName: "MCB Bank",
-
-    accountNumber: "123456789",
 
     tenantName: "DAZZSOFT",
 
