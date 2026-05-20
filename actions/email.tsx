@@ -8,7 +8,7 @@ import AanmanningEmail from "@/templates/emails/AanmanningEmail";
 import SommatieMail from "@/templates/emails/SommatieEmail";
 import { InvoicePDF, InvoicePDFProps } from "@/templates/pdfs/InvoicePDF";
 import AanmaningPDF, { AanmaningPDFProps } from "@/components/pdf/AanmaningPDF";
-import SommatiePDF, { SommatiePDFProps } from "@/templates/pdfs/SommatiePDF";
+import SommatiePDF, { SommatiePDFProps } from "@/components/pdf/SommatiePDF";
 import IngebrekestellingPDF, {
   IngebrekestellingProps,
 } from "@/templates/pdfs/IngebrekestellingPDF";
@@ -317,8 +317,14 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
       debtorName: debtorName || "Debtor",
       debtorAddress: debtorAddress,
       island: island || "Bonaire",
-      invoice_number: collection.reference_number || "",
-      invoiceAmount: collection.total_due.toFixed(2),
+      reference_number: collection.reference_number || "",
+      total_amount: collection.total_due.toFixed(2),
+      amount_original: collection.amount_original.toFixed(2),
+      calculatedABB: collection.abb_amount.toFixed(2),
+      tenantName: collection.tenant.name || "Tenant",
+      administrativeCosts: Number(0).toFixed(2),
+      additionalCosts: Number(0).toFixed(2),
+      additionalABB: Number(0).toFixed(2),
     };
 
     const pdfBase64 = await generatePdfBase64(<SommatiePDF {...params} />);
