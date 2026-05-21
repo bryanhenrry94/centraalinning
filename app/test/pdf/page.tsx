@@ -9,6 +9,13 @@ const TestSommatiePage = dynamic(() => import("./TestSommatiePage"), {
   ssr: false,
 });
 
+const TestIngebrekestellingPage = dynamic(
+  () => import("./TestIngebrekestellingPage"),
+  {
+    ssr: false,
+  },
+);
+
 export default function TestPage() {
-  return <TestSommatiePage />;
+  return <TestIngebrekestellingPage />;
 }

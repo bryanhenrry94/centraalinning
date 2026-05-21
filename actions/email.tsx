@@ -11,7 +11,7 @@ import AanmaningPDF, { AanmaningPDFProps } from "@/components/pdf/AanmaningPDF";
 import SommatiePDF, { SommatiePDFProps } from "@/components/pdf/SommatiePDF";
 import IngebrekestellingPDF, {
   IngebrekestellingProps,
-} from "@/templates/pdfs/IngebrekestellingPDF";
+} from "@/components/pdf/IngebrekestellingPDF";
 import { BlokkadeEmail } from "@/templates/emails/BlokkadeEmail";
 import { IngebrekestellingEmail } from "@/templates/emails/IngebrekestellingEmail";
 import BlokkadePDF, { BlokkadePDFProps } from "@/templates/pdfs/BlokkadePDF";
@@ -423,9 +423,7 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
       debtorName: debtorName || "Debtor",
       debtorAddress: debtorAddress || "",
       island: island || "Bonaire",
-      firstReminderDate: formatDate(firstReminderDate.sent_at.toString()),
-      secondReminderDate: formatDate(secondReminderDate.sent_at.toString()),
-      accountNumber: parameter.bank_account || "Account Number",
+      referenceNumber: collection.reference_number || "",
       tenantName: collection.tenant.name || "Tenant",
     };
 
