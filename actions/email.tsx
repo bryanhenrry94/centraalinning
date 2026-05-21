@@ -262,7 +262,7 @@ export const sendAanmaningEmail = async (
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
-      subject: `Aanmaning - ${collection.reference_number}`,
+      subject: "Aanmaning",
       react: (
         <AanmanningEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
@@ -343,7 +343,7 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
-      subject: `Sommatie - ${collection.reference_number}`,
+      subject: "Sommatie",
       react: (
         <SommatieMail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
@@ -445,7 +445,7 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
-      subject: `Ingebrekestelling - ${collection.reference_number}`,
+      subject: "Ingebrekestelling",
       react: (
         <IngebrekestellingEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
@@ -515,7 +515,7 @@ export const sendBlokkadeMail = async (to: string, caseId: string) => {
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
-      subject: `Blokkade - ${collection.reference_number}`,
+      subject: "Blokkade",
       react: (
         <BlokkadeEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}

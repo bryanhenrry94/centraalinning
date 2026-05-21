@@ -27,15 +27,18 @@ export const IngebrekestellingEmail = ({
         </Text>
         <br />
         <Text style={paragraph}>
-          U bent officieel ingebreke gesteld. (CI). U kunt de gegevens veilig
-          bekijken door in te loggen op het CI-platform:{" "}
-          <Link href="https://www.centraalinning.com/">Centraal Inning</Link>
+          Er is een ingebrekestelling op uw naam geregistreerd binnen de
+          CFSB-samenwerking.
+        </Text>
+
+        <Text style={{ ...paragraph, marginTop: "10px" }}>
+          U kunt de gegevens bekijken, een betaling uitvoeren of een
+          betalingsregeling voorstellen door in te loggen via{" "}
+          <Link href={"https://www.cfsbgroup.com"}>www.cfsbgroup.com</Link>.
         </Text>
 
         <Text style={footer}>
-          Dit bericht is automatisch gegenereerd door het Centraal
-          Incassoplatform (CI).
-          <br />© CENTRAAL INNING
+          Dit bericht is automatisch gegenereerd binnen de CFSB-samenwerking.
         </Text>
       </Container>
     </Body>
