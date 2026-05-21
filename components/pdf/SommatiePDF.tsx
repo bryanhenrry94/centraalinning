@@ -13,7 +13,7 @@ const styles = StyleSheet.create({
   page: {
     fontFamily: "Helvetica",
     backgroundColor: "#FFFFFF",
-    paddingTop: 75,
+    paddingTop: 65,
     paddingBottom: 55,
     paddingHorizontal: 70,
     color: "#111827",
@@ -52,11 +52,11 @@ const styles = StyleSheet.create({
 
   // CLIENT
   clientSection: {
-    marginBottom: 35,
+    marginBottom: 45,
   },
 
   clientText: {
-    fontSize: 10,
+    fontSize: 11,
     lineHeight: 1,
   },
 
@@ -83,13 +83,13 @@ const styles = StyleSheet.create({
   },
 
   greeting: {
-    marginBottom: 22,
+    marginBottom: 12,
   },
 
   // TABLE
   tableWrapper: {
     marginTop: 10,
-    marginBottom: 20,
+    marginBottom: 30,
     width: "60%",
   },
 
@@ -378,8 +378,6 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
             <Link src="https://www.cfsbgroup.com" style={styles.link}>
               www.cfsbgroup.com
             </Link>
-            {"\n"}
-            Vermeld bij betaling uw naam en dossiernummer.
           </Text>
 
           <Text style={styles.paragraph}>
