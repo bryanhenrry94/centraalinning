@@ -6,15 +6,17 @@ import { WelcomeEmail } from "@/templates/emails/WelcomeEmail";
 import InvoiceEmail from "@/templates/emails/InvoiceEmail";
 import AanmanningEmail from "@/templates/emails/AanmanningEmail";
 import SommatieMail from "@/templates/emails/SommatieEmail";
+// PDFs
 import { InvoicePDF, InvoicePDFProps } from "@/templates/pdfs/InvoicePDF";
 import AanmaningPDF, { AanmaningPDFProps } from "@/components/pdf/AanmaningPDF";
 import SommatiePDF, { SommatiePDFProps } from "@/components/pdf/SommatiePDF";
+import BlokkadePDF, { BlokkadePDFProps } from "@/components/pdf/BlokkadePDF";
 import IngebrekestellingPDF, {
   IngebrekestellingProps,
 } from "@/components/pdf/IngebrekestellingPDF";
+// Emails
 import { BlokkadeEmail } from "@/templates/emails/BlokkadeEmail";
 import { IngebrekestellingEmail } from "@/templates/emails/IngebrekestellingEmail";
-import BlokkadePDF, { BlokkadePDFProps } from "@/templates/pdfs/BlokkadePDF";
 // Server actions
 import { getDataInvoicePDF } from "./billing-invoice";
 import { getParameter } from "./parameter";
@@ -495,11 +497,8 @@ export const sendBlokkadeMail = async (to: string, caseId: string) => {
       debtorName: debtorName || "Debtor",
       debtorAddress: debtorAddress || "",
       island: island || "Bonaire",
-      total_amount: collection.total_due.toFixed(2),
-      amountRegister: collection.amount_original.toFixed(2),
-      total: collection.total_due.toFixed(2),
-      bankName: parameter.bank_name || "Bank Name",
-      accountNumber: parameter.bank_account || "Account Number",
+      referenceNumber: collection.reference_number || "",
+      tenantName: collection.tenant.name || "Tenant",
     };
 
     const pdfBase64 = await generatePdfBase64(<BlokkadePDF {...params} />);

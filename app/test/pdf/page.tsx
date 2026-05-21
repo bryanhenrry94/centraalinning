@@ -16,6 +16,10 @@ const TestIngebrekestellingPage = dynamic(
   },
 );
 
+const TestBlokkadePage = dynamic(() => import("./TestBlokkadePage"), {
+  ssr: false,
+});
+
 export default function TestPage() {
-  return <TestIngebrekestellingPage />;
+  return <TestBlokkadePage />;
 }
