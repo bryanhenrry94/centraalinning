@@ -20,6 +20,13 @@ const TestBlokkadePage = dynamic(() => import("./TestBlokkadePage"), {
   ssr: false,
 });
 
+const FinancialSummaryPage = dynamic(
+  () => import("./FinancialSummaryPage"),
+  {
+    ssr: false,
+  },
+);
+
 export default function TestPage() {
-  return <TestBlokkadePage />;
+  return <FinancialSummaryPage />;
 }
