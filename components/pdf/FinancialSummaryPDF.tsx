@@ -8,8 +8,6 @@ import {
   Image,
 } from "@react-pdf/renderer";
 
-import QRCode from "qrcode";
-
 export interface FinancialSummaryPDFProps {
   logoUrl: string;
   issueDate: string;
@@ -34,8 +32,7 @@ export interface FinancialSummaryPDFProps {
   summary: string;
 
   // QR
-  verificationUrl: string;
-  verificationCode: string;
+  qrCode?: string;
 }
 
 const styles = StyleSheet.create({
@@ -204,25 +201,8 @@ const FinancialSummaryPDF: React.FC<FinancialSummaryPDFProps> = ({
 
   summary,
 
-  verificationUrl,
-  verificationCode,
+  qrCode,
 }) => {
-  const [qrCode, setQrCode] = React.useState("");
-
-  React.useEffect(() => {
-    const generateQr = async () => {
-      try {
-        const qr = await QRCode.toDataURL(verificationUrl);
-
-        setQrCode(qr);
-      } catch (error) {
-        console.error("Error generating QR code:", error);
-      }
-    };
-
-    generateQr();
-  }, [verificationUrl]);
-
   return (
     <Document>
       <Page size="A4" style={styles.page}>

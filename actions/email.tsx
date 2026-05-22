@@ -46,6 +46,7 @@ import FinancialSummaryPDF, {
   FinancialSummaryPDFProps,
 } from "@/components/pdf/FinancialSummaryPDF";
 import FinancialSummaryEmail from "@/templates/emails/FinancialSummaryEmail";
+import QRCode from "qrcode";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -490,6 +491,10 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
       throw new Error("Parameters not found");
     }
 
+    const qrCode = await QRCode.toDataURL(
+      "https://sbxcentraalinning.com/verify/" + financial_report.id,
+    );
+
     const params: FinancialSummaryPDFProps = {
       logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
       issueDate: formatDate(financial_report.created_at.toISOString()),
@@ -519,8 +524,7 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
       summary: "",
 
       // QR
-      verificationUrl: "",
-      verificationCode: "",
+      qrCode: qrCode,
     };
 
     const pdfBase64 = await generatePdfBase64(

@@ -6,8 +6,13 @@ import { PDFViewer } from "@react-pdf/renderer";
 import FinancialSummaryPDF, {
   FinancialSummaryPDFProps,
 } from "@/components/pdf/FinancialSummaryPDF";
+import QRCode from "qrcode";
 
-const FinancialSummaryPage = () => {
+const FinancialSummaryPage = async () => {
+  const qrCode = await QRCode.toDataURL(
+    "https://sbxcentraalinning.com/verify/",
+  );
+
   const params: FinancialSummaryPDFProps = {
     logoUrl:
       process.env.NEXT_PUBLIC_LOGO_URL ||
@@ -39,10 +44,8 @@ const FinancialSummaryPage = () => {
     economicBlockRegistered: "Nee",
 
     // SUMMARY
-    summary:
-      "Actieve betalingsregelingen worden correct nagekomen.",
-    verificationUrl: "https://www.cio-bonaire.com/verify/FS-2026-001",
-    verificationCode: "FS-2026-001",
+    summary: "Actieve betalingsregelingen worden correct nagekomen.",
+    qrCode: qrCode,
   };
 
   return (
