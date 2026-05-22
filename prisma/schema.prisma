@@ -14,40 +14,41 @@ datasource db {
 }
 
 model Tenant {
-  id                  String              @id @default(uuid())
-  name                String
-  code                String              @unique
-  subdomain           String              @unique
-  contact_email       String
-  country_code        String
-  kvk                 String?
-  legal_name          String?
-  address             String?
-  city                String?
-  logo_url            String?
-  number_of_employees Int?
-  phone               String?
-  website             String?
-  terms_accepted      Boolean             @default(false)
-  is_active           Boolean             @default(false)
+  id                        String                    @id @default(uuid())
+  name                      String
+  code                      String                    @unique
+  subdomain                 String                    @unique
+  contact_email             String
+  country_code              String
+  kvk                       String?
+  legal_name                String?
+  address                   String?
+  city                      String?
+  logo_url                  String?
+  number_of_employees       Int?
+  phone                     String?
+  website                   String?
+  terms_accepted            Boolean                   @default(false)
+  is_active                 Boolean                   @default(false)
 
-  created_at          DateTime            @default(now())
-  updated_at          DateTime            @updatedAt
+  created_at                DateTime                  @default(now())
+  updated_at                DateTime                  @updatedAt
 
-  billing_invoice     BillingInvoice[]
-  collection_cases    CollectionCase[]
-  debtors             Debtor[]
-  bailiffs            Bailiff[]
-  verdicts            Verdict[]
-  chat_rooms          ChatRoom[]
-  invitations         TenantInvitation[]
-  employees           Employee[]
-  agreements          Agreement[]
-  debts               Debt[]
-  memberships         Membership[]
-  payments            Payment[]
+  billing_invoice           BillingInvoice[]
+  collection_cases          CollectionCase[]
+  debtors                   Debtor[]
+  bailiffs                  Bailiff[]
+  verdicts                  Verdict[]
+  chat_rooms                ChatRoom[]
+  invitations               TenantInvitation[]
+  employees                 Employee[]
+  agreements                Agreement[]
+  debts                     Debt[]
+  memberships               Membership[]
+  payments                  Payment[]
+  financial_report_requests FinancialReportRequest[]
 
-  subscription        Subscription?
+  subscription              Subscription?
 
   @@map("tenant")
 }
@@ -137,27 +138,28 @@ model TenantInvitation {
 }
 
 model Person {
-  id                  String              @id @default(uuid())
-  person_type         PersonType
+  id                        String                    @id @default(uuid())
+  person_type               PersonType
 
-  identification_type IdentificationType
-  identification      String              @unique
+  identification_type       IdentificationType
+  identification            String                    @unique
 
-  first_name          String?
-  last_name           String?
-  business_name       String?
+  first_name                String?
+  last_name                 String?
+  business_name             String?
 
-  email               String?             @unique
-  phone               String?
-  address             String?
+  email                     String?                   @unique
+  phone                     String?
+  address                   String?
 
-  has_blockade        Boolean             @default(false)
+  has_blockade              Boolean                   @default(false)
 
-  created_at          DateTime            @default(now())
-  updated_at          DateTime            @updatedAt
+  created_at                DateTime                  @default(now())
+  updated_at                DateTime                  @updatedAt
 
-  debtors             Debtor[]
-  blok_check_requests BlokCheckRequest[]
+  debtors                   Debtor[]
+  blok_check_requests       BlokCheckRequest[]
+  financial_report_requests FinancialReportRequest[]
   // bailiff             Bailiff?
   // employee            Employee?
 
@@ -202,6 +204,7 @@ model Parameter {
 
   digital_file_costs             Float     @default(0)
   extra_administrative_costs     Float     @default(0)
+  report_financial_pricing       Float     @default(0)
 
   created_at                     DateTime  @default(now())
   updated_at                     DateTime  @updatedAt
@@ -710,6 +713,32 @@ model BlokCheckRequest {
   @@index([tenant_id])
   @@index([document_number])
   @@map("blok_check_request")
+}
+
+model FinancialReportRequest {
+  id             String         @id @default(cuid())
+
+  tenant_id      String
+  tenant         Tenant        @relation(fields: [tenant_id], references: [id])
+
+  // 👤 Relación con persona/deudor
+  person_id      String?
+  person         Person?       @relation(fields: [person_id], references: [id])
+
+  // 💳 Pago (Sentoo)
+  payment_id     String?
+  payment_status PaymentStatus  @default(pending)
+
+  amount         Decimal        @db.Decimal(10,2)
+
+  // 🧾 Auditoría
+  created_at     DateTime       @default(now())
+  updated_at     DateTime       @updatedAt
+
+  @@index([tenant_id])
+  @@index([payment_status])
+
+  @@map("financial_report_request")
 }
 
 model Plan {

@@ -45,6 +45,8 @@ export const paramGeneralSchema = z.object({
   digital_file_costs: z.number().min(0),
   extra_administrative_costs: z.number().min(0),
 
+  report_financial_pricing: z.number().min(0),
+
   // Bank info
   bank_account: z.string(),
   bank_name: z.string(),

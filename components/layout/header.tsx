@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { Avatar, IconButton, Menu, MenuItem } from "@mui/material";
 import ChatIcon from "@mui/icons-material/Chat";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import { signOut, useSession } from "next-auth/react";
@@ -102,6 +103,10 @@ const Header = () => {
     );
   };
 
+  const handleClickNavigation = (route: string) => {
+    router.push(route);
+  };
+
   return (
     <>
       <AppBar
@@ -141,6 +146,26 @@ const Header = () => {
 
           <Box>
             <Stack direction="row" spacing={2} alignItems="center">
+              <Box>
+                <Button
+                  startIcon={<InsertDriveFileIcon />}
+                  variant="text"
+                  sx={{ color: "white", textTransform: "none" }}
+                  onClick={() => handleClickNavigation("/dashboard")}
+                >
+                  Home
+                </Button>
+              </Box>
+              <Box>
+                <Button
+                  startIcon={<InsertDriveFileIcon />}
+                  variant="text"
+                  sx={{ color: "white", textTransform: "none" }}
+                  onClick={() => handleClickNavigation("/dashboard/verklaring")}
+                >
+                  Financiële Verklaring
+                </Button>
+              </Box>
               <Box>
                 <Button
                   startIcon={<ChatIcon />}

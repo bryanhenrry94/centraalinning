@@ -1,3 +1,4 @@
+import { sendFinancialReportMail } from "@/actions/email";
 import { verifySentooPayment } from "@/actions/sentoo.actions";
 import { MembershipStatus } from "@/constants/membership-status";
 import { prisma } from "@/lib/prisma";
@@ -91,6 +92,21 @@ export async function POST(req: NextRequest) {
           where: { id: blokCheck.id },
           data: { has_blockade: _has_blockade, payment_status: "paid" },
         });
+      }
+
+      // Valida si el pago tiene una solicitud de reporte financiero y actualiza el estado del payment_status
+      const financialReportRequest =
+        await prisma.financialReportRequest.findFirst({
+          where: { payment_id: payment.id },
+        });
+
+      if (financialReportRequest) {
+        await prisma.financialReportRequest.update({
+          where: { id: financialReportRequest.id },
+          data: { payment_status: "paid" },
+        });
+
+        await sendFinancialReportMail(financialReportRequest.id);
       }
     } else {
       await prisma.payment.update({

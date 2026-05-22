@@ -91,7 +91,7 @@ export const DashboardAdmin = () => {
         >
           Gerechtelijk Vonnis
         </Button>
-        <Button
+        {/* <Button
           onClick={handleOpen}
           variant="outlined"
           color="primary"
@@ -106,7 +106,7 @@ export const DashboardAdmin = () => {
           }}
         >
           Aanvraag Financieel
-        </Button>
+        </Button> */}
       </Stack>
       <Modal
         open={open}
