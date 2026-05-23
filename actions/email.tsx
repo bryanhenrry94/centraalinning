@@ -515,16 +515,12 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
     });
 
     // obtener el saldo total de las deudas del deudor en estado open
-    const query = `
+    const balanceTotalResult = await prisma.$queryRaw<{ balance: number }[]>`
       SELECT COALESCE(SUM(balance), 0) as balance
       FROM vw_debtor_summary
-      WHERE debtor_id = $1 AND status = 'OPEN'
+      WHERE debtor_id = ${debtor.id}
+        AND status = 'OPEN'
     `;
-
-    const balanceTotalResult = (await prisma.$queryRawUnsafe(
-      query,
-      debtor.id,
-    )) as any[];
 
     const balanceTotal = balanceTotalResult?.[0]?.balance || 0;
 
