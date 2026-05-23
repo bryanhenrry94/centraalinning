@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { Resend } from "resend";
-
 // Templates
 import { WelcomeEmail } from "@/templates/emails/WelcomeEmail";
 import InvoiceEmail from "@/templates/emails/InvoiceEmail";
