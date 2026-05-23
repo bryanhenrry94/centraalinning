@@ -540,6 +540,33 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
       },
     });
 
+    let summary = "";
+
+    // Situación 1 — Sin bloqueo + acuerdos correctos
+    if (
+      financial_report?.person?.has_blockade === false &&
+      overduePaymentPlansCount <= 0
+    ) {
+      summary = "Actieve betalingsregelingen worden correct nagekomen.";
+    }
+
+    // Situación 2 — Bloqueo activo + sin acuerdo de pago
+    if (
+      financial_report?.person?.has_blockade === true &&
+      overduePaymentPlansCount <= 0
+    ) {
+      summary = "Er is een actieve economische blokkade geregistreerd.";
+    }
+
+    // Situación 3 — Bloqueo activo + acuerdo de pago activo
+    if (
+      financial_report?.person?.has_blockade === true &&
+      activePaymentPlansCount > 0
+    ) {
+      summary =
+        "Er is een actieve economische blokkade geregistreerd. Een betalingsregeling is actief.";
+    }
+
     const params: FinancialSummaryPDFProps = {
       logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
       issueDate: formatDate(financial_report.created_at.toISOString()),
@@ -571,11 +598,7 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
         : "Geen Blokkade",
 
       // SUMMARY
-      summary:
-        overduePaymentPlansCount <= 0
-          ? "Actieve betalingsregelingen worden correct nagekomen"
-          : "Er zijn betalingsregelingen die niet worden nagekomen, wat kan leiden tot mogelijke blokkades of juridische stappen.",
-
+      summary: summary,
       // QR
       qrCode: qrCode,
     };
