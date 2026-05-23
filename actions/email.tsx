@@ -22,7 +22,7 @@ import { getParameter } from "./parameter";
 // Libs
 import { generatePdfBase64 } from "@/lib/pdf";
 // Utils
-import { formatDate } from "@/utils/formatters";
+import { formatCurrency, formatDate } from "@/utils/formatters";
 import { getNameCountry } from "@/utils/location";
 import VerdictApprovalPDF, {
   VerdictApprovalPDFProps,
@@ -558,7 +558,7 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
 
       // FINANCIAL SUMMARY
       openObligations: openDebtsCount ? openDebtsCount.toString() : "0",
-      totalOutstandingAmount: balanceTotal.toFixed(2),
+      totalOutstandingAmount: formatCurrency(balanceTotal),
       activePaymentPlans: activePaymentPlansCount
         ? activePaymentPlansCount.toString()
         : "0",
