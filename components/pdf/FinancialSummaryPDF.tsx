@@ -278,7 +278,7 @@ const FinancialSummaryPDF: React.FC<FinancialSummaryPDFProps> = ({
             <View style={styles.row}>
               <Text style={styles.label}>Totaal openstaand bedrag</Text>
 
-              <Text style={styles.value}>: USD {totalOutstandingAmount}</Text>
+              <Text style={styles.value}>: {totalOutstandingAmount}</Text>
             </View>
 
             <View style={styles.row}>
