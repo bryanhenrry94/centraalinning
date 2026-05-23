@@ -352,7 +352,7 @@ const VerklaringPage: React.FC = () => {
         >
           <Typography variant="body2">
             Nadat de betaling is bevestigd, wordt het financiële rapport
-            automatisch gegenereerd.
+            automatisch gegenereerd en ontvang je een e-mail met het PDF-document.
           </Typography>
         </Alert>
       </Container>

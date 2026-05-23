@@ -27,13 +27,7 @@ export const FinancialSummaryEmail = ({
         </Text>
         <br />
         <Text style={paragraph}>
-          Uw financieel samenvattingsrapport is gereed en kan worden
-          geraadpleegd.
-        </Text>
-
-        <Text style={{ ...paragraph, marginTop: "10px" }}>
-          U kunt het rapport bekijken en downloaden door in te loggen via{" "}
-          <Link href={"https://www.cfsbgroup.com"}>www.cfsbgroup.com</Link>.
+          Uw financiële verklaring is beschikbaar en is aan u verzonden.
         </Text>
 
         <Text style={footer}>
