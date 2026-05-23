@@ -495,6 +495,56 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
       "https://sbxcentraalinning.com/verify/" + financial_report.id,
     );
 
+    if (!financial_report.person_id) {
+      throw new Error("Person ID not found in financial report");
+    }
+
+    // obtener el deudor por el person_id del financial_report
+    const debtor = await prisma.debtor.findFirst({
+      where: { person_id: financial_report.person_id },
+    });
+
+    if (!debtor) {
+      throw new Error(
+        "Debtor not found for person_id: " + financial_report.person_id,
+      );
+    }
+
+    // obtener todas las deudas del deudor en estado open y contarlas
+    const openDebtsCount = await prisma.debt.count({
+      where: { debtor_id: debtor.id, status: "OPEN" },
+    });
+
+    // obtener el saldo total de las deudas del deudor en estado open
+    const query = `
+      SELECT COALESCE(SUM(balance), 0) as balance
+      FROM vw_debtor_summary
+      WHERE debtor_id = $1 AND status = 'OPEN'
+    `;
+
+    const balanceTotalResult = (await prisma.$queryRawUnsafe(
+      query,
+      debtor.id,
+    )) as any[];
+
+    const balanceTotal = balanceTotalResult?.[0]?.balance || 0;
+
+    // Obtener los acuerdos de pago activos y vencidos del deudor
+    const activePaymentPlansCount = await prisma.agreement.count({
+      where: {
+        debtor_id: debtor.id,
+        status: "ACCEPTED",
+      },
+    });
+
+    // obtener el numero de acuerdos de pagos que no se cumplen según los términos pactados.
+    const overduePaymentPlansCount = await prisma.agreement.count({
+      where: {
+        debtor_id: debtor.id,
+        status: "CANCELLED",
+      },
+    });
+
     const params: FinancialSummaryPDFProps = {
       logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
       issueDate: formatDate(financial_report.created_at.toISOString()),
@@ -512,16 +562,24 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
       address: financial_report.person?.address || "",
 
       // FINANCIAL SUMMARY
-      openObligations: "0",
-      totalOutstandingAmount: "0",
-      activePaymentPlans: "",
-      overduePaymentPlans: "",
-
+      openObligations: openDebtsCount ? openDebtsCount.toString() : "0",
+      totalOutstandingAmount: balanceTotal.toFixed(2),
+      activePaymentPlans: activePaymentPlansCount
+        ? activePaymentPlansCount.toString()
+        : "0",
+      overduePaymentPlans: overduePaymentPlansCount
+        ? overduePaymentPlansCount.toString()
+        : "0",
       // BLOCK STATUS
-      economicBlockRegistered: "",
+      economicBlockRegistered: financial_report?.person?.has_blockade
+        ? "Met Blokkade"
+        : "Geen Blokkade",
 
       // SUMMARY
-      summary: "",
+      summary:
+        overduePaymentPlansCount <= 0
+          ? "Actieve betalingsregelingen worden correct nagekomen"
+          : "Er zijn betalingsregelingen die niet worden nagekomen, wat kan leiden tot mogelijke blokkades of juridische stappen.",
 
       // QR
       qrCode: qrCode,
