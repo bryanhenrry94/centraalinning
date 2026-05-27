@@ -23,14 +23,12 @@ export const authOptions: AuthOptions = {
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-        subdomain: { label: "Subdomain", type: "text" },
+        password: { label: "Password", type: "password" },        
       },
       async authorize(credentials, req) {
         const params: LoginFormData = {
           email: credentials?.email as string,
-          password: credentials?.password as string,
-          subdomain: credentials?.subdomain as string,
+          password: credentials?.password as string,          
         };
 
         try {

@@ -15,7 +15,6 @@ export const IdTokenSchema = z.object({
 export const loginSchema = z.object({
   email: z.email(),
   password: z.string(),
-  subdomain: z.string(),
 });
 
 export const EmailSchema = z.object({

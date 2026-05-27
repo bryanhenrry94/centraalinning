@@ -14,21 +14,10 @@ export default function LoginPage() {
   const { redirectToSignUp } = useClientRouter();
   const router = useRouter();
 
-  const [subdomain, setSubdomain] = useState<string | null>(null);
-
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
-    subdomain: "",
   });
-
-  useEffect(() => {
-    // Detectar tenant en el lado del cliente
-    const hostname = window.location.hostname;
-    const tenant = getSubdomain(hostname);
-
-    setSubdomain(tenant);
-  }, []);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -46,7 +35,6 @@ export default function LoginPage() {
       // Avoid mutating state directly; build a payload including detected subdomain
       const payload: LoginFormData = {
         ...formData,
-        subdomain: subdomain ?? formData.subdomain,
       };
 
       const result = await signIn("credentials", {
@@ -57,8 +45,7 @@ export default function LoginPage() {
       if (result?.ok) {
         setFormData({
           email: "",
-          password: "",
-          subdomain: "",
+          password: "",          
         });
 
         router.push("/dashboard");
