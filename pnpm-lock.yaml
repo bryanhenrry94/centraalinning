@@ -121,6 +121,9 @@ importers:
       sweetalert:
         specifier: ^2.1.2
         version: 2.1.2
+      swr:
+        specifier: ^2.4.1
+        version: 2.4.1(react@19.1.0)
       tailwind-merge:
         specifier: ^3.3.1
         version: 3.5.0
@@ -2728,6 +2731,10 @@ packages:
     resolution: {integrity: sha512-BRACtc6B1mJe2J2mruHFqHWrtLy0Qppu/7LKdqWH3o/9j1L/1phPUaQV+2S3H8ZDW0k6h+NEOKcHBDRikWLiOA==}
     engines: {node: '>= 0.9'}
 
+  dequal@2.0.3:
+    resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
+    engines: {node: '>=6'}
+
   destr@2.0.5:
     resolution: {integrity: sha512-ugFTXCtDZunbzasqBxrK93Ik/DRYsO6S/fedkWEMKqt04xZ4csmnmwGDBAb07QWNaGMAmnTIemsYZCksjATwsA==}
 
@@ -5291,6 +5298,11 @@ packages:
 
   sweetalert@2.1.2:
     resolution: {integrity: sha512-iWx7X4anRBNDa/a+AdTmvAzQtkN1+s4j/JJRWlHpYE8Qimkohs8/XnFcWeYHH2lMA8LRCa5tj2d244If3S/hzA==}
+
+  swr@2.4.1:
+    resolution: {integrity: sha512-2CC6CiKQtEwaEeNiqWTAw9PGykW8SR5zZX8MZk6TeAvEAnVS7Visz8WzphqgtQ8v2xz/4Q5K+j+SeMaKXeeQIA==}
+    peerDependencies:
+      react: ^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   tabbable@6.4.0:
     resolution: {integrity: sha512-05PUHKSNE8ou2dwIxTngl4EzcnsCDZGJ/iCLtDflR/SHB/ny14rXc+qU5P4mG9JkusiV7EivzY9Mhm55AzAvCg==}
@@ -8165,6 +8177,8 @@ snapshots:
   denque@2.1.0: {}
 
   deprecated@0.0.1: {}
+
+  dequal@2.0.3: {}
 
   destr@2.0.5: {}
 
@@ -11104,6 +11118,12 @@ snapshots:
       es6-object-assign: 1.1.0
       promise-polyfill: 6.1.0
 
+  swr@2.4.1(react@19.1.0):
+    dependencies:
+      dequal: 2.0.3
+      react: 19.1.0
+      use-sync-external-store: 1.6.0(react@19.1.0)
+
   tabbable@6.4.0: {}
 
   tailwind-merge@3.5.0: {}
@@ -11356,6 +11376,10 @@ snapshots:
       punycode: 2.3.1
 
   urix@0.1.0: {}
+
+  use-sync-external-store@1.6.0(react@19.1.0):
+    dependencies:
+      react: 19.1.0
 
   use-sync-external-store@1.6.0(react@19.2.5):
     dependencies:

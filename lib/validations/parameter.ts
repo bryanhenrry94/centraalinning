@@ -2,9 +2,9 @@ import { z } from "zod";
 
 export const paramGeneralSchema = z.object({
   // Percentages
-  collection_fee_rate: z.number().min(0).max(100),
-  abb_rate: z.number().min(0).max(100),
-  collection_fee_minimum_amount: z.number().min(0),
+  collection_fee_rate: z.coerce.number().min(0).max(100),
+  abb_rate: z.coerce.number().min(0).max(100),
+  collection_fee_minimum_amount: z.coerce.number().min(0),
 
   // Terms (days)
   company_aanmaning_term_days: z.number().int().min(0),
@@ -52,4 +52,19 @@ export const paramGeneralSchema = z.object({
   bank_name: z.string(),
 });
 
+export const parameterSchema = z.object({
+  collection_fee_rate: z.number(),
+  collection_fee_minimum_amount: z.number(),
+
+  abb_rate: z.number(),
+
+  invoice_prefix: z.string(),
+  invoice_sequence: z.number(),
+  invoice_number_length: z.number(),
+
+  bank_name: z.string(),
+  bank_account: z.string(),
+});
+
+export type ParameterFormData = z.infer<typeof parameterSchema>;
 export type IParamGeneral = z.infer<typeof paramGeneralSchema>;

@@ -65,6 +65,12 @@ const menus: MenuItem[] = [
     role: [UserRole.PLATFORM_OWNER],
   },
   {
+    label: "Parameters",
+    href: "/admin/settings/parameters",
+    icon: <ReceiptOutlinedIcon fontSize="small" />,
+    role: [UserRole.PLATFORM_OWNER],
+  },
+  {
     label: "Chat",
     href: "/dashboard/chat",
     icon: <ChatOutlinedIcon fontSize="small" />,

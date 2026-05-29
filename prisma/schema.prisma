@@ -169,47 +169,137 @@ model Person {
 model Parameter {
   id                             String    @id @default(uuid())
 
+  //                             =========================================
+  //                             COLLECTION
+  //                             =========================================
   collection_fee_rate            Float     @default(0)
-  abb_rate                       Float     @default(0)
   collection_fee_minimum_amount  Float     @default(0)
 
+  //                             =========================================
+  // ABB / TAXES
+  //                             =========================================
+  abb_rate                       Float     @default(0)
+
+  //                             =========================================
+  // AANMANING TERMS
+  //                             =========================================
   company_aanmaning_term_days    Int       @default(0)
   consumer_aanmaning_term_days   Int       @default(0)
+
+  //                             =========================================
+  // SOMMATIE TERMS
+  //                             =========================================
   company_sommatie_term_days     Int       @default(0)
   consumer_sommatie_term_days    Int       @default(0)
 
+  //                             =========================================
+  // MEMBERSHIP / PFC
+  //                             =========================================
   small_company_price            Float     @default(0)
   small_company_pfc_contribution Float     @default(0)
+
   large_company_price            Float     @default(0)
   large_company_pfc_contribution Float     @default(0)
 
+  //                             =========================================
+  //                             PENALTIES
+  //                             =========================================
   company_aanmaning_penalty      Float     @default(0)
   natural_aanmaning_penalty      Float     @default(0)
+
   company_sommatie_penalty       Float     @default(0)
   natural_sommatie_penalty       Float     @default(0)
 
+  //                             =========================================
+  //                             REACTION
+  //                             =========================================
   company_reaction_limit_days    Int       @default(0)
+
   company_no_reaction_penalty    Float     @default(0)
   natural_no_reaction_penalty    Float     @default(0)
 
+  //                             =========================================
+  // PAYMENT AGREEMENTS
+  //                             =========================================
   company_payment_agreement_fee  Float     @default(0)
   natural_payment_agreement_fee  Float     @default(0)
 
+  //                             =========================================
+  //                             INVOICES
+  //                             =========================================
   invoice_number_length          Int       @default(8)
   invoice_prefix                 String    @default("")
   invoice_sequence               Int       @default(0)
 
+  //                             =========================================
+  //                             BANKS
+  //                             =========================================
   bank_account                   String    @default("")
   bank_name                      String    @default("")
 
+  //                             =========================================
+  //                             COSTS
+  //                             =========================================
   digital_file_costs             Float     @default(0)
   extra_administrative_costs     Float     @default(0)
   report_financial_pricing       Float     @default(0)
+
+  //                             =========================================
+  //                             SYSTEM
+  //                             =========================================
+  currency_code                  String    @default("USD")
+  timezone                       String    @default("America/Kralendijk")
 
   created_at                     DateTime  @default(now())
   updated_at                     DateTime  @updatedAt
 
   @@map("parameter")
+}
+
+model SettingCategory {
+  id          String     @id @default(cuid())
+
+  key         String     @unique
+  name        String
+
+  description String?
+  icon        String?
+
+  sortOrder   Int        @default(0)
+
+  isActive    Boolean    @default(true)
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  settings    Setting[]
+
+  @@map("setting_categories")
+}
+
+model Setting {
+  id          String           @id @default(cuid())
+
+  tenantId    String?
+
+  categoryId  String
+  category    SettingCategory @relation(fields: [categoryId], references: [id])
+
+  name        String
+  description String?
+
+  key         String
+  value       String
+
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([tenantId, key])
+
+  @@index([tenantId])
+  @@index([categoryId])
+
+  @@map("settings")
 }
 
 model Verdict {
