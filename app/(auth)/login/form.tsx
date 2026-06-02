@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { getSession } from "next-auth/react";
 import {
   Box,
   Typography,
@@ -24,7 +25,6 @@ import {
   PersonAdd,
 } from "@mui/icons-material";
 import { notifyError } from "@/lib/notifications";
-import { getSubdomain } from "@/lib/domain";
 import { LoginFormData } from "@/lib/validations/auth";
 import useClientRouter from "@/hooks/useNavigations";
 import { signIn } from "next-auth/react";
@@ -35,23 +35,12 @@ export default function LoginForm() {
   const [rememberMe, setRememberMe] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
-  const { redirectToSignUp } = useClientRouter();
-
-  const [subdomain, setSubdomain] = useState<string | null>(null);
+  const { redirectToSignUp, redirectToDashboard } = useClientRouter();
 
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
-    subdomain: "",
   });
-
-  useEffect(() => {
-    // Detectar tenant en el lado del cliente
-    const hostname = window.location.hostname;
-    const tenant = getSubdomain(hostname);
-
-    setSubdomain(tenant);
-  }, []);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -73,7 +62,6 @@ export default function LoginForm() {
       // Avoid mutating state directly; build a payload including detected subdomain
       const payload: LoginFormData = {
         ...formData,
-        subdomain: subdomain ?? formData.subdomain,
       };
 
       const result = await signIn("credentials", {
@@ -85,10 +73,17 @@ export default function LoginForm() {
         setFormData({
           email: "",
           password: "",
-          subdomain: "",
         });
 
-        router.push("/dashboard");
+        const session = await getSession();
+        const subdomain = session?.user?.subdomain;
+
+        if (!subdomain) {
+          notifyError("Workspace inválido");
+          return;
+        }
+
+        redirectToDashboard(subdomain);
       } else {
         notifyError(result?.error || "Credenciales incorrectas");
       }

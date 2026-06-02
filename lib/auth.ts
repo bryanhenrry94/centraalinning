@@ -3,18 +3,14 @@ import { signInWithPassword } from "@/actions/auth";
 import { type AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { UserRole } from "@/constants/user-role";
+import { Membership } from "./validations/membership";
 
 // Extend NextAuth types to include custom properties
 declare module "next-auth" {
-  interface User extends IdTokenInput {
-    name?: string;
-    phone?: string;
-    tenant_id: string;
-    roles: UserRole[];
-    email_verified?: boolean;
-  }
+  interface User extends IdTokenInput {}
+
   interface Session {
-    user?: User;
+    user: User;
   }
 }
 
@@ -25,50 +21,20 @@ export const authOptions: AuthOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
-        subdomain: { label: "Subdomain", type: "text" },
       },
-      async authorize(credentials, req) {
+      async authorize(credentials) {
         const params: LoginFormData = {
           email: credentials?.email as string,
           password: credentials?.password as string,
-          subdomain: credentials?.subdomain as string,
         };
 
-        try {
-          // llama logica para validar las credenciales
-          const response = await signInWithPassword(params);
+        const response = await signInWithPassword(params);
 
-          if (!response.success) {
-            console.error("Error en signInWithPassword:", response.error);
-
-            throw new Error(response.error || "Authentication failed");
-          }
-
-          // Si la autenticación es exitosa, devuelve el usuario
-          if (response && response.success === true) {
-            if (!response.data) {
-              console.error("No data returned from signInWithPassword");
-              throw new Error("Authentication failed: No user data");
-            }
-
-            // Ensure all expected properties exist, even if undefined
-            return {
-              ...response.data,
-              roles: (response.data.roles ?? []) as UserRole[],
-              tenant_id: response.data.tenant_id ?? "",
-              name: response.data.fullname ?? "",
-              email_verified: response.data.email_verified ?? false,
-            } as any;
-          } else {
-            console.error("Authentication failed");
-            throw new Error("Authentication failed");
-          }
-        } catch (error) {
-          console.error("Error en authorize:", error);
-          throw error instanceof Error
-            ? error
-            : new Error("Authentication error");
+        if (!response.success || !response.data) {
+          throw new Error(response.error || "Authentication failed");
         }
+
+        return response.data;
       },
     }),
   ],
@@ -77,31 +43,71 @@ export const authOptions: AuthOptions = {
     strategy: "jwt", // ✅ ahora sí es válido
   },
   callbacks: {
+    async redirect({ url }) {
+      return url;
+    },
+    
     async jwt({ token, user }) {
       if (user) {
-        token.subdomain = user.subdomain;
-        token.roles = user.roles;
         token.id = user.id;
-        token.name = user.name;
+
+        token.fullname = user.fullname;
+
+        token.email = user.email || "";
+
         token.phone = user.phone;
+
         token.tenant_id = user.tenant_id;
+
+        token.subdomain = user.subdomain;
+
+        token.company = user.company;
+
+        token.roles = user.roles as UserRole[];
+
         token.email_verified = user.email_verified;
-        // Agrega aquí cualquier otra propiedad de iIdToken si es necesario
+
+        token.memberships = user.memberships as Membership[];
       }
+
       return token;
     },
     async session({ session, token }) {
-      if (session.user && token) {
-        session.user.subdomain = token.subdomain as string;
-        session.user.roles = token.roles as UserRole[];
+      if (session.user) {
         session.user.id = token.id as string;
-        session.user.name = token.name as string;
+
+        session.user.fullname = token.fullname as string;
+
+        session.user.email = token.email as string;
+
         session.user.phone = token.phone as string;
+
         session.user.tenant_id = token.tenant_id as string;
+
+        session.user.subdomain = token.subdomain as string;
+
+        session.user.company = token.company as string;
+
+        session.user.roles = token.roles as UserRole[];
+
         session.user.email_verified = token.email_verified as boolean;
-        // Agrega aquí cualquier otra propiedad si es necesario
+
+        session.user.memberships = (token.memberships as Membership[]) || [];
       }
+
       return session;
+    },
+  },
+  cookies: {
+    sessionToken: {
+      name: "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: false,
+        domain: process.env.COOKIE_DOMAIN,
+      },
     },
   },
 

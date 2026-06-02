@@ -13,8 +13,16 @@ const useClientRouter = () => {
     router.push(`${protocol}://${slug}.${rootDomain}/`);
   };
 
+  const redirectToDashboard = (slug: string) => {
+    router.push(`${protocol}://${slug}.${rootDomain}/dashboard`);
+  };
+
   const redirectToLoginCompany = () => {
-    router.push(`${protocol}://auth.${rootDomain}/`);
+    router.push(`${protocol}://auth.${rootDomain}/login`);
+  };
+
+  const redirectToLogout = () => {
+    router.push(`${protocol}://auth.${rootDomain}/logout`);
   };
 
   const redirectToSlugLoginCompany = (subdomain: string, email?: string) => {
@@ -54,8 +62,10 @@ const useClientRouter = () => {
     redirectToSlug,
     redirectToLoginCompany,
     redirectToSlugLoginCompany,
+    redirectToLogout,
     redirectToSignUp,
     redirectToDashboardByRole,
+    redirectToDashboard,
   };
 };
 

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { membershipSchema } from "./membership";
 
 export const UserSchema = z.object({
   id: z.string().uuid(),
@@ -7,6 +8,7 @@ export const UserSchema = z.object({
   fullname: z.string().max(80).nullable().optional(),
   phone: z.string().max(25).nullable().optional(),
   is_active: z.boolean().optional(),
+  memberships: membershipSchema.array(),
   created_at: z.date(),
   updated_at: z.date(),
 });

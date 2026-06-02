@@ -6,4 +6,5 @@ export enum UserRole {
   BAILIFF = "BAILIFF",
   LAWYER = "LAWYER",
   BANK= "BANK",
+  EMPLOYEE= "EMPLOYEE",
 }

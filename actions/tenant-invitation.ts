@@ -186,8 +186,14 @@ export const completeRegistration = async (
       data: {
         user_id: user.id,
         tenant_id: invitation.tenant_id,
-        role: invitation.role as UserRole,
         created_at: new Date(),
+      },
+    });
+
+    const membershipRole = await prisma.membershipRole.create({
+      data: {
+        membership_id: membership.id,
+        role: invitation.role as UserRole,
       },
     });
 

@@ -19,112 +19,83 @@ import { getParameter } from "./parameter";
 import { CountryList } from "@/constants/country";
 import { sendNewClitentEmail, sendWelcomeEmail } from "./email";
 import { MembershipStatus } from "@prisma/client";
-import { UserRole } from "@/constants/user-role";
 
 export const signInWithPassword = async (
   params: LoginFormData,
-): Promise<{ success: boolean; error?: string; data?: IdTokenInput }> => {
-  // Validar inputs
-  const validated = loginSchema.parse(params);
-  const { email, password, subdomain } = validated;
+): Promise<{
+  success: boolean;
+  error?: string;
+  data?: IdTokenInput;
+}> => {
+  const { email, password } = loginSchema.parse(params);
 
-  if (!email || !password || !subdomain) {
-    return {
-      success: false,
-      error: "Email, password, and subdomain are required",
-    };
-  }
-
-  // Buscar el Tenant
-  const tenant = await prisma.tenant.findUnique({
-    where: { subdomain },
-  });
-
-  if (!tenant) {
-    return {
-      success: false,
-      error: "Tenant not found",
-    };
-  }
-
-  // Buscar el usuario POR EMAIL (sin tenant)
   const user = await prisma.user.findFirst({
-    where: { email },
-  });
-
-  if (!user || !user.is_active) {
-    return {
-      success: false,
-      error: "Invalid email or inactive user",
-    };
-  }
-
-  if (!user.password_hash) {
-    return {
-      success: false,
-      error: "User has no password set",
-    };
-  }
-
-  // 3️⃣ Buscar Membership (UserTenant) para este tenant
-  const membershipPending = await prisma.membership.findFirst({
     where: {
-      user_id: user.id,
-      tenant_id: tenant.id,
-      status: MembershipStatus.PENDING,
+      email,
+      is_active: true,
     },
-  });
-
-  if (membershipPending) {
-    return {
-      success: false,
-      error:
-        "Betaling in behandeling. Voltooi alstublieft het betalingsproces om toegang te krijgen.",
-    };
-  }
-
-  const memberships = await prisma.membership.findMany({
-    where: {
-      user_id: user.id,
-      tenant_id: tenant.id,
-      status: {
-        not: MembershipStatus.PENDING,
+    include: {
+      memberships: {
+        where: {
+          status: MembershipStatus.ACTIVE,
+        },
+        include: {
+          tenant: true,
+          roles: true,
+        },
       },
     },
   });
 
-  if (!memberships || memberships.length === 0) {
+  if (!user || !user.password_hash) {
     return {
       success: false,
-      error:
-        "Je hebt geen toegang tot deze tenant. Neem contact op met de beheerder.",
+      error: "Credenciales incorrectas",
     };
   }
 
-  // 4️⃣ Wachtwoord valideren
-  const isPasswordValid = await bcrypt.compare(password, user.password_hash);
-  if (!isPasswordValid) {
+  const valid = await bcrypt.compare(password, user.password_hash);
+
+  if (!valid) {
     return {
       success: false,
-      error: "Ongeldige referenties",
+      error: "Credenciales incorrectas",
     };
   }
 
-  // 5️⃣ Crear el token con el rol del membership
-  const idToken: IdTokenInput = {
-    id: user.id,
-    fullname: user.fullname || "",
-    email: user.email,
-    phone: user.phone || "",
-    tenant_id: tenant.id,
-    subdomain: tenant.subdomain,
-    company: tenant.name,
-    roles: memberships.map((membership) => membership.role) as UserRole[], // 👈 array de roles tomado de memberships
-    email_verified: user.is_active,
+  if (user.memberships.length === 0) {
+    return {
+      success: false,
+      error: "No tienes acceso a ningún espacio de trabajo",
+    };
+  }
+
+  const activeMembership =
+    user.memberships.find((m) => m.tenant_id === user.last_active_tenant_id) ??
+    user.memberships[0];
+
+  return {
+    success: true,
+    data: {
+      id: user.id,
+      fullname: user.fullname || "",
+      email: user.email,
+      phone: user.phone || "",
+      tenant_id: activeMembership.tenant.id,
+      subdomain: activeMembership.tenant.subdomain,
+      company: activeMembership.tenant.name,
+      roles: activeMembership.roles.map((r) => r.role),
+      email_verified: user.is_active,
+      memberships: user.memberships.map((membership) => ({
+        id: membership.id,
+        tenantId: membership.tenant.id,
+        tenantName: membership.tenant.name,
+        subdomain: membership.tenant.subdomain,
+        status: membership.status,
+        roles: membership.roles.map((r) => r.role),
+      })),
+    },
   };
-
-  revalidatePath("/auth/login");
-  return { success: true, data: idToken };
 };
 
 export const emailExists = async (email: string): Promise<boolean> => {
@@ -210,8 +181,14 @@ export async function createAccount(
         data: {
           tenant_id: tenant.id,
           user_id: user.id,
-          role: "TENANT_ADMIN" as any,
           status: MembershipStatus.PENDING, // El membership estará pendiente hasta que se confirme el pago
+        },
+      });
+
+      const membershipRole = await tx.membershipRole.create({
+        data: {
+          membership_id: membership.id,
+          role: "TENANT_ADMIN",
         },
       });
 
@@ -435,12 +412,15 @@ export async function createAccountV2(
         const membership = await tx.membership.create({
           data: {
             tenant_id: tenant.id,
-
             user_id: user.id,
-
-            role: "TENANT_ADMIN",
-
             status: MembershipStatus.PENDING,
+          },
+        });
+
+        const membershipRole = await tx.membershipRole.create({
+          data: {
+            membership_id: membership.id,
+            role: "TENANT_ADMIN",
           },
         });
 

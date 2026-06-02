@@ -33,7 +33,7 @@ export default function RegistroPage() {
           disableGutters
           sx={{
             width: "100%",
-            bgcolor: "white",            
+            bgcolor: "white",
           }}
         >
           <Box
@@ -41,6 +41,8 @@ export default function RegistroPage() {
               width: "100%",
               p: { xs: 2, md: 4 },
               boxSizing: "border-box",
+              display: "flex",
+              flexDirection: "column",
             }}
           >
             {/* HEADER */}
@@ -63,6 +65,7 @@ export default function RegistroPage() {
                 overflowY: "auto",
                 px: 2,
                 py: 2,
+                minHeight: 0,
 
                 "&::-webkit-scrollbar": {
                   width: 6,

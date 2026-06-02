@@ -19,7 +19,6 @@ export default function LoginPage() {
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
-    subdomain: "",
   });
 
   useEffect(() => {
@@ -46,7 +45,6 @@ export default function LoginPage() {
       // Avoid mutating state directly; build a payload including detected subdomain
       const payload: LoginFormData = {
         ...formData,
-        subdomain: subdomain ?? formData.subdomain,
       };
 
       const result = await signIn("credentials", {
@@ -58,7 +56,6 @@ export default function LoginPage() {
         setFormData({
           email: "",
           password: "",
-          subdomain: "",
         });
 
         router.push("/dashboard");

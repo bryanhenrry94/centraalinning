@@ -76,7 +76,7 @@ const SettingPage = () => {
         <ProfileForm
           initial={{
             email: user?.email || "",
-            fullname: user?.name,
+            fullname: user?.fullname || "",
             phone: user?.phone,
           }}
           onSave={handleSaveProfile}

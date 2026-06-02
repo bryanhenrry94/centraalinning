@@ -1,97 +1,232 @@
 "use server";
+
 import { UserRole } from "@/constants/user-role";
 import { prisma } from "@/lib/prisma";
 import { User } from "@/lib/validations/user";
 
+const mapUser = (user: any): User => ({
+  id: user.id,
+  email: user.email,
+  fullname: user.fullname,
+  phone: user.phone,
+  is_active: user.is_active,
+
+  memberships:
+    user.memberships?.map((membership: any) => ({
+      id: membership.id,
+
+      user_id: membership.user_id,
+
+      tenant_id: membership.tenant_id,
+
+      status: membership.status,
+
+      roles: membership.roles?.map((role: any) => role.role as UserRole) || [],
+    })) || [],
+
+  created_at: user.created_at,
+  updated_at: user.updated_at,
+});
+
 export const getUserByEmail = async (email: string) => {
-  const user = await prisma.user.findFirst({
+  return prisma.user.findUnique({
     where: {
-      email: email,
+      email,
+    },
+
+    include: {
+      memberships: {
+        include: {
+          tenant: true,
+          roles: true,
+        },
+      },
     },
   });
-
-  return user;
 };
 
-export const getUsersByRole = async (
-  roleName: UserRole
-): Promise<User[]> => {
+export const getUserById = async (id: string) => {
+  return prisma.user.findUnique({
+    where: {
+      id,
+    },
+
+    include: {
+      memberships: {
+        include: {
+          tenant: true,
+          roles: true,
+        },
+      },
+    },
+  });
+};
+
+export const getUsersByRole = async (roleName: UserRole): Promise<User[]> => {
   const users = await prisma.user.findMany({
     where: {
       memberships: {
         some: {
-          role: roleName,
+          roles: {
+            some: {
+              role: roleName,
+            },
+          },
+        },
+      },
+    },
+
+    include: {
+      memberships: {
+        include: {
+          roles: true,
         },
       },
     },
   });
 
-  return users;
+  return users.map(mapUser);
 };
 
-export const getUserById = async (id: string) => {
-  const user = await prisma.user.findUnique({
+export const getUsersByTenantId = async (
+  tenant_id: string,
+): Promise<User[]> => {
+  const users = await prisma.user.findMany({
     where: {
-      id: id,
+      memberships: {
+        some: {
+          tenant_id,
+        },
+      },
+    },
+
+    include: {
+      memberships: {
+        include: {
+          roles: true,
+        },
+      },
     },
   });
 
-  return user;
+  return users.map(mapUser);
 };
 
 export const updateUserProfile = async (
   id: string,
-  data: { fullname?: string; phone?: string }
+  data: {
+    fullname?: string;
+    phone?: string;
+  },
 ) => {
-  const updatedUser = await prisma.user.update({
+  return prisma.user.update({
     where: {
-      id: id,
+      id,
     },
+
     data: {
       fullname: data.fullname,
       phone: data.phone,
     },
   });
-
-  return updatedUser;
-};
-
-export const getUsersByTenantId = async (
-  tenant_id: string
-): Promise<User[]> => {
-  const users = await prisma.user.findMany({
-    where: {
-      memberships: {
-        some: {
-          tenant_id: tenant_id,
-        },
-      },
-    },
-  });
-
-  return users;
 };
 
 export const updateUserActiveStatus = async (
   user_id: string,
-  is_active: boolean
+  is_active: boolean,
 ): Promise<User> => {
   const updatedUser = await prisma.user.update({
     where: {
       id: user_id,
     },
+
     data: {
-      is_active: is_active,
+      is_active,
+    },
+
+    include: {
+      memberships: {
+        include: {
+          roles: true,
+        },
+      },
     },
   });
 
-  return updatedUser;
+  return mapUser(updatedUser);
 };
 
 export const userExistsByEmail = async (email: string): Promise<boolean> => {
-  const user = await prisma.user.findFirst({
-    where: { email: email },
+  const user = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+
+    select: {
+      id: true,
+    },
   });
 
   return !!user;
+};
+
+/**
+ * Helpers (non-server action utilities)
+ */
+
+export const userHasRole = async (
+  user: User,
+  role: UserRole,
+): Promise<boolean> => {
+  return await user.memberships.some((membership) =>
+    membership.roles.includes(role),
+  );
+};
+
+export const userHasRoleInTenant = async (
+  user: User,
+  tenantId: string,
+  role: UserRole,
+): Promise<boolean> => {
+  const membership = await user.memberships.find(
+    (m) => m.tenantId === tenantId,
+  );
+
+  if (!membership) {
+    return false;
+  }
+
+  return membership.roles.includes(role);
+};
+
+export const userHasAnyRoleInTenant = async (
+  user: User,
+  tenantId: string,
+  roles: UserRole[],
+): Promise<boolean> => {
+  const membership = await user.memberships.find(
+    (m) => m.tenantId === tenantId,
+  );
+
+  if (!membership) {
+    return false;
+  }
+
+  return roles.some((role) => membership.roles.includes(role));
+};
+
+export const userHasAllRolesInTenant = async (
+  user: User,
+  tenantId: string,
+  roles: UserRole[],
+): Promise<boolean> => {
+  const membership = await user.memberships.find(
+    (m) => m.tenantId === tenantId,
+  );
+
+  if (!membership) {
+    return false;
+  }
+
+  return roles.every((role) => membership.roles.includes(role));
 };

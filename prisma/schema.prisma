@@ -55,12 +55,13 @@ model Tenant {
 
 model User {
   id                    String                @id @default(uuid())
-  email                 String                @db.VarChar(80)
+  email                 String                @db.VarChar(80) @unique
   password_hash         String?               @db.VarChar(120)
   fullname              String?               @db.VarChar(80)
   phone                 String?               @db.VarChar(25)
   is_active             Boolean               @default(true)
 
+  last_active_tenant_id String?
   memberships           Membership[]
 
   created_at            DateTime              @default(now())
@@ -90,25 +91,36 @@ model PasswordResetToken {
 }
 
 model Membership {
-  id                 String            @id @default(uuid())
-  user_id            String
-  tenant_id          String
-  role               UserRole
+  id         String            @id @default(uuid())
 
-  status             MembershipStatus  @default(PENDING)
+  user_id    String
+  user       User             @relation(fields: [user_id], references: [id])
 
-  // 👇 control de facturación
-  current_period_end DateTime?
-  last_invoice_at    DateTime?
+  tenant_id  String
+  tenant     Tenant           @relation(fields: [tenant_id], references: [id])
 
-  user               User             @relation(fields: [user_id], references: [id])
-  tenant             Tenant           @relation(fields: [tenant_id], references: [id])
+  status     MembershipStatus  @default(PENDING)
 
-  created_at         DateTime          @default(now())
+  roles      MembershipRole[]
 
-  @@unique([user_id, tenant_id, role]) // evita duplicados
+  created_at DateTime          @default(now())
+
+  @@unique([user_id, tenant_id]) // evita duplicados
 
   @@map("membership")
+}
+
+model MembershipRole {
+  id            String      @id @default(uuid())
+
+  membership_id String
+
+  role          UserRole
+
+  membership    Membership @relation(fields: [membership_id], references: [id])
+
+  @@unique([membership_id, role])
+  @@map("membership_role")
 }
 
 enum MembershipStatus {

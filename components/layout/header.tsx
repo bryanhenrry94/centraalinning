@@ -15,30 +15,27 @@ import {
   MenuItem,
 } from "@mui/material";
 
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { HeaderMenuGroup, menuGroups } from "./menus";
 
 import { UserRole } from "@/constants/user-role";
+import useClientRouter from "@/hooks/useNavigations";
 
 export default function Header() {
   const { data: session } = useSession();
   const router = useRouter();
-
-  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const { redirectToLogout } = useClientRouter();
 
   const [avatarAnchorEl, setAvatarAnchorEl] = useState<null | HTMLElement>(
     null,
   );
-
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-
   const [activeGroup, setActiveGroup] = React.useState<HeaderMenuGroup | null>(
     null,
   );
@@ -49,11 +46,8 @@ export default function Header() {
     group.roles.some((role) => userRoles.includes(role)),
   );
 
-  const handleSignOut = async () => {
-    await signOut({ redirect: false });
-
-    router.push("/login");
-    router.refresh();
+  const handleSignOut = () => {
+    redirectToLogout();
   };
 
   const handleOpenMenu = (

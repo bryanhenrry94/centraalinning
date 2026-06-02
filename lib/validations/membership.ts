@@ -1,16 +1,12 @@
 import { z } from "zod";
 
 export const membershipSchema = z.object({
-  id: z.string().uuid(),
-  user_id: z.string().uuid(),
-  tenant_id: z.string().uuid(),
-  role: z.enum([
-    "PLATFORM_OWNER",
-    "TENANT_ADMIN",
-    "AGENT",
-    "DEBTOR",
-    "BAILIFF",
-  ]),
+  id: z.string(),
+  tenantId: z.string(),
+  tenantName: z.string(),
+  subdomain: z.string(),
+  status: z.string(),
+  roles: z.array(z.string()),
 });
 
 export const createMembershipSchema = membershipSchema.omit({ id: true });

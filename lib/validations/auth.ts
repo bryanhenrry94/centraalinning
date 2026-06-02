@@ -1,21 +1,22 @@
 import { z } from "zod";
+import { membershipSchema } from "./membership";
 
 export const IdTokenSchema = z.object({
-  id: z.uuid(),
+  id: z.string(),
   fullname: z.string(),
-  email: z.email(),
+  email: z.string().email(),
   phone: z.string(),
   tenant_id: z.string(),
   subdomain: z.string(),
   company: z.string(),
   roles: z.array(z.string()),
   email_verified: z.boolean(),
+  memberships: membershipSchema.array(),
 });
 
 export const loginSchema = z.object({
-  email: z.email(),
+  email: z.string().email(),
   password: z.string(),
-  subdomain: z.string(),
 });
 
 export const EmailSchema = z.object({
