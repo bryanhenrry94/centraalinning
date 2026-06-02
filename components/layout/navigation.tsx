@@ -10,8 +10,8 @@ import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
-import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
 import HandshakeOutlinedIcon from "@mui/icons-material/HandshakeOutlined";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 
 import { UserRole } from "@/constants/user-role";
 
@@ -27,34 +27,53 @@ const menus: MenuItem[] = [
     label: "Dashboard",
     href: "/dashboard",
     icon: <DashboardOutlinedIcon fontSize="small" />,
-    role: [
-      UserRole.TENANT_ADMIN,
-      UserRole.PLATFORM_OWNER,
-      UserRole.DEBTOR,
-      UserRole.BAILIFF,
-    ],
+    role: [UserRole.PLATFORM_OWNER, UserRole.DEBTOR, UserRole.BAILIFF],
   },
   {
-    label: "Buitengerechtelijk",
-    href: "/dashboard/collections",
-    icon: <ReceiptOutlinedIcon fontSize="small" />,
+    label: "Mijn dossiers",
+    href: "/client",
+    icon: <DashboardOutlinedIcon fontSize="small" />,
     role: [UserRole.TENANT_ADMIN],
   },
   {
     label: "Blok-Check",
-    href: "/dashboard/blok-checks",
+    href: "/client/blok-checks",
     icon: <ShieldOutlinedIcon fontSize="small" />,
+    role: [UserRole.TENANT_ADMIN],
+  },
+  {
+    label: "Overeenkomst registreren",
+    href: "/client/overeenkomsten-registreren",
+    icon: <DescriptionOutlinedIcon fontSize="small" />,
+    role: [UserRole.TENANT_ADMIN],
+  },
+  {
+    label: "Administratieve opvolging",
+    href: "/client/collections",
+    icon: <ReceiptOutlinedIcon fontSize="small" />,
+    role: [UserRole.TENANT_ADMIN],
+  },
+  {
+    label: "Directe economische blokkade",
+    href: "/client/directe-economische-blokkade",
+    icon: <ShieldOutlinedIcon fontSize="small" />,
+    role: [UserRole.TENANT_ADMIN],
+  },
+  {
+    label: "Gerechtelijke opvolging",
+    href: "/client/verdicts",
+    icon: <GavelOutlinedIcon fontSize="small" />,
     role: [UserRole.TENANT_ADMIN],
   },
   {
     label: "Gerechtelijk Vonnis",
     href: "/dashboard/verdicts",
     icon: <GavelOutlinedIcon fontSize="small" />,
-    role: [UserRole.TENANT_ADMIN, UserRole.BAILIFF],
+    role: [UserRole.BAILIFF],
   },
   {
     label: "Betalingsregeling",
-    href: "/dashboard/agreements",
+    href: "/client/agreements",
     icon: <HandshakeOutlinedIcon fontSize="small" />,
     role: [UserRole.TENANT_ADMIN],
   },
@@ -69,12 +88,6 @@ const menus: MenuItem[] = [
     href: "/admin/settings/parameters",
     icon: <ReceiptOutlinedIcon fontSize="small" />,
     role: [UserRole.PLATFORM_OWNER],
-  },
-  {
-    label: "Chat",
-    href: "/dashboard/chat",
-    icon: <ChatOutlinedIcon fontSize="small" />,
-    role: [UserRole.TENANT_ADMIN, UserRole.DEBTOR],
   },
 ];
 

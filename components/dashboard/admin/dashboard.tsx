@@ -56,7 +56,7 @@ export const DashboardAdmin = () => {
         spacing={4}
         sx={{ width: "100%", justifyContent: "center", alignItems: "center" }}
       >
-        <Button
+        {/* <Button
           component={Link}
           href={`${pathname}/collections`}
           variant="contained"
@@ -90,23 +90,8 @@ export const DashboardAdmin = () => {
           }}
         >
           Gerechtelijk Vonnis
-        </Button>
-        {/* <Button
-          onClick={handleOpen}
-          variant="outlined"
-          color="primary"
-          size="large"
-          sx={{
-            flex: 1,
-            minWidth: 270,
-            minHeight: 120,
-            fontSize: "1.5rem",
-            textTransform: "none",
-            boxShadow: 3,
-          }}
-        >
-          Aanvraag Financieel
         </Button> */}
+        Mijn dossiers
       </Stack>
       <Modal
         open={open}

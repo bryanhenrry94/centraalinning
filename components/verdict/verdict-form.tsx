@@ -40,6 +40,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { Resolver } from "react-hook-form";
 import { BailiffSection } from "./sections/bailiff-section";
 import GavelIcon from "@mui/icons-material/Gavel";
+import { UserRole } from "@/constants/user-role";
 
 interface VerdictFormPageProps {
   defaultValues: VerdictCreate;
@@ -136,7 +137,7 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
 
   const methods = useForm<VerdictCreateForm>({
     resolver: zodResolver(
-      VerdictCreateFormSchema
+      VerdictCreateFormSchema,
     ) as Resolver<VerdictCreateForm>,
     defaultValues,
   });
@@ -148,7 +149,7 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
 
   const serializedDefaults = useMemo(
     () => JSON.stringify(defaultValues),
-    [defaultValues]
+    [defaultValues],
   );
 
   useEffect(() => {
@@ -162,7 +163,7 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
       console.log("Submitting verdict form with data:", data);
       if (!tenant) {
         return notifyError(
-          "Onverwerkte fout, neem contact op met uw systeembeheerder"
+          "Onverwerkte fout, neem contact op met uw systeembeheerder",
         );
       }
 
@@ -177,7 +178,7 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
           "Waarschuwing",
           actionMessage,
           "Ja, registreren",
-          "Annuleren"
+          "Annuleren",
         );
         if (!confirmed) return;
       }
@@ -192,12 +193,12 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
         return notifyError(
           `Er is een fout opgetreden bij het ${
             isUpdate ? "bijwerken" : "aanmaken"
-          } van de registratie.`
+          } van de registratie.`,
         );
       }
 
       notifyInfo(
-        `Registratie is succesvol ${isUpdate ? "bijgewerkt" : "aangemaakt"}`
+        `Registratie is succesvol ${isUpdate ? "bijgewerkt" : "aangemaakt"}`,
       );
 
       // Redirect after creation
@@ -207,7 +208,7 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
     } catch (error) {
       console.error("Error submitting verdict form:", error);
       notifyError(
-        "Er is een fout opgetreden bij het verzenden van het formulier."
+        "Er is een fout opgetreden bij het verzenden van het formulier.",
       );
     }
   };
@@ -219,7 +220,7 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
       "Weet je het zeker?",
       "Het vonnis wordt goedgekeurd en de schuldenaar wordt op de hoogte gesteld.",
       "Ja, goedkeuren",
-      "Annuleren"
+      "Annuleren",
     ).then(async (confirmed) => {
       if (confirmed) {
         const response = await approveVerdict(id);
@@ -265,7 +266,7 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
                 Bewaar Vonnis
               </Button>
 
-              {session?.user?.role === "BAILIFF" && modeEdit && (
+              {session?.user?.roles.includes(UserRole.BAILIFF) && modeEdit && (
                 <Button
                   color="secondary"
                   aria-label="add an alarm"
@@ -286,7 +287,7 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
             debtors={debtors}
           />
 
-          {session?.user?.role !== "BAILIFF" && (
+          {session?.user?.roles.includes(UserRole.BAILIFF) && (
             <BailiffSection
               handleOpenModalBailiff={handleOpenModalBailiff}
               onSelectBailiff={handleSelectBailiff}
@@ -294,7 +295,7 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
             />
           )}
 
-          {session?.user?.role === "BAILIFF" && (
+          {session?.user?.roles.includes(UserRole.BAILIFF) && (
             <>
               <StatutoryInterestSection />
 

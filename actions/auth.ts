@@ -19,6 +19,7 @@ import { getParameter } from "./parameter";
 import { CountryList } from "@/constants/country";
 import { sendNewClitentEmail, sendWelcomeEmail } from "./email";
 import { MembershipStatus } from "@prisma/client";
+import { UserRole } from "@/constants/user-role";
 
 export const signInWithPassword = async (
   params: LoginFormData,
@@ -82,7 +83,7 @@ export const signInWithPassword = async (
     };
   }
 
-  const membership = await prisma.membership.findFirst({
+  const memberships = await prisma.membership.findMany({
     where: {
       user_id: user.id,
       tenant_id: tenant.id,
@@ -92,7 +93,7 @@ export const signInWithPassword = async (
     },
   });
 
-  if (!membership) {
+  if (!memberships || memberships.length === 0) {
     return {
       success: false,
       error:
@@ -118,7 +119,7 @@ export const signInWithPassword = async (
     tenant_id: tenant.id,
     subdomain: tenant.subdomain,
     company: tenant.name,
-    role: membership.role, // 👈 rol correcto tomado de membership
+    roles: memberships.map((membership) => membership.role) as UserRole[], // 👈 array de roles tomado de memberships
     email_verified: user.is_active,
   };
 

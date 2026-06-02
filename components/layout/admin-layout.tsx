@@ -16,7 +16,7 @@ export const AdminLayout = ({ children }: { children?: ReactNode }) => {
     <>
       <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
         <Header />
-        {user.role === "DEBTOR" ? <Box></Box> : <Navigation role={user.role} />}
+        {/* {user.role === "DEBTOR" ? <Box></Box> : <Navigation role={user.role} />} */}
 
         <Box
           component="main"

@@ -8,7 +8,7 @@ export const IdTokenSchema = z.object({
   tenant_id: z.string(),
   subdomain: z.string(),
   company: z.string(),
-  role: z.string(),
+  roles: z.array(z.string()),
   email_verified: z.boolean(),
 });
 

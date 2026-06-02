@@ -106,7 +106,7 @@ model Membership {
 
   created_at         DateTime          @default(now())
 
-  @@unique([user_id, tenant_id]) // evita duplicados
+  @@unique([user_id, tenant_id, role]) // evita duplicados
 
   @@map("membership")
 }
@@ -937,6 +937,7 @@ enum UserRole {
   BAILIFF
   LAWYER
   BANK
+  EMPLOYEE
 }
 
 enum PaymentMethod {

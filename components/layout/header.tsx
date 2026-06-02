@@ -1,5 +1,6 @@
 "use client";
-import React from "react";
+
+import React, { useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -8,194 +9,211 @@ import {
   Divider,
   Stack,
   Button,
+  Avatar,
+  IconButton,
+  Menu,
+  MenuItem,
 } from "@mui/material";
-import { Avatar, IconButton, Menu, MenuItem } from "@mui/material";
-import ChatIcon from "@mui/icons-material/Chat";
+
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+
 import { signOut, useSession } from "next-auth/react";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { HeaderMenuGroup, menuGroups } from "./menus";
 
-const Header = () => {
+import { UserRole } from "@/constants/user-role";
+
+export default function Header() {
   const { data: session } = useSession();
   const router = useRouter();
 
-  const UserAvatar = () => {
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
 
-    const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
-      setAnchorEl(event.currentTarget);
-    };
+  const [avatarAnchorEl, setAvatarAnchorEl] = useState<null | HTMLElement>(
+    null,
+  );
 
-    const handleClose = () => {
-      setAnchorEl(null);
-    };
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
-    const handleSignOut = async () => {
-      await signOut({
-        redirect: false,
-      });
-      handleClose();
-      router.push("/");
-      router.refresh();
-    };
+  const [activeGroup, setActiveGroup] = React.useState<HeaderMenuGroup | null>(
+    null,
+  );
 
-    if (!session) return null;
+  const userRoles = ((session?.user as any)?.roles as UserRole[]) ?? [];
 
-    return (
-      <>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <IconButton onClick={handleOpen} sx={{ ml: 1, p: 0.5 }}>
-            <Avatar
-              alt={session.user?.name || "User"}
-              src={session.user?.image || undefined}
-              sx={{ width: 28, height: 28 }}
-            />
-          </IconButton>
-        </Stack>
+  const availableGroups = menuGroups.filter((group) =>
+    group.roles.some((role) => userRoles.includes(role)),
+  );
 
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleClose}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          transformOrigin={{ vertical: "top", horizontal: "right" }}
-        >
-          <Box sx={{ px: 2, py: 1 }}>
-            <Typography
-              variant="body1"
-              component="span"
-              sx={{ fontWeight: "bold", display: "block" }}
-            >
-              {session?.user?.name}
-            </Typography>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ display: "block", mb: 1 }}
-            >
-              {session?.user?.email}
-            </Typography>
-          </Box>
-          <MenuItem disabled>
-            <Avatar
-              alt={session.user?.name || "User"}
-              src={session.user?.image || undefined}
-              sx={{ width: 24, height: 24, mr: 1 }}
-            />
-            {session?.user?.name}
-          </MenuItem>
-          <Divider sx={{ my: 0.5 }} />
-          <MenuItem onClick={() => router.push("/dashboard/settings")}>
-            <SettingsIcon fontSize="small" sx={{ mr: 1 }} />
-            Configuratie
-          </MenuItem>
+  const handleSignOut = async () => {
+    await signOut({ redirect: false });
 
-          <MenuItem onClick={handleSignOut}>
-            <ExitToAppIcon fontSize="small" sx={{ mr: 1 }} />
-            Afmelden
-          </MenuItem>
-        </Menu>
-      </>
-    );
+    router.push("/login");
+    router.refresh();
   };
 
-  const handleClickNavigation = (route: string) => {
-    router.push(route);
+  const handleOpenMenu = (
+    event: React.MouseEvent<HTMLElement>,
+    group: HeaderMenuGroup,
+  ) => {
+    setAnchorEl(event.currentTarget);
+    setActiveGroup(group);
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+    setActiveGroup(null);
   };
 
   return (
-    <>
-      <AppBar
-        position="static"
-        elevation={0}
-        sx={{ bgcolor: "#0C284C", px: 4 }}
-      >
-        <Toolbar sx={{ justifyContent: "space-between" }}>
-          <Box display="flex" alignItems="center" gap={3}>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Image
-                src="/static/logo-cfsb-light.png"
-                alt="Logo"
-                width={50}
-                height={50}
-              />
-            </Stack>
+    <AppBar
+      position="static"
+      elevation={0}
+      sx={{
+        bgcolor: "#0C284C",
+        px: 4,
+      }}
+    >
+      <Toolbar sx={{ justifyContent: "space-between" }}>
+        <Box display="flex" alignItems="center" gap={3}>
+          <Image
+            src="/static/logo-cfsb-light.png"
+            alt="Logo"
+            width={50}
+            height={50}
+          />
 
-            <Divider
-              orientation="vertical"
-              flexItem
-              sx={{ borderColor: "rgba(255, 255, 255, 0.5)" }}
-            />
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{
+              borderColor: "rgba(255,255,255,.4)",
+            }}
+          />
 
-            <Typography
-              variant="h6"
-              fontWeight="bold"
+          <Typography
+            variant="h6"
+            fontWeight={700}
+            sx={{
+              color: "white",
+              display: { xs: "none", md: "block" },
+            }}
+          >
+            CI Systeem
+          </Typography>
+        </Box>
+
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+            }}
+          >
+            {availableGroups.map((group) => (
+              <Button
+                key={group.id}
+                color="inherit"
+                endIcon={<ArrowDropDownIcon />}
+                onClick={(event) => handleOpenMenu(event, group)}
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 500,
+                }}
+              >
+                {group.label}
+              </Button>
+            ))}
+          </Box>
+
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleCloseMenu}
+          >
+            {activeGroup?.items.map((item) => (
+              <MenuItem
+                key={item.href}
+                onClick={() => {
+                  router.push(item.href);
+                  handleCloseMenu();
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    mr: 1,
+                  }}
+                >
+                  {item.icon}
+                </Box>
+
+                {item.label}
+              </MenuItem>
+            ))}
+          </Menu>
+
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{
+              borderColor: "rgba(255,255,255,.4)",
+            }}
+          />
+
+          <IconButton onClick={(e) => setAvatarAnchorEl(e.currentTarget)}>
+            <Avatar
+              src={session?.user?.image ?? undefined}
+              alt={session?.user?.name ?? ""}
               sx={{
-                textAlign: "center",
-                flexGrow: 1,
-                display: { xs: "none", md: "block" },
+                width: 32,
+                height: 32,
               }}
-            >
-              CI Systeem
-            </Typography>
-          </Box>
+            />
+          </IconButton>
 
-          <Box>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Box>
-                <Button
-                  startIcon={<InsertDriveFileIcon />}
-                  variant="text"
-                  sx={{ color: "white", textTransform: "none" }}
-                  onClick={() => handleClickNavigation("/dashboard")}
-                >
-                  Home
-                </Button>
-              </Box>
-              <Box>
-                <Button
-                  startIcon={<InsertDriveFileIcon />}
-                  variant="text"
-                  sx={{ color: "white", textTransform: "none" }}
-                  onClick={() => handleClickNavigation("/dashboard/verklaring")}
-                >
-                  Financiële Verklaring
-                </Button>
-              </Box>
-              <Box>
-                <Button
-                  startIcon={<ChatIcon />}
-                  variant="text"
-                  sx={{ color: "white", textTransform: "none" }}
-                >
-                  Chat
-                </Button>
-              </Box>
-              <Divider
-                orientation="vertical"
-                flexItem
-                sx={{ borderColor: "rgba(255, 255, 255, 0.5)" }}
-              />
+          <Typography
+            sx={{
+              color: "white",
+              fontWeight: 600,
+            }}
+          >
+            {session?.user?.name}
+          </Typography>
 
-              <Box display="flex" alignItems="center" gap={1}>
-                <UserAvatar />
-                <Typography
-                  variant="body1"
-                  sx={{ color: "white", fontWeight: "bold" }}
-                >
-                  {session?.user?.name}
-                </Typography>
-              </Box>
-            </Stack>
-          </Box>
-        </Toolbar>
-      </AppBar>
-    </>
+          <Menu
+            anchorEl={avatarAnchorEl}
+            open={Boolean(avatarAnchorEl)}
+            onClose={() => setAvatarAnchorEl(null)}
+          >
+            <Box sx={{ px: 2, py: 1 }}>
+              <Typography fontWeight={600}>{session?.user?.name}</Typography>
+
+              <Typography variant="body2" color="text.secondary">
+                {session?.user?.email}
+              </Typography>
+            </Box>
+
+            <Divider />
+
+            <MenuItem onClick={() => router.push("/dashboard/settings")}>
+              <SettingsIcon fontSize="small" sx={{ mr: 1 }} />
+              Configuratie
+            </MenuItem>
+
+            <MenuItem onClick={handleSignOut}>
+              <ExitToAppIcon fontSize="small" sx={{ mr: 1 }} />
+              Afmelden
+            </MenuItem>
+          </Menu>
+        </Stack>
+      </Toolbar>
+    </AppBar>
   );
-};
-
-export default Header;
+}

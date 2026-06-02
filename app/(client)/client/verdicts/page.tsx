@@ -35,6 +35,7 @@ import { formatCurrency } from "@/utils/formatters";
 import { useTenant } from "@/hooks/useTenant";
 import { useSession } from "next-auth/react";
 import { getBailiffByUserId } from "@/actions/bailiff";
+import { UserRole } from "@/constants/user-role";
 
 interface TablePaginationActionsProps {
   count: number;
@@ -42,7 +43,7 @@ interface TablePaginationActionsProps {
   rowsPerPage: number;
   onPageChange: (
     event: React.MouseEvent<HTMLButtonElement>,
-    newPage: number
+    newPage: number,
   ) => void;
 }
 
@@ -51,25 +52,25 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
   const { count, page, rowsPerPage, onPageChange } = props;
 
   const handleFirstPageButtonClick = (
-    event: React.MouseEvent<HTMLButtonElement>
+    event: React.MouseEvent<HTMLButtonElement>,
   ) => {
     onPageChange(event, 0);
   };
 
   const handleBackButtonClick = (
-    event: React.MouseEvent<HTMLButtonElement>
+    event: React.MouseEvent<HTMLButtonElement>,
   ) => {
     onPageChange(event, page - 1);
   };
 
   const handleNextButtonClick = (
-    event: React.MouseEvent<HTMLButtonElement>
+    event: React.MouseEvent<HTMLButtonElement>,
   ) => {
     onPageChange(event, page + 1);
   };
 
   const handleLastPageButtonClick = (
-    event: React.MouseEvent<HTMLButtonElement>
+    event: React.MouseEvent<HTMLButtonElement>,
   ) => {
     onPageChange(event, Math.max(0, Math.ceil(count / rowsPerPage) - 1));
   };
@@ -143,20 +144,20 @@ const VerdictsPage: React.FC = () => {
 
   const handleChangePage = (
     event: React.MouseEvent<HTMLButtonElement> | null,
-    newPage: number
+    newPage: number,
   ) => {
     setPage(newPage);
   };
 
   const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
   const handleClick = (
     event: React.MouseEvent<HTMLButtonElement>,
-    verdict: VerdictResponse
+    verdict: VerdictResponse,
   ) => {
     setAnchorEl(event.currentTarget);
     setSelectedVerdict(verdict);
@@ -181,7 +182,7 @@ const VerdictsPage: React.FC = () => {
       "¿Estás seguro?",
       "Esta acción eliminará el registro de vonnis.",
       "Sí, eliminar",
-      "Cancelar"
+      "Cancelar",
     ).then(async (confirmed) => {
       if (confirmed) {
         const result = await deleteVerdict(verdict.id);
@@ -201,7 +202,7 @@ const VerdictsPage: React.FC = () => {
 
     const verdicts = await getAllVerdicts(tenant?.id);
 
-    if (session?.user?.role === "BAILIFF") {
+    if (session?.user?.roles.includes(UserRole.BAILIFF)) {
       const bailiffResponse = await getBailiffByUserId(session?.user?.id || "");
 
       const bailiffId =
@@ -210,7 +211,7 @@ const VerdictsPage: React.FC = () => {
           : "";
 
       const filteredVerdicts = verdicts.filter(
-        (verdict) => verdict.bailiff_id === bailiffId
+        (verdict) => verdict.bailiff_id === bailiffId,
       );
       setVerdicts(filteredVerdicts);
       return;
@@ -418,7 +419,7 @@ const VerdictsPage: React.FC = () => {
               {(rowsPerPage > 0
                 ? verdicts.slice(
                     page * rowsPerPage,
-                    page * rowsPerPage + rowsPerPage
+                    page * rowsPerPage + rowsPerPage,
                   )
                 : verdicts
               ).map((verdict: VerdictResponse) => (
@@ -434,7 +435,7 @@ const VerdictsPage: React.FC = () => {
                             day: "2-digit",
                             month: "2-digit",
                             year: "numeric",
-                          }
+                          },
                         )
                       : ""}
                   </TableCell>
@@ -452,22 +453,22 @@ const VerdictsPage: React.FC = () => {
                       verdict.verdict_interest.reduce(
                         (acc, curr) =>
                           Number(acc) + Number(curr.total_interest),
-                        0
-                      )
+                        0,
+                      ),
                     )}
                   </TableCell>
                   <TableCell sx={{ textAlign: "center" }}>
                     {formatCurrency(
                       (verdict.bailiff_services ?? []).reduce(
                         (acc, curr) => Number(acc) + Number(curr.service_cost),
-                        0
+                        0,
                       ) +
                         verdict.verdict_embargo.reduce(
                           (acc, curr) =>
                             Number(acc) + Number(curr.embargo_amount),
-                          0
+                          0,
                         ) +
-                        (verdict.procesal_cost || 0)
+                        (verdict.procesal_cost || 0),
                     )}
                   </TableCell>
                   <TableCell>
@@ -476,19 +477,19 @@ const VerdictsPage: React.FC = () => {
                         verdict.verdict_interest.reduce(
                           (acc, curr) =>
                             Number(acc) + Number(curr.total_interest),
-                          0
+                          0,
                         ) +
                         (verdict.bailiff_services ?? []).reduce(
                           (acc, curr) =>
                             Number(acc) + Number(curr.service_cost),
-                          0
+                          0,
                         ) +
                         verdict.verdict_embargo.reduce(
                           (acc, curr) =>
                             Number(acc) + Number(curr.embargo_amount),
-                          0
+                          0,
                         ) +
-                        (verdict.procesal_cost || 0)
+                        (verdict.procesal_cost || 0),
                     )}
                   </TableCell>
                   <TableCell>

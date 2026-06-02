@@ -2,6 +2,7 @@ import { IdTokenInput, LoginFormData } from "@/lib/validations/auth";
 import { signInWithPassword } from "@/actions/auth";
 import { type AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { UserRole } from "@/constants/user-role";
 
 // Extend NextAuth types to include custom properties
 declare module "next-auth" {
@@ -9,7 +10,7 @@ declare module "next-auth" {
     name?: string;
     phone?: string;
     tenant_id: string;
-    role: string;
+    roles: UserRole[];
     email_verified?: boolean;
   }
   interface Session {
@@ -53,11 +54,11 @@ export const authOptions: AuthOptions = {
             // Ensure all expected properties exist, even if undefined
             return {
               ...response.data,
-              role: response.data.role ?? "",
+              roles: (response.data.roles ?? []) as UserRole[],
               tenant_id: response.data.tenant_id ?? "",
               name: response.data.fullname ?? "",
               email_verified: response.data.email_verified ?? false,
-            };
+            } as any;
           } else {
             console.error("Authentication failed");
             throw new Error("Authentication failed");
@@ -79,7 +80,7 @@ export const authOptions: AuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.subdomain = user.subdomain;
-        token.role = user.role;
+        token.roles = user.roles;
         token.id = user.id;
         token.name = user.name;
         token.phone = user.phone;
@@ -92,7 +93,7 @@ export const authOptions: AuthOptions = {
     async session({ session, token }) {
       if (session.user && token) {
         session.user.subdomain = token.subdomain as string;
-        session.user.role = token.role as string;
+        session.user.roles = token.roles as UserRole[];
         session.user.id = token.id as string;
         session.user.name = token.name as string;
         session.user.phone = token.phone as string;
