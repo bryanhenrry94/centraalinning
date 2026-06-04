@@ -63,6 +63,7 @@ export const getTenantById = async (
     terms_accepted: tenant.terms_accepted,
     created_at: tenant.created_at,
     updated_at: tenant.updated_at,
+    kvk: tenant.kvk,
   };
 
   return {

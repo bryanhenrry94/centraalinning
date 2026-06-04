@@ -13,6 +13,7 @@ export const TenantSchema = z.object({
   website: z.string().nullable().optional(), // Sitio web
   logo_url: z.string().nullable().optional(), // URL del logo
   is_active: z.boolean().default(false), // Estado activo
+  kvk: z.string().nullable().optional(), // Número de registro comercial (KvK)
   terms_accepted: z.boolean().default(false), // Términos aceptados
   created_at: z.coerce.date(), // Fecha de creación
   updated_at: z.coerce.date(), // Fecha de última actualización

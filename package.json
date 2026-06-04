@@ -40,6 +40,7 @@
     "react-dropzone": "^14.3.8",
     "react-email": "^4.3.2",
     "react-hook-form": "^7.65.0",
+    "react-number-format": "^5.4.5",
     "react-toastify": "^11.0.5",
     "resend": "^6.2.2",
     "socket.io-client": "^4.8.1",

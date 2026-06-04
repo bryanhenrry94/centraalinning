@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Container,
   Box,
@@ -27,29 +27,37 @@ import {
   DialogActions,
   Paper,
   Stack,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
+  InputAdornment,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
   Download as DownloadIcon,
   Delete as DeleteIcon,
   Upload as UploadIcon,
+  Close as CloseIcon,
   CheckCircle as CheckCircleIcon,
+  CalendarMonth as CalendarMonthIcon,
 } from "@mui/icons-material";
 
 import GroupIcon from "@mui/icons-material/Group";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import CheckIcon from "@mui/icons-material/Check";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
+import {
+  ContractPartyInput,
+  ContractPartySchema,
+} from "@/lib/validations/contract_party";
+import { useSession } from "next-auth/react";
+import { getTenantById } from "@/actions/tenant";
+import { CreateContractInput } from "@/lib/validations/contract";
+
+import { NumericFormat } from "react-number-format";
 
 const steps = ["Gegevens", "Overeenkomst", "Documenten", "Overzicht"];
-
-interface Party {
-  name: string;
-  contactPerson: string;
-  email: string;
-  phone: string;
-  kvk?: string;
-}
 
 interface Document {
   id: string;
@@ -60,46 +68,73 @@ interface Document {
 
 const OvereenkomstenRegistrerenPage = () => {
   const [activeStep, setActiveStep] = useState(0);
-  const [partyA, setPartyA] = useState<Party>({
-    name: "DAZZSOFT S.A.S.",
-    contactPerson: "Bryan Navarrete",
-    email: "bryan.navarrete@dazzsoft.com",
-    kvk: "0993385366001",
-    phone: "+593 96 943 7708",
-  });
+  const { data: session } = useSession();
 
-  //   const [partyB, setPartyB] = useState<Party>({
-  //     name: "XYZ Construction N.V.",
-  //     contactPerson: "Maria Martis",
-  //     email: "info@xyzconstruction.bq",
-  //     phone: "+599 796 5432",
-  //     kvk: "87654321",
-  //   });
+  // const [contractParties, setContractParties] = useState<ContractPartyInput[]>(
+  //   [],
+  // );
 
-  const [partyB, setPartyB] = useState<Party>({
-    name: "",
-    contactPerson: "",
-    email: "",
-    phone: "",
-    kvk: "",
-  });
+  const today = new Date().toISOString().split("T")[0];
 
-  const [agreementData, setAgreementData] = useState({
-    amount: "$ 15.000,00",
-    date: "07-06-2026",
-    startDate: "07-06-2026",
-    endDate: "01-08-2028",
-    quantity: "3",
-    duration: "$ 5.000,00",
+  const [contractData, setContractData] = useState<CreateContractInput>({
+    contractDate: "",
+    startDate: "",
+    endDate: "",
+    amount: 0,
+    installmentCount: 0,
+    installmentAmount: 0,
     description: "",
+    parties: [],
+    documents: [],
   });
 
-  const [documents, setDocuments] = useState<Document[]>([
-    { id: "1", name: "Overeenkomst.pdf", size: "256 KB", date: "2025-01-15" },
-    { id: "2", name: "Factuur.pdf", size: "125 KB", date: "2025-01-14" },
-    { id: "3", name: "Offerte.pdf", size: "89 KB", date: "2025-01-13" },
-    { id: "4", name: "Extra document.pdf", size: "310 KB", date: "2025-01-12" },
-  ]);
+  useEffect(() => {
+    if (!session) return;
+    if (!session.user.tenant_id) return;
+
+    const loadedParties = async () => {
+      const tenantResult = await getTenantById(session.user.tenant_id);
+
+      if (!tenantResult) return;
+
+      const partyAContract: ContractPartyInput = {
+        role: "PARTY_A",
+        full_name: tenantResult?.tenant.name,
+        identification: tenantResult?.tenant.kvk || "",
+        email: session.user?.email || "",
+        contact_person: session.user?.fullname || "",
+        phone: session.user?.phone || "",
+        address: tenantResult?.tenant.address || "",
+      };
+
+      const partyBContract: ContractPartyInput = {
+        role: "PARTY_B",
+        full_name: "",
+        identification: "",
+        email: "",
+        contact_person: "",
+        phone: "",
+      };
+
+      const initialContractData: CreateContractInput = {
+        contractDate: "",
+        startDate: "",
+        endDate: "",
+        amount: 0,
+        installmentCount: 0,
+        installmentAmount: 0,
+        description: "",
+        parties: [partyAContract, partyBContract],
+        documents: [],
+      };
+
+      setContractData(initialContractData);
+    };
+
+    loadedParties();
+  }, [session]);
+
+  const [documents, setDocuments] = useState<Document[]>([]);
 
   const [openDialog, setOpenDialog] = useState(false);
 
@@ -115,20 +150,24 @@ const OvereenkomstenRegistrerenPage = () => {
     }
   };
 
-  const handlePartyAChange = (field: keyof Party, value: string) => {
-    setPartyA({ ...partyA, [field]: value });
-  };
-
-  const handlePartyBChange = (field: keyof Party, value: string) => {
-    setPartyB({ ...partyB, [field]: value });
-  };
-
-  const handleAgreementChange = (field: string, value: string) => {
-    setAgreementData({ ...agreementData, [field]: value });
+  const handleAgreementChange = (field: string, value: any) => {
+    setContractData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   const handleDeleteDocument = (id: string) => {
     setDocuments(documents.filter((doc) => doc.id !== id));
+  };
+
+  const handleChangeParty = (index: number, field: string, value: string) => {
+    const updatedParties = [...contractData.parties];
+    updatedParties[index] = {
+      ...updatedParties[index],
+      [field]: value,
+    };
+    setContractData({ ...contractData, parties: updatedParties });
   };
 
   return (
@@ -171,153 +210,196 @@ const OvereenkomstenRegistrerenPage = () => {
                 deze overeenkomst.
               </Typography>
 
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "row",
-                  gap: 3,
+              <Grid container spacing={3}>
+                {contractData.parties.map((party, index) => (
+                  <Grid size={{ xs: 12, sm: 6 }} key={index}>
+                    <Box
+                      key={index}
+                      component={Paper}
+                      elevation={1}
+                      sx={{ p: 3, width: "100%", height: "450px" }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          mb: 2,
+                        }}
+                      >
+                        <Box>
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            Partij &nbsp;
+                            <Typography variant="caption" color="textSecondary">
+                              (Uw onderneming)
+                            </Typography>
+                          </Typography>
+                        </Box>
+                        {index > 1 && (
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              const updatedParties = [...contractData.parties];
+                              updatedParties.splice(index, 1);
+                              setContractData({
+                                ...contractData,
+                                parties: updatedParties,
+                              });
+                            }}
+                          >
+                            <CloseIcon />
+                          </IconButton>
+                        )}
+                      </Box>
+                      <Stack direction="column" spacing={2} sx={{ mb: 3 }}>
+                        <TextField
+                          fullWidth
+                          label="KvK-nummer (optioneel)"
+                          value={party.identification || ""}
+                          onChange={(e) =>
+                            handleChangeParty(
+                              index,
+                              "identification",
+                              e.target.value,
+                            )
+                          }
+                          size="small"
+                        />
+
+                        <TextField
+                          fullWidth
+                          label="Bedrijfsnaam"
+                          value={party.full_name}
+                          onChange={(e) =>
+                            handleChangeParty(
+                              index,
+                              "full_name",
+                              e.target.value,
+                            )
+                          }
+                          size="small"
+                        />
+
+                        <TextField
+                          fullWidth
+                          label="Adres"
+                          name="address"
+                          value={party.address || ""}
+                          onChange={(e) =>
+                            handleChangeParty(index, "address", e.target.value)
+                          }
+                          size="small"
+                        />
+
+                        <TextField
+                          fullWidth
+                          label="Contactperson"
+                          value={party.contact_person || ""}
+                          onChange={(e) =>
+                            handleChangeParty(
+                              index,
+                              "contact_person",
+                              e.target.value,
+                            )
+                          }
+                          size="small"
+                        />
+
+                        <TextField
+                          fullWidth
+                          label="Telefoonnummer"
+                          value={party.phone || ""}
+                          onChange={(e) =>
+                            handleChangeParty(index, "phone", e.target.value)
+                          }
+                          size="small"
+                        />
+
+                        <TextField
+                          fullWidth
+                          label="E-mailadres"
+                          type="email"
+                          value={party.email || ""}
+                          onChange={(e) =>
+                            handleChangeParty(index, "email", e.target.value)
+                          }
+                          size="small"
+                        />
+
+                        {index > 0 && (
+                          <Stack direction="row" spacing={2}>
+                            <TextField
+                              label="Geboortedatum"
+                              type="date"
+                              fullWidth
+                              size="small"
+                              value={
+                                party.birth_date
+                                  ? new Date(party.birth_date)
+                                      .toISOString()
+                                      .split("T")[0]
+                                  : ""
+                              }
+                              // error={!!errors.birth_date}
+                              // helperText={errors.birth_date?.message}
+                              onChange={(e) =>
+                                handleChangeParty(
+                                  index,
+                                  "birth_date",
+                                  e.target.value
+                                    ? new Date(e.target.value).toISOString()
+                                    : "",
+                                )
+                              }
+                              slotProps={{
+                                inputLabel: { shrink: true },
+                              }}
+                            />
+
+                            <TextField
+                              fullWidth
+                              label="Geboorteplaats"
+                              value={party.birth_place || ""}
+                              onChange={(e) =>
+                                handleChangeParty(
+                                  index,
+                                  "birth_place",
+                                  e.target.value,
+                                )
+                              }
+                              size="small"
+                            />
+                          </Stack>
+                        )}
+                      </Stack>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+
+              <Button
+                variant="outlined"
+                sx={{ mt: 2 }}
+                onClick={() => {
+                  const newParty: ContractPartyInput = {
+                    role: "PARTY_B",
+                    full_name: "",
+                    identification: "",
+                    email: "",
+                    contact_person: "",
+                    phone: "",
+                    address: "",
+                    birth_date: "",
+                    birth_place: "",
+                  };
+
+                  setContractData({
+                    ...contractData,
+                    parties: [...contractData.parties, newParty],
+                  });
                 }}
               >
-                {/* Participante A */}
-                <Box
-                  component={Paper}
-                  elevation={1}
-                  sx={{ p: 3, width: "100%" }}
-                >
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                        Partij A&nbsp;
-                        <Typography variant="caption" color="textSecondary">
-                          (Uw onderneming)
-                        </Typography>
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Stack direction="column" spacing={2} sx={{ mb: 3 }}>
-                    <TextField
-                      fullWidth
-                      label="Bedrijfsnaam"
-                      value={partyA.name}
-                      onChange={(e) =>
-                        handlePartyAChange("name", e.target.value)
-                      }
-                      size="small"
-                    />
-
-                    <TextField
-                      fullWidth
-                      label="KvK-nummer (optioneel)"
-                      value={partyA.kvk || ""}
-                      onChange={(e) =>
-                        handlePartyAChange("kvk", e.target.value)
-                      }
-                      size="small"
-                    />
-
-                    <TextField
-                      fullWidth
-                      label="Contactperson"
-                      value={partyA.contactPerson}
-                      onChange={(e) =>
-                        handlePartyAChange("contactPerson", e.target.value)
-                      }
-                      size="small"
-                    />
-
-                    <TextField
-                      fullWidth
-                      label="Telefoonnummer"
-                      value={partyA.phone}
-                      onChange={(e) =>
-                        handlePartyAChange("phone", e.target.value)
-                      }
-                      size="small"
-                    />
-
-                    <TextField
-                      fullWidth
-                      label="E-mailadres"
-                      type="email"
-                      value={partyA.email}
-                      onChange={(e) =>
-                        handlePartyAChange("email", e.target.value)
-                      }
-                      size="small"
-                    />
-                  </Stack>
-                </Box>
-
-                {/* Participante B */}
-                <Box
-                  component={Paper}
-                  elevation={1}
-                  sx={{ p: 3, width: "100%" }}
-                >
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                        Partij B &nbsp;
-                        <Typography variant="caption" color="textSecondary">
-                          (Wederpartij)
-                        </Typography>
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Stack direction="column" spacing={2} sx={{ mb: 3 }}>
-                    <TextField
-                      fullWidth
-                      label="Bedrijfsnaam"
-                      value={partyB.name}
-                      onChange={(e) =>
-                        handlePartyBChange("name", e.target.value)
-                      }
-                      size="small"
-                    />
-
-                    <TextField
-                      fullWidth
-                      label="KvK-nummer (optioneel)"
-                      value={partyB.kvk || ""}
-                      onChange={(e) =>
-                        handlePartyBChange("kvk", e.target.value)
-                      }
-                      size="small"
-                    />
-
-                    <TextField
-                      fullWidth
-                      label="Contactperson"
-                      value={partyB.contactPerson}
-                      onChange={(e) =>
-                        handlePartyBChange("contactPerson", e.target.value)
-                      }
-                      size="small"
-                    />
-
-                    <TextField
-                      fullWidth
-                      label="Telefoonnummer"
-                      value={partyB.phone}
-                      onChange={(e) =>
-                        handlePartyBChange("phone", e.target.value)
-                      }
-                      size="small"
-                    />
-
-                    <TextField
-                      fullWidth
-                      label="E-mailadres"
-                      type="email"
-                      value={partyB.email}
-                      onChange={(e) =>
-                        handlePartyBChange("email", e.target.value)
-                      }
-                      size="small"
-                    />
-                  </Stack>
-                </Box>
-              </Box>
+                + Partij toevoegen
+              </Button>
 
               <Alert severity="info" sx={{ mt: 3 }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
@@ -348,76 +430,153 @@ const OvereenkomstenRegistrerenPage = () => {
                   <Grid container spacing={3}>
                     <Grid size={{ xs: 12, sm: 2 }}>
                       <TextField
-                        fullWidth
                         label="Datum overeenkomst"
-                        value={agreementData.date}
-                        onChange={(e) =>
-                          handleAgreementChange("date", e.target.value)
-                        }
+                        type="date"
+                        fullWidth
                         size="small"
+                        value={
+                          contractData.contractDate
+                            ? new Date(contractData.contractDate)
+                                .toISOString()
+                                .split("T")[0]
+                            : ""
+                        }
+                        onChange={(e) => {
+                          const date = e.target.value;
+
+                          setContractData((prev) => ({
+                            ...prev,
+                            contractDate: date,
+                            startDate: date,
+                          }));
+                        }}
+                        slotProps={{
+                          inputLabel: { shrink: true },
+                        }}
                       />
                     </Grid>
+
                     <Grid size={{ xs: 12, sm: 2 }}>
-                      <TextField
+                      <NumericFormat
+                        customInput={TextField}
                         fullWidth
                         label="Overeenkomstbedrag"
-                        value={agreementData.amount}
-                        onChange={(e) =>
-                          handleAgreementChange("amount", e.target.value)
-                        }
+                        value={contractData.amount}
+                        thousandSeparator
+                        decimalScale={2}
+                        fixedDecimalScale
+                        allowNegative={false}
+                        prefix="$ "
+                        onValueChange={(values) => {
+                          handleAgreementChange("amount", values.value);
+                        }}
                         size="small"
                       />
                     </Grid>
 
                     <Grid size={{ xs: 12, sm: 2 }}>
                       <TextField
-                        fullWidth
                         label="Startdatum"
-                        value={agreementData.startDate}
-                        onChange={(e) =>
-                          handleAgreementChange("startDate", e.target.value)
-                        }
+                        type="date"
+                        fullWidth
                         size="small"
+                        value={
+                          contractData.startDate
+                            ? new Date(contractData.startDate)
+                                .toISOString()
+                                .split("T")[0]
+                            : ""
+                        }
+                        onChange={(e) =>
+                          handleAgreementChange(
+                            "startDate",
+                            e.target.value
+                              ? new Date(e.target.value).toISOString()
+                              : "",
+                          )
+                        }
+                        slotProps={{
+                          inputLabel: { shrink: true },
+                        }}
                       />
                     </Grid>
+
                     <Grid size={{ xs: 12, sm: 2 }}>
                       <TextField
-                        fullWidth
                         label="Vervaldatum"
-                        value={agreementData.endDate}
-                        onChange={(e) =>
-                          handleAgreementChange("endDate", e.target.value)
-                        }
+                        type="date"
+                        fullWidth
                         size="small"
+                        value={
+                          contractData.endDate
+                            ? new Date(contractData.endDate)
+                                .toISOString()
+                                .split("T")[0]
+                            : ""
+                        }
+                        onChange={(e) =>
+                          handleAgreementChange(
+                            "endDate",
+                            e.target.value
+                              ? new Date(e.target.value).toISOString()
+                              : "",
+                          )
+                        }
+                        slotProps={{
+                          inputLabel: { shrink: true },
+                        }}
                       />
                     </Grid>
+
                     <Grid size={{ xs: 12, sm: 2 }}>
                       <TextField
                         fullWidth
                         label="Aantal termijnen"
-                        value={agreementData.quantity}
-                        onChange={(e) =>
-                          handleAgreementChange("quantity", e.target.value)
-                        }
+                        value={contractData.installmentCount}
+                        type="number"
+                        onChange={(e) => {
+                          const installmentCount = parseInt(e.target.value, 10);
+                          const installmentAmount =
+                            installmentCount > 0
+                              ? contractData.amount / installmentCount
+                              : 0;
+
+                          setContractData((prev) => ({
+                            ...prev,
+                            installmentCount: installmentCount,
+                            installmentAmount: installmentAmount,
+                          }));
+                        }}
                         size="small"
                       />
                     </Grid>
+
                     <Grid size={{ xs: 12, sm: 2 }}>
-                      <TextField
+                      <NumericFormat
+                        customInput={TextField}
                         fullWidth
                         label="Termijnbedrag"
-                        value={agreementData.duration}
-                        onChange={(e) =>
-                          handleAgreementChange("duration", e.target.value)
-                        }
+                        value={contractData.installmentAmount}
+                        thousandSeparator
+                        decimalScale={2}
+                        fixedDecimalScale
+                        allowNegative={false}
+                        prefix="$ "
+                        onValueChange={(values) => {
+                          handleAgreementChange(
+                            "installmentAmount",
+                            values.value,
+                          );
+                        }}
                         size="small"
                       />
                     </Grid>
+
                     <Grid size={{ xs: 12, sm: 12 }}>
                       <TextField
                         fullWidth
                         label="Omschrijving overeenkomst"
-                        value={agreementData.description}
+                        value={contractData.description}
                         onChange={(e) =>
                           handleAgreementChange("description", e.target.value)
                         }
@@ -519,8 +678,8 @@ const OvereenkomstenRegistrerenPage = () => {
                   >
                     Partijen
                   </Typography>
-                  <Typography variant="body2">{partyA.name}</Typography>
-                  <Typography variant="body2">{partyB.name}</Typography>
+                  {/* <Typography variant="body2">{partyA.name}</Typography>
+                  <Typography variant="body2">{partyB.name}</Typography> */}
                 </Box>
 
                 <Box>
@@ -531,8 +690,8 @@ const OvereenkomstenRegistrerenPage = () => {
                     Bedrag en periode
                   </Typography>
                   <Typography variant="body2">
-                    {agreementData.amount} • {agreementData.startDate} tot{" "}
-                    {agreementData.endDate}
+                    {contractData.amount} • {contractData.startDate} tot{" "}
+                    {contractData.endDate}
                   </Typography>
                 </Box>
 

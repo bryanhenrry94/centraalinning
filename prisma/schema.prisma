@@ -50,6 +50,8 @@ model Tenant {
 
   subscription              Subscription?
 
+  contracts                 Contract[]
+
   @@map("tenant")
 }
 
@@ -163,6 +165,8 @@ model Person {
   email                     String?                   @unique
   phone                     String?
   address                   String?
+  birth_date                DateTime?
+  birth_place               String?
 
   has_blockade              Boolean                   @default(false)
 
@@ -172,6 +176,7 @@ model Person {
   debtors                   Debtor[]
   blok_check_requests       BlokCheckRequest[]
   financial_report_requests FinancialReportRequest[]
+
   // bailiff             Bailiff?
   // employee            Employee?
 
@@ -726,6 +731,92 @@ model AgreementInstallment {
   payment      Payment?          @relation(fields: [payment_id], references: [id])
 
   @@map("agreement_installment")
+}
+
+enum ContractStatus {
+  DRAFT
+  REGISTERED
+  CANCELLED
+}
+
+enum ContractPartyRole {
+  PARTY_A
+  PARTY_B
+}
+
+model Contract {
+  id                 String              @id @default(cuid())
+
+  tenant_id          String
+  tenant             Tenant             @relation(fields: [tenant_id], references: [id])
+
+  status             ContractStatus      @default(DRAFT)
+
+  contract_date      DateTime
+  start_date         DateTime
+  end_date           DateTime?
+
+  amount             Decimal             @db.Decimal(12,2)
+
+  installment_count  Int?
+  installment_amount Decimal?            @db.Decimal(12,2)
+
+  description        String?             @db.Text
+
+  // createdById        String
+  // createdBy          User               @relation(fields: [createdById],references: [id])
+
+  referenceNumber    String              @unique
+
+  parties            ContractParty[]
+  documents          ContractDocument[]
+
+  created_at         DateTime            @default(now())
+  updated_at         DateTime            @updatedAt
+
+  @@index([tenant_id])
+  @@map("contract")
+}
+
+model ContractParty {
+  id             String             @id @default(cuid())
+
+  contract_id    String
+  contract       Contract          @relation(fields: [contract_id], references: [id],onDelete: Cascade)
+
+  role           ContractPartyRole
+
+  full_name      String
+  identification String
+  email          String
+  contact_person String
+  phone          String
+  birth_date     DateTime?
+  birth_place    String?
+  address        String?
+
+  created_at     DateTime           @default(now())
+
+  @@index([contract_id])
+  @@map("contract_party")
+}
+
+model ContractDocument {
+  id          String    @id @default(cuid())
+
+  contract_id String
+  contract    Contract @relation(fields: [contract_id], references: [id],onDelete: Cascade)
+
+  file_name   String
+  file_path   String
+
+  mime_type   String
+  file_size   Int
+
+  created_at  DateTime  @default(now())
+
+  @@index([contract_id])
+  @@map("contract_document")
 }
 
 model Payment {
