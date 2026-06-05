@@ -766,7 +766,7 @@ model Contract {
   // createdById        String
   // createdBy          User               @relation(fields: [createdById],references: [id])
 
-  referenceNumber    String              @unique
+  reference_number   String              @unique
 
   parties            ContractParty[]
   documents          ContractDocument[]

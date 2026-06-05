@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Container,
   Box,
@@ -56,6 +56,7 @@ import { getTenantById } from "@/actions/tenant";
 import { CreateContractInput } from "@/lib/validations/contract";
 
 import { NumericFormat } from "react-number-format";
+import { notifyError, notifyInfo } from "@/lib/notifications";
 
 const steps = ["Gegevens", "Overeenkomst", "Documenten", "Overzicht"];
 
@@ -63,30 +64,33 @@ interface Document {
   id: string;
   name: string;
   size: string;
-  date: string;
+  file: File;
 }
 
 const OvereenkomstenRegistrerenPage = () => {
   const [activeStep, setActiveStep] = useState(0);
   const { data: session } = useSession();
 
-  // const [contractParties, setContractParties] = useState<ContractPartyInput[]>(
-  //   [],
-  // );
-
   const today = new Date().toISOString().split("T")[0];
 
   const [contractData, setContractData] = useState<CreateContractInput>({
-    contractDate: "",
-    startDate: "",
-    endDate: "",
+    contract_date: "",
+    start_date: "",
+    end_date: "",
     amount: 0,
-    installmentCount: 0,
-    installmentAmount: 0,
+    installment_count: 0,
+    installment_amount: 0,
     description: "",
     parties: [],
     documents: [],
   });
+
+  const [documents, setDocuments] = useState<Document[]>([]);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [openDialog, setOpenDialog] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!session) return;
@@ -117,12 +121,12 @@ const OvereenkomstenRegistrerenPage = () => {
       };
 
       const initialContractData: CreateContractInput = {
-        contractDate: "",
-        startDate: "",
-        endDate: "",
+        contract_date: "",
+        start_date: "",
+        end_date: "",
         amount: 0,
-        installmentCount: 0,
-        installmentAmount: 0,
+        installment_count: 0,
+        installment_amount: 0,
         description: "",
         parties: [partyAContract, partyBContract],
         documents: [],
@@ -133,10 +137,6 @@ const OvereenkomstenRegistrerenPage = () => {
 
     loadedParties();
   }, [session]);
-
-  const [documents, setDocuments] = useState<Document[]>([]);
-
-  const [openDialog, setOpenDialog] = useState(false);
 
   const handleNext = () => {
     if (activeStep < steps.length - 1) {
@@ -157,10 +157,6 @@ const OvereenkomstenRegistrerenPage = () => {
     }));
   };
 
-  const handleDeleteDocument = (id: string) => {
-    setDocuments(documents.filter((doc) => doc.id !== id));
-  };
-
   const handleChangeParty = (index: number, field: string, value: string) => {
     const updatedParties = [...contractData.parties];
     updatedParties[index] = {
@@ -168,6 +164,121 @@ const OvereenkomstenRegistrerenPage = () => {
       [field]: value,
     };
     setContractData({ ...contractData, parties: updatedParties });
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+
+    const generateUUID = () => {
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+        /[xy]/g,
+        function (c) {
+          const r = (Math.random() * 16) | 0;
+          const v = c === "x" ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        },
+      );
+    };
+
+    const newDocuments: Document[] = files.map((file) => ({
+      id: generateUUID(),
+      name: file.name,
+      size: formatFileSize(file.size),
+      file,
+    }));
+
+    setDocuments((prev) => [...prev, ...newDocuments]);
+
+    event.target.value = "";
+  };
+
+  const handleDeleteDocument = (id: string) => {
+    setDocuments((prev) => prev.filter((doc) => doc.id !== id));
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+
+      const contractDataWithTenant = {
+        ...contractData,
+        tenant_id: session?.user.tenant_id,
+      };
+
+      // Crear contrato
+      const contractResponse = await fetch("/api/contracts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(contractDataWithTenant),
+      });
+
+      if (!contractResponse.ok) {
+        throw new Error("Failed to create contract");
+      }
+
+      const contract = await contractResponse.json();
+
+      // Subir documentos
+      if (documents.length > 0) {
+        const uploadedFiles = await uploadDocuments(contract.id);
+
+        await fetch("/api/contracts/documents", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contractId: contract.id,
+            documents: uploadedFiles,
+          }),
+        });
+      }
+
+      notifyInfo("Overeenkomst succesvol opgeslagen");
+
+      // router.push(`/contracts/${contract.id}`);
+    } catch (error) {
+      console.error(error);
+
+      notifyError(
+        error instanceof Error ? error.message : "Er is een fout opgetreden",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const uploadDocuments = async (contractId: string) => {
+    const uploads = documents.map(async (document) => {
+      const formData = new FormData();
+
+      formData.append("file", document.file);
+      formData.append("contractId", contractId);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+
+        throw new Error(error.error || `Failed to upload ${document.name}`);
+      }
+
+      return response.json();
+    });
+
+    return Promise.all(uploads);
   };
 
   return (
@@ -435,8 +546,8 @@ const OvereenkomstenRegistrerenPage = () => {
                         fullWidth
                         size="small"
                         value={
-                          contractData.contractDate
-                            ? new Date(contractData.contractDate)
+                          contractData.contract_date
+                            ? new Date(contractData.contract_date)
                                 .toISOString()
                                 .split("T")[0]
                             : ""
@@ -446,8 +557,8 @@ const OvereenkomstenRegistrerenPage = () => {
 
                           setContractData((prev) => ({
                             ...prev,
-                            contractDate: date,
-                            startDate: date,
+                            contract_date: date,
+                            start_date: date,
                           }));
                         }}
                         slotProps={{
@@ -481,15 +592,15 @@ const OvereenkomstenRegistrerenPage = () => {
                         fullWidth
                         size="small"
                         value={
-                          contractData.startDate
-                            ? new Date(contractData.startDate)
+                          contractData.start_date
+                            ? new Date(contractData.start_date)
                                 .toISOString()
                                 .split("T")[0]
                             : ""
                         }
                         onChange={(e) =>
                           handleAgreementChange(
-                            "startDate",
+                            "start_date",
                             e.target.value
                               ? new Date(e.target.value).toISOString()
                               : "",
@@ -508,15 +619,15 @@ const OvereenkomstenRegistrerenPage = () => {
                         fullWidth
                         size="small"
                         value={
-                          contractData.endDate
-                            ? new Date(contractData.endDate)
+                          contractData.end_date
+                            ? new Date(contractData.end_date)
                                 .toISOString()
                                 .split("T")[0]
                             : ""
                         }
                         onChange={(e) =>
                           handleAgreementChange(
-                            "endDate",
+                            "end_date",
                             e.target.value
                               ? new Date(e.target.value).toISOString()
                               : "",
@@ -532,7 +643,7 @@ const OvereenkomstenRegistrerenPage = () => {
                       <TextField
                         fullWidth
                         label="Aantal termijnen"
-                        value={contractData.installmentCount}
+                        value={contractData.installment_count}
                         type="number"
                         onChange={(e) => {
                           const installmentCount = parseInt(e.target.value, 10);
@@ -543,8 +654,8 @@ const OvereenkomstenRegistrerenPage = () => {
 
                           setContractData((prev) => ({
                             ...prev,
-                            installmentCount: installmentCount,
-                            installmentAmount: installmentAmount,
+                            installment_count: installmentCount,
+                            installment_amount: installmentAmount,
                           }));
                         }}
                         size="small"
@@ -556,7 +667,7 @@ const OvereenkomstenRegistrerenPage = () => {
                         customInput={TextField}
                         fullWidth
                         label="Termijnbedrag"
-                        value={contractData.installmentAmount}
+                        value={contractData.installment_amount}
                         thousandSeparator
                         decimalScale={2}
                         fixedDecimalScale
@@ -606,11 +717,20 @@ const OvereenkomstenRegistrerenPage = () => {
 
               <Card sx={{ mb: 3 }}>
                 <CardContent>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    hidden
+                    accept=".pdf,.png,.jpg,.jpeg"
+                    onChange={handleFileUpload}
+                  />
                   <Button
                     variant="outlined"
                     startIcon={<UploadIcon />}
                     fullWidth
                     sx={{ py: 2, mb: 2 }}
+                    onClick={() => fileInputRef.current?.click()}
                   >
                     Document uploaden
                   </Button>
@@ -690,8 +810,8 @@ const OvereenkomstenRegistrerenPage = () => {
                     Bedrag en periode
                   </Typography>
                   <Typography variant="body2">
-                    {contractData.amount} • {contractData.startDate} tot{" "}
-                    {contractData.endDate}
+                    {contractData.amount} • {contractData.start_date} tot{" "}
+                    {contractData.end_date}
                   </Typography>
                 </Box>
 
@@ -768,6 +888,7 @@ const OvereenkomstenRegistrerenPage = () => {
             sx={{ bgcolor: "#ff9800" }}
             onClick={() => {
               setOpenDialog(false);
+              handleSubmit();
               alert("Overeenkomst succesvol geregistreerd!");
             }}
           >

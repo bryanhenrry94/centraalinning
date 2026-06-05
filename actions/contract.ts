@@ -30,19 +30,19 @@ export async function createContract(
         data: {
           tenant_id: tenantId,
 
-          referenceNumber,
+          reference_number: referenceNumber,
 
           status: "REGISTERED",
 
-          contract_date: input.contractDate,
-          start_date: input.startDate,
-          end_date: input.endDate ?? null,
+          contract_date: input.contract_date,
+          start_date: input.start_date,
+          end_date: input.end_date ?? null,
 
           amount: input.amount,
 
-          installment_count: input.installmentCount ?? null,
+          installment_count: input.installment_count ?? null,
 
-          installment_amount: input.installmentAmount ?? null,
+          installment_amount: input.installment_amount ?? null,
 
           description: input.description ?? null,
 
@@ -71,13 +71,13 @@ export async function createContract(
           documents: {
             create:
               input.documents?.map((doc) => ({
-                file_name: doc.fileName,
+                file_name: doc.file_name,
 
-                file_path: doc.filePath,
+                file_path: doc.file_path,
 
-                mime_type: doc.mimeType,
+                mime_type: doc.mime_type,
 
-                file_size: doc.fileSize,
+                file_size: doc.file_size,
               })) ?? [],
           },
         },
@@ -212,17 +212,17 @@ export async function updateContract(
         },
 
         data: {
-          contract_date: input.contractDate,
+          contract_date: input.contract_date,
 
-          start_date: input.startDate,
+          start_date: input.start_date,
 
-          end_date: input.endDate ?? null,
+          end_date: input.end_date ?? null,
 
           amount: input.amount,
 
-          installment_count: input.installmentCount ?? null,
+          installment_count: input.installment_count ?? null,
 
-          installment_amount: input.installmentAmount ?? null,
+          installment_amount: input.installment_amount ?? null,
 
           description: input.description ?? null,
 
@@ -255,13 +255,13 @@ export async function updateContract(
 
             create:
               input.documents?.map((doc) => ({
-                file_name: doc.fileName,
+                file_name: doc.file_name,
 
-                file_path: doc.filePath,
+                file_path: doc.file_path,
 
-                mime_type: doc.mimeType,
+                mime_type: doc.mime_type,
 
-                file_size: doc.fileSize,
+                file_size: doc.file_size,
               })) ?? [],
           },
         },

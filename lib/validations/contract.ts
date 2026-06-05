@@ -4,13 +4,13 @@ import { z } from "zod";
 import { ContractPartySchema } from "./contract_party";
 
 export const CreateContractSchema = z.object({
-  contractDate: z.string(),
-  startDate: z.string(),
-  endDate: z.string().optional(),
+  contract_date: z.string(),
+  start_date: z.string(),
+  end_date: z.string().optional(),
 
   amount: z.number(),
-  installmentCount: z.number().optional(),
-  installmentAmount: z.number().optional(),
+  installment_count: z.number().optional(),
+  installment_amount: z.number().optional(),
 
   description: z.string().optional(),
 
@@ -18,10 +18,10 @@ export const CreateContractSchema = z.object({
 
   documents: z.array(
     z.object({
-      fileName: z.string(),
-      filePath: z.string(),
-      mimeType: z.string(),
-      fileSize: z.number(),
+      file_name: z.string(),
+      file_path: z.string(),
+      mime_type: z.string(),
+      file_size: z.number(),
     }),
   ),
 });
