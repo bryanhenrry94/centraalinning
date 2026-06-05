@@ -46,7 +46,7 @@ export const authOptions: AuthOptions = {
     async redirect({ url }) {
       return url;
     },
-    
+
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
@@ -100,12 +100,15 @@ export const authOptions: AuthOptions = {
   },
   cookies: {
     sessionToken: {
-      name: "next-auth.session-token",
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-next-auth.session-token"
+          : "next-auth.session-token",
       options: {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: false,
+        secure: process.env.NODE_ENV === "production",
         domain: process.env.COOKIE_DOMAIN,
       },
     },
