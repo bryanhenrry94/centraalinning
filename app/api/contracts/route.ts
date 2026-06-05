@@ -3,7 +3,6 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { generateContractReference } from "@/services/contract.service";
 import { ContractPartyInput } from "@/lib/validations/contract_party";
-import { ContractPartyInput } from "@/lib/validations/contract_party";
 
 export async function POST(req: NextRequest) {
   try {
