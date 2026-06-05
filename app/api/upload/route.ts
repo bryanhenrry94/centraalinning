@@ -6,10 +6,21 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 const ALLOWED_TYPES = [
+  // PDF
   "application/pdf",
+
+  // Imágenes
   "image/png",
   "image/jpeg",
   "image/jpg",
+
+  // Word
+  "application/msword", // .doc
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+
+  // Excel
+  "application/vnd.ms-excel", // .xls
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
 ];
 
 export async function POST(req: NextRequest) {

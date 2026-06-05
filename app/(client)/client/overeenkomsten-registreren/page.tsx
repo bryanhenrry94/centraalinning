@@ -57,6 +57,7 @@ import { CreateContractInput } from "@/lib/validations/contract";
 
 import { NumericFormat } from "react-number-format";
 import { notifyError, notifyInfo } from "@/lib/notifications";
+import { formatCurrency, formatDate } from "@/utils/formatters";
 
 const steps = ["Gegevens", "Overeenkomst", "Documenten", "Overzicht"];
 
@@ -254,6 +255,7 @@ const OvereenkomstenRegistrerenPage = () => {
       );
     } finally {
       setLoading(false);
+      setOpenDialog(false);
     }
   };
 
@@ -798,10 +800,12 @@ const OvereenkomstenRegistrerenPage = () => {
                   >
                     Partijen
                   </Typography>
-                  {/* <Typography variant="body2">{partyA.name}</Typography>
-                  <Typography variant="body2">{partyB.name}</Typography> */}
+                  {contractData.parties.map((party, index) => (
+                    <Typography key={index} variant="body2">
+                      {party.full_name}
+                    </Typography>
+                  ))}
                 </Box>
-
                 <Box>
                   <Typography
                     variant="subtitle2"
@@ -810,8 +814,11 @@ const OvereenkomstenRegistrerenPage = () => {
                     Bedrag en periode
                   </Typography>
                   <Typography variant="body2">
-                    {contractData.amount} • {contractData.start_date} tot{" "}
-                    {contractData.end_date}
+                    {formatCurrency(contractData.amount)} •{" "}
+                    {formatDate(contractData.start_date)} tot{" "}
+                    {contractData.end_date
+                      ? formatDate(contractData.end_date)
+                      : "Onbekend"}
                   </Typography>
                 </Box>
 
@@ -886,13 +893,13 @@ const OvereenkomstenRegistrerenPage = () => {
           <Button
             variant="contained"
             sx={{ bgcolor: "#ff9800" }}
+            disabled={loading}
+            loading={loading}
             onClick={() => {
-              setOpenDialog(false);
               handleSubmit();
-              alert("Overeenkomst succesvol geregistreerd!");
             }}
           >
-            Bevestigen
+            {loading ? "Bezig met registreren..." : "Bevestigen"}
           </Button>
         </DialogActions>
       </Dialog>

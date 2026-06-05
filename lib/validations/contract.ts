@@ -6,7 +6,7 @@ import { ContractPartySchema } from "./contract_party";
 export const CreateContractSchema = z.object({
   contract_date: z.string(),
   start_date: z.string(),
-  end_date: z.string().optional(),
+  end_date: z.string(),
 
   amount: z.number(),
   installment_count: z.number().optional(),
