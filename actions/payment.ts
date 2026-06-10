@@ -19,6 +19,7 @@ export const registerPayment = async (
       provider_status: "pending",
       total_amount: new Decimal(payload.total_amount),
       status: (payload.status as any) || "pending",
+      contract_id: payload.contract_id || null,
       provider_payload: payload.provider_payload || "",
       paid_at: null,
       payment_type: payload.payment_type || "OTHER",
