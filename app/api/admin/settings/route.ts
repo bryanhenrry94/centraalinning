@@ -1,4 +1,4 @@
-import { SettingsService } from "@/services/settings.service";
+import { SettingsService } from "@/services/settings/settings.service";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {

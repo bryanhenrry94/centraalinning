@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { SettingsCategoryService } from "@/services/settings-category.service";
+import { SettingsCategoryService } from "@/services/settings/settings-category.service";
 
 export async function GET() {
   try {

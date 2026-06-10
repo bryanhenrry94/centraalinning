@@ -1,14 +1,13 @@
-import { sendFinancialReportMail } from "@/actions/email";
 import { verifySentooPayment } from "@/actions/sentoo.actions";
-import { MembershipStatus } from "@/constants/membership-status";
 import { prisma } from "@/lib/prisma";
+import { processSuccessfulPayment } from "@/services/payments/payment-processor";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
     const form = await req.formData();
 
-    const transactionId = form.get("transaction_id");
+    const transactionId = form.get("transaction_id")?.toString();
 
     console.log("📩 Sentoo webhook received:", {
       transactionId,
@@ -17,111 +16,110 @@ export async function POST(req: NextRequest) {
 
     if (!transactionId) {
       console.warn("⚠️ Missing transaction_id");
+
       return NextResponse.json({ success: true });
     }
 
     const payment = await prisma.payment.findUnique({
-      where: { provider_ref: transactionId.toString() },
+      where: {
+        provider_ref: transactionId,
+      },
     });
 
     if (!payment) {
-      console.warn("⚠️ Payment not found:", transactionId);
+      console.warn(`⚠️ Payment not found for transaction ${transactionId}`);
+
       return NextResponse.json({ success: true });
     }
 
-    if (payment.status === "paid") {
-      console.log("Already processed:", transactionId);
-      return NextResponse.json({ success: true });
-    }
+    // Reconciliar contra Sentoo
+    const verification = await verifySentooPayment(transactionId);
 
-    // 🔒 Reconciliar contra Sentoo
-    const verification = await verifySentooPayment(transactionId.toString());
+    const providerStatus = verification.status;
 
-    const status = verification.status;
+    console.log(
+      `🔎 Sentoo verification for ${transactionId}: ${providerStatus}`,
+    );
 
-    if (status === "success") {
-      await prisma.payment.update({
-        where: { id: payment.id },
+    if (providerStatus === "success") {
+      /**
+       * updateMany evita race conditions:
+       * solo un webhook podrá cambiar el estado.
+       */
+      const updated = await prisma.payment.updateMany({
+        where: {
+          id: payment.id,
+          status: {
+            not: "paid",
+          },
+        },
         data: {
           status: "paid",
-          provider_status: "success",
+          provider_status: providerStatus,
           paid_at: new Date(),
+          provider_payload: JSON.stringify(verification),
         },
       });
 
-      // Busca si tiene un Membership pendiente y actívalo
-      const tenant = await prisma.tenant.findUnique({
-        where: { id: payment.tenant_id },
-        include: {
-          memberships: {
-            where: { status: "PENDING" },
+      /**
+       * Si count = 0 significa que otro webhook
+       * ya procesó este pago.
+       */
+      if (updated.count === 0) {
+        console.log(`ℹ️ Payment already processed: ${payment.id}`);
+
+        return NextResponse.json({
+          success: true,
+        });
+      }
+
+      try {
+        await processSuccessfulPayment(payment.id);
+
+        console.log(`✅ Business logic processed for payment ${payment.id}`);
+      } catch (error) {
+        console.error(`🔥 Error processing payment ${payment.id}`, error);
+
+        // Opcional: registrar error para soporte
+        await prisma.payment.update({
+          where: {
+            id: payment.id,
           },
-        },
-      });
-
-      if (tenant?.memberships.length) {
-        await prisma.membership.update({
-          where: { id: tenant.memberships[0].id },
           data: {
-            status: MembershipStatus.ACTIVE,
+            processing_error:
+              error instanceof Error
+                ? error.message
+                : "Unknown processing error",
           },
         });
-
-        console.log("✅ Membership activated for tenant:", tenant.id);
-      }
-
-      // Valida si el pago tiene una solicitud de blok-check y actualiza el estado del has_blokcheck
-      const blokCheck = await prisma.blokCheckRequest.findFirst({
-        where: { payment_id: payment.id },
-      });
-
-      if (blokCheck) {
-        let _has_blockade: boolean = false;
-
-        // consulta en la tabla person por la identificacion y obtiene si la persona tiene un bloqueo
-        const person = await prisma.person.findUnique({
-          where: { identification: blokCheck.document_number },
-        });
-
-        if (person) {
-          _has_blockade = person.has_blockade ? person.has_blockade : false;
-        }
-
-        await prisma.blokCheckRequest.update({
-          where: { id: blokCheck.id },
-          data: { has_blockade: _has_blockade, payment_status: "paid" },
-        });
-      }
-
-      // Valida si el pago tiene una solicitud de reporte financiero y actualiza el estado del payment_status
-      const financialReportRequest =
-        await prisma.financialReportRequest.findFirst({
-          where: { payment_id: payment.id },
-        });
-
-      if (financialReportRequest) {
-        await prisma.financialReportRequest.update({
-          where: { id: financialReportRequest.id },
-          data: { payment_status: "paid" },
-        });
-
-        await sendFinancialReportMail(financialReportRequest.id);
       }
     } else {
       await prisma.payment.update({
-        where: { id: payment.id },
+        where: {
+          id: payment.id,
+        },
         data: {
-          status: status,
-          provider_status: status,
+          status: providerStatus === "pending" ? "pending" : "failed",
+          provider_status: providerStatus,
+          provider_payload: JSON.stringify(verification),
         },
       });
+
+      console.log(
+        `ℹ️ Payment ${payment.id} updated with status ${providerStatus}`,
+      );
     }
 
-    console.log("✅ Sentoo payment synced:", transactionId);
-  } catch (err) {
-    console.error("🔥 Sentoo webhook error:", err);
+    console.log(`✅ Sentoo payment synced: ${transactionId}`);
+  } catch (error) {
+    console.error("🔥 Sentoo webhook error:", error);
   }
 
-  // ⚠️ Sentoo exige 200 siempre
-  return NextResponse.json({ success: true });
+  /**
+   * Sentoo requiere HTTP 200
+   * incluso cuando exista algún error interno.
+   */
+  return NextResponse.json({
+    success: true,
+  });
 }

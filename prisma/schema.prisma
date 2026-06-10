@@ -449,6 +449,10 @@ model InterestDetail {
 model BillingInvoice {
   id             String                  @id @default(uuid())
   tenant_id      String
+
+  payment_id     String                  @unique
+  payment        Payment                @relation(fields: [payment_id], references: [id])
+
   invoice_number String                  @unique
   amount         Float
   currency       String                  @default("USD")
@@ -735,6 +739,7 @@ model AgreementInstallment {
 
 enum ContractStatus {
   DRAFT
+  PENDING_PAYMENT
   REGISTERED
   CANCELLED
 }
@@ -744,6 +749,15 @@ enum ContractPartyRole {
   PARTY_B
 }
 
+enum ContractType {
+  DELIVERY_OF_GOODS
+  SERVICES
+  RENT
+  LOAN
+  PAYMENT_ARRANGEMENT
+  OTHER
+}
+
 model Contract {
   id                 String              @id @default(cuid())
 
@@ -751,6 +765,8 @@ model Contract {
   tenant             Tenant             @relation(fields: [tenant_id], references: [id])
 
   status             ContractStatus      @default(DRAFT)
+
+  contract_type      ContractType
 
   contract_date      DateTime
   start_date         DateTime
@@ -770,6 +786,7 @@ model Contract {
 
   parties            ContractParty[]
   documents          ContractDocument[]
+  activation_payment Payment?
 
   created_at         DateTime            @default(now())
   updated_at         DateTime            @updatedAt
@@ -786,10 +803,11 @@ model ContractParty {
 
   role           ContractPartyRole
 
+  person_type    PersonType
+
   full_name      String
   identification String
   email          String
-  contact_person String
   phone          String
   birth_date     DateTime?
   birth_place    String?
@@ -819,11 +837,26 @@ model ContractDocument {
   @@map("contract_document")
 }
 
+enum PaymentType {
+  SUBSCRIPTION
+  CONTRACT_ACTIVATION
+  AGREEMENT_INSTALLMENT
+  DEBT_PAYMENT
+  BLOK_CHECK
+  FINANCIAL_REPORT
+  OTHER
+}
+
 model Payment {
   id               String                  @id @default(cuid())
 
   tenant_id        String
   tenant           Tenant                 @relation(fields: [tenant_id], references: [id])
+
+  payment_type     PaymentType             @default(OTHER)
+
+  contract_id      String?                 @unique
+  contract         Contract?              @relation(fields: [contract_id], references: [id])
 
   debt_id          String?
   debt             Debt?                  @relation(fields: [debt_id], references: [id])
@@ -845,9 +878,13 @@ model Payment {
   created_at       DateTime                @default(now())
   updated_at       DateTime                @updatedAt
 
+  processing_error String?
+
   allocations      PaymentAllocation[]
   installments     AgreementInstallment[]
   agreements       Agreement?             @relation(fields: [agreement_id], references: [id])
+
+  billing_invoice  BillingInvoice?
 
   @@map("payment")
 }
@@ -962,7 +999,9 @@ model Subscription {
 
   billing_cycle      BillingCycle
 
-  status             SubscriptionStatus  @default(ACTIVE)
+  status             SubscriptionStatus  @default(PENDING)
+  activated_at       DateTime?
+
   current_period_end DateTime
   created_at         DateTime            @default(now())
   updated_at         DateTime            @updatedAt
@@ -976,6 +1015,7 @@ enum BillingCycle {
 }
 
 enum SubscriptionStatus {
+  PENDING
   ACTIVE
   PAST_DUE
   CANCELLED

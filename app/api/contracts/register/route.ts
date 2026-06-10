@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
+import { ContractStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { generateContractReference } from "@/services/contract.service";
+import { generateContractReference } from "@/services/contracts/contract.service";
 import { ContractPartyInput } from "@/lib/validations/contract_party";
+import { createSentooPayment } from "@/actions/sentoo.actions";
+import { PaymentCreate } from "@/lib/validations/payment";
+import { registerPayment } from "@/actions/payment";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,6 +15,7 @@ export async function POST(req: NextRequest) {
 
     const {
       tenant_id,
+      contract_type,
       contract_date,
       start_date,
       end_date,
@@ -21,6 +25,7 @@ export async function POST(req: NextRequest) {
       description,
     } = body;
 
+    // Validations
     if (!tenant_id) {
       console.error("tenant_id is missing in the request body");
       return NextResponse.json(
@@ -56,9 +61,12 @@ export async function POST(req: NextRequest) {
     // generate a unique reference number if not provided
     const referenceNumber = await generateContractReference();
 
+    // 1. Crear el contrato.
     const contract = await prisma.contract.create({
       data: {
         tenant_id,
+
+        contract_type: contract_type as any,
 
         contract_date: new Date(contract_date),
         start_date: new Date(start_date),
@@ -78,11 +86,12 @@ export async function POST(req: NextRequest) {
 
         parties: {
           create: body.parties.map((party: ContractPartyInput) => ({
-            full_name: party.full_name,
+            person_type:
+              (party.person_type as "INDIVIDUAL" | "COMPANY") || "INDIVIDUAL",
             role: party.role,
+            full_name: party.full_name,
             email: party.email,
             identification: party.identification,
-            contact_person: party.contact_person,
             phone: party.phone,
             birth_date: party.birth_date ?? null,
             birth_place: party.birth_place ?? null,
@@ -92,7 +101,64 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(contract);
+    // 2. Si hay documentos, súbelos y asócialos al contrato
+
+    // 3. Crear el pago en Sentoo.
+    const totalWithTax = 45;
+
+    // 3. Crea el pago en Sentoo
+    const sentooResponse = await createSentooPayment({
+      amount: totalWithTax, // YA en centavos
+      description: `Betaling voor overeenkomst ${contract.reference_number}`,
+      reference: contract.reference_number,
+    });
+
+    /**
+     * Validar respuesta Sentoo
+     */
+    if (!sentooResponse?.success || !sentooResponse?.payment?.url) {
+      throw new Error(
+        sentooResponse?.error || "Kon de betaling niet aanmaken.",
+      );
+    }
+
+    // 4. Registra el pago en la base de datos
+    const payment: PaymentCreate = {
+      debt_id: null, // No hay una deuda previa, este es un pago directo por activación
+      method: "TRANSFER",
+      total_amount: totalWithTax,
+      paid_at: null,
+      status: "pending",
+      contract_id: contract.id,
+      provider: "sentoo",
+      provider_ref: sentooResponse?.payment?.id,
+      provider_payload: JSON.stringify(sentooResponse.raw),
+      reference_number: "",
+      agreement_id: null,
+    };
+
+    const paymentRes = await registerPayment(tenant_id, payment);
+    console.log("Payment registered in DB:", paymentRes);
+
+    if (!paymentRes) {
+      throw new Error("Kon de betaling niet registreren.");
+    }
+
+    // 5. Cambiar el estado del contrato a PENDING_PAYMENT.
+    await prisma.contract.update({
+      where: {
+        id: contract.id,
+      },
+
+      data: {
+        status: ContractStatus.PENDING_PAYMENT,
+      },
+    });
+
+    // 6. Devolver la URL de pago al frontend.
+    const paymentUrl = sentooResponse.payment.url;
+
+    return NextResponse.json({ contract, paymentUrl });
   } catch (error: any) {
     console.error(error);
 

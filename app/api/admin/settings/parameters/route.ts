@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import {
   getParameters,
   updateParameters,
-} from "@/services/parameter.service";
+} from "@/services/parameter/parameter.service";
 
 export async function GET() {
   try {

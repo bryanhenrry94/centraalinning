@@ -41,6 +41,7 @@ export const PaymentSchema = z.object({
   provider_payload: z.string().nullable().optional(),
   reference_number: z.string().optional(),
   agreement_id: z.string().nullable().optional(),
+  contract_id: z.string().nullable().optional(),
   created_at: z.date(),
   updated_at: z.date(),
 });
@@ -62,6 +63,7 @@ export const PaymentCreateSchema = PaymentSchema.omit({
   provider_payload: true,
   reference_number: true,
   agreement_id: true,
+  contract_id: true,
 });
 
 export type Payment = z.infer<typeof PaymentSchema>;

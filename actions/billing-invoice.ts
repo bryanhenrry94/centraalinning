@@ -62,6 +62,7 @@ export const createActivationInvoice = async (
       description:
         "Factura por activación de cuenta del sistema Centraal Inning",
       status: "unpaid",
+      payment_id: "",
     },
   });
 
@@ -155,6 +156,7 @@ export const createCollectionInvoice = async (
       description:
         "Factura por activación de cuenta del sistema Centraal Inning",
       status: "unpaid",
+      payment_id: "",
     },
   });
 
@@ -366,6 +368,7 @@ export const createInvoice = async (
         tenant_id: tenant_id,
         currency: "USD",
         amount: invoice.amount ?? 0,
+        payment_id: "",
       },
     });
 

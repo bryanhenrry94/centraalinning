@@ -1,4 +1,4 @@
-import { SettingsCategoryService } from "@/services/settings-category.service";
+import { SettingsCategoryService } from "@/services/settings/settings-category.service";
 import { NextResponse } from "next/server";
 
 interface Params {

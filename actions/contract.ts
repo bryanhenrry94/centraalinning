@@ -5,10 +5,10 @@ import { revalidatePath } from "next/cache";
 
 import {
   CreateContractInput,
-  CreateContractSchema,
+  ContractSchema,
 } from "@/lib/validations/contract";
 
-import { generateContractReference } from "@/services/contract.service";
+import { generateContractReference } from "@/services/contracts/contract.service";
 
 export interface ActionResponse<T = unknown> {
   success: boolean;
@@ -21,7 +21,7 @@ export async function createContract(
   data: CreateContractInput,
 ): Promise<ActionResponse> {
   try {
-    const input = CreateContractSchema.parse(data);
+    const input = ContractSchema.parse(data);
 
     const referenceNumber = await generateContractReference();
 
@@ -46,17 +46,22 @@ export async function createContract(
 
           description: input.description ?? null,
 
+          contract_type: input.contract_type,
+
           parties: {
             create: input.parties.map((party) => ({
+              person_type:
+                (party.person_type as "INDIVIDUAL" | "COMPANY") || "INDIVIDUAL",
+
               role: party.role,
+
+              contact_person: party.full_name,
 
               full_name: party.full_name,
 
               identification: party.identification,
 
               email: party.email,
-
-              contact_person: party.contact_person,
 
               phone: party.phone,
 
@@ -183,13 +188,63 @@ export async function listContracts(tenantId: string): Promise<ActionResponse> {
   }
 }
 
+export async function updateStatusContract(
+  contractId: string,
+  tenantId: string,
+  status: "DRAFT" | "PENDING_PAYMENT" | "REGISTERED" | "CANCELLED",
+): Promise<ActionResponse> {
+  try {
+    const existing = await prisma.contract.findFirst({
+      where: {
+        id: contractId,
+        tenant_id: tenantId,
+      },
+    });
+
+    if (!existing) {
+      return {
+        success: false,
+        error: "Contract not found",
+      };
+    }
+
+    const contract = await prisma.contract.update({
+      where: {
+        id: contractId,
+      },
+
+      data: {
+        status: status as any,
+      },
+    });
+
+    // revalidatePath("/contracts");
+    // revalidatePath(`/contracts/${contractId}`);
+
+    return {
+      success: true,
+      data: contract,
+    };
+  } catch (error) {
+    console.error("[UPDATE_STATUS_CONTRACT]", error);
+
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to update contract status",
+    };
+  }
+}
+
 export async function updateContract(
   contractId: string,
   tenantId: string,
   data: CreateContractInput,
 ): Promise<ActionResponse> {
   try {
-    const input = CreateContractSchema.parse(data);
+    const input = ContractSchema.parse(data);
 
     const existing = await prisma.contract.findFirst({
       where: {
@@ -226,10 +281,14 @@ export async function updateContract(
 
           description: input.description ?? null,
 
+          contract_type: input.contract_type,
+
           parties: {
             deleteMany: {},
 
             create: input.parties.map((party) => ({
+              person_type: party.person_type as "INDIVIDUAL" | "COMPANY",
+
               role: party.role,
 
               full_name: party.full_name,
@@ -237,8 +296,6 @@ export async function updateContract(
               identification: party.identification,
 
               email: party.email,
-
-              contact_person: party.contact_person,
 
               phone: party.phone,
 

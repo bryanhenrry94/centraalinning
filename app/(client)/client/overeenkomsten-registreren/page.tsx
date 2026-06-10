@@ -27,12 +27,12 @@ import {
   DialogActions,
   Paper,
   Stack,
-  FormControl,
-  InputLabel,
   Select,
   MenuItem,
-  SelectChangeEvent,
-  InputAdornment,
+  FormControl,
+  InputLabel,
+  FormHelperText,
+  Chip,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -41,16 +41,12 @@ import {
   Upload as UploadIcon,
   Close as CloseIcon,
   CheckCircle as CheckCircleIcon,
-  CalendarMonth as CalendarMonthIcon,
 } from "@mui/icons-material";
 
 import GroupIcon from "@mui/icons-material/Group";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
-import {
-  ContractPartyInput,
-  ContractPartySchema,
-} from "@/lib/validations/contract_party";
+import { ContractPartyInput } from "@/lib/validations/contract_party";
 import { useSession } from "next-auth/react";
 import { getTenantById } from "@/actions/tenant";
 import { CreateContractInput } from "@/lib/validations/contract";
@@ -58,6 +54,21 @@ import { CreateContractInput } from "@/lib/validations/contract";
 import { NumericFormat } from "react-number-format";
 import { notifyError, notifyInfo } from "@/lib/notifications";
 import { formatCurrency, formatDate } from "@/utils/formatters";
+
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useFieldArray } from "react-hook-form";
+
+import { ContractSchema, ContractFormData } from "@/lib/validations/contract";
+import { watch } from "fs/promises";
+
+import ArticleIcon from "@mui/icons-material/Article";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import CancelIcon from "@mui/icons-material/Cancel";
+import { createSentooPayment } from "@/actions/sentoo.actions";
+import { PaymentCreate } from "@/lib/validations/payment";
+import { registerPayment } from "@/actions/payment";
+import { updateStatusContract } from "@/actions/contract";
 
 const steps = ["Gegevens", "Overeenkomst", "Documenten", "Overzicht"];
 
@@ -72,19 +83,40 @@ const OvereenkomstenRegistrerenPage = () => {
   const [activeStep, setActiveStep] = useState(0);
   const { data: session } = useSession();
 
-  const today = new Date().toISOString().split("T")[0];
-
-  const [contractData, setContractData] = useState<CreateContractInput>({
-    contract_date: "",
-    start_date: "",
-    end_date: "",
-    amount: 0,
-    installment_count: 0,
-    installment_amount: 0,
-    description: "",
-    parties: [],
-    documents: [],
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    reset,
+    getValues,
+    watch,
+    trigger,
+    formState: { errors },
+  } = useForm<ContractFormData>({
+    resolver: zodResolver(ContractSchema),
+    mode: "onChange",
+    defaultValues: {
+      contract_date: "",
+      start_date: "",
+      end_date: "",
+      amount: 0,
+      installment_count: 0,
+      installment_amount: 0,
+      description: "",
+      parties: [],
+    },
   });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "parties",
+  });
+
+  const parties = watch("parties");
+  const contractDate = watch("contract_date");
+  const amount = watch("amount");
+  const startDate = watch("start_date");
+  const endDate = watch("end_date");
 
   const [documents, setDocuments] = useState<Document[]>([]);
 
@@ -104,24 +136,26 @@ const OvereenkomstenRegistrerenPage = () => {
 
       const partyAContract: ContractPartyInput = {
         role: "PARTY_A",
+        person_type: "COMPANY",
         full_name: tenantResult?.tenant.name,
         identification: tenantResult?.tenant.kvk || "",
         email: session.user?.email || "",
-        contact_person: session.user?.fullname || "",
         phone: session.user?.phone || "",
         address: tenantResult?.tenant.address || "",
       };
 
       const partyBContract: ContractPartyInput = {
         role: "PARTY_B",
+        person_type: "INDIVIDUAL",
         full_name: "",
         identification: "",
         email: "",
-        contact_person: "",
         phone: "",
+        address: "",
       };
 
       const initialContractData: CreateContractInput = {
+        contract_type: "DELIVERY_OF_GOODS",
         contract_date: "",
         start_date: "",
         end_date: "",
@@ -131,17 +165,111 @@ const OvereenkomstenRegistrerenPage = () => {
         description: "",
         parties: [partyAContract, partyBContract],
         documents: [],
+        status: "DRAFT",
       };
 
-      setContractData(initialContractData);
+      reset(initialContractData);
     };
 
     loadedParties();
   }, [session]);
 
-  const handleNext = () => {
+  const statusContract = watch("status");
+
+  const StatusContractChip = ({ status }: { status: string }) => {
+    switch (status) {
+      case "DRAFT":
+        return (
+          <Chip
+            label="Concept"
+            color="default"
+            size="small"
+            icon={<ArticleIcon />}
+          />
+        );
+      case "PENDING_PAYMENT":
+        return (
+          <Chip
+            label="In afwachting van betaling"
+            color="warning"
+            size="small"
+            icon={<HourglassEmptyIcon />}
+          />
+        );
+      case "REGISTERED":
+        return (
+          <Chip
+            label="Geregistreerd"
+            color="success"
+            size="small"
+            icon={<CheckCircleIcon />}
+          />
+        );
+      case "CANCELLED":
+        return (
+          <Chip
+            label="Geannuleerd"
+            color="error"
+            size="small"
+            icon={<CancelIcon />}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  const handleNext = async () => {
+    let isValid = false;
+
+    switch (activeStep) {
+      case 0: {
+        isValid = await trigger("parties");
+
+        if (!isValid) {
+          return;
+        }
+
+        break;
+      }
+
+      case 1: {
+        isValid = await trigger([
+          "contract_date",
+          "start_date",
+          "end_date",
+          "amount",
+          "installment_count",
+          "description",
+        ]);
+
+        if (!isValid) {
+          return;
+        }
+
+        break;
+      }
+
+      case 2: {
+        isValid = documents.length > 0;
+
+        if (!isValid) {
+          return;
+        }
+
+        break;
+      }
+
+      default:
+        isValid = true;
+    }
+
+    if (!isValid) {
+      return;
+    }
+
     if (activeStep < steps.length - 1) {
-      setActiveStep(activeStep + 1);
+      setActiveStep((prev) => prev + 1);
     }
   };
 
@@ -149,22 +277,6 @@ const OvereenkomstenRegistrerenPage = () => {
     if (activeStep > 0) {
       setActiveStep(activeStep - 1);
     }
-  };
-
-  const handleAgreementChange = (field: string, value: any) => {
-    setContractData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleChangeParty = (index: number, field: string, value: string) => {
-    const updatedParties = [...contractData.parties];
-    updatedParties[index] = {
-      ...updatedParties[index],
-      [field]: value,
-    };
-    setContractData({ ...contractData, parties: updatedParties });
   };
 
   const formatFileSize = (bytes: number) => {
@@ -204,35 +316,41 @@ const OvereenkomstenRegistrerenPage = () => {
     setDocuments((prev) => prev.filter((doc) => doc.id !== id));
   };
 
-  const handleSubmit = async () => {
+  const onSubmit = async (data: ContractFormData) => {
+    const paymentWindow = window.open("", "_blank");
+
     try {
       setLoading(true);
 
-      const contractDataWithTenant = {
-        ...contractData,
+      if (!session?.user.tenant_id) return;
+
+      const payload = {
+        ...data,
         tenant_id: session?.user.tenant_id,
       };
 
-      // Crear contrato
-      const contractResponse = await fetch("/api/contracts", {
+      // 1. Registra el contrato en la base de datos
+      const contractResponse = await fetch("/api/contracts/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(contractDataWithTenant),
+        body: JSON.stringify(payload),
       });
 
       if (!contractResponse.ok) {
-        throw new Error("Failed to create contract");
+        const error = await contractResponse.json();
+
+        throw new Error(error.message || "Kon overeenkomst niet registreren");
       }
 
-      const contract = await contractResponse.json();
+      const { contract, paymentUrl } = await contractResponse.json();
 
-      // Subir documentos
+      // 2. Si hay documentos, súbelos y asócialos al contrato
       if (documents.length > 0) {
         const uploadedFiles = await uploadDocuments(contract.id);
 
-        await fetch("/api/contracts/documents", {
+        const documentResponse = await fetch("/api/contracts/documents", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -242,11 +360,18 @@ const OvereenkomstenRegistrerenPage = () => {
             documents: uploadedFiles,
           }),
         });
+
+        if (!documentResponse.ok) {
+          throw new Error("Documenten konden niet worden gekoppeld");
+        }
       }
 
+      // TODO: Agregar lógica para enviar el correo con la factura adjunta al email del tenant
       notifyInfo("Overeenkomst succesvol opgeslagen");
 
-      // router.push(`/contracts/${contract.id}`);
+      if (paymentWindow) {
+        paymentWindow.location.href = paymentUrl;
+      }
     } catch (error) {
       console.error(error);
 
@@ -285,624 +410,781 @@ const OvereenkomstenRegistrerenPage = () => {
 
   return (
     <Box sx={{ minHeight: "100vh", py: 4 }}>
-      <Container maxWidth="lg">
-        {/* Header */}
-        <Box sx={{ mb: 8 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>
-            Overeenkomst registreren
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            Registreer een financiële overeenkomst binnen de CFSB-samenwerking
-          </Typography>
-        </Box>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Container maxWidth="lg">
+          {/* Header */}
+          <Box sx={{ mb: 8 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700 }}>
+              Overeenkomst registreren
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              Registreer een financiële overeenkomst binnen de CFSB-samenwerking
+            </Typography>
+          </Box>
 
-        {/* Stepper */}
-        <Box sx={{ mb: 8 }}>
-          <Stepper activeStep={activeStep}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-        </Box>
+          {/* Stepper */}
+          <Box sx={{ mb: 8 }}>
+            <Stepper activeStep={activeStep}>
+              {steps.map((label) => (
+                <Step key={label}>
+                  <StepLabel>{label}</StepLabel>
+                </Step>
+              ))}
+            </Stepper>
+          </Box>
 
-        {/* Step Content */}
-        <Box sx={{ mb: 4 }}>
-          {/* Step 1: Gegevens */}
-          {activeStep === 0 && (
-            <Box>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                <GroupIcon sx={{ mr: 2, fontSize: 28 }} />
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Partijen
+          {/* Step Content */}
+          <Box sx={{ mb: 4 }}>
+            {/* Step 1: Gegevens */}
+            {activeStep === 0 && (
+              <Box>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                  <GroupIcon sx={{ mr: 2, fontSize: 28 }} />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    Partijen
+                  </Typography>
+                </Box>
+                <Typography
+                  variant="body2"
+                  color="textSecondary"
+                  sx={{ mb: 3 }}
+                >
+                  Vul de gegevens in van beide partijen die betrokken zijn bij
+                  deze overeenkomst.
                 </Typography>
-              </Box>
-              <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
-                Vul de gegevens in van beide partijen die betrokken zijn bij
-                deze overeenkomst.
-              </Typography>
 
-              <Grid container spacing={3}>
-                {contractData.parties.map((party, index) => (
-                  <Grid size={{ xs: 12, sm: 6 }} key={index}>
-                    <Box
-                      key={index}
-                      component={Paper}
-                      elevation={1}
-                      sx={{ p: 3, width: "100%", height: "450px" }}
-                    >
+                <Grid container spacing={3}>
+                  {fields.map((party, index) => (
+                    <Grid size={{ xs: 12, sm: 6 }} key={index}>
                       <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          mb: 2,
-                        }}
+                        key={index}
+                        component={Paper}
+                        elevation={1}
+                        sx={{ p: 3, width: "100%", minHeight: "400px" }}
                       >
-                        <Box>
-                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                            Partij &nbsp;
-                            <Typography variant="caption" color="textSecondary">
-                              (Uw onderneming)
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            mb: 2,
+                          }}
+                        >
+                          <Box>
+                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                              Partij &nbsp;
+                              <Typography
+                                variant="caption"
+                                color="textSecondary"
+                              >
+                                (Uw onderneming)
+                              </Typography>
                             </Typography>
-                          </Typography>
+                          </Box>
+                          {index > 1 && (
+                            <IconButton
+                              size="small"
+                              onClick={() => remove(index)}
+                            >
+                              <CloseIcon />
+                            </IconButton>
+                          )}
                         </Box>
-                        {index > 1 && (
-                          <IconButton
-                            size="small"
-                            onClick={() => {
-                              const updatedParties = [...contractData.parties];
-                              updatedParties.splice(index, 1);
-                              setContractData({
-                                ...contractData,
-                                parties: updatedParties,
-                              });
-                            }}
-                          >
-                            <CloseIcon />
-                          </IconButton>
-                        )}
+                        <Stack direction="column" spacing={2} sx={{ mb: 3 }}>
+                          <Controller
+                            name={`parties.${index}.person_type`}
+                            control={control}
+                            render={({ field, fieldState }) => (
+                              <FormControl
+                                fullWidth
+                                size="small"
+                                error={!!fieldState.error}
+                              >
+                                <InputLabel id={`person-type-label-${index}`}>
+                                  Type partij
+                                </InputLabel>
+
+                                <Select
+                                  {...field}
+                                  value={field.value ?? ""}
+                                  labelId={`person-type-label-${index}`}
+                                  label="Type partij"
+                                >
+                                  <MenuItem value="">
+                                    <em>Selecteer een type</em>
+                                  </MenuItem>
+
+                                  <MenuItem value="INDIVIDUAL">
+                                    Persoon
+                                  </MenuItem>
+
+                                  <MenuItem value="COMPANY">Bedrijf</MenuItem>
+                                </Select>
+
+                                <FormHelperText>
+                                  {fieldState.error?.message}
+                                </FormHelperText>
+                              </FormControl>
+                            )}
+                          />
+
+                          <Controller
+                            name={`parties.${index}.identification`}
+                            control={control}
+                            render={({ field, fieldState }) => (
+                              <TextField
+                                {...field}
+                                fullWidth
+                                label={`${watch(`parties.${index}.person_type`) === "INDIVIDUAL" ? "Cedula, ID" : "KVK-nummer"}`}
+                                // helperText="BSN, KVK-nummer of ander identificatienummer"
+                                size="small"
+                                error={!!fieldState.error}
+                                helperText={fieldState.error?.message}
+                              />
+                            )}
+                          />
+
+                          <Controller
+                            name={`parties.${index}.full_name`}
+                            control={control}
+                            render={({ field, fieldState }) => (
+                              <TextField
+                                {...field}
+                                fullWidth
+                                label="Naam"
+                                size="small"
+                                error={!!fieldState.error}
+                                helperText={fieldState.error?.message}
+                              />
+                            )}
+                          />
+
+                          <Controller
+                            name={`parties.${index}.address`}
+                            control={control}
+                            render={({ field, fieldState }) => (
+                              <TextField
+                                {...field}
+                                fullWidth
+                                label="Adres"
+                                size="small"
+                                error={!!fieldState.error}
+                                helperText={fieldState.error?.message}
+                              />
+                            )}
+                          />
+
+                          <Controller
+                            name={`parties.${index}.phone`}
+                            control={control}
+                            render={({ field, fieldState }) => (
+                              <TextField
+                                {...field}
+                                fullWidth
+                                label="Telefoonnummer"
+                                size="small"
+                                error={!!fieldState.error}
+                                helperText={fieldState.error?.message}
+                              />
+                            )}
+                          />
+
+                          <Controller
+                            name={`parties.${index}.email`}
+                            control={control}
+                            render={({ field, fieldState }) => (
+                              <TextField
+                                {...field}
+                                fullWidth
+                                label="E-mailadres"
+                                type="email"
+                                size="small"
+                                error={!!fieldState.error}
+                                helperText={fieldState.error?.message}
+                              />
+                            )}
+                          />
+
+                          {watch(`parties.${index}.person_type`) ===
+                            "INDIVIDUAL" && (
+                            <Stack direction="row" spacing={2}>
+                              <Controller
+                                name={`parties.${index}.birth_date`}
+                                control={control}
+                                render={({ field, fieldState }) => (
+                                  <TextField
+                                    label="Geboortedatum"
+                                    type="date"
+                                    fullWidth
+                                    size="small"
+                                    value={
+                                      field.value
+                                        ? new Date(field.value)
+                                            .toISOString()
+                                            .split("T")[0]
+                                        : ""
+                                    }
+                                    onChange={(e) =>
+                                      field.onChange(
+                                        e.target.value
+                                          ? new Date(
+                                              e.target.value,
+                                            ).toISOString()
+                                          : "",
+                                      )
+                                    }
+                                    error={!!fieldState.error}
+                                    helperText={fieldState.error?.message}
+                                    slotProps={{
+                                      inputLabel: { shrink: true },
+                                    }}
+                                  />
+                                )}
+                              />
+
+                              <Controller
+                                name={`parties.${index}.birth_place`}
+                                control={control}
+                                render={({ field, fieldState }) => (
+                                  <TextField
+                                    {...field}
+                                    fullWidth
+                                    label="Geboorteplaats"
+                                    size="small"
+                                    error={!!fieldState.error}
+                                    helperText={fieldState.error?.message}
+                                  />
+                                )}
+                              />
+                            </Stack>
+                          )}
+                        </Stack>
                       </Box>
-                      <Stack direction="column" spacing={2} sx={{ mb: 3 }}>
-                        <TextField
-                          fullWidth
-                          label="KvK-nummer (optioneel)"
-                          value={party.identification || ""}
-                          onChange={(e) =>
-                            handleChangeParty(
-                              index,
-                              "identification",
-                              e.target.value,
-                            )
-                          }
-                          size="small"
-                        />
+                    </Grid>
+                  ))}
+                </Grid>
 
-                        <TextField
-                          fullWidth
-                          label="Bedrijfsnaam"
-                          value={party.full_name}
-                          onChange={(e) =>
-                            handleChangeParty(
-                              index,
-                              "full_name",
-                              e.target.value,
-                            )
-                          }
-                          size="small"
-                        />
+                <Button
+                  variant="outlined"
+                  sx={{ mt: 2 }}
+                  onClick={() => {
+                    const newParty: ContractPartyInput = {
+                      role: "PARTY_B",
+                      person_type: "INDIVIDUAL",
+                      identification: "",
+                      full_name: "",
+                      email: "",
+                      phone: "",
+                      address: "",
+                      birth_date: "",
+                      birth_place: "",
+                    };
 
-                        <TextField
-                          fullWidth
-                          label="Adres"
-                          name="address"
-                          value={party.address || ""}
-                          onChange={(e) =>
-                            handleChangeParty(index, "address", e.target.value)
-                          }
-                          size="small"
-                        />
+                    append(newParty);
+                  }}
+                >
+                  + Partij toevoegen
+                </Button>
 
-                        <TextField
-                          fullWidth
-                          label="Contactperson"
-                          value={party.contact_person || ""}
-                          onChange={(e) =>
-                            handleChangeParty(
-                              index,
-                              "contact_person",
-                              e.target.value,
-                            )
-                          }
-                          size="small"
-                        />
+                <Alert severity="info" sx={{ mt: 3 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ fontWeight: 600, mb: 1 }}
+                  >
+                    Waarom registreren bij CFSB?
+                  </Typography>
+                  <Typography variant="body2">
+                    Door uw overeenkomst te registreren binnen de
+                    CFSB-samenwerking creëert u zekerheid, controle en
+                    bescherming. Bij problemen kunnen wij u snel ondersteunen
+                    met administratieve en juridische opvolging.
+                  </Typography>
+                </Alert>
+              </Box>
+            )}
 
-                        <TextField
-                          fullWidth
-                          label="Telefoonnummer"
-                          value={party.phone || ""}
-                          onChange={(e) =>
-                            handleChangeParty(index, "phone", e.target.value)
-                          }
-                          size="small"
-                        />
+            {/* Step 2: Overeenkomst */}
+            {activeStep === 1 && (
+              <Box>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                  <InsertDriveFileIcon sx={{ mr: 2, fontSize: 28 }} />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    Overeenkomstgegevens
+                  </Typography>
+                </Box>
 
-                        <TextField
-                          fullWidth
-                          label="E-mailadres"
-                          type="email"
-                          value={party.email || ""}
-                          onChange={(e) =>
-                            handleChangeParty(index, "email", e.target.value)
-                          }
-                          size="small"
-                        />
-
-                        {index > 0 && (
-                          <Stack direction="row" spacing={2}>
+                <Card>
+                  <CardContent>
+                    <Grid container spacing={3}>
+                      <Grid size={{ xs: 12, sm: 2 }}>
+                        <Controller
+                          name="contract_date"
+                          control={control}
+                          render={({ field, fieldState }) => (
                             <TextField
-                              label="Geboortedatum"
+                              label="Overeenkomstdatum"
+                              type="date"
+                              fullWidth
+                              size="small"
+                              value={field.value || ""}
+                              onChange={(e) => {
+                                field.onChange(e.target.value);
+
+                                setValue("start_date", e.target.value, {
+                                  shouldValidate: true,
+                                });
+                              }}
+                              error={!!fieldState.error}
+                              helperText={fieldState.error?.message}
+                              slotProps={{
+                                inputLabel: { shrink: true },
+                              }}
+                            />
+                          )}
+                        />
+                      </Grid>
+
+                      <Grid size={{ xs: 12, sm: 2 }}>
+                        <Controller
+                          name="amount"
+                          control={control}
+                          render={({ field, fieldState }) => (
+                            <NumericFormat
+                              customInput={TextField}
+                              fullWidth
+                              label="Totaalbedrag"
+                              value={field.value ?? ""}
+                              thousandSeparator
+                              decimalScale={2}
+                              fixedDecimalScale
+                              allowNegative={false}
+                              prefix="$ "
+                              size="small"
+                              onValueChange={(values) => {
+                                field.onChange(Number(values.value) || 0);
+                              }}
+                              error={!!fieldState.error}
+                              helperText={fieldState.error?.message}
+                            />
+                          )}
+                        />
+                      </Grid>
+
+                      <Grid size={{ xs: 12, sm: 2 }}>
+                        <Controller
+                          name="start_date"
+                          control={control}
+                          render={({ field, fieldState }) => (
+                            <TextField
+                              label="Startdatum"
+                              type="date"
+                              fullWidth
+                              size="small"
+                              value={field.value || ""}
+                              onChange={(e) => field.onChange(e.target.value)}
+                              error={!!fieldState.error}
+                              helperText={fieldState.error?.message}
+                              slotProps={{
+                                inputLabel: { shrink: true },
+                              }}
+                            />
+                          )}
+                        />
+                      </Grid>
+
+                      <Grid size={{ xs: 12, sm: 2 }}>
+                        <Controller
+                          name="end_date"
+                          control={control}
+                          render={({ field, fieldState }) => (
+                            <TextField
+                              label="Vervaldatum"
                               type="date"
                               fullWidth
                               size="small"
                               value={
-                                party.birth_date
-                                  ? new Date(party.birth_date)
+                                field.value
+                                  ? new Date(field.value)
                                       .toISOString()
                                       .split("T")[0]
                                   : ""
                               }
-                              // error={!!errors.birth_date}
-                              // helperText={errors.birth_date?.message}
                               onChange={(e) =>
-                                handleChangeParty(
-                                  index,
-                                  "birth_date",
+                                field.onChange(
                                   e.target.value
                                     ? new Date(e.target.value).toISOString()
                                     : "",
                                 )
                               }
+                              error={!!fieldState.error}
+                              helperText={fieldState.error?.message}
                               slotProps={{
                                 inputLabel: { shrink: true },
                               }}
                             />
+                          )}
+                        />
+                      </Grid>
 
+                      <Grid size={{ xs: 12, sm: 2 }}>
+                        <Controller
+                          name="installment_count"
+                          control={control}
+                          render={({ field, fieldState }) => (
                             <TextField
                               fullWidth
-                              label="Geboorteplaats"
-                              value={party.birth_place || ""}
-                              onChange={(e) =>
-                                handleChangeParty(
-                                  index,
-                                  "birth_place",
-                                  e.target.value,
-                                )
-                              }
+                              label="Aantal termijnen"
+                              type="number"
                               size="small"
+                              value={field.value || ""}
+                              onChange={(e) => {
+                                const installmentCount =
+                                  Number(e.target.value) || 0;
+
+                                field.onChange(installmentCount);
+
+                                const amount = getValues("amount");
+
+                                setValue(
+                                  "installment_amount",
+                                  installmentCount > 0
+                                    ? amount / installmentCount
+                                    : 0,
+                                  {
+                                    shouldValidate: true,
+                                  },
+                                );
+                              }}
+                              error={!!fieldState.error}
+                              helperText={fieldState.error?.message}
                             />
-                          </Stack>
-                        )}
-                      </Stack>
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
+                          )}
+                        />
+                      </Grid>
 
-              <Button
-                variant="outlined"
-                sx={{ mt: 2 }}
-                onClick={() => {
-                  const newParty: ContractPartyInput = {
-                    role: "PARTY_B",
-                    full_name: "",
-                    identification: "",
-                    email: "",
-                    contact_person: "",
-                    phone: "",
-                    address: "",
-                    birth_date: "",
-                    birth_place: "",
-                  };
+                      <Grid size={{ xs: 12, sm: 2 }}>
+                        <Controller
+                          name="installment_amount"
+                          control={control}
+                          render={({ field, fieldState }) => (
+                            <NumericFormat
+                              customInput={TextField}
+                              fullWidth
+                              label="Termijnbedrag"
+                              value={field.value ?? 0}
+                              thousandSeparator
+                              decimalScale={2}
+                              fixedDecimalScale
+                              allowNegative={false}
+                              prefix="$ "
+                              size="small"
+                              onValueChange={(values) => {
+                                field.onChange(Number(values.value) || 0);
+                              }}
+                              error={!!fieldState.error}
+                              helperText={fieldState.error?.message}
+                            />
+                          )}
+                        />
+                      </Grid>
 
-                  setContractData({
-                    ...contractData,
-                    parties: [...contractData.parties, newParty],
-                  });
-                }}
-              >
-                + Partij toevoegen
-              </Button>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <Controller
+                          name="contract_type"
+                          control={control}
+                          render={({ field, fieldState }) => (
+                            <FormControl
+                              fullWidth
+                              size="small"
+                              error={!!fieldState.error}
+                            >
+                              <InputLabel>Type overeenkomst</InputLabel>
 
-              <Alert severity="info" sx={{ mt: 3 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-                  Waarom registreren bij CFSB?
-                </Typography>
-                <Typography variant="body2">
-                  Door uw overeenkomst te registreren binnen de
-                  CFSB-samenwerking creëert u zekerheid, controle en
-                  bescherming. Bij problemen kunnen wij u snel ondersteunen met
-                  administratieve en juridische opvolging.
-                </Typography>
-              </Alert>
-            </Box>
-          )}
+                              <Select {...field} label="Type overeenkomst">
+                                <MenuItem value="DELIVERY_OF_GOODS">
+                                  Levering van goederen
+                                </MenuItem>
+                                <MenuItem value="SERVICES">Diensten</MenuItem>
+                                <MenuItem value="RENT">Huur</MenuItem>
+                                <MenuItem value="LOAN">Lening</MenuItem>
+                                <MenuItem value="PAYMENT_ARRANGEMENT">
+                                  Betalingsregeling
+                                </MenuItem>
+                                <MenuItem value="OTHER">Overig</MenuItem>
+                              </Select>
 
-          {/* Step 2: Overeenkomst */}
-          {activeStep === 1 && (
-            <Box>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                <InsertDriveFileIcon sx={{ mr: 2, fontSize: 28 }} />
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Overeenkomstgegevens
-                </Typography>
+                              <FormHelperText>
+                                {fieldState.error?.message}
+                              </FormHelperText>
+                            </FormControl>
+                          )}
+                        />
+                      </Grid>
+
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <Controller
+                          name="description"
+                          control={control}
+                          render={({ field, fieldState }) => (
+                            <TextField
+                              fullWidth
+                              label="Omschrijving"
+                              multiline
+                              rows={3}
+                              size="small"
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              error={!!fieldState.error}
+                              helperText={fieldState.error?.message}
+                            />
+                          )}
+                        />
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
               </Box>
+            )}
 
-              <Card>
-                <CardContent>
-                  <Grid container spacing={3}>
-                    <Grid size={{ xs: 12, sm: 2 }}>
-                      <TextField
-                        label="Datum overeenkomst"
-                        type="date"
-                        fullWidth
-                        size="small"
-                        value={
-                          contractData.contract_date
-                            ? new Date(contractData.contract_date)
-                                .toISOString()
-                                .split("T")[0]
-                            : ""
-                        }
-                        onChange={(e) => {
-                          const date = e.target.value;
-
-                          setContractData((prev) => ({
-                            ...prev,
-                            contract_date: date,
-                            start_date: date,
-                          }));
-                        }}
-                        slotProps={{
-                          inputLabel: { shrink: true },
-                        }}
-                      />
-                    </Grid>
-
-                    <Grid size={{ xs: 12, sm: 2 }}>
-                      <NumericFormat
-                        customInput={TextField}
-                        fullWidth
-                        label="Overeenkomstbedrag"
-                        value={contractData.amount}
-                        thousandSeparator
-                        decimalScale={2}
-                        fixedDecimalScale
-                        allowNegative={false}
-                        prefix="$ "
-                        onValueChange={(values) => {
-                          handleAgreementChange("amount", values.value);
-                        }}
-                        size="small"
-                      />
-                    </Grid>
-
-                    <Grid size={{ xs: 12, sm: 2 }}>
-                      <TextField
-                        label="Startdatum"
-                        type="date"
-                        fullWidth
-                        size="small"
-                        value={
-                          contractData.start_date
-                            ? new Date(contractData.start_date)
-                                .toISOString()
-                                .split("T")[0]
-                            : ""
-                        }
-                        onChange={(e) =>
-                          handleAgreementChange(
-                            "start_date",
-                            e.target.value
-                              ? new Date(e.target.value).toISOString()
-                              : "",
-                          )
-                        }
-                        slotProps={{
-                          inputLabel: { shrink: true },
-                        }}
-                      />
-                    </Grid>
-
-                    <Grid size={{ xs: 12, sm: 2 }}>
-                      <TextField
-                        label="Vervaldatum"
-                        type="date"
-                        fullWidth
-                        size="small"
-                        value={
-                          contractData.end_date
-                            ? new Date(contractData.end_date)
-                                .toISOString()
-                                .split("T")[0]
-                            : ""
-                        }
-                        onChange={(e) =>
-                          handleAgreementChange(
-                            "end_date",
-                            e.target.value
-                              ? new Date(e.target.value).toISOString()
-                              : "",
-                          )
-                        }
-                        slotProps={{
-                          inputLabel: { shrink: true },
-                        }}
-                      />
-                    </Grid>
-
-                    <Grid size={{ xs: 12, sm: 2 }}>
-                      <TextField
-                        fullWidth
-                        label="Aantal termijnen"
-                        value={contractData.installment_count}
-                        type="number"
-                        onChange={(e) => {
-                          const installmentCount = parseInt(e.target.value, 10);
-                          const installmentAmount =
-                            installmentCount > 0
-                              ? contractData.amount / installmentCount
-                              : 0;
-
-                          setContractData((prev) => ({
-                            ...prev,
-                            installment_count: installmentCount,
-                            installment_amount: installmentAmount,
-                          }));
-                        }}
-                        size="small"
-                      />
-                    </Grid>
-
-                    <Grid size={{ xs: 12, sm: 2 }}>
-                      <NumericFormat
-                        customInput={TextField}
-                        fullWidth
-                        label="Termijnbedrag"
-                        value={contractData.installment_amount}
-                        thousandSeparator
-                        decimalScale={2}
-                        fixedDecimalScale
-                        allowNegative={false}
-                        prefix="$ "
-                        onValueChange={(values) => {
-                          handleAgreementChange(
-                            "installmentAmount",
-                            values.value,
-                          );
-                        }}
-                        size="small"
-                      />
-                    </Grid>
-
-                    <Grid size={{ xs: 12, sm: 12 }}>
-                      <TextField
-                        fullWidth
-                        label="Omschrijving overeenkomst"
-                        value={contractData.description}
-                        onChange={(e) =>
-                          handleAgreementChange("description", e.target.value)
-                        }
-                        multiline
-                        rows={3}
-                        size="small"
-                      />
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-            </Box>
-          )}
-
-          {/* Step 3: Documenten */}
-          {activeStep === 2 && (
-            <Box>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                <AttachFileIcon sx={{ mr: 2, fontSize: 28 }} />
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Bijlagen
-                </Typography>
-              </Box>
-              <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                Upload de relevante documenten voor deze overeenkomst.
-              </Typography>
-
-              <Card sx={{ mb: 3 }}>
-                <CardContent>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    hidden
-                    accept=".pdf,.png,.jpg,.jpeg"
-                    onChange={handleFileUpload}
-                  />
-                  <Button
-                    variant="outlined"
-                    startIcon={<UploadIcon />}
-                    fullWidth
-                    sx={{ py: 2, mb: 2 }}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    Document uploaden
-                  </Button>
-                  <Typography
-                    variant="caption"
-                    color="textSecondary"
-                    display="block"
-                  >
-                    Ondersteunde formaten: PDF, PNG, JPG - Max. 10 MB per
-                    bestand
+            {/* Step 3: Documenten */}
+            {activeStep === 2 && (
+              <Box>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                  <AttachFileIcon sx={{ mr: 2, fontSize: 28 }} />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    Bijlagen
                   </Typography>
-                </CardContent>
-              </Card>
+                </Box>
+                <Typography
+                  variant="body2"
+                  color="textSecondary"
+                  sx={{ mb: 2 }}
+                >
+                  Upload de relevante documenten voor deze overeenkomst.
+                </Typography>
 
-              <TableContainer component={Card}>
-                <Table>
-                  <TableHead sx={{ bgcolor: "#f5f5f5" }}>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 600 }}>
-                        Bestandsnaam
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Grootte</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }} align="center">
-                        Acties
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {documents.map((doc) => (
-                      <TableRow key={doc.id}>
-                        <TableCell>{doc.name}</TableCell>
-                        <TableCell>{doc.size}</TableCell>
-                        <TableCell align="center">
-                          <IconButton size="small" color="primary">
-                            <DownloadIcon fontSize="small" />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleDeleteDocument(doc.id)}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
+                <Card sx={{ mb: 3 }}>
+                  <CardContent>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      hidden
+                      accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx"
+                      onChange={handleFileUpload}
+                    />
+                    <Button
+                      variant="outlined"
+                      startIcon={<UploadIcon />}
+                      fullWidth
+                      sx={{ py: 2, mb: 2 }}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      Document uploaden
+                    </Button>
+                    <Typography
+                      variant="caption"
+                      color="textSecondary"
+                      display="block"
+                    >
+                      Ondersteunde formaten: PDF, PNG, JPG - Max. 10 MB per
+                      bestand
+                    </Typography>
+                  </CardContent>
+                </Card>
+
+                <TableContainer component={Card}>
+                  <Table>
+                    <TableHead sx={{ bgcolor: "#f5f5f5" }}>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 600 }}>
+                          Bestandsnaam
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>Grootte</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }} align="center">
+                          Acties
                         </TableCell>
                       </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {documents.map((doc) => (
+                        <TableRow key={doc.id}>
+                          <TableCell>{doc.name}</TableCell>
+                          <TableCell>{doc.size}</TableCell>
+                          <TableCell align="center">
+                            <IconButton size="small" color="primary">
+                              <DownloadIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => handleDeleteDocument(doc.id)}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            )}
+
+            {/* Step 4: Overzicht */}
+            {activeStep === 3 && (
+              <Box sx={{ p: 3, border: "1px solid #e0e0e0", borderRadius: 1 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 4 }}>
+                  Overeenkomst
+                </Typography>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: 600, mb: 1, color: "#666" }}
+                >
+                  Betreft:
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 3 }}>
+                  {watch("contract_type") === "DELIVERY_OF_GOODS"
+                    ? "Levering van goederen"
+                    : watch("contract_type") === "SERVICES"
+                      ? "Diensten"
+                      : watch("contract_type") === "RENT"
+                        ? "Huur"
+                        : watch("contract_type") === "LOAN"
+                          ? "Lening"
+                          : watch("contract_type") === "PAYMENT_ARRANGEMENT"
+                            ? "Betalingsregeling"
+                            : "Overig"}
+                </Typography>
+
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ fontWeight: 600, mb: 1, color: "#666" }}
+                    >
+                      Partijen:
+                    </Typography>
+
+                    {parties.map((party, index) => (
+                      <Box
+                        key={index}
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Typography variant="body2" color="textSecondary">
+                          {index === 0 ? "Partij A:" : "Partij B:"}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontWeight: 700, color: "#1976d2" }}
+                        >
+                          {party.full_name || "Onbekende partij"}
+                        </Typography>
+                      </Box>
                     ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Box>
-          )}
-
-          {/* Step 4: Overzicht */}
-          {activeStep === 3 && (
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 4 }}>
-                Overzicht
-              </Typography>
-
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                <Box>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ fontWeight: 600, mb: 1, color: "#666" }}
-                  >
-                    Partijen
-                  </Typography>
-                  {contractData.parties.map((party, index) => (
-                    <Typography key={index} variant="body2">
-                      {party.full_name}
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ fontWeight: 600, mb: 1, color: "#666" }}
+                    >
+                      Registratiedatum:
                     </Typography>
-                  ))}
-                </Box>
-                <Box>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ fontWeight: 600, mb: 1, color: "#666" }}
-                  >
-                    Bedrag en periode
-                  </Typography>
-                  <Typography variant="body2">
-                    {formatCurrency(contractData.amount)} •{" "}
-                    {formatDate(contractData.start_date)} tot{" "}
-                    {contractData.end_date
-                      ? formatDate(contractData.end_date)
-                      : "Onbekend"}
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ fontWeight: 600, mb: 1, color: "#666" }}
-                  >
-                    Documenten
-                  </Typography>
-                  <Typography variant="body2">
-                    {documents.length} document
-                    {documents.length !== 1 ? "en" : ""} geüpload
-                  </Typography>
-                </Box>
-
-                <Box sx={{ pt: 2, borderTop: "1px solid #eee" }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <CheckCircleIcon sx={{ color: "#4caf50", fontSize: 20 }} />
                     <Typography variant="body2">
-                      Klaar voor registratie
+                      {contractDate ? formatDate(contractDate) : "Onbekend"}
                     </Typography>
+                  </Box>
+
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ fontWeight: 600, mb: 1, color: "#666" }}
+                    >
+                      Status:
+                    </Typography>
+                    <StatusContractChip status={statusContract} />
+                  </Box>
+
+                  {/* <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ fontWeight: 600, mb: 1, color: "#666" }}
+                    >
+                      Documenten
+                    </Typography>
+                    <Typography variant="body2">
+                      {documents.length} document
+                      {documents.length !== 1 ? "en" : ""} geüpload
+                    </Typography>
+                  </Box> */}
+
+                  <Box sx={{ pt: 2, borderTop: "1px solid #eee" }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <CheckCircleIcon
+                        sx={{ color: "#4caf50", fontSize: 20 }}
+                      />
+                      <Typography variant="body2">
+                        Klaar voor registratie
+                      </Typography>
+                    </Box>
                   </Box>
                 </Box>
               </Box>
-            </Box>
-          )}
-        </Box>
+            )}
+          </Box>
 
-        {/* Navigation Buttons */}
-        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBackIcon />}
-            onClick={handleBack}
-            disabled={activeStep === 0}
-          >
-            Vorige
-          </Button>
-          {activeStep === steps.length - 1 ? (
+          {/* Navigation Buttons */}
+          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
+            <Button
+              variant="outlined"
+              startIcon={<ArrowBackIcon />}
+              onClick={handleBack}
+              disabled={activeStep === 0}
+            >
+              Vorige
+            </Button>
+            {activeStep === steps.length - 1 ? (
+              <Button
+                variant="contained"
+                sx={{ bgcolor: "#ff9800", "&:hover": { bgcolor: "#f57c00" } }}
+                endIcon={<CheckCircleIcon />}
+                onClick={() => setOpenDialog(true)}
+              >
+                Overeenkomst registreren
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                sx={{ bgcolor: "#ff9800", "&:hover": { bgcolor: "#f57c00" } }}
+                onClick={handleNext}
+              >
+                Volgende
+              </Button>
+            )}
+          </Box>
+        </Container>
+
+        {/* Confirmation Dialog */}
+        <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+          <DialogTitle>Overeenkomst registreren</DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" sx={{ mt: 2 }}>
+              Weet u zeker dat u deze overeenkomst wilt registreren? Deze actie
+              kan niet ongedaan worden gemaakt.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenDialog(false)}>Annuleren</Button>
             <Button
               variant="contained"
-              sx={{ bgcolor: "#ff9800", "&:hover": { bgcolor: "#f57c00" } }}
-              endIcon={<CheckCircleIcon />}
-              onClick={() => setOpenDialog(true)}
+              sx={{ bgcolor: "#ff9800" }}
+              disabled={loading}
+              onClick={handleSubmit(onSubmit)}
             >
-              Overeenkomst registreren
+              {loading ? "Bezig met registreren..." : "Bevestigen"}
             </Button>
-          ) : (
-            <Button
-              variant="contained"
-              sx={{ bgcolor: "#ff9800", "&:hover": { bgcolor: "#f57c00" } }}
-              onClick={handleNext}
-            >
-              Volgende
-            </Button>
-          )}
-        </Box>
-      </Container>
-
-      {/* Confirmation Dialog */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle>Overeenkomst registreren</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" sx={{ mt: 2 }}>
-            Weet u zeker dat u deze overeenkomst wilt registreren? Deze actie
-            kan niet ongedaan worden gemaakt.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Annuleren</Button>
-          <Button
-            variant="contained"
-            sx={{ bgcolor: "#ff9800" }}
-            disabled={loading}
-            loading={loading}
-            onClick={() => {
-              handleSubmit();
-            }}
-          >
-            {loading ? "Bezig met registreren..." : "Bevestigen"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </DialogActions>
+        </Dialog>
+      </form>
     </Box>
   );
 };

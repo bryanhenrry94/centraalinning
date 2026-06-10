@@ -46,6 +46,7 @@ import FinancialSummaryPDF, {
 } from "@/components/pdf/FinancialSummaryPDF";
 import FinancialSummaryEmail from "@/templates/emails/FinancialSummaryEmail";
 import QRCode from "qrcode";
+import ActivateContractEmail from "@/templates/emails/ActivateContractEmail";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -703,6 +704,38 @@ export const sendBlokkadeMail = async (to: string, caseId: string) => {
         />
       ),
       attachments: attachments,
+    });
+
+    if (error) {
+      return Response.json({ error }, { status: 500 });
+    }
+
+    return Response.json(data);
+  } catch (error) {
+    console.error("Error sending email:", error);
+    return Response.json({ error }, { status: 500 });
+  }
+};
+
+export const sendActivateContractMail = async (
+  to: string,
+  fullname: string,
+  reference_number: string,
+) => {
+  try {
+    const recipient = await getEmailByEnv(to);
+
+    const { data, error } = await resend.emails.send({
+      from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
+      to: recipient,
+      subject: `Overeenkomst ${reference_number} geactiveerd`,
+      react: (
+        <ActivateContractEmail
+          logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
+          fullname={fullname}
+          contractNumber={reference_number}
+        />
+      ),
     });
 
     if (error) {
