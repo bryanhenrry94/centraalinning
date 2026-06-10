@@ -43,11 +43,13 @@ export class InvoiceService {
 
     const amount = Number(payment.total_amount);
 
-    const taxRate = Number(parameter.abb_rate ?? 0.21);
+    const taxRatePercentage = Number(parameter.abb_rate ?? 0);
 
-    const subtotal = Number((amount / (1 + taxRate)).toFixed(2));
+    const taxRate = taxRatePercentage / 100;
 
-    const taxAmount = Number((amount - subtotal).toFixed(2));
+    const unitPrice = Number((amount / (1 + taxRate)).toFixed(2));
+
+    const taxAmount = Number((amount - unitPrice).toFixed(2));
 
     const invoiceNumber = await InvoiceService.generateInvoiceNumber();
 
@@ -80,11 +82,11 @@ export class InvoiceService {
 
           item_quantity: 1,
 
-          item_unit_price: subtotal,
+          item_unit_price: unitPrice,
 
-          item_total_price: subtotal,
+          item_total_price: unitPrice,
 
-          item_tax_rate: taxRate,
+          item_tax_rate: taxRatePercentage,
 
           item_tax_amount: taxAmount,
 
@@ -142,130 +144,6 @@ export class InvoiceService {
         const existing = await prisma.billingInvoice.findUnique({
           where: {
             payment_id: invoiceData.payment_id,
-          },
-          include: {
-            details: true,
-          },
-        });
-
-        if (existing) {
-          return existing;
-        }
-      }
-
-      throw error;
-    }
-  }
-
-  static async generateInvoice(paymentId: string) {
-    const payment = await prisma.payment.findUnique({
-      where: {
-        id: paymentId,
-      },
-    });
-
-    if (!payment) {
-      throw new Error(`Payment ${paymentId} not found`);
-    }
-
-    /**
-     * Si ya existe una factura para este pago, devolverla.
-     */
-    const existingInvoice = await prisma.billingInvoice.findUnique({
-      where: {
-        payment_id: payment.id,
-      },
-      include: {
-        details: true,
-      },
-    });
-
-    if (existingInvoice) {
-      return existingInvoice;
-    }
-
-    const parameter = await getParameter();
-
-    if (!parameter) {
-      throw new Error("No se encontró la configuración del sistema");
-    }
-
-    const amount = Number(payment.total_amount);
-
-    /**
-     * IVA configurable
-     */
-    const taxRate = Number(parameter.abb_rate ?? 0.21);
-
-    const subtotal = Number((amount / (1 + taxRate)).toFixed(2));
-
-    const taxAmount = Number((amount - subtotal).toFixed(2));
-
-    const invoiceNumber = await InvoiceService.generateInvoiceNumber();
-
-    const description = InvoiceService.getDescriptionFromPaymentType(
-      payment.payment_type,
-    );
-
-    try {
-      const invoice = await prisma.billingInvoice.create({
-        data: {
-          payment_id: payment.id,
-
-          invoice_number: invoiceNumber,
-
-          issue_date: new Date(),
-
-          due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-
-          description,
-
-          status: "ISSUED",
-
-          tenant_id: payment.tenant_id,
-
-          currency: "EUR",
-
-          amount,
-
-          details: {
-            create: [
-              {
-                item_description: description,
-                item_quantity: 1,
-
-                item_unit_price: subtotal,
-
-                item_total_price: subtotal,
-
-                item_tax_rate: taxRate,
-
-                item_tax_amount: taxAmount,
-
-                item_total_with_tax: amount,
-              },
-            ],
-          },
-        },
-        include: {
-          details: true,
-        },
-      });
-
-      console.log(
-        `✅ Invoice ${invoice.invoice_number} generated for payment ${payment.id}`,
-      );
-
-      return invoice;
-    } catch (error: any) {
-      /**
-       * Si dos procesos intentan crear la misma factura
-       * al mismo tiempo, recuperamos la existente.
-       */
-      if (error.code === "P2002") {
-        const existing = await prisma.billingInvoice.findUnique({
-          where: {
-            payment_id: payment.id,
           },
           include: {
             details: true,
