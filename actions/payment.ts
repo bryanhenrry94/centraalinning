@@ -21,6 +21,7 @@ export const registerPayment = async (
       status: (payload.status as any) || "pending",
       provider_payload: payload.provider_payload || "",
       paid_at: null,
+      payment_type: payload.payment_type || "OTHER",
     },
   });
 
