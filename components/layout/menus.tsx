@@ -1,17 +1,11 @@
 import { UserRole } from "@/constants/user-role";
 
 import {
-  DashboardOutlined,
   ShieldOutlined,
   DescriptionOutlined,
   ReceiptOutlined,
   GavelOutlined,
   HandshakeOutlined,
-  SettingsOutlined,
-  ChatOutlined,
-  BusinessOutlined,
-  AdminPanelSettingsOutlined,
-  PersonOutlined,
   AssignmentOutlined,
   CreditCardOutlined,
 } from "@mui/icons-material";
@@ -41,27 +35,27 @@ export const menuGroups: HeaderMenuGroup[] = [
     items: [
       {
         label: "Blok-Check",
-        href: "/client/blok-checks",
+        href: "/blok-checks",
         icon: <ShieldOutlined fontSize="small" />,
       },
       {
         label: "Overeenkomst registreren",
-        href: "/client/overeenkomsten-registreren",
+        href: "/overeenkomsten-registreren",
         icon: <DescriptionOutlined fontSize="small" />,
       },
       {
         label: "Administratieve opvolging",
-        href: "/client/collections",
+        href: "/collections",
         icon: <ReceiptOutlined fontSize="small" />,
       },
       {
         label: "Directe economische blokkade",
-        href: "/client/directe-economische-blokkade",
+        href: "/directe-economische-blokkade",
         icon: <ShieldOutlined fontSize="small" />,
       },
       {
         label: "Gerechtelijke opvolging",
-        href: "/client/verdicts",
+        href: "/verdicts",
         icon: <GavelOutlined fontSize="small" />,
       },
     ],
@@ -79,22 +73,22 @@ export const menuGroups: HeaderMenuGroup[] = [
       },
       {
         label: "Betalen",
-        href: "/dashboard/payments",
+        href: "/payments",
         icon: <CreditCardOutlined fontSize="small" />,
       },
       {
         label: "Betalingsregeling aanvragen",
-        href: "/dashboard/agreements",
+        href: "/agreements",
         icon: <HandshakeOutlined fontSize="small" />,
       },
       {
         label: "Financiële verklaring aanvragen",
-        href: "/dashboard/verklaring",
+        href: "/verklaring",
         icon: <DescriptionOutlined fontSize="small" />,
       },
       {
         label: "Status economische blokkade bekijken",
-        href: "/dashboard/block-status",
+        href: "/block-status",
         icon: <ShieldOutlined fontSize="small" />,
       },
     ],

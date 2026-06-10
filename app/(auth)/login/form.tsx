@@ -153,31 +153,12 @@ export default function LoginForm() {
           <Box
             sx={{
               display: "flex",
-              justifyContent: "space-between",
+              justifyContent: "end",
               alignItems: "center",
               gap: 1,
               flexWrap: "wrap",
             }}
           >
-            <FormControlLabel
-              sx={{
-                minWidth: 0,
-                flex: 1,
-                mr: 0,
-              }}
-              control={
-                <Checkbox
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  size="small"
-                />
-              }
-              label={
-                <Typography variant="body2" color="text.secondary">
-                  Onthoud mij
-                </Typography>
-              }
-            />
             <Link
               href="/forgot-password"
               underline="hover"

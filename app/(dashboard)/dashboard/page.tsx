@@ -6,7 +6,7 @@ import DashboardDebtor from "@/components/dashboard/debtor/dashboard";
 import { DashboardBailiff } from "@/components/dashboard/bailiff/dashboard";
 import { UserRole } from "@/constants/user-role";
 
-const CompanyHomePage = () => {
+const HomePage = () => {
   const { isAuthenticated, isLoading, user } = useAuthSession();
 
   console.log("User session:", { isAuthenticated, user });
@@ -36,4 +36,4 @@ const CompanyHomePage = () => {
   return <>Rol de usuario no reconocido.</>;
 };
 
-export default CompanyHomePage;
+export default HomePage;

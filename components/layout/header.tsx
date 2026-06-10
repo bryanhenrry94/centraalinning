@@ -18,12 +18,12 @@ import {
 import SettingsIcon from "@mui/icons-material/Settings";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import DashboardIcon from "@mui/icons-material/Dashboard";
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { HeaderMenuGroup, menuGroups } from "./menus";
-
 import { UserRole } from "@/constants/user-role";
 import useClientRouter from "@/hooks/useNavigations";
 
@@ -109,6 +109,18 @@ export default function Header() {
               gap: 2,
             }}
           >
+            <Button
+              key={"dashboard"}
+              color="inherit"
+              // endIcon={<DashboardIcon />}
+              onClick={() => router.push("/dashboard")}
+              sx={{
+                textTransform: "none",
+                fontWeight: 500,
+              }}
+            >
+              Dashboard
+            </Button>
             {availableGroups.map((group) => (
               <Button
                 key={group.id}
