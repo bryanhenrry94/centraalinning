@@ -15,30 +15,38 @@ interface InvoiceEmailProps {
   paymentLink?: string;
 }
 
-export const InvoiceEmail = ({
-  logoUrl,
-  fullname,
-  paymentLink,
-}: InvoiceEmailProps) => (
+export const InvoiceEmail = ({ logoUrl, fullname }: InvoiceEmailProps) => (
   <Html>
     <Head />
     <Body style={main}>
       <Container style={container}>
-        <Img src={logoUrl} width="120" height="50" alt="Plaid" style={logo} />
+        <Img
+          src={logoUrl}
+          width="120"
+          height="50"
+          alt="Centraal Inning"
+          style={logo}
+        />
+
         <Text style={paragraph}>
-          Beste <strong>{fullname}</strong>,
+          <strong>Betalingsbewijs</strong>
         </Text>
+
         <br />
-        <Text style={paragraph}>Klik hier om uw factuur te betalen</Text>
-        <Section style={btnContainer}>
-          <Button style={button} href={paymentLink}>
-            Betaal hier
-          </Button>
-        </Section>
+
+        <Text style={paragraph}>
+          Hierbij bevestigen wij dat wij uw betaling in goede orde hebben
+          ontvangen en verwerkt.
+        </Text>
+
+        <br />
+
+        <Text style={paragraph}>Hartelijk dank voor uw betaling.</Text>
+
         <Text style={footer}>
           Dit bericht is automatisch gegenereerd door het Centraal
           Incassoplatform (CI).
-          <br />© CENTRAAL INNING
+          <br />© Centrale Financiële Samenwerking & Bescherming
         </Text>
       </Container>
     </Body>

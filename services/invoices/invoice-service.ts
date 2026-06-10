@@ -165,13 +165,13 @@ export class InvoiceService {
         return "Subscription fee";
 
       case "CONTRACT_ACTIVATION":
-        return "Contract activation fee";
+        return "Financiële afspraakregistratie";
 
       case "AGREEMENT_INSTALLMENT":
-        return "Agreement installment";
+        return "Afbetalingsregeling";
 
       case "DEBT_PAYMENT":
-        return "Debt payment";
+        return "Schuldbetaling";
 
       case "BLOK_CHECK":
         return "Blok check service";

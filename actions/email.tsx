@@ -184,8 +184,7 @@ export const sendInvoiceEmail = async (
       react: (
         <InvoiceEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
-          fullname={billing.tenant.name || "Customer"}
-          paymentLink={payment_url}
+          fullname={billing.tenant.name || "Customer"}          
         />
       ),
       attachments: attachments,

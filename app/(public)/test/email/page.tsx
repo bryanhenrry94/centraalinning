@@ -19,29 +19,28 @@ export default async function Page() {
   // const html = await render(<WelcomeEmail {...params} />);
 
   // const params = {
-  //   logoUrl: "/static/logo.png",
+  //   logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "/static/logo.png",
   //   fullname: "Bryan Navarrete",
   // };
   // const html = await render(<AanmanningEmail {...params} />);
 
   // const params = {
-  //   logoUrl: "/static/logo.png",
+  //   logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "/static/logo.png",
   //   fullname: "Bryan Navarrete",
   // };
   // const html = await render(<SommatieEmail {...params} />);
 
   // const params = {
-  //   logoUrl: "/static/logo.png",
+  //   logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "/static/logo.png",
   //   fullname: "Bryan Navarrete",
   // };
   // const html = await render(<IngebrekestellingEmail {...params} />);
 
-  // const params = {
-  //   logoUrl: "/static/logo.png",
-  //   fullname: "Bryan Navarrete",
-  //   paymentLink: "https://example.com/pay-invoice/12345",
-  // };
-  // const html = await render(<InvoiceEmail {...params} />);
+  const params = {
+    logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "/static/logo.png",
+    fullname: "Bryan Navarrete",
+  };
+  const html = await render(<InvoiceEmail {...params} />);
 
   // const params = {
   //   logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "/static/logo.png",
@@ -58,13 +57,13 @@ export default async function Page() {
   // };
   // const html = await render(<VerdictRegisterEmail {...params} />);
 
-  const params = {
-    logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "/static/logo.png",
-    clientName: "Empresa Ejemplo S.A.",
-    registeredAt: "2024-06-15",
-    totalClients: 150,
-  };
-  const html = await render(<NewClientEmail {...params} />);
+  // const params = {
+  //   logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "/static/logo.png",
+  //   clientName: "Empresa Ejemplo S.A.",
+  //   registeredAt: "2024-06-15",
+  //   totalClients: 150,
+  // };
+  // const html = await render(<NewClientEmail {...params} />);
 
   return <div dangerouslySetInnerHTML={{ __html: html }} />;
 }
