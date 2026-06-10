@@ -135,6 +135,7 @@ export async function POST(req: NextRequest) {
       provider_payload: JSON.stringify(sentooResponse.raw),
       reference_number: "",
       agreement_id: null,
+      payment_type: "CONTRACT_ACTIVATION",
     };
 
     const paymentRes = await registerPayment(tenant_id, payment);

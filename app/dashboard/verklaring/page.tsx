@@ -127,6 +127,8 @@ const VerklaringPage: React.FC = () => {
 
         provider_ref: sentooResponse.payment.id,
 
+        payment_type: "FINANCIAL_REPORT",
+
         /**
          * Evita guardar payloads gigantes
          */
@@ -352,7 +354,8 @@ const VerklaringPage: React.FC = () => {
         >
           <Typography variant="body2">
             Nadat de betaling is bevestigd, wordt het financiële rapport
-            automatisch gegenereerd en ontvang je een e-mail met het PDF-document.
+            automatisch gegenereerd en ontvang je een e-mail met het
+            PDF-document.
           </Typography>
         </Alert>
       </Container>

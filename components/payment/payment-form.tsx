@@ -27,6 +27,7 @@ const initialState: PaymentCreate = {
   provider: "",
   provider_payload: null,
   provider_ref: null,
+  payment_type: "OTHER",
 };
 
 interface PaymentFormProps {

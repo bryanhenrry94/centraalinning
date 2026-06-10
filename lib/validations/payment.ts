@@ -1,3 +1,4 @@
+import { PaymentType } from "@prisma/client";
 import { z } from "zod";
 
 export const PaymentMethodEnum = z.enum(["TRANSFER", "CREDIT_CARD"]);
@@ -42,6 +43,17 @@ export const PaymentSchema = z.object({
   reference_number: z.string().optional(),
   agreement_id: z.string().nullable().optional(),
   contract_id: z.string().nullable().optional(),
+  payment_type: z
+    .enum([
+      PaymentType.SUBSCRIPTION,
+      PaymentType.CONTRACT_ACTIVATION,
+      PaymentType.AGREEMENT_INSTALLMENT,
+      PaymentType.DEBT_PAYMENT,
+      PaymentType.BLOK_CHECK,
+      PaymentType.FINANCIAL_REPORT,
+      PaymentType.OTHER,
+    ])
+    .default(PaymentType.OTHER),
   created_at: z.date(),
   updated_at: z.date(),
 });
@@ -64,6 +76,7 @@ export const PaymentCreateSchema = PaymentSchema.omit({
   reference_number: true,
   agreement_id: true,
   contract_id: true,
+  payment_type: true,
 });
 
 export type Payment = z.infer<typeof PaymentSchema>;

@@ -107,6 +107,7 @@ export const createActivationInvoice = async (
     provider_payload: JSON.stringify(res.raw),
     reference_number: "",
     agreement_id: null,
+    payment_type: "SUBSCRIPTION", // O el tipo que corresponda según tu lógica de negocio
   };
 
   const paymentRes = await registerPayment(tenant.id, payment);

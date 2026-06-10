@@ -302,6 +302,7 @@ const DashboardDebtor = () => {
         provider_payload: JSON.stringify(res.raw),
         reference_number: "",
         agreement_id: null,
+        payment_type: "DEBT_PAYMENT",
       };
 
       const paymentRes = await registerPayment(debt.tenant_id, payment);

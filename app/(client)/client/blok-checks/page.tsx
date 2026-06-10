@@ -167,6 +167,7 @@ const BlokCheckPage = () => {
       provider_payload: JSON.stringify(res.raw),
       reference_number: "",
       agreement_id: null,
+      payment_type: "BLOK_CHECK",
     };
 
     const paymentRes = await registerPayment(tenantId, payment);
