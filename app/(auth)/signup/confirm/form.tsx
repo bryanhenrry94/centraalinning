@@ -1,9 +1,9 @@
 "use client";
 
-import { createAccountV2 } from "@/actions/auth";
 import useClientRouter from "@/hooks/useNavigations";
 import { notifyInfo, notifyWarning } from "@/lib/notifications";
-import { iSignup, signUpSchema } from "@/lib/validations/signup";
+import { SignUpInput } from "@/services/auth/signup.type";
+import { SignUpSchema } from "@/services/auth/signup.validators";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
@@ -13,7 +13,6 @@ import {
   Lock,
   Person,
   PersonAdd,
-  Phone,
   Visibility,
   VisibilityOff,
 } from "@mui/icons-material";
@@ -36,19 +35,18 @@ import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 export const FormSignUp = () => {
-  const { redirectToSlugLoginCompany } = useClientRouter();
+  const { redirectToLoginCompany } = useClientRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [planId, setPlanId] = useState<string>("");
-  const [cycle, setCycle] = useState<"monthly" | "yearly">("monthly");
 
   const {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
     watch,
-  } = useForm<iSignup>({
-    resolver: zodResolver(signUpSchema),
+    setValue,
+  } = useForm<SignUpInput>({
+    resolver: zodResolver(SignUpSchema),
 
     defaultValues: {
       fullname: "",
@@ -60,6 +58,8 @@ export const FormSignUp = () => {
       company_name: "",
       country: "BQ",
       accept_terms: false,
+      plan_id: "",
+      billing_cycle: "MONTHLY",
     },
   });
 
@@ -68,30 +68,38 @@ export const FormSignUp = () => {
     const planParam = urlParams.get("plan");
     const cycleParam = urlParams.get("cycle");
 
-    if (cycleParam === "yearly" || cycleParam === "monthly") {
-      setCycle(cycleParam);
+    if (cycleParam === "MONTHLY" || cycleParam === "YEARLY") {
+      setValue("billing_cycle", cycleParam);
     }
     if (planParam) {
-      setPlanId(planParam);
+      setValue("plan_id", planParam);
     }
   }, []);
 
-  const onSubmit = async (data: iSignup) => {
-    console.log(data);
-
+  const onSubmit = async (data: SignUpInput) => {
     try {
-      const newAccount = await createAccountV2(data, planId, cycle);
+      const response = await fetch("/api/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
-      if (!newAccount.status) {
+      if (!response.ok) {
         notifyWarning("Sign up failed. Please try again.");
         return;
       }
 
-      notifyInfo(
-        `Account created successfully! Your subdomain is: ${newAccount.subdomain}`,
-      );
-      //redirect to login or dashboard
-      redirectToSlugLoginCompany(newAccount.subdomain, data.email);
+      const account = await response.json();
+
+      if (account) {
+        notifyInfo(
+          "Account created successfully! Please check your email to confirm your account.",
+        );
+
+        redirectToLoginCompany();
+      }
     } catch (error) {
       console.error("Error during sign up:", error);
     }
@@ -118,7 +126,6 @@ export const FormSignUp = () => {
             gap: 2.5,
           }}
         >
-
           {/* Fullname */}
           <Controller
             name="fullname"

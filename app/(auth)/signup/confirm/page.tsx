@@ -1,44 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import {
   Box,
-  Container,
   Typography,
-  TextField,
-  Button,
-  Checkbox,
-  FormControlLabel,
-  InputAdornment,
-  IconButton,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Link,
   Paper,
-  Divider,
   ThemeProvider,
   createTheme,
 } from "@mui/material";
-import {
-  Person,
-  Email,
-  Lock,
-  Visibility,
-  VisibilityOff,
-  Phone,
-  Business,
-  Language,
-  PersonAdd,
-  Shield,
-  CheckCircle,
-  Groups,
-  Security,
-  LockOutlined,
-  Description,
-  Help,
-} from "@mui/icons-material";
+import { Shield } from "@mui/icons-material";
 import LogoComponent from "@/components/ui/logo-app";
 import Image from "next/image";
 import { FormSignUp } from "./form";

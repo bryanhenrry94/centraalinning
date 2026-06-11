@@ -17,9 +17,7 @@ import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutl
 
 import { useSession } from "next-auth/react";
 
-import { getParameter } from "@/actions/parameter";
 import { createSentooPayment } from "@/actions/sentoo.actions";
-import { registerPayment } from "@/actions/payment";
 
 import { formatCurrency } from "@/utils/formatters";
 import { notifyError, notifyInfo } from "@/lib/notifications";
@@ -27,6 +25,8 @@ import { notifyError, notifyInfo } from "@/lib/notifications";
 import { PaymentCreate } from "@/lib/validations/payment";
 import { createFinancialReportRequest } from "@/actions/financial_report_requests";
 import { getDebtorByUserId } from "@/actions/debtor";
+import { ParameterService } from "@/services/parameter/parameter.service";
+import { PaymentService } from "@/services/payments/payment.service";
 
 const VerklaringPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -38,7 +38,7 @@ const VerklaringPage: React.FC = () => {
   useEffect(() => {
     const fetchPrice = async () => {
       try {
-        const parameter = await getParameter();
+        const parameter = await ParameterService.getParameter();
 
         if (parameter?.report_financial_pricing) {
           setPrice(Number(parameter.report_financial_pricing));
@@ -140,7 +140,10 @@ const VerklaringPage: React.FC = () => {
         reference_number: reference,
       };
 
-      const paymentResult = await registerPayment(tenantId, payment);
+      const paymentResult = await PaymentService.registerPayment(
+        tenantId,
+        payment,
+      );
 
       if (!paymentResult) {
         paymentWindow?.close();

@@ -23,9 +23,9 @@ import {
 import { createInvoice, generateInvoiceNumber } from "./billing-invoice";
 import { BillingInvoiceCreate } from "@/lib/validations/billing-invoice";
 import { BillingInvoiceDetailCreate } from "@/lib/validations/billing-invoice-detail";
-import { getParameter } from "./parameter";
 import { VerdictDebtorPDFProps } from "@/templates/pdfs/VerdictDebtorPDF";
 import { createSentooPayment } from "./sentoo.actions";
+import { ParameterService } from "@/services/parameter/parameter.service";
 
 export const getAllVerdicts = async (
   tenant_id: string,
@@ -759,7 +759,7 @@ export const approveVerdict = async (id: string): Promise<boolean> => {
       data: { status: "APPROVED" },
     });
 
-    const parameter = await getParameter();
+    const parameter = await ParameterService.getParameter();
 
     if (!parameter) {
       console.error("Parameter not found");

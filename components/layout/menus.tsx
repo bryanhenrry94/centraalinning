@@ -40,7 +40,7 @@ export const menuGroups: HeaderMenuGroup[] = [
       },
       {
         label: "Overeenkomst registreren",
-        href: "/overeenkomsten-registreren",
+        href: "/contracts",
         icon: <DescriptionOutlined fontSize="small" />,
       },
       {

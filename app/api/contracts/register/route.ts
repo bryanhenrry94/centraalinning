@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ContractStatus, Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
-import { generateContractReference } from "@/services/contracts/contract.service";
-import { ContractPartyInput } from "@/lib/validations/contract_party";
+import { ContractStatus } from "@prisma/client";
+import { ContractService } from "@/services/contract/contract.service";
+import {
+  ContractPartyInput,
+  CreateContractInput,
+} from "@/services/contract/contract.types";
 import { createSentooPayment } from "@/actions/sentoo.actions";
 import { PaymentCreate } from "@/lib/validations/payment";
-import { registerPayment } from "@/actions/payment";
+import { prisma } from "@/lib/prisma";
+import { PaymentService } from "@/services/payments/payment.service";
 
 export async function POST(req: NextRequest) {
   try {
@@ -59,51 +62,39 @@ export async function POST(req: NextRequest) {
     }
 
     // generate a unique reference number if not provided
-    const referenceNumber = await generateContractReference();
+    const referenceNumber = await ContractService.generateContractReference();
 
-    // 1. Crear el contrato.
-    const contract = await prisma.contract.create({
-      data: {
-        tenant_id,
+    const contractData: CreateContractInput = {
+      contract_type: contract_type as any,
+      contract_date: new Date(contract_date).toISOString(),
+      start_date: new Date(start_date).toISOString(),
+      end_date: end_date ? new Date(end_date).toISOString() : null,
+      amount: Number(amount),
+      installment_count: installment_count || null,
+      installment_amount: installment_amount
+        ? Number(installment_amount)
+        : undefined,
+      description: description || null,
+      reference_number: referenceNumber,
+      status: "DRAFT",
+      documents: [],
+      parties: body.parties.map((party: ContractPartyInput) => ({
+        person_type:
+          (party.person_type as "INDIVIDUAL" | "COMPANY") || "INDIVIDUAL",
+        role: party.role,
+        full_name: party.full_name,
+        email: party.email || null,
+        identification: party.identification || null,
+        phone: party.phone || null,
+        birth_date: party.birth_date ?? null,
+        birth_place: party.birth_place ?? null,
+        address: party.address ?? null,
+      })),
+    };
 
-        contract_type: contract_type as any,
+    const contract = await ContractService.create(tenant_id, contractData);
 
-        contract_date: new Date(contract_date),
-        start_date: new Date(start_date),
-        end_date: end_date ? new Date(end_date) : null,
-
-        amount: new Prisma.Decimal(amount),
-
-        installment_count: installment_count || null,
-
-        installment_amount: installment_amount
-          ? new Prisma.Decimal(installment_amount)
-          : null,
-
-        description,
-
-        reference_number: referenceNumber,
-
-        parties: {
-          create: body.parties.map((party: ContractPartyInput) => ({
-            person_type:
-              (party.person_type as "INDIVIDUAL" | "COMPANY") || "INDIVIDUAL",
-            role: party.role,
-            full_name: party.full_name,
-            email: party.email,
-            identification: party.identification,
-            phone: party.phone,
-            birth_date: party.birth_date ?? null,
-            birth_place: party.birth_place ?? null,
-            address: party.address ?? null,
-          })),
-        },
-      },
-    });
-
-    // 2. Si hay documentos, súbelos y asócialos al contrato
-
-    // 3. Crear el pago en Sentoo.
+    // 2. Crear el pago en Sentoo.
     const totalWithTax = 45;
 
     // 3. Crea el pago en Sentoo
@@ -123,7 +114,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Registra el pago en la base de datos
-    const payment: PaymentCreate = {
+    const paymentData: PaymentCreate = {
       debt_id: null, // No hay una deuda previa, este es un pago directo por activación
       method: "TRANSFER",
       total_amount: totalWithTax,
@@ -133,12 +124,15 @@ export async function POST(req: NextRequest) {
       provider: "sentoo",
       provider_ref: sentooResponse?.payment?.id,
       provider_payload: JSON.stringify(sentooResponse.raw),
-      reference_number: "",
+      reference_number: contract.reference_number,
       agreement_id: null,
       payment_type: "CONTRACT_ACTIVATION",
     };
 
-    const paymentRes = await registerPayment(tenant_id, payment);
+    const paymentRes = await PaymentService.registerPayment(
+      tenant_id,
+      paymentData,
+    );
     console.log("Payment registered in DB:", paymentRes);
 
     if (!paymentRes) {

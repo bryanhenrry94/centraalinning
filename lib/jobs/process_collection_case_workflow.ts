@@ -6,11 +6,11 @@ import {
   hasPaymentsUpToDate,
 } from "@/actions/agreement";
 import { applyFine } from "@/actions/debt-fine";
-import { getParameter } from "@/actions/parameter";
 import { getLastNotificationDate } from "@/actions/notification";
 import { CollectionCaseStatus } from "@/constants/collection-case-status";
 import { PersonType } from "@/constants/person-type";
 import { FineType } from "@/constants/fine-type";
+import { ParameterService } from "@/services/parameter/parameter.service";
 
 export async function processCollectionCaseWorkflow() {
   // Obtener todos los casos de cobranza en estados específicos sin notificación de bloqueo
@@ -40,7 +40,7 @@ export async function processCollectionCaseWorkflow() {
   });
 
   // Obtener parámetros generales
-  const parameter = await getParameter();
+  const parameter = await ParameterService.getParameter();
 
   let sent = 0;
   // Procesar cada caso de cobranza

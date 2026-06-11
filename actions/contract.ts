@@ -3,12 +3,10 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-import {
-  CreateContractInput,
-  ContractSchema,
-} from "@/lib/validations/contract";
+import { ContractSchema } from "@/services/contract/contract.validators";
+import { CreateContractInput } from "@/services/contract/contract.types";
 
-import { generateContractReference } from "@/services/contracts/contract.service";
+import { ContractService } from "@/services/contract/contract.service";
 
 export interface ActionResponse<T = unknown> {
   success: boolean;
@@ -23,7 +21,7 @@ export async function createContract(
   try {
     const input = ContractSchema.parse(data);
 
-    const referenceNumber = await generateContractReference();
+    const referenceNumber = await ContractService.generateContractReference();
 
     const contract = await prisma.$transaction(async (tx) => {
       return tx.contract.create({
@@ -186,6 +184,44 @@ export async function listContracts(tenantId: string): Promise<ActionResponse> {
         error instanceof Error ? error.message : "Failed to list contracts",
     };
   }
+}
+
+export async function lastContracts(
+  tenantId: string,
+  limit: number = 5,
+): Promise<ActionResponse> {
+  const contracts = await prisma.contract.findMany({
+    where: {
+      tenant_id: tenantId,
+    },
+    orderBy: {
+      created_at: "desc",
+    },
+    take: limit,
+    select: {
+      id: true,
+      reference_number: true,
+      status: true,
+      created_at: true,
+      amount: true,
+      // debtor: {
+      //   select: {
+      //     fullname: true,
+      //   },
+      // },
+    },
+  });
+
+  return {
+    success: true,
+    data: contracts.map((contract) => ({
+      id: contract.id,
+      reference_number: contract.reference_number,
+      status: contract.status,
+      created_at: contract.created_at,
+      amount: contract.amount,
+    })),
+  };
 }
 
 export async function updateStatusContract(

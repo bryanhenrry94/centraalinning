@@ -16,13 +16,13 @@ import SaveIcon from "@mui/icons-material/Save";
 import { CollectionCaseCreate } from "@/lib/validations/collection";
 import { ModalFormDebtor } from "@/components/debtor/modal-debtor-form";
 import { DebtorBase, DebtorResponse } from "@/lib/validations/debtor";
-import { getParameter } from "@/actions/parameter";
 import { createCollectionCase } from "@/actions/collection-case";
 import { notifyError, notifySuccess } from "@/lib/notifications";
 import { useTenant } from "@/hooks/useTenant";
 import { getAllDebtorsByTenantId } from "@/actions/debtor";
 import { IParamGeneral } from "@/lib/validations/parameter";
 import { CollectionCaseStatus } from "@/constants/collection-case-status";
+import { ParameterService } from "@/services/parameter/parameter.service";
 
 const InitialCollectionCaseCreate: CollectionCaseCreate = {
   debtor_id: "",
@@ -69,7 +69,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
 
   const fetchParameter = async () => {
     try {
-      const result = await getParameter();
+      const result = await ParameterService.getParameter();
 
       if (!result) return;
 

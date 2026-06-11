@@ -8,7 +8,6 @@ import {
   Step,
   StepLabel,
   Card,
-  CardContent,
   TextField,
   Button,
   Grid,
@@ -46,29 +45,24 @@ import {
 import GroupIcon from "@mui/icons-material/Group";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
-import { ContractPartyInput } from "@/lib/validations/contract_party";
+import {
+  ContractPartyInput,
+  CreateContractInput,
+} from "@/services/contract/contract.types";
 import { useSession } from "next-auth/react";
-import { getTenantById } from "@/actions/tenant";
-import { CreateContractInput } from "@/lib/validations/contract";
 
 import { NumericFormat } from "react-number-format";
 import { notifyError, notifyInfo } from "@/lib/notifications";
-import { formatCurrency, formatDate } from "@/utils/formatters";
+import { formatDate } from "@/utils/formatters";
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray } from "react-hook-form";
 
-import { ContractSchema, ContractFormData } from "@/lib/validations/contract";
-import { watch } from "fs/promises";
+import { ContractSchema } from "@/services/contract/contract.validators";
 
-import ArticleIcon from "@mui/icons-material/Article";
-import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
-import CancelIcon from "@mui/icons-material/Cancel";
-import { createSentooPayment } from "@/actions/sentoo.actions";
-import { PaymentCreate } from "@/lib/validations/payment";
-import { registerPayment } from "@/actions/payment";
-import { updateStatusContract } from "@/actions/contract";
+import { useRouter } from "next/navigation";
+import { StatusContractChip } from "./StatusContractChip";
 
 const steps = ["Gegevens", "Overeenkomst", "Documenten", "Overzicht"];
 
@@ -80,6 +74,7 @@ interface Document {
 }
 
 const OvereenkomstenRegistrerenPage = () => {
+  const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
   const { data: session } = useSession();
 
@@ -92,7 +87,7 @@ const OvereenkomstenRegistrerenPage = () => {
     watch,
     trigger,
     formState: { errors },
-  } = useForm<ContractFormData>({
+  } = useForm<CreateContractInput>({
     resolver: zodResolver(ContractSchema),
     mode: "onChange",
     defaultValues: {
@@ -114,9 +109,6 @@ const OvereenkomstenRegistrerenPage = () => {
 
   const parties = watch("parties");
   const contractDate = watch("contract_date");
-  const amount = watch("amount");
-  const startDate = watch("start_date");
-  const endDate = watch("end_date");
 
   const [documents, setDocuments] = useState<Document[]>([]);
 
@@ -130,18 +122,25 @@ const OvereenkomstenRegistrerenPage = () => {
     if (!session.user.tenant_id) return;
 
     const loadedParties = async () => {
-      const tenantResult = await getTenantById(session.user.tenant_id);
+      const response = await fetch("/api/tenant");
+
+      if (!response.ok) {
+        notifyError("Kon tenantgegevens niet laden");
+        return;
+      }
+
+      const tenantResult = await response.json();
 
       if (!tenantResult) return;
 
       const partyAContract: ContractPartyInput = {
         role: "PARTY_A",
         person_type: "COMPANY",
-        full_name: tenantResult?.tenant.name,
-        identification: tenantResult?.tenant.kvk || "",
+        full_name: tenantResult?.name,
+        identification: tenantResult?.kvk || "",
         email: session.user?.email || "",
         phone: session.user?.phone || "",
-        address: tenantResult?.tenant.address || "",
+        address: tenantResult?.address || "",
       };
 
       const partyBContract: ContractPartyInput = {
@@ -166,6 +165,7 @@ const OvereenkomstenRegistrerenPage = () => {
         parties: [partyAContract, partyBContract],
         documents: [],
         status: "DRAFT",
+        reference_number: "",
       };
 
       reset(initialContractData);
@@ -175,49 +175,6 @@ const OvereenkomstenRegistrerenPage = () => {
   }, [session]);
 
   const statusContract = watch("status");
-
-  const StatusContractChip = ({ status }: { status: string }) => {
-    switch (status) {
-      case "DRAFT":
-        return (
-          <Chip
-            label="Concept"
-            color="default"
-            size="small"
-            icon={<ArticleIcon />}
-          />
-        );
-      case "PENDING_PAYMENT":
-        return (
-          <Chip
-            label="In afwachting van betaling"
-            color="warning"
-            size="small"
-            icon={<HourglassEmptyIcon />}
-          />
-        );
-      case "REGISTERED":
-        return (
-          <Chip
-            label="Geregistreerd"
-            color="success"
-            size="small"
-            icon={<CheckCircleIcon />}
-          />
-        );
-      case "CANCELLED":
-        return (
-          <Chip
-            label="Geannuleerd"
-            color="error"
-            size="small"
-            icon={<CancelIcon />}
-          />
-        );
-      default:
-        return null;
-    }
-  };
 
   const handleNext = async () => {
     let isValid = false;
@@ -316,11 +273,13 @@ const OvereenkomstenRegistrerenPage = () => {
     setDocuments((prev) => prev.filter((doc) => doc.id !== id));
   };
 
-  const onSubmit = async (data: ContractFormData) => {
+  const onSubmit = async (data: CreateContractInput) => {
     const paymentWindow = window.open("", "_blank");
 
     try {
       setLoading(true);
+
+      console.log("Submitting contract:", data);
 
       if (!session?.user.tenant_id) return;
 
@@ -372,6 +331,11 @@ const OvereenkomstenRegistrerenPage = () => {
       if (paymentWindow) {
         paymentWindow.location.href = paymentUrl;
       }
+
+      // wait a few seconds before redirecting to ensure the user sees the notification
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+
+      router.push("/contracts");
     } catch (error) {
       console.error(error);
 
@@ -409,11 +373,11 @@ const OvereenkomstenRegistrerenPage = () => {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", py: 4 }}>
+    <Box sx={{ minHeight: "100vh" }}>
       <form onSubmit={handleSubmit(onSubmit)}>
         <Container maxWidth="lg">
           {/* Header */}
-          <Box sx={{ mb: 8 }}>
+          <Box sx={{ mb: 4 }}>
             <Typography variant="h4" sx={{ fontWeight: 700 }}>
               Overeenkomst registreren
             </Typography>
@@ -423,7 +387,7 @@ const OvereenkomstenRegistrerenPage = () => {
           </Box>
 
           {/* Stepper */}
-          <Box sx={{ mb: 8 }}>
+          <Box sx={{ mb: 4 }}>
             <Stepper activeStep={activeStep}>
               {steps.map((label) => (
                 <Step key={label}>
@@ -434,7 +398,7 @@ const OvereenkomstenRegistrerenPage = () => {
           </Box>
 
           {/* Step Content */}
-          <Box sx={{ mb: 4 }}>
+          <Box component={Paper} elevation={3} sx={{ p: 3, mb: 4 }}>
             {/* Step 1: Gegevens */}
             {activeStep === 0 && (
               <Box>
@@ -712,236 +676,232 @@ const OvereenkomstenRegistrerenPage = () => {
                   </Typography>
                 </Box>
 
-                <Card>
-                  <CardContent>
-                    <Grid container spacing={3}>
-                      <Grid size={{ xs: 12, sm: 2 }}>
-                        <Controller
-                          name="contract_date"
-                          control={control}
-                          render={({ field, fieldState }) => (
-                            <TextField
-                              label="Overeenkomstdatum"
-                              type="date"
-                              fullWidth
-                              size="small"
-                              value={field.value || ""}
-                              onChange={(e) => {
-                                field.onChange(e.target.value);
+                <Grid container spacing={3}>
+                  <Grid size={{ xs: 12, sm: 2 }}>
+                    <Controller
+                      name="contract_date"
+                      control={control}
+                      render={({ field, fieldState }) => (
+                        <TextField
+                          label="Overeenkomstdatum"
+                          type="date"
+                          fullWidth
+                          size="small"
+                          value={field.value || ""}
+                          onChange={(e) => {
+                            field.onChange(e.target.value);
 
-                                setValue("start_date", e.target.value, {
-                                  shouldValidate: true,
-                                });
-                              }}
-                              error={!!fieldState.error}
-                              helperText={fieldState.error?.message}
-                              slotProps={{
-                                inputLabel: { shrink: true },
-                              }}
-                            />
-                          )}
+                            setValue("start_date", e.target.value, {
+                              shouldValidate: true,
+                            });
+                          }}
+                          error={!!fieldState.error}
+                          helperText={fieldState.error?.message}
+                          slotProps={{
+                            inputLabel: { shrink: true },
+                          }}
                         />
-                      </Grid>
+                      )}
+                    />
+                  </Grid>
 
-                      <Grid size={{ xs: 12, sm: 2 }}>
-                        <Controller
-                          name="amount"
-                          control={control}
-                          render={({ field, fieldState }) => (
-                            <NumericFormat
-                              customInput={TextField}
-                              fullWidth
-                              label="Totaalbedrag"
-                              value={field.value ?? ""}
-                              thousandSeparator
-                              decimalScale={2}
-                              fixedDecimalScale
-                              allowNegative={false}
-                              prefix="$ "
-                              size="small"
-                              onValueChange={(values) => {
-                                field.onChange(Number(values.value) || 0);
-                              }}
-                              error={!!fieldState.error}
-                              helperText={fieldState.error?.message}
-                            />
-                          )}
+                  <Grid size={{ xs: 12, sm: 2 }}>
+                    <Controller
+                      name="amount"
+                      control={control}
+                      render={({ field, fieldState }) => (
+                        <NumericFormat
+                          customInput={TextField}
+                          fullWidth
+                          label="Totaalbedrag"
+                          value={field.value ?? ""}
+                          thousandSeparator
+                          decimalScale={2}
+                          fixedDecimalScale
+                          allowNegative={false}
+                          prefix="$ "
+                          size="small"
+                          onValueChange={(values) => {
+                            field.onChange(Number(values.value) || 0);
+                          }}
+                          error={!!fieldState.error}
+                          helperText={fieldState.error?.message}
                         />
-                      </Grid>
+                      )}
+                    />
+                  </Grid>
 
-                      <Grid size={{ xs: 12, sm: 2 }}>
-                        <Controller
-                          name="start_date"
-                          control={control}
-                          render={({ field, fieldState }) => (
-                            <TextField
-                              label="Startdatum"
-                              type="date"
-                              fullWidth
-                              size="small"
-                              value={field.value || ""}
-                              onChange={(e) => field.onChange(e.target.value)}
-                              error={!!fieldState.error}
-                              helperText={fieldState.error?.message}
-                              slotProps={{
-                                inputLabel: { shrink: true },
-                              }}
-                            />
-                          )}
+                  <Grid size={{ xs: 12, sm: 2 }}>
+                    <Controller
+                      name="start_date"
+                      control={control}
+                      render={({ field, fieldState }) => (
+                        <TextField
+                          label="Startdatum"
+                          type="date"
+                          fullWidth
+                          size="small"
+                          value={field.value || ""}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          error={!!fieldState.error}
+                          helperText={fieldState.error?.message}
+                          slotProps={{
+                            inputLabel: { shrink: true },
+                          }}
                         />
-                      </Grid>
+                      )}
+                    />
+                  </Grid>
 
-                      <Grid size={{ xs: 12, sm: 2 }}>
-                        <Controller
-                          name="end_date"
-                          control={control}
-                          render={({ field, fieldState }) => (
-                            <TextField
-                              label="Vervaldatum"
-                              type="date"
-                              fullWidth
-                              size="small"
-                              value={
-                                field.value
-                                  ? new Date(field.value)
-                                      .toISOString()
-                                      .split("T")[0]
-                                  : ""
-                              }
-                              onChange={(e) =>
-                                field.onChange(
-                                  e.target.value
-                                    ? new Date(e.target.value).toISOString()
-                                    : "",
-                                )
-                              }
-                              error={!!fieldState.error}
-                              helperText={fieldState.error?.message}
-                              slotProps={{
-                                inputLabel: { shrink: true },
-                              }}
-                            />
-                          )}
+                  <Grid size={{ xs: 12, sm: 2 }}>
+                    <Controller
+                      name="end_date"
+                      control={control}
+                      render={({ field, fieldState }) => (
+                        <TextField
+                          label="Vervaldatum"
+                          type="date"
+                          fullWidth
+                          size="small"
+                          value={
+                            field.value
+                              ? new Date(field.value)
+                                  .toISOString()
+                                  .split("T")[0]
+                              : ""
+                          }
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value
+                                ? new Date(e.target.value).toISOString()
+                                : "",
+                            )
+                          }
+                          error={!!fieldState.error}
+                          helperText={fieldState.error?.message}
+                          slotProps={{
+                            inputLabel: { shrink: true },
+                          }}
                         />
-                      </Grid>
+                      )}
+                    />
+                  </Grid>
 
-                      <Grid size={{ xs: 12, sm: 2 }}>
-                        <Controller
-                          name="installment_count"
-                          control={control}
-                          render={({ field, fieldState }) => (
-                            <TextField
-                              fullWidth
-                              label="Aantal termijnen"
-                              type="number"
-                              size="small"
-                              value={field.value || ""}
-                              onChange={(e) => {
-                                const installmentCount =
-                                  Number(e.target.value) || 0;
+                  <Grid size={{ xs: 12, sm: 2 }}>
+                    <Controller
+                      name="installment_count"
+                      control={control}
+                      render={({ field, fieldState }) => (
+                        <TextField
+                          fullWidth
+                          label="Aantal termijnen"
+                          type="number"
+                          size="small"
+                          value={field.value || ""}
+                          onChange={(e) => {
+                            const installmentCount =
+                              Number(e.target.value) || 0;
 
-                                field.onChange(installmentCount);
+                            field.onChange(installmentCount);
 
-                                const amount = getValues("amount");
+                            const amount = getValues("amount");
 
-                                setValue(
-                                  "installment_amount",
-                                  installmentCount > 0
-                                    ? amount / installmentCount
-                                    : 0,
-                                  {
-                                    shouldValidate: true,
-                                  },
-                                );
-                              }}
-                              error={!!fieldState.error}
-                              helperText={fieldState.error?.message}
-                            />
-                          )}
+                            setValue(
+                              "installment_amount",
+                              installmentCount > 0
+                                ? amount / installmentCount
+                                : 0,
+                              {
+                                shouldValidate: true,
+                              },
+                            );
+                          }}
+                          error={!!fieldState.error}
+                          helperText={fieldState.error?.message}
                         />
-                      </Grid>
+                      )}
+                    />
+                  </Grid>
 
-                      <Grid size={{ xs: 12, sm: 2 }}>
-                        <Controller
-                          name="installment_amount"
-                          control={control}
-                          render={({ field, fieldState }) => (
-                            <NumericFormat
-                              customInput={TextField}
-                              fullWidth
-                              label="Termijnbedrag"
-                              value={field.value ?? 0}
-                              thousandSeparator
-                              decimalScale={2}
-                              fixedDecimalScale
-                              allowNegative={false}
-                              prefix="$ "
-                              size="small"
-                              onValueChange={(values) => {
-                                field.onChange(Number(values.value) || 0);
-                              }}
-                              error={!!fieldState.error}
-                              helperText={fieldState.error?.message}
-                            />
-                          )}
+                  <Grid size={{ xs: 12, sm: 2 }}>
+                    <Controller
+                      name="installment_amount"
+                      control={control}
+                      render={({ field, fieldState }) => (
+                        <NumericFormat
+                          customInput={TextField}
+                          fullWidth
+                          label="Termijnbedrag"
+                          value={field.value ?? 0}
+                          thousandSeparator
+                          decimalScale={2}
+                          fixedDecimalScale
+                          allowNegative={false}
+                          prefix="$ "
+                          size="small"
+                          onValueChange={(values) => {
+                            field.onChange(Number(values.value) || 0);
+                          }}
+                          error={!!fieldState.error}
+                          helperText={fieldState.error?.message}
                         />
-                      </Grid>
+                      )}
+                    />
+                  </Grid>
 
-                      <Grid size={{ xs: 12, sm: 6 }}>
-                        <Controller
-                          name="contract_type"
-                          control={control}
-                          render={({ field, fieldState }) => (
-                            <FormControl
-                              fullWidth
-                              size="small"
-                              error={!!fieldState.error}
-                            >
-                              <InputLabel>Type overeenkomst</InputLabel>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <Controller
+                      name="contract_type"
+                      control={control}
+                      render={({ field, fieldState }) => (
+                        <FormControl
+                          fullWidth
+                          size="small"
+                          error={!!fieldState.error}
+                        >
+                          <InputLabel>Type overeenkomst</InputLabel>
 
-                              <Select {...field} label="Type overeenkomst">
-                                <MenuItem value="DELIVERY_OF_GOODS">
-                                  Levering van goederen
-                                </MenuItem>
-                                <MenuItem value="SERVICES">Diensten</MenuItem>
-                                <MenuItem value="RENT">Huur</MenuItem>
-                                <MenuItem value="LOAN">Lening</MenuItem>
-                                <MenuItem value="PAYMENT_ARRANGEMENT">
-                                  Betalingsregeling
-                                </MenuItem>
-                                <MenuItem value="OTHER">Overig</MenuItem>
-                              </Select>
+                          <Select {...field} label="Type overeenkomst">
+                            <MenuItem value="DELIVERY_OF_GOODS">
+                              Levering van goederen
+                            </MenuItem>
+                            <MenuItem value="SERVICES">Diensten</MenuItem>
+                            <MenuItem value="RENT">Huur</MenuItem>
+                            <MenuItem value="LOAN">Lening</MenuItem>
+                            <MenuItem value="PAYMENT_ARRANGEMENT">
+                              Betalingsregeling
+                            </MenuItem>
+                            <MenuItem value="OTHER">Overig</MenuItem>
+                          </Select>
 
-                              <FormHelperText>
-                                {fieldState.error?.message}
-                              </FormHelperText>
-                            </FormControl>
-                          )}
+                          <FormHelperText>
+                            {fieldState.error?.message}
+                          </FormHelperText>
+                        </FormControl>
+                      )}
+                    />
+                  </Grid>
+
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <Controller
+                      name="description"
+                      control={control}
+                      render={({ field, fieldState }) => (
+                        <TextField
+                          fullWidth
+                          label="Omschrijving"
+                          multiline
+                          rows={3}
+                          size="small"
+                          value={field.value || ""}
+                          onChange={field.onChange}
+                          error={!!fieldState.error}
+                          helperText={fieldState.error?.message}
                         />
-                      </Grid>
-
-                      <Grid size={{ xs: 12, sm: 6 }}>
-                        <Controller
-                          name="description"
-                          control={control}
-                          render={({ field, fieldState }) => (
-                            <TextField
-                              fullWidth
-                              label="Omschrijving"
-                              multiline
-                              rows={3}
-                              size="small"
-                              value={field.value || ""}
-                              onChange={field.onChange}
-                              error={!!fieldState.error}
-                              helperText={fieldState.error?.message}
-                            />
-                          )}
-                        />
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </Card>
+                      )}
+                    />
+                  </Grid>
+                </Grid>
               </Box>
             )}
 
@@ -962,35 +922,33 @@ const OvereenkomstenRegistrerenPage = () => {
                   Upload de relevante documenten voor deze overeenkomst.
                 </Typography>
 
-                <Card sx={{ mb: 3 }}>
-                  <CardContent>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      multiple
-                      hidden
-                      accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx"
-                      onChange={handleFileUpload}
-                    />
-                    <Button
-                      variant="outlined"
-                      startIcon={<UploadIcon />}
-                      fullWidth
-                      sx={{ py: 2, mb: 2 }}
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      Document uploaden
-                    </Button>
-                    <Typography
-                      variant="caption"
-                      color="textSecondary"
-                      display="block"
-                    >
-                      Ondersteunde formaten: PDF, PNG, JPG - Max. 10 MB per
-                      bestand
-                    </Typography>
-                  </CardContent>
-                </Card>
+                <Box sx={{ mb: 3 }}>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    hidden
+                    accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx"
+                    onChange={handleFileUpload}
+                  />
+                  <Button
+                    variant="outlined"
+                    startIcon={<UploadIcon />}
+                    fullWidth
+                    sx={{ py: 2, mb: 2 }}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    Document uploaden
+                  </Button>
+                  <Typography
+                    variant="caption"
+                    color="textSecondary"
+                    display="block"
+                  >
+                    Ondersteunde formaten: PDF, PNG, JPG - Max. 10 MB per
+                    bestand
+                  </Typography>
+                </Box>
 
                 <TableContainer component={Card}>
                   <Table>
@@ -1032,7 +990,7 @@ const OvereenkomstenRegistrerenPage = () => {
 
             {/* Step 4: Overzicht */}
             {activeStep === 3 && (
-              <Box sx={{ p: 3, border: "1px solid #e0e0e0", borderRadius: 1 }}>
+              <Box>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 4 }}>
                   Overeenkomst
                 </Typography>
@@ -1103,19 +1061,6 @@ const OvereenkomstenRegistrerenPage = () => {
                     </Typography>
                     <StatusContractChip status={statusContract} />
                   </Box>
-
-                  {/* <Box>
-                    <Typography
-                      variant="subtitle2"
-                      sx={{ fontWeight: 600, mb: 1, color: "#666" }}
-                    >
-                      Documenten
-                    </Typography>
-                    <Typography variant="body2">
-                      {documents.length} document
-                      {documents.length !== 1 ? "en" : ""} geüpload
-                    </Typography>
-                  </Box> */}
 
                   <Box sx={{ pt: 2, borderTop: "1px solid #eee" }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>

@@ -42,13 +42,10 @@ import { PaymentFormDialog } from "@/components/payment/payment-form-dialog";
 import { createSentooPayment } from "@/actions/sentoo.actions";
 import { AlertService } from "@/lib/alerts";
 import { PaymentCreate } from "@/lib/validations/payment";
-import {
-  getPaymentByDebtId,
-  hasPendingPayments,
-  registerPayment,
-} from "@/actions/payment";
+import { getPaymentByDebtId, hasPendingPayments } from "@/actions/payment";
 import DashboardHeader from "./DashboardHeader";
 import { AgreementStatus } from "@/constants/agreement-status";
+import { PaymentService } from "@/services/payments/payment.service";
 
 type TenantTypes = {
   id: string;
@@ -305,7 +302,10 @@ const DashboardDebtor = () => {
         payment_type: "DEBT_PAYMENT",
       };
 
-      const paymentRes = await registerPayment(debt.tenant_id, payment);
+      const paymentRes = await PaymentService.registerPayment(
+        debt.tenant_id,
+        payment,
+      );
 
       if (!paymentRes.id) {
         notifyError("Error al registrar el pago");

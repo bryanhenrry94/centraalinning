@@ -38,7 +38,7 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import { formatDate, formatDateTime } from "@/utils/formatters";
 import { PaymentCreate } from "@/lib/validations/payment";
 import { createSentooPayment } from "@/actions/sentoo.actions";
-import { registerPayment } from "@/actions/payment";
+import { PaymentService } from "@/services/payments/payment.service";
 import { IdentificationType } from "@/constants/identification-type";
 
 const BlokCheckPage = () => {
@@ -170,7 +170,7 @@ const BlokCheckPage = () => {
       payment_type: "BLOK_CHECK",
     };
 
-    const paymentRes = await registerPayment(tenantId, payment);
+    const paymentRes = await PaymentService.registerPayment(tenantId, payment);
 
     const blokCheckRequestUpdateData: Partial<BlokCheckRequest> = {
       payment_id: paymentRes.id,

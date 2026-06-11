@@ -6,124 +6,12 @@ import {
   BillingInvoiceCreate,
   BillingInvoiceResponse,
 } from "@/lib/validations/billing-invoice";
-import { getParameter } from "@/actions/parameter";
 import { getNameCountry } from "@/utils/location";
 import { sendInvoiceEmail } from "./email";
 import { InvoicePDFProps } from "@/templates/pdfs/InvoicePDF";
 import { createSentooPayment } from "./sentoo.actions";
-import { PaymentCreate } from "@/lib/validations/payment";
-import { registerPayment } from "./payment";
-
-interface ActivationInvoiceInput {
-  tenant_id: string;
-  island: string;
-  address?: string | null;
-  fee_amount: number;
-  abb_amount: number;
-  digital_file_costs: number;
-}
-
-export const createActivationInvoice = async (
-  params: ActivationInvoiceInput,
-) => {
-  const tenant = await prisma.tenant.findUnique({
-    where: { id: params.tenant_id },
-  });
-
-  if (!tenant) {
-    throw new Error("No contact email found for tenant");
-  }
-
-  // Definir valores base
-  const issue_date = new Date();
-  const due_date = addDays(issue_date, 7);
-
-  // Obtener parámetro necesario
-  const parameter = await getParameter();
-  if (!parameter) {
-    throw new Error("No se encontró el parámetro");
-  }
-
-  // Costo base de activación
-  const activationFee = params.fee_amount;
-
-  // Generar número de factura único
-  const invoice_number = await generateInvoiceNumber();
-
-  // Crear factura principal
-  const invoice = await prisma.billingInvoice.create({
-    data: {
-      tenant_id: params.tenant_id,
-      invoice_number,
-      amount: activationFee,
-      currency: "USD",
-      issue_date,
-      due_date,
-      description:
-        "Factura por activación de cuenta del sistema Centraal Inning",
-      status: "unpaid",
-      payment_id: "",
-    },
-  });
-
-  const totalWithTax = activationFee * (1 + parameter.abb_rate / 100);
-
-  // Crear el detalle de factura
-  await prisma.billingInvoiceDetail.create({
-    data: {
-      billing_invoice_id: invoice.id,
-      item_description: "Registratiekosten",
-      item_quantity: 1,
-      item_unit_price: activationFee,
-      item_total_price: activationFee,
-      item_tax_rate: parameter.abb_rate / 100, // 6% ejemplo
-      item_tax_amount: activationFee * (parameter.abb_rate / 100),
-      item_total_with_tax: totalWithTax,
-    },
-  });
-
-  // Crear el pago en Sentoo
-  const res = await createSentooPayment({
-    amount: totalWithTax, // YA en centavos
-    description: `Factura ${invoice_number} - Registratiekosten`,
-    reference: invoice.id,
-  });
-
-  if (!res.success) {
-    throw new Error("Hubo un error al crear el pago en Sentoo");
-  }
-
-  console.log("payment created:", res.payment);
-
-  // Crea el registro de pago en la base de datos
-  const payment: PaymentCreate = {
-    debt_id: null, // No hay una deuda previa, este es un pago directo por activación
-    method: "TRANSFER",
-    total_amount: totalWithTax,
-    paid_at: null,
-    status: "pending",
-    provider: "sentoo",
-    provider_ref: res?.payment?.id,
-    provider_payload: JSON.stringify(res.raw),
-    reference_number: "",
-    agreement_id: null,
-    payment_type: "SUBSCRIPTION", // O el tipo que corresponda según tu lógica de negocio
-  };
-
-  const paymentRes = await registerPayment(tenant.id, payment);
-  console.log("Payment registered in DB:", paymentRes);
-
-  // Enviar correo con la factura al email de contacto del tenant
-  if (tenant.contact_email) {
-    await sendInvoiceEmail(
-      tenant.contact_email,
-      invoice.id,
-      false, // isPaid
-    );
-  }
-
-  return invoice;
-};
+import { ActivationInvoiceInput } from "@/services/invoices/invoice.type";
+import { ParameterService } from "@/services/parameter/parameter.service";
 
 export const createCollectionInvoice = async (
   params: ActivationInvoiceInput,
@@ -250,7 +138,7 @@ export const getDataInvoicePDF = async (
     throw new Error("Invoice not found");
   }
 
-  const parameter = await getParameter();
+  const parameter = await ParameterService.getParameter();
   if (!parameter) {
     throw new Error("No se encontró el parámetro");
   }
@@ -451,7 +339,7 @@ export const getNextInvoiceNumber = async (
   tenant_id: string,
 ): Promise<string> => {
   try {
-    const parameter = await getParameter();
+    const parameter = await ParameterService.getParameter();
     if (!parameter) {
       throw new Error("No se encontró el parámetro");
     }

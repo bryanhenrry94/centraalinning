@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { getSession } from "next-auth/react";
 import {
   Box,
@@ -10,8 +9,6 @@ import {
   Button,
   InputAdornment,
   IconButton,
-  Checkbox,
-  FormControlLabel,
   Link,
   Divider,
   Stack,
@@ -30,9 +27,7 @@ import useClientRouter from "@/hooks/useNavigations";
 import { signIn } from "next-auth/react";
 
 export default function LoginForm() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const { redirectToSignUp, redirectToDashboard } = useClientRouter();
@@ -79,13 +74,13 @@ export default function LoginForm() {
         const subdomain = session?.user?.subdomain;
 
         if (!subdomain) {
-          notifyError("Workspace inválido");
+          notifyError("Ongeldige werkruimte");
           return;
         }
 
         redirectToDashboard(subdomain);
       } else {
-        notifyError(result?.error || "Credenciales incorrectas");
+        notifyError(result?.error || "Onjuiste inloggegevens");
       }
     } catch (error) {
       notifyError("Error inesperado");

@@ -11,9 +11,9 @@ import {
   CollectionCaseView,
 } from "@/lib/validations/collection";
 import { getNotificationDays, sendNotification } from "@/actions/notification";
-import { getParameter } from "./parameter";
 import { CollectionCaseStatus } from "@/constants/collection-case-status";
 import { PersonType } from "@/constants/person-type";
+import { ParameterService } from "@/services/parameter/parameter.service";
 
 type CollectionCaseFilter = {
   tenant_id: string;
@@ -164,7 +164,7 @@ export const createCollectionCase = async (
   if (!tenant) throw new Error("Tenant not found");
 
   // Obtiene params de cobranza
-  const parameter = await getParameter();
+  const parameter = await ParameterService.getParameter();
   if (!parameter) {
     throw new Error("No se encontró el parámetro");
   }
@@ -357,7 +357,7 @@ export const updateCollectionStatusAndSendNotification = async (
     await prisma.person.update({
       where: { id: personId },
       data: { has_blockade: true },
-    });    
+    });
   }
 
   await sendNotification(id);

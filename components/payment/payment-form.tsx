@@ -10,12 +10,12 @@ import {
   PaymentCreateSchema,
   PaymentCreate,
 } from "@/lib/validations/payment";
-import { registerPayment } from "@/actions/payment";
 import { DebtorSummary } from "@/types/DebtorSummary";
 import { useSession } from "next-auth/react";
 import { getDebts } from "@/actions/debtor";
 import { formatCurrency } from "@/utils/formatters";
 import { PaymentMethod } from "@/constants/payment-method";
+import { PaymentService } from "@/services/payments/payment.service";
 
 const initialState: PaymentCreate = {
   debt_id: "",
@@ -71,7 +71,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({ debtId, onSave }) => {
       }
 
       console.log("Payment Data:", data);
-      await registerPayment(tenantId, data);
+      await PaymentService.registerPayment(tenantId, data);
 
       notifyInfo("Payment registered successfully");
       await fetchDebts();

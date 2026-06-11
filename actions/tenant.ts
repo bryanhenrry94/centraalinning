@@ -96,40 +96,6 @@ export const validaSubdomain = async (subdomain: string) => {
   return tenant ? true : false;
 };
 
-export const generateUniqueSubdomain = async (
-  company_name: string,
-): Promise<string> => {
-  // sanitize: lowercase, remove accents/diacritics, remove symbols except spaces and hyphens,
-  // trim, replace spaces with single hyphen and collapse multiple hyphens
-  const sanitizedBase = company_name
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-
-  // fallback base if sanitization removed everything
-  const base = sanitizedBase || "tenant";
-  let subdomain = base;
-
-  let exists = await prisma.tenant.findUnique({
-    where: { subdomain },
-  });
-
-  let suffix = 1;
-  while (exists) {
-    subdomain = `${base}-${suffix}`;
-    exists = await prisma.tenant.findUnique({
-      where: { subdomain },
-    });
-    suffix++;
-  }
-
-  return subdomain;
-};
-
 export const notifyTenantNewAgreement = async (
   tenant_id: string,
   agreementData: CreateAgreement,

@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { CollectionCase } from "@/lib/validations/collection";
 import { getCollectionById } from "@/actions/collection-case";
 import { Notification } from "@/lib/validations/notification";
-import { getParameter } from "@/actions/parameter";
 import { NotificationType } from "@/lib/validations/notification";
 
 import { registerInvitation } from "./tenant-invitation";
@@ -17,6 +16,7 @@ import {
 import { CollectionCaseStatus } from "@/constants/collection-case-status";
 import { PersonType } from "@/constants/person-type";
 import { UserRole } from "@/constants/user-role";
+import { ParameterService } from "@/services/parameter/parameter.service";
 
 export const sendNotification = async (caseId: string) => {
   if (!caseId) {
@@ -278,7 +278,7 @@ export const getNotificationDays = async (
   status: CollectionCaseStatus,
   person_type: PersonType,
 ): Promise<number> => {
-  const _parameter = await getParameter();
+  const _parameter = await ParameterService.getParameter();
 
   if (!_parameter) {
     throw new Error("Parameter not found");

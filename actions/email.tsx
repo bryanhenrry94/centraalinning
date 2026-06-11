@@ -18,7 +18,6 @@ import { BlokkadeEmail } from "@/templates/emails/BlokkadeEmail";
 import { IngebrekestellingEmail } from "@/templates/emails/IngebrekestellingEmail";
 // Server actions
 import { getDataInvoicePDF } from "./billing-invoice";
-import { getParameter } from "./parameter";
 // Libs
 import { generatePdfBase64 } from "@/lib/pdf";
 // Utils
@@ -47,6 +46,7 @@ import FinancialSummaryPDF, {
 import FinancialSummaryEmail from "@/templates/emails/FinancialSummaryEmail";
 import QRCode from "qrcode";
 import ActivateContractEmail from "@/templates/emails/ActivateContractEmail";
+import { ParameterService } from "@/services/parameter/parameter.service";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -222,7 +222,7 @@ export const sendAanmaningEmail = async (
       throw new Error("Collection case not found");
     }
 
-    const parameter = await getParameter();
+    const parameter = await ParameterService.getParameter();
 
     if (!parameter) {
       throw new Error("Parameters not found");
@@ -385,7 +385,7 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
       throw new Error("Collection case not found");
     }
 
-    const parameter = await getParameter();
+    const parameter = await ParameterService.getParameter();
 
     if (!parameter) {
       throw new Error("Parameters not found");
@@ -487,7 +487,7 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
       throw new Error("Financial report not found");
     }
 
-    const parameter = await getParameter();
+    const parameter = await ParameterService.getParameter();
 
     if (!parameter) {
       throw new Error("Parameters not found");
@@ -660,7 +660,7 @@ export const sendBlokkadeMail = async (to: string, caseId: string) => {
       throw new Error("Collection case not found");
     }
 
-    const parameter = await getParameter();
+    const parameter = await ParameterService.getParameter();
 
     if (!parameter) {
       throw new Error("Parameters not found");
@@ -768,7 +768,7 @@ export const sendVerdictApprovalEmail = async (
       throw new Error("Verdict not found");
     }
 
-    const parameter = await getParameter();
+    const parameter = await ParameterService.getParameter();
 
     if (!parameter) {
       throw new Error("Parameters not found");
