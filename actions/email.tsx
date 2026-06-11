@@ -140,8 +140,7 @@ export const sendNewClitentEmail = async (
 export const sendInvoiceEmail = async (
   to: string,
   invoice_id: string,
-  payment_url?: string,
-  qr_code?: string,
+  isPaid: boolean = false,
 ): Promise<boolean> => {
   try {
     if (!to) {
@@ -166,6 +165,10 @@ export const sendInvoiceEmail = async (
 
     // Generar el PDF de la factura
     const params = await getDataInvoicePDF(invoice_id);
+
+    // agrega a params el isPaid
+    params.isPaid = isPaid;
+
     const pdfBase64 = await generatePdfBase64(<InvoicePDF {...params} />);
 
     const attachments = [
@@ -184,7 +187,7 @@ export const sendInvoiceEmail = async (
       react: (
         <InvoiceEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
-          fullname={billing.tenant.name || "Customer"}          
+          fullname={billing.tenant.name || "Customer"}
         />
       ),
       attachments: attachments,
@@ -727,7 +730,7 @@ export const sendActivateContractMail = async (
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
-      subject: `Overeenkomst ${reference_number} geactiveerd`,
+      subject: `Financiële afspraakregistratie: ${reference_number}`,
       react: (
         <ActivateContractEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}

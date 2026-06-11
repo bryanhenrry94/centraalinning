@@ -27,6 +27,7 @@ export interface InvoicePDFProps {
   total: number;
   bank_name: string;
   bank_account: string;
+  isPaid?: boolean;
 }
 
 const styles = StyleSheet.create({
@@ -131,6 +132,21 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#555",
   },
+  paidStamp: {
+    position: "absolute",
+    bottom: 300,
+    left: "35%",
+    textAlign: "center",
+    fontSize: 36,
+    fontWeight: "bold",
+    color: "#16a34a",
+    opacity: 0.3,
+    // transform: "translateX(-50%) rotate(-25deg)",
+    borderWidth: 2,
+    borderColor: "#16a34a",
+    padding: 8,
+    width: 200,
+  },
 });
 
 export const InvoicePDF: React.FC<InvoicePDFProps> = ({
@@ -144,6 +160,7 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({
   total,
   bank_name,
   bank_account,
+  isPaid = false,
 }) => (
   <Document>
     <Page size="A4" style={styles.page}>
@@ -204,6 +221,8 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({
           </View>
         </View>
       </View>
+
+      {isPaid && <Text style={styles.paidStamp}>BETAALD</Text>}
 
       {/* Footer */}
       <View style={styles.footer}>

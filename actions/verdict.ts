@@ -337,7 +337,7 @@ export const updateVerdict = async (
     let total_due: number = 0;
     total_due += (data.sentence_amount || 0) + (data.procesal_cost || 0);
 
-    const updatedVerdict = await prisma.$transaction(async (tx: any ) => {
+    const updatedVerdict = await prisma.$transaction(async (tx: any) => {
       const verdict = await prisma.verdict.update({
         where: { id: verdict_id },
         data: {
@@ -534,7 +534,10 @@ export const calculateInterestDetail = async (
     // Ordenar los details por fecha ascendente
     const details: InterestDetail[] = (objInterestType.details || [])
       .slice()
-      .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      .sort(
+        (a: any, b: any) =>
+          new Date(a.date).getTime() - new Date(b.date).getTime(),
+      );
 
     let tramoIndex = 1;
 
@@ -876,8 +879,7 @@ export const approveVerdict = async (id: string): Promise<boolean> => {
       await sendInvoiceEmail(
         debtor.tenant?.contact_email,
         invoiceCreated.id,
-        res.payment?.url,
-        res.payment?.qrCode,
+        false,
       );
     }
 

@@ -7,5 +7,5 @@ export async function generateContractReference() {
 
   const total = await prisma.contract.count();
 
-  return `CTR-${year}-${String(total + 1).padStart(6, "0")}`;
+  return `FAR-${year}-${String(total + 1).padStart(3, "0")}`;
 }

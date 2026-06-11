@@ -30,13 +30,11 @@ export const ActivateContractEmail = ({
         </Text>
         <br />
         <Text style={paragraph}>
-          Wij informeren u hierbij dat overeenkomst{" "}
-          <strong>#{contractNumber}</strong> succesvol is geactiveerd binnen het
-          CFSB-platform.
+          De afspraak tussen u en Dazssoft is geregistreerd onder nummer{" "}
+          <strong>#{contractNumber}</strong>.
         </Text>
         <Text style={{ ...paragraph, marginTop: "10px" }}>
-          U kunt uw overeenkomst en bijbehorende gegevens bekijken door in te
-          loggen via{" "}
+          U kunt de gegevens bekijken via{" "}
           <Link href="https://www.cfsbgroup.com">www.cfsbgroup.com</Link>.
         </Text>
         <Text style={{ ...paragraph, marginTop: "10px" }}>

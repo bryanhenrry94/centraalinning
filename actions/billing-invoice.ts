@@ -118,8 +118,7 @@ export const createActivationInvoice = async (
     await sendInvoiceEmail(
       tenant.contact_email,
       invoice.id,
-      res.payment?.url,
-      res.payment?.qrCode,
+      false, // isPaid
     );
   }
 
@@ -209,8 +208,7 @@ export const createCollectionInvoice = async (
     await sendInvoiceEmail(
       tenant.contact_email,
       invoice.id,
-      res.payment?.url,
-      res.payment?.qrCode,
+      false, // isPaid
     );
   }
 

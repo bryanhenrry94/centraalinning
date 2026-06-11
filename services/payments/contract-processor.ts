@@ -59,7 +59,7 @@ export const processContractPayment = async (payment: Payment) => {
   for (const party of parties) {
     if (party.role === "PARTY_A") {
       // enviar factura al cliente (PARTY_A)
-      await sendInvoiceEmail(party.email, invoice.id, "", "");
+      await sendInvoiceEmail(party.email, invoice.id, true);
     }
 
     // enviar notificación de activación al cliente (PARTY_A)

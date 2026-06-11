@@ -20,13 +20,14 @@ const TestBlokkadePage = dynamic(() => import("./TestBlokkadePage"), {
   ssr: false,
 });
 
-const FinancialSummaryPage = dynamic(
-  () => import("./FinancialSummaryPage"),
-  {
-    ssr: false,
-  },
-);
+const FinancialSummaryPage = dynamic(() => import("./FinancialSummaryPage"), {
+  ssr: false,
+});
+
+const TestInvoicePage = dynamic(() => import("./TestInvoicePage"), {
+  ssr: false,
+});
 
 export default function TestPage() {
-  return <FinancialSummaryPage />;
+  return <TestInvoicePage />;
 }
