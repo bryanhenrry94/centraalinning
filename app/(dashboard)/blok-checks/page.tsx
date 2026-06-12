@@ -204,26 +204,29 @@ const BlokCheckPage = () => {
       {/* SEARCH CARD */}
       <Card
         sx={{
-          borderRadius: 4,
           boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+          p: 2,
         }}
       >
         <CardContent>
-          <Typography variant="h4" fontWeight={600} mb={1}>
-            Debiteur zoeken
-          </Typography>
+          <Box display="flex" alignItems="center" textAlign="center">
+            <Typography variant="h4" fontWeight={600}>
+              Blok-Check uitvoeren&nbsp;&nbsp;&nbsp;
+            </Typography>
+            <Typography fontSize={20}>
+              Tarief: ${serviceAmount} per controle
+            </Typography>
+          </Box>
 
           <Typography color="text.secondary" mb={10}>
-            De Blok-Check is een controlemiddel waarmee u kunt nagaan of een
-            debiteur een actieve economische blokkade of registraties heeft
-            binnen de CFSB-samenwerking.{" "}
-            <strong>Kosten: ${serviceAmount} per controle</strong>
+            Controleer of een persoon of onderneming geregistreerd staat met een
+            economische blokkade.
           </Typography>
 
           <Box display="flex" gap={2}>
             <TextField
               fullWidth
-              placeholder="Voer cedula-, KVK-, paspoort- of rijbewijsnummer in"
+              placeholder="Voer een identificatienummer of registratienummer in"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);

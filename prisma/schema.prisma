@@ -796,24 +796,25 @@ model Contract {
 }
 
 model ContractParty {
-  id             String             @id @default(cuid())
+  id                  String              @id @default(cuid())
 
-  contract_id    String
-  contract       Contract          @relation(fields: [contract_id], references: [id],onDelete: Cascade)
+  contract_id         String
+  contract            Contract           @relation(fields: [contract_id], references: [id],onDelete: Cascade)
 
-  role           ContractPartyRole
+  role                ContractPartyRole
 
-  person_type    PersonType
+  person_type         PersonType
+  identification_type IdentificationType
+  identification      String
 
-  full_name      String
-  identification String
-  email          String
-  phone          String
-  birth_date     DateTime?
-  birth_place    String?
-  address        String?
+  fullname            String
+  email               String
+  phone               String
+  birth_date          DateTime?
+  birth_place         String?
+  address             String?
 
-  created_at     DateTime           @default(now())
+  created_at          DateTime            @default(now())
 
   @@index([contract_id])
   @@map("contract_party")

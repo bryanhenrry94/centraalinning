@@ -18,9 +18,10 @@ const contractStatuses = [
 
 export const ContractPartySchema = z.object({
   role: z.enum(["PARTY_A", "PARTY_B"]),
+  identification_type: z.enum(["KVK", "CEDULA", "PASSPORT", "RIJBEWIJS"]),
   person_type: z.enum(["INDIVIDUAL", "COMPANY"]),
   identification: z.string().trim().min(1, "Identificatie is vereist").max(50),
-  full_name: z.string().trim().min(2, "Volledige naam is vereist").max(255),
+  fullname: z.string().trim().min(2, "Volledige naam is vereist").max(255),
   email: z.string().trim().email("Ongeldig e-mailadres"),
   phone: z.string().trim().min(5, "Telefoonnummer is vereist").max(50),
   birth_date: z
@@ -32,8 +33,8 @@ export const ContractPartySchema = z.object({
   address: z
     .string()
     .trim()
-    .min(1, "Adres is vereist")
-    .max(500, "Adres is te lang"),
+    .min(1, "Vestigingadres is vereist")
+    .max(500, "Vestigingadres is te lang"),
 });
 
 export const ContractSchema = z.object({

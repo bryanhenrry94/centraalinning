@@ -30,7 +30,7 @@ export class ContractService {
         { reference_number: { contains: search } },
         {
           parties: {
-            some: { full_name: { contains: search } },
+            some: { fullname: { contains: search } },
           },
         },
       ];
@@ -76,8 +76,9 @@ export class ContractService {
           contract_id: createdContract.id,
           role: party.role,
           person_type: party.person_type,
-          full_name: party.full_name,
+          identification_type: party.identification_type,
           identification: party.identification,
+          fullname: party.fullname,
           email: party.email,
           phone: party.phone,
         })),

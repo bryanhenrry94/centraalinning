@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
         person_type:
           (party.person_type as "INDIVIDUAL" | "COMPANY") || "INDIVIDUAL",
         role: party.role,
-        full_name: party.full_name,
+        fullname: party.fullname,
         email: party.email || null,
         identification: party.identification || null,
         phone: party.phone || null,

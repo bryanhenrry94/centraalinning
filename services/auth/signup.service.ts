@@ -1,5 +1,5 @@
-import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 import { SignUpSchema } from "./signup.validators";
 import { SignUpInput } from "./signup.type";
 import { ParameterService } from "../parameter/parameter.service";
@@ -196,7 +196,7 @@ export class SignupService {
       // 7. Crear el pago en Sentoo.
       const sentooResponse = await createSentooPayment({
         amount: pricePlan, // YA en centavos
-        description: `Activación de cuenta - ${tenant.name} (${tenant.subdomain})`,
+        description: "Prueba",
         reference: tenant.kvk || "",
       });
 

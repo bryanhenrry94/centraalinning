@@ -33,7 +33,7 @@ interface ModalFormDebtorProps {
   id?: string;
 }
 
-const identificationTypeOptions = [
+export const identificationTypeOptions = [
   { value: IdentificationType.KVK, label: "KVK" },
   { value: IdentificationType.CEDULA, label: "CEDULA" },
   { value: IdentificationType.PASSPORT, label: "PASPOORT" },

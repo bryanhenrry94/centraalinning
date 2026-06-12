@@ -29,16 +29,27 @@ import { useRouter } from "next/navigation";
 import { formatCurrency, formatDate } from "@/utils/formatters";
 import { useDebounce } from "@/hooks/useDebounce";
 
-function StatusChip({ status }: { status: string }) {
+function StatusChip({ status, width }: { status: string; width?: number }) {
   switch (status) {
     case "DRAFT":
       return (
-        <Chip size="small" label="Concept" color="default" variant="filled" />
+        <Chip
+          size="small"
+          label="Concept"
+          color="default"
+          variant="filled"
+          sx={{ width: width || 100 }}
+        />
       );
 
     case "PENDING_PAYMENT":
       return (
-        <Chip size="small" label="In afwachting van betaling" color="info" />
+        <Chip
+          size="small"
+          label="In afwachting van betaling"
+          color="info"
+          sx={{ width: width || 100 }}
+        />
       );
 
     case "REGISTERED":
@@ -47,7 +58,7 @@ function StatusChip({ status }: { status: string }) {
           size="small"
           label="Geregistreerd"
           color="primary"
-          sx={{ width: 100 }}
+          sx={{ width: width || 100 }}
         />
       );
 
@@ -57,12 +68,12 @@ function StatusChip({ status }: { status: string }) {
           size="small"
           label="Geannuleerd"
           color="warning"
-          sx={{ width: 100 }}
+          sx={{ width: width || 100 }}
         />
       );
 
     default:
-      return <Chip size="small" label={status} sx={{ width: 100 }} />;
+      return <Chip size="small" label={status} sx={{ width: width || 100 }} />;
   }
 }
 
@@ -123,10 +134,10 @@ export default function ContractsPage() {
       >
         <Box>
           <Typography variant="h4" sx={{ fontWeight: 700 }}>
-            Overeenkomst registreren
+            Financiële afspraak registreren
           </Typography>
           <Typography variant="body2" color="textSecondary">
-            Registreer een financiële overeenkomst binnen de CFSB-samenwerking
+            Vul de gegevens van de betrokken partijen in en registreer uw financiële afspraak.
           </Typography>
         </Box>
 
@@ -296,7 +307,7 @@ export default function ContractsPage() {
                   </TableCell>
 
                   <TableCell sx={{ textAlign: "center" }}>
-                    <StatusChip status={contract.status} />
+                    <StatusChip status={contract.status} width={175} />
                   </TableCell>
 
                   <TableCell align="center">

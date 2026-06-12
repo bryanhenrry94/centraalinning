@@ -48,25 +48,17 @@ export async function createContract(
 
           parties: {
             create: input.parties.map((party) => ({
+              role: party.role,
               person_type:
                 (party.person_type as "INDIVIDUAL" | "COMPANY") || "INDIVIDUAL",
-
-              role: party.role,
-
-              contact_person: party.full_name,
-
-              full_name: party.full_name,
-
+              identification_type: party.identification_type,
               identification: party.identification,
-
+              contact_person: party.fullname,
+              fullname: party.fullname,
               email: party.email,
-
               phone: party.phone,
-
               birth_date: party.birth_date ?? null,
-
               birth_place: party.birth_place ?? null,
-
               address: party.address ?? null,
             })),
           },
@@ -159,7 +151,7 @@ export async function listContracts(tenantId: string): Promise<ActionResponse> {
           select: {
             id: true,
             role: true,
-            full_name: true,
+            fullname: true,
             email: true,
             identification: true,
           },
@@ -324,21 +316,14 @@ export async function updateContract(
 
             create: input.parties.map((party) => ({
               person_type: party.person_type as "INDIVIDUAL" | "COMPANY",
-
               role: party.role,
-
-              full_name: party.full_name,
-
+              fullname: party.fullname,
+              identification_type: party.identification_type,
               identification: party.identification,
-
               email: party.email,
-
               phone: party.phone,
-
               birth_date: party.birth_date ?? null,
-
               birth_place: party.birth_place ?? null,
-
               address: party.address ?? null,
             })),
           },

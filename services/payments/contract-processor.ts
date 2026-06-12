@@ -65,7 +65,7 @@ export const processContractPayment = async (payment: Payment) => {
     // enviar notificación de activación al cliente (PARTY_A)
     await sendActivateContractMail(
       party.email,
-      party.full_name,
+      party.fullname,
       contract.reference_number,
     );
   }

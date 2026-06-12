@@ -31,7 +31,6 @@ import {
   FormControl,
   InputLabel,
   FormHelperText,
-  Chip,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -63,6 +62,9 @@ import { ContractSchema } from "@/services/contract/contract.validators";
 
 import { useRouter } from "next/navigation";
 import { StatusContractChip } from "./StatusContractChip";
+import SelectHookForm from "@/components/ui/SelectHookForm";
+import { IdentificationType } from "@/constants/identification-type";
+import { identificationTypeOptions } from "@/components/debtor/modal-debtor-form";
 
 const steps = ["Gegevens", "Overeenkomst", "Documenten", "Overzicht"];
 
@@ -134,20 +136,22 @@ const OvereenkomstenRegistrerenPage = () => {
       if (!tenantResult) return;
 
       const partyAContract: ContractPartyInput = {
-        role: "PARTY_A",
         person_type: "COMPANY",
-        full_name: tenantResult?.name,
+        identification_type: "KVK",
         identification: tenantResult?.kvk || "",
+        role: "PARTY_A",
+        fullname: tenantResult?.name,
         email: session.user?.email || "",
         phone: session.user?.phone || "",
         address: tenantResult?.address || "",
       };
 
       const partyBContract: ContractPartyInput = {
-        role: "PARTY_B",
-        person_type: "INDIVIDUAL",
-        full_name: "",
+        person_type: "COMPANY",
+        identification_type: "KVK",
         identification: "",
+        role: "PARTY_B",
+        fullname: "",
         email: "",
         phone: "",
         address: "",
@@ -379,10 +383,11 @@ const OvereenkomstenRegistrerenPage = () => {
           {/* Header */}
           <Box sx={{ mb: 4 }}>
             <Typography variant="h4" sx={{ fontWeight: 700 }}>
-              Overeenkomst registreren
+              Financiële afspraak registreren
             </Typography>
             <Typography variant="body2" color="textSecondary">
-              Registreer een financiële overeenkomst binnen de CFSB-samenwerking
+              Vul de gegevens van de betrokken partijen in en registreer uw
+              financiële afspraak.
             </Typography>
           </Box>
 
@@ -408,14 +413,6 @@ const OvereenkomstenRegistrerenPage = () => {
                     Partijen
                   </Typography>
                 </Box>
-                <Typography
-                  variant="body2"
-                  color="textSecondary"
-                  sx={{ mb: 3 }}
-                >
-                  Vul de gegevens in van beide partijen die betrokken zijn bij
-                  deze overeenkomst.
-                </Typography>
 
                 <Grid container spacing={3}>
                   {fields.map((party, index) => (
@@ -435,7 +432,7 @@ const OvereenkomstenRegistrerenPage = () => {
                         >
                           <Box>
                             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                              Partij &nbsp;
+                              {index === 0 ? "Partij" : "Wederpartij"} &nbsp;
                               <Typography
                                 variant="caption"
                                 color="textSecondary"
@@ -491,24 +488,77 @@ const OvereenkomstenRegistrerenPage = () => {
                             )}
                           />
 
-                          <Controller
-                            name={`parties.${index}.identification`}
-                            control={control}
-                            render={({ field, fieldState }) => (
-                              <TextField
-                                {...field}
-                                fullWidth
-                                label={`${watch(`parties.${index}.person_type`) === "INDIVIDUAL" ? "Cedula, ID" : "KVK-nummer"}`}
-                                // helperText="BSN, KVK-nummer of ander identificatienummer"
-                                size="small"
-                                error={!!fieldState.error}
-                                helperText={fieldState.error?.message}
+                          <Stack direction="row" spacing={2}>
+                            <FormControl
+                              fullWidth
+                              error={
+                                !!(errors.parties as any)?.[index]
+                                  ?.identification_type
+                              }
+                              size="small"
+                              variant="outlined"
+                            >
+                              <Controller
+                                name={`parties.${index}.identification_type`}
+                                control={control}
+                                // defaultValue=""
+                                render={({ field }) => (
+                                  <TextField
+                                    {...field}
+                                    label="Identification Type"
+                                    select
+                                    size="small"
+                                  >
+                                    {(watch(`parties.${index}.person_type`) ===
+                                    "COMPANY"
+                                      ? [
+                                          {
+                                            value: IdentificationType.KVK,
+                                            label: "KVK",
+                                          },
+                                        ]
+                                      : identificationTypeOptions.filter(
+                                          (option) =>
+                                            option.value !==
+                                            IdentificationType.KVK,
+                                        )
+                                    ).map((option) => (
+                                      <MenuItem
+                                        key={option.value}
+                                        value={option.value}
+                                      >
+                                        {option.label}
+                                      </MenuItem>
+                                    ))}
+                                  </TextField>
+                                )}
                               />
-                            )}
-                          />
+                              <FormHelperText>
+                                {errors.parties?.[
+                                  index
+                                ]?.identification_type?.message?.toString()}
+                              </FormHelperText>
+                            </FormControl>
+
+                            <Controller
+                              name={`parties.${index}.identification`}
+                              control={control}
+                              render={({ field, fieldState }) => (
+                                <TextField
+                                  {...field}
+                                  fullWidth
+                                  label={`${watch(`parties.${index}.person_type`) === "INDIVIDUAL" ? "Identificatienummer" : "KVK-nummer"}`}
+                                  // helperText="BSN, KVK-nummer of ander identificatienummer"
+                                  size="small"
+                                  error={!!fieldState.error}
+                                  helperText={fieldState.error?.message}
+                                />
+                              )}
+                            />
+                          </Stack>
 
                           <Controller
-                            name={`parties.${index}.full_name`}
+                            name={`parties.${index}.fullname`}
                             control={control}
                             render={({ field, fieldState }) => (
                               <TextField
@@ -529,7 +579,7 @@ const OvereenkomstenRegistrerenPage = () => {
                               <TextField
                                 {...field}
                                 fullWidth
-                                label="Adres"
+                                label="Vestigingadres"
                                 size="small"
                                 error={!!fieldState.error}
                                 helperText={fieldState.error?.message}
@@ -629,13 +679,14 @@ const OvereenkomstenRegistrerenPage = () => {
 
                 <Button
                   variant="outlined"
-                  sx={{ mt: 2 }}
+                  sx={{ mt: 2, textTransform: "none" }}
                   onClick={() => {
                     const newParty: ContractPartyInput = {
-                      role: "PARTY_B",
                       person_type: "INDIVIDUAL",
+                      identification_type: "CEDULA",
                       identification: "",
-                      full_name: "",
+                      role: "PARTY_B",
+                      fullname: "",
                       email: "",
                       phone: "",
                       address: "",
@@ -657,10 +708,9 @@ const OvereenkomstenRegistrerenPage = () => {
                     Waarom registreren bij CFSB?
                   </Typography>
                   <Typography variant="body2">
-                    Door uw overeenkomst te registreren binnen de
-                    CFSB-samenwerking creëert u zekerheid, controle en
-                    bescherming. Bij problemen kunnen wij u snel ondersteunen
-                    met administratieve en juridische opvolging.
+                    Door uw financiële afspraak te registreren binnen de
+                    CFSB-samenwerking creëert u duidelijkheid, controle en
+                    bescherming tussen betrokken partijen.
                   </Typography>
                 </Alert>
               </Box>
@@ -1035,7 +1085,7 @@ const OvereenkomstenRegistrerenPage = () => {
                           variant="body2"
                           sx={{ fontWeight: 700, color: "#1976d2" }}
                         >
-                          {party.full_name || "Onbekende partij"}
+                          {party.fullname || "Onbekende partij"}
                         </Typography>
                       </Box>
                     ))}
@@ -1094,7 +1144,7 @@ const OvereenkomstenRegistrerenPage = () => {
                 endIcon={<CheckCircleIcon />}
                 onClick={() => setOpenDialog(true)}
               >
-                Overeenkomst registreren
+                Financiële afspraak registreren
               </Button>
             ) : (
               <Button
@@ -1110,11 +1160,11 @@ const OvereenkomstenRegistrerenPage = () => {
 
         {/* Confirmation Dialog */}
         <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-          <DialogTitle>Overeenkomst registreren</DialogTitle>
+          <DialogTitle>Financiële afspraak registreren</DialogTitle>
           <DialogContent>
             <Typography variant="body2" sx={{ mt: 2 }}>
-              Weet u zeker dat u deze overeenkomst wilt registreren? Deze actie
-              kan niet ongedaan worden gemaakt.
+              Weet u zeker dat u deze financiële afspraak wilt registreren? Deze
+              actie kan niet ongedaan worden gemaakt.
             </Typography>
           </DialogContent>
           <DialogActions>
