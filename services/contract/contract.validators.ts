@@ -13,6 +13,7 @@ const contractStatuses = [
   "DRAFT",
   "PENDING_PAYMENT",
   "REGISTERED",
+  "IN_COLLECTION",
   "CANCELLED",
 ] as const;
 
@@ -35,6 +36,7 @@ export const ContractPartySchema = z.object({
     .trim()
     .min(1, "Vestigingadres is vereist")
     .max(500, "Vestigingadres is te lang"),
+  collection_case_id: z.string().optional().nullable(),
 });
 
 export const ContractSchema = z.object({
@@ -54,6 +56,7 @@ export const ContractSchema = z.object({
     .optional(),
   description: z.string().optional(),
   reference_number: z.string().trim(),
+  collection_case_id: z.string().optional().nullable(),
   parties: ContractPartySchema.array().min(
     1,
     "Minstens één partij is verplicht",

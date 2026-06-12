@@ -1,5 +1,3 @@
-import { User } from "@/lib/validations/user";
-
 export interface Sender {
   id: string;
   fullname: string;

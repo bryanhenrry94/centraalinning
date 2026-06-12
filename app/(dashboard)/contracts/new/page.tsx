@@ -64,6 +64,7 @@ import { useRouter } from "next/navigation";
 import { StatusContractChip } from "../StatusContractChip";
 import { IdentificationType } from "@/constants/identification-type";
 import { identificationTypeOptions } from "@/components/debtor/modal-debtor-form";
+import { getInfoPersonAction } from "@/actions/person";
 
 const steps = ["Gegevens", "Overeenkomst", "Documenten", "Overzicht"];
 
@@ -552,6 +553,60 @@ const OvereenkomstenRegistrerenPage = () => {
                                   size="small"
                                   error={!!fieldState.error}
                                   helperText={fieldState.error?.message}
+                                  onBlur={async () => {
+                                    field.onBlur();
+                                    const personType = getValues(
+                                      `parties.${index}.person_type`,
+                                    );
+                                    const identificationType = getValues(
+                                      `parties.${index}.identification_type`,
+                                    );
+                                    const identification = getValues(
+                                      `parties.${index}.identification`,
+                                    );
+
+                                    if (identificationType && identification) {
+                                      const personInfo =
+                                        await getInfoPersonAction(
+                                          identificationType as IdentificationType,
+                                          identification,
+                                        );
+                                      if (personInfo) {
+                                        setValue(
+                                          `parties.${index}.fullname`,
+                                          personType === "INDIVIDUAL"
+                                            ? `${personInfo.first_name} ${personInfo.last_name}`
+                                            : personInfo.business_name || "",
+                                        );
+                                        setValue(
+                                          `parties.${index}.email`,
+                                          personInfo.email || "",
+                                        );
+                                        setValue(
+                                          `parties.${index}.phone`,
+                                          personInfo.phone || "",
+                                        );
+                                        setValue(
+                                          `parties.${index}.address`,
+                                          personInfo.address || "",
+                                        );
+                                        if (personType === "INDIVIDUAL") {
+                                          setValue(
+                                            `parties.${index}.birth_date`,
+                                            personInfo.birth_date
+                                              ? new Date(personInfo.birth_date)
+                                                  .toISOString()
+                                                  .split("T")[0]
+                                              : "",
+                                          );
+                                          setValue(
+                                            `parties.${index}.birth_place`,
+                                            personInfo.birth_place || "",
+                                          );
+                                        }
+                                      }
+                                    }
+                                  }}
                                 />
                               )}
                             />
@@ -661,6 +716,7 @@ const OvereenkomstenRegistrerenPage = () => {
                                 render={({ field, fieldState }) => (
                                   <TextField
                                     {...field}
+                                    value={field.value || ""}
                                     fullWidth
                                     label="Geboorteplaats"
                                     size="small"

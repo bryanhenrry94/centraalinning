@@ -2,7 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { useForm, FormProvider, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { DebtorCreateSchema, DebtorCreate } from "@/lib/validations/debtor";
+import { DebtorCreateSchema } from "@/services/debtor/debtor.validators";
+import { DebtorCreate } from "@/services/debtor/debtor.type";
 
 import {
   Button,
@@ -22,7 +23,7 @@ import { createDebtor, getDebtorById, updateDebtor } from "@/actions/debtor";
 import { useTenant } from "@/hooks/useTenant";
 import { notifyError, notifySuccess } from "@/lib/notifications";
 import CloseIcon from "@mui/icons-material/Close";
-import { DebtorIncomeCreate } from "@/lib/validations/debtor-incomes";
+import { DebtorIncomeCreate } from "@/services/debtor/debtor.type";
 import { getPersonById, getPersonByIdentification } from "@/actions/person";
 import { IdentificationType } from "@/constants/identification-type";
 
@@ -53,7 +54,7 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
   const [loading, setLoading] = useState(false);
 
   const methods = useForm<DebtorCreate>({
-    resolver: zodResolver(DebtorCreateSchema),
+    resolver: zodResolver(DebtorCreateSchema) as any,
     defaultValues: {
       email: "",
       person_id: "",

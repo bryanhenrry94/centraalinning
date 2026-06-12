@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { VerdictInterestCreateSchema } from "@/lib/validations/verdict-interest";
-import { DebtorBaseSchema } from "@/lib/validations/debtor";
 import {
   VerdictEmbargoBaseSchema,
   VerdictEmbargoCreateSchema,
@@ -33,16 +32,16 @@ const VerdictBaseSchema = z.object({
   }),
   sentence_amount: z.preprocess(
     (val) => (typeof val === "string" ? Number(val) : val),
-    z.number()
+    z.number(),
   ),
   sentence_date: z.preprocess(
     (val) =>
       typeof val === "string" || val instanceof Date ? new Date(val) : val,
-    z.date()
+    z.date(),
   ),
   procesal_cost: z.preprocess(
     (val) => (typeof val === "string" ? Number(val) : val),
-    z.number().optional()
+    z.number().optional(),
   ),
   verdict_interest: z.array(VerdictInterestCreateSchema).optional(),
   verdict_embargo: z.array(VerdictEmbargoCreateSchema).optional(),
@@ -50,7 +49,7 @@ const VerdictBaseSchema = z.object({
     (val) => (val === "" ? null : val),
     z
       .string({ message: "Selecteer een deurwaarder" })
-      .uuid({ message: "Selecteer een geldige deurwaarder" })
+      .uuid({ message: "Selecteer een geldige deurwaarder" }),
   ),
   bailiff_services: z.array(VerdictBailiffServicesCreateSchema).optional(),
   status: VerdictStatusEnum,
@@ -88,7 +87,7 @@ export const VerdictResponseSchema = VerdictBaseSchema.extend({
       total_income: z
         .preprocess(
           (val) => (typeof val === "string" ? Number(val) : val),
-          z.number()
+          z.number(),
         )
         .optional(),
     })

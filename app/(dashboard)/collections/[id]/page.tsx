@@ -23,10 +23,7 @@ import { getCollectionViewById } from "@/actions/collection-case";
 import { notifyError, notifyInfo } from "@/lib/notifications";
 import { formatCurrency } from "@/utils/formatters";
 import { getPaymentsByInvoice } from "@/actions/payment";
-import {
-  getAllNotificationsByCollectionCase,
-  sendNotification,
-} from "@/actions/notification";
+import { CollectionNotificationService } from "@/services/collection/collection-notification.service";
 import { Notification } from "@/lib/validations/notification";
 import TabPanel from "@/components/ui/tab-panel";
 
@@ -112,9 +109,10 @@ const CollectionViewPage: React.FC = () => {
         return;
       }
 
-      const data = await getAllNotificationsByCollectionCase(
-        params.id as string,
-      );
+      const data =
+        await CollectionNotificationService.getAllNotificationsByCollectionCase(
+          params.id as string,
+        );
       console.log("Notifications Data:", data);
       setNotifications(data);
     } catch (error) {
@@ -134,7 +132,7 @@ const CollectionViewPage: React.FC = () => {
         return;
       }
 
-      await sendNotification(params.id as string);
+      await CollectionNotificationService.sendNotification(params.id as string);
       await fetchNotifications();
 
       notifyInfo("Notificación enviada exitosamente");

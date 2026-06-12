@@ -24,7 +24,7 @@ import { useEffect, useState } from "react";
 import { VerdictEmbargo } from "@/lib/validations/verdict-embargo";
 import { embargoTipos } from "@/constants/embargo";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { User } from "@/lib/validations/user";
+import { UserInput } from "@/services/auth/user.type";
 import { getUsersByRole } from "@/actions/user";
 import { UserRole } from "@/constants/user-role";
 
@@ -59,7 +59,7 @@ const TotalCell = ({ control, index }: { control: any; index: number }) => {
 };
 
 const AttachmentSection: React.FC = () => {
-  const [bailiffs, setBailiffs] = useState<User[]>([]);
+  const [bailiffs, setBailiffs] = useState<UserInput[]>([]);
 
   const {
     control,

@@ -1,22 +1,24 @@
 import { prisma } from "@/lib/prisma";
 import { CreateContractInput } from "@/services/contract/contract.types";
 import { Prisma } from "@prisma/client";
+import { DebtorService } from "../debtor/debtor.service";
+import { CollectionService } from "../collection/collection.service";
 
 export class ContractService {
-  static async generateContractReference() {
+  static generateContractReference = async () => {
     const year = new Date().getFullYear();
 
     const total = await prisma.contract.count();
 
     return `FAR-${year}-${String(total + 1).padStart(3, "0")}`;
-  }
+  };
 
-  static async list(
+  static list = async (
     tenantId: string,
     status: string,
     search: string,
     page: string,
-  ) {
+  ) => {
     const whereClause: any = {
       tenant_id: tenantId,
     };
@@ -54,9 +56,9 @@ export class ContractService {
         created_at: "desc",
       },
     });
-  }
+  };
 
-  static async create(tenantId: string, contract: CreateContractInput) {
+  static create = async (tenantId: string, contract: CreateContractInput) => {
     const reference_number = await this.generateContractReference();
 
     return prisma.$transaction(async (tx) => {
@@ -105,9 +107,10 @@ export class ContractService {
 
       return createdContract;
     });
-  }
+  };
 
-  static async getById(id: string) {
+  static getById = async (id: string) => {
+    console.log("Fetching contract with ID:", id);
     return await prisma.contract.findUnique({
       where: { id },
       include: {
@@ -115,12 +118,51 @@ export class ContractService {
         documents: true,
       },
     });
-  }
+  };
 
-  static async update(id: string, data: Prisma.ContractUpdateInput) {
+  static update = async (id: string, data: Prisma.ContractUpdateInput) => {
     return await prisma.contract.update({
       where: { id },
       data,
     });
+  };
+
+  static async startFollowUp(contractId: string) {
+    const contract = await this.getById(contractId);
+
+    if (!contract) {
+      throw new Error("Contract not found");
+    }
+
+    for (const party of contract.parties) {
+      if (party.role !== "PARTY_B") continue;
+
+      const { debtor } = await DebtorService.findOrCreate(
+        {
+          person_type: party.person_type,
+          identification_type: party.identification_type,
+          identification: party.identification,
+          fullname: party.fullname,
+          email: party.email,
+          phone: party.phone,
+          address: party.address,
+          birth_date: party.birth_date,
+          birth_place: party.birth_place,
+        },
+        contract.tenant_id,
+      );
+
+      const collection = await CollectionService.createFromContract(
+        contract,
+        debtor.id,
+      );
+
+      if (collection) {
+        await this.update(contractId, {
+          status: "IN_COLLECTION",
+          collection_case: { connect: { id: collection.id } },
+        });
+      }
+    }
   }
 }

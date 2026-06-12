@@ -17,7 +17,7 @@ import {
   createVerdict,
   updateVerdict,
 } from "@/actions/verdict";
-import { DebtorBase } from "@/lib/validations/debtor";
+import { DebtorInput } from "@/services/debtor/debtor.type";
 // hooks and libs
 import { useTenant } from "@/hooks/useTenant";
 import { useRouter } from "next/navigation";
@@ -55,17 +55,17 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
 }) => {
   const { data: session } = useSession();
   const { tenant } = useTenant();
-  const [debtors, setDebtors] = React.useState<DebtorBase[]>([]);
+  const [debtors, setDebtors] = React.useState<DebtorInput[]>([]);
   const [bailiffs, setBailiffs] = React.useState<Bailiff[]>([]);
   const [openModalDebtor, setOpenModalDebtor] = React.useState(false);
   const [openModalBailiff, setOpenModalBailiff] = React.useState(false);
   const [bailiffSelected, setBailiffSelected] =
     React.useState<Bailiff | null>();
   const [debtorSelected, setDebtorSelected] =
-    React.useState<DebtorBase | null>();
+    React.useState<DebtorInput | null>();
   const router = useRouter();
 
-  const handleSelectDebtor = (debtor: DebtorBase | null) => {
+  const handleSelectDebtor = (debtor: DebtorInput | null) => {
     if (debtor) {
       setDebtorSelected(debtor);
     } else {
@@ -89,7 +89,7 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
     setOpenModalDebtor(false);
   };
 
-  const handleSaveDebtor = async (debtor: DebtorBase) => {
+  const handleSaveDebtor = async (debtor: DebtorInput) => {
     handleSelectDebtor(debtor);
     await fetchDebtors();
   };

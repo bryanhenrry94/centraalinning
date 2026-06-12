@@ -7,7 +7,7 @@ import { TenantService } from "../tenant/tenant.service";
 import { createSentooPayment } from "@/actions/sentoo.actions";
 import { PaymentCreate } from "@/lib/validations/payment";
 import { PaymentService } from "../payments/payment.service";
-import { MailService } from "../notification/mail.service";
+import { MailService } from "../mail/mail.service";
 
 export class SignupService {
   static register = async (

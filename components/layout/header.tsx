@@ -208,7 +208,7 @@ export default function Header() {
 
             <Divider />
 
-            <MenuItem onClick={() => router.push("/dashboard/settings")}>
+            <MenuItem onClick={() => router.push("/settings")}>
               <SettingsIcon fontSize="small" sx={{ mr: 1 }} />
               Configuratie
             </MenuItem>

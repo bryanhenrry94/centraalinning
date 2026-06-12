@@ -1,4 +1,5 @@
 "use server";
+import { IdentificationType } from "@/constants/identification-type";
 import { prisma } from "@/lib/prisma";
 import { PersonInput } from "@/lib/validations/person";
 
@@ -40,4 +41,18 @@ export const getAllPersons = async (): Promise<PersonInput[]> => {
   }));
 
   return personFormatted;
+};
+
+export const getInfoPersonAction = async (
+  identificationType: IdentificationType,
+  identification: string,
+) => {
+  const person = await prisma.person.findFirst({
+    where: {
+      identification_type: identificationType,
+      identification,
+    },
+  });
+
+  return person;
 };

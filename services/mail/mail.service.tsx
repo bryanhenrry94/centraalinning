@@ -7,9 +7,9 @@ import PaymentLinkEmail, {
   PaymentLinkEmailProps,
 } from "@/templates/emails/PaymentLinkEmail";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export class MailService {
+  private static resend = new Resend(process.env.RESEND_API_KEY);
+
   static async sendPaymentLinkEmail(
     to: string,
     fullname: string,
@@ -26,7 +26,7 @@ export class MailService {
       referenceNumber,
     };
 
-    await resend.emails.send({
+    await this.resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
       subject: amount

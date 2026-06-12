@@ -3,14 +3,23 @@ import { IdentificationType } from "@/constants/identification-type";
 import { PersonType } from "@/constants/person-type";
 import { prisma } from "@/lib/prisma";
 import {
-  DebtorBase,
-  DebtorBaseSchema,
-  DebtorCreate,
+  DebtorSchema,
   DebtorCreateSchema,
-  DebtorResponse,
   DebtorResponseSchema,
-} from "@/lib/validations/debtor";
+} from "@/services/debtor/debtor.validators";
+
+import {
+  DebtorInput,
+  DebtorCreate,
+  DebtorResponse,
+} from "@/services/debtor/debtor.type";
 import { DebtorSummary } from "@/types/DebtorSummary";
+
+import { DebtorService } from "@/services/debtor/debtor.service";
+
+export async function getDebtorsAction(tenantId: string) {
+  return DebtorService.getAll(tenantId);
+}
 
 export const getAllDebtorsByTenantId = async (
   tenant_id: string,
@@ -37,17 +46,19 @@ export const getAllDebtorsByTenantId = async (
   }
 };
 
-export const getAllDebtors = async (): Promise<DebtorBase[]> => {
+export const getAllDebtors = async (): Promise<DebtorInput[]> => {
   try {
     const debtors = await prisma.debtor.findMany();
 
-    return debtors.map((debtor: any) => debtor as DebtorBase);
+    return debtors.map((debtor: any) => debtor as DebtorInput);
   } catch (error) {
     throw new Error("Error fetching debtors");
   }
 };
 
-export const getDebtorById = async (id: string): Promise<DebtorBase | null> => {
+export const getDebtorById = async (
+  id: string,
+): Promise<DebtorInput | null> => {
   try {
     const debtor = await prisma.debtor.findFirst({
       where: { id },
@@ -56,7 +67,7 @@ export const getDebtorById = async (id: string): Promise<DebtorBase | null> => {
       },
     });
 
-    return debtor as DebtorBase | null;
+    return debtor as DebtorInput | null;
   } catch (error) {
     throw new Error("Error fetching debtor");
   }
@@ -64,7 +75,7 @@ export const getDebtorById = async (id: string): Promise<DebtorBase | null> => {
 
 export const getDebtorByUserId = async (
   user_id: string,
-): Promise<DebtorBase | null> => {
+): Promise<DebtorInput | null> => {
   try {
     const debtor = await prisma.debtor.findFirst({
       where: { user_id },
@@ -73,7 +84,7 @@ export const getDebtorByUserId = async (
       },
     });
 
-    return debtor as DebtorBase | null;
+    return debtor as DebtorInput | null;
   } catch (error) {
     throw new Error("Error fetching debtor by user ID");
   }
@@ -82,7 +93,7 @@ export const getDebtorByUserId = async (
 export const createDebtor = async (
   debtor: DebtorCreate,
   tenant_id: string,
-): Promise<{ success: boolean; error?: string; data?: DebtorBase }> => {
+): Promise<{ success: boolean; error?: string; data?: DebtorInput }> => {
   try {
     const debtorFormatted = DebtorCreateSchema.parse(debtor);
 
@@ -105,7 +116,8 @@ export const createDebtor = async (
         data: {
           person_type: debtorFormatted.person?.person_type as PersonType,
           identification_type:
-            debtorFormatted.person?.identification_type || IdentificationType.CEDULA,
+            debtorFormatted.person?.identification_type ||
+            IdentificationType.CEDULA,
           identification: debtorFormatted.person?.identification || "",
           first_name: debtorFormatted.person?.first_name || "",
           last_name: debtorFormatted.person?.last_name || "",
@@ -163,7 +175,7 @@ export const updateDebtor = async (
   debtor: DebtorCreate,
   tenant_id: string,
   id: string,
-): Promise<{ success: boolean; error?: string; data?: DebtorBase }> => {
+): Promise<{ success: boolean; error?: string; data?: DebtorInput }> => {
   try {
     const updatedDebtor = await prisma.$transaction(async (tx: any) => {
       // Update debtor
@@ -213,7 +225,7 @@ export const updateDebtor = async (
 export const getDebtorInfo = async (
   tenant_id: string,
   identification: string,
-): Promise<DebtorBase> => {
+): Promise<DebtorInput> => {
   const debtor = await prisma.debtor.findFirst({
     where: {
       tenant_id: tenant_id,
@@ -233,10 +245,10 @@ export const getDebtorInfo = async (
   }
 
   // Validate the debtor data against the schema
-  const parsedDebtor = DebtorBaseSchema.parse(debtor);
+  const parsedDebtor = DebtorSchema.parse(debtor);
 
   // Ensure the return type matches IDebtor
-  return parsedDebtor as DebtorBase;
+  return parsedDebtor as DebtorInput;
 };
 
 export const createDebtorIfNotExists = async (
@@ -300,7 +312,7 @@ export const createDebtorIfNotExists = async (
   // const parsedDebtor = DebtorBaseSchema.parse(newDebtor);
 
   // // Ensure the return type matches IDebtor
-  // return parsedDebtor as DebtorBase;
+  // return parsedDebtor as DebtorInput;
 };
 
 export const validaEmailDebtorUserExist = async (
@@ -402,7 +414,7 @@ export const getDebts = async (
       ${whereSQL}
     `;
 
-    const raw = await prisma.$queryRawUnsafe(query, ...params) as any[];
+    const raw = (await prisma.$queryRawUnsafe(query, ...params)) as any[];
 
     const summary = raw.map((row) => {
       const result: any = {};

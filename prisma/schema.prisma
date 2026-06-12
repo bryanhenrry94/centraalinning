@@ -570,6 +570,7 @@ model CollectionCase {
 
   chat_rooms                 ChatRoom[]
   collectionCaseNotification CollectionCaseNotification[]
+  contract                   Contract?
 
   @@map("collection_case")
 }
@@ -612,7 +613,6 @@ model Debtor {
   agreements       Agreement[]
   debts            Debt[]
 
-  @@unique([tenant_id, email])
   @@map("debtor")
 }
 
@@ -741,6 +741,7 @@ enum ContractStatus {
   DRAFT
   PENDING_PAYMENT
   REGISTERED
+  IN_COLLECTION
   CANCELLED
 }
 
@@ -779,8 +780,8 @@ model Contract {
 
   description        String?             @db.Text
 
-  // createdById        String
-  // createdBy          User               @relation(fields: [createdById],references: [id])
+  collection_case_id String?             @unique
+  collection_case    CollectionCase?    @relation(fields: [collection_case_id], references: [id])
 
   reference_number   String              @unique
 
@@ -845,6 +846,7 @@ enum PaymentType {
   DEBT_PAYMENT
   BLOK_CHECK
   FINANCIAL_REPORT
+  COLLECTION
   OTHER
 }
 

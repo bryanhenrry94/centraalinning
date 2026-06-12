@@ -1,16 +1,50 @@
-import React, { Suspense } from "react";
-import { Box } from "@mui/material";
+"use client";
+import React, { useEffect } from "react";
+import { Box, Skeleton } from "@mui/material";
+import { CollectionHeader } from "@/components/collection/collection-header";
+import { CollectionCaseResponse } from "@/services/collection/collection.type";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { getCollectionsAction } from "@/actions/collection-case";
 import CollectionTable from "@/components/collection/collection-table";
-import LoadingUI from "@/components/ui/loading-ui";
 
-const CollectionsPage = async () => {
+export default function CollectionsPage() {
+  const { session } = useAuthSession();
+  const [invoices, setInvoices] = React.useState<CollectionCaseResponse[]>([]);
+
+  const [loading, setLoading] = React.useState(false);
+
+  const fetchInvoices = React.useCallback(async () => {
+    if (!session?.user?.tenant_id) return;
+
+    try {
+      setLoading(true);
+
+      const invoices = await getCollectionsAction({
+        tenant_id: session.user.tenant_id,
+      });
+
+      setInvoices(invoices);
+    } finally {
+      setLoading(false);
+    }
+  }, [session?.user?.tenant_id]);
+
+  useEffect(() => {
+    fetchInvoices();
+  }, [fetchInvoices]);
+
+  const handleRefresh = async () => {
+    await fetchInvoices();
+  };
+
   return (
     <Box sx={{ m: 4 }}>
-      <Suspense fallback={<LoadingUI />}>
-        <CollectionTable />
-      </Suspense>
+      <CollectionHeader onRefresh={handleRefresh} />
+      {loading ? (
+        <Skeleton variant="rectangular" width={"100%"} height={200} />
+      ) : (
+        <CollectionTable invoices={invoices} />
+      )}
     </Box>
   );
-};
-
-export default CollectionsPage;
+}

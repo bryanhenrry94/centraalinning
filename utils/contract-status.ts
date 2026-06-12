@@ -12,6 +12,9 @@ export function getContractStatusLabel(status: ContractStatus): string {
     case "REGISTERED":
       return "Geregistreerd";
 
+    case "IN_COLLECTION":
+      return "In incasso";
+
     case "CANCELLED":
       return "Geannuleerd";
 
@@ -32,6 +35,9 @@ export function getContractStatusColor(
 
     case "REGISTERED":
       return "info";
+
+    case "IN_COLLECTION":
+      return "error";
 
     case "CANCELLED":
       return "error";

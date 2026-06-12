@@ -55,11 +55,3 @@ export const CollectionCaseViewSchema = CollectionCaseSchema.extend({
     email: z.string(),
   }),
 });
-
-export type CollectionCase = z.infer<typeof CollectionCaseSchema>;
-export type CollectionCaseCreate = z.infer<typeof CollectionCaseCreateSchema>;
-export type CollectionCaseUpdate = z.infer<typeof CollectionCaseUpdateSchema>;
-export type CollectionCaseResponse = z.infer<
-  typeof CollectionCaseResponseSchema
->;
-export type CollectionCaseView = z.infer<typeof CollectionCaseViewSchema>;

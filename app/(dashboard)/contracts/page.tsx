@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Card,
-  Chip,
   IconButton,
   InputAdornment,
   MenuItem,
@@ -21,6 +20,8 @@ import {
   Button,
   Container,
   Menu,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
@@ -30,6 +31,11 @@ import { useRouter } from "next/navigation";
 import { formatCurrency, formatDate } from "@/utils/formatters";
 import { useDebounce } from "@/hooks/useDebounce";
 import { StatusContractChip } from "./StatusContractChip";
+
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import { AlertService } from "@/lib/alerts";
+import { ContractService } from "@/services/contract/contract.service";
 
 export default function ContractsPage() {
   const router = useRouter();
@@ -90,6 +96,47 @@ export default function ContractsPage() {
 
   const handleClicShowDetails = (contractId: string) => {
     router.push(`/contracts/${contractId}`);
+  };
+
+  const handleClicStartFollowUp = (contractId: string) => {
+    handleClose();
+
+    AlertService.showConfirm(
+      "Weet je het zeker?",
+      "Deze actie start het administratieve vervolgingsproces voor deze overeenkomst. Wil je doorgaan?",
+      "Ja, vervolgingsproces starten",
+      "Annuleren",
+    ).then(async (confirmed) => {
+      if (confirmed) {
+        beginFollowUpProcess(contractId);
+      }
+    });
+    return;
+  };
+
+  const beginFollowUpProcess = async (contractId: string) => {
+    try {
+      const response = await fetch(
+        `/api/contracts/${contractId}/start-follow-up`,
+        {
+          method: "POST",
+        },
+      );
+
+      if (response.ok) {
+        AlertService.showSuccess("Vervolgingsproces gestart");
+        fetchContracts(filters); // Refresh the list to show updated status
+      } else {
+        AlertService.showError(
+          "Het vervolgingsproces kon niet worden gestart. Probeer het alstublieft opnieuw.",
+        );
+      }
+    } catch (error) {
+      console.error("Error starting follow-up process:", error);
+      AlertService.showError(
+        "Er is een fout opgetreden bij het starten van het vervolgingsproces. Probeer het alstublieft opnieuw.",
+      );
+    }
   };
 
   return (
@@ -306,10 +353,21 @@ export default function ContractsPage() {
                       <MenuItem
                         onClick={() => handleClicShowDetails(contract.id)}
                       >
-                        Consultar
+                        <ListItemIcon>
+                          <VisibilityIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Raadplegen</ListItemText>
                       </MenuItem>
-                      <MenuItem onClick={handleClose}>
-                        Activar Vordering
+                      <MenuItem
+                        onClick={() => handleClicStartFollowUp(contract.id)}
+                        disabled={contract.status !== "REGISTERED"}
+                      >
+                        <ListItemIcon>
+                          <RestartAltIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>
+                          Administratieve opvolging starten
+                        </ListItemText>
                       </MenuItem>
                     </Menu>
                   </TableCell>

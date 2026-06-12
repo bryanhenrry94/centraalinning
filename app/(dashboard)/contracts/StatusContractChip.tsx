@@ -29,6 +29,16 @@ export const StatusContractChip = ({
         />
       );
 
+    case "IN_COLLECTION":
+      return (
+        <Chip
+          size="small"
+          label="In incasso"
+          color="error"
+          sx={{ width: width || 100 }}
+        />
+      );
+
     case "REGISTERED":
       return (
         <Chip

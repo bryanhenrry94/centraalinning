@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getUsersByTenantId, updateUserActiveStatus } from "@/actions/user";
-import { User } from "@/lib/validations/user";
+import { UserInput } from "@/services/auth/user.type";
 import {
   Box,
   Button,
@@ -19,8 +19,8 @@ import { notifyError } from "@/lib/notifications";
 
 type Props = {
   tenant_id: string;
-  initialUsers?: User[];
-  onChange?: (users: User[]) => void;
+  initialUsers?: UserInput[];
+  onChange?: (users: UserInput[]) => void;
 };
 
 export default function UserTable({
@@ -28,7 +28,7 @@ export default function UserTable({
   initialUsers = [],
   onChange,
 }: Props) {
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [users, setUsers] = useState<UserInput[]>(initialUsers);
   const [loading, setLoading] = useState<boolean>(initialUsers.length === 0);
   const [updating, setUpdating] = useState<Record<string, boolean>>({});
 
@@ -52,7 +52,7 @@ export default function UserTable({
     }
   }
 
-  async function toggleActive(user: User) {
+  async function toggleActive(user: UserInput) {
     setUpdating((s) => ({ ...s, [user.id]: true }));
     try {
       const confirmText = user.is_active
@@ -63,22 +63,22 @@ export default function UserTable({
         "Weet je het zeker?",
         confirmText,
         "Ja",
-        "Annuleren"
+        "Annuleren",
       ).then(async (confirmed) => {
         if (confirmed) {
           const updatedUser = await updateUserActiveStatus(
             user.id,
-            !user.is_active
+            !user.is_active,
           );
 
           if (!updatedUser) {
             throw new Error(
-              "No se pudo actualizar el estado del usuario. Respuesta vacía."
+              "No se pudo actualizar el estado del usuario. Respuesta vacía.",
             );
           }
           setUsers((prev) => {
             const next = prev.map((u) =>
-              u.id === updatedUser.id ? updatedUser : u
+              u.id === updatedUser.id ? updatedUser : u,
             );
             onChange?.(next);
             return next;

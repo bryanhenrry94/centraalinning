@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
   Box,
   Typography,
@@ -12,7 +11,6 @@ import {
   Chip,
   Paper,
   Divider,
-  Stack,
   Button,
   Container,
 } from "@mui/material";
@@ -92,15 +90,10 @@ const StatusChip = ({ status }: { status: string }) => {
 };
 
 export default function AccountsPage() {
-  // Handler temporal para el botón
-  const handleRegisterPayment = (referenceId: string) => {
-    alert(`Registrar nuevo pago para ${referenceId}`);
-  };
-
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <ActionToolbar
-        title="Consultar"
+        title="Raadplegen"
         navigation={[
           { title: "Dashboard", href: "/dashboard" },
           { title: "Vonnis", href: "/dashboard/verdicts" },

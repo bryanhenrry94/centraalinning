@@ -6,7 +6,7 @@ import {
   hasPaymentsUpToDate,
 } from "@/actions/agreement";
 import { applyFine } from "@/actions/debt-fine";
-import { getLastNotificationDate } from "@/actions/notification";
+import { CollectionNotificationService } from "@/services/collection/collection-notification.service";
 import { CollectionCaseStatus } from "@/constants/collection-case-status";
 import { PersonType } from "@/constants/person-type";
 import { FineType } from "@/constants/fine-type";
@@ -78,10 +78,11 @@ export async function processCollectionCaseWorkflow() {
     if (c.due_date >= today) continue;
 
     // Obtener la fecha de la última notificación relevante
-    const lastNotificationDate = await getLastNotificationDate(
-      c.id,
-      c.status as CollectionCaseStatus,
-    );
+    const lastNotificationDate =
+      await CollectionNotificationService.getLastNotificationDate(
+        c.id,
+        c.status as CollectionCaseStatus,
+      );
 
     console.log("lastNotificationDate: ", lastNotificationDate);
 

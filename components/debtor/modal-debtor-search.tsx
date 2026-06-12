@@ -20,17 +20,17 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import { getAllDebtors } from "@/actions/debtor";
 import {
-  DebtorBase,
+  DebtorInput,
   DebtorCreate as DebtorCreateBase,
   DebtorResponse,
-} from "@/lib/validations/debtor";
+} from "@/services/debtor/debtor.type";
 
 type DebtorCreate = DebtorCreateBase & { id: string };
 
 type ModalSearchDebtorProps = {
   open: boolean;
   onClose: () => void;
-  onSelect: (debtor: DebtorBase) => void;
+  onSelect: (debtor: DebtorInput) => void;
   onEdit: (id: string) => void;
 };
 
@@ -75,7 +75,7 @@ const ModalSearchDebtor: React.FC<ModalSearchDebtorProps> = ({
       debtor.person?.first_name?.toLowerCase().includes(search.toLowerCase()) ||
       debtor.person?.last_name?.toLowerCase().includes(search.toLowerCase()) ||
       debtor.person?.identification ||
-      debtor.email.toLowerCase().includes(search.toLowerCase())
+      debtor.email.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (

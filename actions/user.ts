@@ -2,28 +2,22 @@
 
 import { UserRole } from "@/constants/user-role";
 import { prisma } from "@/lib/prisma";
-import { User } from "@/lib/validations/user";
+import { UserInput, UserResponse } from "@/services/auth/user.type";
 
-const mapUser = (user: any): User => ({
+const mapUser = (user: any): UserResponse => ({
   id: user.id,
   email: user.email,
   fullname: user.fullname,
   phone: user.phone,
   is_active: user.is_active,
-
   memberships:
     user.memberships?.map((membership: any) => ({
       id: membership.id,
-
       user_id: membership.user_id,
-
       tenant_id: membership.tenant_id,
-
       status: membership.status,
-
       roles: membership.roles?.map((role: any) => role.role as UserRole) || [],
     })) || [],
-
   created_at: user.created_at,
   updated_at: user.updated_at,
 });
@@ -62,7 +56,9 @@ export const getUserById = async (id: string) => {
   });
 };
 
-export const getUsersByRole = async (roleName: UserRole): Promise<User[]> => {
+export const getUsersByRole = async (
+  roleName: UserRole,
+): Promise<UserInput[]> => {
   const users = await prisma.user.findMany({
     where: {
       memberships: {
@@ -90,7 +86,7 @@ export const getUsersByRole = async (roleName: UserRole): Promise<User[]> => {
 
 export const getUsersByTenantId = async (
   tenant_id: string,
-): Promise<User[]> => {
+): Promise<UserInput[]> => {
   const users = await prisma.user.findMany({
     where: {
       memberships: {
@@ -134,7 +130,7 @@ export const updateUserProfile = async (
 export const updateUserActiveStatus = async (
   user_id: string,
   is_active: boolean,
-): Promise<User> => {
+): Promise<UserInput> => {
   const updatedUser = await prisma.user.update({
     where: {
       id: user_id,
@@ -175,7 +171,7 @@ export const userExistsByEmail = async (email: string): Promise<boolean> => {
  */
 
 export const userHasRole = async (
-  user: User,
+  user: UserResponse,
   role: UserRole,
 ): Promise<boolean> => {
   return await user.memberships.some((membership) =>
@@ -184,7 +180,7 @@ export const userHasRole = async (
 };
 
 export const userHasRoleInTenant = async (
-  user: User,
+  user: UserResponse,
   tenantId: string,
   role: UserRole,
 ): Promise<boolean> => {
@@ -200,7 +196,7 @@ export const userHasRoleInTenant = async (
 };
 
 export const userHasAnyRoleInTenant = async (
-  user: User,
+  user: UserResponse,
   tenantId: string,
   roles: UserRole[],
 ): Promise<boolean> => {
@@ -216,7 +212,7 @@ export const userHasAnyRoleInTenant = async (
 };
 
 export const userHasAllRolesInTenant = async (
-  user: User,
+  user: UserResponse,
   tenantId: string,
   roles: UserRole[],
 ): Promise<boolean> => {

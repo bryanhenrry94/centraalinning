@@ -15,14 +15,13 @@ import PersonIcon from "@mui/icons-material/Person";
 import SaveIcon from "@mui/icons-material/Save";
 import { CollectionCaseCreate } from "@/lib/validations/collection";
 import { ModalFormDebtor } from "@/components/debtor/modal-debtor-form";
-import { DebtorBase, DebtorResponse } from "@/lib/validations/debtor";
-import { createCollectionCase } from "@/actions/collection-case";
+import { DebtorResponse, DebtorInput } from "@/services/debtor/debtor.type";
 import { notifyError, notifySuccess } from "@/lib/notifications";
 import { useTenant } from "@/hooks/useTenant";
-import { getAllDebtorsByTenantId } from "@/actions/debtor";
-import { IParamGeneral } from "@/lib/validations/parameter";
 import { CollectionCaseStatus } from "@/constants/collection-case-status";
-import { ParameterService } from "@/services/parameter/parameter.service";
+import { getParameterAction } from "@/actions/parameter";
+import { ParameterInput } from "@/services/parameter/parameter.type";
+import { getDebtorsAction } from "@/actions/debtor";
 
 const InitialCollectionCaseCreate: CollectionCaseCreate = {
   debtor_id: "",
@@ -54,8 +53,8 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
   );
   const [loading, setLoading] = useState(false);
 
-  const [_parameter, setParameters] = useState<IParamGeneral>();
-  // const [_ModalSearchDebtors, setModalSearchDebtors] = useState(false);
+  const [_parameter, setParameters] = useState<ParameterInput | null>(null);
+  // const [, setModalSearchDebtors] = useState(false);
   const [_ModalFormDebtor, setModalFormDebtor] = useState({
     open: false,
     debtor_id: "",
@@ -69,10 +68,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
 
   const fetchParameter = async () => {
     try {
-      const result = await ParameterService.getParameter();
-
-      if (!result) return;
-
+      const result = await getParameterAction();
       setParameters(result);
     } catch (error) {
       console.error("Error al obtener el parámetro:", error);
@@ -81,13 +77,10 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
 
   const fetchDebtors = async () => {
     if (!tenant?.id) return;
-
-    const result = await getAllDebtorsByTenantId(tenant?.id);
-    console.log("result: ", result);
+    const result = await getDebtorsAction(tenant?.id);
     setDebtors(result);
   };
 
-  // const collection_fee_rate = demo?.collection_fee_rate ? demo?.collection_fee_rate : 0;
   const collection_fee_rate = _parameter?.collection_fee_rate ?? 0;
   const abb_rate = _parameter?.abb_rate ?? 0;
 
@@ -117,8 +110,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
     setModalFormDebtor({ open: true, debtor_id: formData.debtor_id });
   };
 
-  const handleSetDebtor = (debtor: DebtorBase) => {
-    // consulta y setea el debtor_id en el formulario de factura
+  const handleSetDebtor = (debtor: DebtorInput) => {
     fetchDebtors();
     setFormData({
       ...formData,
@@ -130,13 +122,22 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
     e.preventDefault();
 
     try {
-      if (!tenant) return;
-
       setLoading(true);
-      // Ensure debtor_id is not changed when updating other fields
-      const newInvoice = await createCollectionCase(formData, tenant?.id);
+
+      const response = await fetch("/api/collection", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create collection case");
+      }
+
       setFormData(InitialCollectionCaseCreate);
-      console.log("New invoice: ", newInvoice);
       notifySuccess("Opgenomen verzameltaak");
       onSave?.();
     } catch (error) {

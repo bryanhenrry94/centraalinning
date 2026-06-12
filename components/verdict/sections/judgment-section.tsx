@@ -12,12 +12,12 @@ import {
 import { Controller, useFormContext } from "react-hook-form";
 import AddIcon from "@mui/icons-material/Add";
 
-import { DebtorBase, DebtorResponse } from "@/lib/validations/debtor";
+import { DebtorInput, DebtorResponse } from "@/services/debtor/debtor.type";
 import { VerdictJudgment } from "@/lib/validations/verdict";
 
 interface JudgmentSectionProps {
   handleOpenModalDebtor: () => void;
-  onSelectDebtor: (debtor: DebtorBase | null) => void;
+  onSelectDebtor: (debtor: DebtorInput | null) => void;
   debtors: DebtorResponse[];
 }
 
@@ -116,7 +116,7 @@ export const JudgmentSection: React.FC<JudgmentSectionProps> = ({
                         onChange(newValue ? newValue.id : null);
 
                         if (newValue) {
-                          const debtorSelected: DebtorBase = {
+                          const debtorSelected: DebtorInput = {
                             id: newValue?.id,
                             email: newValue?.email,
                             tenant_id: newValue?.tenant_id || "",

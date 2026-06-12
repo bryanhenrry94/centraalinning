@@ -51,6 +51,7 @@ export const PaymentSchema = z.object({
       PaymentType.DEBT_PAYMENT,
       PaymentType.BLOK_CHECK,
       PaymentType.FINANCIAL_REPORT,
+      PaymentType.COLLECTION,
       PaymentType.OTHER,
     ])
     .default(PaymentType.OTHER),
