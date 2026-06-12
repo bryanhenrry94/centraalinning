@@ -61,8 +61,7 @@ import { useFieldArray } from "react-hook-form";
 import { ContractSchema } from "@/services/contract/contract.validators";
 
 import { useRouter } from "next/navigation";
-import { StatusContractChip } from "./StatusContractChip";
-import SelectHookForm from "@/components/ui/SelectHookForm";
+import { StatusContractChip } from "../StatusContractChip";
 import { IdentificationType } from "@/constants/identification-type";
 import { identificationTypeOptions } from "@/components/debtor/modal-debtor-form";
 
@@ -489,26 +488,29 @@ const OvereenkomstenRegistrerenPage = () => {
                           />
 
                           <Stack direction="row" spacing={2}>
-                            <FormControl
-                              fullWidth
-                              error={
-                                !!(errors.parties as any)?.[index]
-                                  ?.identification_type
-                              }
-                              size="small"
-                              variant="outlined"
-                            >
-                              <Controller
-                                name={`parties.${index}.identification_type`}
-                                control={control}
-                                // defaultValue=""
-                                render={({ field }) => (
-                                  <TextField
+                            <Controller
+                              name={`parties.${index}.identification_type`}
+                              control={control}
+                              render={({ field, fieldState }) => (
+                                <FormControl
+                                  fullWidth
+                                  size="small"
+                                  error={!!fieldState.error}
+                                >
+                                  <InputLabel id={`person-type-label-${index}`}>
+                                    Identificatietype
+                                  </InputLabel>
+
+                                  <Select
                                     {...field}
-                                    label="Identification Type"
-                                    select
-                                    size="small"
+                                    value={field.value ?? ""}
+                                    labelId={`person-type-label-${index}`}
+                                    label="Identificatietype"
                                   >
+                                    <MenuItem value="">
+                                      <em>Selecteer een type</em>
+                                    </MenuItem>
+
                                     {(watch(`parties.${index}.person_type`) ===
                                     "COMPANY"
                                       ? [
@@ -530,15 +532,14 @@ const OvereenkomstenRegistrerenPage = () => {
                                         {option.label}
                                       </MenuItem>
                                     ))}
-                                  </TextField>
-                                )}
-                              />
-                              <FormHelperText>
-                                {errors.parties?.[
-                                  index
-                                ]?.identification_type?.message?.toString()}
-                              </FormHelperText>
-                            </FormControl>
+                                  </Select>
+
+                                  <FormHelperText>
+                                    {fieldState.error?.message}
+                                  </FormHelperText>
+                                </FormControl>
+                              )}
+                            />
 
                             <Controller
                               name={`parties.${index}.identification`}
@@ -547,8 +548,7 @@ const OvereenkomstenRegistrerenPage = () => {
                                 <TextField
                                   {...field}
                                   fullWidth
-                                  label={`${watch(`parties.${index}.person_type`) === "INDIVIDUAL" ? "Identificatienummer" : "KVK-nummer"}`}
-                                  // helperText="BSN, KVK-nummer of ander identificatienummer"
+                                  label="Identificatienummer"
                                   size="small"
                                   error={!!fieldState.error}
                                   helperText={fieldState.error?.message}

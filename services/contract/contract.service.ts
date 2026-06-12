@@ -68,6 +68,12 @@ export class ContractService {
           contract_type: contract.contract_type,
           contract_date: contract.contract_date,
           start_date: contract.start_date,
+          description: contract.description,
+          end_date: contract.end_date,
+          installment_count: contract.installment_count,
+          installment_amount: contract.installment_amount
+            ? Prisma.Decimal(contract.installment_amount)
+            : null,
         },
       });
 
@@ -81,6 +87,9 @@ export class ContractService {
           fullname: party.fullname,
           email: party.email,
           phone: party.phone,
+          address: party.address,
+          birth_date: party.birth_date,
+          birth_place: party.birth_place,
         })),
       });
 
@@ -98,7 +107,7 @@ export class ContractService {
     });
   }
 
-  static async findById(id: string) {
+  static async getById(id: string) {
     return await prisma.contract.findUnique({
       where: { id },
       include: {

@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
         role: party.role,
         fullname: party.fullname,
         email: party.email || null,
+        identification_type: party.identification_type || null,
         identification: party.identification || null,
         phone: party.phone || null,
         birth_date: party.birth_date ?? null,

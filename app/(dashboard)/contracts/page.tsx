@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Card,
@@ -20,6 +20,7 @@ import {
   Typography,
   Button,
   Container,
+  Menu,
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
@@ -28,65 +29,31 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useRouter } from "next/navigation";
 import { formatCurrency, formatDate } from "@/utils/formatters";
 import { useDebounce } from "@/hooks/useDebounce";
-
-function StatusChip({ status, width }: { status: string; width?: number }) {
-  switch (status) {
-    case "DRAFT":
-      return (
-        <Chip
-          size="small"
-          label="Concept"
-          color="default"
-          variant="filled"
-          sx={{ width: width || 100 }}
-        />
-      );
-
-    case "PENDING_PAYMENT":
-      return (
-        <Chip
-          size="small"
-          label="In afwachting van betaling"
-          color="info"
-          sx={{ width: width || 100 }}
-        />
-      );
-
-    case "REGISTERED":
-      return (
-        <Chip
-          size="small"
-          label="Geregistreerd"
-          color="primary"
-          sx={{ width: width || 100 }}
-        />
-      );
-
-    case "CANCELLED":
-      return (
-        <Chip
-          size="small"
-          label="Geannuleerd"
-          color="warning"
-          sx={{ width: width || 100 }}
-        />
-      );
-
-    default:
-      return <Chip size="small" label={status} sx={{ width: width || 100 }} />;
-  }
-}
+import { StatusContractChip } from "./StatusContractChip";
 
 export default function ContractsPage() {
   const router = useRouter();
 
   const [contracts, setContracts] = useState<any[]>([]);
-
   const [filters, setFilters] = useState({
     search: "",
     status: "ALL",
     page: 1,
   });
+
+  const id = React.useId();
+  const buttonId = `${id}-button`;
+  const menuId = `${id}-menu`;
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   const debouncedSearch = useDebounce(filters.search, 1000);
 
@@ -121,6 +88,10 @@ export default function ContractsPage() {
     }));
   };
 
+  const handleClicShowDetails = (contractId: string) => {
+    router.push(`/contracts/${contractId}`);
+  };
+
   return (
     <Container maxWidth="lg">
       {/* Header */}
@@ -137,7 +108,8 @@ export default function ContractsPage() {
             Financiële afspraak registreren
           </Typography>
           <Typography variant="body2" color="textSecondary">
-            Vul de gegevens van de betrokken partijen in en registreer uw financiële afspraak.
+            Vul de gegevens van de betrokken partijen in en registreer uw
+            financiële afspraak.
           </Typography>
         </Box>
 
@@ -293,7 +265,7 @@ export default function ContractsPage() {
                   <TableCell>
                     <Typography variant="body2">
                       {contract.parties
-                        .map((party: any) => party.full_name)
+                        .map((party: any) => party.fullname)
                         .join(" / ")}
                     </Typography>
                   </TableCell>
@@ -307,13 +279,39 @@ export default function ContractsPage() {
                   </TableCell>
 
                   <TableCell sx={{ textAlign: "center" }}>
-                    <StatusChip status={contract.status} width={175} />
+                    <StatusContractChip status={contract.status} width={175} />
                   </TableCell>
 
                   <TableCell align="center">
-                    <IconButton>
+                    <IconButton
+                      id={buttonId}
+                      aria-controls={open ? menuId : undefined}
+                      aria-haspopup="true"
+                      aria-expanded={open}
+                      onClick={handleClick}
+                    >
                       <MoreVertIcon />
                     </IconButton>
+                    <Menu
+                      id={menuId}
+                      anchorEl={anchorEl}
+                      open={open}
+                      onClose={handleClose}
+                      slotProps={{
+                        list: {
+                          "aria-labelledby": buttonId,
+                        },
+                      }}
+                    >
+                      <MenuItem
+                        onClick={() => handleClicShowDetails(contract.id)}
+                      >
+                        Consultar
+                      </MenuItem>
+                      <MenuItem onClick={handleClose}>
+                        Activar Vordering
+                      </MenuItem>
+                    </Menu>
                   </TableCell>
                 </TableRow>
               ))}
