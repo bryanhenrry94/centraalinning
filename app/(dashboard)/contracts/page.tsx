@@ -35,7 +35,6 @@ import { StatusContractChip } from "./StatusContractChip";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { AlertService } from "@/lib/alerts";
-import { ContractService } from "@/services/contract/contract.service";
 
 export default function ContractsPage() {
   const router = useRouter();
@@ -50,15 +49,18 @@ export default function ContractsPage() {
   const id = React.useId();
   const buttonId = `${id}-button`;
   const menuId = `${id}-menu`;
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+  const [selectedContract, setSelectedContract] = useState<any | null>(null);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   const open = Boolean(anchorEl);
 
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = (
+    event: React.MouseEvent<HTMLButtonElement>,
+    contract: any,
+  ) => {
     setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
+    setSelectedContract(contract);
   };
 
   const debouncedSearch = useDebounce(filters.search, 1000);
@@ -137,6 +139,11 @@ export default function ContractsPage() {
         "Er is een fout opgetreden bij het starten van het vervolgingsproces. Probeer het alstublieft opnieuw.",
       );
     }
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+    setSelectedContract(null);
   };
 
   return (
@@ -335,47 +342,55 @@ export default function ContractsPage() {
                       aria-controls={open ? menuId : undefined}
                       aria-haspopup="true"
                       aria-expanded={open}
-                      onClick={handleClick}
+                      onClick={(event) => handleClick(event, contract)}
                     >
                       <MoreVertIcon />
                     </IconButton>
-                    <Menu
-                      id={menuId}
-                      anchorEl={anchorEl}
-                      open={open}
-                      onClose={handleClose}
-                      slotProps={{
-                        list: {
-                          "aria-labelledby": buttonId,
-                        },
-                      }}
-                    >
-                      <MenuItem
-                        onClick={() => handleClicShowDetails(contract.id)}
-                      >
-                        <ListItemIcon>
-                          <VisibilityIcon fontSize="small" />
-                        </ListItemIcon>
-                        <ListItemText>Raadplegen</ListItemText>
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => handleClicStartFollowUp(contract.id)}
-                        disabled={contract.status !== "REGISTERED"}
-                      >
-                        <ListItemIcon>
-                          <RestartAltIcon fontSize="small" />
-                        </ListItemIcon>
-                        <ListItemText>
-                          Administratieve opvolging starten
-                        </ListItemText>
-                      </MenuItem>
-                    </Menu>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </TableContainer>
+
+        <Menu
+          id={menuId}
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleClose}
+          slotProps={{
+            list: {
+              "aria-labelledby": buttonId,
+            },
+          }}
+        >
+          <MenuItem
+            onClick={() => {
+              if (!selectedContract) return;
+
+              handleClicShowDetails(selectedContract.id);
+              handleClose();
+            }}
+          >
+            <ListItemIcon>
+              <VisibilityIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Raadplegen</ListItemText>
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              if (!selectedContract) return;
+
+              handleClicStartFollowUp(selectedContract.id);
+            }}
+            disabled={selectedContract?.status !== "REGISTERED"}
+          >
+            <ListItemIcon>
+              <RestartAltIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Administratieve opvolging starten</ListItemText>
+          </MenuItem>
+        </Menu>
 
         <Box
           mt={3}
