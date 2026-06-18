@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useMemo } from "react";
 // mui
-import { Box, Button, Grid, Stack, Typography } from "@mui/material";
+import { Box, Button, Container, Grid, Stack, Typography } from "@mui/material";
 // icons
 import SaveIcon from "@mui/icons-material/Save";
 // validations
@@ -236,7 +236,7 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
   };
 
   return (
-    <Box>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)}>
           {/* Action Buttons */}
@@ -341,7 +341,7 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
         onSave={handleSaveBailiff}
         id={bailiffSelected?.id} // Aquí puedes pasar el ID del deudor si estás editando
       />
-    </Box>
+    </Container>
   );
 };
 

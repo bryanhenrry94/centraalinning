@@ -54,7 +54,7 @@ const menus: MenuItem[] = [
     role: [UserRole.TENANT_ADMIN],
   },
   {
-    label: "Directe economische blokkade",
+    label: "Blokkade",
     href: "/client/directe-economische-blokkade",
     icon: <ShieldOutlinedIcon fontSize="small" />,
     role: [UserRole.TENANT_ADMIN],

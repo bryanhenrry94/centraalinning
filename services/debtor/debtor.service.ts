@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/prisma";
-import { DebtorResponse } from "./debtor.type";
+import {
+  DebtorPickerResponse,
+  DebtorResponse,
+  DebtorSearchParams,
+} from "./debtor.type";
 import { DebtorResponseSchema } from "./debtor.validators";
+import { Prisma } from "@prisma/client";
 
 interface FindOrCreateDebtorParams {
   person_type: string;
@@ -134,4 +139,92 @@ export class DebtorService {
       throw new Error("Error fetching debtors");
     }
   };
+
+  static async searchPicker(
+    tenant_id: string,
+    params: DebtorSearchParams,
+  ): Promise<DebtorPickerResponse> {
+    const { q, page, pageSize } = params;
+
+    const where: Prisma.DebtorWhereInput = {
+      tenant_id,
+    };
+
+    if (q?.trim()) {
+      where.OR = [
+        {
+          person: {
+            first_name: {
+              contains: q.trim(),
+            },
+          },
+        },
+        {
+          person: {
+            last_name: {
+              contains: q.trim(),
+            },
+          },
+        },
+        {
+          person: {
+            identification: {
+              contains: q.trim(),
+            },
+          },
+        },
+        {
+          person: {
+            phone: {
+              contains: q.trim(),
+            },
+          },
+        },
+        {
+          person: {
+            address: {
+              contains: q.trim(),
+            },
+          },
+        },
+        {
+          person: {
+            email: {
+              contains: q.trim(),
+            },
+          },
+        },
+      ];
+    }
+
+    const [persons, total] = await prisma.$transaction([
+      prisma.debtor.findMany({
+        where,
+        orderBy: {
+          person: {
+            first_name: "asc",
+          },
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+          person: true,
+        },
+      }),
+
+      prisma.debtor.count({
+        where,
+      }),
+    ]);
+
+    return {
+      data: persons,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize) || 1,
+      },
+    };
+  }
 }

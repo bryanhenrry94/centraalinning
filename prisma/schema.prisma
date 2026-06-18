@@ -47,6 +47,7 @@ model Tenant {
   memberships               Membership[]
   payments                  Payment[]
   financial_report_requests FinancialReportRequest[]
+  blockades                 Blockade[]
 
   subscription              Subscription?
 
@@ -612,6 +613,7 @@ model Debtor {
   verdicts         Verdict[]
   agreements       Agreement[]
   debts            Debt[]
+  blockades        Blockade[]
 
   @@map("debtor")
 }
@@ -1012,6 +1014,54 @@ model Subscription {
   @@map("subscription")
 }
 
+model Blockade {
+  id           String              @id @default(cuid())
+
+  tenantId     String
+  debtorId     String
+
+  amount       Decimal             @db.Decimal(12,2)
+
+  reason       BlockadeReason
+  status       BlockadeStatus      @default(ACTIVE)
+
+  registeredAt DateTime            @default(now())
+
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  tenant       Tenant             @relation(fields: [tenantId], references: [id])
+  debtor       Debtor             @relation(fields: [debtorId], references: [id])
+
+  documents    BlockadeDocument[]
+
+  @@index([tenantId])
+  @@index([debtorId])
+  @@map("blockade")
+}
+
+model BlockadeDocument {
+  id           String    @id @default(cuid())
+
+  blockadeId   String
+
+  fileName     String
+  originalName String
+
+  mimeType     String
+
+  size         Int
+
+  storageKey   String
+
+  createdAt    DateTime  @default(now())
+
+  blockade     Blockade @relation(fields: [blockadeId],references: [id], onDelete: Cascade)
+
+  @@index([blockadeId])
+  @@map("blockade_document")
+}
+
 enum BillingCycle {
   MONTHLY
   YEARLY
@@ -1135,3 +1185,12 @@ enum FineStatus {
   REVERSED
 }
 
+enum BlockadeReason {
+  UNPAID_PAYMENT
+}
+
+enum BlockadeStatus {
+  ACTIVE
+  RELEASED
+  CANCELLED
+}

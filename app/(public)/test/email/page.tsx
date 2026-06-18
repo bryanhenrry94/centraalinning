@@ -5,6 +5,7 @@ import {
   SommatieEmail,
   WelcomeEmail,
 } from "@/templates/emails";
+import EconomischeBlokkadeEmail from "@/templates/emails/EconomischeBlokkadeEmail";
 import NewClientEmail from "@/templates/emails/NewClientEmail";
 import VerdictDebtorMail from "@/templates/emails/VerdictDebtorMail";
 import VerdictRegisterEmail from "@/templates/emails/VerdictRegisterMail";
@@ -36,11 +37,18 @@ export default async function Page() {
   // };
   // const html = await render(<IngebrekestellingEmail {...params} />);
 
+  // const params = {
+  //   logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "/static/logo.png",
+  //   fullname: "Bryan Navarrete",
+  // };
+  // const html = await render(<InvoiceEmail {...params} />);
+
   const params = {
     logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "/static/logo.png",
     fullname: "Bryan Navarrete",
+    creditorName: "Dazzsoft",
   };
-  const html = await render(<InvoiceEmail {...params} />);
+  const html = await render(<EconomischeBlokkadeEmail {...params} />);
 
   // const params = {
   //   logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "/static/logo.png",

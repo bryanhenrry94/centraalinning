@@ -108,7 +108,7 @@ const DashboardHeader = ({
 
         <Grid size={{ xs: 12, md: 3 }}>
           <StatCard
-            title="Economische Blokkade"
+            title="Blokkade"
             value="Actief / Niet actief"
             color="#d32f2f"
             icon={<Pause sx={{ color: "#d32f2f" }} />}

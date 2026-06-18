@@ -185,6 +185,29 @@ export const updateDebtor = async (
           person_id: debtor.person_id,
           tenant_id,
         },
+        include: {
+          person: true,
+        },
+      });
+
+      // actualizar la persona asociada
+      await tx.person.update({
+        where: { id: debtorResult.person_id },
+        data: {
+          first_name: debtor.person?.first_name,
+          last_name: debtor.person?.last_name,
+          business_name: debtor.person?.business_name,
+          identification: debtor.person?.identification,
+          identification_type: debtor.person
+            ? (debtor.person.identification_type as IdentificationType)
+            : undefined,
+          person_type: debtor.person
+            ? (debtor.person.person_type as PersonType)
+            : undefined,
+          address: debtor.person?.address,
+          phone: debtor.person?.phone,
+          email: debtor.email,
+        },
       });
 
       // Handle incomes

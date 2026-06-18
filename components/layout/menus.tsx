@@ -49,8 +49,8 @@ export const menuGroups: HeaderMenuGroup[] = [
         icon: <ReceiptOutlined fontSize="small" />,
       },
       {
-        label: "Directe economische blokkade",
-        href: "/directe-economische-blokkade",
+        label: "Blokkade",
+        href: "/blocks/new",
         icon: <ShieldOutlined fontSize="small" />,
       },
       {

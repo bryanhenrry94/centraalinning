@@ -131,7 +131,7 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
     try {
       console.log("Submitting debtor:", values);
 
-      if (id) {
+      if (id && values.person_id) {
         const updDebtor = await updateDebtor(values, tenant.id, id);
 
         if (!updDebtor.success) {

@@ -303,7 +303,7 @@ const FinancialSummaryPDF: React.FC<FinancialSummaryPDFProps> = ({
           <Text style={styles.sectionTitle}>Blokkadestatus</Text>
 
           <View style={styles.row}>
-            <Text style={styles.label}>Economische blokkade geregistreerd</Text>
+            <Text style={styles.label}>Blokkade geregistreerd</Text>
 
             <Text style={styles.value}>: {economicBlockRegistered}</Text>
           </View>

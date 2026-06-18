@@ -168,12 +168,12 @@ const VerdictsPage: React.FC = () => {
   };
 
   const handleCreate = () => {
-    router.push("/dashboard/verdicts/new");
+    router.push("/verdicts/new");
     handleClose();
   };
 
   const handleEdit = (id: string) => {
-    router.push(`/dashboard/verdicts/${id}/edit`);
+    router.push(`/verdicts/${id}/edit`);
     handleClose();
   };
 

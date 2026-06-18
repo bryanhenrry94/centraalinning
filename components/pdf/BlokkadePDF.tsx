@@ -228,7 +228,7 @@ const BlokkadePDF: React.FC<BlokkadePDFProps> = ({
           <View style={styles.headerTop}>
             <Image style={styles.logo} src={logoUrl} />
 
-            <Text style={styles.title}>Economische Blokkade</Text>
+            <Text style={styles.title}>Blokkade</Text>
           </View>
 
           <View style={styles.divider} />
