@@ -26,15 +26,19 @@ export const PaymentIntent: React.FC<PaymentIntentProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handlePayNow = async () => {
     try {
+      setLoading(true);
       const { paymentId, paymentUrl } = await onCreateTransaction();
       setPaymentId(paymentId);
       window.open(paymentUrl, "_blank");
       setOpen(true);
     } catch (err) {
       console.error("Error creando transacción", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -75,8 +79,9 @@ export const PaymentIntent: React.FC<PaymentIntentProps> = ({
         startIcon={<PaymentIcon />}
         fullWidth
         sx={{ textTransform: "none" }}
+        disabled={loading}
       >
-        Pagar ahora
+        {loading ? "Procesando..." : "Pagar ahora"}
       </Button>
 
       <Dialog open={open} disableEscapeKeyDown>
