@@ -858,32 +858,33 @@ model Payment {
   tenant_id        String
   tenant           Tenant                 @relation(fields: [tenant_id], references: [id])
 
+  total_amount     Decimal                 @db.Decimal(10, 2)
+  status           PaymentStatus           @default(pending)
+  paid_at          DateTime?               @db.Date
+
+  // Sentoo / Pasarela
+  provider         String?
+  provider_ref     String?                 @unique
+  provider_payload Json?
+
+  reference_number String?
+  created_at       DateTime                @default(now())
+  updated_at       DateTime                @updatedAt
+
+  payment_url      String?                 @unique
+
+  // campos a borrar
+  processing_error String?
+
   payment_type     PaymentType             @default(OTHER)
 
+  agreement_id     String?
   contract_id      String?                 @unique
   contract         Contract?              @relation(fields: [contract_id], references: [id])
 
   debt_id          String?
   debt             Debt?                  @relation(fields: [debt_id], references: [id])
   method           PaymentMethod
-  total_amount     Decimal                 @db.Decimal(10, 2)
-  paid_at          DateTime?               @db.Date
-
-  // Estado financiero real
-  status           PaymentStatus           @default(pending)
-
-  // Sentoo / Pasarela
-  provider         String                  @default("manual") // sentoo | stripe | cash | etc
-  provider_ref     String?                 @unique
-  provider_status  PaymentSentooStatus     @default(pending)
-  provider_payload Json?
-
-  reference_number String?
-  agreement_id     String?
-  created_at       DateTime                @default(now())
-  updated_at       DateTime                @updatedAt
-
-  processing_error String?
 
   allocations      PaymentAllocation[]
   installments     AgreementInstallment[]
@@ -1060,6 +1061,19 @@ model BlockadeDocument {
 
   @@index([blockadeId])
   @@map("blockade_document")
+}
+
+model Entitlement {
+  id                                                String    @id @default(uuid())
+  userId                                            String
+  feature                                           String
+  paymentStatus String   // UNPAID | PENDING | PAID
+  paymentUrl                                        String?
+  updatedAt                                         DateTime  @updatedAt
+  createdAt                                         DateTime  @default(now())
+
+  @@index([userId,                                  feature])
+  @@map("entitlement")
 }
 
 enum BillingCycle {

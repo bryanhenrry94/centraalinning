@@ -7,6 +7,7 @@ import {
   BlokCheckRequestResponse,
 } from "@/lib/validations/blok-check-request";
 import { PaymentCreate } from "@/lib/validations/payment";
+import { Prisma } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 
 export const createBlokCheckRequest = async (
@@ -45,8 +46,7 @@ export const createPaymentForBlokCheckRequest = async (
       method: payload.method || "TRANSFER",
       provider: payload.provider || "sentoo",
       provider_ref: payload.provider_ref || "",
-      provider_status: "pending",
-      total_amount: new Decimal(payload.total_amount),
+      total_amount: new Prisma.Decimal(payload.total_amount),
       status: (payload.status as any) || "pending",
       provider_payload: payload.provider_payload || "",
       paid_at: null,

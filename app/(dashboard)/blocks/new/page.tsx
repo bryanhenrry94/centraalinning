@@ -2,11 +2,14 @@
 
 import React, { useState } from "react";
 import {
+  Avatar,
   Box,
   Button,
   Card,
   CardContent,
   Container,
+  Dialog,
+  DialogContent,
   Grid,
   IconButton,
   MenuItem,
@@ -23,31 +26,93 @@ import { DebtorResponse } from "@/lib/validations/debtor";
 import UploadIcon from "@mui/icons-material/Upload";
 import DownloadIcon from "@mui/icons-material/Download";
 import DeleteIcon from "@mui/icons-material/Delete";
-
-interface FormValues {
-  debtorId: string;
-  amount: number;
-  reason: string;
-}
+import {
+  BlockadeDocument,
+  BlockadeSchema,
+  CreateBlockadeInput,
+} from "@/services/blockade/blockade.validators";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createBlockadeAction } from "@/actions/blockade/create-blockade";
+import { notifyError, notifyInfo } from "@/lib/notifications";
+import CloseIcon from "@mui/icons-material/Close";
+import { PaymentIntent } from "@/components/payment/PaymentIntent";
+import { formatCurrency } from "@/utils/formatters";
 
 export default function BlockCreatePage() {
   const { tenant } = useTenant();
+
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
 
   // Estados locales para manejar los documentos y el deudor seleccionado
   const [documents, setDocuments] = useState<File[]>([]);
 
   const [debtor, setDebtor] = React.useState<DebtorResponse | null>(null);
 
-  const { control, handleSubmit } = useForm<FormValues>({
+  const [showCostDialog, setShowCostDialog] = useState(false);
+  const [pendingFormValues, setPendingFormValues] =
+    useState<CreateBlockadeInput>();
+  const [showPaymentIntent, setShowPaymentIntent] = useState(false);
+
+  const amountService = 35.0; // monto fijo para el servicio, se puede ajustar según sea necesario
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setValue,
+    reset,
+  } = useForm<CreateBlockadeInput>({
+    resolver: zodResolver(BlockadeSchema),
     defaultValues: {
       debtorId: "",
       amount: 0,
-      reason: "DEFAULT",
+      reason: "UNPAID_PAYMENT",
+      documents: [],
     },
   });
 
-  const onSubmit = (data: FormValues) => {
-    console.log(data);
+  const createBlockade = async () => {
+    if (!pendingFormValues) return;
+
+    try {
+      const res = await createBlockadeAction(
+        pendingFormValues,
+        tenant?.id || "",
+      );
+
+      if (!res.success) {
+        notifyError(
+          res.message || "Error al registrar la blokkade. Inténtalo de nuevo.",
+        );
+        return;
+      }
+
+      await notifyInfo("Blokkade succesvol geregistreerd");
+
+      // espera 3 segundos antes de resetear el formulario para que el usuario pueda ver la notificación
+      setTimeout(() => {
+        reset();
+        setDocuments([]);
+        setDebtor(null);
+      }, 3000);
+    } catch (error: any) {
+      console.error("Error al registrar la blokkade:", error);
+      notifyError(
+        error?.message || "Ocurrió un error al registrar la blokkade.",
+      );
+    }
+  };
+
+  const onSubmit = async (data: CreateBlockadeInput) => {
+    // si ya se generó el pago, solo abrir la url del pago
+    if (paymentUrl) {
+      window.open(paymentUrl, "_blank");
+      return;
+    }
+
+    // Validación con react-hook-form + zod ya pasó
+    setPendingFormValues(data);
+    setShowCostDialog(true);
   };
 
   const handleChangeDebtor = (debtor: DebtorResponse | null) => {
@@ -72,18 +137,49 @@ export default function BlockCreatePage() {
     return data.data;
   };
 
+  const mapFileToDocument = (file: File): BlockadeDocument => {
+    return {
+      file: file,
+      fileName: file.name,
+      originalName: file.name,
+      mimeType: file.type,
+      size: file.size,
+    };
+  };
+
   // logica de manejo de documentos (agregar, eliminar, etc.) se puede implementar aquí
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
 
-    setDocuments((prev) => [...prev, ...files]);
+    setDocuments((prevFiles) => {
+      const updatedFiles = [...prevFiles, ...files];
 
-    // Permite volver a seleccionar el mismo archivo
+      const mappedDocuments = updatedFiles.map(mapFileToDocument);
+
+      setValue("documents", mappedDocuments, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+
+      return updatedFiles;
+    });
+
     event.target.value = "";
   };
 
   const removeDocument = (index: number) => {
-    setDocuments((prev) => prev.filter((_, i) => i !== index));
+    setDocuments((prevFiles) => {
+      const updatedFiles = prevFiles.filter((_, i) => i !== index);
+
+      const mappedDocuments = updatedFiles.map(mapFileToDocument);
+
+      setValue("documents", mappedDocuments, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+
+      return updatedFiles;
+    });
   };
 
   const downloadDocument = (file: File) => {
@@ -106,198 +202,335 @@ export default function BlockCreatePage() {
 
   return (
     <Container maxWidth="lg">
-      <Stack spacing={3} sx={{ py: 8 }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            gap: 1,
-            alignItems: "center",
-          }}
-        >
-          <Box>
-            <Typography variant="h4" fontWeight={700}>
-              Nieuwe blokkade registreren
-            </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 1,
+          alignItems: "center",
+        }}
+      >
+        <Box>
+          <Typography variant="h4" fontWeight={700}>
+            Nieuwe blokkade registreren
+          </Typography>
 
-            <Typography color="text.secondary">
-              Registreer een economische blokkade conform de geldende
-              voorwaarden.
-            </Typography>
-          </Box>
+          <Typography color="text.secondary">
+            Registreer een economische blokkade conform de geldende voorwaarden.
+          </Typography>
         </Box>
-
-        <Paper
-          component="section"
-          sx={{
-            elevation: 1,
-            borderRadius: 1,
-            // overflow: "hidden",
-            mb: 2,
-          }}
-        >
-          <Box
+      </Box>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Stack spacing={3} sx={{ py: 8 }}>
+          {/* Cabecera */}
+          <Paper
+            component="section"
             sx={{
-              bgcolor: "secondary.main",
-              color: "white",
-              px: 2,
-              py: 1.5,
-              borderTopLeftRadius: 8,
-              borderTopRightRadius: 8,
-              borderBottom: "1px solid #e0e0e0",
-              display: "flex",
-              alignItems: "center",
+              elevation: 1,
+              borderRadius: 1,
+              mb: 2,
             }}
           >
-            <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
-              BLOKKADE INFORMATIE
-            </Typography>
-          </Box>
+            <Box
+              sx={{
+                bgcolor: "secondary.main",
+                color: "white",
+                px: 2,
+                py: 1.5,
+                borderTopLeftRadius: 8,
+                borderTopRightRadius: 8,
+                borderBottom: "1px solid #e0e0e0",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
+                BLOKKADE INFORMATIE
+              </Typography>
+            </Box>
 
-          <Box sx={{ p: 2 }}>
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <Stack direction="row" spacing={2} alignItems="center">
+            <Box sx={{ p: 2 }}>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Controller
+                      name="debtorId"
+                      control={control}
+                      render={({ field }) => (
+                        <Box
+                          sx={{
+                            width: "100%",
+                            display: "flex",
+                            flexDirection: "column",
+                          }}
+                        >
+                          <DebtorPicker
+                            value={debtor}
+                            onChange={(option) => {
+                              handleChangeDebtor(option);
+                              field.onChange(option?.id || "");
+                            }}
+                            onSearch={handleSearchPersons}
+                            // disabled
+                          />
+
+                          {errors.debtorId && (
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: "error.main",
+                                display: "block",
+                                mt: 0.5,
+                              }}
+                            >
+                              {errors.debtorId.message}
+                            </Typography>
+                          )}
+                        </Box>
+                      )}
+                    />
+                  </Stack>
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
                   <Controller
-                    name="debtorId"
+                    name="amount"
                     control={control}
-                    render={({ field }) => (
-                      <DebtorPicker
-                        value={debtor}
-                        onChange={(option) => {
-                          handleChangeDebtor(option);
-                          field.onChange(option?.id || "");
+                    render={({ field, fieldState }) => (
+                      <NumericFormat
+                        customInput={TextField}
+                        fullWidth
+                        label="Openstaand bedrag"
+                        value={field.value ?? ""}
+                        thousandSeparator
+                        decimalScale={2}
+                        fixedDecimalScale
+                        allowNegative={false}
+                        prefix="$ "
+                        size="small"
+                        onValueChange={(values) => {
+                          field.onChange(Number(values.value) || 0);
                         }}
-                        onSearch={handleSearchPersons}
-                        // disabled
+                        error={!!fieldState.error}
+                        helperText={fieldState.error?.message}
                       />
                     )}
                   />
-                </Stack>
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <Controller
+                    name="reason"
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        select
+                        label="Reden Blokkade"
+                        fullWidth
+                        size="small"
+                        error={!!errors.reason}
+                        helperText={errors.reason?.message}
+                      >
+                        <MenuItem value="UNPAID_PAYMENT">
+                          Niet nagekomen betalingsverplichting
+                        </MenuItem>
+                      </TextField>
+                    )}
+                  />
+                </Grid>
               </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <Controller
-                  name="amount"
-                  control={control}
-                  render={({ field, fieldState }) => (
-                    <NumericFormat
-                      customInput={TextField}
-                      fullWidth
-                      label="Openstaand bedrag"
-                      value={field.value ?? ""}
-                      thousandSeparator
-                      decimalScale={2}
-                      fixedDecimalScale
-                      allowNegative={false}
-                      prefix="$ "
-                      size="small"
-                      onValueChange={(values) => {
-                        field.onChange(Number(values.value) || 0);
-                      }}
-                      error={!!fieldState.error}
-                      helperText={fieldState.error?.message}
-                    />
-                  )}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <Controller
-                  name="reason"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      select
-                      label="Reden Blokkade"
-                      fullWidth
-                      size="small"
-                    >
-                      <MenuItem value="DEFAULT">
-                        Niet nagekomen betalingsverplichting
-                      </MenuItem>
-                    </TextField>
-                  )}
-                />
-              </Grid>
-            </Grid>
-          </Box>
-        </Paper>
+            </Box>
+          </Paper>
 
-        <Card>
-          <CardContent>
-            <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-              Bewijsstukken
+          {/* Detalle */}
+          <Card>
+            <CardContent>
+              <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                Bewijsstukken
+              </Typography>
+
+              <Button
+                variant="outlined"
+                component="label"
+                color="secondary"
+                startIcon={<UploadIcon />}
+                sx={{ textTransform: "none" }}
+              >
+                Document toevoegen
+                <input
+                  type="file"
+                  hidden
+                  multiple
+                  onChange={handleFileChange}
+                />
+              </Button>
+
+              {documents.length > 0 && (
+                <Stack spacing={1.5} mt={2}>
+                  {documents.map((file, index) => (
+                    <Box
+                      key={`${file.name}-${index}`}
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      border={1}
+                      borderColor="divider"
+                      borderRadius={1}
+                      p={1.5}
+                    >
+                      <Box>
+                        <Typography variant="body2" fontWeight={500}>
+                          {file.name}
+                        </Typography>
+
+                        <Typography variant="caption" color="text.secondary">
+                          {formatFileSize(file.size)}
+                        </Typography>
+                      </Box>
+
+                      <Stack direction="row" spacing={0.5}>
+                        <IconButton
+                          size="small"
+                          type="button"
+                          onClick={() => downloadDocument(file)}
+                        >
+                          <DownloadIcon fontSize="small" />
+                        </IconButton>
+
+                        <IconButton
+                          size="small"
+                          color="error"
+                          type="button"
+                          onClick={() => removeDocument(index)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Stack>
+                    </Box>
+                  ))}
+                </Stack>
+              )}
+
+              {errors.documents && (
+                <Typography
+                  color="error"
+                  variant="caption"
+                  sx={{ mt: 1, display: "block" }}
+                >
+                  {errors.documents.message}
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Botones */}
+          <Box
+            sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mt: 2 }}
+          >
+            <Button
+              variant="contained"
+              type="submit"
+              sx={{ textTransform: "none" }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? "Bezig met registreren..."
+                : "Blokkade registreer"}
+            </Button>
+          </Box>
+        </Stack>
+      </form>
+
+      {/* Dialog de confirmación de costo */}
+      <Dialog
+        open={showCostDialog}
+        onClose={() => setShowCostDialog(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogContent sx={{ p: 4 }}>
+          <Stack spacing={3} alignItems="center">
+            {/* Título */}
+            <Stack spacing={1} textAlign="center">
+              <Typography variant="h5" fontWeight={700}>
+                Confirmar pago
+              </Typography>
+
+              <Typography variant="body2" color="text.secondary">
+                Este servicio requiere un pago antes de registrar el bloqueo.
+              </Typography>
+            </Stack>
+
+            {/* Precio */}
+            <Paper
+              variant="outlined"
+              sx={{
+                width: "100%",
+                p: 2,
+                borderRadius: 2,
+                textAlign: "center",
+                bgcolor: "background.default",
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                Valor del servicio
+              </Typography>
+
+              <Typography variant="h4" fontWeight={700} color="primary.main">
+                {formatCurrency(amountService)}
+              </Typography>
+            </Paper>
+
+            {/* Mensaje */}
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              textAlign="center"
+            >
+              Al continuar será redirigido al proceso de pago seguro.
             </Typography>
 
-            <Button
-              variant="outlined"
-              component="label"
-              color="secondary"
-              startIcon={<UploadIcon />}
-              sx={{ textTransform: "none" }}
-            >
-              Document toevoegen
-              <input type="file" hidden multiple onChange={handleFileChange} />
-            </Button>
+            {/* Acciones */}
+            <Stack direction="row" spacing={2} width="100%">
+              <Button
+                fullWidth
+                variant="outlined"
+                color="inherit"
+                startIcon={<CloseIcon />}
+                onClick={() => setShowCostDialog(false)}
+                sx={{ textTransform: "none" }}
+              >
+                Cancelar
+              </Button>
 
-            {documents.length > 0 && (
-              <Stack spacing={1.5} mt={2}>
-                {documents.map((file, index) => (
-                  <Box
-                    key={`${file.name}-${index}`}
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    border={1}
-                    borderColor="divider"
-                    borderRadius={1}
-                    p={1.5}
-                  >
-                    <Box>
-                      <Typography variant="body2" fontWeight={500}>
-                        {file.name}
-                      </Typography>
+              <PaymentIntent
+                onCreateTransaction={async () => {
+                  const res = await fetch("/api/payments/create", {
+                    method: "POST",
+                    body: JSON.stringify({
+                      amount: amountService,
+                      currency: "USD",
+                      description: "Payment for registering blokkade",
+                    }),
+                    headers: { "Content-Type": "application/json" },
+                  });
+                  const data = await res.json();
 
-                      <Typography variant="caption" color="text.secondary">
-                        {formatFileSize(file.size)}
-                      </Typography>
-                    </Box>
+                  setPaymentUrl(data.paymentUrl);
 
-                    <Stack direction="row" spacing={0.5}>
-                      <IconButton
-                        size="small"
-                        onClick={() => downloadDocument(file)}
-                      >
-                        <DownloadIcon fontSize="small" />
-                      </IconButton>
-
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => removeDocument(index)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Stack>
-                  </Box>
-                ))}
-              </Stack>
-            )}
-          </CardContent>
-        </Card>
-
-        <Box
-          sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mt: 2 }}
-        >
-          <Button
-            variant="contained"
-            onClick={handleSubmit(onSubmit)}
-            sx={{ textTransform: "none" }}
-          >
-            Blokkade registreer
-          </Button>
-        </Box>
-      </Stack>
+                  return {
+                    paymentId: data.paymentId,
+                    paymentUrl: data.paymentUrl,
+                  };
+                }}
+                onPaymentConfirmed={async () => {
+                  setShowCostDialog(false);
+                  await createBlockade();
+                }}
+              />
+            </Stack>
+          </Stack>
+        </DialogContent>
+      </Dialog>
     </Container>
   );
 }

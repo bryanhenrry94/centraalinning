@@ -1,8 +1,85 @@
 import { prisma } from "@/lib/prisma";
-import { PaymentCreate } from "@/lib/validations/payment";
 import { Prisma } from "@prisma/client";
+import { SentooService } from "../providers/sentoo.service";
+import { PaymentCreate } from "@/lib/validations/payment";
+import { PaymentStatus } from "@/types/PaymentStatus";
+
+export interface PaymentResult {
+  success: boolean;
+  message: string;
+  data?: {
+    paymentId: string;
+    paymentUrl: string;
+  };
+}
+
+export interface PaymentPayload {
+  id: string;
+  url: string;
+  qrCode: string;
+  payload: Record<string, any>;
+}
 
 export class PaymentService {
+  static create = async (
+    tenant_id: string,
+    payload: {
+      amount: number;
+      currency: string;
+      description: string;
+      reference?: string;
+    },
+  ): Promise<PaymentResult> => {
+    // Create payment
+    const paymentRes = await prisma.payment.create({
+      data: {
+        tenant_id: tenant_id,
+        total_amount: new Prisma.Decimal(payload.amount),
+        status: "pending",
+        payment_type: "OTHER",
+        method: "TRANSFER",
+      },
+    });
+
+    // Crear transacción en Sentoo
+    const sentooRes = await SentooService.createTransaction({
+      amount: payload.amount,
+      currency: payload.currency || "USD",
+      description: payload.description,
+      reference: payload.reference || `payment_${paymentRes.id}`,
+    });
+
+    if (!sentooRes.success) {
+      console.error("Error creating Sentoo payment:", sentooRes.raw);
+      return {
+        success: false,
+        message: "Failed to create payment with Sentoo",
+      };
+    }
+
+    const paymentUrl = sentooRes.payment?.url || "";
+
+    // Actualizar el pago con la información de Sentoo
+    await prisma.payment.update({
+      where: { id: paymentRes.id },
+      data: {
+        provider: "sentoo",
+        provider_ref: sentooRes.payment?.id || "",
+        provider_payload: JSON.stringify(sentooRes.payment?.payload || {}),
+        payment_url: paymentUrl,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Payment created successfully",
+      data: {
+        paymentId: paymentRes.id,
+        paymentUrl: paymentUrl,
+      },
+    };
+  };
+
   static registerPayment = async (
     tenant_id: string,
     payload: PaymentCreate,
@@ -15,7 +92,6 @@ export class PaymentService {
         method: payload.method || "TRANSFER",
         provider: payload.provider || "manual",
         provider_ref: payload.provider_ref || "",
-        provider_status: "pending",
         total_amount: new Prisma.Decimal(payload.total_amount),
         status: (payload.status as any) || "pending",
         contract_id: payload.contract_id || null,
@@ -176,5 +252,18 @@ export class PaymentService {
     // });
 
     return paymentRes;
+  };
+
+  static getByIdForTenant = async (id: string, tenantId: string) => {
+    return await prisma.payment.findUnique({
+      where: { id, tenant_id: tenantId },
+    });
+  };
+
+  static updateStatus = async (id: string, status: PaymentStatus) => {
+    return await prisma.payment.update({
+      where: { id },
+      data: { status },
+    });
   };
 }

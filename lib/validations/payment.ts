@@ -12,15 +12,6 @@ export const PaymentStatusEnum = z.enum([
 ]);
 export type PaymentStatus = z.infer<typeof PaymentStatusEnum>;
 
-export const PaymentSentooStatusEnum = z.enum([
-  "pending",
-  "processing",
-  "completed",
-  "failed",
-  "rejected",
-]);
-export type PaymentSentooStatus = z.infer<typeof PaymentSentooStatusEnum>;
-
 export const PaymentSchema = z.object({
   id: z.string(),
   tenant_id: z.string(),
@@ -38,7 +29,6 @@ export const PaymentSchema = z.object({
   status: PaymentStatusEnum.default("pending"),
   provider: z.string().default("sentoo"),
   provider_ref: z.string().nullable().optional(),
-  provider_status: PaymentSentooStatusEnum.default("pending"),
   provider_payload: z.string().nullable().optional(),
   reference_number: z.string().optional(),
   agreement_id: z.string().nullable().optional(),
@@ -64,7 +54,6 @@ export const PaymentCreateSchema = PaymentSchema.omit({
   tenant_id: true,
   created_at: true,
   updated_at: true,
-  provider_status: true,
 }).pick({
   debt_id: true,
   paid_at: true,

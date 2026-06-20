@@ -32,7 +32,6 @@ export const getPayments = async (
       paid_at: payment.paid_at ? payment.paid_at.toISOString() : "",
       reference_number: payment.reference_number ?? undefined,
       status: payment.status as any,
-      provider_status: payment.provider_status as any,
       provider_payload: payment.provider_payload as any,
       created_at: payment.created_at,
       updated_at: payment.updated_at,
@@ -67,7 +66,6 @@ export const getPaymentsByInvoice = async (
     paid_at: payment.paid_at ? payment.paid_at.toISOString() : "",
     reference_number: payment.reference_number ?? undefined,
     status: payment.status as any,
-    provider_status: payment.provider_status as any,
     provider_payload: payment.provider_payload as any,
     created_at: payment.created_at,
     updated_at: payment.updated_at,
@@ -424,7 +422,7 @@ export const hasPendingPayments = async (debt_id: string): Promise<boolean> => {
   const pendingPayments = await prisma.payment.findMany({
     where: {
       debt_id: debt_id,
-      provider_status: "pending",
+      status: "pending",
     },
   });
 
@@ -489,7 +487,7 @@ export const getPaymentByDebtId = async (
     reference_number: payment.reference_number ?? undefined,
     created_at: payment.created_at,
     updated_at: payment.updated_at,
-    provider_status: payment.provider_status as any,
+    provider: payment.provider as any,
     provider_payload: payment.provider_payload as any,
   };
 };

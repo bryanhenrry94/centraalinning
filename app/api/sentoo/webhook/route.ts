@@ -55,7 +55,6 @@ export async function POST(req: NextRequest) {
         },
         data: {
           status: "paid",
-          provider_status: providerStatus,
           paid_at: new Date(),
           provider_payload: JSON.stringify(verification),
         },
@@ -100,7 +99,6 @@ export async function POST(req: NextRequest) {
         },
         data: {
           status: providerStatus === "pending" ? "pending" : "failed",
-          provider_status: providerStatus,
           provider_payload: JSON.stringify(verification),
         },
       });

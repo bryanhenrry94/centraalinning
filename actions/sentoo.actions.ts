@@ -1,7 +1,6 @@
 "use server";
-import { prisma } from "@/lib/prisma";
-import { getPaymentStatus, sentooRequest } from "@/lib/sentoo";
-import { Prisma } from "@prisma/client";
+import { sentooRequest } from "@/lib/sentoo";
+import { SentooService } from "@/services/providers/sentoo.service";
 
 export async function createSentooPayment(input: {
   amount: number;
@@ -55,7 +54,7 @@ export async function createSentooPayment(input: {
       };
     }
 
-    const sentooSuccess = result.data?.success;
+    const sentooSuccess = result.status === 200 ? result.data?.success : null;
 
     console.log("Sentoo payment success data:", sentooSuccess);
 
@@ -70,7 +69,7 @@ export async function createSentooPayment(input: {
 
     // ✅ Datos reales del pago
     const payment = {
-      id: sentooSuccess.message, // este es el paymentId
+      id: sentooSuccess.message, // este es el transactionId que usaremos para verificar el pago
       url: sentooSuccess.data.url,
       qrCode: sentooSuccess.data.qr_code,
       payload: Object.fromEntries(body.entries()),
@@ -100,23 +99,12 @@ export const toCents = async (amount: string | number): Promise<number> => {
 };
 
 export async function verifySentooPayment(transactionId: string) {
-  const url = `/v1/payment/status/${process.env.SENTOO_MERCHANT!}/${transactionId}`;
-
-  const res = await getPaymentStatus(url);
-  if (!res.ok) {
+  const res = await SentooService.verifySentooPayment(transactionId);
+  if (!res.success) {
     throw new Error("Failed to verify Sentoo payment");
   }
 
-  console.log("Sentoo payment status data:", JSON.stringify(res.data, null, 2));
-  const sentooStatus = res.data.success.message;
-
-  // Sincronizar con DB
-  await prisma.payment.update({
-    where: { provider_ref: transactionId },
-    data: { provider_status: sentooStatus },
-  });
-
   return {
-    status: sentooStatus,
+    status: res.status,
   };
 }
