@@ -38,6 +38,24 @@ import CloseIcon from "@mui/icons-material/Close";
 import { PaymentIntent } from "@/components/payment/PaymentIntent";
 import { formatCurrency } from "@/utils/formatters";
 
+const ALLOWED_TYPES = [
+  "application/pdf",
+
+  // Word
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+
+  // Excel
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+
+  // Imágenes
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+];
+
 export default function BlockCreatePage() {
   const { tenant } = useTenant();
 
@@ -151,8 +169,25 @@ export default function BlockCreatePage() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
 
+    const validFiles = files.filter((file) =>
+      ALLOWED_TYPES.includes(file.type),
+    );
+
+    const invalidFiles = files.filter(
+      (file) => !ALLOWED_TYPES.includes(file.type),
+    );
+
+    if (invalidFiles.length > 0) {
+      notifyError("Solo se permiten archivos PDF, Word, Excel e imágenes.");
+    }
+
+    if (validFiles.length === 0) {
+      event.target.value = "";
+      return;
+    }
+
     setDocuments((prevFiles) => {
-      const updatedFiles = [...prevFiles, ...files];
+      const updatedFiles = [...prevFiles, ...validFiles];
 
       const mappedDocuments = updatedFiles.map(mapFileToDocument);
 
@@ -220,7 +255,7 @@ export default function BlockCreatePage() {
           </Typography>
         </Box>
       </Box>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)}>        
         <Stack spacing={3} sx={{ py: 8 }}>
           {/* Cabecera */}
           <Paper
@@ -360,6 +395,12 @@ export default function BlockCreatePage() {
                   type="file"
                   hidden
                   multiple
+                  accept="
+                    .pdf,
+                    .doc,.docx,
+                    .xls,.xlsx,
+                    .png,.jpg,.jpeg,.gif,.webp
+                  "
                   onChange={handleFileChange}
                 />
               </Button>
