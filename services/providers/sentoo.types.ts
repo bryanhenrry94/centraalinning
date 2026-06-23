@@ -16,4 +16,5 @@ export interface SentooPaymentCreate {
   currency: string;
   description: string;
   reference: string;
+  urlReturn: string;
 }

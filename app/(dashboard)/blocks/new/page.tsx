@@ -69,7 +69,6 @@ export default function BlockCreatePage() {
   const [showCostDialog, setShowCostDialog] = useState(false);
   const [pendingFormValues, setPendingFormValues] =
     useState<CreateBlockadeInput>();
-  const [showPaymentIntent, setShowPaymentIntent] = useState(false);
 
   const amountService = 35.0; // monto fijo para el servicio, se puede ajustar según sea necesario
 
@@ -255,7 +254,7 @@ export default function BlockCreatePage() {
           </Typography>
         </Box>
       </Box>
-      <form onSubmit={handleSubmit(onSubmit)}>        
+      <form onSubmit={handleSubmit(onSubmit)}>
         <Stack spacing={3} sx={{ py: 8 }}>
           {/* Cabecera */}
           <Paper
@@ -481,7 +480,7 @@ export default function BlockCreatePage() {
         </Stack>
       </form>
 
-      {/* Dialog de confirmación de costo */}
+      {/* Dialoogvenster kostenbevesting */}
       <Dialog
         open={showCostDialog}
         onClose={() => setShowCostDialog(false)}
@@ -490,18 +489,18 @@ export default function BlockCreatePage() {
       >
         <DialogContent sx={{ p: 4 }}>
           <Stack spacing={3} alignItems="center">
-            {/* Título */}
+            {/* Titel */}
             <Stack spacing={1} textAlign="center">
               <Typography variant="h5" fontWeight={700}>
-                Confirmar pago
+                Betaling bevestigen
               </Typography>
 
               <Typography variant="body2" color="text.secondary">
-                Este servicio requiere un pago antes de registrar el bloqueo.
+                Deze service vereist betaling voordat u de blokkade registreert.
               </Typography>
             </Stack>
 
-            {/* Precio */}
+            {/* Prijs */}
             <Paper
               variant="outlined"
               sx={{
@@ -513,7 +512,7 @@ export default function BlockCreatePage() {
               }}
             >
               <Typography variant="body2" color="text.secondary">
-                Valor del servicio
+                Servicewaarde
               </Typography>
 
               <Typography variant="h4" fontWeight={700} color="primary.main">
@@ -521,16 +520,17 @@ export default function BlockCreatePage() {
               </Typography>
             </Paper>
 
-            {/* Mensaje */}
+            {/* Bericht */}
             <Typography
               variant="body2"
               color="text.secondary"
               textAlign="center"
             >
-              Al continuar será redirigido al proceso de pago seguro.
+              Als u doorgaat, wordt u doorgestuurd naar het beveiligde
+              betalingsproces.
             </Typography>
 
-            {/* Acciones */}
+            {/* Acties */}
             <Stack direction="row" spacing={2} width="100%">
               <Button
                 fullWidth
@@ -540,7 +540,7 @@ export default function BlockCreatePage() {
                 onClick={() => setShowCostDialog(false)}
                 sx={{ textTransform: "none" }}
               >
-                Cancelar
+                Annuleren
               </Button>
 
               <PaymentIntent

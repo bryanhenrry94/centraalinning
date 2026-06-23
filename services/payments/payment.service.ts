@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { SentooService } from "../providers/sentoo.service";
 import { PaymentCreate } from "@/lib/validations/payment";
 import { PaymentStatus } from "@/types/PaymentStatus";
+import { protocol } from "@/lib/config";
 
 export interface PaymentResult {
   success: boolean;
@@ -30,6 +31,17 @@ export class PaymentService {
       reference?: string;
     },
   ): Promise<PaymentResult> => {
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: tenant_id },
+    });
+
+    if (!tenant) {
+      return {
+        success: false,
+        message: "Tenant not found",
+      };
+    }
+
     // Create payment
     const paymentRes = await prisma.payment.create({
       data: {
@@ -41,12 +53,17 @@ export class PaymentService {
       },
     });
 
+    const urlReturn = `${protocol}://${tenant.subdomain}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/dashboard`;
+
+    console.log("Creating Sentoo payment with return URL:", urlReturn);
+
     // Crear transacción en Sentoo
     const sentooRes = await SentooService.createTransaction({
       amount: payload.amount,
       currency: payload.currency || "USD",
       description: payload.description,
       reference: payload.reference || `payment_${paymentRes.id}`,
+      urlReturn: urlReturn,
     });
 
     if (!sentooRes.success) {

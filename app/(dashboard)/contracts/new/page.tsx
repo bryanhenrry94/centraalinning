@@ -52,7 +52,7 @@ import { useSession } from "next-auth/react";
 
 import { NumericFormat } from "react-number-format";
 import { notifyError, notifyInfo } from "@/lib/notifications";
-import { formatDate } from "@/utils/formatters";
+import { formatCurrency, formatDate } from "@/utils/formatters";
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -65,6 +65,7 @@ import { StatusContractChip } from "../StatusContractChip";
 import { IdentificationType } from "@/constants/identification-type";
 import { identificationTypeOptions } from "@/components/debtor/modal-debtor-form";
 import { getInfoPersonAction } from "@/actions/person";
+import { PaymentIntent } from "@/components/payment/PaymentIntent";
 
 const steps = ["Gegevens", "Overeenkomst", "Documenten", "Overzicht"];
 
@@ -79,6 +80,13 @@ const OvereenkomstenRegistrerenPage = () => {
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
   const { data: session } = useSession();
+
+  const [showCostDialog, setShowCostDialog] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+  const [pendingFormValues, setPendingFormValues] =
+    useState<CreateContractInput>();
+
+  const amountService = 35;
 
   const {
     control,
@@ -277,18 +285,16 @@ const OvereenkomstenRegistrerenPage = () => {
     setDocuments((prev) => prev.filter((doc) => doc.id !== id));
   };
 
-  const onSubmit = async (data: CreateContractInput) => {
+  const createContract = async () => {
     const paymentWindow = window.open("", "_blank");
 
     try {
       setLoading(true);
 
-      console.log("Submitting contract:", data);
-
       if (!session?.user.tenant_id) return;
 
       const payload = {
-        ...data,
+        ...pendingFormValues,
         tenant_id: session?.user.tenant_id,
       };
 
@@ -350,6 +356,18 @@ const OvereenkomstenRegistrerenPage = () => {
       setLoading(false);
       setOpenDialog(false);
     }
+  };
+
+  const onSubmit = async (data: CreateContractInput) => {
+    // si ya se generó el pago, solo abrir la url del pago
+    if (paymentUrl) {
+      window.open(paymentUrl, "_blank");
+      return;
+    }
+
+    // Validación con react-hook-form + zod ya pasó
+    setPendingFormValues(data);
+    setShowCostDialog(true);
   };
 
   const uploadDocuments = async (contractId: string) => {
@@ -1236,6 +1254,98 @@ const OvereenkomstenRegistrerenPage = () => {
           </DialogActions>
         </Dialog>
       </form>
+
+      {/* Dialog de confirmación de costo */}
+      <Dialog
+        open={showCostDialog}
+        onClose={() => setShowCostDialog(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogContent sx={{ p: 4 }}>
+          <Stack spacing={3} alignItems="center">
+            {/* Título */}
+            <Stack spacing={1} textAlign="center">
+              <Typography variant="h5" fontWeight={700}>
+                Confirmar pago
+              </Typography>
+
+              <Typography variant="body2" color="text.secondary">
+                Este servicio requiere un pago antes de registrar el bloqueo.
+              </Typography>
+            </Stack>
+
+            {/* Precio */}
+            <Paper
+              variant="outlined"
+              sx={{
+                width: "100%",
+                p: 2,
+                borderRadius: 2,
+                textAlign: "center",
+                bgcolor: "background.default",
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                Valor del servicio
+              </Typography>
+
+              <Typography variant="h4" fontWeight={700} color="primary.main">
+                {formatCurrency(amountService)}
+              </Typography>
+            </Paper>
+
+            {/* Mensaje */}
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              textAlign="center"
+            >
+              Al continuar será redirigido al proceso de pago seguro.
+            </Typography>
+
+            {/* Acciones */}
+            <Stack direction="row" spacing={2} width="100%">
+              <Button
+                fullWidth
+                variant="outlined"
+                color="inherit"
+                startIcon={<CloseIcon />}
+                onClick={() => setShowCostDialog(false)}
+                sx={{ textTransform: "none" }}
+              >
+                Cancelar
+              </Button>
+
+              <PaymentIntent
+                onCreateTransaction={async () => {
+                  const res = await fetch("/api/payments/create", {
+                    method: "POST",
+                    body: JSON.stringify({
+                      amount: amountService,
+                      currency: "USD",
+                      description: "Payment for registering blokkade",
+                    }),
+                    headers: { "Content-Type": "application/json" },
+                  });
+                  const data = await res.json();
+
+                  setPaymentUrl(data.paymentUrl);
+
+                  return {
+                    paymentId: data.paymentId,
+                    paymentUrl: data.paymentUrl,
+                  };
+                }}
+                onPaymentConfirmed={async () => {
+                  setShowCostDialog(false);
+                  await createContract();
+                }}
+              />
+            </Stack>
+          </Stack>
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 };

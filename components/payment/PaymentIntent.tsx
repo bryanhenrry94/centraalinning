@@ -81,14 +81,14 @@ export const PaymentIntent: React.FC<PaymentIntentProps> = ({
         sx={{ textTransform: "none" }}
         disabled={loading}
       >
-        {loading ? "Procesando..." : "Pagar ahora"}
+        {loading ? "Verwerken..." : "Nu betalen"}
       </Button>
 
       <Dialog open={open} disableEscapeKeyDown>
         <DialogContent sx={{ textAlign: "center", p: 4 }}>
           <CircularProgress size={48} sx={{ mt: 2 }} />
           <Typography variant="body2" sx={{ mt: 2 }}>
-            ⏳ Esperando confirmación del pago...
+            ⏳ Wachten op betalingsbevestiging...
           </Typography>
         </DialogContent>
       </Dialog>
