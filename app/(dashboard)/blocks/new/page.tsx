@@ -37,6 +37,8 @@ import { notifyError, notifyInfo } from "@/lib/notifications";
 import CloseIcon from "@mui/icons-material/Close";
 import { PaymentIntent } from "@/components/payment/PaymentIntent";
 import { formatCurrency } from "@/utils/formatters";
+import { useRouter } from "next/navigation";
+import { REASONS } from "@/constants/reason-blockades";
 
 const ALLOWED_TYPES = [
   "application/pdf",
@@ -58,6 +60,8 @@ const ALLOWED_TYPES = [
 
 export default function BlockCreatePage() {
   const { tenant } = useTenant();
+
+  const router = useRouter();
 
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
 
@@ -108,9 +112,7 @@ export default function BlockCreatePage() {
 
       // espera 3 segundos antes de resetear el formulario para que el usuario pueda ver la notificación
       setTimeout(() => {
-        reset();
-        setDocuments([]);
-        setDebtor(null);
+        router.push("/blocks");
       }, 3000);
     } catch (error: any) {
       console.error("Error al registrar la blokkade:", error);
@@ -364,9 +366,11 @@ export default function BlockCreatePage() {
                         error={!!errors.reason}
                         helperText={errors.reason?.message}
                       >
-                        <MenuItem value="UNPAID_PAYMENT">
-                          Niet nagekomen betalingsverplichting
-                        </MenuItem>
+                        {REASONS.map((reason) => (
+                          <MenuItem key={reason.value} value={reason.value}>
+                            {reason.label}
+                          </MenuItem>
+                        ))}
                       </TextField>
                     )}
                   />

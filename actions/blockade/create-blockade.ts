@@ -6,6 +6,7 @@ import { CreateBlockadeInput } from "@/services/blockade/blockade.validators";
 import { StorageService } from "@/services/storage/storage.service";
 import { Prisma } from "@prisma/client";
 import { sendMailBlockade } from "../email";
+import { BlockadeService } from "@/services/blockade/blockade.service";
 
 type CreateBlockadeResponse = {
   success: boolean;
@@ -34,6 +35,9 @@ export async function createBlockadeAction(
       };
     }
 
+    // Generar un número de referencia único para la nueva blockade
+    const referenceNumber = await BlockadeService.generateReferenceNumber();
+
     // 1. crear bloqueo
     const blockade = await prisma.blockade.create({
       data: {
@@ -42,6 +46,8 @@ export async function createBlockadeAction(
         amount: new Prisma.Decimal(input.amount),
         reason: input.reason,
         registeredAt: input.registeredAt || new Date(),
+        status: "ACTIVE",
+        reference_number: referenceNumber,
       },
     });
 

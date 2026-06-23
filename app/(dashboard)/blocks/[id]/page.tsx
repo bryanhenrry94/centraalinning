@@ -15,6 +15,7 @@ import { DocumentsList } from "./DocumentsList";
 
 import { formatDate } from "@/utils/formatters";
 import { BlockadeService } from "@/services/blockade/blockade.service";
+import { REASONS } from "@/constants/reason-blockades";
 
 export default async function BlockadeDetailPage({
   params,
@@ -28,6 +29,10 @@ export default async function BlockadeDetailPage({
   if (!blockade) {
     notFound();
   }
+
+  const getLabelForReason = (reason: string) => {
+    return REASONS.find((r) => r.value === reason)?.label || reason;
+  };
 
   return (
     <Container maxWidth="lg">
@@ -70,11 +75,7 @@ export default async function BlockadeDetailPage({
 
                   <InfoRow
                     label="Reden blokade"
-                    value={
-                      blockade.reason === "UNPAID_PAYMENT"
-                        ? "Niet nagekomen betalingsverplichting"
-                        : "-"
-                    }
+                    value={getLabelForReason(blockade.reason)}
                   />
                 </Stack>
               </Grid>
