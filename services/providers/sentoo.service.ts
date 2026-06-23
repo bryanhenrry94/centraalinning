@@ -33,7 +33,7 @@ export class SentooService {
         sentoo_description: payload.description,
         sentoo_expires: expires,
         sentoo_reference: reference,
-        sentoo_return_url: payload.urlReturn,
+        sentoo_return_url: `${process.env.APP_URL}/payment/return`,
         sentoo_callback_url: `${process.env.APP_URL}/api/sentoo/webhook`,
       });
 

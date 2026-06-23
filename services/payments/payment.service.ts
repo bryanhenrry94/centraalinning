@@ -53,17 +53,12 @@ export class PaymentService {
       },
     });
 
-    const urlReturn = `${protocol}://${tenant.subdomain}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/dashboard`;
-
-    console.log("Creating Sentoo payment with return URL:", urlReturn);
-
     // Crear transacción en Sentoo
     const sentooRes = await SentooService.createTransaction({
       amount: payload.amount,
       currency: payload.currency || "USD",
       description: payload.description,
       reference: payload.reference || `payment_${paymentRes.id}`,
-      urlReturn: urlReturn,
     });
 
     if (!sentooRes.success) {

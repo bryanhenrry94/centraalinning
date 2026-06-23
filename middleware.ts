@@ -22,7 +22,7 @@ export async function middleware(req: NextRequest) {
   // RUTAS PÚBLICAS
   // ========================================
 
-  const publicRoutes = ["/login", "/signup", "/forgot-password", "/logout"];
+  const publicRoutes = ["/login", "/signup", "/forgot-password", "/logout", "/payment/return"];
 
   const isPublicRoute = publicRoutes.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
