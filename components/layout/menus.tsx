@@ -50,7 +50,7 @@ export const menuGroups: HeaderMenuGroup[] = [
       },
       {
         label: "Blokkade",
-        href: "/blocks/new",
+        href: "/blocks",
         icon: <ShieldOutlined fontSize="small" />,
       },
       {
