@@ -6,7 +6,7 @@ import {
   DialogContent,
   CircularProgress,
 } from "@mui/material";
-import PaymentIcon from "@mui/icons-material/Payment";
+import LockIcon from "@mui/icons-material/Lock";
 
 export interface PaymentIntentProps {
   onCreateTransaction: () => Promise<{
@@ -76,9 +76,17 @@ export const PaymentIntent: React.FC<PaymentIntentProps> = ({
         variant="contained"
         color="primary"
         onClick={handlePayNow}
-        startIcon={<PaymentIcon />}
+        startIcon={<LockIcon />}
         fullWidth
-        sx={{ textTransform: "none" }}
+        sx={{
+          textTransform: "none",
+          fontSize: "1rem",
+          fontWeight: 700,
+          bgcolor: "#F97316",
+          "&:hover": {
+            bgcolor: "#EA580C",
+          },
+        }}
         disabled={loading}
       >
         {loading ? "Verwerken..." : "Nu betalen"}

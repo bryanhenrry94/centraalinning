@@ -42,7 +42,7 @@ const menus: MenuItem[] = [
     role: [UserRole.TENANT_ADMIN],
   },
   {
-    label: "Overeenkomst registreren",
+    label: "Financiële afspraak registreren",
     href: "/client/overeenkomsten-registreren",
     icon: <DescriptionOutlinedIcon fontSize="small" />,
     role: [UserRole.TENANT_ADMIN],

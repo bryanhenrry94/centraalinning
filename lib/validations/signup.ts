@@ -210,7 +210,7 @@ export const initialTenantSignUp: ITenantSignUp = {
     email: "",
     password: "",
     phone: "",
-    country: "BQ",
+    country: "BON",
     identification_type: "",
     identification: "",
   },

@@ -175,7 +175,6 @@ model Person {
   updated_at                DateTime                  @updatedAt
 
   debtors                   Debtor[]
-  blok_check_requests       BlokCheckRequest[]
   financial_report_requests FinancialReportRequest[]
 
   // bailiff             Bailiff?
@@ -920,35 +919,6 @@ model PaymentAllocation {
   amount                                                                           Decimal  @db.Decimal(10, 2)
 
   @@map("payment_allocation")
-}
-
-model BlokCheckRequest {
-  id                                                String              @id @default(cuid())
-  tenant_id                                         String
-  person_id                                         String?
-  person                                            Person?            @relation(fields: [person_id], references: [id])
-
-  // 🔍 Datos de búsqueda
-  document_type                                     IdentificationType
-  document_number                                   String
-
-  // 💳 Pago (Sentoo)
-  payment_id        String?  // id externo (sentoo)
-  payment_status                                    PaymentStatus       @default(pending)
-  amount                                            Decimal             @db.Decimal(10,2)
-
-  // 📊 Resultado
-  has_blockade                                      Boolean?
-  block_reason                                      String?
-  checked_at                                        DateTime?
-
-  // 🧾 Control
-  created_at                                        DateTime            @default(now())
-  updated_at                                        DateTime            @updatedAt
-
-  @@index([tenant_id])
-  @@index([document_number])
-  @@map("blok_check_request")
 }
 
 model FinancialReportRequest {

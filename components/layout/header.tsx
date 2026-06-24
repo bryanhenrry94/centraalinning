@@ -32,6 +32,7 @@ import Image from "next/image";
 import { HeaderMenuGroup, menuGroups } from "./menus";
 import { UserRole } from "@/constants/user-role";
 import useClientRouter from "@/hooks/useNavigations";
+import Link from "next/link";
 
 export default function Header() {
   const { data: session } = useSession();
@@ -113,12 +114,14 @@ export default function Header() {
               <MenuIcon />
             </IconButton>
 
-            <Image
-              src="/static/logo-cfsb-light.png"
-              alt="Logo"
-              width={50}
-              height={50}
-            />
+            <Link href="/dashboard" style={{ textDecoration: "none" }}>
+              <Image
+                src="/static/logo-cfsb-light.png"
+                alt="Logo"
+                width={50}
+                height={50}
+              />
+            </Link>
 
             <Divider
               orientation="vertical"
@@ -131,20 +134,21 @@ export default function Header() {
                 },
               }}
             />
-
-            <Typography
-              variant="h6"
-              fontWeight={700}
-              sx={{
-                color: "white",
-                display: {
-                  xs: "none",
-                  md: "block",
-                },
-              }}
-            >
-              CI Systeem
-            </Typography>
+            <Link href="/dashboard" style={{ textDecoration: "none" }}>
+              <Typography
+                variant="h6"
+                fontWeight={700}
+                sx={{
+                  color: "white",
+                  display: {
+                    xs: "none",
+                    md: "block",
+                  },
+                }}
+              >
+                CI Systeem
+              </Typography>
+            </Link>
           </Box>
 
           {/* Desktop Navigation */}

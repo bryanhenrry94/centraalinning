@@ -44,7 +44,7 @@ export class TenantService {
 
   static generateCode = async (country_code: string): Promise<string> => {
     const island = CountryList.find((c) => c.value === country_code);
-    const prefix = island?.label.toUpperCase().slice(0, 3) || "XXX";
+    const prefix = island?.value.toUpperCase().slice(0, 3) || "XXX";
     const last_sequence = await prisma.tenant.count({
       where: {
         country_code,
@@ -52,6 +52,6 @@ export class TenantService {
     });
 
     const new_sequence = last_sequence + 1;
-    return `CI${prefix}${new_sequence.toString().padStart(3, "0")}`;
+    return `CFSB-${prefix}-${new_sequence.toString().padStart(6, "0")}`;
   };
 }

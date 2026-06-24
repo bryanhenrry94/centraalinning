@@ -63,7 +63,7 @@ export const AdminLayout = ({ children }: { children?: ReactNode }) => {
         }}
       >
         <Typography variant="body2" color="white">
-          Klantnummer: CIARU001
+          Klantnummer: CFSB-BON-000001
         </Typography>
       </Box>
     </Box>

@@ -84,7 +84,7 @@ export const getAllTenants = async (): Promise<Tenant[]> => {
 
   return tenants.map((tenant: Tenant) => ({
     ...tenant,
-    country_code: tenant.country_code as "BQ" | "CW" | "AW",
+    country_code: tenant.country_code as "BON" | "CUR" | "ARU",
   }));
 };
 

@@ -121,7 +121,7 @@ export default function AccountInfoCard(props: AccountInfoCardProps) {
         fullWidth
         label="Land"
         placeholder="Land"
-        value={initial.company?.country || "BQ"}
+        value={initial.company?.country || "BON"}
         type="text"
         select
         required

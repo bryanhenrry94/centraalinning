@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { processSubscriptionPayment } from "./subscription-processor";
 import { processContractPayment } from "./contract-processor";
-import { processBlokCheckPayment } from "./blokcheck-processor";
 import { processFinancialReportPayment } from "./financial-report-processor";
 
 export async function processSuccessfulPayment(paymentId: string) {
@@ -19,9 +18,6 @@ export async function processSuccessfulPayment(paymentId: string) {
 
     case "CONTRACT_ACTIVATION":
       return processContractPayment(payment);
-
-    case "BLOK_CHECK":
-      return processBlokCheckPayment(payment);
 
     case "FINANCIAL_REPORT":
       return processFinancialReportPayment(payment);

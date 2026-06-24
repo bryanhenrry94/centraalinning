@@ -56,7 +56,7 @@ export const FormSignUp = () => {
       phone: "",
       kvk: "",
       company_name: "",
-      country: "BQ",
+      country: "BON",
       accept_terms: false,
       plan_id: "",
       billing_cycle: "MONTHLY",
@@ -314,11 +314,11 @@ export const FormSignUp = () => {
                 }}
                 sx={commonStyles}
               >
-                <MenuItem value="BQ">Bonaire</MenuItem>
+                <MenuItem value="BON">Bonaire</MenuItem>
 
-                <MenuItem value="CW">Curaçao</MenuItem>
+                <MenuItem value="CUR">Curaçao</MenuItem>
 
-                <MenuItem value="AW">Aruba</MenuItem>
+                <MenuItem value="ARU">Aruba</MenuItem>
               </TextField>
             )}
           />

@@ -4,7 +4,7 @@ export const TenantSchema = z.object({
   id: z.string().uuid(), // Identificador único del tenant
   name: z.string(), // Nombre comercial
   subdomain: z.string(), // Subdominio de acceso
-  country_code: z.string(), // Código de país ('BQ', 'CW', 'AW')
+  country_code: z.string(), // Código de país ('BON', 'CUR', 'ARU')
   contact_email: z.string().email(), // Email de contacto
   address: z.string().nullable().optional(), // Dirección
   city: z.string().nullable().optional(), // Ciudad

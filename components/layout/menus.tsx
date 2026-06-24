@@ -39,7 +39,7 @@ export const menuGroups: HeaderMenuGroup[] = [
         icon: <ShieldOutlined fontSize="small" />,
       },
       {
-        label: "Overeenkomst registreren",
+        label: "Financiële afspraak registreren",
         href: "/contracts",
         icon: <DescriptionOutlined fontSize="small" />,
       },
