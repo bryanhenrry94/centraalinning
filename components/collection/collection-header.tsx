@@ -36,7 +36,7 @@ export const CollectionHeader = ({ onRefresh }: CollectionHeaderProps) => {
     >
       <Box>
         <Typography variant="h5" gutterBottom>
-          OVERZICHT VORDERING
+          Overzicht Administratieve opvolging
         </Typography>
         <Box display="flex" alignItems="center">
           <TextField
@@ -59,8 +59,13 @@ export const CollectionHeader = ({ onRefresh }: CollectionHeaderProps) => {
           <IconButton onClick={onRefresh} color="primary">
             <RefreshIcon />
           </IconButton>
-          <Button onClick={handleOpenModal} variant="contained" color="primary">
-            NIEUWE VORDERING
+          <Button
+            onClick={handleOpenModal}
+            variant="contained"
+            color="primary"
+            sx={{ textTransform: "none" }}
+          >
+            Nieuwe Administratieve opvolging
           </Button>
         </Stack>
         <Modal

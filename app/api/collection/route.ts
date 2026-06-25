@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
     const payload: CollectionCaseCreate = {
       debtor_id: body.debtor_id,
-      reference_number: body.reference_number,
+      document_number: body.document_number,
       issue_date: new Date(body.issue_date),
       due_date: new Date(body.due_date),
       amount_original: body.amount_original,

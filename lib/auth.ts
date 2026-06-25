@@ -30,6 +30,8 @@ export const authOptions: AuthOptions = {
 
         const response = await signInWithPassword(params);
 
+        console.log("signInWithPassword response:", response);
+
         if (!response.success || !response.data) {
           throw new Error(response.error || "Authentication failed");
         }
@@ -50,6 +52,8 @@ export const authOptions: AuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+
+        token.code = user.code;
 
         token.fullname = user.fullname;
 
@@ -75,6 +79,8 @@ export const authOptions: AuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+
+        session.user.code = token.code as string;
 
         session.user.fullname = token.fullname as string;
 

@@ -3,6 +3,7 @@ import { membershipSchema } from "./membership";
 
 export const IdTokenSchema = z.object({
   id: z.string(),
+  code: z.string(),
   fullname: z.string(),
   email: z.string().email(),
   phone: z.string(),

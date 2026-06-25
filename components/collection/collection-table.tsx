@@ -204,7 +204,7 @@ const CollectionTable = ({
                   {formatDate(invoice.issue_date?.toString() || "")}
                 </TableCell>
                 <TableCell sx={{ textAlign: "center" }}>
-                  {invoice.reference_number}
+                  {invoice.document_number || "Onbekend"}
                 </TableCell>
                 <TableCell sx={{ textAlign: "center" }}>
                   {formatDate(invoice.due_date?.toString() || "")}

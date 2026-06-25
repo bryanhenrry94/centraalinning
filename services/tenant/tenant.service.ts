@@ -52,6 +52,6 @@ export class TenantService {
     });
 
     const new_sequence = last_sequence + 1;
-    return `CFSB-${prefix}-${new_sequence.toString().padStart(6, "0")}`;
+    return `CFSB-${prefix}-${new_sequence.toString().padStart(3, "0")}`;
   };
 }

@@ -85,7 +85,7 @@ export class CollectionService {
 
       balance: calculations.balance,
 
-      reference_number: contract.reference_number,
+      document_number: contract.reference_number || "",
     };
 
     return this.create(collectionCaseData, contract.tenant_id);
@@ -215,30 +215,26 @@ export class CollectionService {
       parsedData.issue_date!,
     );
 
+    const referenceNumber = await this.generateCollectionReference();
+
     const result = await prisma.$transaction(async (tx) => {
       const collectionCase = await tx.collectionCase.create({
         data: {
           debtor_id: parsedData.debtor_id,
-          reference_number: parsedData.reference_number,
+          reference_number: referenceNumber,
+          document_number: parsedData.document_number,
           issue_date: parsedData.issue_date,
-
           due_date: dueDate,
-
           amount_original: parsedData.amount_original,
-
           fee_rate: calculations.feeRate,
           fee_amount: calculations.feeAmount,
-
           abb_rate: calculations.abbRate,
           abb_amount: calculations.abbAmount,
-
           total_fined: 0,
           total_due: calculations.totalDue,
           total_to_receive: calculations.totalToReceive,
-
           total_paid: 0,
           balance: calculations.balance,
-
           status: parsedData.status,
           tenant_id: tenant.id,
         },
@@ -357,6 +353,14 @@ export class CollectionService {
     return result.collectionCase;
   }
 
+  static generateCollectionReference = async () => {
+    const year = new Date().getFullYear();
+
+    const total = await prisma.collectionCase.count();
+
+    return `GOP-${year}-${String(total + 1).padStart(3, "0")}`;
+  };
+
   static getAll = async (
     params: CollectionCaseFilter,
   ): Promise<CollectionCaseResponse[]> => {
@@ -378,6 +382,7 @@ export class CollectionService {
     return collectionCases.map((collection: any) => ({
       id: collection.id,
       reference_number: collection.reference_number || "",
+      document_number: collection.document_number || "",
       issue_date: collection.issue_date,
       due_date: collection.due_date,
       tenant_id: collection.tenant_id,

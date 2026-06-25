@@ -33,7 +33,7 @@ export const StatusContractChip = ({
       return (
         <Chip
           size="small"
-          label="In incasso"
+          label="Administratieve opvolging"
           color="error"
           sx={{ width: width || 100 }}
         />

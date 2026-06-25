@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { ReportService } from "@/services/dashboard/report.service";
 
 export async function getDashboardStats() {
   try {
@@ -41,7 +42,7 @@ export async function getDashboardStats() {
 
     const incomeMonth = facturasDelMes.reduce(
       (total: number, factura: any) => total + factura.amount,
-      0
+      0,
     );
 
     return {
@@ -59,3 +60,7 @@ export async function getDashboardStats() {
     return { success: false, error: "Error al obtener estadísticas" };
   }
 }
+
+export const getTableSummary = async (tenantId: string) => {
+  return await ReportService.getTableSummary(tenantId);
+};

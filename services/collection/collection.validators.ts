@@ -5,6 +5,7 @@ import { CollectionCaseStatus } from "@/constants/collection-case-status";
 export const CollectionCaseSchema = z.object({
   id: z.cuid(),
   reference_number: z.string().optional(),
+  document_number: z.string(),
   issue_date: z.date(),
   due_date: z.date(),
   tenant_id: z.string(),

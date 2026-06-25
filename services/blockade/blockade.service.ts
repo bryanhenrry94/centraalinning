@@ -105,8 +105,6 @@ export class BlockadeService {
       }),
     ]);
 
-    console.log("Fetched blockades:", items);
-
     return {
       items,
       total,

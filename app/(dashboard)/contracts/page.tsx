@@ -33,7 +33,10 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { StatusContractChip } from "./StatusContractChip";
 
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import EditIcon from '@mui/icons-material/Edit';
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import DeleteIcon from '@mui/icons-material/Delete';
+
 import { AlertService } from "@/lib/alerts";
 
 export default function ContractsPage() {
@@ -174,7 +177,7 @@ export default function ContractsPage() {
           sx={{ textTransform: "none" }}
           onClick={() => router.push("/contracts/new")}
         >
-          Nieuwe overeenkomst
+          Nieuwe financiële afspraak
         </Button>
       </Box>
 
@@ -190,7 +193,7 @@ export default function ContractsPage() {
           <TextField
             fullWidth
             size="small"
-            placeholder="Zoeken op partij of nummer..."
+            placeholder="Zoeken op partij of registratienummer..."
             value={filters.search}
             onChange={handleSearchChange}
             InputProps={{
@@ -375,8 +378,16 @@ export default function ContractsPage() {
             <ListItemIcon>
               <VisibilityIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>Raadplegen</ListItemText>
+            <ListItemText>Bekijken</ListItemText>
           </MenuItem>
+
+          <MenuItem>
+            <ListItemIcon>
+              <EditIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Bewerken</ListItemText>
+          </MenuItem>
+
           <MenuItem
             onClick={() => {
               if (!selectedContract) return;
@@ -390,6 +401,13 @@ export default function ContractsPage() {
             </ListItemIcon>
             <ListItemText>Administratieve opvolging starten</ListItemText>
           </MenuItem>
+
+          <MenuItem>
+            <ListItemIcon>
+              <DeleteIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Verwijderen</ListItemText>
+          </MenuItem>
         </Menu>
 
         <Box
@@ -399,7 +417,7 @@ export default function ContractsPage() {
           alignItems="center"
         >
           <Typography variant="body2" color="text.secondary">
-            Totaal {contracts.length} overeenkomst
+            Totaal {contracts.length} financiële afspraak
           </Typography>
         </Box>
       </Card>

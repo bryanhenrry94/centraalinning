@@ -204,7 +204,7 @@ export class InvoiceService {
       },
     });
 
-    const sequence = String(count + 1).padStart(6, "0");
+    const sequence = String(count + 1).padStart(3, "0");
 
     return `INV-${year}-${sequence}`;
   };

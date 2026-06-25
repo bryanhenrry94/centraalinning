@@ -66,6 +66,7 @@ export const signInWithPassword = async (
     success: true,
     data: {
       id: user.id,
+      code: activeMembership.tenant.code,
       fullname: user.fullname || "",
       email: user.email,
       phone: user.phone || "",

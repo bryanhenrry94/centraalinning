@@ -33,7 +33,7 @@ const initialBlokCheck: BlokCheckResponse = {
   document_number: "0940528128",
   person_id: "",
   fullname: "John Doe",
-  has_blockade: false,
+  has_blockade: true,
 };
 
 const BlokCheckPage = () => {
@@ -42,7 +42,7 @@ const BlokCheckPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
-  const [showResult, setShowResult] = useState(false);
+  const [showResult, setShowResult] = useState(true);
   const [showCostDialog, setShowCostDialog] = useState(false);
   const [blokCheck, setBlokCheck] = useState<BlokCheckResponse | null>(
     initialBlokCheck,
@@ -135,7 +135,7 @@ const BlokCheckPage = () => {
             <Box display="flex" gap={2}>
               <TextField
                 fullWidth
-                placeholder="ID-nummer / KVK"
+                placeholder="ID-nummer / KVK-nummer"
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);

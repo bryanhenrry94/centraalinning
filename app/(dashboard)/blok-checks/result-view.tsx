@@ -29,7 +29,7 @@ export const ResultView: React.FC<ResultViewProps> = ({ result, onClose }) => {
       sx={{
         mt: 2,
         border: 1,
-        borderColor: "divider",        
+        borderColor: "divider",
         overflow: "hidden",
       }}
     >
@@ -56,26 +56,22 @@ export const ResultView: React.FC<ResultViewProps> = ({ result, onClose }) => {
         >
           <Box>
             <Typography variant="h6" fontWeight={600} color="white">
-              Resultaat van controle
-            </Typography>
-
-            <Typography variant="body2" color="white" sx={{ mt: 0.5 }}>
-              Persoons- en blokkade-informatie
-            </Typography>
+              Blok-Check resultaat
+            </Typography>          
           </Box>
         </Stack>
       </Box>
       <CardContent sx={{ p: 3 }}>
         {/* Información */}
         <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-          Informatie
+          Persoonsgegevens
         </Typography>
 
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid size={{ xs: 12, md: 4 }}>
             <Box>
               <Typography variant="caption" color="text.secondary">
-                Documentnummer
+                ID-nummer
               </Typography>
 
               <Typography variant="body1" fontWeight={500}>
@@ -108,17 +104,18 @@ export const ResultView: React.FC<ResultViewProps> = ({ result, onClose }) => {
 
         {/* Estado */}
         <Alert
-          severity={hasBlockade ? "warning" : "success"}
+          severity={hasBlockade ? "error" : "success"}
           variant="outlined"
           sx={{
             mt: 4,
             borderRadius: 2,
             alignItems: "center",
+            fontSize: "1rem",
           }}
         >
           {hasBlockade
-            ? "Verzoek aan de schuldenaar om een financieel rapport bij de CFSB aan te vragen voor een gedetailleerd overzicht van blokkades en beperkingen."
-            : "Er zijn geen actieve blokkades gevonden in het systeem."}
+            ? "Verzoek de debiteur een financiële verklaring bij CFSB aan te vragen voor een volledig financieel overzicht."
+            : "Er is geen actieve economische blokkade geregistreerd"}
         </Alert>
 
         {/* Footer */}
@@ -129,7 +126,11 @@ export const ResultView: React.FC<ResultViewProps> = ({ result, onClose }) => {
             mt: 4,
           }}
         >
-          <Button variant="contained" onClick={onClose}>
+          <Button
+            variant="contained"
+            onClick={onClose}
+            sx={{ textTransform: "none", fontWeight: 600 }}
+          >
             Sluiten
           </Button>
         </Box>

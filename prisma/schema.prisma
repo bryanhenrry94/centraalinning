@@ -547,7 +547,8 @@ model CollectionCase {
   id                         String                        @id @default(cuid())
   debt_id                    String?
   debt                       Debt?                        @relation(fields: [debt_id], references: [id])
-  reference_number           String?
+  reference_number           String                        @unique
+  document_number            String?
   issue_date                 DateTime
   due_date                   DateTime
   tenant_id                  String

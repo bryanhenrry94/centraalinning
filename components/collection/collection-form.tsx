@@ -25,7 +25,7 @@ import { getDebtorsAction } from "@/actions/debtor";
 
 const InitialCollectionCaseCreate: CollectionCaseCreate = {
   debtor_id: "",
-  reference_number: "",
+  document_number: "",
   issue_date: new Date(),
   due_date: new Date(),
   amount_original: 0,
@@ -162,11 +162,11 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
               variant="outlined"
               type={"text"}
               placeholder="Bijv. REF-2025-001"
-              value={formData.reference_number}
+              value={formData.document_number}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  reference_number: e.target.value,
+                  document_number: e.target.value,
                 })
               }
               required

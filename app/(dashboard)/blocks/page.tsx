@@ -137,7 +137,7 @@ export default function BlocksPage() {
           <TextField
             fullWidth
             size="small"
-            placeholder="Zoeken op schuldenaar ..."
+            placeholder="Zoeken op debiteur..."
             value={filters.search}
             onChange={handleSearchChange}
             InputProps={{
@@ -214,7 +214,7 @@ export default function BlocksPage() {
                   }}
                   align="center"
                 >
-                  Reden Blokkade
+                  Reden blokkade
                 </TableCell>
 
                 <TableCell

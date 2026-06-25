@@ -23,6 +23,7 @@ export const getCollectionById = async (
   return {
     id: collection.id,
     reference_number: collection.reference_number || "",
+    document_number: collection.document_number || "",
     issue_date: collection.issue_date,
     due_date: collection.due_date,
     tenant_id: collection.tenant_id,
@@ -56,6 +57,7 @@ export const getCollectionViewById = async (
     ...collection,
     id: collection.id,
     reference_number: collection.reference_number || "",
+    document_number: collection.document_number || "",
     issue_date: collection.issue_date,
     due_date: collection.due_date,
     tenant_id: collection.tenant_id,

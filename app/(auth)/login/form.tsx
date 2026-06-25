@@ -59,10 +59,14 @@ export default function LoginForm() {
         ...formData,
       };
 
+      console.log("Submitting login form with payload:", payload);
+
       const result = await signIn("credentials", {
         redirect: false,
         ...payload,
       });
+
+      console.log("signIn result:", result);
 
       if (result?.ok) {
         setFormData({

@@ -119,7 +119,7 @@ export const generateInvoiceNumber = async (): Promise<string> => {
     }
   }
 
-  const formattedNumber = nextNumber.toString().padStart(6, "0");
+  const formattedNumber = nextNumber.toString().padStart(3, "0");
 
   console.log("Next invoice number:", formattedNumber);
 
