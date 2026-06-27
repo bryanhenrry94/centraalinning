@@ -4,6 +4,7 @@ import { TableSummaryResponse } from "./types";
 export class ReportService {
   static getTableSummary = async (
     tenantId: string,
+    limit: number = 5,
   ): Promise<TableSummaryResponse[]> => {
     const [contracts, collections, blockades] = await Promise.all([
       prisma.contract.findMany({
@@ -103,8 +104,8 @@ export class ReportService {
       status: blockade.status,
     }));
 
-    return [...contractRows, ...collectionRows, ...blockadeRows].sort(
-      (a, b) => b.date.getTime() - a.date.getTime(),
-    );
+    return [...contractRows, ...collectionRows, ...blockadeRows]
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .slice(0, limit);
   };
 }

@@ -114,6 +114,7 @@ export const DashboardAdmin = () => {
                 <Typography variant="h6">Laatste overeenkomst</Typography>
               </Box>
 
+
               <TableContainer>
                 <Table size="small">
                   <TableHead>
