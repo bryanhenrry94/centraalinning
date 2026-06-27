@@ -28,7 +28,7 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
     <Box>
       <DashboardHeader
         title="Dashboard"
-        subtitle="Resumen general"
+        subtitle="Overzicht van uw overeenkomsten en activiteiten."
         actions={
           <DashboardFilters
             startDate={startDate}
@@ -36,7 +36,7 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
             onStartDateChange={(date) => setStartDate(date)}
             onEndDateChange={(date) => setEndDate(date)}
             onCreate={() => router.push("/collections")}
-            createLabel="Nueva factura"
+            createLabel="Nieuwe Administratie opvolging"
           />
         }
       />

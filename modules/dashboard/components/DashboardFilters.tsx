@@ -30,7 +30,7 @@ export default function DashboardFilters({
       spacing={2}
       alignItems="center"
     >
-      <TextField
+      {/* <TextField
         label="Desde"
         type="date"
         value={startDate ? startDate.format("YYYY-MM-DD") : ""}
@@ -58,12 +58,13 @@ export default function DashboardFilters({
         InputLabelProps={{
           shrink: true,
         }}
-      />
+      /> */}
 
       <Button
         variant="contained"
         startIcon={<AddRoundedIcon />}
         onClick={onCreate}
+        sx={{ textTransform: "none" }}
       >
         {createLabel}
       </Button>

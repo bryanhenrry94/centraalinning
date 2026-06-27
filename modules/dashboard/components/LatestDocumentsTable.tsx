@@ -18,13 +18,24 @@ export const LatestDocumentsTable = ({ rows }: LatestDocumentsTableProps) => {
   const theme = useTheme();
 
   const columns: GridColDef<(typeof rows)[number]>[] = [
-    { field: "id", headerName: "Id", width: 0 },
-    { field: "source", headerName: "Modulo", width: 150 },
+    {
+      field: "source",
+      headerName: "Module",
+      width: 150,
+      flex: 1,
+      renderCell: (params) => {
+        let color = "#666";
+        if (params.value.includes("Blokkade")) color = "#ef5350";
+        else if (params.value.includes("Fin.")) color = "#1976d2";
+        else if (params.value.includes("Adm.")) color = "#f57c00";
+        return <span style={{ fontWeight: 500, color }}>{params.value}</span>;
+      },
+    },
     {
       field: "date",
       headerName: "Datum",
-      width: 150,
-      editable: true,
+      width: 100,
+      flex: 1,
       renderCell: (params) => {
         return formatDate(params.value);
       },
@@ -32,19 +43,20 @@ export const LatestDocumentsTable = ({ rows }: LatestDocumentsTableProps) => {
     {
       field: "reference_number",
       headerName: "Referentie",
-      width: 150,
-      editable: true,
+      width: 120,
+      flex: 1,
     },
     {
       field: "name",
       headerName: "Naam",
-      width: 150,
-      editable: true,
+      width: 200,
+      flex: 1,
     },
     {
       field: "amount",
       headerName: "Totaal",
-      width: 160,
+      width: 110,
+      flex: 1,
       align: "right" as const,
       headerAlign: "right" as const,
       renderCell: (params) => {
@@ -54,7 +66,8 @@ export const LatestDocumentsTable = ({ rows }: LatestDocumentsTableProps) => {
     {
       field: "status",
       headerName: "Status",
-      width: 210,
+      width: 130,
+      flex: 1,
       align: "center" as const,
       headerAlign: "center" as const,
       renderCell: (params) => {
@@ -71,19 +84,38 @@ export const LatestDocumentsTable = ({ rows }: LatestDocumentsTableProps) => {
               | "success"
               | "warning";
             label: string;
+            bgColor: string;
           };
         } = {
           PAID: {
             color: "success",
             label: "Pagado",
+            bgColor: "#e8f5e9",
           },
           OPEN: {
             color: "warning",
             label: "Abierto",
+            bgColor: "#fff3e0",
+          },
+          ACTIVE: {
+            color: "error",
+            label: "Actief",
+            bgColor: "#ffebee",
+          },
+          REGISTERED: {
+            color: "success",
+            label: "Geregistreerd",
+            bgColor: "#e8f5e9",
+          },
+          AANMANING: {
+            color: "warning",
+            label: "Aanmaning",
+            bgColor: "#fff3e0",
           },
           default: {
             color: "default",
             label: status,
+            bgColor: "#f5f5f5",
           },
         };
 
@@ -93,11 +125,27 @@ export const LatestDocumentsTable = ({ rows }: LatestDocumentsTableProps) => {
           <Chip
             label={config.label}
             color={config.color}
-            variant="outlined"
+            variant="filled"
             size="small"
+            sx={{
+              fontWeight: 600,
+              width: "100%",
+              textTransform: "capitalize",
+            }}
           />
         );
       },
+    },
+    {
+      field: "actions",
+      headerName: "Actie",
+      width: 80,
+      flex: 0.5,
+      align: "center" as const,
+      headerAlign: "center" as const,
+      sortable: false,
+      filterable: false,
+      renderCell: () => "⋯",
     },
   ];
 
@@ -123,6 +171,16 @@ export const LatestDocumentsTable = ({ rows }: LatestDocumentsTableProps) => {
         hideFooter
         disableColumnMenu
         disableRowSelectionOnClick
+        sx={{
+          "& .MuiDataGrid-columnHeaders": {
+            backgroundColor: theme.palette.grey[100],
+            borderBottom: `1px solid ${theme.palette.divider}`,
+          },
+          "& .MuiDataGrid-cell": {
+            borderBottom: `1px solid ${theme.palette.divider}`,
+          },
+          bgcolor: "white",
+        }}
       />
     </Paper>
   );
