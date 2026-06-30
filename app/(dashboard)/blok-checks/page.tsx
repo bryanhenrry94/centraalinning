@@ -42,7 +42,7 @@ const BlokCheckPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
-  const [showResult, setShowResult] = useState(true);
+  const [showResult, setShowResult] = useState(false);
   const [showCostDialog, setShowCostDialog] = useState(false);
   const [blokCheck, setBlokCheck] = useState<BlokCheckResponse | null>(
     initialBlokCheck,

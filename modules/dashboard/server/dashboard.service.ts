@@ -41,8 +41,8 @@ export async function getDashboard(): Promise<DashboardResponse> {
       },
     ],
     modules: [
-      { name: "FAR - Financiele afspraken registreren", value: 24 },
       { name: "BLC - Blok-Check", value: 32 },
+      { name: "FAR - Financiele afspraken registreren", value: 24 },
       { name: "AOP - Administrative opvolging", value: 28 },
       { name: "BLK - Blokade", value: 16 },
       { name: "COL - Collectieve inning", value: 13 },

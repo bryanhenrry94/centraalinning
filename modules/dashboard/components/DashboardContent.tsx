@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Grid } from "@mui/material";
+import { Box, Container, Grid } from "@mui/material";
 
 import DashboardHeader from "./DashboardHeader";
 import DashboardFilters from "./DashboardFilters";
@@ -25,7 +25,7 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
   const router = useRouter();
 
   return (
-    <Box>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <DashboardHeader
         title="Dashboard"
         subtitle="Overzicht van uw overeenkomsten en activiteiten."
@@ -56,6 +56,6 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
       <Box mt={3}>
         <LatestDocumentsTable rows={dashboard.documents} />
       </Box>
-    </Box>
+    </Container>
   );
 }
