@@ -182,10 +182,10 @@ export default function Header() {
                   fontWeight: 500,
                 }}
               >
-                Werkstation
+                Diensten
               </Button>
 
-              {availableGroups.map((group) => (
+              {/* {availableGroups.map((group) => (
                 <Button
                   key={group.id}
                   color="inherit"
@@ -198,7 +198,7 @@ export default function Header() {
                 >
                   {group.label}
                 </Button>
-              ))}
+              ))} */}
             </Box>
 
             <Menu
