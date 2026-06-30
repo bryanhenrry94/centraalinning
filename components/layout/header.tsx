@@ -174,6 +174,17 @@ export default function Header() {
                 Dashboard
               </Button>
 
+              <Button
+                color="inherit"
+                onClick={() => router.push("/workstation")}
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 500,
+                }}
+              >
+                Werkstation
+              </Button>
+
               {availableGroups.map((group) => (
                 <Button
                   key={group.id}
