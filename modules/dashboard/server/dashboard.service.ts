@@ -17,10 +17,10 @@ export async function getDashboard(): Promise<DashboardResponse> {
 
   return {
     stats: {
-      total: 0,
-      active: 0,
-      completed: 0,
-      blocked: 0,
+      total: 5,
+      active: 15000,
+      completed: 10,
+      blocked: 2,
     },
     status: [
       {

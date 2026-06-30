@@ -1,5 +1,6 @@
 "use client";
 
+import { formatCurrency } from "@/utils/formatters";
 import { Avatar, Paper, Stack, Typography } from "@mui/material";
 import { alpha, useTheme } from "@mui/material/styles";
 import { ReactNode } from "react";
@@ -10,6 +11,7 @@ export interface StatCardProps {
   subtitle?: string;
   icon: ReactNode;
   color?: string;
+  type?: "text" | "number";
 }
 
 export default function StatCard({
@@ -18,6 +20,7 @@ export default function StatCard({
   subtitle,
   icon,
   color,
+  type = "text",
 }: StatCardProps) {
   const theme = useTheme();
 
@@ -26,7 +29,7 @@ export default function StatCard({
   return (
     <Paper
       elevation={0}
-      sx={{        
+      sx={{
         border: `1px solid ${theme.palette.divider}`,
         height: "100%",
         padding: 2,
@@ -60,7 +63,7 @@ export default function StatCard({
           </Typography>
 
           <Typography variant="h5" fontWeight={700} lineHeight={1.2}>
-            {value}
+            {type === "number" ? formatCurrency(Number(value)) : value}
           </Typography>
 
           {subtitle && (

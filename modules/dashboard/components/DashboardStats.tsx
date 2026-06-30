@@ -28,9 +28,9 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
     <Grid container spacing={3}>
       <Grid size={{ xs: 12, sm: 3, xl: 3 }}>
         <StatCard
-          title="Overeeenkomsten"
+          title="Openstaande dossiers"
           value={stats.total}
-          subtitle="Totaal"
+          // subtitle="Totaal"
           icon={<AssignmentRoundedIcon />}
           color={theme.palette.primary.main}
         />
@@ -38,19 +38,20 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
 
       <Grid size={{ xs: 12, sm: 3, xl: 3 }}>
         <StatCard
-          title="Openstaand"
+          title="Openstaand bedrag"
           value={stats.active}
-          subtitle="Actieve dossiers"
+          // subtitle="Actieve dossiers"
           icon={<CheckCircleRoundedIcon />}
           color={theme.palette.success.main}
-        />
+          type="number"
+        />        
       </Grid>
 
       <Grid size={{ xs: 12, sm: 3, xl: 3 }}>
         <StatCard
-          title="Geregistreerd"
+          title="Afgeronde dossiers"
           value={stats.completed}
-          subtitle="Afgeronde dossiers"
+          // subtitle="Afgeronde dossiers"
           icon={<FolderRoundedIcon />}
           color={theme.palette.warning.main}
         />
@@ -58,9 +59,9 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
 
       <Grid size={{ xs: 12, sm: 3, xl: 3 }}>
         <StatCard
-          title="Geblokkeerd"
+          title="Actieve blokkades"
           value={stats.blocked}
-          subtitle="Met blokkade"
+          // subtitle="Met blokkade"
           icon={<LockRoundedIcon />}
           color={theme.palette.error.main}
         />

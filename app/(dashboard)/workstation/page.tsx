@@ -36,9 +36,8 @@ export default function WorkstationPage() {
       color: "#1976d2",
       icon: SearchIcon,
       buttonText: "Blok-Check uitvoeren →",
-      linkText: "📋 Blok-Check overzicht",
-      isNew: true,
-      linkList: "/blok-checks",
+      linkText: "📋 Blok-Check overzicht",     
+      // linkList: "/blok-checks",
       newLink: "/blok-checks",
     },
     {
@@ -109,7 +108,7 @@ export default function WorkstationPage() {
         {/* Header */}
         <Box sx={{ mb: 8 }}>
           <Typography variant="h3" component="h1" sx={{ fontWeight: "bold" }}>
-            Werkstation
+            Diensten
           </Typography>
           <Typography variant="subtitle1" sx={{ color: "#666" }}>
             Alle CFSB diensten op één scherm
@@ -133,21 +132,7 @@ export default function WorkstationPage() {
                       boxShadow: 6,
                     },
                   }}
-                >
-                  {service.isNew && (
-                    <Chip
-                      label="NEW HERE"
-                      size="small"
-                      sx={{
-                        position: "absolute",
-                        top: 16,
-                        right: 16,
-                        bgcolor: service.color,
-                        color: "white",
-                        fontWeight: "bold",
-                      }}
-                    />
-                  )}
+                >                  
                   <CardContent sx={{ flexGrow: 1 }}>
                     <Stack
                       direction="row"
@@ -183,6 +168,7 @@ export default function WorkstationPage() {
                             bgcolor: service.color,
                             opacity: 0.9,
                           },
+                          // textTransform: "none",
                         }}
                         onClick={() => {
                           handleServiceClick(service.newLink || "#");
@@ -190,20 +176,22 @@ export default function WorkstationPage() {
                       >
                         {service.buttonText}
                       </Button>
-                      <MuiLink
-                        href={service.linkList}
-                        sx={{
-                          fontSize: "0.875rem",
-                          fontWeight: "bold",
-                          color: service.color,
-                          textDecoration: "none",
-                          "&:hover": {
-                            textDecoration: "underline",
-                          },
-                        }}
-                      >
-                        {service.linkText}
-                      </MuiLink>
+                      {service.linkList && (
+                        <MuiLink
+                          href={service.linkList}
+                          sx={{
+                            fontSize: "0.875rem",
+                            fontWeight: "bold",
+                            color: service.color,
+                            textDecoration: "none",
+                            "&:hover": {
+                              textDecoration: "underline",
+                            },
+                          }}
+                        >
+                          {service.linkText}
+                        </MuiLink>
+                      )}
                     </Stack>
                   </CardContent>
                 </Card>

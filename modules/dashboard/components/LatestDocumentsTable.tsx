@@ -17,20 +17,7 @@ interface LatestDocumentsTableProps {
 export const LatestDocumentsTable = ({ rows }: LatestDocumentsTableProps) => {
   const theme = useTheme();
 
-  const columns: GridColDef<(typeof rows)[number]>[] = [
-    {
-      field: "source",
-      headerName: "Module",
-      width: 150,
-      flex: 1,
-      renderCell: (params) => {
-        let color = "#666";
-        if (params.value.includes("Blokkade")) color = "#ef5350";
-        else if (params.value.includes("Fin.")) color = "#1976d2";
-        else if (params.value.includes("Adm.")) color = "#f57c00";
-        return <span style={{ fontWeight: 500, color }}>{params.value}</span>;
-      },
-    },
+  const columns: GridColDef<(typeof rows)[number]>[] = [    
     {
       field: "date",
       headerName: "Datum",
