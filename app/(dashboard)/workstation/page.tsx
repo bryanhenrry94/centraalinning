@@ -103,10 +103,10 @@ export default function WorkstationPage() {
   ];
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#f5f5f5", py: 8 }}>
+    <Box sx={{ minHeight: "100vh", bgcolor: "#f5f5f5", py: 2 }}>
       <Container maxWidth="lg">
         {/* Header */}
-        <Box sx={{ mb: 8 }}>
+        <Box sx={{ mb: 4 }}>
           <Typography variant="h3" component="h1" sx={{ fontWeight: "bold" }}>
             Diensten
           </Typography>

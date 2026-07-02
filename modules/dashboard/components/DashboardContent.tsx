@@ -36,7 +36,7 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
             onStartDateChange={(date) => setStartDate(date)}
             onEndDateChange={(date) => setEndDate(date)}
             onCreate={() => router.push("/workstation")}
-            createLabel="Workstation"
+            createLabel="Diensten"
           />
         }
       />
@@ -53,7 +53,7 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
         </Grid>
       </Grid>
 
-      <Box mt={3}>
+      <Box mt={3} sx={{ display: { xs: "none", md: "block" } }}>
         <LatestDocumentsTable rows={dashboard.documents} />
       </Box>
     </Container>

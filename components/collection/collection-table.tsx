@@ -18,6 +18,7 @@ import { useTenant } from "@/hooks/useTenant";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { formatCurrency, formatDate } from "@/utils/formatters";
 import { CollectionCaseResponse } from "@/services/collection/collection.type";
+import { useTheme, useMediaQuery } from "@mui/material";
 
 const CollectionTable = ({
   invoices,
@@ -40,8 +41,8 @@ const CollectionTable = ({
     page * rowsPerPage + rowsPerPage,
   );
 
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleEdit = (id: string) => {
     router.push(`/dashboard/collections/${id}`);
@@ -71,7 +72,7 @@ const CollectionTable = ({
             <TableRow>
               <TableCell
                 sx={{
-                  minWidth: 50,
+                  minWidth: 110,
                   backgroundColor: "secondary.main",
                   color: "#fff",
                   fontWeight: "bold",
@@ -79,35 +80,40 @@ const CollectionTable = ({
                 }}
                 align="center"
               >
-                Datum vordering
+                Datum
               </TableCell>
+              {!isSmallScreen && (
+                <>
+                  <TableCell
+                    sx={{
+                      minWidth: 110,
+                      backgroundColor: "secondary.main",
+                      color: "#fff",
+                      fontWeight: "bold",
+                      border: "1px solid #bdbdbd",
+                    }}
+                    align="center"
+                  >
+                    Referentienummer
+                  </TableCell>
+
+                  <TableCell
+                    sx={{
+                      minWidth: 50,
+                      backgroundColor: "secondary.main",
+                      color: "#fff",
+                      fontWeight: "bold",
+                      border: "1px solid #bdbdbd",
+                    }}
+                    align="center"
+                  >
+                    Reactietermijn
+                  </TableCell>
+                </>
+              )}
               <TableCell
                 sx={{
-                  minWidth: 50,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                  border: "1px solid #bdbdbd",
-                }}
-                align="center"
-              >
-                Referentienummer
-              </TableCell>
-              <TableCell
-                sx={{
-                  minWidth: 50,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                  border: "1px solid #bdbdbd",
-                }}
-                align="center"
-              >
-                Reactietermijn
-              </TableCell>
-              <TableCell
-                sx={{
-                  minWidth: 50,
+                  minWidth: 200,
                   backgroundColor: "secondary.main",
                   color: "#fff",
                   fontWeight: "bold",
@@ -117,42 +123,46 @@ const CollectionTable = ({
               >
                 Debiteurnaam
               </TableCell>
-              <TableCell
-                sx={{
-                  minWidth: 50,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                  border: "1px solid #bdbdbd",
-                }}
-                align="center"
-              >
-                Vordering
-              </TableCell>
-              <TableCell
-                sx={{
-                  minWidth: 50,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                  border: "1px solid #bdbdbd",
-                }}
-                align="center"
-              >
-                Te betalen
-              </TableCell>
-              <TableCell
-                sx={{
-                  minWidth: 50,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                  border: "1px solid #bdbdbd",
-                }}
-                align="center"
-              >
-                Te ontvangen
-              </TableCell>
+              {!isSmallScreen && (
+                <>
+                  <TableCell
+                    sx={{
+                      minWidth: 50,
+                      backgroundColor: "secondary.main",
+                      color: "#fff",
+                      fontWeight: "bold",
+                      border: "1px solid #bdbdbd",
+                    }}
+                    align="center"
+                  >
+                    Vordering
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      minWidth: 50,
+                      backgroundColor: "secondary.main",
+                      color: "#fff",
+                      fontWeight: "bold",
+                      border: "1px solid #bdbdbd",
+                    }}
+                    align="center"
+                  >
+                    Betaald
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      minWidth: 50,
+                      backgroundColor: "secondary.main",
+                      color: "#fff",
+                      fontWeight: "bold",
+                      border: "1px solid #bdbdbd",
+                    }}
+                    align="center"
+                  >
+                    Te ontvangen
+                  </TableCell>
+                </>
+              )}
 
               <TableCell
                 sx={{
@@ -166,6 +176,7 @@ const CollectionTable = ({
               >
                 Status
               </TableCell>
+              {!isSmallScreen && (
               <TableCell
                 sx={{
                   minWidth: 50,
@@ -178,6 +189,7 @@ const CollectionTable = ({
               >
                 Actie
               </TableCell>
+              )}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -203,36 +215,51 @@ const CollectionTable = ({
                 <TableCell sx={{ textAlign: "center" }}>
                   {formatDate(invoice.issue_date?.toString() || "")}
                 </TableCell>
-                <TableCell sx={{ textAlign: "center" }}>
-                  {invoice.document_number || "Onbekend"}
-                </TableCell>
-                <TableCell sx={{ textAlign: "center" }}>
-                  {formatDate(invoice.due_date?.toString() || "")}
-                </TableCell>
+                {!isSmallScreen && (
+                  <>
+                    <TableCell sx={{ textAlign: "center" }}>
+                      {invoice.document_number || "Onbekend"}
+                    </TableCell>
+                    <TableCell sx={{ textAlign: "center" }}>
+                      {formatDate(invoice.due_date?.toString() || "")}
+                    </TableCell>
+                  </>
+                )}
                 <TableCell sx={{ textAlign: "left" }}>
                   {invoice.debtor.fullname || "Onbekend"}
                 </TableCell>
-                <TableCell sx={{ textAlign: "right" }}>
-                  {formatCurrency(invoice.amount_original)}
-                </TableCell>
-                <TableCell sx={{ textAlign: "right" }}>
-                  {formatCurrency(invoice.fee_amount + invoice.abb_amount)}
-                </TableCell>
-                <TableCell sx={{ textAlign: "right" }}>
-                  {formatCurrency(invoice.total_to_receive)}
-                </TableCell>
+                {!isSmallScreen && (
+                  <>
+                    <TableCell sx={{ textAlign: "right" }}>
+                      {formatCurrency(invoice.amount_original)}
+                    </TableCell>
+                    <TableCell sx={{ textAlign: "right" }}>
+                      {formatCurrency(invoice.fee_amount - invoice.abb_amount)}
+                    </TableCell>
+                    <TableCell sx={{ textAlign: "right" }}>
+                      {formatCurrency(
+                        invoice.amount_original -
+                          invoice.fee_amount -
+                          invoice.abb_amount -
+                          invoice.total_paid,
+                      )}
+                    </TableCell>
+                  </>
+                )}
                 <TableCell sx={{ textAlign: "center" }}>
                   {getStatusLabel(invoice.status)}
                 </TableCell>
-                <TableCell sx={{ textAlign: "center" }}>
-                  <IconButton
-                    onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                      handleEdit(invoice.id)
-                    }
-                  >
-                    <VisibilityIcon />
-                  </IconButton>
-                </TableCell>
+                {!isSmallScreen && (
+                  <TableCell sx={{ textAlign: "center" }}>
+                    <IconButton
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
+                        handleEdit(invoice.id)
+                      }
+                    >
+                      <VisibilityIcon />
+                    </IconButton>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>

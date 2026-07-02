@@ -412,16 +412,21 @@ const OvereenkomstenRegistrerenPage = () => {
           {/* Stepper */}
           <Box sx={{ mb: 4 }}>
             <Stepper activeStep={activeStep}>
-              {steps.map((label) => (
+              {steps.map((label, index) => (
                 <Step key={label}>
-                  <StepLabel>{label}</StepLabel>
+                  <StepLabel>
+                    <Box sx={{ display: { xs: "none", sm: "block" } }}>
+                      {label}
+                    </Box>
+                  </StepLabel>
                 </Step>
               ))}
             </Stepper>
           </Box>
 
           {/* Step Content */}
-          <Box component={Paper} elevation={3} sx={{ p: 3, mb: 4 }}>
+          {/* <Box component={Paper} elevation={3} sx={{ p: 3, mb: 4 }}> */}
+          <>
             {/* Step 1: Gegevens */}
             {activeStep === 0 && (
               <Box>
@@ -450,13 +455,7 @@ const OvereenkomstenRegistrerenPage = () => {
                         >
                           <Box>
                             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                              {index === 0 ? "Partij" : "Wederpartij"} &nbsp;
-                              <Typography
-                                variant="caption"
-                                color="textSecondary"
-                              >
-                                (Uw onderneming)
-                              </Typography>
+                              {index === 0 ? "Partij" : "Wederpartij"}
                             </Typography>
                           </Box>
                           {index > 1 && (
@@ -468,47 +467,11 @@ const OvereenkomstenRegistrerenPage = () => {
                             </IconButton>
                           )}
                         </Box>
+
                         <Stack direction="column" spacing={2} sx={{ mb: 3 }}>
-                          <Controller
-                            name={`parties.${index}.person_type`}
-                            control={control}
-                            render={({ field, fieldState }) => (
-                              <FormControl
-                                fullWidth
-                                size="small"
-                                error={!!fieldState.error}
-                              >
-                                <InputLabel id={`person-type-label-${index}`}>
-                                  Type partij
-                                </InputLabel>
-
-                                <Select
-                                  {...field}
-                                  value={field.value ?? ""}
-                                  labelId={`person-type-label-${index}`}
-                                  label="Type partij"
-                                >
-                                  <MenuItem value="">
-                                    <em>Selecteer een type</em>
-                                  </MenuItem>
-
-                                  <MenuItem value="INDIVIDUAL">
-                                    Persoon
-                                  </MenuItem>
-
-                                  <MenuItem value="COMPANY">Bedrijf</MenuItem>
-                                </Select>
-
-                                <FormHelperText>
-                                  {fieldState.error?.message}
-                                </FormHelperText>
-                              </FormControl>
-                            )}
-                          />
-
-                          <Stack direction="row" spacing={2}>
+                          <Grid container spacing={2} sx={{ mb: 2 }}>
                             <Controller
-                              name={`parties.${index}.identification_type`}
+                              name={`parties.${index}.person_type`}
                               control={control}
                               render={({ field, fieldState }) => (
                                 <FormControl
@@ -517,40 +480,24 @@ const OvereenkomstenRegistrerenPage = () => {
                                   error={!!fieldState.error}
                                 >
                                   <InputLabel id={`person-type-label-${index}`}>
-                                    Identificatietype
+                                    Type partij
                                   </InputLabel>
 
                                   <Select
                                     {...field}
                                     value={field.value ?? ""}
                                     labelId={`person-type-label-${index}`}
-                                    label="Identificatietype"
+                                    label="Type partij"
                                   >
                                     <MenuItem value="">
                                       <em>Selecteer een type</em>
                                     </MenuItem>
 
-                                    {(watch(`parties.${index}.person_type`) ===
-                                    "COMPANY"
-                                      ? [
-                                          {
-                                            value: IdentificationType.KVK,
-                                            label: "KVK",
-                                          },
-                                        ]
-                                      : identificationTypeOptions.filter(
-                                          (option) =>
-                                            option.value !==
-                                            IdentificationType.KVK,
-                                        )
-                                    ).map((option) => (
-                                      <MenuItem
-                                        key={option.value}
-                                        value={option.value}
-                                      >
-                                        {option.label}
-                                      </MenuItem>
-                                    ))}
+                                    <MenuItem value="INDIVIDUAL">
+                                      Persoon
+                                    </MenuItem>
+
+                                    <MenuItem value="COMPANY">Bedrijf</MenuItem>
                                   </Select>
 
                                   <FormHelperText>
@@ -560,75 +507,139 @@ const OvereenkomstenRegistrerenPage = () => {
                               )}
                             />
 
-                            <Controller
-                              name={`parties.${index}.identification`}
-                              control={control}
-                              render={({ field, fieldState }) => (
-                                <TextField
-                                  {...field}
-                                  fullWidth
-                                  label="Identificatienummer"
-                                  size="small"
-                                  error={!!fieldState.error}
-                                  helperText={fieldState.error?.message}
-                                  onBlur={async () => {
-                                    field.onBlur();
-                                    const personType = getValues(
-                                      `parties.${index}.person_type`,
-                                    );
-                                    const identificationType = getValues(
-                                      `parties.${index}.identification_type`,
-                                    );
-                                    const identification = getValues(
-                                      `parties.${index}.identification`,
-                                    );
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                              <Controller
+                                name={`parties.${index}.identification_type`}
+                                control={control}
+                                render={({ field, fieldState }) => (
+                                  <FormControl
+                                    fullWidth
+                                    size="small"
+                                    error={!!fieldState.error}
+                                  >
+                                    <InputLabel
+                                      id={`person-type-label-${index}`}
+                                    >
+                                      Identificatietype
+                                    </InputLabel>
 
-                                    if (identificationType && identification) {
-                                      const personInfo =
-                                        await getInfoPersonAction(
-                                          identificationType as IdentificationType,
-                                          identification,
-                                        );
-                                      if (personInfo) {
-                                        setValue(
-                                          `parties.${index}.fullname`,
-                                          personType === "INDIVIDUAL"
-                                            ? `${personInfo.first_name} ${personInfo.last_name}`
-                                            : personInfo.business_name || "",
-                                        );
-                                        setValue(
-                                          `parties.${index}.email`,
-                                          personInfo.email || "",
-                                        );
-                                        setValue(
-                                          `parties.${index}.phone`,
-                                          personInfo.phone || "",
-                                        );
-                                        setValue(
-                                          `parties.${index}.address`,
-                                          personInfo.address || "",
-                                        );
-                                        if (personType === "INDIVIDUAL") {
+                                    <Select
+                                      {...field}
+                                      value={field.value ?? ""}
+                                      labelId={`person-type-label-${index}`}
+                                      label="Identificatietype"
+                                    >
+                                      <MenuItem value="">
+                                        <em>Selecteer een type</em>
+                                      </MenuItem>
+
+                                      {(watch(
+                                        `parties.${index}.person_type`,
+                                      ) === "COMPANY"
+                                        ? [
+                                            {
+                                              value: IdentificationType.KVK,
+                                              label: "KVK",
+                                            },
+                                          ]
+                                        : identificationTypeOptions.filter(
+                                            (option) =>
+                                              option.value !==
+                                              IdentificationType.KVK,
+                                          )
+                                      ).map((option) => (
+                                        <MenuItem
+                                          key={option.value}
+                                          value={option.value}
+                                        >
+                                          {option.label}
+                                        </MenuItem>
+                                      ))}
+                                    </Select>
+
+                                    <FormHelperText>
+                                      {fieldState.error?.message}
+                                    </FormHelperText>
+                                  </FormControl>
+                                )}
+                              />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                              <Controller
+                                name={`parties.${index}.identification`}
+                                control={control}
+                                render={({ field, fieldState }) => (
+                                  <TextField
+                                    {...field}
+                                    fullWidth
+                                    label="Identificatienummer"
+                                    size="small"
+                                    error={!!fieldState.error}
+                                    helperText={fieldState.error?.message}
+                                    onBlur={async () => {
+                                      field.onBlur();
+                                      const personType = getValues(
+                                        `parties.${index}.person_type`,
+                                      );
+                                      const identificationType = getValues(
+                                        `parties.${index}.identification_type`,
+                                      );
+                                      const identification = getValues(
+                                        `parties.${index}.identification`,
+                                      );
+
+                                      if (
+                                        identificationType &&
+                                        identification
+                                      ) {
+                                        const personInfo =
+                                          await getInfoPersonAction(
+                                            identificationType as IdentificationType,
+                                            identification,
+                                          );
+                                        if (personInfo) {
                                           setValue(
-                                            `parties.${index}.birth_date`,
-                                            personInfo.birth_date
-                                              ? new Date(personInfo.birth_date)
-                                                  .toISOString()
-                                                  .split("T")[0]
-                                              : "",
+                                            `parties.${index}.fullname`,
+                                            personType === "INDIVIDUAL"
+                                              ? `${personInfo.first_name} ${personInfo.last_name}`
+                                              : personInfo.business_name || "",
                                           );
                                           setValue(
-                                            `parties.${index}.birth_place`,
-                                            personInfo.birth_place || "",
+                                            `parties.${index}.email`,
+                                            personInfo.email || "",
                                           );
+                                          setValue(
+                                            `parties.${index}.phone`,
+                                            personInfo.phone || "",
+                                          );
+                                          setValue(
+                                            `parties.${index}.address`,
+                                            personInfo.address || "",
+                                          );
+                                          if (personType === "INDIVIDUAL") {
+                                            setValue(
+                                              `parties.${index}.birth_date`,
+                                              personInfo.birth_date
+                                                ? new Date(
+                                                    personInfo.birth_date,
+                                                  )
+                                                    .toISOString()
+                                                    .split("T")[0]
+                                                : "",
+                                            );
+                                            setValue(
+                                              `parties.${index}.birth_place`,
+                                              personInfo.birth_place || "",
+                                            );
+                                          }
                                         }
                                       }
-                                    }
-                                  }}
-                                />
-                              )}
-                            />
-                          </Stack>
+                                    }}
+                                  />
+                                )}
+                              />
+                            </Grid>
+                          </Grid>
 
                           <Controller
                             name={`parties.${index}.fullname`}
@@ -781,7 +792,7 @@ const OvereenkomstenRegistrerenPage = () => {
                   >
                     Waarom registreren bij CFSB?
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant="body2" sx={{ textAlign: "justify" }}>
                     Door uw financiële afspraak te registreren binnen de
                     CFSB-samenwerking creëert u duidelijkheid, controle en
                     bescherming tussen betrokken partijen.
@@ -1176,7 +1187,7 @@ const OvereenkomstenRegistrerenPage = () => {
                     </Typography>
                   </Box>
 
-                  <Box>
+                  {/* <Box>
                     <Typography
                       variant="subtitle2"
                       sx={{ fontWeight: 600, mb: 1, color: "#666" }}
@@ -1184,7 +1195,7 @@ const OvereenkomstenRegistrerenPage = () => {
                       Status:
                     </Typography>
                     <StatusContractChip status={statusContract} />
-                  </Box>
+                  </Box> */}
 
                   <Box sx={{ pt: 2, borderTop: "1px solid #eee" }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -1199,10 +1210,11 @@ const OvereenkomstenRegistrerenPage = () => {
                 </Box>
               </Box>
             )}
-          </Box>
+          </>
+          {/* </Box> */}
 
           {/* Navigation Buttons */}
-          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
+          <Stack direction="row" spacing={1} sx={{ mt: 4, justifyContent: "space-between" }}>
             <Button
               variant="outlined"
               startIcon={<ArrowBackIcon />}
@@ -1218,7 +1230,7 @@ const OvereenkomstenRegistrerenPage = () => {
                 endIcon={<CheckCircleIcon />}
                 onClick={() => setOpenDialog(true)}
               >
-                Financiële afspraak registreren
+                Registreren
               </Button>
             ) : (
               <Button
@@ -1229,7 +1241,7 @@ const OvereenkomstenRegistrerenPage = () => {
                 Volgende
               </Button>
             )}
-          </Box>
+          </Stack>
         </Container>
 
         {/* Confirmation Dialog */}

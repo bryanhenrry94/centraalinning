@@ -17,6 +17,7 @@ import {
   Stack,
   Paper,
   IconButton,
+  AlertTitle,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 
@@ -33,7 +34,7 @@ const initialBlokCheck: BlokCheckResponse = {
   document_number: "0940528128",
   person_id: "",
   fullname: "John Doe",
-  has_blockade: true,
+  has_blockade: false,
 };
 
 const BlokCheckPage = () => {
@@ -130,50 +131,94 @@ const BlokCheckPage = () => {
 
       {/* SEARCH CARD */}
       {!showResult ? (
-        <Card>
-          <CardContent>
-            <Box display="flex" gap={2}>
-              <TextField
-                fullWidth
-                placeholder="ID-nummer / KVK-nummer"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setError("");
-                }}
-                size="small"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                }}
-              />
+        <>
+          <Card>
+            <CardContent>
+              <Box display="flex" gap={2}>
+                <TextField
+                  fullWidth
+                  placeholder="ID-nummer / KVK-nummer"
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setError("");
+                  }}
+                  size="small"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
 
-              <Button
-                variant="contained"
-                onClick={handleSearch}
-                disabled={search.trim().length <= 5 || loading}
-                sx={{
-                  px: 4,
-                  textTransform: "none",
-                  fontWeight: 600,
-                }}
-                size="small"
-              >
-                {loading ? <CircularProgress size={20} /> : "Zoeken"}
-              </Button>
+                <Button
+                  variant="contained"
+                  onClick={handleSearch}
+                  disabled={search.trim().length <= 5 || loading}
+                  sx={{
+                    px: 4,
+                    textTransform: "none",
+                    fontWeight: 600,
+                  }}
+                  size="small"
+                >
+                  {loading ? <CircularProgress size={20} /> : "Zoeken"}
+                </Button>
+              </Box>
+
+              {/* ERROR */}
+              {error && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                  {error}
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+          <Box
+            sx={{
+              mt: 2,
+              p: 2,
+              bgcolor: "rgba(30, 95, 177, 0.05)",
+              border: "1px solid rgba(30, 95, 177, 0.1)",
+              borderRadius: 1,
+              display: "flex",
+              gap: 1.5,
+            }}
+          >
+            <Box
+              sx={{
+                minWidth: 24,
+                height: 24,
+                borderRadius: "50%",
+                bgcolor: "rgba(30, 95, 177, 0.15)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#1e5fb1",
+                fontSize: 16,
+                flexShrink: 0,
+                mt: 0.25,
+              }}
+            >
+              ℹ
             </Box>
-
-            {/* ERROR */}
-            {error && (
-              <Alert severity="error" sx={{ mt: 2 }}>
-                {error}
-              </Alert>
-            )}
-          </CardContent>
-        </Card>
+            <Box>
+              <Typography
+                variant="subtitle2"
+                sx={{ fontWeight: 600, mb: 0.5, color: "#1e5fb1" }}
+              >
+                Wat kunt u doen?
+              </Typography>
+              <Typography sx={{ color: "#5a6f8f", lineHeight: 1.5, fontSize: "0.875rem", textAlign: "justify" }}>
+                Voer een ID- of KVK-nummer in om te controleren of een persoon
+                of onderneming voorkomt op de lijst met economisch geblokkeerde
+                partijen.
+              </Typography>
+            </Box>
+          </Box>
+        </>
       ) : (
         <ResultView result={blokCheck} onClose={handleReset} />
       )}

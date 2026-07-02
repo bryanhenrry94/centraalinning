@@ -2,6 +2,7 @@ import React from "react";
 import {
   Box,
   Button,
+  Grid,
   IconButton,
   InputAdornment,
   Modal,
@@ -14,6 +15,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import CloseIcon from "@mui/icons-material/Close";
 import CollectionForm from "@/components/collection/collection-form";
+import AddIcon from '@mui/icons-material/Add';
 
 interface CollectionHeaderProps {
   onRefresh?: () => void;
@@ -28,92 +30,92 @@ export const CollectionHeader = ({ onRefresh }: CollectionHeaderProps) => {
   const handleSave = () => {};
 
   return (
-    <Box
-      display="flex"
-      justifyContent="space-between"
-      alignItems="center"
-      mb={2}
-    >
-      <Box>
-        <Typography variant="h5" gutterBottom>
-          Overzicht Administratieve opvolging
-        </Typography>
-        <Box display="flex" alignItems="center">
+    <>
+      <Typography variant="h5" gutterBottom>
+        Overzicht Administratieve opvolging
+      </Typography>
+
+      <Grid container spacing={2} alignItems="center">
+        <Grid size={{ xs: 12, sm: "auto" }}>
           <TextField
             variant="outlined"
             size="small"
             placeholder="Zoek naar..."
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              },
             }}
-            sx={{ width: 300 }}
+            sx={{ width: { xs: "100%", sm: 300 } }}
           />
-        </Box>
-      </Box>
-      <Box>
-        <Stack spacing={2} direction="row">
-          <IconButton onClick={onRefresh} color="primary">
-            <RefreshIcon />
-          </IconButton>
-          <Button
-            onClick={handleOpenModal}
-            variant="contained"
-            color="primary"
-            sx={{ textTransform: "none" }}
-          >
-            Nieuwe Administratieve opvolging
-          </Button>
-        </Stack>
-        <Modal
-          open={open || false}
-          onClose={handleCloseModal}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
+        </Grid>
+        <Grid size={{ xs: 12, sm: "auto" }}>
+          <Stack spacing={2} direction="row">
+            <IconButton onClick={onRefresh} color="primary">
+              <RefreshIcon />
+            </IconButton>
+            <Button
+              onClick={handleOpenModal}
+              variant="contained"
+              color="primary"
+              sx={{ textTransform: "none", whiteSpace: "nowrap" }}
+              startIcon={<AddIcon />}
+            >
+              Nieuwe
+            </Button>
+          </Stack>
+        </Grid>
+      </Grid>
+
+      <Modal
+        open={open || false}
+        onClose={handleCloseModal}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Paper
+          component="section"
+          sx={{
+            mt: 2,
+            elevation: 1,
+            borderRadius: 1,
+            overflow: "hidden",
+            mb: 2,
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+          }}
         >
-          <Paper
-            component="section"
+          <Box
             sx={{
-              mt: 2,
-              elevation: 1,
-              borderRadius: 1,
-              overflow: "hidden",
-              mb: 2,
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: 400,
+              bgcolor: "secondary.main",
+              color: "white",
+              px: 2,
+              py: 1.5,
+              borderTopLeftRadius: 8,
+              borderTopRightRadius: 8,
+              borderBottom: "1px solid #e0e0e0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
             }}
           >
-            <Box
-              sx={{
-                bgcolor: "secondary.main",
-                color: "white",
-                px: 2,
-                py: 1.5,
-                borderTopLeftRadius: 8,
-                borderTopRightRadius: 8,
-                borderBottom: "1px solid #e0e0e0",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
-                NIEUWE VORDERING
-              </Typography>
-              <IconButton onClick={handleCloseModal} sx={{ color: "white" }}>
-                <CloseIcon />
-              </IconButton>
-            </Box>
-            <CollectionForm onSave={handleSave} />
-          </Paper>
-        </Modal>
-      </Box>
-    </Box>
+            <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
+              NIEUWE VORDERING
+            </Typography>
+            <IconButton onClick={handleCloseModal} sx={{ color: "white" }}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          <CollectionForm onSave={handleSave} />
+        </Paper>
+      </Modal>
+    </>
   );
 };

@@ -24,19 +24,19 @@ export async function getDashboard(): Promise<DashboardResponse> {
     },
     status: [
       {
-        name: "Pendientes",
+        name: "In afwachting",
         value: 12,
       },
       {
-        name: "En proceso",
+        name: "In behandeling",
         value: 24,
       },
       {
-        name: "Completados",
+        name: "Voltooid",
         value: 32,
       },
       {
-        name: "Bloqueados",
+        name: "Geblokkeerd",
         value: 16,
       },
     ],
