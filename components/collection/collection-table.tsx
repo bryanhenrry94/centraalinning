@@ -64,7 +64,7 @@ const CollectionTable = ({
   };
 
   return (
-    <Box mt={2}>
+    <Box mt={4}>
       {loading && <Typography>Loading...</Typography>}
       <TableContainer component={"div"}>
         <Table size="small" stickyHeader aria-label="sticky table">
@@ -72,13 +72,12 @@ const CollectionTable = ({
             <TableRow>
               <TableCell
                 sx={{
-                  minWidth: 110,
+                  minWidth: 90,
                   backgroundColor: "secondary.main",
                   color: "#fff",
                   fontWeight: "bold",
                   border: "1px solid #bdbdbd",
                 }}
-                align="center"
               >
                 Datum
               </TableCell>
@@ -91,8 +90,8 @@ const CollectionTable = ({
                       color: "#fff",
                       fontWeight: "bold",
                       border: "1px solid #bdbdbd",
+                      textAlign: "left",
                     }}
-                    align="center"
                   >
                     Referentienummer
                   </TableCell>
@@ -113,15 +112,15 @@ const CollectionTable = ({
               )}
               <TableCell
                 sx={{
-                  minWidth: 200,
+                  minWidth: 120,
                   backgroundColor: "secondary.main",
                   color: "#fff",
                   fontWeight: "bold",
                   border: "1px solid #bdbdbd",
+                  textAlign: "left",
                 }}
-                align="center"
               >
-                Debiteurnaam
+                Naam
               </TableCell>
               {!isSmallScreen && (
                 <>
@@ -132,8 +131,8 @@ const CollectionTable = ({
                       color: "#fff",
                       fontWeight: "bold",
                       border: "1px solid #bdbdbd",
+                      textAlign: "left",
                     }}
-                    align="center"
                   >
                     Vordering
                   </TableCell>
@@ -144,25 +143,26 @@ const CollectionTable = ({
                       color: "#fff",
                       fontWeight: "bold",
                       border: "1px solid #bdbdbd",
+                      textAlign: "left",
                     }}
-                    align="center"
                   >
                     Betaald
                   </TableCell>
-                  <TableCell
-                    sx={{
-                      minWidth: 50,
-                      backgroundColor: "secondary.main",
-                      color: "#fff",
-                      fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  >
-                    Te ontvangen
-                  </TableCell>
                 </>
               )}
+
+              <TableCell
+                sx={{
+                  minWidth: 70,
+                  backgroundColor: "secondary.main",
+                  color: "#fff",
+                  fontWeight: "bold",
+                  border: "1px solid #bdbdbd",
+                  textAlign: "left",
+                }}
+              >
+                Hoofd
+              </TableCell>
 
               <TableCell
                 sx={{
@@ -172,23 +172,24 @@ const CollectionTable = ({
                   fontWeight: "bold",
                   border: "1px solid #bdbdbd",
                 }}
-                align="center"
+                align="left"
               >
                 Status
               </TableCell>
+
               {!isSmallScreen && (
-              <TableCell
-                sx={{
-                  minWidth: 50,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                  border: "1px solid #bdbdbd",
-                }}
-                align="center"
-              >
-                Actie
-              </TableCell>
+                <TableCell
+                  sx={{
+                    minWidth: 50,
+                    backgroundColor: "secondary.main",
+                    color: "#fff",
+                    fontWeight: "bold",
+                    border: "1px solid #bdbdbd",
+                  }}
+                  align="left"
+                >
+                  Actie
+                </TableCell>
               )}
             </TableRow>
           </TableHead>
@@ -212,7 +213,7 @@ const CollectionTable = ({
                   },
                 }}
               >
-                <TableCell sx={{ textAlign: "center" }}>
+                <TableCell sx={{ textAlign: "left", fontSize: "10px" }}>
                   {formatDate(invoice.issue_date?.toString() || "")}
                 </TableCell>
                 {!isSmallScreen && (
@@ -225,7 +226,7 @@ const CollectionTable = ({
                     </TableCell>
                   </>
                 )}
-                <TableCell sx={{ textAlign: "left" }}>
+                <TableCell sx={{ textAlign: "left", fontSize: "10px" }}>
                   {invoice.debtor.fullname || "Onbekend"}
                 </TableCell>
                 {!isSmallScreen && (
@@ -236,17 +237,19 @@ const CollectionTable = ({
                     <TableCell sx={{ textAlign: "right" }}>
                       {formatCurrency(invoice.fee_amount - invoice.abb_amount)}
                     </TableCell>
-                    <TableCell sx={{ textAlign: "right" }}>
-                      {formatCurrency(
-                        invoice.amount_original -
-                          invoice.fee_amount -
-                          invoice.abb_amount -
-                          invoice.total_paid,
-                      )}
-                    </TableCell>
                   </>
                 )}
-                <TableCell sx={{ textAlign: "center" }}>
+
+                <TableCell sx={{ textAlign: "right", fontSize: "10px" }}>
+                  {formatCurrency(
+                    invoice.amount_original -
+                      invoice.fee_amount -
+                      invoice.abb_amount -
+                      invoice.total_paid,
+                  )}
+                </TableCell>
+
+                <TableCell sx={{ textAlign: "center", fontSize: "10px" }}>
                   {getStatusLabel(invoice.status)}
                 </TableCell>
                 {!isSmallScreen && (

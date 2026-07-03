@@ -266,17 +266,15 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
                 Bewaar Vonnis
               </Button>
 
-              {session?.user?.roles.includes(UserRole.BAILIFF) && modeEdit && (
-                <Button
-                  color="secondary"
-                  aria-label="add an alarm"
-                  variant="contained"
-                  onClick={handleApprove}
-                  startIcon={<GavelIcon />}
-                >
-                  Vonnis goedkeuren
-                </Button>
-              )}
+              <Button
+                color="secondary"
+                aria-label="add an alarm"
+                variant="contained"
+                onClick={handleApprove}
+                startIcon={<GavelIcon />}
+              >
+                Vonnis goedkeuren
+              </Button>
             </Stack>
           </Box>
 
@@ -287,15 +285,15 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
             debtors={debtors}
           />
 
-          {session?.user?.roles.includes(UserRole.BAILIFF) && (
+          {/* {session?.user?.roles.includes(UserRole.BAILIFF) && ( */}
             <BailiffSection
               handleOpenModalBailiff={handleOpenModalBailiff}
               onSelectBailiff={handleSelectBailiff}
               bailiffs={bailiffs}
             />
-          )}
+          {/* )} */}
 
-          {session?.user?.roles.includes(UserRole.BAILIFF) && (
+          {/* {session?.user?.roles.includes(UserRole.BAILIFF) && ( */}
             <>
               <StatutoryInterestSection />
 
@@ -307,7 +305,7 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
                 bailiffs={bailiffs}
               />
             </>
-          )}
+          {/* )} */}
 
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 8 }}>
