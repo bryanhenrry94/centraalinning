@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ContractStatus } from "@prisma/client";
+import { ZodError } from "zod";
 import { ContractService } from "@/modules/contract/services/contract.service";
-import {
-  ContractPartyInput,
-  CreateContractInput,
-} from "@/modules/contract/services/contract.types";
+import { CreateContractInput } from "@/modules/contract/services/contract.types";
+import { ContractSchema } from "@/modules/contract/services/contract.validators";
 import { SentooService } from "@/infrastructure/sentoo/sentoo.service";
 import { PaymentCreate } from "@/modules/payment/services/payment.validators";
 import { prisma } from "@/lib/prisma";
@@ -14,83 +13,21 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    console.log("Received contract data:", body);
+    const { tenant_id } = body;
 
-    const {
-      tenant_id,
-      contract_type,
-      contract_date,
-      start_date,
-      end_date,
-      amount,
-      installment_count,
-      installment_amount,
-      description,
-    } = body;
-
-    // Validations
     if (!tenant_id) {
-      console.error("tenant_id is missing in the request body");
       return NextResponse.json(
         { error: "tenant_id is required" },
         { status: 400 },
       );
     }
 
-    if (!contract_date) {
-      console.error("contract_date is missing in the request body");
-      return NextResponse.json(
-        { error: "contract_date is required" },
-        { status: 400 },
-      );
-    }
-
-    if (!start_date) {
-      console.error("start_date is missing in the request body");
-      return NextResponse.json(
-        { error: "start_date is required" },
-        { status: 400 },
-      );
-    }
-
-    if (!amount) {
-      console.error("amount is missing in the request body");
-      return NextResponse.json(
-        { error: "amount is required" },
-        { status: 400 },
-      );
-    }
-
-    // generate a unique reference number if not provided
-    const referenceNumber = await ContractService.generateContractReference();
+    const parsed = ContractSchema.parse(body);
 
     const contractData: CreateContractInput = {
-      contract_type: contract_type as any,
-      contract_date: new Date(contract_date).toISOString(),
-      start_date: new Date(start_date).toISOString(),
-      end_date: end_date ? new Date(end_date).toISOString() : null,
-      amount: Number(amount),
-      installment_count: installment_count || null,
-      installment_amount: installment_amount
-        ? Number(installment_amount)
-        : undefined,
-      description: description || null,
-      reference_number: referenceNumber,
+      ...parsed,
       status: "DRAFT",
-      documents: [],
-      parties: body.parties.map((party: ContractPartyInput) => ({
-        person_type:
-          (party.person_type as "INDIVIDUAL" | "COMPANY") || "INDIVIDUAL",
-        role: party.role,
-        fullname: party.fullname,
-        email: party.email || null,
-        identification_type: party.identification_type || null,
-        identification: party.identification || null,
-        phone: party.phone || null,
-        birth_date: party.birth_date ?? null,
-        birth_place: party.birth_place ?? null,
-        address: party.address ?? null,
-      })),
+      documents: parsed.documents ?? [],
     };
 
     const contract = await ContractService.create(tenant_id, contractData);
@@ -158,24 +95,23 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error(error);
 
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        { error: "Validatiefout", details: error.issues },
+        { status: 400 },
+      );
+    }
+
     if (error.code === "P2002") {
       return NextResponse.json(
-        {
-          error: "Reference number already exists",
-        },
-        {
-          status: 409,
-        },
+        { error: "Reference number already exists" },
+        { status: 409 },
       );
     }
 
     return NextResponse.json(
-      {
-        error: "Failed to create contract",
-      },
-      {
-        status: 500,
-      },
+      { error: "Failed to create contract" },
+      { status: 500 },
     );
   }
 }

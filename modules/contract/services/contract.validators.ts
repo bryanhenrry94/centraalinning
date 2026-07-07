@@ -36,12 +36,13 @@ export const ContractPartySchema = z.object({
     .trim()
     .min(1, "Vestigingadres is vereist")
     .max(500, "Vestigingadres is te lang"),
-  collection_case_id: z.string().optional().nullable(),
 });
 
 export const ContractSchema = z.object({
   contract_type: z.enum(contractTypes),
-  status: z.enum(contractStatuses),
+  // status and reference_number are generated server-side; optional here
+  status: z.enum(contractStatuses).optional(),
+  reference_number: z.string().trim().optional(),
   contract_date: z.string().min(1, "Contractdatum mag niet leeg zijn"),
   start_date: z.string().min(1, "Startdatum mag niet leeg zijn"),
   end_date: z.string().optional().nullable(),
@@ -55,8 +56,6 @@ export const ContractSchema = z.object({
     .positive("Termijnbedrag moet groter zijn dan 0")
     .optional(),
   description: z.string().optional(),
-  reference_number: z.string().trim(),
-  collection_case_id: z.string().optional().nullable(),
   parties: ContractPartySchema.array().min(
     1,
     "Minstens één partij is verplicht",

@@ -228,6 +228,31 @@ export class CollectionService {
         },
       });
 
+      // Registrar los servicios activos en esta reclamación
+      await tx.claimService.createMany({
+        data: [
+          // FAR completado si la claim viene de un contrato
+          ...(parsedData.origin === "FAR"
+            ? [
+                {
+                  debtClaimId: claim.id,
+                  service: "FAR" as const,
+                  status: "COMPLETED" as const,
+                  startedAt,
+                  finishedAt: startedAt,
+                },
+              ]
+            : []),
+          // AOP siempre inicia junto con la claim
+          {
+            debtClaimId: claim.id,
+            service: "AOP" as const,
+            status: "IN_PROGRESS" as const,
+            startedAt,
+          },
+        ],
+      });
+
       return claim;
     });
 
