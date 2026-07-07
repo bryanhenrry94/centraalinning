@@ -38,7 +38,7 @@ export const PaymentsDialog: React.FC<PaymentsDialogProps> = ({
   }, [debtId]);
 
   const fetchPayments = async (debtId: string) => {
-    const response = await getPayments({ debt_id: debtId });
+    const response = await getPayments({ debtClaim_id: debtId });
 
     if (response.success) {
       setPayments(response.data || []);

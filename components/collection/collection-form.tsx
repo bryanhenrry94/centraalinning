@@ -13,32 +13,24 @@ import {
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import SaveIcon from "@mui/icons-material/Save";
-import { CollectionCaseCreate } from "@/lib/validations/collection";
+import { DebtClaimCreate } from "@/lib/validations/collection";
 import { ModalFormDebtor } from "@/components/debtor/modal-debtor-form";
 import { DebtorResponse, DebtorInput } from "@/services/debtor/debtor.type";
 import { notifyError, notifySuccess } from "@/lib/notifications";
 import { useTenant } from "@/hooks/useTenant";
-import { CollectionCaseStatus } from "@/constants/collection-case-status";
 import { getParameterAction } from "@/actions/parameter";
 import { ParameterInput } from "@/services/parameter/parameter.type";
 import { getDebtorsAction } from "@/actions/debtor";
 
-const InitialCollectionCaseCreate: CollectionCaseCreate = {
-  debtor_id: "",
-  document_number: "",
-  issue_date: new Date(),
-  due_date: new Date(),
-  amount_original: 0,
-  fee_rate: 0,
-  fee_amount: 0,
-  abb_rate: 0,
-  abb_amount: 0,
-  total_fined: 0,
-  total_due: 0,
-  total_paid: 0,
-  total_to_receive: 0,
-  balance: 0,
-  status: CollectionCaseStatus.AANMANING,
+const InitialDebtClaimCreate: DebtClaimCreate = {
+  debtorId: "",
+  reference: "",
+  description: "",
+  principalAmount: 0,
+  currentAmount: 0,
+  currency: "USD",
+  origin: "MANUAL",
+  status: "IN_PROGRESS",
 };
 
 interface IRegisterInvoiceProps {
@@ -48,8 +40,8 @@ interface IRegisterInvoiceProps {
 const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
   const { tenant } = useTenant();
 
-  const [formData, setFormData] = useState<CollectionCaseCreate>(
-    InitialCollectionCaseCreate,
+  const [formData, setFormData] = useState<DebtClaimCreate>(
+    InitialDebtClaimCreate,
   );
   const [loading, setLoading] = useState(false);
 
@@ -84,7 +76,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
   const collection_fee_rate = _parameter?.collection_fee_rate ?? 0;
   const abb_rate = _parameter?.abb_rate ?? 0;
 
-  const invoiceAmount = formData.amount_original || 0;
+  const invoiceAmount = formData.principalAmount || 0;
   const subtotal = Number(invoiceAmount);
   let cobranza = (subtotal * collection_fee_rate) / 100; // 0.15
 
@@ -107,14 +99,14 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
     }).format(value);
 
   const handleClickNewDebtor = () => {
-    setModalFormDebtor({ open: true, debtor_id: formData.debtor_id });
+    setModalFormDebtor({ open: true, debtor_id: formData.debtorId });
   };
 
   const handleSetDebtor = (debtor: DebtorInput) => {
     fetchDebtors();
     setFormData({
       ...formData,
-      debtor_id: debtor.id,
+      debtorId: debtor.id,
     });
   };
 
@@ -137,7 +129,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
         throw new Error(errorData.error || "Failed to create collection case");
       }
 
-      setFormData(InitialCollectionCaseCreate);
+      setFormData(InitialDebtClaimCreate);
       notifySuccess("Opgenomen verzameltaak");
       onSave?.();
     } catch (error) {
@@ -162,11 +154,11 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
               variant="outlined"
               type={"text"}
               placeholder="Bijv. REF-2025-001"
-              value={formData.document_number}
+              value={formData.reference ?? ""}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  document_number: e.target.value,
+                  reference: e.target.value,
                 })
               }
               required
@@ -182,13 +174,13 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
                 }
                 isOptionEqualToValue={(option, val) => option.id === val.id}
                 value={
-                  debtors.find((debtor) => debtor.id === formData.debtor_id) ||
+                  debtors.find((debtor) => debtor.id === formData.debtorId) ||
                   null
                 }
                 onChange={(_, newValue) => {
                   setFormData({
                     ...formData,
-                    debtor_id: newValue ? newValue.id : "",
+                    debtorId: newValue ? newValue.id : "",
                   });
                 }}
                 fullWidth
@@ -225,32 +217,11 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
               variant="outlined"
               type="number"
               required
-              value={formData.amount_original ?? ""}
+              value={formData.principalAmount ?? ""}
               onChange={(e) => {
                 setFormData({
                   ...formData,
-                  amount_original: Number(e.target.value),
-                });
-              }}
-            />
-            <TextField
-              type="date"
-              fullWidth
-              size="small"
-              label={"Datum vordering"}
-              InputLabelProps={{ shrink: true }}
-              disabled
-              value={
-                formData.issue_date
-                  ? formData.issue_date instanceof Date
-                    ? formData.issue_date.toISOString().slice(0, 10)
-                    : new Date(formData.issue_date).toISOString().slice(0, 10)
-                  : ""
-              }
-              onChange={(e) => {
-                setFormData({
-                  ...formData,
-                  issue_date: new Date(e.target.value),
+                  principalAmount: Number(e.target.value),
                 });
               }}
             />
@@ -298,7 +269,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({ onSave }) => {
       <ModalFormDebtor
         open={_ModalFormDebtor.open}
         onClose={() =>
-          setModalFormDebtor({ open: false, debtor_id: formData.debtor_id })
+          setModalFormDebtor({ open: false, debtor_id: formData.debtorId })
         }
         id={_ModalFormDebtor.debtor_id} // Aquí puedes pasar el ID del deudor si estás editando
         onSave={handleSetDebtor}

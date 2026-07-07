@@ -15,7 +15,7 @@ export type PaymentStatus = z.infer<typeof PaymentStatusEnum>;
 export const PaymentSchema = z.object({
   id: z.string(),
   tenant_id: z.string(),
-  debt_id: z.string().nullable().optional(),
+  debtClaim_id: z.string().nullable().optional(),
   paid_at: z
     .union([z.string(), z.date()])
     .nullable()
@@ -55,7 +55,7 @@ export const PaymentCreateSchema = PaymentSchema.omit({
   created_at: true,
   updated_at: true,
 }).pick({
-  debt_id: true,
+  debtClaim_id: true,
   paid_at: true,
   total_amount: true,
   method: true,

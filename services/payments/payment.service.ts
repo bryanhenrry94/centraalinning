@@ -100,7 +100,7 @@ export class PaymentService {
     const paymentRes = await prisma.payment.create({
       data: {
         tenant_id: tenant_id,
-        debt_id: payload.debt_id,
+        debtClaim_id: payload.debtClaim_id,
         method: payload.method || "TRANSFER",
         provider: payload.provider || "manual",
         provider_ref: payload.provider_ref || "",

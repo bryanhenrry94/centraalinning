@@ -1,23 +1,18 @@
 import { z } from "zod";
 import {
-  CollectionCaseSchema,
-  CollectionCaseCreateSchema,
-  CollectionCaseUpdateSchema,
-  CollectionCaseResponseSchema,
-  CollectionCaseViewSchema,
+  DebtClaimSchema,
+  DebtClaimCreateSchema,
+  DebtClaimUpdateSchema,
+  DebtClaimResponseSchema,
 } from "@/services/collection/collection.validators";
-import { CollectionCaseStatus } from "@/constants/collection-case-status";
 
-export type CollectionCaseFilter = {
-  tenant_id: string;
-  status?: CollectionCaseStatus;
-  debtor_id?: string;
+export type DebtClaimFilter = {
+  tenantId: string;
+  status?: "OPEN" | "IN_PROGRESS" | "SETTLED" | "CLOSED" | "CANCELLED";
+  debtorId?: string;
 };
 
-export type CollectionCase = z.infer<typeof CollectionCaseSchema>;
-export type CollectionCaseCreate = z.infer<typeof CollectionCaseCreateSchema>;
-export type CollectionCaseUpdate = z.infer<typeof CollectionCaseUpdateSchema>;
-export type CollectionCaseResponse = z.infer<
-  typeof CollectionCaseResponseSchema
->;
-export type CollectionCaseView = z.infer<typeof CollectionCaseViewSchema>;
+export type DebtClaim = z.infer<typeof DebtClaimSchema>;
+export type DebtClaimCreate = z.infer<typeof DebtClaimCreateSchema>;
+export type DebtClaimUpdate = z.infer<typeof DebtClaimUpdateSchema>;
+export type DebtClaimResponse = z.infer<typeof DebtClaimResponseSchema>;

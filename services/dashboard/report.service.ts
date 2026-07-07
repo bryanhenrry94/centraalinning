@@ -25,15 +25,15 @@ export class ReportService {
         },
       }),
 
-      prisma.collectionCase.findMany({
+      prisma.debtClaim.findMany({
         where: {
-          tenant_id: tenantId,
+          tenantId,
         },
         select: {
           id: true,
-          issue_date: true,
-          reference_number: true,
-          balance: true,
+          createdAt: true,
+          reference: true,
+          currentAmount: true,
           status: true,
           debtor: {
             select: {
@@ -55,9 +55,14 @@ export class ReportService {
         select: {
           id: true,
           createdAt: true,
-          reference_number: true,
-          amount: true,
-          status: true,
+          reason: true,
+          originDebtClaim: {
+            select: {
+              reference: true,
+              currentAmount: true,
+              status: true,
+            },
+          },
           debtor: {
             select: {
               person: {
@@ -83,25 +88,25 @@ export class ReportService {
     }));
 
     const collectionRows: TableSummaryResponse[] = collections.map(
-      (collection) => ({
+      (collection: any) => ({
         id: collection.id,
         source: "AOP - Administrative opvolging",
-        date: collection.issue_date,
-        reference_number: collection.reference_number || "",
+        date: collection.createdAt,
+        reference_number: collection.reference || "",
         name: `${collection.debtor.person.first_name} ${collection.debtor.person.last_name}`,
-        amount: Number(collection.balance),
+        amount: Number(collection.currentAmount),
         status: collection.status,
       }),
     );
 
-    const blockadeRows: TableSummaryResponse[] = blockades.map((blockade) => ({
+    const blockadeRows: TableSummaryResponse[] = blockades.map((blockade: any) => ({
       id: blockade.id,
       source: "BLK - Blokade",
       date: blockade.createdAt,
-      reference_number: blockade.reference_number,
+      reference_number: blockade.originDebtClaim?.reference || blockade.reason || "",
       name: `${blockade.debtor.person.first_name} ${blockade.debtor.person.last_name}`,
-      amount: Number(blockade.amount),
-      status: blockade.status,
+      amount: Number(blockade.originDebtClaim?.currentAmount ?? 0),
+      status: blockade.originDebtClaim?.status || "ACTIVE",
     }));
 
     return [...contractRows, ...collectionRows, ...blockadeRows]

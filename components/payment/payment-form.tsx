@@ -18,7 +18,7 @@ import { PaymentMethod } from "@/constants/payment-method";
 import { PaymentService } from "@/services/payments/payment.service";
 
 const initialState: PaymentCreate = {
-  debt_id: "",
+  debtClaim_id: "",
   total_amount: 0,
   method: PaymentMethod.TRANSFER,
   reference_number: "",
@@ -109,7 +109,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({ debtId, onSave }) => {
         </Box>
       )}
       <Controller
-        name="debt_id"
+        name="debtClaim_id"
         control={control}
         render={({ field }) => (
           <Autocomplete
@@ -125,8 +125,8 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({ debtId, onSave }) => {
               <TextField
                 {...params}
                 label="Schulden"
-                error={!!errors.debt_id}
-                helperText={errors.debt_id?.message}
+                error={!!errors.debtClaim_id}
+                helperText={errors.debtClaim_id?.message}
                 required
               />
             )}

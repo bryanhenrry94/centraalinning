@@ -35,19 +35,13 @@ export async function createBlockadeAction(
       };
     }
 
-    // Generar un número de referencia único para la nueva blockade
-    const referenceNumber = await BlockadeService.generateReferenceNumber();
-
     // 1. crear bloqueo
     const blockade = await prisma.blockade.create({
       data: {
         tenantId,
         debtorId: input.debtorId,
-        amount: new Prisma.Decimal(input.amount),
         reason: input.reason,
         registeredAt: input.registeredAt || new Date(),
-        status: "ACTIVE",
-        reference_number: referenceNumber,
       },
     });
 

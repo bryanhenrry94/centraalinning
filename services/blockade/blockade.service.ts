@@ -13,10 +13,7 @@ export class BlockadeService {
       data: {
         tenantId: tenantId,
         debtorId: input.debtorId,
-        amount: input.amount,
         reason: input.reason,
-        status: "ACTIVE",
-        reference_number: referenceNumber,
       },
     });
 

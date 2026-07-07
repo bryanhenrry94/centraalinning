@@ -1,53 +1,38 @@
 "use server";
 import { prisma } from "@/lib/prisma";
 
-type FineType = "MORA" | "PENALTY" | "INTEREST" | "JUDICIAL_FEE" | "OTHER";
-
-export const applyFine = async (
-  debt_id: string,
+export const applyCharge = async (
+  debtClaimId: string,
   amount: number,
-  description: string,
-  type: FineType
+  concept: string,
+  service: "FAR" | "AOP" | "BLK" | "BLC" | "COL" | "GOP",
 ) => {
-  const fine = await prisma.debtFine.create({
+  return prisma.claimCharge.create({
     data: {
-      debt_id,
+      debtClaimId,
       amount,
-      type,
-      description,
-      status: "ACTIVE",
-      applied_at: new Date(),
+      concept,
+      service,
+      status: "PENDING",
     },
   });
-
-  return fine;
 };
 
-export const getFinesForCollectionCase = async (debt_id: string) => {
-  const fines = await prisma.debtFine.findMany({
-    where: { debt_id },
-    orderBy: { applied_at: "desc" },
-  });
-
-  return fines;
-};
-
-export const getCollectionCaseFineById = async (fine_id: string) => {
-  const fine = await prisma.debtFine.findUnique({
-    where: { id: fine_id },
-  });
-
-  return fine;
-};
-export const deleteCollectionCaseFine = async (fine_id: string) => {
-  await prisma.debtFine.delete({
-    where: { id: fine_id },
+export const getChargesForClaim = async (debtClaimId: string) => {
+  return prisma.claimCharge.findMany({
+    where: { debtClaimId },
+    orderBy: { id: "desc" },
   });
 };
-export const countFinesForCollectionCase = async (debt_id: string) => {
-  const count = await prisma.debtFine.count({
-    where: { debt_id },
-  });
 
-  return count;
+export const getClaimChargeById = async (id: string) => {
+  return prisma.claimCharge.findUnique({ where: { id } });
+};
+
+export const deleteClaimCharge = async (id: string) => {
+  await prisma.claimCharge.delete({ where: { id } });
+};
+
+export const countChargesForClaim = async (debtClaimId: string) => {
+  return prisma.claimCharge.count({ where: { debtClaimId } });
 };

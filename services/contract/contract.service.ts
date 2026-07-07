@@ -160,7 +160,6 @@ export class ContractService {
       if (collection) {
         await this.update(contractId, {
           status: "IN_COLLECTION",
-          collection_case: { connect: { id: collection.id } },
         });
       }
     }

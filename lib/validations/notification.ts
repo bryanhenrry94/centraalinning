@@ -1,32 +1,13 @@
 import { z } from "zod";
-import { CollectionCaseSchema } from "@/lib/validations/collection";
 
-export enum NotificationType {
-  AANMANING = "AANMANING",
-  SOMMATIE = "SOMMATIE",
-  INGEBREKESTELLING = "INGEBREKESTELLING",
-  BLOKKADE = "BLOKKADE",
-}
-
-export const NotificationSchema = z.object({
-  id: z.string(), // cuid
-  collection_case_id: z.string(),
-  type: z.enum([
-    NotificationType.AANMANING,
-    NotificationType.SOMMATIE,
-    NotificationType.INGEBREKESTELLING,
-    NotificationType.BLOKKADE,
-  ]),
-  title: z.string(),
-  message: z.string(),
-  sent_at: z.date(),
-  read: z.boolean(),
-  created_at: z.date(),
+export const AOPStepNotificationSchema = z.object({
+  id: z.string().cuid(),
+  collectionId: z.string().cuid(),
+  step: z.enum(["REMINDER", "FINAL_NOTICE", "DEFAULT_NOTICE", "BLK_NOTIFICATION"]),
+  deadline: z.date().optional().nullable(),
+  sentAt: z.date().optional().nullable(),
+  completedAt: z.date().optional().nullable(),
+  status: z.enum(["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"]),
 });
 
-export const NotificationResponseSchema = NotificationSchema.extend({
-  collection_case: CollectionCaseSchema,
-});
-
-export type Notification = z.infer<typeof NotificationSchema>;
-export type NotificationResponse = z.infer<typeof NotificationResponseSchema>;
+export type AOPStepNotification = z.infer<typeof AOPStepNotificationSchema>;

@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
 
     // 4. Registra el pago en la base de datos
     const paymentData: PaymentCreate = {
-      debt_id: null, // No hay una deuda previa, este es un pago directo por activación
+      debtClaim_id: null, // No hay una deuda previa, este es un pago directo por activación
       method: "TRANSFER",
       total_amount: totalWithTax,
       paid_at: null,

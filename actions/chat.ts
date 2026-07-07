@@ -5,13 +5,13 @@ import { IChatMessage, IChatMessageCreate } from "@/lib/validations/chat";
 
 export const createChatRoom = async (
   name: string,
-  collection_case_id: string,
+  debtClaimId: string,
   tenant_id: string
 ) => {
   await prisma.chatRoom.create({
     data: {
       name,
-      collection_case_id,
+      debtClaimId,
       tenant_id,
     },
   });

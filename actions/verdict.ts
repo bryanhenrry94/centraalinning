@@ -65,7 +65,6 @@ export const getAllVerdicts = async (
     // Map the verdicts to match the VerdictResponse type
     const mappedVerdicts: VerdictResponse[] = verdicts.map((verdict: any) => ({
       ...verdict,
-      debt_id: verdict.debt_id ?? undefined,
       procesal_cost:
         verdict.procesal_cost === null ? undefined : verdict.procesal_cost,
       debtor: verdict.debtor
@@ -133,7 +132,6 @@ export const getVerdictById = async (
       ...verdict,
       procesal_cost: verdict.procesal_cost ?? undefined,
       sentence_date: verdict.sentence_date,
-      debt_id: verdict.debt_id ?? undefined,
       debtor: verdict.debtor
         ? {
             id: verdict.debtor.id,
@@ -271,22 +269,10 @@ export const createVerdict = async (
         total_due += totalEmbargo;
       }
 
-      // Registra deuda en tabla debt
-      const newDebt = await tx.debt.create({
-        data: {
-          debtor_id: data.debtor_id,
-          tenant_id: tenant_id,
-          source_type: "VERDICT",
-          source_id: newVerdict.id,
-          principal_amount: total_due,
-          status: "OPEN",
-        },
-      });
-
-      // Actualiza el veredicto con el debt_id y cambia estado a PENDING
+      // Actualiza el veredicto cambia estado a PENDING
       await tx.verdict.update({
         where: { id: newVerdict.id },
-        data: { status: "PENDING", debt_id: newDebt.id },
+        data: { status: "PENDING" },
       });
 
       return newVerdict;
@@ -465,20 +451,6 @@ export const updateVerdict = async (
               verdict_id: verdict_id,
             },
           });
-        }
-      }
-
-      // Actualiza la deuda asociada
-      if (verdict.debt_id) {
-        try {
-          await tx.debt.update({
-            where: { id: verdict.debt_id },
-            data: {
-              principal_amount: total_due,
-            },
-          });
-        } catch (e) {
-          console.warn(`No existing debt found for verdict ${verdict.debt_id}`);
         }
       }
 

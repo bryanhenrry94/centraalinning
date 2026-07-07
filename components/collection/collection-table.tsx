@@ -17,13 +17,13 @@ import TablePagination from "@mui/material/TablePagination";
 import { useTenant } from "@/hooks/useTenant";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { formatCurrency, formatDate } from "@/utils/formatters";
-import { CollectionCaseResponse } from "@/services/collection/collection.type";
+import { DebtClaimResponse } from "@/services/collection/collection.type";
 import { useTheme, useMediaQuery } from "@mui/material";
 
 const CollectionTable = ({
   invoices,
 }: {
-  invoices: CollectionCaseResponse[];
+  invoices: DebtClaimResponse[];
 }) => {
   const router = useRouter();
   const { tenant } = useTenant();
@@ -214,15 +214,15 @@ const CollectionTable = ({
                 }}
               >
                 <TableCell sx={{ textAlign: "left", fontSize: "10px" }}>
-                  {formatDate(invoice.issue_date?.toString() || "")}
+                  {formatDate(invoice.createdAt?.toString() || "")}
                 </TableCell>
                 {!isSmallScreen && (
                   <>
                     <TableCell sx={{ textAlign: "center" }}>
-                      {invoice.document_number || "Onbekend"}
+                      {invoice.reference || "Onbekend"}
                     </TableCell>
                     <TableCell sx={{ textAlign: "center" }}>
-                      {formatDate(invoice.due_date?.toString() || "")}
+                      {invoice.description || "-"}
                     </TableCell>
                   </>
                 )}
@@ -232,21 +232,16 @@ const CollectionTable = ({
                 {!isSmallScreen && (
                   <>
                     <TableCell sx={{ textAlign: "right" }}>
-                      {formatCurrency(invoice.amount_original)}
+                      {formatCurrency(Number(invoice.principalAmount))}
                     </TableCell>
                     <TableCell sx={{ textAlign: "right" }}>
-                      {formatCurrency(invoice.fee_amount - invoice.abb_amount)}
+                      {formatCurrency(Number(invoice.currentAmount))}
                     </TableCell>
                   </>
                 )}
 
                 <TableCell sx={{ textAlign: "right", fontSize: "10px" }}>
-                  {formatCurrency(
-                    invoice.amount_original -
-                      invoice.fee_amount -
-                      invoice.abb_amount -
-                      invoice.total_paid,
-                  )}
+                  {formatCurrency(Number(invoice.currentAmount))}
                 </TableCell>
 
                 <TableCell sx={{ textAlign: "center", fontSize: "10px" }}>

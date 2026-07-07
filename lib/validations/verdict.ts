@@ -26,7 +26,6 @@ const VerdictBaseSchema = z.object({
         "De naam van de schuldeiser mag niet langer zijn dan 100 tekens.",
     }),
   debtor_id: z.string(),
-  debt_id: z.string().optional(),
   registration_number: z.string().max(100, {
     message: "Het registratienummer mag maximaal 100 tekens lang zijn.",
   }),

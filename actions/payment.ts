@@ -4,7 +4,7 @@ import { Payment, PaymentCreate } from "@/lib/validations/payment";
 import { Decimal } from "@prisma/client/runtime/library";
 
 interface PaymentFilter {
-  debt_id?: string;
+  debtClaim_id?: string;
 }
 
 export const getPayments = async (
@@ -13,13 +13,13 @@ export const getPayments = async (
   try {
     const payments = await prisma.payment.findMany({
       where: {
-        debt_id: filter.debt_id,
+        debtClaim_id: filter.debtClaim_id,
       },
     });
 
     const formattedPayments: Payment[] = payments.map((payment: any) => ({
       ...payment,
-      debt_id: payment.debt_id ?? "",
+      debtClaim_id: payment.debtClaim_id ?? "",
       total_amount:
         typeof payment.total_amount === "object" &&
         "toNumber" in payment.total_amount
@@ -45,15 +45,15 @@ export const getPayments = async (
 };
 
 export const getPaymentsByInvoice = async (
-  debt_id: string,
+  debtClaim_id: string,
 ): Promise<Payment[]> => {
   const payments = await prisma.payment.findMany({
-    where: { debt_id: debt_id },
+    where: { debtClaim_id },
   });
 
   return payments.map((payment: any) => ({
     ...payment,
-    debt_id: payment.debt_id ?? "",
+    debtClaim_id: payment.debtClaim_id ?? "",
     total_amount:
       typeof payment.total_amount === "object" &&
       "toNumber" in payment.total_amount
@@ -418,10 +418,10 @@ export const distributePayment = async (paymentDetailId: string) => {
   // return { success: true, paymentApplications };
 };
 
-export const hasPendingPayments = async (debt_id: string): Promise<boolean> => {
+export const hasPendingPayments = async (debtClaim_id: string): Promise<boolean> => {
   const pendingPayments = await prisma.payment.findMany({
     where: {
-      debt_id: debt_id,
+      debtClaim_id,
       status: "pending",
     },
   });
@@ -449,11 +449,11 @@ export const getLinkToPayment = async (
   return payload?.url || null;
 };
 
-export const getPaymentByDebtId = async (
-  debt_id: string,
+export const getPaymentByDebtClaimId = async (
+  debtClaim_id: string,
 ): Promise<Payment | null> => {
   const payment = await prisma.payment.findFirst({
-    where: { debt_id: debt_id },
+    where: { debtClaim_id },
   });
 
   if (!payment) {
@@ -472,7 +472,7 @@ export const getPaymentByDebtId = async (
 
   return {
     ...payment,
-    debt_id: payment.debt_id ?? "",
+    debtClaim_id: payment.debtClaim_id ?? "",
     total_amount:
       typeof payment.total_amount === "object" &&
       "toNumber" in payment.total_amount

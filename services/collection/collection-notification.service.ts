@@ -1,9 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { CollectionCase } from "@/lib/validations/collection";
-import { getCollectionById } from "@/actions/collection-case";
-import { Notification } from "@/lib/validations/notification";
-import { NotificationType } from "@/lib/validations/notification";
-
+import { getDebtClaimById } from "@/actions/collection-case";
 import { registerInvitation } from "@/actions/tenant-invitation";
 import { protocol, rootDomain } from "@/lib/config";
 import {
@@ -12,113 +8,58 @@ import {
   sendIngebrekestellingMail,
   sendSommatieEmail,
 } from "@/actions/email";
-import { CollectionCaseStatus } from "@/constants/collection-case-status";
 import { PersonType } from "@/constants/person-type";
 import { UserRole } from "@/constants/user-role";
 import { ParameterService } from "@/services/parameter/parameter.service";
 
+type AOPStep = "REMINDER" | "FINAL_NOTICE" | "DEFAULT_NOTICE" | "BLK_NOTIFICATION";
+
 export class CollectionNotificationService {
-  static sendNotification = async (caseId: string) => {
-    if (!caseId) {
-      throw new Error("Notification caseId is required");
-    }
+  static sendNotification = async (debtClaimId: string) => {
+    if (!debtClaimId) throw new Error("debtClaimId is required");
 
-    // Check if the notification.collectionCase exists
-    const collection = await getCollectionById(caseId);
-    if (!collection) {
-      throw new Error("Collection not found");
-    }
+    const aop = await prisma.administrativeCollection.findUnique({
+      where: { debtClaimId },
+      include: {
+        steps: { orderBy: { id: "desc" }, take: 1 },
+      },
+    });
 
-    // Get the last notification for the collection case
-    switch (collection.status) {
-      case CollectionCaseStatus.AANMANING:
-        console.log("Sending Aanmaning...");
-        return await this.sendAanmaning(collection);
-      case CollectionCaseStatus.SOMMATIE:
-        return await this.sendSommatie(collection);
-      case CollectionCaseStatus.INGEBREKESTELLING:
-        return await this.sendIngebrekestelling(collection);
-      case CollectionCaseStatus.BLOKKADE:
-        console.log("Sending Blokkade...");
-        return await this.sendBlokkade(collection);
+    if (!aop) throw new Error("AdministrativeCollection not found");
+
+    const currentStep = aop.steps[0]?.step as AOPStep | undefined;
+
+    switch (currentStep) {
+      case "REMINDER":
+        return this.sendAanmaning(debtClaimId);
+      case "FINAL_NOTICE":
+        return this.sendSommatie(debtClaimId);
+      case "DEFAULT_NOTICE":
+        return this.sendIngebrekestelling(debtClaimId);
+      case "BLK_NOTIFICATION":
+        return this.sendBlokkade(debtClaimId);
       default:
         return;
     }
   };
 
-  static createNotification = async (
-    caseId: string,
-    type: NotificationType,
-    title: string,
-    message: string,
-  ): Promise<Notification> => {
-    if (!caseId) {
-      throw new Error("Notification caseId is required");
-    }
-
-    const notification = await prisma.collectionCaseNotification.create({
-      data: {
-        collection_case_id: caseId,
-        type,
-        sent_at: new Date(),
-        title,
-        message,
-      },
-    });
-
-    if (!notification) {
-      throw new Error("Notification not found");
-    }
-
-    return {
-      ...notification,
-      type: notification.type as Notification["type"],
-    };
-  };
-
-  static sendAanmaning = async (
-    collection: CollectionCase,
-  ): Promise<string> => {
+  static sendAanmaning = async (debtClaimId: string): Promise<string> => {
     try {
-      console.log(
-        "Send_Aanmaning: Starting process for collection ID:",
-        collection.id,
-      );
-      // valida el tenant
-      if (!collection.tenant_id) {
-        throw new Error("Tenant ID not found");
-      }
-
-      console.log("Send_Aanmaning: Tenant ID found:", collection.tenant_id);
-      // Obtiene datos del deudor
+      const claim = await getDebtClaimById(debtClaimId);
       const debtor = await prisma.debtor.findUnique({
-        where: { id: collection.debtor_id },
+        where: { id: claim.debtorId },
         include: { person: true },
       });
-      if (!debtor) {
-        throw new Error("No se encontró el deudor");
-      }
-
-      console.log("Send_Aanmaning: Debtor found:", debtor);
-
-      // Si el deudor no tiene email, no envía la notificación
-      if (!debtor.email) {
-        throw new Error("El deudor no tiene email");
-      }
+      if (!debtor) throw new Error("Deudor no encontrado");
+      if (!debtor.email) throw new Error("El deudor no tiene email");
 
       const debtorName =
-        `${debtor.person?.first_name} ${debtor.person?.last_name}`.trim() ||
+        `${debtor.person?.first_name ?? ""} ${debtor.person?.last_name ?? ""}`.trim() ||
         debtor.person?.business_name;
 
-      // Si el deudor no tiene usuario, enviar invitación para registrarse
-      let invitationLink: string = `${protocol}://${rootDomain}/`;
+      let invitationLink = `${protocol}://${rootDomain}/`;
 
-      console.log("Send_Aanmaning: ", debtor);
-
-      // Verifica si el deudor ya tiene usuario
       if (debtor.user_id === null) {
-        console.log("Send_Aanmaning: Sending invitation link to debtor");
-        // Registrar invitación
         const invitation = await registerInvitation({
           tenantId: debtor.tenant_id,
           email: debtor.email,
@@ -126,42 +67,12 @@ export class CollectionNotificationService {
           fullname: debtorName || "Debtor",
           debtor_id: debtor.id,
         });
-
-        console.log("Send_Aanmaning: Invitation created:", invitation);
-
         if (invitation.status === true && invitation.token) {
           invitationLink = `${protocol}://${rootDomain}/invitation/${invitation.token}`;
         }
       }
 
-      const tenant = await prisma.tenant.findUnique({
-        where: { id: collection.tenant_id },
-      });
-      if (!tenant) {
-        throw new Error("No se encontró el tenant");
-      }
-
-      console.log(
-        "Send_Aanmaning: Sending Aanmaning email to debtor at",
-        debtor.email,
-      );
-
-      if (debtor?.email) {
-        console.log("Send_Aanmaning: Preparing to send email to", debtor.email);
-        await sendAanmaningEmail(debtor?.email, collection.id, invitationLink);
-
-        await this.createNotification(
-          collection.id,
-          NotificationType.AANMANING,
-          "Eerste incassoaankondiging",
-          "De eerste incassoaankondiging is verzonden.",
-        );
-        console.log(
-          "Send_Aanmaning: Aanmaning email sent successfully to",
-          debtor.email,
-        );
-      }
-
+      await sendAanmaningEmail(debtor.email, debtClaimId, invitationLink);
       return "Aanmaning sent successfully";
     } catch (error) {
       console.error("Error sending Aanmaning:", error);
@@ -169,59 +80,25 @@ export class CollectionNotificationService {
     }
   };
 
-  static sendSommatie = async (collection: CollectionCase): Promise<string> => {
+  static sendSommatie = async (debtClaimId: string): Promise<string> => {
     try {
-      const debtor = await prisma.debtor.findUnique({
-        where: { id: collection.debtor_id },
-      });
-      if (!debtor) {
-        throw new Error("No se encontró el deudor");
-      }
-
-      if (debtor?.email) {
-        await sendSommatieEmail(debtor?.email, collection.id);
-        await this.createNotification(
-          collection.id,
-          NotificationType.SOMMATIE,
-          "Tweede incassobericht",
-          "De tweede incassoaankondiging is verzonden.",
-        );
-      }
-
+      const claim = await getDebtClaimById(debtClaimId);
+      const debtor = await prisma.debtor.findUnique({ where: { id: claim.debtorId } });
+      if (!debtor?.email) throw new Error("El deudor no tiene email");
+      await sendSommatieEmail(debtor.email, debtClaimId);
       return "Sommatie sent successfully";
     } catch (error) {
-      console.error("Error sending Aanmaning:", error);
-      throw new Error("Failed to send Aanmaning");
+      console.error("Error sending Sommatie:", error);
+      throw new Error("Failed to send Sommatie");
     }
   };
 
-  static sendIngebrekestelling = async (
-    collection: CollectionCase,
-  ): Promise<string> => {
+  static sendIngebrekestelling = async (debtClaimId: string): Promise<string> => {
     try {
-      const debtor = await prisma.debtor.findUnique({
-        where: { id: collection.debtor_id },
-      });
-      if (!debtor) {
-        throw new Error("No se encontró el deudor");
-      }
-
-      // Si el deudor no tiene email, no envía la notificación
-      if (!debtor.email) {
-        throw new Error("El deudor no tiene email");
-      }
-
-      if (debtor?.email) {
-        await sendIngebrekestellingMail(debtor?.email, collection.id);
-
-        await this.createNotification(
-          collection.id,
-          NotificationType.INGEBREKESTELLING,
-          "Derde incassoaankondiging",
-          "De derde incassoaankondiging is verzonden.",
-        );
-      }
-
+      const claim = await getDebtClaimById(debtClaimId);
+      const debtor = await prisma.debtor.findUnique({ where: { id: claim.debtorId } });
+      if (!debtor?.email) throw new Error("El deudor no tiene email");
+      await sendIngebrekestellingMail(debtor.email, debtClaimId);
       return "Ingebrekestelling sent successfully";
     } catch (error) {
       console.error("Error sending Ingebrekestelling:", error);
@@ -229,126 +106,61 @@ export class CollectionNotificationService {
     }
   };
 
-  static sendBlokkade = async (collection: CollectionCase): Promise<string> => {
+  static sendBlokkade = async (debtClaimId: string): Promise<string> => {
     try {
-      const debtor = await prisma.debtor.findUnique({
-        where: { id: collection.debtor_id },
-      });
-      if (!debtor) {
-        throw new Error("No se encontró el deudor");
-      }
-
-      // Si el deudor no tiene email, no envía la notificación
-      if (!debtor.email) {
-        throw new Error("El deudor no tiene email");
-      }
-
-      console.log(
-        "Send_Blokkade: Preparing to send Blokkade email to",
-        debtor.email,
-      );
-
-      if (debtor?.email) {
-        console.log(
-          "Send_Blokkade: Preparing to send Blokkade email to",
-          debtor.email,
-        );
-        await sendBlokkadeMail(debtor?.email, collection.id);
-
-        await this.createNotification(
-          collection.id,
-          NotificationType.BLOKKADE,
-          "Notificatie van financiële blokkade",
-          "De notificatie van financiële blokkade is verzonden.",
-        );
-      }
-
-      return "Financiele Blokkade sent successfully";
+      const claim = await getDebtClaimById(debtClaimId);
+      const debtor = await prisma.debtor.findUnique({ where: { id: claim.debtorId } });
+      if (!debtor?.email) throw new Error("El deudor no tiene email");
+      await sendBlokkadeMail(debtor.email, debtClaimId);
+      return "Blokkade sent successfully";
     } catch (error) {
-      console.error("Error sending FinancieleBlokkade:", error);
-      throw new Error("Failed to send FinancieleBlokkade");
+      console.error("Error sending Blokkade:", error);
+      throw new Error("Failed to send Blokkade");
     }
+  };
+
+  static getStepsForClaim = async (debtClaimId: string) => {
+    const aop = await prisma.administrativeCollection.findUnique({
+      where: { debtClaimId },
+      include: { steps: { orderBy: { id: "asc" } } },
+    });
+    return aop?.steps ?? [];
   };
 
   static getNotificationDays = async (
-    status: CollectionCaseStatus,
+    step: AOPStep,
     person_type: PersonType,
   ): Promise<number> => {
-    const _parameter = await ParameterService.getParameter();
+    const param = await ParameterService.getParameter();
+    if (!param) throw new Error("Parameter not found");
 
-    if (!_parameter) {
-      throw new Error("Parameter not found");
-    }
-
-    if (status === CollectionCaseStatus.AANMANING) {
+    if (step === "REMINDER") {
       return person_type === PersonType.INDIVIDUAL
-        ? _parameter.consumer_aanmaning_term_days
-        : _parameter.company_aanmaning_term_days;
+        ? param.consumer_aanmaning_term_days
+        : param.company_aanmaning_term_days;
     }
-
-    if (status === CollectionCaseStatus.SOMMATIE) {
+    if (step === "FINAL_NOTICE") {
       return person_type === PersonType.INDIVIDUAL
-        ? _parameter.consumer_sommatie_term_days
-        : _parameter.company_sommatie_term_days;
+        ? param.consumer_sommatie_term_days
+        : param.company_sommatie_term_days;
     }
-
     return 0;
   };
 
-  static getLastNotificationDate = async (
-    caseId: string,
-    type: CollectionCaseStatus,
+  static getLastStepDate = async (
+    debtClaimId: string,
+    step: AOPStep,
   ): Promise<Date> => {
-    // Fetch the notification collection record based on collection and type
-    const notificationRecord =
-      await prisma.collectionCaseNotification.findFirst({
-        where: {
-          collection_case_id: caseId,
-          type: type, // Replace with the appropriate type if needed
-        },
-        orderBy: {
-          sent_at: "desc", // Get the most recent notification
-        },
-      });
+    const aop = await prisma.administrativeCollection.findUnique({
+      where: { debtClaimId },
+    });
+    if (!aop) return new Date(0);
 
-    if (!notificationRecord) {
-      // throw new Error(`Notification of type ${type} not found`);
-      return new Date(0); // Retorna una fecha muy antigua si no se encuentra la notificación
-    }
-
-    return notificationRecord.sent_at;
-  };
-
-  static getLastNotificationByCollectionCase = async (
-    collection_case_id: string,
-  ): Promise<Notification | null> => {
-    const notification = await prisma.collectionCaseNotification.findFirst({
-      where: { collection_case_id },
-      orderBy: { sent_at: "desc" },
+    const record = await prisma.administrativeCollectionStep.findFirst({
+      where: { collectionId: aop.id, step },
+      orderBy: { id: "desc" },
     });
 
-    if (!notification) {
-      return null;
-    }
-
-    return {
-      ...notification,
-      type: notification.type as Notification["type"],
-    };
-  };
-
-  static getAllNotificationsByCollectionCase = async (
-    collection_case_id: string,
-  ): Promise<Notification[]> => {
-    const notifications = await prisma.collectionCaseNotification.findMany({
-      where: { collection_case_id },
-      orderBy: { sent_at: "desc" },
-    });
-
-    // Map the Prisma result to your Notification type if needed
-    return notifications.map((n: any) => ({
-      ...n,
-      type: n.type as Notification["type"],
-    }));
+    return record?.sentAt ?? new Date(0);
   };
 }

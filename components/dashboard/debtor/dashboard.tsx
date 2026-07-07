@@ -29,8 +29,8 @@ import { AgreementResponse } from "@/lib/validations/agreement";
 import { notifyError, notifyInfo, notifyWarning } from "@/lib/notifications";
 
 import {
-  getAgreementByDebtId,
-  getAgreementsByDebtId,
+  getAgreementByDebtClaimId,
+  getAgreementsByDebtClaimId,
 } from "@/actions/agreement";
 
 import { getDebtorByUserId, getDebts } from "@/actions/debtor";
@@ -42,7 +42,7 @@ import { PaymentFormDialog } from "@/components/payment/payment-form-dialog";
 import { createSentooPayment } from "@/actions/sentoo.actions";
 import { AlertService } from "@/lib/alerts";
 import { PaymentCreate } from "@/lib/validations/payment";
-import { getPaymentByDebtId, hasPendingPayments } from "@/actions/payment";
+import { getPaymentByDebtClaimId, hasPendingPayments } from "@/actions/payment";
 import DashboardHeader from "./DashboardHeader";
 import { AgreementStatus } from "@/constants/agreement-status";
 import { PaymentService } from "@/services/payments/payment.service";
@@ -144,7 +144,7 @@ const DashboardDebtor = () => {
    * FETCH AGREEMENTS
    * -------------------------------------------------------------------- */
   const fetchAgreements = async (debtId: string) => {
-    const response = await getAgreementsByDebtId(debtId);
+    const response = await getAgreementsByDebtClaimId(debtId);
     setAgreements(response || []);
   };
 
@@ -209,7 +209,7 @@ const DashboardDebtor = () => {
       }
 
       // 2. Validar acuerdos
-      const agreement = await getAgreementByDebtId(debt.id);
+      const agreement = await getAgreementByDebtClaimId(debt.id);
 
       if (agreement?.status === AgreementStatus.PENDING) {
         notifyWarning(
@@ -248,7 +248,7 @@ const DashboardDebtor = () => {
     const hasPending = await hasPendingPayments(debtId);
     if (!hasPending) return null;
 
-    return await getPaymentByDebtId(debtId);
+    return await getPaymentByDebtClaimId(debtId);
   };
 
   const handleExistingPayment = (payment: any) => {
@@ -289,7 +289,7 @@ const DashboardDebtor = () => {
       }
 
       const payment: PaymentCreate = {
-        debt_id: debt.id,
+        debtClaim_id: debt.id,
         method: "TRANSFER",
         total_amount: amountToPay,
         paid_at: null,
@@ -564,9 +564,9 @@ const DashboardDebtor = () => {
         onClose={() => setOpenModalAgreement(false)}
         title="NIEUWE OVEREENKOMST"
         onSave={onSaveAgreement}
-        debt_id={debtSelected?.id || ""}
+        debtClaim_id={debtSelected?.id || ""}
         initialData={{
-          debt_id: debtSelected?.id || "",
+          debtClaim_id: debtSelected?.id || "",
           total_amount: debtSelected?.amount || 0,
           installments_count: 1,
           installment_amount: 0,

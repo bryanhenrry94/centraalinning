@@ -209,18 +209,17 @@ export const sendAanmaningEmail = async (
 ) => {
   try {
     // Generar el PDF de la aanmaning
-    const collection = await prisma.collectionCase.findUnique({
+    const claim = await prisma.debtClaim.findUnique({
       where: { id: caseId },
       include: {
         tenant: true,
-        debtor: {
-          include: { person: true },
-        },
+        debtor: { include: { person: true } },
+        charges: true,
       },
     });
 
-    if (!collection) {
-      throw new Error("Collection case not found");
+    if (!claim) {
+      throw new Error("Debt claim not found");
     }
 
     const parameter = await ParameterService.getParameter();
@@ -229,31 +228,34 @@ export const sendAanmaningEmail = async (
       throw new Error("Parameters not found");
     }
 
-    const island = getNameCountry(collection.tenant.country_code);
+    const island = getNameCountry(claim.tenant.country_code);
 
     const debtorName =
-      `${collection.debtor.person?.first_name} ${collection.debtor.person?.last_name}`.trim() ||
-      collection.debtor.person?.business_name;
+      `${claim.debtor.person?.first_name} ${claim.debtor.person?.last_name}`.trim() ||
+      claim.debtor.person?.business_name;
 
-    const debtorAddress = collection.debtor.person?.address || "";
+    const debtorAddress = claim.debtor.person?.address || "";
+
+    const feeCharge = claim.charges.find((c) => c.concept === "Honorarios de cobranza");
+    const abbCharge = claim.charges.find((c) => c.concept === "ABB (belasting)");
 
     const params: AanmaningPDFProps = {
       logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
-      date: formatDate(collection.issue_date.toString()),
+      date: formatDate(claim.createdAt.toString()),
       debtorName: debtorName || "Debtor",
       debtorAddress: debtorAddress,
       island: island || "Bonaire",
-      reference_number: collection.reference_number || "",
+      reference_number: claim.reference || "",
       digitalFileCosts: parameter.digital_file_costs
         ? parameter.digital_file_costs.toFixed(2)
         : "0.00",
-      total_amount: collection.total_due.toFixed(2),
+      total_amount: Number(claim.currentAmount).toFixed(2),
       bankName: parameter.bank_name || "Bank Name",
       accountNumber: parameter.bank_account || "Account Number",
-      amount_original: collection.amount_original.toFixed(2),
-      extraCosts: collection.fee_amount.toFixed(2),
-      calculatedABB: collection.abb_amount.toFixed(2),
-      tenantName: collection.tenant.name || "Tenant",
+      amount_original: Number(claim.principalAmount).toFixed(2),
+      extraCosts: feeCharge ? Number(feeCharge.amount).toFixed(2) : "0.00",
+      calculatedABB: abbCharge ? Number(abbCharge.amount).toFixed(2) : "0.00",
+      tenantName: claim.tenant.name || "Tenant",
     };
 
     const pdfBase64 = await generatePdfBase64(<AanmaningPDF {...params} />);
@@ -301,37 +303,40 @@ export const sendAanmaningEmail = async (
 
 export const sendSommatieEmail = async (to: string, caseId: string) => {
   try {
-    const collection = await prisma.collectionCase.findUnique({
+    const claim = await prisma.debtClaim.findUnique({
       where: { id: caseId },
       include: {
         tenant: true,
         debtor: { include: { person: true } },
+        charges: true,
       },
     });
 
-    if (!collection) {
-      throw new Error("Collection case not found");
+    if (!claim) {
+      throw new Error("Debt claim not found");
     }
 
-    const island = getNameCountry(collection.tenant.country_code);
+    const island = getNameCountry(claim.tenant.country_code);
 
     const debtorName =
-      `${collection.debtor.person?.first_name} ${collection.debtor.person?.last_name}`.trim() ||
-      collection.debtor.person?.business_name;
+      `${claim.debtor.person?.first_name} ${claim.debtor.person?.last_name}`.trim() ||
+      claim.debtor.person?.business_name;
 
-    const debtorAddress = collection.debtor.person?.address || "";
+    const debtorAddress = claim.debtor.person?.address || "";
+
+    const abbCharge = claim.charges.find((c) => c.concept === "ABB (belasting)");
 
     const params: SommatiePDFProps = {
       logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
-      date: formatDate(collection.issue_date.toString()),
+      date: formatDate(claim.createdAt.toString()),
       debtorName: debtorName || "Debtor",
       debtorAddress: debtorAddress,
       island: island || "Bonaire",
-      reference_number: collection.reference_number || "",
-      total_amount: collection.total_due.toFixed(2),
-      amount_original: collection.amount_original.toFixed(2),
-      calculatedABB: collection.abb_amount.toFixed(2),
-      tenantName: collection.tenant.name || "Tenant",
+      reference_number: claim.reference || "",
+      total_amount: Number(claim.currentAmount).toFixed(2),
+      amount_original: Number(claim.principalAmount).toFixed(2),
+      calculatedABB: abbCharge ? Number(abbCharge.amount).toFixed(2) : "0.00",
+      tenantName: claim.tenant.name || "Tenant",
       administrativeCosts: Number(0).toFixed(2),
       additionalCosts: Number(0).toFixed(2),
       additionalABB: Number(0).toFixed(2),
@@ -374,16 +379,17 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
 
 export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
   try {
-    const collection = await prisma.collectionCase.findUnique({
+    const claim = await prisma.debtClaim.findUnique({
       where: { id: caseId },
       include: {
         tenant: true,
         debtor: { include: { person: true } },
+        administrativeCollection: { include: { steps: true } },
       },
     });
 
-    if (!collection) {
-      throw new Error("Collection case not found");
+    if (!claim) {
+      throw new Error("Debt claim not found");
     }
 
     const parameter = await ParameterService.getParameter();
@@ -392,49 +398,32 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
       throw new Error("Parameters not found");
     }
 
-    const island = getNameCountry(collection.tenant.country_code);
+    const island = getNameCountry(claim.tenant.country_code);
 
     const debtorName =
-      `${collection.debtor.person?.first_name} ${collection.debtor.person?.last_name}`.trim() ||
-      collection.debtor.person?.business_name;
+      `${claim.debtor.person?.first_name} ${claim.debtor.person?.last_name}`.trim() ||
+      claim.debtor.person?.business_name;
 
-    const debtorAddress = collection.debtor.person?.address || "";
+    const debtorAddress = claim.debtor.person?.address || "";
 
-    const firstReminderDate = await prisma.collectionCaseNotification.findFirst(
-      {
-        where: {
-          collection_case_id: collection.id,
-          type: "AANMANING",
-        },
-      },
-    );
-
-    // console.log("firstReminderDate", firstReminderDate);
-    if (!firstReminderDate) {
-      throw new Error("First reminder date not found");
+    const aopSteps = claim.administrativeCollection?.steps ?? [];
+    const firstReminderStep = aopSteps.find((s) => s.step === "REMINDER");
+    if (!firstReminderStep) {
+      throw new Error("First reminder step not found");
     }
-
-    const secondReminderDate =
-      await prisma.collectionCaseNotification.findFirst({
-        where: {
-          collection_case_id: collection.id,
-          type: "SOMMATIE",
-        },
-      });
-
-    // console.log("secondReminderDate", secondReminderDate);
-    if (!secondReminderDate) {
-      throw new Error("Second reminder date not found");
+    const secondStep = aopSteps.find((s) => s.step === "FINAL_NOTICE");
+    if (!secondStep) {
+      throw new Error("Final notice step not found");
     }
 
     const params: IngebrekestellingProps = {
       logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
-      date: formatDate(collection.issue_date.toString()),
+      date: formatDate(claim.createdAt.toString()),
       debtorName: debtorName || "Debtor",
       debtorAddress: debtorAddress || "",
       island: island || "Bonaire",
-      referenceNumber: collection.reference_number || "",
-      tenantName: collection.tenant.name || "Tenant",
+      referenceNumber: claim.reference || "",
+      tenantName: claim.tenant.name || "Tenant",
     };
 
     const pdfBase64 = await generatePdfBase64(
@@ -514,8 +503,8 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
     }
 
     // obtener todas las deudas del deudor en estado open y contarlas
-    const openDebtsCount = await prisma.debt.count({
-      where: { debtor_id: debtor.id, status: "OPEN" },
+    const openDebtsCount = await prisma.debtClaim.count({
+      where: { debtorId: debtor.id, status: "OPEN" },
     });
 
     // obtener el saldo total de las deudas del deudor en estado open
@@ -652,13 +641,13 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
 
 export const sendBlokkadeMail = async (to: string, caseId: string) => {
   try {
-    const collection = await prisma.collectionCase.findUnique({
+    const claim = await prisma.debtClaim.findUnique({
       where: { id: caseId },
       include: { tenant: true, debtor: { include: { person: true } } },
     });
 
-    if (!collection) {
-      throw new Error("Collection case not found");
+    if (!claim) {
+      throw new Error("Debt claim not found");
     }
 
     const parameter = await ParameterService.getParameter();
@@ -667,22 +656,22 @@ export const sendBlokkadeMail = async (to: string, caseId: string) => {
       throw new Error("Parameters not found");
     }
 
-    const island = getNameCountry(collection.tenant.country_code);
+    const island = getNameCountry(claim.tenant.country_code);
 
     const debtorName =
-      `${collection.debtor.person?.first_name} ${collection.debtor.person?.last_name}`.trim() ||
-      collection.debtor.person?.business_name;
+      `${claim.debtor.person?.first_name} ${claim.debtor.person?.last_name}`.trim() ||
+      claim.debtor.person?.business_name;
 
-    const debtorAddress = collection.debtor.person?.address || "";
+    const debtorAddress = claim.debtor.person?.address || "";
 
     const params: BlokkadePDFProps = {
       logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
-      date: formatDate(collection.issue_date.toString()),
+      date: formatDate(claim.createdAt.toString()),
       debtorName: debtorName || "Debtor",
       debtorAddress: debtorAddress || "",
       island: island || "Bonaire",
-      referenceNumber: collection.reference_number || "",
-      tenantName: collection.tenant.name || "Tenant",
+      referenceNumber: claim.reference || "",
+      tenantName: claim.tenant.name || "Tenant",
     };
 
     const pdfBase64 = await generatePdfBase64(<BlokkadePDF {...params} />);

@@ -1,162 +1,140 @@
 "use server";
 import { prisma } from "@/lib/prisma";
-
-import {
-  CollectionCase,
-  CollectionCaseResponse,
-  CollectionCaseSchema,
-  CollectionCaseView,
-} from "@/lib/validations/collection";
-import { CollectionNotificationService } from "@/services/collection/collection-notification.service";
-import { CollectionCaseStatus } from "@/constants/collection-case-status";
-import { CollectionCaseFilter } from "@/services/collection/collection.type";
+import { DebtClaim, DebtClaimSchema, DebtClaimView } from "@/lib/validations/collection";
+import { DebtClaimFilter } from "@/services/collection/collection.type";
 import { CollectionService } from "@/services/collection/collection.service";
 
-export const getCollectionById = async (
-  id: string,
-): Promise<CollectionCase> => {
-  const collection = await prisma.collectionCase.findUnique({
-    where: { id },
-  });
-  if (!collection) throw new Error("Collection not found");
-
+function toDebtClaim(raw: any): DebtClaim {
   return {
-    id: collection.id,
-    reference_number: collection.reference_number || "",
-    document_number: collection.document_number || "",
-    issue_date: collection.issue_date,
-    due_date: collection.due_date,
-    tenant_id: collection.tenant_id,
-    debtor_id: collection.debtor_id,
-    amount_original: collection.amount_original.toNumber(),
-    fee_rate: collection.fee_rate.toNumber(),
-    fee_amount: collection.fee_amount.toNumber(),
-    abb_rate: collection.abb_rate.toNumber(),
-    abb_amount: collection.abb_amount.toNumber(),
-    total_fined: collection.total_fined.toNumber(),
-    total_due: collection.total_due.toNumber(),
-    total_to_receive: collection.total_to_receive.toNumber(),
-    total_paid: collection.total_paid.toNumber(),
-    balance: collection.balance.toNumber(),
-    status: collection.status as CollectionCaseStatus,
-    created_at: collection.created_at,
-    updated_at: collection.updated_at,
+    id: raw.id,
+    tenantId: raw.tenantId,
+    debtorId: raw.debtorId,
+    reference: raw.reference,
+    description: raw.description,
+    principalAmount: Number(raw.principalAmount),
+    currentAmount: Number(raw.currentAmount),
+    currency: raw.currency,
+    origin: raw.origin,
+    status: raw.status,
+    createdAt: raw.createdAt,
+    updatedAt: raw.updatedAt,
+    closedAt: raw.closedAt,
   };
+}
+
+export const getDebtClaimById = async (id: string): Promise<DebtClaim> => {
+  const claim = await prisma.debtClaim.findUnique({ where: { id } });
+  if (!claim) throw new Error("DebtClaim not found");
+  return toDebtClaim(claim);
 };
 
-export const getCollectionViewById = async (
-  id: string,
-): Promise<CollectionCaseView> => {
-  const collection = await prisma.collectionCase.findUnique({
+export const getDebtClaimViewById = async (id: string): Promise<DebtClaimView> => {
+  const claim = await prisma.debtClaim.findUnique({
     where: { id },
     include: { debtor: { include: { person: true } } },
   });
-  if (!collection) throw new Error("Collection not found");
+  if (!claim) throw new Error("DebtClaim not found");
 
   return {
-    ...collection,
-    id: collection.id,
-    reference_number: collection.reference_number || "",
-    document_number: collection.document_number || "",
-    issue_date: collection.issue_date,
-    due_date: collection.due_date,
-    tenant_id: collection.tenant_id,
-    debtor_id: collection.debtor_id,
-    amount_original: collection.amount_original.toNumber(),
-    fee_rate: collection.fee_rate.toNumber(),
-    fee_amount: collection.fee_amount.toNumber(),
-    abb_rate: collection.abb_rate.toNumber(),
-    abb_amount: collection.abb_amount.toNumber(),
-    total_fined: collection.total_fined.toNumber(),
-    total_due: collection.total_due.toNumber(),
-    total_to_receive: collection.total_to_receive.toNumber(),
-    total_paid: collection.total_paid.toNumber(),
-    balance: collection.balance.toNumber(),
-    status: collection.status as CollectionCaseStatus,
-    created_at: collection.created_at,
-    updated_at: collection.updated_at,
+    ...toDebtClaim(claim),
     debtor: {
-      id: collection.debtor?.id ?? "",
+      id: claim.debtor.id,
       fullname:
-        (collection.debtor.person?.first_name +
-          " " +
-          collection.debtor.person?.last_name ||
-          collection.debtor?.person?.business_name) ??
+        `${claim.debtor.person?.first_name ?? ""} ${claim.debtor.person?.last_name ?? ""}`.trim() ||
+        claim.debtor.person?.business_name ||
         "",
-      email: collection.debtor?.email ?? "",
+      email: claim.debtor.email ?? "",
     },
   };
 };
 
-export const updateCollection = async (
+export const updateDebtClaim = async (
   id: string,
-  data: Partial<typeof CollectionCaseSchema>,
+  data: Partial<DebtClaim>,
 ) => {
-  const parsedData = CollectionCaseSchema.partial().parse(data);
-
-  // Exclude 'id' from update data
-  const { id: _id, ...updateData } = parsedData;
-
-  // Remove undefined properties to match Prisma types
-  const filteredUpdateData = Object.fromEntries(
-    Object.entries(updateData).filter(([_, v]) => v !== undefined),
+  const parsedData = DebtClaimSchema.partial().parse(data);
+  const { id: _id, ...rest } = parsedData as any;
+  const filtered = Object.fromEntries(
+    Object.entries(rest).filter(([_, v]) => v !== undefined),
   );
-  const updatedCollection = await prisma.collectionCase.update({
-    where: { id },
-    data: filteredUpdateData,
-  });
-  return updatedCollection;
+  return prisma.debtClaim.update({ where: { id }, data: filtered });
 };
 
-export const updateCollectionStatusAndSendNotification = async (
-  id: string,
-  status: CollectionCaseStatus,
-) => {
-  await prisma.collectionCase.update({
-    where: {
-      id: id,
-    },
-    data: {
-      status: status,
+export const advanceAOPStep = async (debtClaimId: string) => {
+  const aop = await prisma.administrativeCollection.findUnique({
+    where: { debtClaimId },
+    include: {
+      steps: { orderBy: { id: "desc" }, take: 1 },
+      debtClaim: { include: { debtor: { include: { person: true } } } },
     },
   });
 
-  if (status === CollectionCaseStatus.BLOKKADE) {
-    // Actualiza la tabla person y cambia el estado de has_blockade a true
-    const collectionCase = await prisma.collectionCase.findUnique({
-      where: { id },
-      include: {
-        debtor: {
-          include: {
-            person: true,
-          },
+  if (!aop) throw new Error("AdministrativeCollection not found");
+
+  const currentStep = aop.steps[0];
+
+  const stepSequence = [
+    "REMINDER",
+    "FINAL_NOTICE",
+    "DEFAULT_NOTICE",
+    "BLK_NOTIFICATION",
+  ] as const;
+
+  const nextStepMap: Record<string, (typeof stepSequence)[number] | null> = {
+    REMINDER: "FINAL_NOTICE",
+    FINAL_NOTICE: "DEFAULT_NOTICE",
+    DEFAULT_NOTICE: "BLK_NOTIFICATION",
+    BLK_NOTIFICATION: null,
+  };
+
+  const nextStep = currentStep ? nextStepMap[currentStep.step] : "REMINDER";
+
+  await prisma.$transaction(async (tx) => {
+    if (currentStep) {
+      await tx.administrativeCollectionStep.update({
+        where: { id: currentStep.id },
+        data: { status: "COMPLETED", completedAt: new Date() },
+      });
+    }
+
+    if (nextStep) {
+      await tx.administrativeCollectionStep.create({
+        data: {
+          collectionId: aop.id,
+          step: nextStep,
+          sentAt: new Date(),
+          status: "IN_PROGRESS",
         },
+      });
+    } else {
+      await tx.administrativeCollection.update({
+        where: { id: aop.id },
+        data: { status: "CLOSED", finishedAt: new Date() },
+      });
+    }
+
+    if (nextStep === "BLK_NOTIFICATION" || (!nextStep && currentStep?.step === "DEFAULT_NOTICE")) {
+      const personId = aop.debtClaim.debtor.person?.id;
+      if (personId) {
+        await tx.person.update({
+          where: { id: personId },
+          data: { has_blockade: true },
+        });
+      }
+    }
+
+    await tx.claimTimeline.create({
+      data: {
+        debtClaimId,
+        event: nextStep ? "AOP_STEP_COMPLETED" : "AOP_COMPLETED",
+        description: nextStep
+          ? `Stap ${currentStep?.step ?? "start"} voltooid, volgende: ${nextStep}`
+          : "AOP-proces afgerond",
       },
     });
-
-    if (!collectionCase) {
-      console.error(`Collection case with ID ${id} not found.`);
-      return;
-    }
-
-    const personId = collectionCase.debtor?.person?.id;
-
-    if (!personId) {
-      console.error(
-        `Person associated with collection case ID ${id} not found.`,
-      );
-      return;
-    }
-
-    await prisma.person.update({
-      where: { id: personId },
-      data: { has_blockade: true },
-    });
-  }
-
-  await CollectionNotificationService.sendNotification(id);
+  });
 };
 
-export async function getCollectionsAction(params: CollectionCaseFilter) {
+export async function getDebtClaimsAction(params: DebtClaimFilter) {
   return CollectionService.getAll(params);
 }

@@ -12,7 +12,7 @@ export async function getDashboardStats() {
         // prisma.factura.count({ where: { tenant_id } }),
         prisma.verdict.count(),
         prisma.debtor.count(),
-        prisma.collectionCase.count(),
+        prisma.debtClaim.count(),
         prisma.billingInvoice.findMany({
           // where: { tenant_id: process.env.ADMIN_TENANT_ID },
           include: {

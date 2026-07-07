@@ -19,14 +19,14 @@ import { AgreementStatus } from "@/constants/agreement-status";
 interface AgreementFormProps {
   id?: string;
   initialData?: CreateAgreement;
-  debt_id: string;
+  debtClaim_id: string;
   onSave?: () => void;
 }
 
 export const AgreementForm: React.FC<AgreementFormProps> = ({
   id,
   initialData,
-  debt_id,
+  debtClaim_id,
   onSave,
 }) => {
   const { data: session } = useSession();
@@ -42,7 +42,7 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
     formState: { isSubmitting },
   } = useForm<CreateAgreement>({
     defaultValues: initialData || {
-      debt_id,
+      debtClaim_id,
       total_amount: 0,
       installments_count: 1,
       installment_amount: 0,
@@ -92,7 +92,7 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
       }
 
       if (!modeEdit) {
-        const exists = await existsPaymentAgreement(debt_id);
+        const exists = await existsPaymentAgreement(debtClaim_id);
         if (exists) {
           return notifyError(
             "Ya existe un acuerdo de pago para esta collection",
@@ -102,7 +102,7 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
 
       if (modeEdit && id) {
         const payload: UpdateAgreement = {
-          debt_id: data.debt_id,
+          debtClaim_id: data.debtClaim_id,
           debtor_id: data.debtor_id,
           total_amount: Number(data.total_amount),
           installments_count: Number(data.installments_count),
@@ -123,7 +123,7 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
         return notifyError("No se encontró deudor asociado al usuario");
 
       const payload: CreateAgreement = {
-        debt_id,
+        debtClaim_id,
         debtor_id: debtor.id,
         total_amount: data.total_amount,
         installments_count: data.installments_count,

@@ -9,7 +9,7 @@ interface AgreementFormDialogProps {
   id?: string;
   title: string;
   initialData?: CreateAgreement;
-  debt_id: string;
+  debtClaim_id: string;
   onSave: () => void;
 }
 
@@ -19,7 +19,7 @@ export const AgreementFormDialog: React.FC<AgreementFormDialogProps> = ({
   id,
   title,
   initialData,
-  debt_id,
+  debtClaim_id,
   onSave,
 }) => {
   return (
@@ -45,7 +45,7 @@ export const AgreementFormDialog: React.FC<AgreementFormDialogProps> = ({
 
       <AgreementForm
         id={id}
-        debt_id={debt_id}
+        debtClaim_id={debtClaim_id}
         initialData={initialData}
         onSave={onSave}
       />

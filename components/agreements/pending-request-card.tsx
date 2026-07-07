@@ -5,8 +5,8 @@ import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import PersonIcon from "@mui/icons-material/Person";
 // action & validations
-import { getCollectionViewById } from "@/actions/collection-case";
-import { CollectionCaseView } from "@/lib/validations/collection";
+import { getDebtClaimViewById } from "@/actions/collection-case";
+import { DebtClaimView } from "@/lib/validations/collection";
 import { Agreement } from "@/lib/validations/agreement";
 import { formatCurrency, formatDate } from "@/utils/formatters";
 import PaymentAgreementStatusChip from "../ui/payment-agreement-status-chip";
@@ -24,16 +24,15 @@ const PendingRequestCard: React.FC<PendingRequestCardProps> = ({
   onReject,
 }) => {
   const [collectionCase, setCollectionCase] =
-    useState<CollectionCaseView | null>(null);
+    useState<DebtClaimView | null>(null);
 
   useEffect(() => {
-    // Fetch collection case details if needed
     const fetchCollectionCase = async () => {
-      const data = await getCollectionViewById(agreement.debt_id || "");
+      const data = await getDebtClaimViewById(agreement.debtClaim_id || "");
       setCollectionCase(data);
     };
     fetchCollectionCase();
-  }, [agreement.debt_id]);
+  }, [agreement.debtClaim_id]);
 
   const handleApprove = () => {
     onApprove?.(agreement.id);
@@ -54,7 +53,7 @@ const PendingRequestCard: React.FC<PendingRequestCardProps> = ({
       >
         <Box>
           <Typography variant="h5">
-            Referencia #{collectionCase?.reference_number}
+            Referencia #{collectionCase?.reference}
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <PersonIcon />

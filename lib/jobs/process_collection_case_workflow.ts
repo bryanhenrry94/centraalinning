@@ -1,197 +1,117 @@
 import { prisma } from "@/lib/prisma";
-import { updateCollectionStatusAndSendNotification } from "@/actions/collection-case";
-import {
-  cancelAgreementsByCollectionCase,
-  hasAgreement,
-  hasPaymentsUpToDate,
-} from "@/actions/agreement";
-import { applyFine } from "@/actions/debt-fine";
+import { advanceAOPStep, getDebtClaimsAction } from "@/actions/collection-case";
+import { applyCharge, countChargesForClaim } from "@/actions/debt-fine";
+import { hasAgreement, hasPaymentsUpToDate, cancelAgreementsByCliam } from "@/actions/agreement";
 import { CollectionNotificationService } from "@/services/collection/collection-notification.service";
-import { CollectionCaseStatus } from "@/constants/collection-case-status";
 import { PersonType } from "@/constants/person-type";
-import { FineType } from "@/constants/fine-type";
 import { ParameterService } from "@/services/parameter/parameter.service";
 
+type AOPStep = "REMINDER" | "FINAL_NOTICE" | "DEFAULT_NOTICE" | "BLK_NOTIFICATION";
+
+const STEP_SEQUENCE: AOPStep[] = [
+  "REMINDER",
+  "FINAL_NOTICE",
+  "DEFAULT_NOTICE",
+  "BLK_NOTIFICATION",
+];
+
 export async function processCollectionCaseWorkflow() {
-  // Obtener todos los casos de cobranza en estados específicos sin notificación de bloqueo
-  const collections = await prisma.collectionCase.findMany({
+  const activeCollections = await prisma.administrativeCollection.findMany({
     where: {
-      status: {
-        in: [
-          CollectionCaseStatus.AANMANING,
-          CollectionCaseStatus.SOMMATIE,
-          CollectionCaseStatus.INGEBREKESTELLING,
-        ],
-      },
-      collectionCaseNotification: {
-        none: {
-          type: "BLOKKADE",
-        },
+      status: "ACTIVE",
+      steps: {
+        none: { step: "BLK_NOTIFICATION" },
       },
     },
     include: {
-      debtor: {
+      steps: { orderBy: { id: "desc" } },
+      debtClaim: {
         include: {
-          person: true,
+          debtor: { include: { person: true } },
         },
       },
-      collectionCaseNotification: true,
     },
   });
 
-  // Obtener parámetros generales
   const parameter = await ParameterService.getParameter();
-
   let sent = 0;
-  // Procesar cada caso de cobranza
-  for (const c of collections) {
-    // Comparar solo las fechas (sin horas)
+
+  for (const aop of activeCollections) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    console.log(
-      `Procesando caso de cobranza ID: ${c.id}, Estado: ${c.status}, Fecha de vencimiento: ${c.due_date.toISOString().split("T")[0]}, Hoy: ${today.toISOString().split("T")[0]}`,
-    );
+    const currentStep = aop.steps[0] as (typeof aop.steps)[0] | undefined;
+    const currentStepType = (currentStep?.step ?? null) as AOPStep | null;
 
-    // Calcular días entre notificaciones según el tipo de persona
-    const days_between_aanmaning_sommatie =
-      c.debtor.person?.person_type === PersonType.INDIVIDUAL
-        ? Number(parameter?.consumer_aanmaning_term_days)
-        : Number(parameter?.company_aanmaning_term_days);
+    const personType =
+      (aop.debtClaim.debtor.person?.person_type as PersonType) ||
+      PersonType.INDIVIDUAL;
 
-    const days_between_sommatie_ingebrekestelling =
-      c.debtor.person?.person_type === PersonType.INDIVIDUAL
-        ? Number(parameter?.consumer_sommatie_term_days)
-        : Number(parameter?.company_sommatie_term_days);
+    const daysMap: Record<AOPStep, number> = {
+      REMINDER:
+        personType === PersonType.INDIVIDUAL
+          ? Number(parameter?.consumer_aanmaning_term_days ?? 0)
+          : Number(parameter?.company_aanmaning_term_days ?? 0),
+      FINAL_NOTICE:
+        personType === PersonType.INDIVIDUAL
+          ? Number(parameter?.consumer_sommatie_term_days ?? 0)
+          : Number(parameter?.company_sommatie_term_days ?? 0),
+      DEFAULT_NOTICE: 0,
+      BLK_NOTIFICATION: 0,
+    };
 
-    const days_between_ingebrekestelling_blokkade =
-      c.debtor.person?.person_type === PersonType.INDIVIDUAL
-        ? Number(0)
-        : Number(0);
+    if (currentStepType) {
+      const lastSentAt = currentStep?.sentAt;
+      if (!lastSentAt) continue;
 
-    console.log(
-      " Días entre ingebrekestelling y blokkade: ",
-      days_between_ingebrekestelling_blokkade,
-    );
-
-    // Si la fecha de vencimiento es mayor o igual a hoy, no hacer nada
-    if (c.due_date >= today) continue;
-
-    // Obtener la fecha de la última notificación relevante
-    const lastNotificationDate =
-      await CollectionNotificationService.getLastNotificationDate(
-        c.id,
-        c.status as CollectionCaseStatus,
+      const nextNotificationDate = new Date(lastSentAt);
+      nextNotificationDate.setDate(
+        nextNotificationDate.getDate() + (daysMap[currentStepType] ?? 0),
       );
-
-    console.log("lastNotificationDate: ", lastNotificationDate);
-
-    // Calcular la próxima fecha de notificación
-    if (lastNotificationDate) {
-      const nextNotificationDate = new Date(lastNotificationDate);
-
-      if (c.status === CollectionCaseStatus.AANMANING) {
-        nextNotificationDate.setDate(
-          nextNotificationDate.getDate() + days_between_aanmaning_sommatie,
-        );
-      } else if (c.status === CollectionCaseStatus.SOMMATIE) {
-        nextNotificationDate.setDate(
-          nextNotificationDate.getDate() +
-            days_between_sommatie_ingebrekestelling,
-        );
-      } else if (c.status === CollectionCaseStatus.INGEBREKESTELLING) {
-        nextNotificationDate.setDate(
-          nextNotificationDate.getDate() +
-            days_between_ingebrekestelling_blokkade,
-        );
-      }
-
-      // Comparar solo las fechas (sin horas)
       nextNotificationDate.setHours(0, 0, 0, 0);
 
-      // Si la próxima fecha de notificación es mayor a hoy, no hacer nada
-      if (nextNotificationDate > today) {
-        console.log(
-          `Próxima notificación para el caso de cobranza ID: ${c.id} es el ${nextNotificationDate.toISOString().split("T")[0]}`,
-        );
+      if (nextNotificationDate > today) continue;
+    }
 
-        continue;
+    const debtClaimId = aop.debtClaim.id;
+
+    // Check for active payment agreement
+    const hasActiveAgreement = await hasAgreement(debtClaimId);
+    if (hasActiveAgreement) {
+      const paymentsOk = await hasPaymentsUpToDate(debtClaimId);
+      if (!paymentsOk) {
+        const penaltyMap: Record<string, number> = {
+          REMINDER:
+            personType === PersonType.COMPANY
+              ? Number(parameter?.company_aanmaning_penalty ?? 0)
+              : Number(parameter?.natural_aanmaning_penalty ?? 0),
+          FINAL_NOTICE:
+            personType === PersonType.COMPANY
+              ? Number(parameter?.company_sommatie_penalty ?? 0)
+              : Number(parameter?.natural_sommatie_penalty ?? 0),
+        };
+
+        const penaltyAmount = currentStepType
+          ? (penaltyMap[currentStepType] ?? 0)
+          : 0;
+
+        if (penaltyAmount > 0) {
+          await applyCharge(
+            debtClaimId,
+            penaltyAmount,
+            `Boete voor achterstallige betaling in stap ${currentStepType}`,
+            "AOP",
+          );
+        }
+
+        await cancelAgreementsByCliam(debtClaimId);
       }
     }
 
-    console.log(
-      `El caso de cobranza ID: ${c.id} es elegible para avanzar en el flujo.`,
-    );
-
-    // Verificar si tiene acuerdo de pago
-    const has_payment_agreement = await hasAgreement(c.id);
-
-    // Si tiene acuerdo de pago, verificar si los pagos están al día
-    if (has_payment_agreement) {
-      const has_payments_up_to_date = await hasPaymentsUpToDate(c.id);
-
-      // Si no esta al dia registra multa, cancela el acuerdo de pago y avanza al siguiente estado
-      if (!has_payments_up_to_date) {
-        let penalty_amount = 0;
-
-        if (c.status === CollectionCaseStatus.AANMANING) {
-          penalty_amount =
-            c.debtor.person?.person_type === PersonType.COMPANY
-              ? Number(parameter?.company_aanmaning_penalty)
-              : Number(parameter?.natural_aanmaning_penalty);
-        }
-
-        if (c.status === CollectionCaseStatus.SOMMATIE) {
-          penalty_amount =
-            c.debtor.person?.person_type === PersonType.COMPANY
-              ? Number(parameter?.company_sommatie_penalty)
-              : Number(parameter?.natural_sommatie_penalty);
-        }
-
-        if (penalty_amount > 0) {
-          // Registrar multa
-          if (c.debt_id) {
-            await applyFine(
-              c.debt_id,
-              penalty_amount,
-              `Multa por pago atrasado en estado ${c.status}`,
-              FineType.PENALTY,
-            );
-          }
-        }
-
-        // Cancelar acuerdo de pago aceptados
-        await cancelAgreementsByCollectionCase(c.id);
-      }
-    }
-
-    if (c.status === CollectionCaseStatus.AANMANING) {
-      await updateCollectionStatusAndSendNotification(
-        c.id,
-        CollectionCaseStatus.SOMMATIE,
-      );
-      sent++;
-    }
-
-    if (c.status === CollectionCaseStatus.SOMMATIE) {
-      await updateCollectionStatusAndSendNotification(
-        c.id,
-        CollectionCaseStatus.INGEBREKESTELLING,
-      );
-      sent++;
-    }
-
-    if (c.status === CollectionCaseStatus.INGEBREKESTELLING) {
-      await updateCollectionStatusAndSendNotification(
-        c.id,
-        CollectionCaseStatus.BLOKKADE,
-      );
-      sent++;
-    }
+    await advanceAOPStep(debtClaimId);
+    await CollectionNotificationService.sendNotification(debtClaimId);
+    sent++;
   }
 
-  return {
-    message: "Notificaciones enviadas correctamente",
-    sent,
-  };
+  return { message: "Notificaties succesvol verzonden", sent };
 }

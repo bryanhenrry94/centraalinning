@@ -17,14 +17,14 @@ import {
   Button,
   Modal,
 } from "@mui/material";
-import { CollectionCaseView } from "@/lib/validations/collection";
+import { DebtClaimView } from "@/lib/validations/collection";
 import { Payment } from "@/lib/validations/payment";
-import { getCollectionViewById } from "@/actions/collection-case";
+import { getDebtClaimViewById } from "@/actions/collection-case";
 import { notifyError, notifyInfo } from "@/lib/notifications";
 import { formatCurrency } from "@/utils/formatters";
 import { getPaymentsByInvoice } from "@/actions/payment";
 import { CollectionNotificationService } from "@/services/collection/collection-notification.service";
-import { Notification } from "@/lib/validations/notification";
+import { AOPStepNotification } from "@/lib/validations/notification";
 import TabPanel from "@/components/ui/tab-panel";
 
 import { useSession } from "next-auth/react";
@@ -34,11 +34,11 @@ import { PaymentFormDialog } from "@/components/payment/payment-form-dialog";
 const CollectionViewPage: React.FC = () => {
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
-  const [collection, setCollection] = React.useState<CollectionCaseView | null>(
+  const [collection, setCollection] = React.useState<DebtClaimView | null>(
     null,
   );
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [notifications, setNotifications] = useState<Notification[] | null>(
+  const [notifications, setNotifications] = useState<AOPStepNotification[] | null>(
     null,
   );
   const [value, setValue] = React.useState(0);
@@ -67,7 +67,7 @@ const CollectionViewPage: React.FC = () => {
         router.back();
         return;
       }
-      const data = await getCollectionViewById(params.id as string);
+      const data = await getDebtClaimViewById(params.id as string);
       if (data) {
         setCollection(data);
       }
@@ -110,7 +110,7 @@ const CollectionViewPage: React.FC = () => {
       }
 
       const data =
-        await CollectionNotificationService.getAllNotificationsByCollectionCase(
+        await CollectionNotificationService.getStepsForClaim(
           params.id as string,
         );
       console.log("Notifications Data:", data);
@@ -171,29 +171,20 @@ const CollectionViewPage: React.FC = () => {
           <Box sx={{ p: 2 }}>
             <Typography variant="body1" color="text.secondary">
               Datum vordering:{" "}
-              {(() => {
-                const d = collection?.issue_date;
-                if (!d) return "N/A";
-                return typeof d === "string"
-                  ? new Date(d).toLocaleDateString()
-                  : d.toLocaleDateString();
-              })()}
+              {collection?.createdAt
+                ? new Date(collection.createdAt).toLocaleDateString()
+                : "N/A"}
             </Typography>
             <Typography variant="body1" color="text.secondary">
               Debiteurnaam:{" "}
               {collection?.debtor.fullname ? collection.debtor.fullname : "N/A"}
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Vordering: {formatCurrency(collection?.amount_original || 0)}
+              Vordering: {formatCurrency(Number(collection?.principalAmount) || 0)}
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Te betalen:{" "}
-              {formatCurrency(
-                (collection?.fee_amount || 0) + (collection?.abb_amount || 0),
-              )}
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Te ontvangen: {formatCurrency(collection?.total_to_receive || 0)}
+              Totaal te betalen:{" "}
+              {formatCurrency(Number(collection?.currentAmount) || 0)}
             </Typography>
             <Typography variant="body1" color="text.secondary">
               Status: {collection?.status || "N/A"}
@@ -282,10 +273,12 @@ const CollectionViewPage: React.FC = () => {
                       sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                     >
                       <TableCell component="th" scope="row">
-                        {new Date(notification.created_at).toLocaleDateString()}
+                        {notification.sentAt
+                          ? new Date(notification.sentAt).toLocaleDateString()
+                          : "-"}
                       </TableCell>
-                      <TableCell align="right">{notification.title}</TableCell>
-                      <TableCell align="right">{notification.type}</TableCell>
+                      <TableCell align="right">{notification.step}</TableCell>
+                      <TableCell align="right">{notification.status}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

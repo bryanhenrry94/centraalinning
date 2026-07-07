@@ -253,7 +253,7 @@ export const AgreementTableApprove = ({
                   </IconButton>
                 </TableCell>
                 <TableCell align="center">
-                  {agreement.collection_case ? "Vonnis" : "Buitengerechtelijk"}
+                  {"Buitengerechtelijk"}
                 </TableCell>
                 <TableCell align="center">
                   {new Date(agreement.created_at || "").toLocaleDateString()}
@@ -306,9 +306,9 @@ export const AgreementTableApprove = ({
         open={openModal}
         onClose={handleCloseModal}
         id={agreementSelected?.id || ""}
-        debt_id={agreementSelected?.debt_id || ""}
+        debtClaim_id={agreementSelected?.debtClaim_id || ""}
         initialData={{
-          debt_id: agreementSelected?.debt_id || "",
+          debtClaim_id: agreementSelected?.debtClaim_id || "",
           ...agreementSelected,
           total_amount: agreementSelected?.total_amount || 0,
           installment_amount: agreementSelected?.installment_amount || 0,

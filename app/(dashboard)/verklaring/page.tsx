@@ -112,7 +112,7 @@ const VerklaringPage: React.FC = () => {
        * Registrar pago local
        */
       const payment: PaymentCreate = {
-        debt_id: null,
+        debtClaim_id: null,
         agreement_id: null,
 
         method: "TRANSFER",

@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const agreementSchema = z.object({
   id: z.string().cuid(),
-  debt_id: z.string().cuid(),
-  tenant_id: z.uuid(),
+  debtClaim_id: z.string().cuid(),
+  tenant_id: z.string().uuid(),
   total_amount: z.number(),
   installment_amount: z.number(),
   installments_count: z.number().int(),
@@ -26,13 +26,6 @@ export const createAgreementSchema = agreementSchema.omit({
 export const updateAgreementSchema = createAgreementSchema.partial();
 
 export const agreementResponseSchema = agreementSchema.extend({
-  collection_case: z
-    .object({
-      id: z.string().cuid(),
-      reference_number: z.string(),
-      issue_date: z.date().optional().nullable(),
-    })
-    .optional(),
   debtor: z
     .object({
       id: z.string().cuid(),

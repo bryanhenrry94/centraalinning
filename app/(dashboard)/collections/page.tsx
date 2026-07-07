@@ -2,14 +2,14 @@
 import React, { useEffect } from "react";
 import { Box, Skeleton } from "@mui/material";
 import { CollectionHeader } from "@/components/collection/collection-header";
-import { CollectionCaseResponse } from "@/services/collection/collection.type";
+import { DebtClaimResponse } from "@/services/collection/collection.type";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { getCollectionsAction } from "@/actions/collection-case";
+import { getDebtClaimsAction } from "@/actions/collection-case";
 import CollectionTable from "@/components/collection/collection-table";
 
 export default function CollectionsPage() {
   const { session } = useAuthSession();
-  const [invoices, setInvoices] = React.useState<CollectionCaseResponse[]>([]);
+  const [invoices, setInvoices] = React.useState<DebtClaimResponse[]>([]);
 
   const [loading, setLoading] = React.useState(false);
 
@@ -19,8 +19,8 @@ export default function CollectionsPage() {
     try {
       setLoading(true);
 
-      const invoices = await getCollectionsAction({
-        tenant_id: session.user.tenant_id,
+      const invoices = await getDebtClaimsAction({
+        tenantId: session.user.tenant_id,
       });
 
       setInvoices(invoices);
