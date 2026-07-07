@@ -15,8 +15,6 @@ export class ParameterService {
   };
 
   static updateParameters = async (data: ParameterInput) => {
-    console.log("Updating parameters with data:", data);
-
     const parameter = await prisma.parameter.findFirst();
 
     if (!parameter) {
@@ -33,13 +31,14 @@ export class ParameterService {
     });
   };
 
-  static getParameter = async () => {
+  static getParameter = async (): Promise<ParameterInput | null> => {
     const PARAMETER_ID = process.env.NEXT_PUBLIC_PARAMETER_ID;
 
     if (PARAMETER_ID) {
       const parameter = await prisma.parameter.findUnique({
         where: { id: PARAMETER_ID },
       });
+
       if (parameter) return parameter;
     }
 

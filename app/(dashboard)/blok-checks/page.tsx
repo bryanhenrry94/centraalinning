@@ -41,15 +41,23 @@ const BlokCheckPage = () => {
   const [showResult, setShowResult] = useState(false);
   const [showCostDialog, setShowCostDialog] = useState(false);
   const [blokCheck, setBlokCheck] = useState<BlokCheckResponse | null>(null);
-  const [amountService, setAmountService] = useState<number>(30);
+  const [amountService, setAmountService] = useState<number>(0);
 
   useEffect(() => {
-    getParameterAction().then((param) => {
-      if (param?.blok_check_pricing) {
-        setAmountService(param.blok_check_pricing);
+    if (!session?.user?.tenant_id) return;
+
+    const fetchParameter = async () => {
+      try {
+        const parameter = await getParameterAction();
+        console.log("Fetched parameter:", parameter);
+        setAmountService(parameter?.blok_check_pricing ?? 30);
+      } catch (err) {
+        console.error("Error fetching parameter:", err);
       }
-    });
-  }, []);
+    };
+
+    fetchParameter();
+  }, [session?.user?.tenant_id]);
 
   // Membership gate
   const currentMembership =
