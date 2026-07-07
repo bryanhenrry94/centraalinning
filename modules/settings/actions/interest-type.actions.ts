@@ -1,44 +1,26 @@
 "use server";
-import { prisma } from "@/lib/prisma";
 import { InterestType } from "@/modules/settings/services/interest-type.validators";
+import { InterestTypeService } from "@/modules/settings/services/interest-type.service";
 
 export async function getAllInterestTypes(): Promise<{
   interestTypes: InterestType[];
 }> {
-  const data = await prisma.interestType.findMany({
-    include: {
-      details: true,
-    },
-  });
-
-  return { interestTypes: data as InterestType[] };
+  const interestTypes = await InterestTypeService.getAll();
+  return { interestTypes };
 }
 
-export async function getInterestTypeById(
-  id: string
-): Promise<InterestType | null> {
-  const data = await prisma.interestType.findUnique({
-    where: { id },
-    include: { details: true },
-  });
-
-  return data as InterestType | null;
+export async function getInterestTypeById(id: string): Promise<InterestType | null> {
+  return InterestTypeService.getById(id);
 }
 
-// Create
 export async function createInterestType(data: any) {
-  return await prisma.interestType.create({ data });
+  return InterestTypeService.create(data);
 }
 
-// Update
 export async function updateInterestType(id: string, data: any) {
-  return await prisma.interestType.update({
-    where: { id },
-    data,
-  });
+  return InterestTypeService.update(id, data);
 }
 
-// Delete
 export async function deleteInterestType(id: string) {
-  return await prisma.interestType.delete({ where: { id } });
+  return InterestTypeService.delete(id);
 }

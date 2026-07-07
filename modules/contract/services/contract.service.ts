@@ -127,6 +127,96 @@ export class ContractService {
     });
   };
 
+  static getByIdForTenant = async (id: string, tenantId: string) => {
+    return prisma.contract.findFirst({
+      where: { id, tenant_id: tenantId },
+      include: { parties: true, documents: true },
+    });
+  };
+
+  static listAll = async (tenantId: string) => {
+    return prisma.contract.findMany({
+      where: { tenant_id: tenantId },
+      include: {
+        parties: {
+          select: { id: true, role: true, fullname: true, email: true, identification: true },
+        },
+      },
+      orderBy: { created_at: "desc" },
+    });
+  };
+
+  static last = async (tenantId: string, limit: number = 5) => {
+    return prisma.contract.findMany({
+      where: { tenant_id: tenantId },
+      orderBy: { created_at: "desc" },
+      take: limit,
+      select: { id: true, reference_number: true, status: true, created_at: true, amount: true },
+    });
+  };
+
+  static updateStatus = async (
+    id: string,
+    tenantId: string,
+    status: "DRAFT" | "PENDING_PAYMENT" | "REGISTERED" | "CANCELLED",
+  ) => {
+    const existing = await prisma.contract.findFirst({ where: { id, tenant_id: tenantId } });
+    if (!existing) throw new Error("Contract not found");
+    return prisma.contract.update({ where: { id }, data: { status: status as any } });
+  };
+
+  static updateFull = async (id: string, tenantId: string, input: CreateContractInput) => {
+    const existing = await prisma.contract.findFirst({ where: { id, tenant_id: tenantId } });
+    if (!existing) throw new Error("Contract not found");
+
+    return prisma.$transaction(async (tx) => {
+      return tx.contract.update({
+        where: { id },
+        data: {
+          contract_date: input.contract_date,
+          start_date: input.start_date,
+          end_date: input.end_date ?? null,
+          amount: input.amount,
+          installment_count: input.installment_count ?? null,
+          installment_amount: input.installment_amount ?? null,
+          description: input.description ?? null,
+          contract_type: input.contract_type,
+          parties: {
+            deleteMany: {},
+            create: input.parties.map((party) => ({
+              person_type: party.person_type as "INDIVIDUAL" | "COMPANY",
+              role: party.role,
+              fullname: party.fullname,
+              identification_type: party.identification_type,
+              identification: party.identification,
+              email: party.email,
+              phone: party.phone,
+              birth_date: party.birth_date ?? null,
+              birth_place: party.birth_place ?? null,
+              address: party.address ?? null,
+            })),
+          },
+          documents: {
+            deleteMany: {},
+            create: (input.documents ?? []).map((doc) => ({
+              file_name: doc.file_name,
+              file_path: doc.file_path,
+              mime_type: doc.mime_type,
+              file_size: doc.file_size,
+            })),
+          },
+        },
+        include: { parties: true, documents: true },
+      });
+    });
+  };
+
+  static deleteById = async (id: string, tenantId: string) => {
+    const existing = await prisma.contract.findFirst({ where: { id, tenant_id: tenantId } });
+    if (!existing) throw new Error("Contract not found");
+    return prisma.contract.delete({ where: { id } });
+  };
+
   static async startFollowUp(contractId: string) {
     const contract = await this.getById(contractId);
 

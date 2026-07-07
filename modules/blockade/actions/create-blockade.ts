@@ -1,12 +1,7 @@
 "use server";
-
-import { prisma } from "@/lib/prisma";
-// import { uploadToR2 } from "@/lib/uploadToR2";
 import { CreateBlockadeInput } from "@/modules/blockade/services/blockade.validators";
-import { StorageService } from "@/infrastructure/storage/storage.service";
-import { Prisma } from "@prisma/client";
-import { sendMailBlockade } from "@/modules/blockade/services/blockade-mail.service";
 import { BlockadeService } from "@/modules/blockade/services/blockade.service";
+import { sendMailBlockade } from "@/modules/blockade/services/blockade-mail.service";
 
 type CreateBlockadeResponse = {
   success: boolean;
@@ -19,88 +14,17 @@ export async function createBlockadeAction(
   tenantId: string,
 ): Promise<CreateBlockadeResponse> {
   try {
-    const debtor = await prisma.debtor.findUnique({
-      where: { id: input.debtorId },
-      include: { person: true, tenant: true },
-    });
+    const result = await BlockadeService.createFull(input, tenantId);
 
-    if (!debtor) {
-      return { success: false, message: "Deudor no encontrado" };
+    if (!result.success) {
+      return result;
     }
 
-    if (!debtor.email || !debtor.person.email) {
-      return {
-        success: false,
-        message: "El deudor no tiene un correo electrónico asociado",
-      };
-    }
+    sendMailBlockade(result.debtorEmail!, result.debtorName!, result.creditorName!);
 
-    // 1. crear bloqueo
-    const blockade = await prisma.blockade.create({
-      data: {
-        tenantId,
-        debtorId: input.debtorId,
-        reason: input.reason,
-        registeredAt: input.registeredAt || new Date(),
-      },
-    });
-
-    // 2. subir documentos en paralelo
-    const uploadedDocs = await Promise.all(
-      input.documents.map(async (doc: any) => {
-        const file: File = doc.file;
-
-        const key = `${tenantId}/blockades/${blockade.id}/${crypto.randomUUID()}-${doc.fileName}`;
-
-        // convertir File a Buffer
-        const arrayBuffer = await file.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-
-        await StorageService.uploadFile(
-          key,
-          doc.fileName,
-          doc.mimeType,
-          buffer,
-        );
-
-        return {
-          blockadeId: blockade.id,
-          fileName: doc.fileName,
-          originalName: doc.originalName,
-          mimeType: doc.mimeType,
-          size: doc.size,
-          storageKey: key,
-        };
-      }),
-    );
-
-    // 3. guardar documentos en DB
-    await prisma.blockadeDocument.createMany({
-      data: uploadedDocs.map((doc) => ({
-        blockadeId: blockade.id,
-        fileName: doc.fileName,
-        originalName: doc.originalName,
-        mimeType: doc.mimeType,
-        size: doc.size,
-        storageKey: doc.storageKey,
-      })),
-    });
-
-    // envia correo de bloqueo al deudor
-    const creditorName = debtor.tenant?.name || "";
-
-    sendMailBlockade(
-      debtor?.email || "",
-      `${debtor?.person?.first_name} ${debtor?.person?.last_name}` || "",
-      creditorName,
-    );
-
-    return { success: true, id: blockade.id };
+    return { success: true, id: result.id };
   } catch (error: any) {
     console.error(error);
-    return {
-      success: false,
-      message: error?.message || "Error creating blockade",
-    };
+    return { success: false, message: error?.message || "Error creating blockade" };
   }
 }

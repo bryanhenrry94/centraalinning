@@ -42,6 +42,28 @@ export class TenantService {
     return subdomain;
   };
 
+  static getByEmail = async (
+    email: string,
+  ): Promise<{ subdomain: string; clientName: string }[]> => {
+    if (!email) throw new Error("Email is required");
+    const tenants = await prisma.tenant.findMany({
+      where: {
+        memberships: { some: { user: { email } } },
+        is_active: true,
+      },
+    });
+    return tenants.map((t) => ({ subdomain: t.subdomain, clientName: t.name }));
+  };
+
+  static getAll = async () => {
+    return prisma.tenant.findMany();
+  };
+
+  static subdomainExists = async (subdomain: string): Promise<boolean> => {
+    const tenant = await prisma.tenant.findFirst({ where: { subdomain } });
+    return !!tenant;
+  };
+
   static generateCode = async (country_code: string): Promise<string> => {
     const island = CountryList.find((c) => c.value === country_code);
     const prefix = island?.value.toUpperCase().slice(0, 3) || "XXX";

@@ -1,11 +1,16 @@
 import { prisma } from "@/lib/prisma";
 import {
+  DebtorInput,
+  DebtorCreate,
   DebtorPickerResponse,
   DebtorResponse,
   DebtorSearchParams,
 } from "./debtor.type";
-import { DebtorResponseSchema } from "./debtor.validators";
+import { DebtorResponseSchema, DebtorSchema, DebtorCreateSchema } from "./debtor.validators";
 import { Prisma } from "@prisma/client";
+import { IdentificationType } from "@/shared/constants/identification-type";
+import { PersonType } from "@/shared/constants/person-type";
+import { DebtorSummary } from "@/modules/collection/types/DebtorSummary";
 
 interface FindOrCreateDebtorParams {
   person_type: string;
@@ -139,6 +144,220 @@ export class DebtorService {
       throw new Error("Error fetching debtors");
     }
   };
+
+  static async getAllByTenantId(tenant_id: string): Promise<DebtorResponse[]> {
+    const debtors = await prisma.debtor.findMany({
+      where: { tenant_id },
+      include: { person: true },
+    });
+    return debtors.map((d: any) => DebtorResponseSchema.parse(d)) as DebtorResponse[];
+  }
+
+  static async getAllDebtors(): Promise<DebtorInput[]> {
+    const debtors = await prisma.debtor.findMany();
+    return debtors.map((d: any) => d as DebtorInput);
+  }
+
+  static async getById(id: string): Promise<DebtorInput | null> {
+    const debtor = await prisma.debtor.findFirst({
+      where: { id },
+      include: { incomes: true },
+    });
+    return debtor as DebtorInput | null;
+  }
+
+  static async getByUserId(user_id: string): Promise<DebtorInput | null> {
+    const debtor = await prisma.debtor.findFirst({
+      where: { user_id },
+      include: { incomes: true },
+    });
+    return debtor as DebtorInput | null;
+  }
+
+  static async create(
+    debtor: DebtorCreate,
+    tenant_id: string,
+  ): Promise<{ success: boolean; error?: string; data?: DebtorInput }> {
+    try {
+      const debtorFormatted = DebtorCreateSchema.parse(debtor);
+
+      const existingPerson = await prisma.person.findFirst({
+        where: { identification: debtorFormatted.person?.identification },
+      });
+
+      if (!existingPerson) {
+        const newPerson = await prisma.person.create({
+          data: {
+            person_type: debtorFormatted.person?.person_type as PersonType,
+            identification_type:
+              debtorFormatted.person?.identification_type || IdentificationType.CEDULA,
+            identification: debtorFormatted.person?.identification || "",
+            first_name: debtorFormatted.person?.first_name || "",
+            last_name: debtorFormatted.person?.last_name || "",
+            business_name: debtorFormatted.person?.business_name || "",
+            address: debtorFormatted.person?.address || "",
+            phone: debtorFormatted.person?.phone || "",
+          },
+        });
+
+        const newDebtor = await prisma.debtor.create({
+          data: {
+            tenant_id,
+            person_id: newPerson.id,
+            email: debtorFormatted.email,
+            total_income: debtorFormatted.total_income || 0,
+          },
+        });
+
+        return { success: true, data: newDebtor };
+      } else {
+        const existingDebtor = await prisma.debtor.findFirst({
+          where: { tenant_id, person_id: existingPerson.id },
+        });
+
+        if (existingDebtor) {
+          return { success: false, error: "Debtor already exists" };
+        }
+
+        const newDebtor = await prisma.debtor.create({
+          data: {
+            tenant_id,
+            person_id: existingPerson.id,
+            email: debtorFormatted.email,
+            total_income: debtorFormatted.total_income || 0,
+          },
+        });
+
+        return { success: true, data: newDebtor };
+      }
+    } catch (error) {
+      console.error("Error creating debtor:", error);
+      return { success: false, error: "Error creating debtor" };
+    }
+  }
+
+  static async update(
+    debtor: DebtorCreate,
+    tenant_id: string,
+    id: string,
+  ): Promise<{ success: boolean; error?: string; data?: DebtorInput }> {
+    try {
+      const updatedDebtor = await prisma.$transaction(async (tx: any) => {
+        const debtorResult = await tx.debtor.update({
+          where: { id },
+          data: { person_id: debtor.person_id, tenant_id },
+          include: { person: true },
+        });
+
+        await tx.person.update({
+          where: { id: debtorResult.person_id },
+          data: {
+            first_name: debtor.person?.first_name,
+            last_name: debtor.person?.last_name,
+            business_name: debtor.person?.business_name,
+            identification: debtor.person?.identification,
+            identification_type: debtor.person
+              ? (debtor.person.identification_type as IdentificationType)
+              : undefined,
+            person_type: debtor.person ? (debtor.person.person_type as PersonType) : undefined,
+            address: debtor.person?.address,
+            phone: debtor.person?.phone,
+            email: debtor.email,
+          },
+        });
+
+        await tx.debtorIncome.deleteMany({ where: { debtor_id: id } });
+
+        for (const income of debtor.incomes ?? []) {
+          await tx.debtorIncome.create({
+            data: { debtor_id: id, source: income.source, amount: income.amount },
+          });
+        }
+
+        return debtorResult;
+      });
+
+      return { success: true, data: updatedDebtor };
+    } catch (error) {
+      console.error("Error updating debtor:", error);
+      return { success: false, error: "Error updating debtor" };
+    }
+  }
+
+  static async getInfo(tenant_id: string, identification: string): Promise<DebtorInput> {
+    const debtor = await prisma.debtor.findFirst({
+      where: { tenant_id, person: { identification } },
+      include: { user: true },
+    });
+
+    if (!debtor) {
+      throw new Error(`Debtor with identification ${identification} not found for tenant ${tenant_id}`);
+    }
+
+    return DebtorSchema.parse(debtor) as DebtorInput;
+  }
+
+  static async emailDebtorUserExists(
+    email: string,
+    tenant_id: string,
+    debtor_id: string,
+  ): Promise<boolean> {
+    if (!email) return false;
+
+    const existingUser = await prisma.user.findFirst({ where: { email } });
+
+    if (!existingUser) return false;
+
+    const existingDebtor = await prisma.debtor.findFirst({
+      where: {
+        tenant_id,
+        user_id: existingUser.id,
+        NOT: debtor_id ? { id: debtor_id } : undefined,
+      },
+    });
+
+    return !!existingDebtor;
+  }
+
+  static async getDebts(filters: {
+    tenant_id?: string;
+    debtor_id?: string;
+    person_id?: string;
+  }): Promise<{ success: boolean; data?: DebtorSummary[]; message?: string }> {
+    try {
+      const whereClauses: string[] = [];
+      const params: any[] = [];
+
+      if (filters.tenant_id) { whereClauses.push(`tenant_id = ?`); params.push(filters.tenant_id); }
+      if (filters.debtor_id) { whereClauses.push(`debtor_id = ?`); params.push(filters.debtor_id); }
+      if (filters.person_id) { whereClauses.push(`person_id = ?`); params.push(filters.person_id); }
+
+      const whereSQL = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+      const query = `SELECT * FROM vw_debtor_summary ${whereSQL}`;
+
+      const raw = (await prisma.$queryRawUnsafe(query, ...params)) as any[];
+
+      const summary = raw.map((row) => {
+        const result: any = {};
+        for (const key of Object.keys(row)) {
+          const value = row[key];
+          result[key] = value && typeof value === "object" && "toNumber" in value
+            ? value.toNumber()
+            : value;
+        }
+        return result;
+      });
+
+      summary.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+
+      return { success: true, data: summary };
+    } catch (error) {
+      console.error("Error fetching debts:", error);
+      return { success: false, message: "Error fetching debts" };
+    }
+  }
 
   static async searchPicker(
     tenant_id: string,

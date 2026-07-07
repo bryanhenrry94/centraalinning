@@ -1,5 +1,5 @@
 "use server";
-import { prisma } from "@/lib/prisma";
+import { DebtFineService } from "@/modules/collection/services/debt-fine.service";
 
 export const applyCharge = async (
   debtClaimId: string,
@@ -7,32 +7,21 @@ export const applyCharge = async (
   concept: string,
   service: "FAR" | "AOP" | "BLK" | "BLC" | "COL" | "GOP",
 ) => {
-  return prisma.claimCharge.create({
-    data: {
-      debtClaimId,
-      amount,
-      concept,
-      service,
-      status: "PENDING",
-    },
-  });
+  return DebtFineService.applyCharge(debtClaimId, amount, concept, service);
 };
 
 export const getChargesForClaim = async (debtClaimId: string) => {
-  return prisma.claimCharge.findMany({
-    where: { debtClaimId },
-    orderBy: { id: "desc" },
-  });
+  return DebtFineService.getChargesForClaim(debtClaimId);
 };
 
 export const getClaimChargeById = async (id: string) => {
-  return prisma.claimCharge.findUnique({ where: { id } });
+  return DebtFineService.getById(id);
 };
 
 export const deleteClaimCharge = async (id: string) => {
-  await prisma.claimCharge.delete({ where: { id } });
+  return DebtFineService.delete(id);
 };
 
 export const countChargesForClaim = async (debtClaimId: string) => {
-  return prisma.claimCharge.count({ where: { debtClaimId } });
+  return DebtFineService.countForClaim(debtClaimId);
 };

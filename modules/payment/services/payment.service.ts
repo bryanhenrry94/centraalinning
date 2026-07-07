@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { SentooService } from "@/infrastructure/sentoo/sentoo.service";
-import { PaymentCreate } from "@/modules/payment/services/payment.validators";
+import { Payment, PaymentCreate } from "@/modules/payment/services/payment.validators";
 import { PaymentStatus } from "@/modules/payment/types/PaymentStatus";
 import { protocol } from "@/lib/config";
 
@@ -278,5 +278,69 @@ export class PaymentService {
       where: { id },
       data: { status },
     });
+  };
+
+  private static mapPayment(payment: any): Payment {
+    const statusMap: Record<string, "pending" | "failed" | "cancelled" | "completed"> = {
+      pending: "pending",
+      failed: "failed",
+      cancelled: "cancelled",
+      completed: "completed",
+      paid: "completed",
+    };
+
+    return {
+      ...payment,
+      debtClaim_id: payment.debtClaim_id ?? "",
+      total_amount:
+        typeof payment.total_amount === "object" && "toNumber" in payment.total_amount
+          ? payment.total_amount.toNumber()
+          : Number(payment.total_amount),
+      method: payment.method as "TRANSFER" | "CREDIT_CARD",
+      paid_at: payment.paid_at ? payment.paid_at.toISOString() : "",
+      reference_number: payment.reference_number ?? undefined,
+      status: statusMap[payment.status] ?? "pending",
+      provider_payload: payment.provider_payload as any,
+      provider: payment.provider as any,
+      created_at: payment.created_at,
+      updated_at: payment.updated_at,
+    };
+  }
+
+  static getByFilter = async (filter: {
+    debtClaim_id?: string;
+  }): Promise<{ success: boolean; error?: string; data?: Payment[] }> => {
+    try {
+      const payments = await prisma.payment.findMany({ where: { debtClaim_id: filter.debtClaim_id } });
+      return { success: true, data: payments.map(this.mapPayment) };
+    } catch {
+      return { success: false, error: "Error fetching payments" };
+    }
+  };
+
+  static getAllByDebtClaim = async (debtClaim_id: string): Promise<Payment[]> => {
+    const payments = await prisma.payment.findMany({ where: { debtClaim_id } });
+    return payments.map(this.mapPayment);
+  };
+
+  static hasPending = async (debtClaim_id: string): Promise<boolean> => {
+    const count = await prisma.payment.count({ where: { debtClaim_id, status: "pending" } });
+    return count > 0;
+  };
+
+  static getLinkToPayment = async (paymentId: string): Promise<string | null> => {
+    const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
+    if (!payment) return null;
+    const payload =
+      typeof payment.provider_payload === "string"
+        ? JSON.parse(payment.provider_payload)
+        : (payment.provider_payload as any);
+    return payload?.url || null;
+  };
+
+  static getFirstByDebtClaimId = async (debtClaim_id: string): Promise<Payment | null> => {
+    const payment = await prisma.payment.findFirst({ where: { debtClaim_id } });
+    if (!payment) return null;
+    return this.mapPayment(payment);
   };
 }

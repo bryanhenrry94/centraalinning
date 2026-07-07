@@ -1,18 +1,12 @@
 "use server";
-
-import { prisma } from "@/lib/prisma";
-import crypto from "crypto";
-import { addMinutes } from "date-fns";
 import { sendMailRecoveryPassword } from "@/modules/auth/services/auth-mail.service";
+import { AuthService } from "@/modules/auth/services/auth.service";
 
 export async function requestPasswordReset(email: string) {
   try {
-    const user = await prisma.user.findFirst({
-      where: { email },
-    });
+    const result = await AuthService.createPasswordResetToken(email);
 
-    // Nooit onthullen of het bestaat of niet
-    if (!user) {
+    if (!result) {
       return {
         success: true,
         message:
@@ -20,41 +14,10 @@ export async function requestPasswordReset(email: string) {
       };
     }
 
-    // Eerdere tokens ongeldig maken
-    await prisma.passwordResetToken.deleteMany({
-      where: {
-        user_id: user.id,
-        used_at: null,
-      },
-    });
-
-    // Openbare token
-    const rawToken = crypto.randomBytes(32).toString("hex");
-
-    // Hash om op te slaan in db
-    const tokenHash = crypto
-      .createHash("sha256")
-      .update(rawToken)
-      .digest("hex");
-
-    await prisma.passwordResetToken.create({
-      data: {
-        user_id: user.id,
-        token_hash: tokenHash,
-        expires_at: addMinutes(new Date(), 30),
-      },
-    });
-
+    const { user, rawToken } = result;
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${rawToken}`;
 
-    // TODO: E-mail versturen
-    console.log(resetUrl);
-
-    await sendMailRecoveryPassword(
-      user.email,
-      user.fullname || "User",
-      resetUrl,
-    );
+    await sendMailRecoveryPassword(user.email, user.fullname || "User", resetUrl);
 
     return {
       success: true,
@@ -63,10 +26,6 @@ export async function requestPasswordReset(email: string) {
     };
   } catch (error) {
     console.error(error);
-
-    return {
-      success: false,
-      message: "Ocurrió un error",
-    };
+    return { success: false, message: "Ocurrió un error" };
   }
 }

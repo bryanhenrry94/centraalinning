@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { CreateBlockadeInput } from "./blockade.validators";
 import { Prisma } from "@prisma/client";
+import { StorageService } from "@/infrastructure/storage/storage.service";
 
 export class BlockadeService {
   static createBlockade = async (
@@ -123,6 +124,72 @@ export class BlockadeService {
         documents: true,
       },
     });
+  };
+
+  static createFull = async (
+    input: CreateBlockadeInput,
+    tenantId: string,
+  ) => {
+    const debtor = await prisma.debtor.findUnique({
+      where: { id: input.debtorId },
+      include: { person: true, tenant: true },
+    });
+
+    if (!debtor) {
+      return { success: false, message: "Deudor no encontrado" };
+    }
+
+    if (!debtor.email || !debtor.person.email) {
+      return { success: false, message: "El deudor no tiene un correo electrónico asociado" };
+    }
+
+    const blockade = await prisma.blockade.create({
+      data: {
+        tenantId,
+        debtorId: input.debtorId,
+        reason: input.reason,
+        registeredAt: input.registeredAt || new Date(),
+      },
+    });
+
+    const uploadedDocs = await Promise.all(
+      input.documents.map(async (doc: any) => {
+        const file: File = doc.file;
+        const key = `${tenantId}/blockades/${blockade.id}/${crypto.randomUUID()}-${doc.fileName}`;
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        await StorageService.uploadFile(key, doc.fileName, doc.mimeType, buffer);
+
+        return {
+          blockadeId: blockade.id,
+          fileName: doc.fileName,
+          originalName: doc.originalName,
+          mimeType: doc.mimeType,
+          size: doc.size,
+          storageKey: key,
+        };
+      }),
+    );
+
+    await prisma.blockadeDocument.createMany({
+      data: uploadedDocs.map((doc) => ({
+        blockadeId: blockade.id,
+        fileName: doc.fileName,
+        originalName: doc.originalName,
+        mimeType: doc.mimeType,
+        size: doc.size,
+        storageKey: doc.storageKey,
+      })),
+    });
+
+    return {
+      success: true,
+      id: blockade.id,
+      debtorEmail: debtor.email,
+      debtorName: `${debtor.person?.first_name} ${debtor.person?.last_name}`,
+      creditorName: debtor.tenant?.name || "",
+    };
   };
 
   static generateReferenceNumber = async () => {
