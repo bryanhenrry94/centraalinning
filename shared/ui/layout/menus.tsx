@@ -35,7 +35,7 @@ export const menuGroups: HeaderMenuGroup[] = [
     items: [
       {
         label: "Blok-Check",
-        href: "/blok-checks",
+        href: "/block-check",
         icon: <ShieldOutlined fontSize="small" />,
       },
       {
@@ -83,7 +83,7 @@ export const menuGroups: HeaderMenuGroup[] = [
       },
       {
         label: "Financiële verklaring aanvragen",
-        href: "/verklaring",
+        href: "/financial-report",
         icon: <DescriptionOutlined fontSize="small" />,
       },
       {

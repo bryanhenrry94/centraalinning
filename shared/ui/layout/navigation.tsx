@@ -37,13 +37,13 @@ const menus: MenuItem[] = [
   },
   {
     label: "Blok-Check",
-    href: "/client/blok-checks",
+    href: "/client/block-check",
     icon: <ShieldOutlinedIcon fontSize="small" />,
     role: [UserRole.TENANT_ADMIN],
   },
   {
     label: "Financiële afspraak registreren",
-    href: "/client/overeenkomsten-registreren",
+    href: "/client/register-agreements",
     icon: <DescriptionOutlinedIcon fontSize="small" />,
     role: [UserRole.TENANT_ADMIN],
   },

@@ -37,8 +37,8 @@ export default function WorkstationPage() {
       icon: SearchIcon,
       buttonText: "Blok-Check uitvoeren →",
       linkText: "📋 Blok-Check overzicht",     
-      // linkList: "/blok-checks",
-      newLink: "/blok-checks",
+      // linkList: "/block-check",
+      newLink: "/block-check",
     },
     {
       id: 2,
