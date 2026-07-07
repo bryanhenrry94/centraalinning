@@ -33,15 +33,16 @@ export class ParameterService {
     });
   };
 
-  static getParameter = async (): Promise<ParameterInput | null> => {
-    const PARAMETER_ID = process.env.NEXT_PUBLIC_PARAMETER_ID || "";
+  static getParameter = async () => {
+    const PARAMETER_ID = process.env.NEXT_PUBLIC_PARAMETER_ID;
 
-    const parameter = await prisma.parameter.findUnique({
-      where: {
-        id: PARAMETER_ID,
-      },
-    });
+    if (PARAMETER_ID) {
+      const parameter = await prisma.parameter.findUnique({
+        where: { id: PARAMETER_ID },
+      });
+      if (parameter) return parameter;
+    }
 
-    return parameter;
+    return prisma.parameter.findFirst();
   };
 }
