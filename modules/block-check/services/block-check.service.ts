@@ -21,7 +21,19 @@ export class BlockCheckService {
       return { success: false };
     }
 
-    // Look for the Debtor record linked to this Person within the current tenant
+    // Check for an active blockade across ALL tenants via the Debtor relation.
+    // releasedAt === null means the blockade is still active.
+    // A blockade registered by any tenant makes the person blocked globally.
+    const activeBlockade = await prisma.blockade.findFirst({
+      where: {
+        debtor: { person_id: person.id },
+        releasedAt: null,
+      },
+    });
+
+    const has_blockade = !!activeBlockade;
+
+    // Debtor record within the querying tenant (for audit purposes only)
     const debtor = await prisma.debtor.findFirst({
       where: { person_id: person.id, tenant_id: context.tenantId },
     });
@@ -31,7 +43,7 @@ export class BlockCheckService {
         tenantId: context.tenantId,
         personId: person.id,
         debtorId: debtor?.id ?? null,
-        blockadeFound: person.has_blockade,
+        blockadeFound: has_blockade,
         price: new Prisma.Decimal(context.price),
         checkedById: context.userId,
       },
@@ -46,7 +58,7 @@ export class BlockCheckService {
         fullname:
           (`${person.first_name ?? ""} ${person.last_name ?? ""}`.trim() ||
             person.business_name) ?? undefined,
-        has_blockade: person.has_blockade,
+        has_blockade,
       },
     };
   };
