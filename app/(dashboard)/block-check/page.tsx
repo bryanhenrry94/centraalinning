@@ -24,7 +24,7 @@ import { useSession } from "next-auth/react";
 
 import { formatCurrency } from "@/shared/utils/formatters";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
-import { ResultView } from "./result-view";
+import { ResultView } from "../../../modules/block-check/components/block-check-result";
 import { BlokCheckResponse } from "@/modules/block-check/services/block-check.types";
 import { existsBlockCheck } from "@/modules/block-check/actions/block-check.actions";
 import { getParameterAction } from "@/modules/settings/actions/parameter.actions";

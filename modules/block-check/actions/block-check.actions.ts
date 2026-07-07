@@ -13,7 +13,7 @@ export const existsBlockCheck = async (search: string) => {
   }
 
   const parameter = await ParameterService.getParameter();
-  const price = parameter?.blok_check_pricing ?? 30;
+  const price = parameter?.blok_check_pricing ?? 0;
 
   return BlockCheckService.existsBlockCheck(search, {
     tenantId: session.user.tenant_id,

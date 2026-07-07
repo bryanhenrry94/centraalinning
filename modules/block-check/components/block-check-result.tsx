@@ -57,7 +57,7 @@ export const ResultView: React.FC<ResultViewProps> = ({ result, onClose }) => {
           <Box>
             <Typography variant="h6" fontWeight={600} color="white">
               Blok-Check resultaat
-            </Typography>          
+            </Typography>
           </Box>
         </Stack>
       </Box>
