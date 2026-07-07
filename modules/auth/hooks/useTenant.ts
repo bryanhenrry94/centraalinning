@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { getTenantById } from "@/modules/tenant/actions/tenant.actions";
-import { Tenant } from "@/lib/validations/tenant";
+import { Tenant } from "@/modules/tenant/services/tenant.validators";
 
 export function useTenant() {
   const [tenant, setTenant] = useState<Tenant | null>(null);

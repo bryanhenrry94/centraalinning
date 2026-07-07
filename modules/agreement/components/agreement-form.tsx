@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo } from "react";
 import { Box, Button, Slider, Typography } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
-import { CreateAgreement, UpdateAgreement } from "@/lib/validations/agreement";
+import { CreateAgreement, UpdateAgreement } from "@/modules/agreement/services/agreement.validators";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { notifyError, notifyInfo } from "@/shared/ui/notifications";
 import { useSession } from "next-auth/react";

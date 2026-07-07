@@ -17,14 +17,14 @@ import {
   Button,
   Modal,
 } from "@mui/material";
-import { DebtClaimView } from "@/lib/validations/collection";
-import { Payment } from "@/lib/validations/payment";
+import { DebtClaimView } from "@/modules/collection/services/collection.validators";
+import { Payment } from "@/modules/payment/services/payment.validators";
 import { getDebtClaimViewById } from "@/modules/collection/actions/collection-case.actions";
 import { notifyError, notifyInfo } from "@/shared/ui/notifications";
 import { formatCurrency } from "@/shared/utils/formatters";
 import { getPaymentsByInvoice } from "@/modules/payment/actions/payment.actions";
 import { CollectionNotificationService } from "@/modules/collection/services/collection-notification.service";
-import { AOPStepNotification } from "@/lib/validations/notification";
+import { AOPStepNotification } from "@/modules/notification/services/notification.validators";
 import TabPanel from "@/shared/ui/tab-panel";
 
 import { useSession } from "next-auth/react";

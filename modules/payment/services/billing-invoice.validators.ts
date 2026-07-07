@@ -2,8 +2,8 @@ import { z } from "zod";
 import {
   BillingInvoiceDetailBaseSchema,
   BillingInvoiceDetailCreateSchema,
-} from "@/lib/validations/billing-invoice-detail";
-import { TenantSchema } from "./tenant";
+} from "@/modules/payment/services/billing-invoice-detail.validators";
+import { TenantSchema } from "@/modules/tenant/services/tenant.validators";
 
 export const BillingInvoiceBaseSchema = z.object({
   id: z.string().uuid(),

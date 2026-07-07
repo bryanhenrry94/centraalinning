@@ -1,7 +1,7 @@
 "use server";
 import { IdentificationType } from "@/shared/constants/identification-type";
 import { prisma } from "@/lib/prisma";
-import { PersonInput } from "@/lib/validations/person";
+import { PersonInput } from "@/modules/collection/services/person.validators";
 
 export const getPersonById = async (id: string) => {
   const person = await prisma.person.findFirst({

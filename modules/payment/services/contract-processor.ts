@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { Payment } from "@prisma/client";
 import { InvoiceService } from "@/modules/payment/services/invoice-service";
-import { sendActivateContractMail, sendInvoiceEmail } from "@/actions/email";
+import { sendActivateContractMail } from "@/modules/contract/services/contract-mail.service";
+import { sendInvoiceEmail } from "@/modules/payment/services/payment-mail.service";
 
 export const processContractPayment = async (payment: Payment) => {
   console.log("Processing contract payment:", payment.id);

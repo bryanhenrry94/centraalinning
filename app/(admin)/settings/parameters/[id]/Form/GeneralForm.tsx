@@ -4,7 +4,7 @@ import { CardDescription, CardTitle } from "@/shared/ui/card";
 import {
   ParameterFormData,
   parameterSchema,
-} from "@/lib/validations/parameter";
+} from "@/modules/settings/services/parameter/parameter.validators";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Box,

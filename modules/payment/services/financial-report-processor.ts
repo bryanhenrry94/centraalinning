@@ -1,4 +1,4 @@
-import { sendFinancialReportMail } from "@/actions/email";
+import { sendFinancialReportMail } from "@/modules/payment/services/payment-mail.service";
 import { prisma } from "@/lib/prisma";
 import { Payment } from "@prisma/client";
 

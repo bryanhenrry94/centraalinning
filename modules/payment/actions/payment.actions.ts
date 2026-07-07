@@ -1,6 +1,6 @@
 "use server";
 import { prisma } from "@/lib/prisma";
-import { Payment, PaymentCreate } from "@/lib/validations/payment";
+import { Payment, PaymentCreate } from "@/modules/payment/services/payment.validators";
 import { Decimal } from "@prisma/client/runtime/library";
 
 interface PaymentFilter {

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
 import Link from "next/link";
-import { BillingInvoiceWithTenant } from "@/lib/validations/billing-invoice";
+import { BillingInvoiceWithTenant } from "@/modules/payment/services/billing-invoice.validators";
 
 interface RecentInvoicesProps {
   facturas: BillingInvoiceWithTenant[];

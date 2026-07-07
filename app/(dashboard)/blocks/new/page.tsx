@@ -22,7 +22,7 @@ import { Controller, useForm } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
 import { useTenant } from "@/modules/auth/hooks/useTenant";
 import { DebtorPicker } from "@/modules/collection/components/DebtorPicker";
-import { DebtorResponse } from "@/lib/validations/debtor";
+import { DebtorResponse } from "@/modules/collection/services/debtor.validators";
 import UploadIcon from "@mui/icons-material/Upload";
 import DownloadIcon from "@mui/icons-material/Download";
 import DeleteIcon from "@mui/icons-material/Delete";

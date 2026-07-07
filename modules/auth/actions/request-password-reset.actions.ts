@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import { addMinutes } from "date-fns";
-import { sendMailRecoveryPassword } from "@/actions/email";
+import { sendMailRecoveryPassword } from "@/modules/auth/services/auth-mail.service";
 
 export async function requestPasswordReset(email: string) {
   try {

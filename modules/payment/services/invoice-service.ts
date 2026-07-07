@@ -2,9 +2,9 @@ import { prisma } from "@/lib/prisma";
 import { PaymentType } from "@prisma/client";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 import { addDays } from "date-fns/addDays";
-import { createSentooPayment } from "@/actions/sentoo.actions";
-import { sendInvoiceEmail } from "@/actions/email";
-import { PaymentCreate } from "@/lib/validations/payment";
+import { SentooService } from "@/infrastructure/sentoo/sentoo.service";
+import { sendInvoiceEmail } from "@/modules/payment/services/payment-mail.service";
+import { PaymentCreate } from "@/modules/payment/services/payment.validators";
 import { ActivationInvoiceInput } from "./invoice.type";
 import { PaymentService } from "@/modules/payment/services/payment.service";
 
@@ -267,7 +267,7 @@ export class InvoiceService {
     });
 
     // Crear el pago en Sentoo
-    const res = await createSentooPayment({
+    const res = await SentooService.createTransaction({
       amount: totalWithTax, // YA en centavos
       description: `Factura ${invoice_number} - Registratiekosten`,
       reference: invoice.id,

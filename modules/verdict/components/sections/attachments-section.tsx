@@ -7,7 +7,7 @@ import {
 import { useTenant } from "@/modules/auth/hooks/useTenant";
 import { AlertService } from "@/shared/ui/alerts";
 import { notifyError, notifyInfo } from "@/shared/ui/notifications";
-import { VerdictAttachment } from "@/lib/validations/verdict-attachments";
+import { VerdictAttachment } from "@/modules/verdict/services/verdict-attachments.validators";
 import {
   Box,
   Button,

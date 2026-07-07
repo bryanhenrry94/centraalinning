@@ -17,7 +17,7 @@ import EditIcon from "@mui/icons-material/Edit";
 
 // components
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
-import { AgreementResponse } from "@/lib/validations/agreement";
+import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
 import { AlertService } from "@/shared/ui/alerts";
 import {
   notifyApprovalAgreement,

@@ -22,7 +22,7 @@ import {
   PersonAdd,
 } from "@mui/icons-material";
 import { notifyError } from "@/shared/ui/notifications";
-import { LoginFormData } from "@/lib/validations/auth";
+import { LoginFormData } from "@/modules/auth/services/auth.validators";
 import useClientRouter from "@/shared/hooks/useNavigations";
 import { signIn } from "next-auth/react";
 

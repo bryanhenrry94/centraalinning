@@ -22,7 +22,7 @@ import { createSentooPayment } from "@/actions/sentoo.actions";
 import { formatCurrency } from "@/shared/utils/formatters";
 import { notifyError, notifyInfo } from "@/shared/ui/notifications";
 
-import { PaymentCreate } from "@/lib/validations/payment";
+import { PaymentCreate } from "@/modules/payment/services/payment.validators";
 import { createFinancialReportRequest } from "@/modules/payment/actions/financial-report.actions";
 import { getDebtorByUserId } from "@/modules/collection/actions/debtor.actions";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";

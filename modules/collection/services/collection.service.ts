@@ -6,8 +6,8 @@ import { CollectionNotificationService } from "@/modules/collection/services/col
 import { DebtClaimFilter, DebtClaimResponse } from "./collection.type";
 import { MailService } from "@/infrastructure/mail/mail.service";
 import { ParameterInput } from "@/modules/settings/services/parameter/parameter.type";
-import { createSentooPayment } from "@/actions/sentoo.actions";
-import { PaymentCreate } from "@/lib/validations/payment";
+import { SentooService } from "@/infrastructure/sentoo/sentoo.service";
+import { PaymentCreate } from "@/modules/payment/services/payment.validators";
 import { PaymentService } from "@/modules/payment/services/payment.service";
 import { DebtClaimCreate, DebtClaimCreateSchema } from "./collection.validators";
 
@@ -233,7 +233,7 @@ export class CollectionService {
       ).toFixed(2),
     );
 
-    const sentooResponse = await createSentooPayment({
+    const sentooResponse = await SentooService.createTransaction({
       amount: totalWithTax,
       description: `Betaling voor aanmaning ${reference}`,
       reference,

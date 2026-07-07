@@ -9,7 +9,7 @@ import {
   Box,
 } from "@mui/material";
 import TermsAndConditions from "./terms-and-conditions";
-import { ITenantSignUp } from "@/lib/validations/signup";
+import { ITenantSignUp } from "@/modules/auth/services/signup.validators";
 
 interface AccountInfoCardProps {
   initial: ITenantSignUp;

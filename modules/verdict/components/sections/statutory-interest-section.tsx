@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
-import { InterestType } from "@/lib/validations/interest-type";
-import { VerdictInterestDetailCreate } from "@/lib/validations/verdict-interest-details";
+import { InterestType } from "@/modules/settings/services/interest-type.validators";
+import { VerdictInterestDetailCreate } from "@/modules/verdict/services/verdict-interest-details.validators";
 import {
   Box,
   Button,
@@ -27,7 +27,7 @@ import {
 import {
   IVerdictInterest,
   IVerdictInterestCreate,
-} from "@/lib/validations/verdict-interest";
+} from "@/modules/verdict/services/verdict-interest.validators";
 import { getAllInterestTypes } from "@/modules/settings/actions/interest-type.actions";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import CloseIcon from "@mui/icons-material/Close";

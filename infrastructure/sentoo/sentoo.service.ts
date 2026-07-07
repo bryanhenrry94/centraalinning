@@ -28,7 +28,7 @@ export class SentooService {
 
       const body = new URLSearchParams({
         sentoo_merchant: process.env.SENTOO_MERCHANT!,
-        sentoo_currency: "USD",
+        sentoo_currency: payload.currency ?? "USD",
         sentoo_amount: amountSentoo.toString(),
         sentoo_description: payload.description,
         sentoo_expires: expires,

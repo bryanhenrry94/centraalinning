@@ -74,7 +74,7 @@ const DashboardSuperAdmin = () => {
 
           <RecentInvoices
             facturas={
-              facturasRecientes as unknown as import("@/lib/validations/billing-invoice").BillingInvoiceWithTenant[]
+              facturasRecientes as unknown as import("@/modules/payment/services/billing-invoice.validators").BillingInvoiceWithTenant[]
             }
           />
         </Box>

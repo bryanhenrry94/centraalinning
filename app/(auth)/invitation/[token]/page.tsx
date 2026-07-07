@@ -20,7 +20,7 @@ import {
 import { useParams } from "next/navigation";
 import LoadingUI from "@/shared/ui/loading-ui";
 
-import { InvitationRegistration } from "@/lib/validations/tenant-invitation";
+import { InvitationRegistration } from "@/modules/auth/services/invitation.validators";
 import LogoComponent from "@/shared/ui/logo-app";
 
 export default function InvitationPage() {

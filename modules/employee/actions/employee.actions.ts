@@ -1,6 +1,6 @@
 "use server";
 import { prisma } from "@/lib/prisma";
-import { CreateEmployee, Employee } from "@/lib/validations/employee";
+import { CreateEmployee, Employee } from "@/modules/employee/services/employee.validators";
 
 export async function getAllEmployeesByTenantId(
   tenant_id: string

@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { VerdictInterestCreateSchema } from "@/lib/validations/verdict-interest";
+import { VerdictInterestCreateSchema } from "@/modules/verdict/services/verdict-interest.validators";
 import {
   VerdictEmbargoBaseSchema,
   VerdictEmbargoCreateSchema,
-} from "./verdict-embargo";
-import { VerdictAttachmentSchema } from "./verdict-attachments";
-import { VerdictBailiffServicesCreateSchema } from "./verdict-bailiff-services";
+} from "@/modules/verdict/services/verdict-embargo.validators";
+import { VerdictAttachmentSchema } from "@/modules/verdict/services/verdict-attachments.validators";
+import { VerdictBailiffServicesCreateSchema } from "@/modules/verdict/services/verdict-bailiff-services.validators";
 
 // Enum for VerdictStatus
 export const VerdictStatusEnum = z.enum([

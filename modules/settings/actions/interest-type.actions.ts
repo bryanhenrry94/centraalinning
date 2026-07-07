@@ -1,6 +1,6 @@
 "use server";
 import { prisma } from "@/lib/prisma";
-import { InterestType } from "@/lib/validations/interest-type";
+import { InterestType } from "@/modules/settings/services/interest-type.validators";
 
 export async function getAllInterestTypes(): Promise<{
   interestTypes: InterestType[];

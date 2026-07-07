@@ -1,6 +1,6 @@
 "use server";
 import { prisma } from "@/lib/prisma";
-import { DebtClaim, DebtClaimSchema, DebtClaimView } from "@/lib/validations/collection";
+import { DebtClaim, DebtClaimSchema, DebtClaimView } from "@/modules/collection/services/collection.validators";
 import { DebtClaimFilter } from "@/modules/collection/services/collection.type";
 import { CollectionService } from "@/modules/collection/services/collection.service";
 

@@ -40,3 +40,45 @@ export const SignUpSchema = z
     path: ["confirm_password"],
     message: "Wachtwoorden moeten overeenkomen",
   });
+
+// Legacy interfaces from lib/validations/signup.ts
+export interface IUser {
+  fullname: string;
+  email: string;
+  password: string;
+  phone: string;
+  country: string;
+  identification_type: string;
+  identification: string;
+}
+
+export interface ICompany {
+  name: string;
+  contact_email: string;
+  kvk: string;
+  address: string;
+  country: string;
+  number_of_employees: number;
+  terms_accepted: boolean;
+  role: string;
+}
+
+export interface ISubscription {
+  subscription_type: string;
+  subscription_price: number;
+  price: number;
+}
+
+export interface ITenantSignUp {
+  user: IUser;
+  company: ICompany;
+  subscription: ISubscription;
+  total_price: number;
+}
+
+export const initialTenantSignUp: ITenantSignUp = {
+  user: { fullname: "", email: "", password: "", phone: "", country: "BON", identification_type: "", identification: "" },
+  company: { name: "", contact_email: "", kvk: "", address: "", country: "", number_of_employees: 1, terms_accepted: false, role: "" },
+  subscription: { price: 150, subscription_type: "", subscription_price: 0 },
+  total_price: 0,
+};

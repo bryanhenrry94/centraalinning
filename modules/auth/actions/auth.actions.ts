@@ -5,7 +5,7 @@ import {
   IdTokenInput,
   LoginFormData,
   loginSchema,
-} from "@/lib/validations/auth";
+} from "@/modules/auth/services/auth.validators";
 import { MembershipStatus } from "@prisma/client";
 
 export const signInWithPassword = async (

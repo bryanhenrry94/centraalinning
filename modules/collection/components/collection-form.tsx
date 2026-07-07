@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import SaveIcon from "@mui/icons-material/Save";
-import { DebtClaimCreate } from "@/lib/validations/collection";
+import { DebtClaimCreate } from "@/modules/collection/services/collection.validators";
 import { ModalFormDebtor } from "@/modules/collection/components/modal-debtor-form";
 import { DebtorResponse, DebtorInput } from "@/modules/collection/services/debtor.type";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";

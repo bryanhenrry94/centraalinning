@@ -1,7 +1,7 @@
 import { Box, Dialog, IconButton, Typography } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { AgreementForm } from "./agreement-form";
-import { CreateAgreement } from "@/lib/validations/agreement";
+import { CreateAgreement } from "@/modules/agreement/services/agreement.validators";
 
 interface AgreementFormDialogProps {
   open: boolean;

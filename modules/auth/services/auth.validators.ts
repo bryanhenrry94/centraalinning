@@ -1,4 +1,4 @@
-import { membershipSchema } from "@/lib/validations/membership";
+import { membershipSchema } from "@/modules/auth/services/membership.validators";
 import { z } from "zod";
 
 export const companyInfoSchema = z.object({
@@ -76,6 +76,7 @@ const EmailVerificationResponseSchema = z.object({
 
 const IdTokenSchema = z.object({
   id: z.string(),
+  code: z.string().optional(),
   fullname: z.string(),
   email: z.string().email(),
   phone: z.string(),
@@ -122,3 +123,8 @@ export {
   ResendVerificationEmailSchema,
   EmailVerificationResponseSchema,
 };
+
+// Type exports for backwards compatibility
+export type LoginFormData = z.infer<typeof loginSchema>;
+export type IdTokenInput = z.infer<typeof IdTokenSchema>;
+export type EmailFormData = z.infer<typeof EmailSchema>;

@@ -5,7 +5,7 @@ import {
   BailiffCreate,
   bailiffCreateSchema,
   BailiffUpdate,
-} from "@/lib/validations/bailiff";
+} from "@/modules/bailiff/services/bailiff.validators";
 
 export async function createBailiff(
   data: BailiffCreate,

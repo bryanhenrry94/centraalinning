@@ -1,6 +1,6 @@
 "use server";
 import { prisma } from "@/lib/prisma";
-import { Plan } from "@/lib/validations/plan";
+import { Plan } from "@/modules/settings/services/plan.validators";
 
 export const getPlans = async (): Promise<Plan[]> => {
   const plans = await prisma.plan.findMany();

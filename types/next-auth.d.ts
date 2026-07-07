@@ -1,9 +1,11 @@
-import { Membership } from "@/lib/validations/membership";
+import { Membership } from "@/modules/auth/services/membership.validators";
 import { UserRole } from "@/shared/constants/user-role";
 
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
+
+    code?: string;
 
     fullname: string;
 

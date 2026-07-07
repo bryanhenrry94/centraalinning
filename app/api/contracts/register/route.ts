@@ -5,8 +5,8 @@ import {
   ContractPartyInput,
   CreateContractInput,
 } from "@/modules/contract/services/contract.types";
-import { createSentooPayment } from "@/actions/sentoo.actions";
-import { PaymentCreate } from "@/lib/validations/payment";
+import { SentooService } from "@/infrastructure/sentoo/sentoo.service";
+import { PaymentCreate } from "@/modules/payment/services/payment.validators";
 import { prisma } from "@/lib/prisma";
 import { PaymentService } from "@/modules/payment/services/payment.service";
 
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
     const totalWithTax = 45;
 
     // 3. Crea el pago en Sentoo
-    const sentooResponse = await createSentooPayment({
+    const sentooResponse = await SentooService.createTransaction({
       amount: totalWithTax, // YA en centavos
       description: `Betaling voor overeenkomst ${contract.reference_number}`,
       reference: contract.reference_number,

@@ -2,7 +2,7 @@ import React from "react";
 // mui
 import { Box, TextField } from "@mui/material";
 // validations
-import { ITenantSignUp } from "@/lib/validations/signup";
+import { ITenantSignUp } from "@/modules/auth/services/signup.validators";
 
 interface AccountInfoCardProps {
   initial: ITenantSignUp;

@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Slider, Typography, TextField, MenuItem } from "@mui/material";
-import { ITenantSignUp } from "@/lib/validations/signup";
+import { ITenantSignUp } from "@/modules/auth/services/signup.validators";
 import { CountryList } from "@/shared/constants/country";
 import { RoleList } from "@/shared/constants/role-list";
 

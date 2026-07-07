@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { SentooService } from "@/infrastructure/sentoo/sentoo.service";
-import { PaymentCreate } from "@/lib/validations/payment";
+import { PaymentCreate } from "@/modules/payment/services/payment.validators";
 import { PaymentStatus } from "@/modules/payment/types/PaymentStatus";
 import { protocol } from "@/lib/config";
 

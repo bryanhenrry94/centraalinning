@@ -39,9 +39,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   BillingInvoiceCreate,
   BillingInvoiceCreateSchema,
-} from "@/lib/validations/billing-invoice";
-import { BillingInvoiceDetailBase } from "@/lib/validations/billing-invoice-detail";
-import { Tenant } from "@/lib/validations/tenant";
+} from "@/modules/payment/services/billing-invoice.validators";
+import { BillingInvoiceDetailBase } from "@/modules/payment/services/billing-invoice-detail.validators";
+import { Tenant } from "@/modules/tenant/services/tenant.validators";
 // actions
 import {
   createInvoice,

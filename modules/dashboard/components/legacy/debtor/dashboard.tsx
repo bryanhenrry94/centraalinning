@@ -25,7 +25,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
-import { AgreementResponse } from "@/lib/validations/agreement";
+import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
 import { notifyError, notifyInfo, notifyWarning } from "@/shared/ui/notifications";
 
 import {
@@ -41,7 +41,7 @@ import { AgreementFormDialog } from "@/modules/agreement/components/agreement-fo
 import { PaymentFormDialog } from "@/modules/payment/components/payment-form-dialog";
 import { createSentooPayment } from "@/actions/sentoo.actions";
 import { AlertService } from "@/shared/ui/alerts";
-import { PaymentCreate } from "@/lib/validations/payment";
+import { PaymentCreate } from "@/modules/payment/services/payment.validators";
 import { getPaymentByDebtClaimId, hasPendingPayments } from "@/modules/payment/actions/payment.actions";
 import DashboardHeader from "./DashboardHeader";
 import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";

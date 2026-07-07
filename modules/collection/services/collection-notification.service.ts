@@ -4,10 +4,10 @@ import { registerInvitation } from "@/modules/auth/actions/invitation.actions";
 import { protocol, rootDomain } from "@/lib/config";
 import {
   sendAanmaningEmail,
-  sendBlokkadeMail,
   sendIngebrekestellingMail,
   sendSommatieEmail,
-} from "@/actions/email";
+} from "@/modules/collection/services/collection-mail.service";
+import { sendBlokkadeMail } from "@/modules/blockade/services/blockade-mail.service";
 import { PersonType } from "@/shared/constants/person-type";
 import { UserRole } from "@/shared/constants/user-role";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";

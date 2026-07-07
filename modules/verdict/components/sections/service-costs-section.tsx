@@ -16,10 +16,10 @@ import {
   Typography,
 } from "@mui/material";
 import TotalBailiff from "../total-bailiff";
-import { Bailiff } from "@/lib/validations/bailiff";
+import { Bailiff } from "@/modules/bailiff/services/bailiff.validators";
 import { Controller, useFieldArray, useFormContext } from "react-hook-form";
-import { Verdict } from "@/lib/validations/verdict";
-import { VerdictBailiffServices } from "@/lib/validations/verdict-bailiff-services";
+import { Verdict } from "@/modules/verdict/services/verdict.validators";
+import { VerdictBailiffServices } from "@/modules/verdict/services/verdict-bailiff-services.validators";
 import { AlertService } from "@/shared/ui/alerts";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { CollectionService } from "@/modules/collection/services/collection.service";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { DebtClaimCreate } from "@/lib/validations/collection";
+import { DebtClaimCreate } from "@/modules/collection/services/collection.validators";
 
 export async function POST(req: NextRequest) {
   try {

@@ -11,8 +11,8 @@ import { embargoTipos } from "@/modules/blockade/constants/embargo";
 import {
   VerdictEmbargo,
   VerdictEmbargoCreate,
-} from "@/lib/validations/verdict-embargo";
-import { VerdictInterestDetail } from "@/lib/validations/verdict-interest-details";
+} from "@/modules/verdict/services/verdict-embargo.validators";
+import { VerdictInterestDetail } from "@/modules/verdict/services/verdict-interest-details.validators";
 
 interface VerdictContextProps {
   loading: boolean;

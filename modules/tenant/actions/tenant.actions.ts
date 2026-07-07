@@ -1,8 +1,8 @@
 "use server";
 import { sendEmail } from "@/infrastructure/mail/resend-client";
 import { prisma } from "@/lib/prisma";
-import { CreateAgreement } from "@/lib/validations/agreement";
-import { Tenant } from "@/lib/validations/tenant";
+import { CreateAgreement } from "@/modules/agreement/services/agreement.validators";
+import { Tenant } from "@/modules/tenant/services/tenant.validators";
 
 export const getTenantByEmail = async (
   email: string,

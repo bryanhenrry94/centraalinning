@@ -39,3 +39,7 @@ export type DebtClaim = z.infer<typeof DebtClaimSchema>;
 export type DebtClaimCreate = z.infer<typeof DebtClaimCreateSchema>;
 export type DebtClaimUpdate = z.infer<typeof DebtClaimUpdateSchema>;
 export type DebtClaimResponse = z.infer<typeof DebtClaimResponseSchema>;
+
+// Legacy alias
+export const DebtClaimViewSchema = DebtClaimResponseSchema;
+export type DebtClaimView = DebtClaimResponse;

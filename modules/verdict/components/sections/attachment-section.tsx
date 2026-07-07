@@ -21,7 +21,7 @@ import {
   useWatch,
 } from "react-hook-form";
 import { useEffect, useState } from "react";
-import { VerdictEmbargo } from "@/lib/validations/verdict-embargo";
+import { VerdictEmbargo } from "@/modules/verdict/services/verdict-embargo.validators";
 import { embargoTipos } from "@/modules/blockade/constants/embargo";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { UserInput } from "@/modules/auth/services/user.type";

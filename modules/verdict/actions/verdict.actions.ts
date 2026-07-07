@@ -4,27 +4,27 @@ import {
   VerdictCreate,
   VerdictResponse,
   VerdictUpdate,
-} from "@/lib/validations/verdict";
-import { VerdictInterestDetailCreate } from "@/lib/validations/verdict-interest-details";
-import { InterestDetail } from "@/lib/validations/interest-type";
+} from "@/modules/verdict/services/verdict.validators";
+import { VerdictInterestDetailCreate } from "@/modules/verdict/services/verdict-interest-details.validators";
+import { InterestDetail } from "@/modules/settings/services/interest-type.validators";
 import { getInterestTypeById } from "@/modules/settings/actions/interest-type.actions";
 import { notifyError } from "@/shared/ui/notifications";
 import { protocol, rootDomain } from "@/lib/config";
 import path from "path";
 import fs from "fs/promises";
 import { formatDate } from "@/shared/utils/formatters";
-import { VerdictAttachment } from "@/lib/validations/verdict-attachments";
+import { VerdictAttachment } from "@/modules/verdict/services/verdict-attachments.validators";
 import {
-  sendInvoiceEmail,
   sendMailRegisterVerdict,
   sendMailVerdictDebtor,
   sendVerdictApprovalEmail,
-} from "@/actions/email";
+} from "@/modules/verdict/services/verdict-mail.service";
+import { sendInvoiceEmail } from "@/modules/payment/services/payment-mail.service";
 import { createInvoice, generateInvoiceNumber } from "@/modules/payment/actions/billing-invoice.actions";
-import { BillingInvoiceCreate } from "@/lib/validations/billing-invoice";
-import { BillingInvoiceDetailCreate } from "@/lib/validations/billing-invoice-detail";
+import { BillingInvoiceCreate } from "@/modules/payment/services/billing-invoice.validators";
+import { BillingInvoiceDetailCreate } from "@/modules/payment/services/billing-invoice-detail.validators";
 import { VerdictDebtorPDFProps } from "@/modules/verdict/templates/pdfs/VerdictDebtorPDF";
-import { createSentooPayment } from "@/actions/sentoo.actions";
+import { SentooService } from "@/infrastructure/sentoo/sentoo.service";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 
 export const getAllVerdicts = async (
@@ -836,7 +836,7 @@ export const approveVerdict = async (id: string): Promise<boolean> => {
     // };
 
     // Crear el pago en Sentoo
-    const res = await createSentooPayment({
+    const res = await SentooService.createTransaction({
       amount: totalInvoice, // YA en centavos
       description: `Factura ${invoice_number} - Vonnis ${VerdictUpdated.registration_number}`,
       reference: invoiceCreated.id,

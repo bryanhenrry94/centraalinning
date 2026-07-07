@@ -33,7 +33,7 @@ import {
   CreateEmployee,
   createEmployeeSchema,
   Employee,
-} from "@/lib/validations/employee";
+} from "@/modules/employee/services/employee.validators";
 import { AlertService } from "@/shared/ui/alerts";
 import { EmployeeImportDialog } from "./employee-import-dialog";
 

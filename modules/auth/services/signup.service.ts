@@ -4,8 +4,8 @@ import { SignUpSchema } from "./signup.validators";
 import { SignUpInput } from "./signup.type";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 import { TenantService } from "@/modules/tenant/services/tenant.service";
-import { createSentooPayment } from "@/actions/sentoo.actions";
-import { PaymentCreate } from "@/lib/validations/payment";
+import { SentooService } from "@/infrastructure/sentoo/sentoo.service";
+import { PaymentCreate } from "@/modules/payment/services/payment.validators";
 import { PaymentService } from "@/modules/payment/services/payment.service";
 import { MailService } from "@/infrastructure/mail/mail.service";
 
@@ -194,7 +194,7 @@ export class SignupService {
       const { tenant, user } = transactionResult.result;
 
       // 7. Crear el pago en Sentoo.
-      const sentooResponse = await createSentooPayment({
+      const sentooResponse = await SentooService.createTransaction({
         amount: pricePlan, // YA en centavos
         description: "Prueba",
         reference: tenant.kvk || "",

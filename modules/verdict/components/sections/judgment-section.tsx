@@ -13,7 +13,7 @@ import { Controller, useFormContext } from "react-hook-form";
 import AddIcon from "@mui/icons-material/Add";
 
 import { DebtorInput, DebtorResponse } from "@/modules/collection/services/debtor.type";
-import { VerdictJudgment } from "@/lib/validations/verdict";
+import { VerdictJudgment } from "@/modules/verdict/services/verdict.validators";
 
 interface JudgmentSectionProps {
   handleOpenModalDebtor: () => void;

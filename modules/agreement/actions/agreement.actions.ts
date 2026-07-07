@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { Agreement, CreateAgreement, AgreementResponse } from "@/lib/validations/agreement";
+import { Agreement, CreateAgreement, AgreementResponse } from "@/modules/agreement/services/agreement.validators";
 import { sendEmail } from "@/infrastructure/mail/resend-client";
 import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
 import { InstallmentStatus } from "@/modules/agreement/constants/installment-status";

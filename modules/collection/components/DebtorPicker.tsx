@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { TextField, Button, Stack, IconButton } from "@mui/material";
 import { useDebounce } from "@/shared/hooks/useDebounce";
-import { DebtorResponse } from "@/lib/validations/debtor";
+import { DebtorResponse } from "@/modules/collection/services/debtor.validators";
 import { DebtorSearchDialog } from "./DebtorSearchDialog";
 import SearchIcon from "@mui/icons-material/Search";
 import PersonIcon from "@mui/icons-material/Person";

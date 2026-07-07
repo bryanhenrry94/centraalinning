@@ -6,8 +6,8 @@ import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import PersonIcon from "@mui/icons-material/Person";
 // action & validations
 import { getDebtClaimViewById } from "@/modules/collection/actions/collection-case.actions";
-import { DebtClaimView } from "@/lib/validations/collection";
-import { Agreement } from "@/lib/validations/agreement";
+import { DebtClaimView } from "@/modules/collection/services/collection.validators";
+import { Agreement } from "@/modules/agreement/services/agreement.validators";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import PaymentAgreementStatusChip from "@/shared/ui/payment-agreement-status-chip";
 import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";

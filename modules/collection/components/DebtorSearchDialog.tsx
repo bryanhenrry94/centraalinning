@@ -19,7 +19,7 @@ import {
   IconButton,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import { DebtorResponse } from "@/lib/validations/debtor";
+import { DebtorResponse } from "@/modules/collection/services/debtor.validators";
 import TouchAppIcon from "@mui/icons-material/TouchApp";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";

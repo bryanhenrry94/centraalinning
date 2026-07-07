@@ -13,7 +13,7 @@ export interface SentooPaymentResult {
 
 export interface SentooPaymentCreate {
   amount: number;
-  currency: string;
+  currency?: string;
   description: string;
   reference: string;
 }

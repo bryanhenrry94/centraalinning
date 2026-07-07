@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { VerdictInterestDetailCreateSchema } from "./verdict-interest-details";
+import { VerdictInterestDetailCreateSchema } from "@/modules/verdict/services/verdict-interest-details.validators";
 
 export const VerdictInterestBaseSchema = z.object({
   id: z.string().uuid({ message: "El id debe ser un UUID válido" }),

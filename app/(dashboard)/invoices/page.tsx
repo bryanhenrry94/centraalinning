@@ -38,7 +38,7 @@ import { getAllInvoices } from "@/modules/payment/actions/billing-invoice.action
 import {
   BillingInvoiceBase,
   BillingInvoiceResponse,
-} from "@/lib/validations/billing-invoice";
+} from "@/modules/payment/services/billing-invoice.validators";
 
 interface TablePaginationActionsProps {
   count: number;

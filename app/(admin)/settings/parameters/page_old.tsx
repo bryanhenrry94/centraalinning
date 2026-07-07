@@ -14,7 +14,7 @@ import BankSettings from "./sections/BankSettings";
 import {
   parameterSchema,
   ParameterFormData,
-} from "@/lib/validations/parameter";
+} from "@/modules/settings/services/parameter/parameter.validators";
 
 export default function ParametersPage() {
   const [tab, setTab] = useState(0);

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Box, IconButton, Modal, Typography } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import AgreementTable from "./agreement-table";
-import { AgreementResponse } from "@/lib/validations/agreement";
+import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
 
 interface AgreementDialogProps {
   open: boolean;

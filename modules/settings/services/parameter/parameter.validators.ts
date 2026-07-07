@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 export const ParameterSchema = z.object({
-  collection_fee_rate: z.coerce.number().min(0).max(100),
-  abb_rate: z.coerce.number().min(0).max(100),
-  collection_fee_minimum_amount: z.coerce.number().min(0),
+  collection_fee_rate: z.number().min(0).max(100),
+  abb_rate: z.number().min(0).max(100),
+  collection_fee_minimum_amount: z.number().min(0),
   company_aanmaning_term_days: z.number().int().min(0),
   consumer_aanmaning_term_days: z.number().int().min(0),
   company_sommatie_term_days: z.number().int().min(0),
@@ -31,3 +31,7 @@ export const ParameterSchema = z.object({
   bank_account: z.string(),
   bank_name: z.string(),
 });
+
+// Type exports and aliases
+export type ParameterFormData = z.infer<typeof ParameterSchema>;
+export const parameterSchema = ParameterSchema;

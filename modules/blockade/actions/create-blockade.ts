@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { CreateBlockadeInput } from "@/modules/blockade/services/blockade.validators";
 import { StorageService } from "@/infrastructure/storage/storage.service";
 import { Prisma } from "@prisma/client";
-import { sendMailBlockade } from "@/actions/email";
+import { sendMailBlockade } from "@/modules/blockade/services/blockade-mail.service";
 import { BlockadeService } from "@/modules/blockade/services/blockade.service";
 
 type CreateBlockadeResponse = {

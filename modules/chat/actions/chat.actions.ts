@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { IChatMessage, IChatMessageCreate } from "@/lib/validations/chat";
+import { IChatMessage, IChatMessageCreate } from "@/modules/chat/services/chat.validators";
 
 export const createChatRoom = async (
   name: string,

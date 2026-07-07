@@ -5,11 +5,11 @@ import {
   BillingInvoiceBase,
   BillingInvoiceCreate,
   BillingInvoiceResponse,
-} from "@/lib/validations/billing-invoice";
+} from "@/modules/payment/services/billing-invoice.validators";
 import { getNameCountry } from "@/shared/utils/location";
-import { sendInvoiceEmail } from "@/actions/email";
+import { sendInvoiceEmail } from "@/modules/payment/services/payment-mail.service";
 import { InvoicePDFProps } from "@/modules/payment/templates/pdfs/InvoicePDF";
-import { createSentooPayment } from "@/actions/sentoo.actions";
+import { SentooService } from "@/infrastructure/sentoo/sentoo.service";
 import { ActivationInvoiceInput } from "@/modules/payment/services/invoice.type";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 
@@ -79,7 +79,7 @@ export const createCollectionInvoice = async (
   });
 
   // Crear el pago en Sentoo
-  const res = await createSentooPayment({
+  const res = await SentooService.createTransaction({
     amount: totalWithTax, // YA en centavos
     description: `Factura ${invoice_number} - Activation fee`,
     reference: invoice.id,

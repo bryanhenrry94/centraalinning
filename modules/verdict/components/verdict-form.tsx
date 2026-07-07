@@ -9,7 +9,7 @@ import {
   VerdictCreate,
   VerdictCreateForm,
   VerdictCreateFormSchema,
-} from "@/lib/validations/verdict";
+} from "@/modules/verdict/services/verdict.validators";
 import { notifyError, notifyInfo } from "@/shared/ui/notifications";
 // actions
 import {
@@ -33,7 +33,7 @@ import { ModalFormDebtor } from "@/modules/collection/components/modal-debtor-fo
 import { getAllDebtorsByTenantId } from "@/modules/collection/actions/debtor.actions";
 import { ModalFormBailiff } from "@/modules/bailiff/components/modal-bailiff-form";
 import { getAllBailiffs } from "@/modules/bailiff/actions/bailiff.actions";
-import { Bailiff } from "@/lib/validations/bailiff";
+import { Bailiff } from "@/modules/bailiff/services/bailiff.validators";
 import { useSession } from "next-auth/react";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

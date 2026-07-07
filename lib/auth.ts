@@ -1,9 +1,9 @@
-import { IdTokenInput, LoginFormData } from "@/lib/validations/auth";
+import { IdTokenInput, LoginFormData } from "@/modules/auth/services/auth.validators";
 import { signInWithPassword } from "@/modules/auth/actions/auth.actions";
 import { type AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { UserRole } from "@/shared/constants/user-role";
-import { Membership } from "./validations/membership";
+import { Membership } from "@/modules/auth/services/membership.validators";
 
 // Extend NextAuth types to include custom properties
 declare module "next-auth" {

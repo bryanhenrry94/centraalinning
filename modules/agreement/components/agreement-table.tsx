@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@mui/material";
 
-import { AgreementResponse } from "@/lib/validations/agreement";
+import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
 
 interface AgreementTableProps {
   agreements: AgreementResponse[];

@@ -6,7 +6,7 @@ import {
   bailiffCreateSchema,
   BailiffCreate,
   Bailiff,
-} from "@/lib/validations/bailiff";
+} from "@/modules/bailiff/services/bailiff.validators";
 
 import {
   Button,

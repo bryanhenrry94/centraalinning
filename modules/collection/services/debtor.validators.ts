@@ -48,3 +48,5 @@ export const DebtorSummarySchema = DebtorSchema.pick({
 }).extend({
   fullname: z.string().optional(),
 });
+
+export type DebtorResponse = z.infer<typeof DebtorResponseSchema>;

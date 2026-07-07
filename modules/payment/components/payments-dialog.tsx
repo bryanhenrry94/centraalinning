@@ -15,7 +15,7 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import { formatCurrency } from "@/shared/utils/formatters";
 import React, { useEffect } from "react";
-import { Payment } from "@/lib/validations/payment";
+import { Payment } from "@/modules/payment/services/payment.validators";
 import { getPayments } from "@/modules/payment/actions/payment.actions";
 
 interface PaymentsDialogProps {

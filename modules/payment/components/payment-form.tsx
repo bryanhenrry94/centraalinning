@@ -9,7 +9,7 @@ import {
   PaymentMethodEnum,
   PaymentCreateSchema,
   PaymentCreate,
-} from "@/lib/validations/payment";
+} from "@/modules/payment/services/payment.validators";
 import { DebtorSummary } from "@/modules/collection/types/DebtorSummary";
 import { useSession } from "next-auth/react";
 import { getDebts } from "@/modules/collection/actions/debtor.actions";

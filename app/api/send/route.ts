@@ -1,7 +1,7 @@
 import React from "react";
 import { NextResponse } from "next/server";
 import { TestEmail } from "@/modules/employee/templates/TestEmail";
-import { sendInvoiceEmail } from "@/actions/email";
+import { sendInvoiceEmail } from "@/modules/payment/services/payment-mail.service";
 import { render } from "@react-email/components";
 import { resend } from "@/infrastructure/mail/resend-client";
 

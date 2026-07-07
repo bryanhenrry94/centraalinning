@@ -25,8 +25,16 @@ export const PersonSummarySchema = PersonSchema.pick({
   first_name: true,
   last_name: true,
   business_name: true,
+  email: true,
+  phone: true,
+  address: true,
 });
 
 export const PersonCreateSchema = PersonSchema.omit({
   // id: true,
 });
+
+// Type exports
+export type PersonInput = z.infer<typeof PersonSchema>;
+export type PersonSummary = z.infer<typeof PersonSummarySchema>;
+export type PersonCreateInput = z.infer<typeof PersonCreateSchema>;

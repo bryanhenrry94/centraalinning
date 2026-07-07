@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Controller, useWatch, useFormContext } from "react-hook-form";
 import { TextField } from "@mui/material";
 import { calculateInterestDetail } from "@/modules/verdict/actions/verdict.actions";
-import { IVerdictInterestCreate } from "@/lib/validations/verdict-interest";
+import { IVerdictInterestCreate } from "@/modules/verdict/services/verdict-interest.validators";
 
 interface InterestCellProps {
   control: any;

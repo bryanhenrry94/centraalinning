@@ -26,7 +26,7 @@ import {
 } from "@/modules/chat/actions/chat.actions";
 import { useAuthSession } from "@/modules/auth/hooks/useAuthSession";
 import { ChatWindowProps, ISelectedRoom, Sender } from "./types";
-import { IChatMessage, IChatMessageCreate } from "@/lib/validations/chat";
+import { IChatMessage, IChatMessageCreate } from "@/modules/chat/services/chat.validators";
 
 function ChatWindow({ room, sender }: ChatWindowProps) {
   const [messages, setMessages] = useState<IChatMessage[]>([]);

@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { Box, TextField, MenuItem, Typography, Divider } from "@mui/material";
-import { ITenantSignUp } from "@/lib/validations/signup";
+import { ITenantSignUp } from "@/modules/auth/services/signup.validators";
 import { formatCurrency } from "@/shared/utils/formatters";
 import { PRICING } from "@/modules/settings/constants/pricing";
 

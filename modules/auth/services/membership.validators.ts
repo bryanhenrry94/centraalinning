@@ -14,3 +14,10 @@ export const MembershipCreateSchema = MembershipSchema.omit({ id: true });
 export const MembershipUpdateSchema = MembershipSchema.partial().required({
   id: true,
 });
+
+// Type exports (aliases for compatibility)
+export type Membership = z.infer<typeof MembershipSchema>;
+export type MembershipCreate = z.infer<typeof MembershipCreateSchema>;
+export type MembershipUpdate = z.infer<typeof MembershipUpdateSchema>;
+// Lowercase alias for legacy code
+export const membershipSchema = MembershipSchema;

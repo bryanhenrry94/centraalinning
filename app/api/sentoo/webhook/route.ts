@@ -1,4 +1,4 @@
-import { verifySentooPayment } from "@/actions/sentoo.actions";
+import { SentooService } from "@/infrastructure/sentoo/sentoo.service";
 import { prisma } from "@/lib/prisma";
 import { processSuccessfulPayment } from "@/modules/payment/services/payment-processor";
 import { NextRequest, NextResponse } from "next/server";
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Reconciliar contra Sentoo
-    const verification = await verifySentooPayment(transactionId);
+    const verification = await SentooService.verifySentooPayment(transactionId);
 
     const providerStatus = verification.status;
 

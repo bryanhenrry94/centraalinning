@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import {
   InvitationRegistration,
   InvitationRegistrationSchema,
-} from "@/lib/validations/tenant-invitation";
+} from "@/modules/auth/services/invitation.validators";
 import bcrypt from "bcryptjs";
 
 import { revalidatePath } from "next/cache";

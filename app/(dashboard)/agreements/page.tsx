@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Box, Tab, Tabs, Typography } from "@mui/material";
-import { AgreementResponse } from "@/lib/validations/agreement";
+import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
 import { getPaymentAgreements } from "@/modules/agreement/actions/agreement.actions";
 import TabPanel from "@/shared/ui/tab-panel";
 import { useSession } from "next-auth/react";

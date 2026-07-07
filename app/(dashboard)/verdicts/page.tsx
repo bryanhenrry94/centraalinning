@@ -2,7 +2,7 @@
 import React, { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { deleteVerdict, getAllVerdicts } from "@/modules/verdict/actions/verdict.actions";
-import { VerdictResponse } from "@/lib/validations/verdict";
+import { VerdictResponse } from "@/modules/verdict/services/verdict.validators";
 import {
   Box,
   Button,
