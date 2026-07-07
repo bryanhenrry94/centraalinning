@@ -1,6 +1,6 @@
 "use client";
 
-import { formatCurrency } from "@/utils/formatters";
+import { formatCurrency } from "@/shared/utils/formatters";
 import { Avatar, Paper, Stack, Typography } from "@mui/material";
 import { alpha, useTheme } from "@mui/material/styles";
 import { ReactNode } from "react";

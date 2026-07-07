@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
-import { BlockadeService } from "@/services/blockade/blockade.service";
+import { BlockadeService } from "@/modules/blockade/services/blockade.service";
 
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);

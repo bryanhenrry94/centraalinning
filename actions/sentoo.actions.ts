@@ -1,6 +1,6 @@
 "use server";
-import { sentooRequest } from "@/lib/sentoo";
-import { SentooService } from "@/services/providers/sentoo.service";
+import { sentooRequest } from "@/infrastructure/sentoo/sentoo-client";
+import { SentooService } from "@/infrastructure/sentoo/sentoo.service";
 
 export async function createSentooPayment(input: {
   amount: number;

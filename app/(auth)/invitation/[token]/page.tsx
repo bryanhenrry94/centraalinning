@@ -4,24 +4,24 @@ import Link from "next/link";
 // mui
 import { Box, Button, Container, TextField, Typography } from "@mui/material";
 // validations & actions
-import { notifyError, notifyInfo, notifyWarning } from "@/lib/notifications";
-import useClientRouter from "@/hooks/useNavigations";
+import { notifyError, notifyInfo, notifyWarning } from "@/shared/ui/notifications";
+import useClientRouter from "@/shared/hooks/useNavigations";
 
 // components
-import OnboardingLayout from "@/components/onboarding/onboarding-layout";
-import HeaderInfoCard from "@/components/signup/header-info-card";
-import { userExistsByEmail } from "@/actions/user";
+import OnboardingLayout from "@/shared/ui/onboarding/onboarding-layout";
+import HeaderInfoCard from "@/modules/auth/components/signup/header-info-card";
+import { userExistsByEmail } from "@/modules/auth/actions/user.actions";
 import {
   completeRegistration,
   getInvitationDetails,
   invitationIsUsed,
   isInvitationValid,
-} from "@/actions/tenant-invitation";
+} from "@/modules/auth/actions/invitation.actions";
 import { useParams } from "next/navigation";
-import LoadingUI from "@/components/ui/loading-ui";
+import LoadingUI from "@/shared/ui/loading-ui";
 
 import { InvitationRegistration } from "@/lib/validations/tenant-invitation";
-import LogoComponent from "@/components/ui/logo-app";
+import LogoComponent from "@/shared/ui/logo-app";
 
 export default function InvitationPage() {
   const [loading, setLoading] = React.useState(false);

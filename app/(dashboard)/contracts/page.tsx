@@ -28,8 +28,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useRouter } from "next/navigation";
-import { formatCurrency, formatDate } from "@/utils/formatters";
-import { useDebounce } from "@/hooks/useDebounce";
+import { formatCurrency, formatDate } from "@/shared/utils/formatters";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 import { StatusContractChip } from "./StatusContractChip";
 
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -37,7 +37,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import DeleteIcon from '@mui/icons-material/Delete';
 
-import { AlertService } from "@/lib/alerts";
+import { AlertService } from "@/shared/ui/alerts";
 
 export default function ContractsPage() {
   const router = useRouter();

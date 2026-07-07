@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-server";
 
-import { DebtorService } from "@/services/debtor/debtor.service";
-import { DebtorSearchParams } from "@/services/debtor/debtor.type";
+import { DebtorService } from "@/modules/collection/services/debtor.service";
+import { DebtorSearchParams } from "@/modules/collection/services/debtor.type";
 
 export async function GET(request: NextRequest) {
   try {

@@ -2,7 +2,7 @@
 
 import { Box, Grid } from "@mui/material";
 
-import ParameterInput from "@/components/settings/ParameterInput";
+import ParameterInput from "@/modules/settings/components/ParameterInput";
 
 export default function CollectionSettings() {
   return (

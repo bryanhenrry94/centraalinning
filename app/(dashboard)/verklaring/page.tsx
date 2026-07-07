@@ -19,14 +19,14 @@ import { useSession } from "next-auth/react";
 
 import { createSentooPayment } from "@/actions/sentoo.actions";
 
-import { formatCurrency } from "@/utils/formatters";
-import { notifyError, notifyInfo } from "@/lib/notifications";
+import { formatCurrency } from "@/shared/utils/formatters";
+import { notifyError, notifyInfo } from "@/shared/ui/notifications";
 
 import { PaymentCreate } from "@/lib/validations/payment";
-import { createFinancialReportRequest } from "@/actions/financial_report_requests";
-import { getDebtorByUserId } from "@/actions/debtor";
-import { ParameterService } from "@/services/parameter/parameter.service";
-import { PaymentService } from "@/services/payments/payment.service";
+import { createFinancialReportRequest } from "@/modules/payment/actions/financial-report.actions";
+import { getDebtorByUserId } from "@/modules/collection/actions/debtor.actions";
+import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
+import { PaymentService } from "@/modules/payment/services/payment.service";
 
 const VerklaringPage: React.FC = () => {
   const [loading, setLoading] = useState(false);

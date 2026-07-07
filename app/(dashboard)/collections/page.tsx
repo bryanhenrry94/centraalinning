@@ -1,11 +1,11 @@
 "use client";
 import React, { useEffect } from "react";
 import { Box, Skeleton } from "@mui/material";
-import { CollectionHeader } from "@/components/collection/collection-header";
-import { DebtClaimResponse } from "@/services/collection/collection.type";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { getDebtClaimsAction } from "@/actions/collection-case";
-import CollectionTable from "@/components/collection/collection-table";
+import { CollectionHeader } from "@/modules/collection/components/collection-header";
+import { DebtClaimResponse } from "@/modules/collection/services/collection.type";
+import { useAuthSession } from "@/modules/auth/hooks/useAuthSession";
+import { getDebtClaimsAction } from "@/modules/collection/actions/collection-case.actions";
+import CollectionTable from "@/modules/collection/components/collection-table";
 
 export default function CollectionsPage() {
   const { session } = useAuthSession();

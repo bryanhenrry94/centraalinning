@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ContractService } from "@/services/contract/contract.service";
+import { ContractService } from "@/modules/contract/services/contract.service";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 

@@ -8,7 +8,7 @@ import {
   createTheme,
 } from "@mui/material";
 import { Shield } from "@mui/icons-material";
-import LogoComponent from "@/components/ui/logo-app";
+import LogoComponent from "@/shared/ui/logo-app";
 import Image from "next/image";
 import { FormSignUp } from "./form";
 

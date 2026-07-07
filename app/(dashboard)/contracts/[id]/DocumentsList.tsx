@@ -1,5 +1,5 @@
 "use client";
-import { formatDate } from "@/utils/formatters";
+import { formatDate } from "@/shared/utils/formatters";
 import {
   Box,
   Button,

@@ -15,7 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useForm } from "react-hook-form";
-import { requestPasswordReset } from "@/actions/request-password-reset";
+import { requestPasswordReset } from "@/modules/auth/actions/request-password-reset.actions";
 
 type FormValues = {
   email: string;

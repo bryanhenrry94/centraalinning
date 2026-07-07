@@ -1,4 +1,4 @@
-import { formatCurrency } from "@/utils/formatters";
+import { formatCurrency } from "@/shared/utils/formatters";
 import { ArrowForward, Check } from "@mui/icons-material";
 import {
   Box,

@@ -5,10 +5,10 @@ import {
   SommatieEmail,
   WelcomeEmail,
 } from "@/templates/emails";
-import EconomischeBlokkadeEmail from "@/templates/emails/EconomischeBlokkadeEmail";
-import NewClientEmail from "@/templates/emails/NewClientEmail";
-import VerdictDebtorMail from "@/templates/emails/VerdictDebtorMail";
-import VerdictRegisterEmail from "@/templates/emails/VerdictRegisterMail";
+import EconomischeBlokkadeEmail from "@/modules/blockade/templates/EconomischeBlokkadeEmail";
+import NewClientEmail from "@/modules/tenant/templates/NewClientEmail";
+import VerdictDebtorMail from "@/modules/verdict/templates/VerdictDebtorMail";
+import VerdictRegisterEmail from "@/modules/verdict/templates/VerdictRegisterMail";
 import { render } from "@react-email/render";
 
 export default async function Page() {

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import AppTheme from "@/theme/ThemeProvider";
+import AppTheme from "@/shared/theme/ThemeProvider";
 import { ToastContainer } from "react-toastify";
-import { SessionAuthProvider } from "@/providers/sessionAuthProvider";
+import { SessionAuthProvider } from "@/shared/providers/sessionAuthProvider";
 import "@/lib/initServer"; // inicializa el scheduler
 import type { Viewport } from "next";
 

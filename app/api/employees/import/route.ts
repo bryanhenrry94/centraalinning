@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
-import { createEmployee } from "@/actions/employee";
+import { createEmployee } from "@/modules/employee/actions/employee.actions";
 
 export async function POST(req: Request) {
   try {

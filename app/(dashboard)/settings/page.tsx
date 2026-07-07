@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import TabPanel from "@/components/ui/tab-panel";
+import TabPanel from "@/shared/ui/tab-panel";
 import {
   Box,
   Button,
@@ -10,13 +10,13 @@ import {
   Tabs,
   Typography,
 } from "@mui/material";
-import { AccountForm } from "@/components/settings/account-form";
-import ProfileForm from "@/components/settings/profile-form";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { updateUserProfile } from "@/actions/user";
-import { notifyInfo } from "@/lib/notifications";
-import UserTable from "@/components/settings/user-table";
-import { EmployeeForm } from "@/components/employees/employee-form";
+import { AccountForm } from "@/modules/auth/components/account-form";
+import ProfileForm from "@/modules/auth/components/profile-form";
+import { useAuthSession } from "@/modules/auth/hooks/useAuthSession";
+import { updateUserProfile } from "@/modules/auth/actions/user.actions";
+import { notifyInfo } from "@/shared/ui/notifications";
+import UserTable from "@/modules/auth/components/user-table";
+import { EmployeeForm } from "@/modules/employee/components/employee-form";
 
 const SettingPage = () => {
   const [value, setValue] = useState(0);

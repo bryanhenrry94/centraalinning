@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CollectionService } from "@/services/collection/collection.service";
+import { CollectionService } from "@/modules/collection/services/collection.service";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { DebtClaimCreate } from "@/lib/validations/collection";

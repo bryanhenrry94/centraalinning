@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ContractStatus } from "@prisma/client";
-import { ContractService } from "@/services/contract/contract.service";
+import { ContractService } from "@/modules/contract/services/contract.service";
 import {
   ContractPartyInput,
   CreateContractInput,
-} from "@/services/contract/contract.types";
+} from "@/modules/contract/services/contract.types";
 import { createSentooPayment } from "@/actions/sentoo.actions";
 import { PaymentCreate } from "@/lib/validations/payment";
 import { prisma } from "@/lib/prisma";
-import { PaymentService } from "@/services/payments/payment.service";
+import { PaymentService } from "@/modules/payment/services/payment.service";
 
 export async function POST(req: NextRequest) {
   try {

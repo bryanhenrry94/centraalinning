@@ -1,53 +1,53 @@
 import { prisma } from "@/lib/prisma";
 import { Resend } from "resend";
 // Templates
-import { WelcomeEmail } from "@/templates/emails/WelcomeEmail";
-import InvoiceEmail from "@/templates/emails/InvoiceEmail";
-import AanmanningEmail from "@/templates/emails/AanmanningEmail";
-import SommatieMail from "@/templates/emails/SommatieEmail";
+import { WelcomeEmail } from "@/modules/auth/templates/WelcomeEmail";
+import InvoiceEmail from "@/modules/payment/templates/InvoiceEmail";
+import AanmanningEmail from "@/modules/collection/templates/AanmanningEmail";
+import SommatieMail from "@/modules/collection/templates/SommatieEmail";
 // PDFs
-import { InvoicePDF, InvoicePDFProps } from "@/templates/pdfs/InvoicePDF";
-import AanmaningPDF, { AanmaningPDFProps } from "@/components/pdf/AanmaningPDF";
-import SommatiePDF, { SommatiePDFProps } from "@/components/pdf/SommatiePDF";
-import BlokkadePDF, { BlokkadePDFProps } from "@/components/pdf/BlokkadePDF";
+import { InvoicePDF, InvoicePDFProps } from "@/modules/payment/templates/pdfs/InvoicePDF";
+import AanmaningPDF, { AanmaningPDFProps } from "@/modules/collection/templates/pdfs/AanmaningPDF";
+import SommatiePDF, { SommatiePDFProps } from "@/modules/collection/templates/pdfs/SommatiePDF";
+import BlokkadePDF, { BlokkadePDFProps } from "@/modules/blockade/templates/pdfs/BlokkadePDF";
 import IngebrekestellingPDF, {
   IngebrekestellingProps,
-} from "@/components/pdf/IngebrekestellingPDF";
+} from "@/modules/collection/templates/pdfs/IngebrekestellingPDF";
 // Emails
-import { BlokkadeEmail } from "@/templates/emails/BlokkadeEmail";
-import { IngebrekestellingEmail } from "@/templates/emails/IngebrekestellingEmail";
+import { BlokkadeEmail } from "@/modules/blockade/templates/BlokkadeEmail";
+import { IngebrekestellingEmail } from "@/modules/collection/templates/IngebrekestellingEmail";
 // Server actions
-import { getDataInvoicePDF } from "./billing-invoice";
+import { getDataInvoicePDF } from "@/modules/payment/actions/billing-invoice.actions";
 // Libs
-import { generatePdfBase64 } from "@/lib/pdf";
+import { generatePdfBase64 } from "@/infrastructure/pdf/pdf";
 // Utils
-import { formatCurrency, formatDate } from "@/utils/formatters";
-import { getNameCountry } from "@/utils/location";
+import { formatCurrency, formatDate } from "@/shared/utils/formatters";
+import { getNameCountry } from "@/shared/utils/location";
 import VerdictApprovalPDF, {
   VerdictApprovalPDFProps,
-} from "@/templates/pdfs/VerdictApprovalPDF";
-import VerdictApprovalEmail from "@/templates/emails/VerdictApprovalEmail";
+} from "@/modules/verdict/templates/pdfs/VerdictApprovalPDF";
+import VerdictApprovalEmail from "@/modules/verdict/templates/VerdictApprovalEmail";
 import VerdictDebtorPDF, {
   VerdictDebtorPDFProps,
-} from "@/templates/pdfs/VerdictDebtorPDF";
-import VerdictDebtorMail from "@/templates/emails/VerdictDebtorMail";
-import VerdictCreditorMail from "@/templates/emails/VerdictCreditorMail";
+} from "@/modules/verdict/templates/pdfs/VerdictDebtorPDF";
+import VerdictDebtorMail from "@/modules/verdict/templates/VerdictDebtorMail";
+import VerdictCreditorMail from "@/modules/verdict/templates/VerdictCreditorMail";
 import VerdictCreditorPDF, {
   VerdictCreditorPDFProps,
-} from "@/templates/pdfs/VerdictCreditorPDF";
-import VerdictRegisterEmail from "@/templates/emails/VerdictRegisterMail";
+} from "@/modules/verdict/templates/pdfs/VerdictCreditorPDF";
+import VerdictRegisterEmail from "@/modules/verdict/templates/VerdictRegisterMail";
 import NewClientEmail, {
   NewClientEmailProps,
-} from "@/templates/emails/NewClientEmail";
-import RecoveryPasswordEmail from "@/templates/emails/RecoveryPasswordEmail";
+} from "@/modules/tenant/templates/NewClientEmail";
+import RecoveryPasswordEmail from "@/modules/auth/templates/RecoveryPasswordEmail";
 import FinancialSummaryPDF, {
   FinancialSummaryPDFProps,
-} from "@/components/pdf/FinancialSummaryPDF";
-import FinancialSummaryEmail from "@/templates/emails/FinancialSummaryEmail";
+} from "@/modules/payment/templates/pdfs/FinancialSummaryPDF";
+import FinancialSummaryEmail from "@/modules/payment/templates/FinancialSummaryEmail";
 import QRCode from "qrcode";
-import ActivateContractEmail from "@/templates/emails/ActivateContractEmail";
-import { ParameterService } from "@/services/parameter/parameter.service";
-import EconomischeBlokkadeEmail from "@/templates/emails/EconomischeBlokkadeEmail";
+import ActivateContractEmail from "@/modules/contract/templates/ActivateContractEmail";
+import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
+import EconomischeBlokkadeEmail from "@/modules/blockade/templates/EconomischeBlokkadeEmail";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 

@@ -1,7 +1,7 @@
 "use client";
 import React, { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { deleteVerdict, getAllVerdicts } from "@/actions/verdict";
+import { deleteVerdict, getAllVerdicts } from "@/modules/verdict/actions/verdict.actions";
 import { VerdictResponse } from "@/lib/validations/verdict";
 import {
   Box,
@@ -24,18 +24,18 @@ import {
   useTheme,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { notifyError, notifyInfo } from "@/lib/notifications";
-import { AlertService } from "@/lib/alerts";
+import { notifyError, notifyInfo } from "@/shared/ui/notifications";
+import { AlertService } from "@/shared/ui/alerts";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import AddIcon from "@mui/icons-material/Add";
-import { formatCurrency } from "@/utils/formatters";
-import { useTenant } from "@/hooks/useTenant";
+import { formatCurrency } from "@/shared/utils/formatters";
+import { useTenant } from "@/modules/auth/hooks/useTenant";
 import { useSession } from "next-auth/react";
-import { getBailiffByUserId } from "@/actions/bailiff";
-import { UserRole } from "@/constants/user-role";
+import { getBailiffByUserId } from "@/modules/bailiff/actions/bailiff.actions";
+import { UserRole } from "@/shared/constants/user-role";
 
 interface TablePaginationActionsProps {
   count: number;

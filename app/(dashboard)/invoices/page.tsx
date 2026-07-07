@@ -30,11 +30,11 @@ import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import AddIcon from "@mui/icons-material/Add";
 // libs
-import { AlertService } from "@/lib/alerts";
-import { formatCurrency } from "@/utils/formatters";
+import { AlertService } from "@/shared/ui/alerts";
+import { formatCurrency } from "@/shared/utils/formatters";
 // hooks and services
-import { useTenant } from "@/hooks/useTenant";
-import { getAllInvoices } from "@/actions/billing-invoice";
+import { useTenant } from "@/modules/auth/hooks/useTenant";
+import { getAllInvoices } from "@/modules/payment/actions/billing-invoice.actions";
 import {
   BillingInvoiceBase,
   BillingInvoiceResponse,

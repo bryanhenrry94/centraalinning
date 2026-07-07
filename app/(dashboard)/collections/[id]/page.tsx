@@ -19,17 +19,17 @@ import {
 } from "@mui/material";
 import { DebtClaimView } from "@/lib/validations/collection";
 import { Payment } from "@/lib/validations/payment";
-import { getDebtClaimViewById } from "@/actions/collection-case";
-import { notifyError, notifyInfo } from "@/lib/notifications";
-import { formatCurrency } from "@/utils/formatters";
-import { getPaymentsByInvoice } from "@/actions/payment";
-import { CollectionNotificationService } from "@/services/collection/collection-notification.service";
+import { getDebtClaimViewById } from "@/modules/collection/actions/collection-case.actions";
+import { notifyError, notifyInfo } from "@/shared/ui/notifications";
+import { formatCurrency } from "@/shared/utils/formatters";
+import { getPaymentsByInvoice } from "@/modules/payment/actions/payment.actions";
+import { CollectionNotificationService } from "@/modules/collection/services/collection-notification.service";
 import { AOPStepNotification } from "@/lib/validations/notification";
-import TabPanel from "@/components/ui/tab-panel";
+import TabPanel from "@/shared/ui/tab-panel";
 
 import { useSession } from "next-auth/react";
-import LoadingUI from "@/components/ui/loading-ui";
-import { PaymentFormDialog } from "@/components/payment/payment-form-dialog";
+import LoadingUI from "@/shared/ui/loading-ui";
+import { PaymentFormDialog } from "@/modules/payment/components/payment-form-dialog";
 
 const CollectionViewPage: React.FC = () => {
   const router = useRouter();

@@ -11,7 +11,7 @@ import {
   VerifiedUser,
 } from "@mui/icons-material";
 import { Plan } from "@/lib/validations/plan";
-import { getPlans } from "@/actions/plan";
+import { getPlans } from "@/modules/settings/actions/plan.actions";
 import { PlanCard } from "./PlanCard";
 
 export default function RegistrationPage() {

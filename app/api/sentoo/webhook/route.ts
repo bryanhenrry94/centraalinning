@@ -1,6 +1,6 @@
 import { verifySentooPayment } from "@/actions/sentoo.actions";
 import { prisma } from "@/lib/prisma";
-import { processSuccessfulPayment } from "@/services/payments/payment-processor";
+import { processSuccessfulPayment } from "@/modules/payment/services/payment-processor";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {

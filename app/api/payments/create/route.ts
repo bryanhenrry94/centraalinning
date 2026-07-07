@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { PaymentService } from "@/services/payments/payment.service";
+import { PaymentService } from "@/modules/payment/services/payment.service";
 
 export async function POST(req: NextRequest) {
   try {

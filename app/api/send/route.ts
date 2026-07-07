@@ -1,9 +1,9 @@
 import React from "react";
 import { NextResponse } from "next/server";
-import { TestEmail } from "@/templates/emails/TestEmail";
+import { TestEmail } from "@/modules/employee/templates/TestEmail";
 import { sendInvoiceEmail } from "@/actions/email";
 import { render } from "@react-email/components";
-import { resend } from "@/lib/email";
+import { resend } from "@/infrastructure/mail/resend-client";
 
 export async function GET() {
   const result = await sendInvoiceEmail(

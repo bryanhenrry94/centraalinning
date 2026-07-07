@@ -1,4 +1,4 @@
-import { ReportService } from "@/services/dashboard/report.service";
+import { ReportService } from "@/modules/dashboard/server/report.service";
 import { DashboardResponse } from "../types/dashboard.types";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";

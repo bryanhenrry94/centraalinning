@@ -1,13 +1,13 @@
 import React from "react";
 import { NextResponse } from "next/server";
 import { render } from "@react-email/components";
-import { resend } from "@/lib/email";
+import { resend } from "@/infrastructure/mail/resend-client";
 import NewClientEmail, {
   NewClientEmailProps,
-} from "@/templates/emails/NewClientEmail";
+} from "@/modules/tenant/templates/NewClientEmail";
 import EconomischeBlokkadeEmail, {
   EconomischeBlokkadeEmailProps,
-} from "@/templates/emails/EconomischeBlokkadeEmail";
+} from "@/modules/blockade/templates/EconomischeBlokkadeEmail";
 
 export async function GET(req: Request) {
   try {

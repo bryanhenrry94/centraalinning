@@ -11,17 +11,17 @@ import {
 
 import { notFound } from "next/navigation";
 
-import AppBreadcrumbs from "@/components/common/AppBreadcrumbs";
-import { ContractService } from "@/services/contract/contract.service";
+import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
+import { ContractService } from "@/modules/contract/services/contract.service";
 import { DocumentsList } from "./DocumentsList";
 
-import { formatCurrency, formatDate } from "@/utils/formatters";
-import { getContractTypeLabel } from "@/utils/contract-type";
+import { formatCurrency, formatDate } from "@/shared/utils/formatters";
+import { getContractTypeLabel } from "@/modules/contract/utils/contract-type";
 import {
   getContractStatusColor,
   getContractStatusLabel,
-} from "@/utils/contract-status";
-import { getContractPartyRoleLabel } from "@/utils/contract-party-role";
+} from "@/modules/contract/utils/contract-status";
+import { getContractPartyRoleLabel } from "@/modules/contract/utils/contract-party-role";
 
 export default async function ContractDetailPage({
   params,

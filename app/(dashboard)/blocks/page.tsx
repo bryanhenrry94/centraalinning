@@ -23,11 +23,11 @@ import TablePagination from "@mui/material/TablePagination";
 import SearchIcon from "@mui/icons-material/Search";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import { useRouter } from "next/navigation";
-import { formatCurrency, formatDate } from "@/utils/formatters";
-import { useDebounce } from "@/hooks/useDebounce";
+import { formatCurrency, formatDate } from "@/shared/utils/formatters";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import { REASONS } from "@/constants/reason-blockades";
+import { REASONS } from "@/modules/blockade/constants/reason-blockades";
 
 export default function BlocksPage() {
   const router = useRouter();

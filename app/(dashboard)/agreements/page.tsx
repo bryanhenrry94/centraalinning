@@ -2,12 +2,12 @@
 import { useEffect, useState } from "react";
 import { Box, Tab, Tabs, Typography } from "@mui/material";
 import { AgreementResponse } from "@/lib/validations/agreement";
-import { getPaymentAgreements } from "@/actions/agreement";
-import TabPanel from "@/components/ui/tab-panel";
+import { getPaymentAgreements } from "@/modules/agreement/actions/agreement.actions";
+import TabPanel from "@/shared/ui/tab-panel";
 import { useSession } from "next-auth/react";
-import { AgreementTableApprove } from "@/components/agreements/agreement-table-approve";
-import AgreementTable from "@/components/agreements/agreement-table";
-import { AgreementStatus } from "@/constants/agreement-status";
+import { AgreementTableApprove } from "@/modules/agreement/components/agreement-table-approve";
+import AgreementTable from "@/modules/agreement/components/agreement-table";
+import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
 
 const PaymentAgreementsPage = () => {
   const { data: session } = useSession();

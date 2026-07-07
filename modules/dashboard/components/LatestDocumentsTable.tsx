@@ -1,4 +1,4 @@
-import { formatCurrency, formatDate } from "@/utils/formatters";
+import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Chip, Paper, Typography, useTheme } from "@mui/material";
 

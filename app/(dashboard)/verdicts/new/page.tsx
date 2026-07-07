@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
-import VerdictFormPage from "@/components/verdict/verdict-form";
-import { VerdictProvider } from "@/contexts/verdictContext";
+import VerdictFormPage from "@/modules/verdict/components/verdict-form";
+import { VerdictProvider } from "@/modules/verdict/contexts/verdict.context";
 import { Box } from "@mui/material";
 import { VerdictCreate } from "@/lib/validations/verdict";
 

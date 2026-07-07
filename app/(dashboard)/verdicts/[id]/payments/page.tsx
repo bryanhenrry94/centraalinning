@@ -14,7 +14,7 @@ import {
   Button,
   Container,
 } from "@mui/material";
-import ActionToolbar from "@/components/ui/breadcrums";
+import ActionToolbar from "@/shared/ui/breadcrums";
 import PaymentList from "./payment-lists";
 // Datos de prueba
 const sampleData = [

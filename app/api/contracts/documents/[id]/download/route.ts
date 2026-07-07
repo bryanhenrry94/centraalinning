@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 
-import { StorageService } from "@/services/storage/storage.service";
-import { ContractDocumentService } from "@/services/contract/contract-document.service";
+import { StorageService } from "@/infrastructure/storage/storage.service";
+import { ContractDocumentService } from "@/modules/contract/services/contract-document.service";
 
 export async function GET(
   _req: NextRequest,

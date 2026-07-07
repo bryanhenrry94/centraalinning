@@ -47,25 +47,25 @@ import AttachFileIcon from "@mui/icons-material/AttachFile";
 import {
   ContractPartyInput,
   CreateContractInput,
-} from "@/services/contract/contract.types";
+} from "@/modules/contract/services/contract.types";
 import { useSession } from "next-auth/react";
 
 import { NumericFormat } from "react-number-format";
-import { notifyError, notifyInfo } from "@/lib/notifications";
-import { formatCurrency, formatDate } from "@/utils/formatters";
+import { notifyError, notifyInfo } from "@/shared/ui/notifications";
+import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray } from "react-hook-form";
 
-import { ContractSchema } from "@/services/contract/contract.validators";
+import { ContractSchema } from "@/modules/contract/services/contract.validators";
 
 import { useRouter } from "next/navigation";
 import { StatusContractChip } from "../StatusContractChip";
-import { IdentificationType } from "@/constants/identification-type";
-import { identificationTypeOptions } from "@/components/debtor/modal-debtor-form";
-import { getInfoPersonAction } from "@/actions/person";
-import { PaymentIntent } from "@/components/payment/PaymentIntent";
+import { IdentificationType } from "@/shared/constants/identification-type";
+import { identificationTypeOptions } from "@/modules/collection/components/modal-debtor-form";
+import { getInfoPersonAction } from "@/modules/collection/actions/person.actions";
+import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 
 const steps = ["Gegevens", "Overeenkomst", "Documenten", "Overzicht"];
 

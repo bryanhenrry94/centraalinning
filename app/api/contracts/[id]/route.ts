@@ -3,7 +3,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { ContractService } from "@/services/contract/contract.service";
+import { ContractService } from "@/modules/contract/services/contract.service";
 
 export async function GET(
   request: Request,

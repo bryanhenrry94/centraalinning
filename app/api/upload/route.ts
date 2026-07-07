@@ -1,7 +1,7 @@
 // app/api/upload/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/admin";
+import { supabaseAdmin } from "@/infrastructure/storage/supabase/admin";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 

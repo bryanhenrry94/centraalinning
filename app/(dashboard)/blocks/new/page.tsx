@@ -20,8 +20,8 @@ import {
 } from "@mui/material";
 import { Controller, useForm } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
-import { useTenant } from "@/hooks/useTenant";
-import { DebtorPicker } from "@/components/debtor-picker/DebtorPicker";
+import { useTenant } from "@/modules/auth/hooks/useTenant";
+import { DebtorPicker } from "@/modules/collection/components/DebtorPicker";
 import { DebtorResponse } from "@/lib/validations/debtor";
 import UploadIcon from "@mui/icons-material/Upload";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -30,15 +30,15 @@ import {
   BlockadeDocument,
   BlockadeSchema,
   CreateBlockadeInput,
-} from "@/services/blockade/blockade.validators";
+} from "@/modules/blockade/services/blockade.validators";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createBlockadeAction } from "@/actions/blockade/create-blockade";
-import { notifyError, notifyInfo } from "@/lib/notifications";
+import { createBlockadeAction } from "@/modules/blockade/actions/create-blockade";
+import { notifyError, notifyInfo } from "@/shared/ui/notifications";
 import CloseIcon from "@mui/icons-material/Close";
-import { PaymentIntent } from "@/components/payment/PaymentIntent";
-import { formatCurrency } from "@/utils/formatters";
+import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
+import { formatCurrency } from "@/shared/utils/formatters";
 import { useRouter } from "next/navigation";
-import { REASONS } from "@/constants/reason-blockades";
+import { REASONS } from "@/modules/blockade/constants/reason-blockades";
 
 const ALLOWED_TYPES = [
   "application/pdf",

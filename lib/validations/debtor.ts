@@ -1,4 +1,4 @@
-import { PersonSchema } from "@/services/person/person.validators";
+import { PersonSchema } from "@/modules/collection/services/person.validators";
 import { z } from "zod";
 
 export const debtorSchema = z.object({

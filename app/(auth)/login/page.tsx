@@ -2,7 +2,7 @@
 
 import { Box, Typography, Container } from "@mui/material";
 import GppGoodIcon from "@mui/icons-material/GppGood";
-import LogoComponent from "@/components/ui/logo-app";
+import LogoComponent from "@/shared/ui/logo-app";
 import Image from "next/image";
 import LoginForm from "./form";
 

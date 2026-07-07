@@ -2,8 +2,8 @@
 
 import { Grid } from "@mui/material";
 
-import ParameterSection from "@/components/settings/ParameterSection";
-import ParameterInput from "@/components/settings/ParameterInput";
+import ParameterSection from "@/modules/settings/components/ParameterSection";
+import ParameterInput from "@/modules/settings/components/ParameterInput";
 
 export default function BankSettings() {
   return (

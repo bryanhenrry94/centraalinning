@@ -1,9 +1,9 @@
 "use client";
 
-import useClientRouter from "@/hooks/useNavigations";
-import { notifyInfo, notifyWarning } from "@/lib/notifications";
-import { SignUpInput } from "@/services/auth/signup.type";
-import { SignUpSchema } from "@/services/auth/signup.validators";
+import useClientRouter from "@/shared/hooks/useNavigations";
+import { notifyInfo, notifyWarning } from "@/shared/ui/notifications";
+import { SignUpInput } from "@/modules/auth/services/signup.type";
+import { SignUpSchema } from "@/modules/auth/services/signup.validators";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {

@@ -14,8 +14,8 @@ import {
 } from "@mui/material";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { resetPassword } from "@/actions/reset-password";
-import useClientRouter from "@/hooks/useNavigations";
+import { resetPassword } from "@/modules/auth/actions/reset-password.actions";
+import useClientRouter from "@/shared/hooks/useNavigations";
 
 type FormValues = {
   password: string;

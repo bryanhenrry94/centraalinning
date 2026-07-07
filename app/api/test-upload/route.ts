@@ -1,7 +1,7 @@
 // app/api/test-upload/route.ts
 
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/admin";
+import { supabaseAdmin } from "@/infrastructure/storage/supabase/admin";
 
 export async function GET() {
   const { data, error } = await supabaseAdmin.storage

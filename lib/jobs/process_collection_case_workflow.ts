@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma";
-import { advanceAOPStep, getDebtClaimsAction } from "@/actions/collection-case";
-import { applyCharge, countChargesForClaim } from "@/actions/debt-fine";
-import { hasAgreement, hasPaymentsUpToDate, cancelAgreementsByCliam } from "@/actions/agreement";
-import { CollectionNotificationService } from "@/services/collection/collection-notification.service";
-import { PersonType } from "@/constants/person-type";
-import { ParameterService } from "@/services/parameter/parameter.service";
+import { advanceAOPStep, getDebtClaimsAction } from "@/modules/collection/actions/collection-case.actions";
+import { applyCharge, countChargesForClaim } from "@/modules/collection/actions/debt-fine.actions";
+import { hasAgreement, hasPaymentsUpToDate, cancelAgreementsByCliam } from "@/modules/agreement/actions/agreement.actions";
+import { CollectionNotificationService } from "@/modules/collection/services/collection-notification.service";
+import { PersonType } from "@/shared/constants/person-type";
+import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 
 type AOPStep = "REMINDER" | "FINAL_NOTICE" | "DEFAULT_NOTICE" | "BLK_NOTIFICATION";
 

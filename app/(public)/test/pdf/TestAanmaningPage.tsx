@@ -2,7 +2,7 @@
 
 import React from "react";
 import { PDFViewer } from "@react-pdf/renderer";
-import AanmaningPDF, { AanmaningPDFProps } from "@/components/pdf/AanmaningPDF";
+import AanmaningPDF, { AanmaningPDFProps } from "@/modules/collection/templates/pdfs/AanmaningPDF";
 
 const TestAanmaningPage = () => {
   const params: AanmaningPDFProps = {

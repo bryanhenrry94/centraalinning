@@ -11,7 +11,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { BlokCheckResponse } from "@/services/block-check/block-check.types";
+import { BlokCheckResponse } from "@/modules/block-check/services/block-check.types";
 
 export interface ResultViewProps {
   result: BlokCheckResponse | null;

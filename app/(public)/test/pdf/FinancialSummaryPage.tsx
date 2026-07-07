@@ -5,7 +5,7 @@ import { PDFViewer } from "@react-pdf/renderer";
 
 import FinancialSummaryPDF, {
   FinancialSummaryPDFProps,
-} from "@/components/pdf/FinancialSummaryPDF";
+} from "@/modules/payment/templates/pdfs/FinancialSummaryPDF";
 import QRCode from "qrcode";
 
 const FinancialSummaryPage = async () => {

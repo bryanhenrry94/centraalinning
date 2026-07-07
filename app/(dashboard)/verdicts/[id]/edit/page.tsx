@@ -1,10 +1,10 @@
 "use client";
 import React, { useEffect } from "react";
-import VerdictFormPage from "@/components/verdict/verdict-form";
-import { VerdictProvider } from "@/contexts/verdictContext";
+import VerdictFormPage from "@/modules/verdict/components/verdict-form";
+import { VerdictProvider } from "@/modules/verdict/contexts/verdict.context";
 import { Box } from "@mui/material";
 import { useParams } from "next/navigation";
-import { getVerdictById } from "@/actions/verdict";
+import { getVerdictById } from "@/modules/verdict/actions/verdict.actions";
 
 const VerdictPageEdit: React.FC = () => {
   const params = useParams();

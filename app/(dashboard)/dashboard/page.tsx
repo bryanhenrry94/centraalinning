@@ -1,10 +1,10 @@
 // "use client";
-// import { useAuthSession } from "@/hooks/useAuthSession";
-// import DashboardSuperAdmin from "@/components/dashboard/superadmin/dashboard";
-// import { DashboardAdmin } from "@/components/dashboard/admin/dashboard";
-// import DashboardDebtor from "@/components/dashboard/debtor/dashboard";
-// import { DashboardBailiff } from "@/components/dashboard/bailiff/dashboard";
-// import { UserRole } from "@/constants/user-role";
+// import { useAuthSession } from "@/modules/auth/hooks/useAuthSession";
+// import DashboardSuperAdmin from "@/modules/dashboard/components/legacy/superadmin/dashboard";
+// import { DashboardAdmin } from "@/modules/dashboard/components/legacy/admin/dashboard";
+// import DashboardDebtor from "@/modules/dashboard/components/legacy/debtor/dashboard";
+// import { DashboardBailiff } from "@/modules/dashboard/components/legacy/bailiff/dashboard";
+// import { UserRole } from "@/shared/constants/user-role";
 
 // const HomePage = () => {
 //   const { isAuthenticated, isLoading, user } = useAuthSession();

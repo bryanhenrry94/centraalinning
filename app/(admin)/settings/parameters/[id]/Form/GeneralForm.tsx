@@ -1,6 +1,6 @@
 "use client";
-import ParameterInput from "@/components/settings/ParameterInput";
-import { CardDescription, CardTitle } from "@/components/ui/card";
+import ParameterInput from "@/modules/settings/components/ParameterInput";
+import { CardDescription, CardTitle } from "@/shared/ui/card";
 import {
   ParameterFormData,
   parameterSchema,

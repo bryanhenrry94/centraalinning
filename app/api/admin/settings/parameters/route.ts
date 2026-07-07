@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ParameterService } from "@/services/parameter/parameter.service";
+import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 
 export async function GET() {
   try {

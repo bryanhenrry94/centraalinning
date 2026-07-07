@@ -3,7 +3,7 @@
 import React from "react";
 import { PDFViewer } from "@react-pdf/renderer";
 
-import SommatiePDF, { SommatiePDFProps } from "@/components/pdf/SommatiePDF";
+import SommatiePDF, { SommatiePDFProps } from "@/modules/collection/templates/pdfs/SommatiePDF";
 import { InvoicePDF, InvoicePDFProps } from "@/templates/pdfs";
 
 const TestInvoicePage = () => {

@@ -10,12 +10,12 @@ import {
 
 import { notFound } from "next/navigation";
 
-import AppBreadcrumbs from "@/components/common/AppBreadcrumbs";
+import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import { DocumentsList } from "./DocumentsList";
 
-import { formatDate } from "@/utils/formatters";
-import { BlockadeService } from "@/services/blockade/blockade.service";
-import { REASONS } from "@/constants/reason-blockades";
+import { formatDate } from "@/shared/utils/formatters";
+import { BlockadeService } from "@/modules/blockade/services/blockade.service";
+import { REASONS } from "@/modules/blockade/constants/reason-blockades";
 
 export default async function BlockadeDetailPage({
   params,

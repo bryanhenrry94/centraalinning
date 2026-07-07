@@ -3,7 +3,7 @@
 import React from "react";
 import { PDFViewer } from "@react-pdf/renderer";
 
-import BlokkadePDF, { BlokkadePDFProps } from "@/components/pdf/BlokkadePDF";
+import BlokkadePDF, { BlokkadePDFProps } from "@/modules/blockade/templates/pdfs/BlokkadePDF";
 
 const TestBlokkadePage = () => {
   const params: BlokkadePDFProps = {

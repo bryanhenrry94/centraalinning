@@ -5,7 +5,7 @@ import { PDFViewer } from "@react-pdf/renderer";
 
 import IngebrekestellingPDF, {
   IngebrekestellingProps,
-} from "@/components/pdf/IngebrekestellingPDF";
+} from "@/modules/collection/templates/pdfs/IngebrekestellingPDF";
 
 const TestIngebrekestellingPage = () => {
   const params: IngebrekestellingProps = {

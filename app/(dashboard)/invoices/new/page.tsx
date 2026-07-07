@@ -1,9 +1,9 @@
 "use client";
 import React from "react";
-import ActionToolbar from "@/components/ui/breadcrums";
+import ActionToolbar from "@/shared/ui/breadcrums";
 import { Box } from "@mui/material";
-import { InvoiceProvider } from "@/contexts/invoiceContext";
-import InvoiceFormPage from "@/components/billing/invoice-form";
+import { InvoiceProvider } from "@/modules/payment/contexts/invoice.context";
+import InvoiceFormPage from "@/modules/payment/components/invoice-form";
 
 const InvoicePage: React.FC = () => {
   return (

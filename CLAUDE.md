@@ -26,6 +26,7 @@ This is a **Next.js 15 multi-tenant debt collection SaaS** (App Router, React 19
 ### Multi-tenant subdomain routing
 
 Each tenant gets its own subdomain (e.g., `dazzsoft-sas.cio.test`). Authentication lives on `auth.cio.test`. The middleware (`middleware.ts`) handles:
+
 - Unauthenticated users → redirect to `auth.<ROOT_DOMAIN>/login`
 - Authenticated user on auth domain → redirect to `<subdomain>.<ROOT_DOMAIN>/dashboard`
 - Wrong subdomain → redirect to tenant's correct subdomain
@@ -50,6 +51,7 @@ The auth cookie is shared across subdomains using `COOKIE_DOMAIN`. The JWT token
 ### Business domain
 
 The collection workflow follows Dutch legal stages tracked by `CollectionCaseStatus`:
+
 1. `AANMANING` (payment reminder)
 2. `SOMMATIE` (formal demand)
 3. `INGEBREKESTELLING` (notice of default)
@@ -63,17 +65,17 @@ Automated workflow progression runs via `lib/jobs/process_collection_case_workfl
 
 ### Key libraries
 
-| Purpose | Library |
-|---|---|
-| UI components | MUI v7 (`@mui/material`, `@mui/x-data-grid`) |
-| Styling | Tailwind CSS v4 |
-| Forms | `react-hook-form` + Zod validation |
-| Auth | `next-auth` v4 (Credentials provider, JWT strategy) |
-| Email | Resend + `@react-email/components` |
-| PDF generation | `@react-pdf/renderer` |
-| File storage | AWS S3 / Cloudflare R2 (`lib/r2-client.ts`) |
-| Charts | ApexCharts (`react-apexcharts`) |
-| Real-time chat | Socket.IO client (`lib/socketClient.ts`) |
+| Purpose        | Library                                             |
+| -------------- | --------------------------------------------------- |
+| UI components  | MUI v7 (`@mui/material`, `@mui/x-data-grid`)        |
+| Styling        | Tailwind CSS v4                                     |
+| Forms          | `react-hook-form` + Zod validation                  |
+| Auth           | `next-auth` v4 (Credentials provider, JWT strategy) |
+| Email          | Resend + `@react-email/components`                  |
+| PDF generation | `@react-pdf/renderer`                               |
+| File storage   | AWS S3 / Cloudflare R2 (`lib/r2-client.ts`)         |
+| Charts         | ApexCharts (`react-apexcharts`)                     |
+| Real-time chat | Socket.IO client (`lib/socketClient.ts`)            |
 
 ### Validations
 
@@ -86,6 +88,7 @@ Dutch collection documents are generated as React components in `components/pdf/
 ### Environment variables
 
 See `.env.example`. Key variables:
+
 - `DATABASE_URL` / `DIRECT_URL` — MySQL connection strings
 - `NEXTAUTH_SECRET` / `COOKIE_DOMAIN` — session security
 - `NEXT_PUBLIC_ROOT_DOMAIN` — base domain for subdomain routing
@@ -94,9 +97,26 @@ See `.env.example`. Key variables:
 - `SENTOO_API` / `SENTOO_SECRET` — payment gateway
 - AWS/R2 credentials for file storage
 
+# Arquitectura
+
+- Organizar el proyecto por módulos.
+- No crear carpetas globales si pertenecen a un módulo.
+- Toda la lógica de negocio debe permanecer dentro del módulo.
+- shared contiene únicamente código reutilizable entre módulos.
+- infrastructure contiene integraciones externas.
+- app solo contiene rutas y layouts.
+- Nunca acceder a Prisma desde componentes React.
+- Toda consulta debe pasar por Service.
+- Toda regla de negocio debe pasar por Service.
+- Los Server Actions únicamente orquestan Services.
+- No duplicar tipos.
+- No duplicar validaciones.
+- Un módulo nunca importa componentes internos de otro módulo.
+
 ### Local dev setup
 
 Add entries to `/etc/hosts`:
+
 ```
 127.0.0.1 cio.test
 127.0.0.1 auth.cio.test

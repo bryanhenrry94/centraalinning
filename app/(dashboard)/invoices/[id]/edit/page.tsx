@@ -1,8 +1,8 @@
 "use client";
 import React, { useEffect } from "react";
-import ActionToolbar from "@/components/ui/breadcrums";
-import { InvoiceProvider } from "@/contexts/invoiceContext";
-import InvoiceFormPage from "@/components/billing/invoice-form";
+import ActionToolbar from "@/shared/ui/breadcrums";
+import { InvoiceProvider } from "@/modules/payment/contexts/invoice.context";
+import InvoiceFormPage from "@/modules/payment/components/invoice-form";
 import { useParams } from "next/navigation";
 import { Box } from "@mui/material";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useSettingCategories } from "@/hooks/use-setting-categories";
+import { useSettingCategories } from "@/modules/settings/hooks/use-setting-categories";
 import {
   Grid,
   Card,

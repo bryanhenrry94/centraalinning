@@ -22,14 +22,14 @@ import SearchIcon from "@mui/icons-material/Search";
 import { Close as CloseIcon } from "@mui/icons-material";
 import { useSession } from "next-auth/react";
 
-import { formatCurrency } from "@/utils/formatters";
-import { PaymentIntent } from "@/components/payment/PaymentIntent";
+import { formatCurrency } from "@/shared/utils/formatters";
+import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 import { ResultView } from "./result-view";
-import { BlokCheckResponse } from "@/services/block-check/block-check.types";
-import { existsBlockCheck } from "@/actions/block-check";
-import { getParameterAction } from "@/actions/parameter";
-import { canUseFeature } from "@/utils/permission";
-import { AppAction } from "@/constants/AppAction";
+import { BlokCheckResponse } from "@/modules/block-check/services/block-check.types";
+import { existsBlockCheck } from "@/modules/block-check/actions/block-check.actions";
+import { getParameterAction } from "@/modules/settings/actions/parameter.actions";
+import { canUseFeature } from "@/shared/utils/permission";
+import { AppAction } from "@/shared/constants/AppAction";
 
 const BlokCheckPage = () => {
   const { data: session } = useSession();

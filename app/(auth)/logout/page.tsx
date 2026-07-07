@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { signOut } from "next-auth/react";
 import { protocol, rootDomain } from "@/lib/config";
-import LoadingUI from "@/components/ui/loading-ui";
+import LoadingUI from "@/shared/ui/loading-ui";
 
 export default function LogoutPage() {
   useEffect(() => {

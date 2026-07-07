@@ -21,9 +21,9 @@ import {
   ArrowForward,
   PersonAdd,
 } from "@mui/icons-material";
-import { notifyError } from "@/lib/notifications";
+import { notifyError } from "@/shared/ui/notifications";
 import { LoginFormData } from "@/lib/validations/auth";
-import useClientRouter from "@/hooks/useNavigations";
+import useClientRouter from "@/shared/hooks/useNavigations";
 import { signIn } from "next-auth/react";
 
 export default function LoginForm() {
