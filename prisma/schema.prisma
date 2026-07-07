@@ -134,8 +134,11 @@ model BlockCheck {
   tenantId      String
   tenant        Tenant   @relation(fields:[tenantId], references:[id])
 
-  debtorId      String
-  debtor        Debtor   @relation(fields:[debtorId], references:[id])
+  personId      String?
+  person        Person?  @relation(fields:[personId], references:[id])
+
+  debtorId      String?
+  debtor        Debtor?  @relation(fields:[debtorId], references:[id])
 
   blockadeFound Boolean
 
@@ -650,6 +653,7 @@ model Person {
 
   debtors                   Debtor[]
   financial_report_requests FinancialReportRequest[]
+  block_checks              BlockCheck[]
 
   // bailiff             Bailiff?
   // employee            Employee?
@@ -734,6 +738,7 @@ model Parameter {
   digital_file_costs             Float     @default(0)
   extra_administrative_costs     Float     @default(0)
   report_financial_pricing       Float     @default(0)
+  blok_check_pricing             Float     @default(30)
 
   //                             =========================================
   //                             SYSTEM

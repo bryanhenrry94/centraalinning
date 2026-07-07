@@ -29,6 +29,7 @@ export class PaymentService {
       currency: string;
       description: string;
       reference?: string;
+      payment_type?: string;
     },
   ): Promise<PaymentResult> => {
     const tenant = await prisma.tenant.findUnique({
@@ -48,7 +49,7 @@ export class PaymentService {
         tenant_id: tenant_id,
         total_amount: new Prisma.Decimal(payload.amount),
         status: "pending",
-        payment_type: "OTHER",
+        payment_type: (payload.payment_type as any) ?? "OTHER",
         method: "TRANSFER",
       },
     });

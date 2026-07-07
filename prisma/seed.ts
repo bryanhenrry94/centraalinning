@@ -62,6 +62,7 @@ async function seedParameter() {
       digital_file_costs: 25,
       extra_administrative_costs: 0,
       report_financial_pricing: 35,
+      blok_check_pricing: 30,
 
       // Banco receptor
       bank_name: "MCB (Maduro & Curiel's Bank)",

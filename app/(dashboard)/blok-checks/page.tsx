@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Container,
   Box,
@@ -17,57 +17,63 @@ import {
   Stack,
   Paper,
   IconButton,
-  AlertTitle,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import { Close as CloseIcon } from "@mui/icons-material";
+import { useSession } from "next-auth/react";
 
 import { formatCurrency } from "@/utils/formatters";
-import { IdentificationType } from "@/constants/identification-type";
-import { Close as CloseIcon } from "@mui/icons-material";
 import { PaymentIntent } from "@/components/payment/PaymentIntent";
 import { ResultView } from "./result-view";
 import { BlokCheckResponse } from "@/services/block-check/block-check.types";
 import { existsBlockCheck } from "@/actions/block-check";
-
-const initialBlokCheck: BlokCheckResponse = {
-  identification_type: IdentificationType.CEDULA,
-  document_number: "0940528128",
-  person_id: "",
-  fullname: "John Doe",
-  has_blockade: false,
-};
+import { getParameterAction } from "@/actions/parameter";
+import { canUseFeature } from "@/utils/permission";
+import { AppAction } from "@/constants/AppAction";
 
 const BlokCheckPage = () => {
-  // local state
+  const { data: session } = useSession();
+
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [showCostDialog, setShowCostDialog] = useState(false);
-  const [blokCheck, setBlokCheck] = useState<BlokCheckResponse | null>(
-    initialBlokCheck,
-  );
-  const amountService = 30;
+  const [blokCheck, setBlokCheck] = useState<BlokCheckResponse | null>(null);
+  const [amountService, setAmountService] = useState<number>(30);
+
+  useEffect(() => {
+    getParameterAction().then((param) => {
+      if (param?.blok_check_pricing) {
+        setAmountService(param.blok_check_pricing);
+      }
+    });
+  }, []);
+
+  // Membership gate
+  const currentMembership =
+    session?.user?.memberships?.find(
+      (m) => m.tenantId === session?.user?.tenant_id,
+    ) ?? null;
+
+  const permission = canUseFeature(currentMembership, AppAction.BLOK_CHECK);
 
   const handleSearch = async () => {
     try {
       setLoading(true);
       setError("");
 
-      // 1. Validar que el campo de búsqueda no esté vacío
       if (!search.trim()) {
         setError("Ingrese un valor para buscar");
         return;
       }
 
-      // 2. Si ya existe un link de pago para este documento, abrirlo en una nueva pestaña
       if (paymentUrl) {
         window.open(paymentUrl, "_blank");
         return;
       }
 
-      // 3. Mostrar el diálogo de confirmación de costos
       setShowCostDialog(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -84,7 +90,9 @@ const BlokCheckPage = () => {
       const result = await existsBlockCheck(search);
 
       if (!result.success || !result.data) {
-        setError("Niet gevonden");
+        setError(
+          "Geen persoon gevonden met dit identificatienummer in het systeem",
+        );
         setLoading(false);
         return;
       }
@@ -101,10 +109,21 @@ const BlokCheckPage = () => {
   const handleReset = () => {
     setSearch("");
     setError("");
-    setBlokCheck(initialBlokCheck);
+    setBlokCheck(null);
     setPaymentUrl(null);
     setShowResult(false);
   };
+
+  if (!permission.allowed) {
+    return (
+      <Container maxWidth="md" sx={{ mt: 8 }}>
+        <Alert severity="warning">
+          <Typography fontWeight={600}>Geen toegang</Typography>
+          <Typography variant="body2">{permission.reason}</Typography>
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="md">
@@ -144,12 +163,14 @@ const BlokCheckPage = () => {
                     setError("");
                   }}
                   size="small"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon />
-                      </InputAdornment>
-                    ),
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon />
+                        </InputAdornment>
+                      ),
+                    },
                   }}
                 />
 
@@ -168,7 +189,6 @@ const BlokCheckPage = () => {
                 </Button>
               </Box>
 
-              {/* ERROR */}
               {error && (
                 <Alert severity="error" sx={{ mt: 2 }}>
                   {error}
@@ -211,7 +231,14 @@ const BlokCheckPage = () => {
               >
                 Wat kunt u doen?
               </Typography>
-              <Typography sx={{ color: "#5a6f8f", lineHeight: 1.5, fontSize: "0.875rem", textAlign: "justify" }}>
+              <Typography
+                sx={{
+                  color: "#5a6f8f",
+                  lineHeight: 1.5,
+                  fontSize: "0.875rem",
+                  textAlign: "justify",
+                }}
+              >
                 Voer een ID- of KVK-nummer in om te controleren of een persoon
                 of onderneming voorkomt op de lijst met economisch geblokkeerde
                 partijen.
@@ -318,7 +345,8 @@ const BlokCheckPage = () => {
                     body: JSON.stringify({
                       amount: amountService,
                       currency: "USD",
-                      description: "Payment for Blok-Check service",
+                      description: "Blok-Check service",
+                      payment_type: "BLOK_CHECK",
                     }),
                     headers: {
                       "Content-Type": "application/json",
@@ -340,19 +368,6 @@ const BlokCheckPage = () => {
                 }}
               />
             </Stack>
-
-            {/* Seguridad */}
-            {/* <Stack
-              direction="row"
-              spacing={1}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <LockIcon fontSize="small" color="action" />
-              <Typography variant="caption" color="text.secondary">
-                Veilig betalen via CFSB beveiligde omgeving
-              </Typography>
-            </Stack> */}
           </Stack>
         </DialogContent>
       </Dialog>
