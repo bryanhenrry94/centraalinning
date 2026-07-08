@@ -10,8 +10,10 @@ import LockIcon from "@mui/icons-material/Lock";
 
 export interface PaymentIntentProps {
   onCreateTransaction: () => Promise<{
-    paymentId: string;
-    paymentUrl: string;
+    success: boolean;
+    error?: string;
+    paymentId?: string;
+    paymentUrl?: string;
   }>;
   onPaymentConfirmed: () => Promise<void>;
   pollingInterval?: number;
@@ -31,7 +33,14 @@ export const PaymentIntent: React.FC<PaymentIntentProps> = ({
   const handlePayNow = async () => {
     try {
       setLoading(true);
-      const { paymentId, paymentUrl } = await onCreateTransaction();
+      const { success, paymentId, paymentUrl, error } =
+        await onCreateTransaction();
+
+      if (!success || !paymentId || !paymentUrl) {
+        console.error("Error creando transacción", error);
+        return;
+      }
+
       setPaymentId(paymentId);
       window.open(paymentUrl, "_blank");
       setOpen(true);

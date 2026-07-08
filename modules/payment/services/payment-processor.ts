@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { processSubscriptionPayment } from "./subscription-processor";
 import { processContractPayment } from "./contract-processor";
 import { processFinancialReportPayment } from "./financial-report-processor";
+import { PaymentType } from "./payment.validators";
+import { processCollectionPayment } from "@/modules/collection/services/collection.service";
 
 export async function processSuccessfulPayment(paymentId: string) {
   const payment = await prisma.payment.findUnique({
@@ -13,14 +15,17 @@ export async function processSuccessfulPayment(paymentId: string) {
   }
 
   switch (payment.payment_type) {
-    case "SUBSCRIPTION":
+    case PaymentType.SUBSCRIPTION:
       return processSubscriptionPayment(payment);
 
-    case "CONTRACT_ACTIVATION":
+    case PaymentType.CONTRACT_ACTIVATION:
       return processContractPayment(payment);
 
-    case "FINANCIAL_REPORT":
+    case PaymentType.FINANCIAL_REPORT:
       return processFinancialReportPayment(payment);
+
+    case PaymentType.COLLECTION:
+      return processCollectionPayment(payment.id);
 
     default:
       console.warn(`No processor found for ${payment.payment_type}`);

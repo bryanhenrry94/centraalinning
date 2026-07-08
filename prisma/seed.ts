@@ -18,15 +18,15 @@ async function seedParameter() {
       id: PARAMETER_ID,
 
       // Tarifa de cobranza AOP
-      collection_fee_rate: 15,          // 15 % sobre el monto principal
-      collection_fee_minimum_amount: 75, // mínimo USD 75
+      collection_fee_rate: 15, // 15 % sobre el monto principal
+      collection_fee_minimum_amount: 40, // mínimo USD 40
 
-      // ABB (belasting) – impuesto Bonaire/Curaçao ~9 %
-      abb_rate: 9,
+      // ABB (belasting) – impuesto Bonaire/Curaçao ~6 %
+      abb_rate: 6,
 
       // Plazos aanmaning (recordatorio de pago)
-      company_aanmaning_term_days: 14,
-      consumer_aanmaning_term_days: 30,
+      company_aanmaning_term_days: 5,
+      consumer_aanmaning_term_days: 14,
 
       // Plazos sommatie (intimación formal)
       company_sommatie_term_days: 7,
@@ -59,7 +59,7 @@ async function seedParameter() {
       invoice_sequence: 0,
 
       // Costos adicionales
-      digital_file_costs: 25,
+      digital_file_costs: 10,
       extra_administrative_costs: 0,
       report_financial_pricing: 35,
       blok_check_pricing: 30,
@@ -160,7 +160,9 @@ async function seedAdminUser() {
 
   // Membership en el tenant admin
   const membership = await prisma.membership.upsert({
-    where: { user_id_tenant_id: { user_id: user.id, tenant_id: ADMIN_TENANT_ID } },
+    where: {
+      user_id_tenant_id: { user_id: user.id, tenant_id: ADMIN_TENANT_ID },
+    },
     update: {},
     create: {
       user_id: user.id,
@@ -171,7 +173,12 @@ async function seedAdminUser() {
 
   // Rol PLATFORM_OWNER
   await prisma.membershipRole.upsert({
-    where: { membership_id_role: { membership_id: membership.id, role: "PLATFORM_OWNER" } },
+    where: {
+      membership_id_role: {
+        membership_id: membership.id,
+        role: "PLATFORM_OWNER",
+      },
+    },
     update: {},
     create: {
       membership_id: membership.id,

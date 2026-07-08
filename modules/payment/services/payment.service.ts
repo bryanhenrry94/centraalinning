@@ -1,7 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { SentooService } from "@/infrastructure/sentoo/sentoo.service";
-import { Payment, PaymentCreate } from "@/modules/payment/services/payment.validators";
+import {
+  Payment,
+  PaymentCreate,
+  PaymentType,
+} from "@/modules/payment/services/payment.validators";
 import { PaymentStatus } from "@/modules/payment/types/PaymentStatus";
 import { protocol } from "@/lib/config";
 
@@ -49,7 +53,8 @@ export class PaymentService {
         tenant_id: tenant_id,
         total_amount: new Prisma.Decimal(payload.amount),
         status: "pending",
-        payment_type: (payload.payment_type as any) ?? "OTHER",
+        payment_type:
+          (payload.payment_type as PaymentType) || PaymentType.OTHER,
         method: "TRANSFER",
       },
     });
@@ -281,7 +286,10 @@ export class PaymentService {
   };
 
   private static mapPayment(payment: any): Payment {
-    const statusMap: Record<string, "pending" | "failed" | "cancelled" | "completed"> = {
+    const statusMap: Record<
+      string,
+      "pending" | "failed" | "cancelled" | "completed"
+    > = {
       pending: "pending",
       failed: "failed",
       cancelled: "cancelled",
@@ -293,7 +301,8 @@ export class PaymentService {
       ...payment,
       debtClaim_id: payment.debtClaim_id ?? "",
       total_amount:
-        typeof payment.total_amount === "object" && "toNumber" in payment.total_amount
+        typeof payment.total_amount === "object" &&
+        "toNumber" in payment.total_amount
           ? payment.total_amount.toNumber()
           : Number(payment.total_amount),
       method: payment.method as "TRANSFER" | "CREDIT_CARD",
@@ -311,25 +320,35 @@ export class PaymentService {
     debtClaim_id?: string;
   }): Promise<{ success: boolean; error?: string; data?: Payment[] }> => {
     try {
-      const payments = await prisma.payment.findMany({ where: { debtClaim_id: filter.debtClaim_id } });
+      const payments = await prisma.payment.findMany({
+        where: { debtClaim_id: filter.debtClaim_id },
+      });
       return { success: true, data: payments.map(this.mapPayment) };
     } catch {
       return { success: false, error: "Error fetching payments" };
     }
   };
 
-  static getAllByDebtClaim = async (debtClaim_id: string): Promise<Payment[]> => {
+  static getAllByDebtClaim = async (
+    debtClaim_id: string,
+  ): Promise<Payment[]> => {
     const payments = await prisma.payment.findMany({ where: { debtClaim_id } });
     return payments.map(this.mapPayment);
   };
 
   static hasPending = async (debtClaim_id: string): Promise<boolean> => {
-    const count = await prisma.payment.count({ where: { debtClaim_id, status: "pending" } });
+    const count = await prisma.payment.count({
+      where: { debtClaim_id, status: "pending" },
+    });
     return count > 0;
   };
 
-  static getLinkToPayment = async (paymentId: string): Promise<string | null> => {
-    const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
+  static getLinkToPayment = async (
+    paymentId: string,
+  ): Promise<string | null> => {
+    const payment = await prisma.payment.findUnique({
+      where: { id: paymentId },
+    });
     if (!payment) return null;
     const payload =
       typeof payment.provider_payload === "string"
@@ -338,7 +357,9 @@ export class PaymentService {
     return payload?.url || null;
   };
 
-  static getFirstByDebtClaimId = async (debtClaim_id: string): Promise<Payment | null> => {
+  static getFirstByDebtClaimId = async (
+    debtClaim_id: string,
+  ): Promise<Payment | null> => {
     const payment = await prisma.payment.findFirst({ where: { debtClaim_id } });
     if (!payment) return null;
     return this.mapPayment(payment);

@@ -66,6 +66,7 @@ import { IdentificationType } from "@/shared/constants/identification-type";
 import { identificationTypeOptions } from "@/modules/collection/components/modal-debtor-form";
 import { getInfoPersonAction } from "@/modules/collection/actions/person.actions";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
+import { PaymentType } from "@/modules/payment/services/payment.validators";
 
 const steps = ["Gegevens", "Overeenkomst", "Documenten", "Overzicht"];
 
@@ -392,6 +393,46 @@ const OvereenkomstenRegistrerenPage = () => {
     });
 
     return Promise.all(uploads);
+  };
+
+  const handleCreateTransaction = async (): Promise<{
+    success: boolean;
+    error?: string;
+    paymentId?: string;
+    paymentUrl?: string;
+  }> => {
+    // const isValid = await trigger();
+    // if (!isValid) {
+    //   return { success: false, error: "Formulario inválido" };
+    // }
+
+    if (amountService <= 0) {
+      notifyError("Het servicebedrag moet groter zijn dan 0");
+      return { success: false, error: "Servicebedrag is 0" };
+    }
+
+    const res = await fetch("/api/payments/create", {
+      method: "POST",
+      body: JSON.stringify({
+        amount: amountService,
+        currency: "USD",
+        description: "Payment for registering contract",
+        payment_type: PaymentType.OTHER,
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!res.ok) {
+      notifyError("Fout bij het aanmaken van de betaling");
+      throw new Error("Payment creation failed");
+    }
+
+    const data = await res.json();
+    return {
+      success: true,
+      paymentId: data.paymentId,
+      paymentUrl: data.paymentUrl,
+    };
   };
 
   return (
@@ -1214,7 +1255,11 @@ const OvereenkomstenRegistrerenPage = () => {
           {/* </Box> */}
 
           {/* Navigation Buttons */}
-          <Stack direction="row" spacing={1} sx={{ mt: 4, justifyContent: "space-between" }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ mt: 4, justifyContent: "space-between" }}
+          >
             <Button
               variant="outlined"
               startIcon={<ArrowBackIcon />}
@@ -1330,25 +1375,7 @@ const OvereenkomstenRegistrerenPage = () => {
               </Button>
 
               <PaymentIntent
-                onCreateTransaction={async () => {
-                  const res = await fetch("/api/payments/create", {
-                    method: "POST",
-                    body: JSON.stringify({
-                      amount: amountService,
-                      currency: "USD",
-                      description: "Payment for registering blokkade",
-                    }),
-                    headers: { "Content-Type": "application/json" },
-                  });
-                  const data = await res.json();
-
-                  setPaymentUrl(data.paymentUrl);
-
-                  return {
-                    paymentId: data.paymentId,
-                    paymentUrl: data.paymentUrl,
-                  };
-                }}
+                onCreateTransaction={handleCreateTransaction}
                 onPaymentConfirmed={async () => {
                   setShowCostDialog(false);
                   await createContract();

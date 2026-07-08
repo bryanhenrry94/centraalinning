@@ -15,7 +15,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import CloseIcon from "@mui/icons-material/Close";
 import CollectionForm from "@/modules/collection/components/collection-form";
-import AddIcon from '@mui/icons-material/Add';
+import AddIcon from "@mui/icons-material/Add";
 
 interface CollectionHeaderProps {
   onRefresh?: () => void;
@@ -113,7 +113,7 @@ export const CollectionHeader = ({ onRefresh }: CollectionHeaderProps) => {
               <CloseIcon />
             </IconButton>
           </Box>
-          <CollectionForm onSave={handleSave} />
+          <CollectionForm onSave={handleSave} onClose={handleCloseModal} />
         </Paper>
       </Modal>
     </>

@@ -5,7 +5,10 @@ import { SignUpInput } from "./signup.type";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 import { TenantService } from "@/modules/tenant/services/tenant.service";
 import { SentooService } from "@/infrastructure/sentoo/sentoo.service";
-import { PaymentCreate } from "@/modules/payment/services/payment.validators";
+import {
+  PaymentCreate,
+  PaymentType,
+} from "@/modules/payment/services/payment.validators";
 import { PaymentService } from "@/modules/payment/services/payment.service";
 import { MailService } from "@/infrastructure/mail/mail.service";
 
@@ -222,7 +225,7 @@ export class SignupService {
         provider_payload: JSON.stringify(sentooResponse.raw),
         reference_number: tenant.kvk || "",
         agreement_id: null,
-        payment_type: "SUBSCRIPTION",
+        payment_type: PaymentType.SUBSCRIPTION,
       };
 
       // Registrar el pago en la base de datos

@@ -1,5 +1,11 @@
 "use server";
-import { DebtClaim, DebtClaimView } from "@/modules/collection/services/collection.validators";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import {
+  DebtClaim,
+  DebtClaimCreate,
+  DebtClaimView,
+} from "@/modules/collection/services/collection.validators";
 import { DebtClaimFilter } from "@/modules/collection/services/collection.type";
 import { CollectionService } from "@/modules/collection/services/collection.service";
 
@@ -7,7 +13,9 @@ export const getDebtClaimById = async (id: string): Promise<DebtClaim> => {
   return CollectionService.getById(id);
 };
 
-export const getDebtClaimViewById = async (id: string): Promise<DebtClaimView> => {
+export const getDebtClaimViewById = async (
+  id: string,
+): Promise<DebtClaimView> => {
   return CollectionService.getViewById(id);
 };
 
@@ -21,4 +29,11 @@ export const advanceAOPStep = async (debtClaimId: string) => {
 
 export async function getDebtClaimsAction(params: DebtClaimFilter) {
   return CollectionService.getAll(params);
+}
+
+export async function createDebtClaimAction(data: DebtClaimCreate) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.tenant_id) throw new Error("Unauthorized");
+
+  return CollectionService.create(data, session.user.tenant_id);
 }

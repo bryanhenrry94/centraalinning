@@ -9,6 +9,7 @@ import {
   PaymentMethodEnum,
   PaymentCreateSchema,
   PaymentCreate,
+  PaymentType,
 } from "@/modules/payment/services/payment.validators";
 import { DebtorSummary } from "@/modules/collection/types/DebtorSummary";
 import { useSession } from "next-auth/react";
@@ -27,7 +28,7 @@ const initialState: PaymentCreate = {
   provider: "",
   provider_payload: null,
   provider_ref: null,
-  payment_type: "OTHER",
+  payment_type: PaymentType.OTHER,
 };
 
 interface PaymentFormProps {

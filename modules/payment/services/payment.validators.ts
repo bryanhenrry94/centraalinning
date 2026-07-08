@@ -1,4 +1,3 @@
-import { PaymentType } from "@prisma/client";
 import { z } from "zod";
 
 export const PaymentMethodEnum = z.enum(["TRANSFER", "CREDIT_CARD"]);
@@ -11,6 +10,28 @@ export const PaymentStatusEnum = z.enum([
   "cancelled",
 ]);
 export type PaymentStatus = z.infer<typeof PaymentStatusEnum>;
+
+export const enum PaymentType {
+  SUBSCRIPTION = "SUBSCRIPTION",
+  CONTRACT_ACTIVATION = "CONTRACT_ACTIVATION",
+  AGREEMENT_INSTALLMENT = "AGREEMENT_INSTALLMENT",
+  DEBT_PAYMENT = "DEBT_PAYMENT",
+  BLOK_CHECK = "BLOK_CHECK",
+  FINANCIAL_REPORT = "FINANCIAL_REPORT",
+  COLLECTION = "COLLECTION",
+  OTHER = "OTHER",
+}
+
+const PaymentTypeEnum = z.enum([
+  PaymentType.SUBSCRIPTION,
+  PaymentType.CONTRACT_ACTIVATION,
+  PaymentType.AGREEMENT_INSTALLMENT,
+  PaymentType.DEBT_PAYMENT,
+  PaymentType.BLOK_CHECK,
+  PaymentType.FINANCIAL_REPORT,
+  PaymentType.COLLECTION,
+  PaymentType.OTHER,
+]);
 
 export const PaymentSchema = z.object({
   id: z.string(),
@@ -26,25 +47,14 @@ export const PaymentSchema = z.object({
     z.number(),
   ),
   method: PaymentMethodEnum,
-  status: PaymentStatusEnum.default("pending"),
-  provider: z.string().default("sentoo"),
+  status: PaymentStatusEnum,
+  provider: z.string(),
   provider_ref: z.string().nullable().optional(),
   provider_payload: z.string().nullable().optional(),
   reference_number: z.string().optional(),
   agreement_id: z.string().nullable().optional(),
   contract_id: z.string().nullable().optional(),
-  payment_type: z
-    .enum([
-      PaymentType.SUBSCRIPTION,
-      PaymentType.CONTRACT_ACTIVATION,
-      PaymentType.AGREEMENT_INSTALLMENT,
-      PaymentType.DEBT_PAYMENT,
-      PaymentType.BLOK_CHECK,
-      PaymentType.FINANCIAL_REPORT,
-      PaymentType.COLLECTION,
-      PaymentType.OTHER,
-    ])
-    .default(PaymentType.OTHER),
+  payment_type: PaymentTypeEnum,
   created_at: z.date(),
   updated_at: z.date(),
 });

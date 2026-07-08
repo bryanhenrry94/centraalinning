@@ -26,14 +26,21 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
-import { notifyError, notifyInfo, notifyWarning } from "@/shared/ui/notifications";
+import {
+  notifyError,
+  notifyInfo,
+  notifyWarning,
+} from "@/shared/ui/notifications";
 
 import {
   getAgreementByDebtClaimId,
   getAgreementsByDebtClaimId,
 } from "@/modules/agreement/actions/agreement.actions";
 
-import { getDebtorByUserId, getDebts } from "@/modules/collection/actions/debtor.actions";
+import {
+  getDebtorByUserId,
+  getDebts,
+} from "@/modules/collection/actions/debtor.actions";
 import { DebtorSummary } from "@/modules/collection/types/DebtorSummary";
 import { AgreementDialog } from "@/modules/agreement/components/agreement-dialog";
 import { PaymentsDialog } from "@/modules/payment/components/payments-dialog";
@@ -41,8 +48,14 @@ import { AgreementFormDialog } from "@/modules/agreement/components/agreement-fo
 import { PaymentFormDialog } from "@/modules/payment/components/payment-form-dialog";
 import { createSentooPayment } from "@/actions/sentoo.actions";
 import { AlertService } from "@/shared/ui/alerts";
-import { PaymentCreate } from "@/modules/payment/services/payment.validators";
-import { getPaymentByDebtClaimId, hasPendingPayments } from "@/modules/payment/actions/payment.actions";
+import {
+  PaymentCreate,
+  PaymentType,
+} from "@/modules/payment/services/payment.validators";
+import {
+  getPaymentByDebtClaimId,
+  hasPendingPayments,
+} from "@/modules/payment/actions/payment.actions";
 import DashboardHeader from "./DashboardHeader";
 import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
 import { PaymentService } from "@/modules/payment/services/payment.service";
@@ -299,7 +312,7 @@ const DashboardDebtor = () => {
         provider_payload: JSON.stringify(res.raw),
         reference_number: "",
         agreement_id: null,
-        payment_type: "DEBT_PAYMENT",
+        payment_type: PaymentType.DEBT_PAYMENT,
       };
 
       const paymentRes = await PaymentService.registerPayment(

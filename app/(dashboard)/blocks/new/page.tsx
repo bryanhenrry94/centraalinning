@@ -39,6 +39,7 @@ import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 import { formatCurrency } from "@/shared/utils/formatters";
 import { useRouter } from "next/navigation";
 import { REASONS } from "@/modules/blockade/constants/reason-blockades";
+import { PaymentType } from "@/modules/payment/services/payment.validators";
 
 const ALLOWED_TYPES = [
   "application/pdf",
@@ -234,6 +235,46 @@ export default function BlockCreatePage() {
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
 
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const handleCreateTransaction = async (): Promise<{
+    success: boolean;
+    error?: string;
+    paymentId?: string;
+    paymentUrl?: string;
+  }> => {
+    // const isValid = await trigger();
+    // if (!isValid) {
+    //   return { success: false, error: "Formulario inválido" };
+    // }
+
+    if (amountService <= 0) {
+      notifyError("Het servicebedrag moet groter zijn dan 0");
+      return { success: false, error: "Servicebedrag is 0" };
+    }
+
+    const res = await fetch("/api/payments/create", {
+      method: "POST",
+      body: JSON.stringify({
+        amount: amountService,
+        currency: "USD",
+        description: "Payment for registering blokkade",
+        payment_type: PaymentType.BLOK_CHECK,
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!res.ok) {
+      notifyError("Fout bij het aanmaken van de betaling");
+      throw new Error("Payment creation failed");
+    }
+
+    const data = await res.json();
+    return {
+      success: true,
+      paymentId: data.paymentId,
+      paymentUrl: data.paymentUrl,
+    };
   };
 
   return (
@@ -548,25 +589,7 @@ export default function BlockCreatePage() {
               </Button>
 
               <PaymentIntent
-                onCreateTransaction={async () => {
-                  const res = await fetch("/api/payments/create", {
-                    method: "POST",
-                    body: JSON.stringify({
-                      amount: amountService,
-                      currency: "USD",
-                      description: "Payment for registering blokkade",
-                    }),
-                    headers: { "Content-Type": "application/json" },
-                  });
-                  const data = await res.json();
-
-                  setPaymentUrl(data.paymentUrl);
-
-                  return {
-                    paymentId: data.paymentId,
-                    paymentUrl: data.paymentUrl,
-                  };
-                }}
+                onCreateTransaction={handleCreateTransaction}
                 onPaymentConfirmed={async () => {
                   setShowCostDialog(false);
                   await createBlockade();

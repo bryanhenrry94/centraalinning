@@ -4,11 +4,7 @@ import { ParameterService } from "@/modules/settings/services/parameter/paramete
 import { PersonType } from "@/shared/constants/person-type";
 import { CollectionNotificationService } from "@/modules/collection/services/collection-notification.service";
 import { DebtClaimFilter, DebtClaimResponse } from "./collection.type";
-import { MailService } from "@/infrastructure/mail/mail.service";
 import { ParameterInput } from "@/modules/settings/services/parameter/parameter.type";
-import { SentooService } from "@/infrastructure/sentoo/sentoo.service";
-import { PaymentCreate } from "@/modules/payment/services/payment.validators";
-import { PaymentService } from "@/modules/payment/services/payment.service";
 import {
   DebtClaim,
   DebtClaimCreate,
@@ -16,6 +12,8 @@ import {
   DebtClaimSchema,
   DebtClaimView,
 } from "./collection.validators";
+import { InvoiceService } from "@/modules/payment/services/invoice-service";
+import { sendInvoiceEmail } from "@/actions/email";
 
 export class CollectionService {
   static createFromContract = async (
@@ -67,11 +65,15 @@ export class CollectionService {
     );
 
     const totalDue = Number(
-      (amount + feeAmount + abbAmount + parameter.digital_file_costs).toFixed(2),
+      (amount + feeAmount + abbAmount + parameter.digital_file_costs).toFixed(
+        2,
+      ),
     );
 
     const totalToReceive = Number(
-      (amount - feeAmount - abbAmount - parameter.digital_file_costs).toFixed(2),
+      (amount - feeAmount - abbAmount - parameter.digital_file_costs).toFixed(
+        2,
+      ),
     );
 
     return {
@@ -108,11 +110,17 @@ export class CollectionService {
     return `${name} - ${reference}`;
   }
 
-  static async create(data: Partial<DebtClaimCreate>, tenantId: string) {
+  static async create(
+    data: DebtClaimCreate,
+    tenantId: string,
+  ): Promise<{ success: boolean; error?: string; collection?: DebtClaim }> {
     const parsedData = DebtClaimCreateSchema.parse(data);
 
     if (parsedData.principalAmount <= 0) {
-      throw new Error("El monto principal debe ser mayor a cero");
+      return {
+        success: false,
+        error: "El monto principal debe ser mayor a cero",
+      };
     }
 
     const [tenant, parameter, debtor] = await Promise.all([
@@ -124,9 +132,15 @@ export class CollectionService {
       }),
     ]);
 
-    if (!tenant) throw new Error("Tenant not found");
-    if (!parameter) throw new Error("Parameter not found");
-    if (!debtor) throw new Error("Debtor not found");
+    if (!tenant) {
+      return { success: false, error: "Tenant not found" };
+    }
+    if (!parameter) {
+      return { success: false, error: "Parameter not found" };
+    }
+    if (!debtor) {
+      return { success: false, error: "Debtor not found" };
+    }
 
     const personType =
       (debtor.person?.person_type as PersonType) || PersonType.INDIVIDUAL;
@@ -256,58 +270,87 @@ export class CollectionService {
       return claim;
     });
 
-    const totalWithTax = Number(
-      (
-        parsedData.principalAmount +
-        calculations.feeAmount +
-        calculations.abbAmount
-      ).toFixed(2),
-    );
-
-    const sentooResponse = await SentooService.createTransaction({
-      amount: totalWithTax,
-      description: `Betaling voor aanmaning ${reference}`,
-      reference,
-    });
-
-    if (!sentooResponse?.success || !sentooResponse?.payment?.url) {
-      throw new Error(sentooResponse?.error || "Kon de betaling niet aanmaken.");
+    if (!result) {
+      return { success: false, error: "Kon de collection case niet aanmaken." };
     }
 
-    const paymentData: PaymentCreate = {
-      debtClaim_id: result.id,
-      method: "TRANSFER",
-      total_amount: totalWithTax,
-      paid_at: null,
-      status: "pending",
-      contract_id: null,
-      provider: "sentoo",
-      provider_ref: sentooResponse.payment.id,
-      provider_payload: JSON.stringify(sentooResponse.raw),
-      reference_number: reference,
-      agreement_id: null,
-      payment_type: "COLLECTION",
-    };
+    // **************************
+    // YA NO REGISTRA EL PAGO AUTOMÁTICAMENTE, SE HACE DESDE EL FRONTEND
+    // **************************
 
-    const paymentRes = await PaymentService.registerPayment(tenantId, paymentData);
-    if (!paymentRes) throw new Error("Kon de betaling niet registreren.");
+    // const totalWithTax = Number(
+    //   (
+    //     parsedData.principalAmount +
+    //     calculations.feeAmount +
+    //     calculations.abbAmount
+    //   ).toFixed(2),
+    // );
+
+    // const sentooResponse = await SentooService.createTransaction({
+    //   amount: totalWithTax,
+    //   description: `Betaling voor aanmaning ${reference}`,
+    //   reference,
+    // });
+
+    // if (!sentooResponse?.success || !sentooResponse?.payment?.url) {
+    //   return { success: false, error: "Kon de betaling niet aanmaken." };
+    // }
+
+    // const paymentData: PaymentCreate = {
+    //   debtClaim_id: result.id,
+    //   method: "TRANSFER",
+    //   total_amount: totalWithTax,
+    //   paid_at: null,
+    //   status: "pending",
+    //   contract_id: null,
+    //   provider: "sentoo",
+    //   provider_ref: sentooResponse?.payment?.id || "",
+    //   provider_payload: JSON.stringify(sentooResponse?.raw || {}),
+    //   reference_number: reference,
+    //   agreement_id: null,
+    //   payment_type: "COLLECTION",
+    // };
+
+    // const paymentRes = await PaymentService.registerPayment(
+    //   tenantId,
+    //   paymentData,
+    // );
+    // if (!paymentRes)
+    //   return { success: false, error: "Kon de betaling niet registreren." };
 
     try {
       await Promise.all([
-        MailService.sendPaymentLinkEmail(
-          tenant.contact_email,
-          tenant.name,
-          sentooResponse.payment.url,
-          calculations.feeAmount,
-          reference,
-        ),
+        // MailService.sendPaymentLinkEmail(
+        //   tenant.contact_email,
+        //   tenant.name,
+        //   sentooResponse?.payment?.url || "",
+        //   calculations.feeAmount,
+        //   reference,
+        // ),
         CollectionNotificationService.sendAanmaning(result.id),
       ]);
+
+      const collectionFormatted: DebtClaim = {
+        id: result.id,
+        tenantId: result.tenantId,
+        debtorId: result.debtorId,
+        reference: result.reference,
+        description: result.description,
+        principalAmount: Number(result.principalAmount),
+        currentAmount: Number(result.currentAmount),
+        currency: result.currency,
+        origin: result.origin,
+        status: result.status,
+        createdAt: result.createdAt,
+        updatedAt: result.updatedAt,
+        closedAt: result.closedAt,
+      };
+
+      return { success: true, collection: collectionFormatted };
     } catch (error) {
       console.error("Post-create notification error", error);
+      return { success: false, error: "Kon de notificaties niet verzenden." };
     }
-
-    return result;
   }
 
   static generateClaimReference = async () => {
@@ -389,7 +432,10 @@ export class CollectionService {
 
     const currentStep = aop.steps[0];
 
-    const nextStepMap: Record<string, "REMINDER" | "FINAL_NOTICE" | "DEFAULT_NOTICE" | "BLK_NOTIFICATION" | null> = {
+    const nextStepMap: Record<
+      string,
+      "REMINDER" | "FINAL_NOTICE" | "DEFAULT_NOTICE" | "BLK_NOTIFICATION" | null
+    > = {
       REMINDER: "FINAL_NOTICE",
       FINAL_NOTICE: "DEFAULT_NOTICE",
       DEFAULT_NOTICE: "BLK_NOTIFICATION",
@@ -422,7 +468,10 @@ export class CollectionService {
         });
       }
 
-      if (nextStep === "BLK_NOTIFICATION" || (!nextStep && currentStep?.step === "DEFAULT_NOTICE")) {
+      if (
+        nextStep === "BLK_NOTIFICATION" ||
+        (!nextStep && currentStep?.step === "DEFAULT_NOTICE")
+      ) {
         const personId = aop.debtClaim.debtor.person?.id;
         if (personId) {
           await tx.person.update({
@@ -481,3 +530,48 @@ export class CollectionService {
     }));
   };
 }
+
+export const processCollectionPayment = async (paymentId: string) => {
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId },
+  });
+
+  if (!payment) {
+    throw new Error("Payment not found");
+  }
+
+  console.log("Processing collection payment:", payment.id);
+
+  if (!payment.debtClaim_id) {
+    console.warn(`Payment ${payment.id} has no debtClaim_id associated`);
+
+    return;
+  }
+
+  const debtClaim = await prisma.debtClaim.findUnique({
+    where: {
+      id: payment.debtClaim_id!,
+    },
+    include: {
+      tenant: true,
+    },
+  });
+
+  if (!debtClaim) {
+    throw new Error(`DebtClaim ${payment.debtClaim_id} not found`);
+  }
+
+  if (!debtClaim?.tenant.contact_email) {
+    console.warn(`Tenant ${debtClaim.tenantId} has no contact email`);
+    return;
+  }
+
+  // TODO:
+  // 1. Generar factura
+  const invoiceData = await InvoiceService.generateInvoiceData(payment.id);
+  // 2. Crear registro Invoice
+  const invoice = await InvoiceService.createInvoice(invoiceData);
+  // 3. Enviar email con factura
+
+  await sendInvoiceEmail(debtClaim?.tenant.contact_email, invoice.id, true);
+};

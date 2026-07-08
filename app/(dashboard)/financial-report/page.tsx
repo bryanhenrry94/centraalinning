@@ -22,7 +22,10 @@ import { createSentooPayment } from "@/actions/sentoo.actions";
 import { formatCurrency } from "@/shared/utils/formatters";
 import { notifyError, notifyInfo } from "@/shared/ui/notifications";
 
-import { PaymentCreate } from "@/modules/payment/services/payment.validators";
+import {
+  PaymentCreate,
+  PaymentType,
+} from "@/modules/payment/services/payment.validators";
 import { createFinancialReportRequest } from "@/modules/payment/actions/financial-report.actions";
 import { getDebtorByUserId } from "@/modules/collection/actions/debtor.actions";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
@@ -127,7 +130,7 @@ const VerklaringPage: React.FC = () => {
 
         provider_ref: sentooResponse.payment.id,
 
-        payment_type: "FINANCIAL_REPORT",
+        payment_type: PaymentType.FINANCIAL_REPORT,
 
         /**
          * Evita guardar payloads gigantes

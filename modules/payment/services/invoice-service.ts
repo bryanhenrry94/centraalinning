@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma";
-import { PaymentType } from "@prisma/client";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 import { addDays } from "date-fns/addDays";
 import { SentooService } from "@/infrastructure/sentoo/sentoo.service";
 import { sendInvoiceEmail } from "@/modules/payment/services/payment-mail.service";
-import { PaymentCreate } from "@/modules/payment/services/payment.validators";
+import {
+  PaymentCreate,
+  PaymentType,
+} from "@/modules/payment/services/payment.validators";
 import { ActivationInvoiceInput } from "./invoice.type";
 import { PaymentService } from "@/modules/payment/services/payment.service";
 
@@ -62,7 +64,7 @@ export class InvoiceService {
     const invoiceNumber = await InvoiceService.generateInvoiceNumber();
 
     const description = InvoiceService.getDescriptionFromPaymentType(
-      payment.payment_type,
+      payment.payment_type as PaymentType,
     );
 
     return {
@@ -169,22 +171,22 @@ export class InvoiceService {
 
   static getDescriptionFromPaymentType(paymentType: PaymentType): string {
     switch (paymentType) {
-      case "SUBSCRIPTION":
+      case PaymentType.SUBSCRIPTION:
         return "Subscription fee";
 
-      case "CONTRACT_ACTIVATION":
+      case PaymentType.CONTRACT_ACTIVATION:
         return "Financiële afspraakregistratie";
 
-      case "AGREEMENT_INSTALLMENT":
+      case PaymentType.AGREEMENT_INSTALLMENT:
         return "Afbetalingsregeling";
 
-      case "DEBT_PAYMENT":
+      case PaymentType.DEBT_PAYMENT:
         return "Schuldbetaling";
 
-      case "BLOK_CHECK":
+      case PaymentType.BLOK_CHECK:
         return "Blok check service";
 
-      case "FINANCIAL_REPORT":
+      case PaymentType.FINANCIAL_REPORT:
         return "Financial report service";
 
       default:
@@ -291,7 +293,7 @@ export class InvoiceService {
       provider_payload: JSON.stringify(res.raw),
       reference_number: "",
       agreement_id: null,
-      payment_type: "SUBSCRIPTION", // O el tipo que corresponda según tu lógica de negocio
+      payment_type: PaymentType.SUBSCRIPTION, // O el tipo que corresponda según tu lógica de negocio
     };
 
     const paymentRes = await PaymentService.registerPayment(tenant.id, payment);

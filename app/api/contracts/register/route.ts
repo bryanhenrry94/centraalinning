@@ -5,7 +5,10 @@ import { ContractService } from "@/modules/contract/services/contract.service";
 import { CreateContractInput } from "@/modules/contract/services/contract.types";
 import { ContractSchema } from "@/modules/contract/services/contract.validators";
 import { SentooService } from "@/infrastructure/sentoo/sentoo.service";
-import { PaymentCreate } from "@/modules/payment/services/payment.validators";
+import {
+  PaymentCreate,
+  PaymentType,
+} from "@/modules/payment/services/payment.validators";
 import { prisma } from "@/lib/prisma";
 import { PaymentService } from "@/modules/payment/services/payment.service";
 
@@ -64,7 +67,7 @@ export async function POST(req: NextRequest) {
       provider_payload: JSON.stringify(sentooResponse.raw),
       reference_number: contract.reference_number,
       agreement_id: null,
-      payment_type: "CONTRACT_ACTIVATION",
+      payment_type: PaymentType.CONTRACT_ACTIVATION, // Tipo de pago específico para activación de contrato
     };
 
     const paymentRes = await PaymentService.registerPayment(
