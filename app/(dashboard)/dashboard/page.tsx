@@ -2,7 +2,7 @@
 // import { useAuthSession } from "@/modules/auth/hooks/useAuthSession";
 // import DashboardSuperAdmin from "@/modules/dashboard/components/legacy/superadmin/dashboard";
 // import { DashboardAdmin } from "@/modules/dashboard/components/legacy/admin/dashboard";
-// import DashboardDebtor from "@/modules/dashboard/components/legacy/debtor/dashboard";
+import DashboardDebtor from "@/modules/dashboard/components/legacy/debtor/dashboard";
 // import { DashboardBailiff } from "@/modules/dashboard/components/legacy/bailiff/dashboard";
 // import { UserRole } from "@/shared/constants/user-role";
 
@@ -45,4 +45,5 @@ export default async function Page() {
   const dashboard = await getDashboard();
 
   return <DashboardContent dashboard={dashboard} />;
+  // return <DashboardDebtor />;
 }

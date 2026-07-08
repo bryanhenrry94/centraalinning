@@ -12,22 +12,38 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
 import TablePagination from "@mui/material/TablePagination";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { DebtClaimResponse } from "@/modules/collection/services/collection.type";
+import { AopStep } from "@/modules/collection/services/collection.validators";
 
-type StatusColor = "default" | "warning" | "info" | "error" | "success";
+type ChipColor =
+  | "default"
+  | "primary"
+  | "warning"
+  | "info"
+  | "error"
+  | "success";
 
-const STATUS_CONFIG: Record<string, { label: string; color: StatusColor }> = {
-  OPEN: { label: "Open", color: "default" },
+const STATUS_CONFIG: Record<string, { label: string; color: ChipColor }> = {
+  OPEN: { label: "Wacht op betaling", color: "primary" },
   IN_PROGRESS: { label: "In behandeling", color: "info" },
   SETTLED: { label: "Vereffend", color: "success" },
-  CLOSED: { label: "Gesloten", color: "warning" },
+  CLOSED: { label: "Gesloten", color: "default" },
   CANCELLED: { label: "Geannuleerd", color: "error" },
+};
+
+const AOP_STEP_CONFIG: Record<AopStep, { label: string; color: ChipColor }> = {
+  REMINDER: { label: "Aanmaning", color: "info" },
+  FINAL_NOTICE: { label: "Sommatie", color: "warning" },
+  DEFAULT_NOTICE: { label: "Ingebrekestelling", color: "error" },
+  BLK_NOTIFICATION: { label: "Blokkade", color: "error" },
 };
 
 const HEAD_SX = {
@@ -53,7 +69,7 @@ const CollectionTable = ({ invoices }: { invoices: DebtClaimResponse[] }) => {
   );
 
   const handleView = useCallback(
-    (id: string) => router.push(`/dashboard/collections/${id}`),
+    (id: string) => router.push(`/collections/${id}`),
     [router],
   );
 
@@ -83,10 +99,11 @@ const CollectionTable = ({ invoices }: { invoices: DebtClaimResponse[] }) => {
               </TableCell>
               {!isMobile && (
                 <TableCell sx={{ ...HEAD_SX, textAlign: "right" }}>
-                  Open
+                  Saldo
                 </TableCell>
               )}
               <TableCell sx={HEAD_SX}>Status</TableCell>
+              <TableCell sx={HEAD_SX}>Fase</TableCell>
               <TableCell sx={{ ...HEAD_SX, textAlign: "center" }}>
                 Actie
               </TableCell>
@@ -96,15 +113,17 @@ const CollectionTable = ({ invoices }: { invoices: DebtClaimResponse[] }) => {
             {paginatedData.map((row) => {
               const statusInfo = STATUS_CONFIG[row.status] ?? {
                 label: row.status,
-                color: "default" as StatusColor,
+                color: "default" as ChipColor,
               };
+              const aopInfo = row.aopStep ? AOP_STEP_CONFIG[row.aopStep] : null;
+              const isPending = row.status === "OPEN";
 
               return (
                 <TableRow
                   key={row.id}
                   hover
-                  onClick={() => handleView(row.id)}
-                  sx={{ cursor: "pointer" }}
+                  // onClick={() => handleView(row.id)}
+                  sx={{ cursor: "pointer", opacity: isPending ? 0.75 : 1 }}
                 >
                   <TableCell sx={{ whiteSpace: "nowrap" }}>
                     {formatDate(row.createdAt?.toString() ?? "")}
@@ -116,7 +135,9 @@ const CollectionTable = ({ invoices }: { invoices: DebtClaimResponse[] }) => {
                   </TableCell>
                   {!isMobile && (
                     <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                      {formatCurrency(Number(row.currentAmount))}
+                      {isPending
+                        ? "—"
+                        : formatCurrency(Number(row.currentAmount))}
                     </TableCell>
                   )}
                   <TableCell>
@@ -126,16 +147,34 @@ const CollectionTable = ({ invoices }: { invoices: DebtClaimResponse[] }) => {
                       size="small"
                     />
                   </TableCell>
+                  <TableCell>
+                    {aopInfo ? (
+                      <Chip
+                        label={aopInfo.label}
+                        color={aopInfo.color}
+                        size="small"
+                        variant="outlined"
+                      />
+                    ) : (
+                      "—"
+                    )}
+                  </TableCell>
                   <TableCell align="center">
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleView(row.id);
-                      }}
-                    >
-                      <VisibilityIcon fontSize="small" />
-                    </IconButton>
+                    {isPending ? (
+                      <Tooltip title="Wacht op betalingsbevestiging">
+                        <HourglassEmptyIcon fontSize="small" color="disabled" />
+                      </Tooltip>
+                    ) : (
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleView(row.id);
+                        }}
+                      >
+                        <VisibilityIcon fontSize="small" />
+                      </IconButton>
+                    )}
                   </TableCell>
                 </TableRow>
               );

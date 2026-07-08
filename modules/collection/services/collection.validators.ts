@@ -29,6 +29,14 @@ export const DebtClaimCreateSchema = DebtClaimSchema.omit({
 
 export const DebtClaimUpdateSchema = DebtClaimCreateSchema.partial();
 
+export const AopStepEnum = z.enum([
+  "REMINDER",
+  "FINAL_NOTICE",
+  "DEFAULT_NOTICE",
+  "BLK_NOTIFICATION",
+]);
+export type AopStep = z.infer<typeof AopStepEnum>;
+
 export const DebtClaimResponseSchema = DebtClaimSchema.extend({
   debtor: z.object({
     id: z.string(),
@@ -36,6 +44,7 @@ export const DebtClaimResponseSchema = DebtClaimSchema.extend({
     email: z.string(),
     total_income: z.number().optional(),
   }),
+  aopStep: AopStepEnum.nullable().optional(),
 });
 
 export type DebtClaim = z.infer<typeof DebtClaimSchema>;

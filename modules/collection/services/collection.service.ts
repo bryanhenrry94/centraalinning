@@ -471,6 +471,11 @@ export class CollectionService {
       orderBy: { createdAt: "desc" },
       include: {
         debtor: { include: { person: true } },
+        administrativeCollection: {
+          include: {
+            steps: { orderBy: { id: "desc" }, take: 1 },
+          },
+        },
       },
     });
 
@@ -497,6 +502,7 @@ export class CollectionService {
         email: c.debtor.email ?? "",
         total_income: c.debtor.total_income ?? 0,
       },
+      aopStep: c.administrativeCollection?.steps[0]?.step ?? null,
     }));
   };
 }

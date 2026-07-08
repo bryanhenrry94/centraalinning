@@ -6,7 +6,11 @@ import {
   DebtorResponse,
   DebtorSearchParams,
 } from "./debtor.type";
-import { DebtorResponseSchema, DebtorSchema, DebtorCreateSchema } from "./debtor.validators";
+import {
+  DebtorResponseSchema,
+  DebtorSchema,
+  DebtorCreateSchema,
+} from "./debtor.validators";
 import { Prisma } from "@prisma/client";
 import { IdentificationType } from "@/shared/constants/identification-type";
 import { PersonType } from "@/shared/constants/person-type";
@@ -150,7 +154,9 @@ export class DebtorService {
       where: { tenant_id },
       include: { person: true },
     });
-    return debtors.map((d: any) => DebtorResponseSchema.parse(d)) as DebtorResponse[];
+    return debtors.map((d: any) =>
+      DebtorResponseSchema.parse(d),
+    ) as DebtorResponse[];
   }
 
   static async getAllDebtors(): Promise<DebtorInput[]> {
@@ -190,7 +196,8 @@ export class DebtorService {
           data: {
             person_type: debtorFormatted.person?.person_type as PersonType,
             identification_type:
-              debtorFormatted.person?.identification_type || IdentificationType.CEDULA,
+              debtorFormatted.person?.identification_type ||
+              IdentificationType.CEDULA,
             identification: debtorFormatted.person?.identification || "",
             first_name: debtorFormatted.person?.first_name || "",
             last_name: debtorFormatted.person?.last_name || "",
@@ -259,7 +266,9 @@ export class DebtorService {
             identification_type: debtor.person
               ? (debtor.person.identification_type as IdentificationType)
               : undefined,
-            person_type: debtor.person ? (debtor.person.person_type as PersonType) : undefined,
+            person_type: debtor.person
+              ? (debtor.person.person_type as PersonType)
+              : undefined,
             address: debtor.person?.address,
             phone: debtor.person?.phone,
             email: debtor.email,
@@ -270,7 +279,11 @@ export class DebtorService {
 
         for (const income of debtor.incomes ?? []) {
           await tx.debtorIncome.create({
-            data: { debtor_id: id, source: income.source, amount: income.amount },
+            data: {
+              debtor_id: id,
+              source: income.source,
+              amount: income.amount,
+            },
           });
         }
 
@@ -284,14 +297,19 @@ export class DebtorService {
     }
   }
 
-  static async getInfo(tenant_id: string, identification: string): Promise<DebtorInput> {
+  static async getInfo(
+    tenant_id: string,
+    identification: string,
+  ): Promise<DebtorInput> {
     const debtor = await prisma.debtor.findFirst({
       where: { tenant_id, person: { identification } },
       include: { user: true },
     });
 
     if (!debtor) {
-      throw new Error(`Debtor with identification ${identification} not found for tenant ${tenant_id}`);
+      throw new Error(
+        `Debtor with identification ${identification} not found for tenant ${tenant_id}`,
+      );
     }
 
     return DebtorSchema.parse(debtor) as DebtorInput;
@@ -328,11 +346,21 @@ export class DebtorService {
       const whereClauses: string[] = [];
       const params: any[] = [];
 
-      if (filters.tenant_id) { whereClauses.push(`tenant_id = ?`); params.push(filters.tenant_id); }
-      if (filters.debtor_id) { whereClauses.push(`debtor_id = ?`); params.push(filters.debtor_id); }
-      if (filters.person_id) { whereClauses.push(`person_id = ?`); params.push(filters.person_id); }
+      if (filters.tenant_id) {
+        whereClauses.push(`tenant_id = ?`);
+        params.push(filters.tenant_id);
+      }
+      if (filters.debtor_id) {
+        whereClauses.push(`debtor_id = ?`);
+        params.push(filters.debtor_id);
+      }
+      // if (filters.person_id) {
+      //   whereClauses.push(`person_id = ?`);
+      //   params.push(filters.person_id);
+      // }
 
-      const whereSQL = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+      const whereSQL =
+        whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
       const query = `SELECT * FROM vw_debtor_summary ${whereSQL}`;
 
       const raw = (await prisma.$queryRawUnsafe(query, ...params)) as any[];
@@ -341,15 +369,17 @@ export class DebtorService {
         const result: any = {};
         for (const key of Object.keys(row)) {
           const value = row[key];
-          result[key] = value && typeof value === "object" && "toNumber" in value
-            ? value.toNumber()
-            : value;
+          result[key] =
+            value && typeof value === "object" && "toNumber" in value
+              ? value.toNumber()
+              : value;
         }
         return result;
       });
 
       summary.sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       );
 
       return { success: true, data: summary };

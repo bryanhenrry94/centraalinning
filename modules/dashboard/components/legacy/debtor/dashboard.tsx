@@ -123,7 +123,9 @@ const DashboardDebtor = () => {
       }
 
       if (!session?.user?.tenant_id) return;
-      const response = await getDebts({ person_id: debtor.person_id });
+      const response = await getDebts({ debtor_id: debtor.id });
+
+      console.log("response: ", response);
 
       if (response.success) {
         setDebts(response.data || []);
