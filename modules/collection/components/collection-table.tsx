@@ -23,11 +23,11 @@ import { DebtClaimResponse } from "@/modules/collection/services/collection.type
 type StatusColor = "default" | "warning" | "info" | "error" | "success";
 
 const STATUS_CONFIG: Record<string, { label: string; color: StatusColor }> = {
-  OPEN:        { label: "Open",           color: "default" },
-  IN_PROGRESS: { label: "In behandeling", color: "info"    },
-  SETTLED:     { label: "Vereffend",      color: "success" },
-  CLOSED:      { label: "Gesloten",       color: "warning" },
-  CANCELLED:   { label: "Geannuleerd",    color: "error"   },
+  OPEN: { label: "Open", color: "default" },
+  IN_PROGRESS: { label: "In behandeling", color: "info" },
+  SETTLED: { label: "Vereffend", color: "success" },
+  CLOSED: { label: "Gesloten", color: "warning" },
+  CANCELLED: { label: "Geannuleerd", color: "error" },
 };
 
 const HEAD_SX = {
@@ -77,13 +77,13 @@ const CollectionTable = ({ invoices }: { invoices: DebtClaimResponse[] }) => {
             <TableRow>
               <TableCell sx={HEAD_SX}>Datum</TableCell>
               {!isMobile && <TableCell sx={HEAD_SX}>Referentie</TableCell>}
-              <TableCell sx={HEAD_SX}>Naam</TableCell>
+              <TableCell sx={{ ...HEAD_SX, minWidth: 150 }}>Naam</TableCell>
               <TableCell sx={{ ...HEAD_SX, textAlign: "right" }}>
                 Vordering
               </TableCell>
               {!isMobile && (
                 <TableCell sx={{ ...HEAD_SX, textAlign: "right" }}>
-                  Saldo
+                  Open
                 </TableCell>
               )}
               <TableCell sx={HEAD_SX}>Status</TableCell>
@@ -109,9 +109,7 @@ const CollectionTable = ({ invoices }: { invoices: DebtClaimResponse[] }) => {
                   <TableCell sx={{ whiteSpace: "nowrap" }}>
                     {formatDate(row.createdAt?.toString() ?? "")}
                   </TableCell>
-                  {!isMobile && (
-                    <TableCell>{row.reference ?? "—"}</TableCell>
-                  )}
+                  {!isMobile && <TableCell>{row.reference ?? "—"}</TableCell>}
                   <TableCell>{row.debtor.fullname || "Onbekend"}</TableCell>
                   <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
                     {formatCurrency(Number(row.principalAmount))}
