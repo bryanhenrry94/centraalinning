@@ -15,7 +15,7 @@ export interface PaymentIntentProps {
     paymentId?: string;
     paymentUrl?: string;
   }>;
-  onPaymentConfirmed: () => Promise<void>;
+  onPaymentConfirmed: (paymentId: string) => Promise<void>;
   pollingInterval?: number;
   timeout?: number;
 }
@@ -65,7 +65,7 @@ export const PaymentIntent: React.FC<PaymentIntentProps> = ({
           // Continúa con el registro del bloqueo
           clearInterval(interval);
           setOpen(false);
-          await onPaymentConfirmed();
+          await onPaymentConfirmed(paymentId);
         } else if (Date.now() - start > timeout) {
           clearInterval(interval);
           setOpen(false);

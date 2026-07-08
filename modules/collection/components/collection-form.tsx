@@ -30,7 +30,7 @@ import { useTenant } from "@/modules/auth/hooks/useTenant";
 import { getParameterAction } from "@/modules/settings/actions/parameter.actions";
 import { ParameterInput } from "@/modules/settings/services/parameter/parameter.type";
 import { getDebtorsAction } from "@/modules/collection/actions/debtor.actions";
-import { createDebtClaimAction } from "@/modules/collection/actions/collection-case.actions";
+import { createPendingDebtClaimAction } from "@/modules/collection/actions/collection-case.actions";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 
@@ -45,7 +45,6 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
 }) => {
   const { tenant } = useTenant();
 
-  const [loading, setLoading] = useState(false);
   const [parameter, setParameter] = useState<ParameterInput | null>(null);
   const [modalFormDebtor, setModalFormDebtor] = useState({
     open: false,
@@ -145,9 +144,8 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
   };
 
   /**
-   * Paso 1: validar formulario y crear la transacción en Sentoo.
-   * Se ejecuta cuando el usuario pulsa "Nu betalen".
-   * Si hay errores de validación o el monto del servicio es 0, se aborta.
+   * Paso 1: validar form → crear DebtClaim (OPEN) → crear pago Sentoo vinculado.
+   * Retorna { success, paymentId, paymentUrl } al componente PaymentIntent.
    */
   const handleCreateTransaction = async (): Promise<{
     success: boolean;
@@ -157,7 +155,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
   }> => {
     const isValid = await trigger();
     if (!isValid) {
-      return { success: false, error: "Formulario inválido" };
+      return { success: false, error: "Vul alle verplichte velden in" };
     }
 
     if (amountService <= 0) {
@@ -165,6 +163,16 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
       return { success: false, error: "Servicebedrag is 0" };
     }
 
+    // Crear DebtClaim en estado OPEN (pre-pago)
+    const claimRes = await createPendingDebtClaimAction(
+      getValues() as DebtClaimCreate,
+    );
+    if (!claimRes.success || !claimRes.claimId) {
+      notifyError(claimRes.error ?? "Kon de vordering niet aanmaken");
+      return { success: false, error: claimRes.error };
+    }
+
+    // Crear pago en Sentoo vinculado al claim
     const res = await fetch("/api/payments/create", {
       method: "POST",
       body: JSON.stringify({
@@ -172,53 +180,29 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
         currency: "USD",
         description: "Registratie incassovordering",
         payment_type: PaymentType.COLLECTION,
+        debtClaim_id: claimRes.claimId,
       }),
       headers: { "Content-Type": "application/json" },
     });
 
     if (!res.ok) {
       notifyError("Fout bij het aanmaken van de betaling");
-      throw new Error("Payment creation failed");
+      return { success: false, error: "Payment creation failed" };
     }
 
     const data = await res.json();
-    return {
-      success: true,
-      paymentId: data.paymentId,
-      paymentUrl: data.paymentUrl,
-    };
+    return { success: true, paymentId: data.paymentId, paymentUrl: data.paymentUrl };
   };
 
   /**
-   * Paso 2: registrar el caso de cobro una vez que el webhook de Sentoo
-   * marcó el pago como "paid" y el polling lo detectó.
+   * Paso 2: el webhook ya activó el claim (activate + factura + aanmaning).
+   * Aquí solo limpiamos la UI.
    */
-  const handlePaymentConfirmed = async () => {
-    try {
-      setLoading(true);
-
-      const res = await createDebtClaimAction(getValues() as DebtClaimCreate);
-
-      if (!res || res.error) {
-        notifyError(
-          res?.error ??
-            "Er is een fout opgetreden bij het registreren van de verzameltaak",
-        );
-        return;
-      }
-
-      reset();
-      notifySuccess("Opgenomen verzameltaak");
-      onSave?.();
-      onClose?.();
-    } catch (error) {
-      console.error("Error: ", error);
-      notifyError(
-        "Er is een fout opgetreden bij het registreren van de verzameltaak",
-      );
-    } finally {
-      setLoading(false);
-    }
+  const handlePaymentConfirmed = async (_paymentId: string) => {
+    reset();
+    notifySuccess("Opgenomen verzameltaak");
+    onSave?.();
+    onClose?.();
   };
 
   return (
@@ -317,7 +301,6 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
                 color="inherit"
                 startIcon={<CloseIcon />}
                 onClick={() => onClose?.()}
-                disabled={loading}
                 sx={{ textTransform: "none" }}
               >
                 Cancelar

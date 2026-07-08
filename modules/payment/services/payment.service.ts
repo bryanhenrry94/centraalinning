@@ -34,6 +34,7 @@ export class PaymentService {
       description: string;
       reference?: string;
       payment_type?: string;
+      debtClaim_id?: string | null;
     },
   ): Promise<PaymentResult> => {
     const tenant = await prisma.tenant.findUnique({
@@ -56,6 +57,7 @@ export class PaymentService {
         payment_type:
           (payload.payment_type as PaymentType) || PaymentType.OTHER,
         method: "TRANSFER",
+        debtClaim_id: payload.debtClaim_id ?? null,
       },
     });
 

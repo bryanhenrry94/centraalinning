@@ -110,71 +110,86 @@ export class CollectionService {
     return `${name} - ${reference}`;
   }
 
-  static async create(
+  /**
+   * Crea un DebtClaim en estado OPEN (pre-pago).
+   * No genera cargos, AOP ni notificaciones — eso ocurre en `activate`.
+   */
+  static async createPending(
     data: DebtClaimCreate,
     tenantId: string,
-  ): Promise<{ success: boolean; error?: string; collection?: DebtClaim }> {
+  ): Promise<{ success: boolean; error?: string; claimId?: string }> {
     const parsedData = DebtClaimCreateSchema.parse(data);
 
-    if (parsedData.principalAmount <= 0) {
-      return {
-        success: false,
-        error: "El monto principal debe ser mayor a cero",
-      };
-    }
-
-    const [tenant, parameter, debtor] = await Promise.all([
+    const [tenant, debtor] = await Promise.all([
       prisma.tenant.findUnique({ where: { id: tenantId } }),
-      ParameterService.getParameter(),
-      prisma.debtor.findUnique({
-        where: { id: parsedData.debtorId },
-        include: { person: true },
-      }),
+      prisma.debtor.findUnique({ where: { id: parsedData.debtorId } }),
     ]);
 
-    if (!tenant) {
-      return { success: false, error: "Tenant not found" };
+    if (!tenant) return { success: false, error: "Tenant not found" };
+    if (!debtor) return { success: false, error: "Debtor not found" };
+
+    const reference = parsedData.reference?.trim()
+      ? parsedData.reference
+      : await this.generateClaimReference();
+
+    const claim = await prisma.debtClaim.create({
+      data: {
+        tenantId,
+        debtorId: parsedData.debtorId,
+        reference,
+        description: parsedData.description,
+        principalAmount: parsedData.principalAmount,
+        currentAmount: parsedData.principalAmount, // se actualiza en activate
+        currency: parsedData.currency ?? "USD",
+        origin: parsedData.origin ?? "MANUAL",
+        status: "OPEN",
+      },
+    });
+
+    return { success: true, claimId: claim.id };
+  }
+
+  /**
+   * Activa un DebtClaim luego de confirmar el pago.
+   * Crea cargos, AOP, chat room, timeline, servicios y envía la aanmaning.
+   * Es idempotente: si ya está activo, no hace nada.
+   */
+  static async activate(claimId: string): Promise<void> {
+    const claim = await prisma.debtClaim.findUnique({
+      where: { id: claimId },
+      include: { debtor: { include: { person: true } }, tenant: true },
+    });
+
+    if (!claim) throw new Error(`DebtClaim ${claimId} not found`);
+
+    if (claim.status !== "OPEN") {
+      console.warn(`DebtClaim ${claimId} ya activado (status: ${claim.status})`);
+      return;
     }
-    if (!parameter) {
-      return { success: false, error: "Parameter not found" };
-    }
-    if (!debtor) {
-      return { success: false, error: "Debtor not found" };
-    }
+
+    const parameter = await ParameterService.getParameter();
+    if (!parameter) throw new Error("Parameter not found");
 
     const personType =
-      (debtor.person?.person_type as PersonType) || PersonType.INDIVIDUAL;
-
+      (claim.debtor.person?.person_type as PersonType) || PersonType.INDIVIDUAL;
     const calculations = this.calculateAmounts(
-      parsedData.principalAmount,
+      Number(claim.principalAmount),
       parameter,
     );
-
     const startedAt = new Date();
     const deadline = await this.calculateDeadline(personType, startedAt);
-    const reference =
-      parsedData.reference ?? (await this.generateClaimReference());
+    const reference = claim.reference ?? claimId;
 
-    const result = await prisma.$transaction(async (tx) => {
-      const claim = await tx.debtClaim.create({
-        data: {
-          tenantId,
-          debtorId: parsedData.debtorId,
-          reference,
-          description: parsedData.description,
-          principalAmount: parsedData.principalAmount,
-          currentAmount: calculations.totalDue,
-          currency: parsedData.currency ?? "USD",
-          origin: parsedData.origin ?? "MANUAL",
-          status: "IN_PROGRESS",
-        },
+    await prisma.$transaction(async (tx) => {
+      await tx.debtClaim.update({
+        where: { id: claimId },
+        data: { status: "IN_PROGRESS", currentAmount: calculations.totalDue },
       });
 
-      // Cargos por servicio AOP
       await tx.claimCharge.createMany({
         data: [
           {
-            debtClaimId: claim.id,
+            debtClaimId: claimId,
             service: "AOP",
             concept: "Honorarios de cobranza",
             amount: calculations.feeAmount,
@@ -182,7 +197,7 @@ export class CollectionService {
             status: "PENDING",
           },
           {
-            debtClaimId: claim.id,
+            debtClaimId: claimId,
             service: "AOP",
             concept: "ABB (belasting)",
             amount: calculations.abbAmount,
@@ -192,7 +207,7 @@ export class CollectionService {
           ...(calculations.digitalFileCosts > 0
             ? [
                 {
-                  debtClaimId: claim.id,
+                  debtClaimId: claimId,
                   service: "AOP" as const,
                   concept: "Digitaal dossier",
                   amount: calculations.digitalFileCosts,
@@ -204,11 +219,7 @@ export class CollectionService {
       });
 
       const aop = await tx.administrativeCollection.create({
-        data: {
-          debtClaimId: claim.id,
-          status: "ACTIVE",
-          startedAt,
-        },
+        data: { debtClaimId: claimId, status: "ACTIVE", startedAt },
       });
 
       await tx.administrativeCollectionStep.create({
@@ -223,12 +234,12 @@ export class CollectionService {
 
       await tx.chatRoom.create({
         data: {
-          tenant_id: tenantId,
-          debtClaimId: claim.id,
+          tenant_id: claim.tenantId,
+          debtClaimId: claimId,
           name: this.buildChatRoomName(
-            debtor.person?.first_name || "",
-            debtor.person?.last_name || "",
-            debtor.person?.business_name || "",
+            claim.debtor.person?.first_name || "",
+            claim.debtor.person?.last_name || "",
+            claim.debtor.person?.business_name || "",
             reference,
           ),
         },
@@ -236,20 +247,18 @@ export class CollectionService {
 
       await tx.claimTimeline.create({
         data: {
-          debtClaimId: claim.id,
+          debtClaimId: claimId,
           event: "CLAIM_CREATED",
           description: `Claim aangemaakt — AOP gestart (${reference})`,
         },
       });
 
-      // Registrar los servicios activos en esta reclamación
       await tx.claimService.createMany({
         data: [
-          // FAR completado si la claim viene de un contrato
-          ...(parsedData.origin === "FAR"
+          ...(claim.origin === "FAR"
             ? [
                 {
-                  debtClaimId: claim.id,
+                  debtClaimId: claimId,
                   service: "FAR" as const,
                   status: "COMPLETED" as const,
                   startedAt,
@@ -257,100 +266,61 @@ export class CollectionService {
                 },
               ]
             : []),
-          // AOP siempre inicia junto con la claim
           {
-            debtClaimId: claim.id,
+            debtClaimId: claimId,
             service: "AOP" as const,
             status: "IN_PROGRESS" as const,
             startedAt,
           },
         ],
       });
-
-      return claim;
     });
 
-    if (!result) {
-      return { success: false, error: "Kon de collection case niet aanmaken." };
+    await CollectionNotificationService.sendAanmaning(claimId);
+  }
+
+  static async create(
+    data: DebtClaimCreate,
+    tenantId: string,
+  ): Promise<{ success: boolean; error?: string; collection?: DebtClaim }> {
+    const pendingResult = await this.createPending(data, tenantId);
+    if (!pendingResult.success || !pendingResult.claimId) {
+      return { success: false, error: pendingResult.error };
     }
-
-    // **************************
-    // YA NO REGISTRA EL PAGO AUTOMÁTICAMENTE, SE HACE DESDE EL FRONTEND
-    // **************************
-
-    // const totalWithTax = Number(
-    //   (
-    //     parsedData.principalAmount +
-    //     calculations.feeAmount +
-    //     calculations.abbAmount
-    //   ).toFixed(2),
-    // );
-
-    // const sentooResponse = await SentooService.createTransaction({
-    //   amount: totalWithTax,
-    //   description: `Betaling voor aanmaning ${reference}`,
-    //   reference,
-    // });
-
-    // if (!sentooResponse?.success || !sentooResponse?.payment?.url) {
-    //   return { success: false, error: "Kon de betaling niet aanmaken." };
-    // }
-
-    // const paymentData: PaymentCreate = {
-    //   debtClaim_id: result.id,
-    //   method: "TRANSFER",
-    //   total_amount: totalWithTax,
-    //   paid_at: null,
-    //   status: "pending",
-    //   contract_id: null,
-    //   provider: "sentoo",
-    //   provider_ref: sentooResponse?.payment?.id || "",
-    //   provider_payload: JSON.stringify(sentooResponse?.raw || {}),
-    //   reference_number: reference,
-    //   agreement_id: null,
-    //   payment_type: "COLLECTION",
-    // };
-
-    // const paymentRes = await PaymentService.registerPayment(
-    //   tenantId,
-    //   paymentData,
-    // );
-    // if (!paymentRes)
-    //   return { success: false, error: "Kon de betaling niet registreren." };
 
     try {
-      await Promise.all([
-        // MailService.sendPaymentLinkEmail(
-        //   tenant.contact_email,
-        //   tenant.name,
-        //   sentooResponse?.payment?.url || "",
-        //   calculations.feeAmount,
-        //   reference,
-        // ),
-        CollectionNotificationService.sendAanmaning(result.id),
-      ]);
-
-      const collectionFormatted: DebtClaim = {
-        id: result.id,
-        tenantId: result.tenantId,
-        debtorId: result.debtorId,
-        reference: result.reference,
-        description: result.description,
-        principalAmount: Number(result.principalAmount),
-        currentAmount: Number(result.currentAmount),
-        currency: result.currency,
-        origin: result.origin,
-        status: result.status,
-        createdAt: result.createdAt,
-        updatedAt: result.updatedAt,
-        closedAt: result.closedAt,
-      };
-
-      return { success: true, collection: collectionFormatted };
+      await this.activate(pendingResult.claimId);
     } catch (error) {
-      console.error("Post-create notification error", error);
-      return { success: false, error: "Kon de notificaties niet verzenden." };
+      console.error("Error activating claim", error);
+      return { success: false, error: "Kon de collection case niet activeren." };
     }
+
+    const claim = await prisma.debtClaim.findUnique({
+      where: { id: pendingResult.claimId },
+    });
+
+    if (!claim) {
+      return { success: false, error: "Kon de collection case niet ophalen." };
+    }
+
+    return {
+      success: true,
+      collection: {
+        id: claim.id,
+        tenantId: claim.tenantId,
+        debtorId: claim.debtorId,
+        reference: claim.reference,
+        description: claim.description,
+        principalAmount: Number(claim.principalAmount),
+        currentAmount: Number(claim.currentAmount),
+        currency: claim.currency,
+        origin: claim.origin,
+        status: claim.status,
+        createdAt: claim.createdAt,
+        updatedAt: claim.updatedAt,
+        closedAt: claim.closedAt,
+      },
+    };
   }
 
   static generateClaimReference = async () => {
@@ -532,46 +502,31 @@ export class CollectionService {
 }
 
 export const processCollectionPayment = async (paymentId: string) => {
-  const payment = await prisma.payment.findUnique({
-    where: { id: paymentId },
-  });
-
-  if (!payment) {
-    throw new Error("Payment not found");
-  }
-
-  console.log("Processing collection payment:", payment.id);
+  const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
+  if (!payment) throw new Error("Payment not found");
 
   if (!payment.debtClaim_id) {
     console.warn(`Payment ${payment.id} has no debtClaim_id associated`);
-
     return;
   }
+
+  // Activa el claim: IN_PROGRESS + cargos + AOP + chat + aanmaning
+  await CollectionService.activate(payment.debtClaim_id);
 
   const debtClaim = await prisma.debtClaim.findUnique({
-    where: {
-      id: payment.debtClaim_id!,
-    },
-    include: {
-      tenant: true,
-    },
+    where: { id: payment.debtClaim_id },
+    include: { tenant: true },
   });
 
-  if (!debtClaim) {
-    throw new Error(`DebtClaim ${payment.debtClaim_id} not found`);
-  }
+  if (!debtClaim) throw new Error(`DebtClaim ${payment.debtClaim_id} not found`);
 
-  if (!debtClaim?.tenant.contact_email) {
-    console.warn(`Tenant ${debtClaim.tenantId} has no contact email`);
-    return;
-  }
-
-  // TODO:
-  // 1. Generar factura
+  // Generar factura y enviar email al tenant
   const invoiceData = await InvoiceService.generateInvoiceData(payment.id);
-  // 2. Crear registro Invoice
   const invoice = await InvoiceService.createInvoice(invoiceData);
-  // 3. Enviar email con factura
 
-  await sendInvoiceEmail(debtClaim?.tenant.contact_email, invoice.id, true);
+  if (debtClaim.tenant.contact_email) {
+    await sendInvoiceEmail(debtClaim.tenant.contact_email, invoice.id, true);
+  } else {
+    console.warn(`Tenant ${debtClaim.tenantId} has no contact email`);
+  }
 };

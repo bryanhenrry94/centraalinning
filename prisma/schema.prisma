@@ -61,7 +61,10 @@ model DebtClaim {
   id                       String                     @id @default(cuid())
 
   tenantId                 String
+  tenant                   Tenant                    @relation(fields: [tenantId], references: [id])
+
   debtorId                 String
+  debtor                   Debtor                    @relation(fields: [debtorId], references: [id])
 
   reference                String?
   description              String?
@@ -78,8 +81,6 @@ model DebtClaim {
   updatedAt                DateTime                   @updatedAt
   closedAt                 DateTime?
 
-  tenant                   Tenant                    @relation(fields: [tenantId], references: [id])
-  debtor                   Debtor                    @relation(fields: [debtorId], references: [id])
 
   contract                 Contract?
 
@@ -991,29 +992,29 @@ model BillingPayment {
 
 
 model Debtor {
-  id               String            @id @default(uuid())
+  id           String          @id @default(uuid())
 
-  tenant_id        String
-  tenant           Tenant           @relation(fields: [tenant_id], references: [id])
+  tenant_id    String
+  tenant       Tenant         @relation(fields: [tenant_id], references: [id])
 
-  person_id        String
-  person           Person           @relation(fields: [person_id], references: [id])
+  person_id    String
+  person       Person         @relation(fields: [person_id], references: [id])
 
-  user_id          String?
-  user             User?            @relation(fields: [user_id], references: [id])
+  user_id      String?
+  user         User?          @relation(fields: [user_id], references: [id])
 
-  email            String
-  total_income     Float             @default(0)
+  email        String
+  total_income Float           @default(0)
 
-  created_at       DateTime          @default(now())
-  updated_at       DateTime          @updatedAt
+  created_at   DateTime        @default(now())
+  updated_at   DateTime        @updatedAt
 
-  incomes          DebtorIncome[]
-  verdicts         Verdict[]
-  agreements       Agreement[]
-  blockades        Blockade[]
-  block_checks     BlockCheck[]
-  debt_claims      DebtClaim[]
+  incomes      DebtorIncome[]
+  verdicts     Verdict[]
+  agreements   Agreement[]
+  blockades    Blockade[]
+  block_checks BlockCheck[]
+  debt_claims  DebtClaim[]
 
   @@map("debtor")
 }
@@ -1110,15 +1111,15 @@ model Employee {
 }
 
 model ChatRoom {
-  id           String    @id @default(cuid())
-  tenant_id    String
-  tenant       Tenant   @relation(fields: [tenant_id], references: [id])
-  debtClaimId  String
-  debtClaim    DebtClaim @relation(fields: [debtClaimId], references: [id])
-  name         String
-  created_at   DateTime  @default(now())
-  updated_at   DateTime  @updatedAt
-  messages     ChatMessage[]
+  id          String         @id @default(cuid())
+  tenant_id   String
+  tenant      Tenant        @relation(fields: [tenant_id], references: [id])
+  debtClaimId String
+  debtClaim   DebtClaim     @relation(fields: [debtClaimId], references: [id])
+  name        String
+  created_at  DateTime       @default(now())
+  updated_at  DateTime       @updatedAt
+  messages    ChatMessage[]
 
   @@map("chat_room")
 }
@@ -1359,11 +1360,11 @@ enum PaymentSentooStatus {
 }
 
 model PaymentAllocation {
-  id         String          @id @default(cuid())
+  id         String            @id @default(cuid())
   payment_id String
-  payment    Payment        @relation(fields: [payment_id], references: [id])
+  payment    Payment          @relation(fields: [payment_id], references: [id])
   component  PaymentComponent
-  amount     Decimal         @db.Decimal(10, 2)
+  amount     Decimal           @db.Decimal(10, 2)
 
   @@map("payment_allocation")
 }

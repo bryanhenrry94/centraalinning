@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
       description: body.description || "Payment",
       reference: body.reference,
       payment_type: body.payment_type,
+      debtClaim_id: body.debtClaim_id ?? null,
     };
 
     // registrar payment y crear transacción con sentoo

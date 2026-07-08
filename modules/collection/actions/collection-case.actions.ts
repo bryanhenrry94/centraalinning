@@ -37,3 +37,10 @@ export async function createDebtClaimAction(data: DebtClaimCreate) {
 
   return CollectionService.create(data, session.user.tenant_id);
 }
+
+export async function createPendingDebtClaimAction(data: DebtClaimCreate) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.tenant_id) throw new Error("Unauthorized");
+
+  return CollectionService.createPending(data, session.user.tenant_id);
+}
