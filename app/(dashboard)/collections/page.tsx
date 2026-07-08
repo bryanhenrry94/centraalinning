@@ -38,7 +38,7 @@ export default function CollectionsPage() {
   };
 
   return (
-    <Box sx={{ m: 4 }}>
+    <Box sx={{ m: 4, display: "flex", flexDirection: "column", gap: 2 }}>
       <CollectionHeader onRefresh={handleRefresh} />
       {loading ? (
         <Skeleton variant="rectangular" width={"100%"} height={200} />

@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 // IDs fijos para poder referenciarlos entre sí y desde el .env
 const ADMIN_TENANT_ID = "0874303e-6795-46ef-8416-5d76bba8071b";
 const PARAMETER_ID = "0874303e-6795-46ef-8416-5d76bba8071b";
-const ADMIN_USER_EMAIL = "admin@centraalinning.com";
+const ADMIN_USER_EMAIL = "bryanhenrry94@gmail.com";
 const PLAN_SMALL_ID = "plan-small-001";
 const PLAN_LARGE_ID = "plan-large-001";
 
@@ -130,10 +130,10 @@ async function seedAdminTenant() {
     update: {},
     create: {
       id: ADMIN_TENANT_ID,
-      name: "CFSB – Centraal Inning",
+      name: "CFSB - Centraal Inning",
       code: "CFSB",
       subdomain: "admin",
-      contact_email: "admin@centraalinning.com",
+      contact_email: "bryanhenrry94@gmail.com",
       country_code: "BQ", // Bonaire
       legal_name: "CFSB N.V.",
       is_active: true,

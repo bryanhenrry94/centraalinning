@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Box,
+  Chip,
   IconButton,
   Table,
   TableBody,
@@ -11,266 +12,152 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import TablePagination from "@mui/material/TablePagination";
-import { useTenant } from "@/modules/auth/hooks/useTenant";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { DebtClaimResponse } from "@/modules/collection/services/collection.type";
-import { useTheme, useMediaQuery } from "@mui/material";
 
-const CollectionTable = ({
-  invoices,
-}: {
-  invoices: DebtClaimResponse[];
-}) => {
+type StatusColor = "default" | "warning" | "info" | "error" | "success";
+
+const STATUS_CONFIG: Record<string, { label: string; color: StatusColor }> = {
+  OPEN:        { label: "Open",           color: "default" },
+  IN_PROGRESS: { label: "In behandeling", color: "info"    },
+  SETTLED:     { label: "Vereffend",      color: "success" },
+  CLOSED:      { label: "Gesloten",       color: "warning" },
+  CANCELLED:   { label: "Geannuleerd",    color: "error"   },
+};
+
+const HEAD_SX = {
+  backgroundColor: "secondary.main",
+  color: "#fff",
+  fontWeight: "bold",
+  whiteSpace: "nowrap" as const,
+};
+
+const ROWS_PER_PAGE_OPTIONS = [10, 25, 50];
+
+const CollectionTable = ({ invoices }: { invoices: DebtClaimResponse[] }) => {
   const router = useRouter();
-  const { tenant } = useTenant();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const [open, setOpen] = React.useState(false);
-  const [loading, setLoading] = React.useState(false);
-  const [selectedRow, setSelectedRow] = React.useState<string | null>(null);
-
-  // pagination
   const [page, setPage] = React.useState(0);
-  const rowsPerPage = 5;
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
-  const paginatedData = invoices.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage,
+  const paginatedData = useMemo(
+    () => invoices.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [invoices, page, rowsPerPage],
   );
 
-  const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const handleView = useCallback(
+    (id: string) => router.push(`/dashboard/collections/${id}`),
+    [router],
+  );
 
-  const handleEdit = (id: string) => {
-    router.push(`/dashboard/collections/${id}`);
-  };
+  const handlePageChange = useCallback((_: unknown, newPage: number) => {
+    setPage(newPage);
+  }, []);
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "AANMANING":
-        return "Aanmaning";
-      case "SOMMATIE":
-        return "Sommaties";
-      case "INGEBREKESTELLING":
-        return "Ingebrekestelling";
-      case "BLOKKADE":
-        return "Blokkade";
-      default:
-        return status;
-    }
-  };
+  const handleRowsPerPageChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setRowsPerPage(parseInt(e.target.value, 10));
+      setPage(0);
+    },
+    [],
+  );
 
   return (
-    <Box mt={4}>
-      {loading && <Typography>Loading...</Typography>}
-      <TableContainer component={"div"}>
-        <Table size="small" stickyHeader aria-label="sticky table">
+    <Box sx={{ width: "100%", overflow: "hidden" }}>
+      <TableContainer>
+        <Table size="small" stickyHeader aria-label="collection table">
           <TableHead>
             <TableRow>
-              <TableCell
-                sx={{
-                  minWidth: 90,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                  border: "1px solid #bdbdbd",
-                }}
-              >
-                Datum
+              <TableCell sx={HEAD_SX}>Datum</TableCell>
+              {!isMobile && <TableCell sx={HEAD_SX}>Referentie</TableCell>}
+              <TableCell sx={HEAD_SX}>Naam</TableCell>
+              <TableCell sx={{ ...HEAD_SX, textAlign: "right" }}>
+                Vordering
               </TableCell>
-              {!isSmallScreen && (
-                <>
-                  <TableCell
-                    sx={{
-                      minWidth: 110,
-                      backgroundColor: "secondary.main",
-                      color: "#fff",
-                      fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                      textAlign: "left",
-                    }}
-                  >
-                    Referentienummer
-                  </TableCell>
-
-                  <TableCell
-                    sx={{
-                      minWidth: 50,
-                      backgroundColor: "secondary.main",
-                      color: "#fff",
-                      fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  >
-                    Reactietermijn
-                  </TableCell>
-                </>
-              )}
-              <TableCell
-                sx={{
-                  minWidth: 120,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                  border: "1px solid #bdbdbd",
-                  textAlign: "left",
-                }}
-              >
-                Naam
-              </TableCell>
-              {!isSmallScreen && (
-                <>
-                  <TableCell
-                    sx={{
-                      minWidth: 50,
-                      backgroundColor: "secondary.main",
-                      color: "#fff",
-                      fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                      textAlign: "left",
-                    }}
-                  >
-                    Vordering
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      minWidth: 50,
-                      backgroundColor: "secondary.main",
-                      color: "#fff",
-                      fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                      textAlign: "left",
-                    }}
-                  >
-                    Betaald
-                  </TableCell>
-                </>
-              )}
-
-              <TableCell
-                sx={{
-                  minWidth: 70,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                  border: "1px solid #bdbdbd",
-                  textAlign: "left",
-                }}
-              >
-                Hoofd
-              </TableCell>
-
-              <TableCell
-                sx={{
-                  minWidth: 50,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                  border: "1px solid #bdbdbd",
-                }}
-                align="left"
-              >
-                Status
-              </TableCell>
-
-              {!isSmallScreen && (
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="left"
-                >
-                  Actie
+              {!isMobile && (
+                <TableCell sx={{ ...HEAD_SX, textAlign: "right" }}>
+                  Saldo
                 </TableCell>
               )}
+              <TableCell sx={HEAD_SX}>Status</TableCell>
+              <TableCell sx={{ ...HEAD_SX, textAlign: "center" }}>
+                Actie
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedData.map((invoice) => (
-              <TableRow
-                key={invoice.id}
-                hover
-                selected={selectedRow === invoice.id}
-                onClick={() => setSelectedRow(invoice.id)}
-                sx={{
-                  cursor: "pointer",
-                  "&:hover": {
-                    backgroundColor: (theme) => theme.palette.primary.light,
-                  },
-                  "&.Mui-selected": {
-                    backgroundColor: (theme) => theme.palette.primary.light,
-                  },
-                  "&.Mui-selected:hover": {
-                    backgroundColor: (theme) => theme.palette.primary.light,
-                  },
-                }}
-              >
-                <TableCell sx={{ textAlign: "left", fontSize: "10px" }}>
-                  {formatDate(invoice.createdAt?.toString() || "")}
-                </TableCell>
-                {!isSmallScreen && (
-                  <>
-                    <TableCell sx={{ textAlign: "center" }}>
-                      {invoice.reference || "Onbekend"}
-                    </TableCell>
-                    <TableCell sx={{ textAlign: "center" }}>
-                      {invoice.description || "-"}
-                    </TableCell>
-                  </>
-                )}
-                <TableCell sx={{ textAlign: "left", fontSize: "10px" }}>
-                  {invoice.debtor.fullname || "Onbekend"}
-                </TableCell>
-                {!isSmallScreen && (
-                  <>
-                    <TableCell sx={{ textAlign: "right" }}>
-                      {formatCurrency(Number(invoice.principalAmount))}
-                    </TableCell>
-                    <TableCell sx={{ textAlign: "right" }}>
-                      {formatCurrency(Number(invoice.currentAmount))}
-                    </TableCell>
-                  </>
-                )}
+            {paginatedData.map((row) => {
+              const statusInfo = STATUS_CONFIG[row.status] ?? {
+                label: row.status,
+                color: "default" as StatusColor,
+              };
 
-                <TableCell sx={{ textAlign: "right", fontSize: "10px" }}>
-                  {formatCurrency(Number(invoice.currentAmount))}
-                </TableCell>
-
-                <TableCell sx={{ textAlign: "center", fontSize: "10px" }}>
-                  {getStatusLabel(invoice.status)}
-                </TableCell>
-                {!isSmallScreen && (
-                  <TableCell sx={{ textAlign: "center" }}>
+              return (
+                <TableRow
+                  key={row.id}
+                  hover
+                  onClick={() => handleView(row.id)}
+                  sx={{ cursor: "pointer" }}
+                >
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>
+                    {formatDate(row.createdAt?.toString() ?? "")}
+                  </TableCell>
+                  {!isMobile && (
+                    <TableCell>{row.reference ?? "—"}</TableCell>
+                  )}
+                  <TableCell>{row.debtor.fullname || "Onbekend"}</TableCell>
+                  <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                    {formatCurrency(Number(row.principalAmount))}
+                  </TableCell>
+                  {!isMobile && (
+                    <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                      {formatCurrency(Number(row.currentAmount))}
+                    </TableCell>
+                  )}
+                  <TableCell>
+                    <Chip
+                      label={statusInfo.label}
+                      color={statusInfo.color}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell align="center">
                     <IconButton
-                      onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                        handleEdit(invoice.id)
-                      }
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleView(row.id);
+                      }}
                     >
-                      <VisibilityIcon />
+                      <VisibilityIcon fontSize="small" />
                     </IconButton>
                   </TableCell>
-                )}
-              </TableRow>
-            ))}
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
-        <TablePagination
-          component="div"
-          count={invoices.length}
-          page={page}
-          onPageChange={(_, newPage) => setPage(newPage)}
-          rowsPerPage={rowsPerPage}
-          rowsPerPageOptions={[5]} // fijo en 5
-        />
       </TableContainer>
+      <TablePagination
+        component="div"
+        count={invoices.length}
+        page={page}
+        onPageChange={handlePageChange}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={handleRowsPerPageChange}
+        rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
+        labelRowsPerPage={isMobile ? "" : "Rijen per pagina:"}
+        labelDisplayedRows={({ from, to, count }) =>
+          `${from}–${to} van ${count}`
+        }
+      />
     </Box>
   );
 };
