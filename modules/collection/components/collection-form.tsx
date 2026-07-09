@@ -68,7 +68,6 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
     defaultValues: {
       debtorId: "",
       principalAmount: 0,
-      currentAmount: 0,
       currency: "USD",
       origin: "MANUAL",
       status: "IN_PROGRESS",
@@ -191,7 +190,11 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
     }
 
     const data = await res.json();
-    return { success: true, paymentId: data.paymentId, paymentUrl: data.paymentUrl };
+    return {
+      success: true,
+      paymentId: data.paymentId,
+      paymentUrl: data.paymentUrl,
+    };
   };
 
   /**

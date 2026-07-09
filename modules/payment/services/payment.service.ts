@@ -34,7 +34,6 @@ export class PaymentService {
       description: string;
       reference?: string;
       payment_type?: string;
-      debtClaim_id?: string | null;
     },
   ): Promise<PaymentResult> => {
     const tenant = await prisma.tenant.findUnique({
@@ -57,7 +56,6 @@ export class PaymentService {
         payment_type:
           (payload.payment_type as PaymentType) || PaymentType.OTHER,
         method: "TRANSFER",
-        debtClaim_id: payload.debtClaim_id ?? null,
       },
     });
 
@@ -108,7 +106,6 @@ export class PaymentService {
     const paymentRes = await prisma.payment.create({
       data: {
         tenant_id: tenant_id,
-        debtClaim_id: payload.debtClaim_id,
         method: payload.method || "TRANSFER",
         provider: payload.provider || "manual",
         provider_ref: payload.provider_ref || "",
@@ -301,7 +298,6 @@ export class PaymentService {
 
     return {
       ...payment,
-      debtClaim_id: payment.debtClaim_id ?? "",
       total_amount:
         typeof payment.total_amount === "object" &&
         "toNumber" in payment.total_amount
@@ -322,9 +318,7 @@ export class PaymentService {
     debtClaim_id?: string;
   }): Promise<{ success: boolean; error?: string; data?: Payment[] }> => {
     try {
-      const payments = await prisma.payment.findMany({
-        where: { debtClaim_id: filter.debtClaim_id },
-      });
+      const payments = await prisma.payment.findMany();
       return { success: true, data: payments.map(this.mapPayment) };
     } catch {
       return { success: false, error: "Error fetching payments" };
@@ -334,14 +328,12 @@ export class PaymentService {
   static getAllByDebtClaim = async (
     debtClaim_id: string,
   ): Promise<Payment[]> => {
-    const payments = await prisma.payment.findMany({ where: { debtClaim_id } });
+    const payments = await prisma.payment.findMany();
     return payments.map(this.mapPayment);
   };
 
   static hasPending = async (debtClaim_id: string): Promise<boolean> => {
-    const count = await prisma.payment.count({
-      where: { debtClaim_id, status: "pending" },
-    });
+    const count = await prisma.payment.count();
     return count > 0;
   };
 
@@ -362,7 +354,7 @@ export class PaymentService {
   static getFirstByDebtClaimId = async (
     debtClaim_id: string,
   ): Promise<Payment | null> => {
-    const payment = await prisma.payment.findFirst({ where: { debtClaim_id } });
+    const payment = await prisma.payment.findFirst();
     if (!payment) return null;
     return this.mapPayment(payment);
   };

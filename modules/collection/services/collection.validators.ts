@@ -7,7 +7,6 @@ export const DebtClaimSchema = z.object({
   reference: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
   principalAmount: z.number(),
-  currentAmount: z.number(),
   currency: z.string(),
   origin: z.enum(["FAR", "MANUAL", "IMPORT", "API"]),
   status: z.enum(["OPEN", "IN_PROGRESS", "SETTLED", "CLOSED", "CANCELLED"]),
@@ -24,7 +23,9 @@ export const DebtClaimCreateSchema = DebtClaimSchema.omit({
   closedAt: true,
 }).extend({
   debtorId: z.string().min(1, "Debiteur is verplicht"),
-  principalAmount: z.number().positive("Vorderingsbedrag moet groter zijn dan 0"),
+  principalAmount: z
+    .number()
+    .positive("Vorderingsbedrag moet groter zijn dan 0"),
 });
 
 export const DebtClaimUpdateSchema = DebtClaimCreateSchema.partial();

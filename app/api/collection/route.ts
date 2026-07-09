@@ -19,7 +19,6 @@ export async function POST(req: NextRequest) {
       reference: body.reference,
       description: body.description,
       principalAmount: body.principalAmount,
-      currentAmount: body.currentAmount ?? body.principalAmount,
       currency: body.currency ?? "USD",
       origin: body.origin ?? "MANUAL",
       status: body.status ?? "IN_PROGRESS",

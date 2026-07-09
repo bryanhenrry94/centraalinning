@@ -33,7 +33,6 @@ export class ReportService {
           id: true,
           createdAt: true,
           reference: true,
-          currentAmount: true,
           status: true,
           debtor: {
             select: {
@@ -59,7 +58,6 @@ export class ReportService {
           originDebtClaim: {
             select: {
               reference: true,
-              currentAmount: true,
               status: true,
             },
           },
@@ -94,20 +92,23 @@ export class ReportService {
         date: collection.createdAt,
         reference_number: collection.reference || "",
         name: `${collection.debtor.person.first_name} ${collection.debtor.person.last_name}`,
-        amount: Number(collection.currentAmount),
+        amount: Number(collection.principalAmount),
         status: collection.status,
       }),
     );
 
-    const blockadeRows: TableSummaryResponse[] = blockades.map((blockade: any) => ({
-      id: blockade.id,
-      source: "BLK - Blokade",
-      date: blockade.createdAt,
-      reference_number: blockade.originDebtClaim?.reference || blockade.reason || "",
-      name: `${blockade.debtor.person.first_name} ${blockade.debtor.person.last_name}`,
-      amount: Number(blockade.originDebtClaim?.currentAmount ?? 0),
-      status: blockade.originDebtClaim?.status || "ACTIVE",
-    }));
+    const blockadeRows: TableSummaryResponse[] = blockades.map(
+      (blockade: any) => ({
+        id: blockade.id,
+        source: "BLK - Blokade",
+        date: blockade.createdAt,
+        reference_number:
+          blockade.originDebtClaim?.reference || blockade.reason || "",
+        name: `${blockade.debtor.person.first_name} ${blockade.debtor.person.last_name}`,
+        amount: Number(blockade.originDebtClaim?.principalAmount ?? 0),
+        status: blockade.originDebtClaim?.status || "ACTIVE",
+      }),
+    );
 
     return [...contractRows, ...collectionRows, ...blockadeRows]
       .sort((a, b) => b.date.getTime() - a.date.getTime())

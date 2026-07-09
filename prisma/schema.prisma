@@ -70,7 +70,6 @@ model DebtClaim {
   description              String?
 
   principalAmount          Decimal                    @db.Decimal(18, 2)
-  currentAmount            Decimal                    @db.Decimal(18, 2)
 
   currency                 String                     @default("USD")
 
@@ -90,7 +89,6 @@ model DebtClaim {
 
   blockade                 Blockade?                 @relation("ClaimOrigin")
 
-  payments                 Payment[]
   agreements               Agreement[]
 
   documents                ClaimDocument[]
@@ -98,8 +96,35 @@ model DebtClaim {
   timeline                 ClaimTimeline[]
   services                 ClaimService[]
   chatRooms                ChatRoom[]
+  obligations              DebtClaimObligation[]
 
   @@map("debt_claim")
+}
+
+model DebtClaimObligation {
+  id             String            @id @default(cuid())
+
+  debtClaimId    String
+  debtClaim      DebtClaim        @relation(fields: [debtClaimId], references: [id])
+
+  type           ObligationType
+  beneficiary    BeneficiaryType
+
+  originalAmount Decimal
+  paidAmount     Decimal           @default(0)
+  balanceAmount  Decimal
+
+  status         ObligationStatus
+
+  dueDate        DateTime?
+
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  payments       Payment[]
+
+  @@map("debt_claim_obligation")
+  @@index([debtClaimId])
 }
 
 model Blockade {
@@ -329,6 +354,26 @@ model ClaimDocument {
 }
 
 // ******************************* ENUMS *******************************
+
+enum ObligationType {
+  PRINCIPAL_DEBT
+  ADMINISTRATIVE_FEE
+  ABB
+  INTEREST
+  LEGAL_COST
+}
+
+enum BeneficiaryType {
+  PARTICIPANT
+  CFSB
+}
+
+enum ObligationStatus {
+  PENDING
+  PARTIALLY_PAID
+  PAID
+  CANCELLED
+}
 
 enum ChargeStatus {
   PENDING     // El cargo fue generado pero aún no es exigible o facturable.
@@ -1306,8 +1351,8 @@ model Payment {
   tenant_id        String
   tenant           Tenant                 @relation(fields: [tenant_id], references: [id])
 
-  debtClaim_id     String?
-  debtClaim        DebtClaim?             @relation(fields: [debtClaim_id], references: [id])
+  obligation_id    String?
+  obligation       DebtClaimObligation?   @relation(fields: [obligation_id], references: [id])
 
   total_amount     Decimal                 @db.Decimal(10, 2)
   status           PaymentStatus           @default(pending)

@@ -137,7 +137,7 @@ const CollectionTable = ({ invoices }: { invoices: DebtClaimResponse[] }) => {
                     <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
                       {isPending
                         ? "—"
-                        : formatCurrency(Number(row.currentAmount))}
+                        : formatCurrency(Number(row.principalAmount))}
                     </TableCell>
                   )}
                   <TableCell>

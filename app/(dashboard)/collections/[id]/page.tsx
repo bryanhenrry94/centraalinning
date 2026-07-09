@@ -38,9 +38,9 @@ const CollectionViewPage: React.FC = () => {
     null,
   );
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [notifications, setNotifications] = useState<AOPStepNotification[] | null>(
-    null,
-  );
+  const [notifications, setNotifications] = useState<
+    AOPStepNotification[] | null
+  >(null);
   const [value, setValue] = React.useState(0);
 
   const [openModalPayment, setOpenModalPayment] = React.useState(false);
@@ -109,10 +109,9 @@ const CollectionViewPage: React.FC = () => {
         return;
       }
 
-      const data =
-        await CollectionNotificationService.getStepsForClaim(
-          params.id as string,
-        );
+      const data = await CollectionNotificationService.getStepsForClaim(
+        params.id as string,
+      );
       console.log("Notifications Data:", data);
       setNotifications(data);
     } catch (error) {
@@ -180,11 +179,12 @@ const CollectionViewPage: React.FC = () => {
               {collection?.debtor.fullname ? collection.debtor.fullname : "N/A"}
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Vordering: {formatCurrency(Number(collection?.principalAmount) || 0)}
+              Vordering:{" "}
+              {formatCurrency(Number(collection?.principalAmount) || 0)}
             </Typography>
             <Typography variant="body1" color="text.secondary">
               Totaal te betalen:{" "}
-              {formatCurrency(Number(collection?.currentAmount) || 0)}
+              {formatCurrency(Number(collection?.principalAmount) || 0)}
             </Typography>
             <Typography variant="body1" color="text.secondary">
               Status: {collection?.status || "N/A"}

@@ -54,7 +54,9 @@ export const sendAanmaningEmail = async (
     const feeCharge = claim.charges.find(
       (c) => c.concept === "Honorarios de cobranza",
     );
-    const abbCharge = claim.charges.find((c) => c.concept === "ABB (belasting)");
+    const abbCharge = claim.charges.find(
+      (c) => c.concept === "ABB (belasting)",
+    );
 
     const params: AanmaningPDFProps = {
       logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
@@ -66,7 +68,7 @@ export const sendAanmaningEmail = async (
       digitalFileCosts: parameter.digital_file_costs
         ? parameter.digital_file_costs.toFixed(2)
         : "0.00",
-      total_amount: Number(claim.currentAmount).toFixed(2),
+      total_amount: Number(claim.principalAmount).toFixed(2),
       bankName: parameter.bank_name || "Bank Name",
       accountNumber: parameter.bank_account || "Account Number",
       amount_original: Number(claim.principalAmount).toFixed(2),
@@ -131,7 +133,9 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
 
     const debtorAddress = claim.debtor.person?.address || "";
 
-    const abbCharge = claim.charges.find((c) => c.concept === "ABB (belasting)");
+    const abbCharge = claim.charges.find(
+      (c) => c.concept === "ABB (belasting)",
+    );
 
     const params: SommatiePDFProps = {
       logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
@@ -140,7 +144,7 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
       debtorAddress: debtorAddress,
       island: island || "Bonaire",
       reference_number: claim.reference || "",
-      total_amount: Number(claim.currentAmount).toFixed(2),
+      total_amount: Number(claim.principalAmount).toFixed(2),
       amount_original: Number(claim.principalAmount).toFixed(2),
       calculatedABB: abbCharge ? Number(abbCharge.amount).toFixed(2) : "0.00",
       tenantName: claim.tenant.name || "Tenant",
@@ -179,10 +183,7 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
   }
 };
 
-export const sendIngebrekestellingMail = async (
-  to: string,
-  caseId: string,
-) => {
+export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
   try {
     const claim = await prisma.debtClaim.findUnique({
       where: { id: caseId },

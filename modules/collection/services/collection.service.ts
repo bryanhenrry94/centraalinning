@@ -43,7 +43,6 @@ export class CollectionService {
       reference: await this.generateClaimReference(),
       description: contract.reference_number || "",
       principalAmount,
-      currentAmount: calculations.totalDue,
       currency: "USD",
       origin: "FAR",
       status: "IN_PROGRESS",
@@ -128,6 +127,18 @@ export class CollectionService {
     if (!tenant) return { success: false, error: "Tenant not found" };
     if (!debtor) return { success: false, error: "Debtor not found" };
 
+    const principalAmount = Number(parsedData.principalAmount);
+    if (principalAmount <= 0) {
+      return {
+        success: false,
+        error: "Principal amount must be greater than 0",
+      };
+    }
+
+    const feeAmount = Number(((principalAmount * 15) / 100).toFixed(2));
+
+    const abbAmount = Number(((feeAmount * 6) / 100).toFixed(2));
+
     const reference = parsedData.reference?.trim()
       ? parsedData.reference
       : await this.generateClaimReference();
@@ -139,10 +150,46 @@ export class CollectionService {
         reference,
         description: parsedData.description,
         principalAmount: parsedData.principalAmount,
-        currentAmount: parsedData.principalAmount, // se actualiza en activate
         currency: parsedData.currency ?? "USD",
         origin: parsedData.origin ?? "MANUAL",
         status: "OPEN",
+      },
+    });
+
+    // crear obligación asociada al debt claim
+    await prisma.debtClaimObligation.create({
+      data: {
+        debtClaimId: claim.id,
+        type: "PRINCIPAL_DEBT",
+        beneficiary: "PARTICIPANT",
+        originalAmount: parsedData.principalAmount,
+        paidAmount: 0,
+        balanceAmount: parsedData.principalAmount,
+        status: "PENDING",
+      },
+    });
+
+    await prisma.debtClaimObligation.create({
+      data: {
+        debtClaimId: claim.id,
+        type: "ADMINISTRATIVE_FEE",
+        beneficiary: "CFSB",
+        originalAmount: feeAmount,
+        paidAmount: 0,
+        balanceAmount: feeAmount,
+        status: "PENDING",
+      },
+    });
+
+    await prisma.debtClaimObligation.create({
+      data: {
+        debtClaimId: claim.id,
+        type: "ABB",
+        beneficiary: "CFSB",
+        originalAmount: abbAmount,
+        paidAmount: 0,
+        balanceAmount: abbAmount,
+        status: "PENDING",
       },
     });
 
@@ -163,7 +210,9 @@ export class CollectionService {
     if (!claim) throw new Error(`DebtClaim ${claimId} not found`);
 
     if (claim.status !== "OPEN") {
-      console.warn(`DebtClaim ${claimId} ya activado (status: ${claim.status})`);
+      console.warn(
+        `DebtClaim ${claimId} ya activado (status: ${claim.status})`,
+      );
       return;
     }
 
@@ -183,7 +232,7 @@ export class CollectionService {
     await prisma.$transaction(async (tx) => {
       await tx.debtClaim.update({
         where: { id: claimId },
-        data: { status: "IN_PROGRESS", currentAmount: calculations.totalDue },
+        data: { status: "IN_PROGRESS" },
       });
 
       await tx.claimCharge.createMany({
@@ -292,7 +341,10 @@ export class CollectionService {
       await this.activate(pendingResult.claimId);
     } catch (error) {
       console.error("Error activating claim", error);
-      return { success: false, error: "Kon de collection case niet activeren." };
+      return {
+        success: false,
+        error: "Kon de collection case niet activeren.",
+      };
     }
 
     const claim = await prisma.debtClaim.findUnique({
@@ -312,7 +364,6 @@ export class CollectionService {
         reference: claim.reference,
         description: claim.description,
         principalAmount: Number(claim.principalAmount),
-        currentAmount: Number(claim.currentAmount),
         currency: claim.currency,
         origin: claim.origin,
         status: claim.status,
@@ -339,7 +390,6 @@ export class CollectionService {
       reference: claim.reference,
       description: claim.description,
       principalAmount: Number(claim.principalAmount),
-      currentAmount: Number(claim.currentAmount),
       currency: claim.currency,
       origin: claim.origin,
       status: claim.status,
@@ -362,7 +412,6 @@ export class CollectionService {
       reference: claim.reference,
       description: claim.description,
       principalAmount: Number(claim.principalAmount),
-      currentAmount: Number(claim.currentAmount),
       currency: claim.currency,
       origin: claim.origin,
       status: claim.status,
@@ -486,7 +535,6 @@ export class CollectionService {
       reference: c.reference,
       description: c.description,
       principalAmount: Number(c.principalAmount),
-      currentAmount: Number(c.currentAmount),
       currency: c.currency,
       origin: c.origin,
       status: c.status,
@@ -508,31 +556,50 @@ export class CollectionService {
 }
 
 export const processCollectionPayment = async (paymentId: string) => {
-  const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
-  if (!payment) throw new Error("Payment not found");
-
-  if (!payment.debtClaim_id) {
-    console.warn(`Payment ${payment.id} has no debtClaim_id associated`);
-    return;
-  }
-
-  // Activa el claim: IN_PROGRESS + cargos + AOP + chat + aanmaning
-  await CollectionService.activate(payment.debtClaim_id);
-
-  const debtClaim = await prisma.debtClaim.findUnique({
-    where: { id: payment.debtClaim_id },
-    include: { tenant: true },
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId },
+    include: {
+      obligation: {
+        include: {
+          debtClaim: {
+            include: {
+              tenant: true,
+            },
+          },
+        },
+      },
+    },
   });
 
-  if (!debtClaim) throw new Error(`DebtClaim ${payment.debtClaim_id} not found`);
+  if (!payment) throw new Error("Payment not found");
 
-  // Generar factura y enviar email al tenant
-  const invoiceData = await InvoiceService.generateInvoiceData(payment.id);
-  const invoice = await InvoiceService.createInvoice(invoiceData);
+  if (!payment.obligation || !payment.obligation.debtClaim) {
+    throw new Error("Obligation or DebtClaim not found for the payment");
+  }
 
-  if (debtClaim.tenant.contact_email) {
-    await sendInvoiceEmail(debtClaim.tenant.contact_email, invoice.id, true);
-  } else {
-    console.warn(`Tenant ${debtClaim.tenantId} has no contact email`);
+  // await ObligationService.applyPayment(paymentId);
+
+  if (
+    payment.obligation.type === "ADMINISTRATIVE_FEE" &&
+    payment.status === "paid"
+  ) {
+    // Activa el claim: IN_PROGRESS + cargos + AOP + chat + aanmaning
+    await CollectionService.activate(payment.obligation.debtClaim.id);
+
+    // Generar factura y enviar email al tenant
+    const invoiceData = await InvoiceService.generateInvoiceData(payment.id);
+    const invoice = await InvoiceService.createInvoice(invoiceData);
+
+    if (payment.obligation.debtClaim.tenant.contact_email) {
+      await sendInvoiceEmail(
+        payment.obligation.debtClaim.tenant.contact_email,
+        invoice.id,
+        true,
+      );
+    } else {
+      console.warn(
+        `Tenant ${payment.obligation.debtClaim.tenantId} has no contact email`,
+      );
+    }
   }
 };
