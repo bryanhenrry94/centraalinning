@@ -2,19 +2,21 @@ import { prisma } from "@/lib/prisma";
 import { CreateBlockadeInput } from "./blockade.validators";
 import { Prisma } from "@prisma/client";
 import { StorageService } from "@/infrastructure/storage/storage.service";
+import { sendMailBlockade } from "./blockade-mail.service";
 
 export class BlockadeService {
   static createBlockade = async (
     input: CreateBlockadeInput,
     tenantId: string,
   ) => {
-    const referenceNumber = await BlockadeService.generateReferenceNumber();
-
     const blockade = await prisma.blockade.create({
       data: {
         tenantId: tenantId,
         debtorId: input.debtorId,
         reason: input.reason,
+        status: input.status || "DRAFT",
+        registeredAt: input.registeredAt || new Date(),
+        paymentId: input.paymentId || null,
       },
     });
 
@@ -126,10 +128,7 @@ export class BlockadeService {
     });
   };
 
-  static createFull = async (
-    input: CreateBlockadeInput,
-    tenantId: string,
-  ) => {
+  static createFull = async (input: CreateBlockadeInput, tenantId: string) => {
     const debtor = await prisma.debtor.findUnique({
       where: { id: input.debtorId },
       include: { person: true, tenant: true },
@@ -140,7 +139,10 @@ export class BlockadeService {
     }
 
     if (!debtor.email || !debtor.person.email) {
-      return { success: false, message: "El deudor no tiene un correo electrónico asociado" };
+      return {
+        success: false,
+        message: "El deudor no tiene un correo electrónico asociado",
+      };
     }
 
     const blockade = await prisma.blockade.create({
@@ -149,6 +151,8 @@ export class BlockadeService {
         debtorId: input.debtorId,
         reason: input.reason,
         registeredAt: input.registeredAt || new Date(),
+        status: input.status || "DRAFT",
+        paymentId: input.paymentId || null,
       },
     });
 
@@ -159,7 +163,12 @@ export class BlockadeService {
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
-        await StorageService.uploadFile(key, doc.fileName, doc.mimeType, buffer);
+        await StorageService.uploadFile(
+          key,
+          doc.fileName,
+          doc.mimeType,
+          buffer,
+        );
 
         return {
           blockadeId: blockade.id,
@@ -198,5 +207,85 @@ export class BlockadeService {
     const total = await prisma.blockade.count();
 
     return `BLK-${year}-${String(total + 1).padStart(3, "0")}`;
+  };
+
+  static updatePaymentReference = async (
+    blockadeId: string,
+    input: { paymentId: string },
+  ) => {
+    const blockade = await prisma.blockade.update({
+      where: { id: blockadeId },
+      data: {
+        paymentId: input.paymentId,
+      },
+    });
+
+    const debtor = await prisma.debtor.findUnique({
+      where: { id: blockade.debtorId },
+      include: { person: true, tenant: true },
+    });
+
+    if (!debtor) {
+      return { success: false, message: "Deudor no encontrado" };
+    }
+
+    if (!debtor.email || !debtor.person.email) {
+      return {
+        success: false,
+        message: "El deudor no tiene un correo electrónico asociado",
+      };
+    }
+
+    return {
+      success: true,
+      id: blockade.id,
+      debtorEmail: debtor.email,
+      debtorName: `${debtor.person?.first_name} ${debtor.person?.last_name}`,
+      creditorName: debtor.tenant?.name || "",
+    };
+  };
+
+  static processBlokCheckPayment = async (paymentId: string) => {
+    const payment = await prisma.payment.findUnique({
+      where: { id: paymentId },
+    });
+
+    if (!payment) {
+      throw new Error("Payment not found");
+    }
+
+    if (payment.status !== "paid") {
+      throw new Error("Payment is not marked as paid");
+    }
+
+    const blockade = await prisma.blockade.findFirst({
+      where: { paymentId: payment.id, status: "DRAFT" },
+      include: {
+        debtor: {
+          include: {
+            person: true,
+            tenant: true,
+          },
+        },
+      },
+    });
+
+    if (!blockade) {
+      throw new Error("Blockade not found");
+    }
+
+    // Aquí puedes agregar la lógica específica para procesar el pago de la blokkade
+    await prisma.blockade.update({
+      where: { id: blockade.id },
+      data: { status: "ACTIVE" },
+    });
+
+    sendMailBlockade(
+      blockade.debtor.email!,
+      `${blockade.debtor.person?.first_name} ${blockade.debtor.person?.last_name}`,
+      blockade.debtor.tenant?.name || "",
+    );
+
+    return { success: true };
   };
 }

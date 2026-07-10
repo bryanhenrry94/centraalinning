@@ -18,6 +18,10 @@ export const BlockadeSchema = z.object({
 
   registeredAt: z.date().optional(),
 
+  status: z.enum(["DRAFT", "ACTIVE", "SUSPENDED"]).optional(),
+
+  paymentId: z.string().optional(),
+
   documents: z
     .array(BlockadeDocumentSchema)
     .min(1, "Debe adjuntar al menos un documento"),

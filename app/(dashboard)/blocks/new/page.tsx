@@ -32,7 +32,10 @@ import {
   CreateBlockadeInput,
 } from "@/modules/blockade/services/blockade.validators";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createBlockadeAction } from "@/modules/blockade/actions/create-blockade";
+import {
+  createBlockadeAction,
+  updatePaymentReference,
+} from "@/modules/blockade/actions/create-blockade";
 import { notifyError, notifyInfo } from "@/shared/ui/notifications";
 import CloseIcon from "@mui/icons-material/Close";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
@@ -64,8 +67,6 @@ export default function BlockCreatePage() {
 
   const router = useRouter();
 
-  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
-
   // Estados locales para manejar los documentos y el deudor seleccionado
   const [documents, setDocuments] = useState<File[]>([]);
 
@@ -82,7 +83,6 @@ export default function BlockCreatePage() {
     handleSubmit,
     formState: { errors, isSubmitting },
     setValue,
-    reset,
   } = useForm<CreateBlockadeInput>({
     resolver: zodResolver(BlockadeSchema),
     defaultValues: {
@@ -93,43 +93,7 @@ export default function BlockCreatePage() {
     },
   });
 
-  const createBlockade = async () => {
-    if (!pendingFormValues) return;
-
-    try {
-      const res = await createBlockadeAction(
-        pendingFormValues,
-        tenant?.id || "",
-      );
-
-      if (!res.success) {
-        notifyError(
-          res.message || "Error al registrar la blokkade. Inténtalo de nuevo.",
-        );
-        return;
-      }
-
-      await notifyInfo("Blokkade succesvol geregistreerd");
-
-      // espera 3 segundos antes de resetear el formulario para que el usuario pueda ver la notificación
-      setTimeout(() => {
-        router.push("/blocks");
-      }, 3000);
-    } catch (error: any) {
-      console.error("Error al registrar la blokkade:", error);
-      notifyError(
-        error?.message || "Ocurrió un error al registrar la blokkade.",
-      );
-    }
-  };
-
   const onSubmit = async (data: CreateBlockadeInput) => {
-    // si ya se generó el pago, solo abrir la url del pago
-    if (paymentUrl) {
-      window.open(paymentUrl, "_blank");
-      return;
-    }
-
     // Validación con react-hook-form + zod ya pasó
     setPendingFormValues(data);
     setShowCostDialog(true);
@@ -237,20 +201,49 @@ export default function BlockCreatePage() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const handlePaymentFailed = async (_paymentId: string) => {
+    setShowCostDialog(false);
+    notifyError("Betaling mislukt. Probeer het opnieuw.");
+
+    // espera 3 segundos antes de resetear el formulario para que el usuario pueda ver la notificación
+    setTimeout(() => {
+      router.push("/blocks");
+    }, 3000);
+  };
+
+  const handlePaymentConfirmed = async (paymentId: string) => {
+    setShowCostDialog(false);
+    notifyInfo("Betaling bevestigd. Blokkade wordt geregistreerd...");
+  };
+
   const handleCreateTransaction = async (): Promise<{
     success: boolean;
     error?: string;
     paymentId?: string;
     paymentUrl?: string;
   }> => {
-    // const isValid = await trigger();
-    // if (!isValid) {
-    //   return { success: false, error: "Formulario inválido" };
-    // }
+    if (!pendingFormValues) {
+      notifyError("Geen formuliergegevens beschikbaar");
+      return { success: false, error: "Geen formuliergegevens beschikbaar" };
+    }
 
     if (amountService <= 0) {
       notifyError("Het servicebedrag moet groter zijn dan 0");
       return { success: false, error: "Servicebedrag is 0" };
+    }
+
+    const resBlockade = await createBlockadeAction(
+      pendingFormValues,
+      tenant?.id || "",
+    );
+
+    if (!resBlockade.success) {
+      return {
+        success: false,
+        error:
+          resBlockade.message ||
+          "Error al registrar la blokkade. Inténtalo de nuevo.",
+      };
     }
 
     const res = await fetch("/api/payments/create", {
@@ -268,6 +261,11 @@ export default function BlockCreatePage() {
       notifyError("Fout bij het aanmaken van de betaling");
       throw new Error("Payment creation failed");
     }
+
+    // relaciona el paymentId con la blokkade
+    await updatePaymentReference(resBlockade.id!, {
+      paymentId: resBlockade.id!,
+    });
 
     const data = await res.json();
     return {
@@ -590,10 +588,8 @@ export default function BlockCreatePage() {
 
               <PaymentIntent
                 onCreateTransaction={handleCreateTransaction}
-                onPaymentConfirmed={async () => {
-                  setShowCostDialog(false);
-                  await createBlockade();
-                }}
+                onPaymentConfirmed={handlePaymentConfirmed}
+                onPaymentFailed={handlePaymentFailed}
               />
             </Stack>
           </Stack>

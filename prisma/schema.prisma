@@ -144,6 +144,11 @@ model Blockade {
   registeredAt      DateTime            @default(now())
   releasedAt        DateTime?
 
+  status            BlockadeStatus
+
+  paymentId         String?
+  payment           Payment?           @relation(fields: [paymentId], references: [id])
+
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
 
@@ -537,8 +542,8 @@ enum DebtClaimStatus {
 }
 
 enum BlockadeStatus {
+  DRAFT
   ACTIVE
-  RELEASED
   SUSPENDED
 }
 
@@ -1381,6 +1386,7 @@ model Payment {
   allocations      PaymentAllocation[]
   installments     AgreementInstallment[]
   agreements       Agreement?             @relation(fields: [agreement_id], references: [id])
+  blockades        Blockade[]
 
   billing_invoice  BillingInvoice?
 

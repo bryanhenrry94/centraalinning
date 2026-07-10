@@ -20,11 +20,36 @@ export async function createBlockadeAction(
       return result;
     }
 
-    sendMailBlockade(result.debtorEmail!, result.debtorName!, result.creditorName!);
+    return { success: true, id: result.id };
+  } catch (error: any) {
+    console.error(error);
+    return {
+      success: false,
+      message: error?.message || "Error creating blockade",
+    };
+  }
+}
+
+export async function updatePaymentReference(
+  blockadeId: string,
+  input: { paymentId: string },
+): Promise<CreateBlockadeResponse> {
+  try {
+    const result = await BlockadeService.updatePaymentReference(
+      blockadeId,
+      input,
+    );
+
+    if (!result.success) {
+      return result;
+    }
 
     return { success: true, id: result.id };
   } catch (error: any) {
     console.error(error);
-    return { success: false, message: error?.message || "Error creating blockade" };
+    return {
+      success: false,
+      message: error?.message || "Error updating blockade",
+    };
   }
 }
