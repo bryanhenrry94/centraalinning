@@ -16,6 +16,7 @@ export interface PaymentIntentProps {
     paymentUrl?: string;
   }>;
   onPaymentConfirmed: (paymentId: string) => Promise<void>;
+  onPaymentFailed?: (paymentId: string) => Promise<void>;
   pollingInterval?: number;
   timeout?: number;
 }
@@ -23,6 +24,7 @@ export interface PaymentIntentProps {
 export const PaymentIntent: React.FC<PaymentIntentProps> = ({
   onCreateTransaction,
   onPaymentConfirmed,
+  onPaymentFailed,
   pollingInterval = 5000,
   timeout = 120000,
 }) => {
@@ -60,16 +62,22 @@ export const PaymentIntent: React.FC<PaymentIntentProps> = ({
         const res = await fetch(`/api/payments/${paymentId}/status`);
         const data = await res.json();
 
-        if (data.status === "paid") {
-          // El webhook ya actualizó la BD
-          // Continúa con el registro del bloqueo
-          clearInterval(interval);
-          setOpen(false);
-          await onPaymentConfirmed(paymentId);
-        } else if (Date.now() - start > timeout) {
-          clearInterval(interval);
-          setOpen(false);
-          console.warn("Timeout esperando confirmación de pago");
+        switch (data.status) {
+          case "failed":
+            clearInterval(interval);
+            setOpen(false);
+            if (onPaymentFailed) {
+              await onPaymentFailed(paymentId);
+            }
+            break;
+          case "paid":
+            clearInterval(interval);
+            setOpen(false);
+            await onPaymentConfirmed(paymentId);
+            break;
+          default:
+            // Continue polling
+            break;
         }
       } catch (err) {
         console.error("Error en polling de pago", err);
@@ -77,7 +85,14 @@ export const PaymentIntent: React.FC<PaymentIntentProps> = ({
     }, pollingInterval);
 
     return () => clearInterval(interval);
-  }, [open, paymentId, pollingInterval, timeout, onPaymentConfirmed]);
+  }, [
+    open,
+    paymentId,
+    pollingInterval,
+    timeout,
+    onPaymentConfirmed,
+    onPaymentFailed,
+  ]);
 
   return (
     <>

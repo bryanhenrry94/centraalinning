@@ -53,6 +53,7 @@ const HEAD_SX = {
   color: "#fff",
   fontWeight: "bold",
   whiteSpace: "nowrap" as const,
+  textAlign: "center" as const,
 };
 
 const ROWS_PER_PAGE_OPTIONS = [10, 25, 50];
@@ -142,14 +143,15 @@ const CollectionTable = ({ invoices }: { invoices: DebtClaimResponse[] }) => {
                         : formatCurrency(Number(row.principalAmount))}
                     </TableCell>
                   )}
-                  <TableCell>
+                  <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
                     <Chip
                       label={statusInfo.label}
                       color={statusInfo.color}
                       size="small"
+                      sx={{ minWidth: 150 }}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
                     {aopInfo ? (
                       <Chip
                         label={aopInfo.label}

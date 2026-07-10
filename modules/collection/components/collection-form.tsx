@@ -208,6 +208,11 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
     onClose?.();
   };
 
+  const handlePaymentFailed = async (_paymentId: string) => {
+    notifyError("De betaling is mislukt. Probeer het opnieuw.");
+    onClose?.();
+  };
+
   return (
     <>
       <Box sx={{ p: 2 }}>
@@ -312,6 +317,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
               <PaymentIntent
                 onCreateTransaction={handleCreateTransaction}
                 onPaymentConfirmed={handlePaymentConfirmed}
+                onPaymentFailed={handlePaymentFailed}
               />
             </Stack>
           </Box>
