@@ -528,7 +528,7 @@ export class CollectionService {
           where: { beneficiary: "CFSB", status: "PENDING" },
           include: {
             payments: {
-              where: { status: "pending" },
+              where: { status: { in: ["pending", "failed"] } },
               select: { payment_url: true },
               take: 1,
             },
