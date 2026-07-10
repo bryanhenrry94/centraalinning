@@ -179,7 +179,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
         currency: "USD",
         description: "Registratie incassovordering",
         payment_type: PaymentType.COLLECTION,
-        debtClaim_id: claimRes.claimId,
+        obligationId: claimRes.obligationId,
       }),
       headers: { "Content-Type": "application/json" },
     });

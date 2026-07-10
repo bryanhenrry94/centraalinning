@@ -18,7 +18,9 @@ import {
 } from "@mui/material";
 import TablePagination from "@mui/material/TablePagination";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import PaidIcon from "@mui/icons-material/Paid";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { DebtClaimResponse } from "@/modules/collection/services/collection.type";
 import { AopStep } from "@/modules/collection/services/collection.validators";
@@ -161,19 +163,42 @@ const CollectionTable = ({ invoices }: { invoices: DebtClaimResponse[] }) => {
                   </TableCell>
                   <TableCell align="center">
                     {isPending ? (
-                      <Tooltip title="Wacht op betalingsbevestiging">
-                        <HourglassEmptyIcon fontSize="small" color="disabled" />
-                      </Tooltip>
+                      row.paymentLink ? (
+                        <Tooltip title="Link de pago pendiente">
+                          <IconButton
+                            size="small"
+                            component="a"
+                            href={row.paymentLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            color="primary"
+                            onClick={(e: React.MouseEvent) =>
+                              e.stopPropagation()
+                            }
+                          >
+                            <OpenInNewIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      ) : (
+                        <Tooltip title="Wacht op betalingsbevestiging">
+                          <HourglassEmptyIcon
+                            fontSize="small"
+                            color="disabled"
+                          />
+                        </Tooltip>
+                      )
                     ) : (
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleView(row.id);
-                        }}
-                      >
-                        <VisibilityIcon fontSize="small" />
-                      </IconButton>
+                      <>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleView(row.id);
+                          }}
+                        >
+                          <VisibilityIcon fontSize="small" />
+                        </IconButton>
+                      </>
                     )}
                   </TableCell>
                 </TableRow>

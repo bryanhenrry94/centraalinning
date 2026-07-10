@@ -357,8 +357,7 @@ model ClaimDocument {
 
 enum ObligationType {
   PRINCIPAL_DEBT
-  ADMINISTRATIVE_FEE
-  ABB
+  COLLECTION
   INTEREST
   LEGAL_COST
 }

@@ -116,7 +116,12 @@ export class CollectionService {
   static async createPending(
     data: DebtClaimCreate,
     tenantId: string,
-  ): Promise<{ success: boolean; error?: string; claimId?: string }> {
+  ): Promise<{
+    success: boolean;
+    error?: string;
+    claimId?: string;
+    obligationId?: string;
+  }> {
     const parsedData = DebtClaimCreateSchema.parse(data);
 
     const [tenant, debtor] = await Promise.all([
@@ -136,64 +141,58 @@ export class CollectionService {
     }
 
     const feeAmount = Number(((principalAmount * 15) / 100).toFixed(2));
-
     const abbAmount = Number(((feeAmount * 6) / 100).toFixed(2));
 
-    const reference = parsedData.reference?.trim()
-      ? parsedData.reference
-      : await this.generateClaimReference();
+    const { claimId, obligationId } = await prisma.$transaction(async (tx) => {
+      const reference = parsedData.reference?.trim()
+        ? parsedData.reference
+        : await (async () => {
+            const year = new Date().getFullYear();
+            const total = await tx.debtClaim.count();
+            return `AOP-${year}-${String(total + 1).padStart(3, "0")}`;
+          })();
 
-    const claim = await prisma.debtClaim.create({
-      data: {
-        tenantId,
-        debtorId: parsedData.debtorId,
-        reference,
-        description: parsedData.description,
-        principalAmount: parsedData.principalAmount,
-        currency: parsedData.currency ?? "USD",
-        origin: parsedData.origin ?? "MANUAL",
-        status: "OPEN",
-      },
+      const claim = await tx.debtClaim.create({
+        data: {
+          tenantId,
+          debtorId: parsedData.debtorId,
+          reference,
+          description: parsedData.description,
+          principalAmount: parsedData.principalAmount,
+          currency: parsedData.currency ?? "USD",
+          origin: parsedData.origin ?? "MANUAL",
+          status: "OPEN",
+        },
+      });
+
+      await tx.debtClaimObligation.create({
+        data: {
+          debtClaimId: claim.id,
+          type: "PRINCIPAL_DEBT",
+          beneficiary: "PARTICIPANT",
+          originalAmount: parsedData.principalAmount,
+          paidAmount: 0,
+          balanceAmount: parsedData.principalAmount,
+          status: "PENDING",
+        },
+      });
+
+      const cfsbObligation = await tx.debtClaimObligation.create({
+        data: {
+          debtClaimId: claim.id,
+          type: "COLLECTION",
+          beneficiary: "CFSB",
+          originalAmount: feeAmount + abbAmount,
+          paidAmount: 0,
+          balanceAmount: feeAmount + abbAmount,
+          status: "PENDING",
+        },
+      });
+
+      return { claimId: claim.id, obligationId: cfsbObligation.id };
     });
 
-    // crear obligación asociada al debt claim
-    await prisma.debtClaimObligation.create({
-      data: {
-        debtClaimId: claim.id,
-        type: "PRINCIPAL_DEBT",
-        beneficiary: "PARTICIPANT",
-        originalAmount: parsedData.principalAmount,
-        paidAmount: 0,
-        balanceAmount: parsedData.principalAmount,
-        status: "PENDING",
-      },
-    });
-
-    await prisma.debtClaimObligation.create({
-      data: {
-        debtClaimId: claim.id,
-        type: "ADMINISTRATIVE_FEE",
-        beneficiary: "CFSB",
-        originalAmount: feeAmount,
-        paidAmount: 0,
-        balanceAmount: feeAmount,
-        status: "PENDING",
-      },
-    });
-
-    await prisma.debtClaimObligation.create({
-      data: {
-        debtClaimId: claim.id,
-        type: "ABB",
-        beneficiary: "CFSB",
-        originalAmount: abbAmount,
-        paidAmount: 0,
-        balanceAmount: abbAmount,
-        status: "PENDING",
-      },
-    });
-
-    return { success: true, claimId: claim.id };
+    return { success: true, claimId, obligationId };
   }
 
   /**
@@ -525,8 +524,21 @@ export class CollectionService {
             steps: { orderBy: { id: "desc" }, take: 1 },
           },
         },
+        obligations: {
+          where: { beneficiary: "CFSB", status: "PENDING" },
+          include: {
+            payments: {
+              where: { status: "pending" },
+              select: { payment_url: true },
+              take: 1,
+            },
+          },
+          take: 1,
+        },
       },
     });
+
+    console.log("Fetched claims:", claims);
 
     return claims.map((c: any) => ({
       id: c.id,
@@ -551,7 +563,29 @@ export class CollectionService {
         total_income: c.debtor.total_income ?? 0,
       },
       aopStep: c.administrativeCollection?.steps[0]?.step ?? null,
+      paymentLink: c.obligations[0]?.payments[0]?.payment_url ?? null,
     }));
+  };
+
+  static getPaymentLinkFromDebtClaimId = async (
+    debtClaimId: string,
+  ): Promise<string | null> => {
+    const obligation = await prisma.debtClaimObligation.findFirst({
+      where: {
+        debtClaimId,
+        beneficiary: "CFSB",
+        status: "PENDING",
+      },
+      include: {
+        payments: {
+          where: { status: "pending" },
+          select: { payment_url: true },
+          take: 1,
+        },
+      },
+    });
+
+    return obligation?.payments[0]?.payment_url ?? null;
   };
 }
 
@@ -579,10 +613,7 @@ export const processCollectionPayment = async (paymentId: string) => {
 
   // await ObligationService.applyPayment(paymentId);
 
-  if (
-    payment.obligation.type === "ADMINISTRATIVE_FEE" &&
-    payment.status === "paid"
-  ) {
+  if (payment.obligation.type === "COLLECTION" && payment.status === "paid") {
     // Activa el claim: IN_PROGRESS + cargos + AOP + chat + aanmaning
     await CollectionService.activate(payment.obligation.debtClaim.id);
 
