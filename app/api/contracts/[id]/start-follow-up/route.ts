@@ -16,15 +16,9 @@ export async function POST(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    await ContractService.startFollowUp(id);
+    const result = await ContractService.initiateFollowUp(id);
 
-    return new NextResponse(
-      JSON.stringify({ message: "Vervolgupdate gestart" }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return NextResponse.json(result);
   } catch (error) {
     const errorMessage =
       error instanceof Error

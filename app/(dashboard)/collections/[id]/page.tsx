@@ -1,10 +1,12 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import {
   Container,
   Typography,
-  Paper,
+  Card,
+  CardContent,
   Box,
   Tabs,
   Tab,
@@ -14,207 +16,208 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  Button,
-  Modal,
+  Chip,
+  Grid,
+  Stack,
 } from "@mui/material";
+
 import { DebtClaimView } from "@/modules/collection/services/collection.validators";
 import { Payment } from "@/modules/payment/services/payment.validators";
 import { getDebtClaimViewById } from "@/modules/collection/actions/collection-case.actions";
-import { notifyError, notifyInfo } from "@/shared/ui/notifications";
-import { formatCurrency } from "@/shared/utils/formatters";
+import { notifyError } from "@/shared/ui/notifications";
+import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { getPaymentsByInvoice } from "@/modules/payment/actions/payment.actions";
-import { CollectionNotificationService } from "@/modules/collection/services/collection-notification.service";
+import { getAopStepsForClaim } from "@/modules/collection/actions/collection-notification.actions";
 import { AOPStepNotification } from "@/modules/notification/services/notification.validators";
 import TabPanel from "@/shared/ui/tab-panel";
-
-import { useSession } from "next-auth/react";
+import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
-import { PaymentFormDialog } from "@/modules/payment/components/payment-form-dialog";
+import {
+  getDebtClaimStatusInfo,
+  getAopStepInfo,
+  getWorkflowStatusInfo,
+} from "@/modules/collection/utils/debt-claim-status";
 
 const CollectionViewPage: React.FC = () => {
   const router = useRouter();
-  const [loading, setLoading] = React.useState(false);
-  const [collection, setCollection] = React.useState<DebtClaimView | null>(
-    null,
-  );
+  const params = useParams();
+
+  const [loading, setLoading] = useState(true);
+  const [collection, setCollection] = useState<DebtClaimView | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [notifications, setNotifications] = useState<
     AOPStepNotification[] | null
   >(null);
-  const [value, setValue] = React.useState(0);
-
-  const [openModalPayment, setOpenModalPayment] = React.useState(false);
-  const handleOpenModalPayment = () => setOpenModalPayment(true);
-  const handleCloseModalPayment = () => setOpenModalPayment(false);
-
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setValue(newValue);
-  };
-
-  const params = useParams();
+  const [tab, setTab] = useState(0);
 
   useEffect(() => {
-    fetchInvoice();
-    fetchPayments();
-    fetchNotifications();
+    if (!params.id) {
+      notifyError("ID de collection no proporcionado");
+      router.back();
+      return;
+    }
+
+    loadData(params.id as string);
   }, []);
 
-  const fetchInvoice = async () => {
+  const loadData = async (debtClaimId: string) => {
     try {
       setLoading(true);
-      if (!params.id) {
-        notifyError("ID de collection no proporcionado");
-        router.back();
-        return;
-      }
-      const data = await getDebtClaimViewById(params.id as string);
-      if (data) {
-        setCollection(data);
-      }
+
+      const [claim, paymentsData, notificationsData] = await Promise.all([
+        getDebtClaimViewById(debtClaimId),
+        getPaymentsByInvoice(debtClaimId),
+        getAopStepsForClaim(debtClaimId),
+      ]);
+
+      setCollection(claim ?? null);
+      setPayments(paymentsData ?? []);
+      setNotifications(notificationsData ?? []);
     } catch (error) {
-      console.error("Error fetching collection:", error);
-      notifyError("Error al cargar la collection");
+      console.error("Error fetching collection detail:", error);
+      notifyError("Er is een fout opgetreden bij het laden van het dossier");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchPayments = async () => {
-    try {
-      setLoading(true);
-      if (!params.id) {
-        notifyError("ID de collection no proporcionado");
-        router.back();
-        return;
-      }
+  if (loading) {
+    return <LoadingUI />;
+  }
 
-      const data = await getPaymentsByInvoice(params.id as string);
-      if (data) {
-        setPayments(data);
-      }
-    } catch (error) {
-      console.error("Error fetching payments:", error);
-      notifyError("Error al cargar los pagos");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchNotifications = async () => {
-    try {
-      setLoading(true);
-      if (!params.id) {
-        notifyError("ID de collection no proporcionado");
-        router.back();
-        return;
-      }
-
-      const data = await CollectionNotificationService.getStepsForClaim(
-        params.id as string,
-      );
-      console.log("Notifications Data:", data);
-      setNotifications(data);
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-      notifyError("Error al cargar las notificaciones");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSendNotification = async () => {
-    try {
-      setLoading(true);
-      if (!params.id) {
-        notifyError("ID de collection no proporcionado");
-        router.back();
-        return;
-      }
-
-      await CollectionNotificationService.sendNotification(params.id as string);
-      await fetchNotifications();
-
-      notifyInfo("Notificación enviada exitosamente");
-    } catch (error) {
-      console.error("Error sending notification:", error);
-      notifyError("Error al enviar la notificación");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const statusInfo = getDebtClaimStatusInfo(collection?.status ?? "");
+  const aopInfo = collection?.aopStep
+    ? getAopStepInfo(collection.aopStep)
+    : null;
 
   return (
-    <Container maxWidth="lg">
-      <Container maxWidth="lg" sx={{ py: 6 }}>
-        <Paper elevation={3} sx={{ mb: 4 }}>
-          <Box
-            sx={{
-              bgcolor: "secondary.main",
-              color: "white",
-              px: 2,
-              py: 1.5,
-              borderTopLeftRadius: 8,
-              borderTopRightRadius: 8,
-              borderBottom: "1px solid #e0e0e0",
-              display: "flex",
-              alignItems: "left",
-            }}
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <AppBreadcrumbs
+        items={[
+          { label: "Incasso", href: "/collections" },
+          { label: "Details" },
+        ]}
+      />
+
+      <Stack spacing={3}>
+        {/* Header */}
+        <Box>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            flexWrap="wrap"
+            gap={1}
           >
-            <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
-              OVERZICHT VORDERING
-            </Typography>
-          </Box>
+            <Box>
+              <Typography variant="h4" fontWeight={700}>
+                {collection?.reference || "Vordering"}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {collection?.debtor?.fullname || "-"}
+              </Typography>
+            </Box>
 
-          {loading ?? <LoadingUI />}
-
-          <Box sx={{ p: 2 }}>
-            <Typography variant="body1" color="text.secondary">
-              Datum vordering:{" "}
-              {collection?.createdAt
-                ? new Date(collection.createdAt).toLocaleDateString()
-                : "N/A"}
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Debiteurnaam:{" "}
-              {collection?.debtor.fullname ? collection.debtor.fullname : "N/A"}
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Vordering:{" "}
-              {formatCurrency(Number(collection?.principalAmount) || 0)}
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Totaal te betalen:{" "}
-              {formatCurrency(Number(collection?.principalAmount) || 0)}
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Status: {collection?.status || "N/A"}
-            </Typography>
-          </Box>
-        </Paper>
-
-        <Box sx={{ width: "100%" }}>
-          <Tabs value={value} onChange={handleChange} aria-label="example tabs">
-            <Tab value={0} label="Betalingen" wrapped />
-            <Tab value={1} label="Notificaties" />
-          </Tabs>
+            <Stack direction="row" spacing={1}>
+              <Chip
+                label={statusInfo.label}
+                color={statusInfo.color}
+                sx={{ fontWeight: 700 }}
+              />
+              {aopInfo && (
+                <Chip
+                  variant="outlined"
+                  label={aopInfo.label}
+                  color={aopInfo.color}
+                  sx={{ fontWeight: 700 }}
+                />
+              )}
+            </Stack>
+          </Stack>
         </Box>
-        <TabPanel value={value} index={0}>
-          <Box sx={{ mt: 2 }}>
-            <Button
-              variant="contained"
-              sx={{ mb: 2 }}
-              onClick={handleOpenModalPayment}
-            >
-              Nieuwe betaling
-            </Button>
 
-            <PaymentFormDialog
-              open={openModalPayment}
-              onClose={handleCloseModalPayment}
-            />
+        {/* AOP information */}
+        <Card>
+          <CardContent>
+            <Typography variant="h6" fontWeight={600} gutterBottom>
+              Vorderingsinformatie
+            </Typography>
 
-            <TableContainer component={Paper}>
-              <Table aria-label="simple table">
+            <Grid container spacing={4}>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Stack spacing={2}>
+                  <InfoRow
+                    label="Registratienummer"
+                    value={collection?.reference || "-"}
+                  />
+
+                  <InfoRow
+                    label="Factuur-/contractnummer"
+                    value={collection?.externalReference || "-"}
+                  />
+
+                  <InfoRow
+                    label="Datum vordering"
+                    value={
+                      collection?.createdAt
+                        ? formatDate(collection.createdAt.toString())
+                        : "-"
+                    }
+                  />
+
+                  <InfoRow
+                    label="Debiteurnaam"
+                    value={collection?.debtor?.fullname || "-"}
+                  />
+
+                  <InfoRow
+                    label="E-mail debiteur"
+                    value={collection?.debtor?.email || "-"}
+                  />
+                </Stack>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Stack spacing={2}>
+                  <InfoRow
+                    label="Vorderingsbedrag"
+                    value={formatCurrency(
+                      Number(collection?.principalAmount) || 0,
+                    )}
+                  />
+
+                  <InfoRow
+                    label="Beschrijving"
+                    value={collection?.description || "-"}
+                  />
+
+                  <InfoRow
+                    label="Status"
+                    value={statusInfo.label}
+                  />
+
+                  <InfoRow
+                    label="Huidige AOP-stap"
+                    value={aopInfo?.label || "-"}
+                  />
+                </Stack>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
+        {/* Payments & notifications */}
+        <Card>
+          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+            <Tabs value={tab} onChange={(_, value) => setTab(value)}>
+              <Tab label="Betalingen" />
+              <Tab label="Notificatiegeschiedenis" />
+            </Tabs>
+          </Box>
+
+          <TabPanel value={tab} index={0}>
+            <TableContainer>
+              <Table size="small">
                 <TableHead>
                   <TableRow>
                     <TableCell>Betalingsdatum</TableCell>
@@ -224,71 +227,111 @@ const CollectionViewPage: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {payments?.map((payment) => (
-                    <TableRow
-                      key={payment.id}
-                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                    >
-                      <TableCell component="th" scope="row">
+                  {payments.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} align="center">
+                        <Typography variant="body2" color="text.secondary" py={2}>
+                          Nog geen betalingen geregistreerd
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
+
+                  {payments.map((payment) => (
+                    <TableRow key={payment.id}>
+                      <TableCell>
                         {payment.paid_at
-                          ? new Date(payment.paid_at).toLocaleDateString()
-                          : "N/A"}
+                          ? formatDate(payment.paid_at.toString())
+                          : "-"}
                       </TableCell>
                       <TableCell align="right">
                         {formatCurrency(payment.total_amount)}
                       </TableCell>
                       <TableCell align="right">{payment.method}</TableCell>
                       <TableCell align="right">
-                        {payment.reference_number || "N/A"}
+                        {payment.reference_number || "-"}
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
-          </Box>
-        </TabPanel>
-        <TabPanel value={value} index={1}>
-          <Box sx={{ mt: 2 }}>
-            <Button
-              variant="contained"
-              sx={{ mb: 2 }}
-              onClick={handleSendNotification}
-            >
-              Send New Notification
-            </Button>
-            <TableContainer component={Paper}>
-              <Table aria-label="simple table">
+          </TabPanel>
+
+          <TabPanel value={tab} index={1}>
+            <TableContainer>
+              <Table size="small">
                 <TableHead>
                   <TableRow>
                     <TableCell>Datum</TableCell>
-                    <TableCell align="right">Titel</TableCell>
-                    <TableCell align="right">Type</TableCell>
+                    <TableCell align="right">Stap</TableCell>
+                    <TableCell align="right">Status</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {notifications?.map((notification) => (
-                    <TableRow
-                      key={notification.id}
-                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                    >
-                      <TableCell component="th" scope="row">
-                        {notification.sentAt
-                          ? new Date(notification.sentAt).toLocaleDateString()
-                          : "-"}
+                  {(!notifications || notifications.length === 0) && (
+                    <TableRow>
+                      <TableCell colSpan={3} align="center">
+                        <Typography variant="body2" color="text.secondary" py={2}>
+                          Nog geen notificaties verzonden
+                        </Typography>
                       </TableCell>
-                      <TableCell align="right">{notification.step}</TableCell>
-                      <TableCell align="right">{notification.status}</TableCell>
                     </TableRow>
-                  ))}
+                  )}
+
+                  {notifications?.map((notification) => {
+                    const stepInfo = getAopStepInfo(notification.step);
+                    const workflowStatusInfo = getWorkflowStatusInfo(
+                      notification.status,
+                    );
+
+                    return (
+                      <TableRow key={notification.id}>
+                        <TableCell>
+                          {notification.sentAt
+                            ? formatDate(notification.sentAt.toString())
+                            : "-"}
+                        </TableCell>
+                        <TableCell align="right">
+                          {stepInfo?.label || notification.step}
+                        </TableCell>
+                        <TableCell align="right">
+                          <Chip
+                            size="small"
+                            label={workflowStatusInfo.label}
+                            color={workflowStatusInfo.color}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </TableContainer>
-          </Box>
-        </TabPanel>
-      </Container>
+          </TabPanel>
+        </Card>
+      </Stack>
     </Container>
   );
 };
+
+type InfoRowProps = {
+  label: string;
+  value?: React.ReactNode;
+};
+
+function InfoRow({ label, value }: InfoRowProps) {
+  return (
+    <Box display="flex" gap={2}>
+      <Typography color="text.secondary" minWidth={160}>
+        {label}
+      </Typography>
+
+      <Typography component="span" fontWeight={500}>
+        {value}
+      </Typography>
+    </Box>
+  );
+}
 
 export default CollectionViewPage;

@@ -22,25 +22,37 @@ import {
   Menu,
   ListItemIcon,
   ListItemText,
+  Dialog,
+  DialogContent,
+  Paper,
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import CloseIcon from "@mui/icons-material/Close";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { useDebounce } from "@/shared/hooks/useDebounce";
 import { StatusContractChip } from "./StatusContractChip";
 
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import EditIcon from '@mui/icons-material/Edit';
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import DeleteIcon from '@mui/icons-material/Delete';
+import PaymentIcon from "@mui/icons-material/Payment";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
 import { AlertService } from "@/shared/ui/alerts";
+import { deleteContract } from "@/modules/contract/actions/contract.actions";
+import { PaymentType } from "@/modules/payment/services/payment.validators";
+import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
+
+const CONTRACT_ACTIVATION_AMOUNT = 35;
 
 export default function ContractsPage() {
   const router = useRouter();
+  const { data: session } = useSession();
 
   const [contracts, setContracts] = useState<any[]>([]);
   const [filters, setFilters] = useState({
@@ -55,6 +67,13 @@ export default function ContractsPage() {
 
   const [selectedContract, setSelectedContract] = useState<any | null>(null);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
+  const [aopPaymentDialog, setAopPaymentDialog] = useState<{
+    open: boolean;
+    referenceNumber: string;
+    obligationId: string | null;
+    amount: number;
+  }>({ open: false, referenceNumber: "", obligationId: null, amount: 0 });
 
   const open = Boolean(anchorEl);
 
@@ -103,7 +122,7 @@ export default function ContractsPage() {
     router.push(`/contracts/${contractId}`);
   };
 
-  const handleClicStartFollowUp = (contractId: string) => {
+  const handleClicStartFollowUp = (contract: any) => {
     handleClose();
 
     AlertService.showConfirm(
@@ -113,33 +132,180 @@ export default function ContractsPage() {
       "Annuleren",
     ).then(async (confirmed) => {
       if (confirmed) {
-        beginFollowUpProcess(contractId);
+        beginFollowUpProcess(contract);
       }
     });
     return;
   };
 
-  const beginFollowUpProcess = async (contractId: string) => {
+  /**
+   * Maakt de DebtClaim + betaalverplichting aan (status OPEN, nog niet
+   * geactiveerd) en toont vervolgens het betalingsdialoog (PaymentIntent).
+   * De AOP wordt pas geactiveerd wanneer de webhook de betaling bevestigt.
+   */
+  const beginFollowUpProcess = async (contract: any) => {
     try {
       const response = await fetch(
-        `/api/contracts/${contractId}/start-follow-up`,
+        `/api/contracts/${contract.id}/start-follow-up`,
         {
           method: "POST",
         },
       );
 
-      if (response.ok) {
-        AlertService.showSuccess("Vervolgingsproces gestart");
-        fetchContracts(filters); // Refresh the list to show updated status
-      } else {
+      if (!response.ok) {
+        const error = await response.json();
         AlertService.showError(
-          "Het vervolgingsproces kon niet worden gestart. Probeer het alstublieft opnieuw.",
+          error.message ||
+            "Het vervolgingsproces kon niet worden gestart. Probeer het alstublieft opnieuw.",
         );
+        return;
       }
+
+      const data = await response.json();
+
+      setAopPaymentDialog({
+        open: true,
+        referenceNumber: contract.reference_number,
+        obligationId: data.obligationId,
+        amount: data.amount,
+      });
     } catch (error) {
       console.error("Error starting follow-up process:", error);
       AlertService.showError(
         "Er is een fout opgetreden bij het starten van het vervolgingsproces. Probeer het alstublieft opnieuw.",
+      );
+    }
+  };
+
+  const handleCreateAopTransaction = async (): Promise<{
+    success: boolean;
+    error?: string;
+    paymentId?: string;
+    paymentUrl?: string;
+  }> => {
+    if (!aopPaymentDialog.obligationId) {
+      return { success: false, error: "Geen betaalverplichting gevonden" };
+    }
+
+    const res = await fetch("/api/payments/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount: aopPaymentDialog.amount,
+        currency: "USD",
+        description: `AOP-dienst voor overeenkomst ${aopPaymentDialog.referenceNumber}`,
+        payment_type: PaymentType.COLLECTION,
+        obligationId: aopPaymentDialog.obligationId,
+      }),
+    });
+
+    if (!res.ok) {
+      return { success: false, error: "Fout bij het aanmaken van de betaling" };
+    }
+
+    const data = await res.json();
+
+    return { success: true, paymentId: data.paymentId, paymentUrl: data.paymentUrl };
+  };
+
+  const closeAopPaymentDialog = () => {
+    setAopPaymentDialog({
+      open: false,
+      referenceNumber: "",
+      obligationId: null,
+      amount: 0,
+    });
+  };
+
+  const handleAopPaymentConfirmed = async () => {
+    closeAopPaymentDialog();
+    AlertService.showSuccess("Vervolgingsproces gestart");
+    fetchContracts(filters);
+  };
+
+  const handleAopPaymentFailed = async () => {
+    closeAopPaymentDialog();
+    AlertService.showError(
+      "De betaling is mislukt. U kunt het opnieuw proberen via 'Administratieve opvolging starten'.",
+    );
+    fetchContracts(filters);
+  };
+
+  const handleClicDelete = (contractId: string) => {
+    handleClose();
+
+    AlertService.showConfirm(
+      "Weet je het zeker?",
+      "Deze actie verwijdert de conceptovereenkomst definitief. Wil je doorgaan?",
+      "Ja, verwijderen",
+      "Annuleren",
+    ).then(async (confirmed) => {
+      if (confirmed) {
+        deleteContractRecord(contractId);
+      }
+    });
+  };
+
+  const deleteContractRecord = async (contractId: string) => {
+    if (!session?.user.tenant_id) return;
+
+    const result = await deleteContract(contractId, session.user.tenant_id);
+
+    if (result.success) {
+      AlertService.showSuccess("Overeenkomst verwijderd");
+      fetchContracts(filters);
+    } else {
+      AlertService.showError(
+        result.error || "De overeenkomst kon niet worden verwijderd.",
+      );
+    }
+  };
+
+  const handleClicOpenPaymentLink = () => {
+    const paymentUrl = selectedContract?.activation_payment?.payment_url;
+
+    handleClose();
+
+    if (paymentUrl) {
+      window.open(paymentUrl, "_blank");
+    }
+  };
+
+  const handleClicAttemptPayment = (contract: any) => {
+    handleClose();
+    attemptPayment(contract);
+  };
+
+  const attemptPayment = async (contract: any) => {
+    try {
+      const res = await fetch("/api/payments/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: CONTRACT_ACTIVATION_AMOUNT,
+          currency: "USD",
+          description: `Payment for registering contract ${contract.reference_number}`,
+          payment_type: PaymentType.CONTRACT_ACTIVATION,
+          contractId: contract.id,
+        }),
+      });
+
+      if (!res.ok) {
+        AlertService.showError("De betaling kon niet worden aangemaakt.");
+        return;
+      }
+
+      const data = await res.json();
+
+      if (data.paymentUrl) {
+        window.open(data.paymentUrl, "_blank");
+      }
+
+      fetchContracts(filters);
+    } catch (error) {
+      console.error("Error creating payment:", error);
+      AlertService.showError(
+        "Er is een fout opgetreden bij het aanmaken van de betaling.",
       );
     }
   };
@@ -220,13 +386,7 @@ export default function ContractsPage() {
 
             <MenuItem value="DRAFT">Concept</MenuItem>
 
-            <MenuItem value="PENDING_PAYMENT">
-              In afwachting van betaling
-            </MenuItem>
-
             <MenuItem value="REGISTERED">Geregistreerd</MenuItem>
-
-            <MenuItem value="CANCELLED">Geannuleerd</MenuItem>
           </Select>
         </Stack>
 
@@ -381,20 +541,41 @@ export default function ContractsPage() {
             <ListItemText>Bekijken</ListItemText>
           </MenuItem>
 
-          <MenuItem>
-            <ListItemIcon>
-              <EditIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText>Bewerken</ListItemText>
-          </MenuItem>
+          {selectedContract?.status === "DRAFT" &&
+          selectedContract?.activation_payment?.payment_url ? (
+            <MenuItem onClick={handleClicOpenPaymentLink}>
+              <ListItemIcon>
+                <OpenInNewIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Betalingslink openen</ListItemText>
+            </MenuItem>
+          ) : (
+            <MenuItem
+              onClick={() => {
+                if (!selectedContract) return;
+
+                handleClicAttemptPayment(selectedContract);
+              }}
+              disabled={selectedContract?.status !== "DRAFT"}
+            >
+              <ListItemIcon>
+                <PaymentIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Betaling proberen</ListItemText>
+            </MenuItem>
+          )}
 
           <MenuItem
             onClick={() => {
               if (!selectedContract) return;
 
-              handleClicStartFollowUp(selectedContract.id);
+              handleClicStartFollowUp(selectedContract);
             }}
-            disabled={selectedContract?.status !== "REGISTERED"}
+            disabled={
+              selectedContract?.status !== "REGISTERED" ||
+              (selectedContract?.debtClaim &&
+                selectedContract.debtClaim.status !== "OPEN")
+            }
           >
             <ListItemIcon>
               <RestartAltIcon fontSize="small" />
@@ -402,7 +583,14 @@ export default function ContractsPage() {
             <ListItemText>Administratieve opvolging starten</ListItemText>
           </MenuItem>
 
-          <MenuItem>
+          <MenuItem
+            onClick={() => {
+              if (!selectedContract) return;
+
+              handleClicDelete(selectedContract.id);
+            }}
+            disabled={selectedContract?.status !== "DRAFT"}
+          >
             <ListItemIcon>
               <DeleteIcon fontSize="small" />
             </ListItemIcon>
@@ -421,6 +609,76 @@ export default function ContractsPage() {
           </Typography>
         </Box>
       </Card>
+
+      {/* Betaaldialoog voor de AOP-dienst */}
+      <Dialog
+        open={aopPaymentDialog.open}
+        onClose={closeAopPaymentDialog}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogContent sx={{ p: 4 }}>
+          <Stack spacing={3} alignItems="center">
+            <Stack spacing={1} textAlign="center">
+              <Typography variant="h5" fontWeight={700}>
+                Betaling bevestigen
+              </Typography>
+
+              <Typography variant="body2" color="text.secondary">
+                Deze service vereist betaling voordat het administratieve
+                vervolgingsproces start.
+              </Typography>
+            </Stack>
+
+            <Paper
+              variant="outlined"
+              sx={{
+                width: "100%",
+                p: 2,
+                borderRadius: 2,
+                textAlign: "center",
+                bgcolor: "background.default",
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                Servicewaarde
+              </Typography>
+
+              <Typography variant="h4" fontWeight={700} color="primary.main">
+                {formatCurrency(aopPaymentDialog.amount)}
+              </Typography>
+            </Paper>
+
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              textAlign="center"
+            >
+              Als u doorgaat, wordt u doorgestuurd naar het beveiligde
+              betalingsproces.
+            </Typography>
+
+            <Stack direction="row" spacing={2} width="100%">
+              <Button
+                fullWidth
+                variant="outlined"
+                color="inherit"
+                startIcon={<CloseIcon />}
+                onClick={closeAopPaymentDialog}
+                sx={{ textTransform: "none" }}
+              >
+                Annuleren
+              </Button>
+
+              <PaymentIntent
+                onCreateTransaction={handleCreateAopTransaction}
+                onPaymentConfirmed={handleAopPaymentConfirmed}
+                onPaymentFailed={handleAopPaymentFailed}
+              />
+            </Stack>
+          </Stack>
+        </DialogContent>
+      </Dialog>
     </Container>
   );
 }

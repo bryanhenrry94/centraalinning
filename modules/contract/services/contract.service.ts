@@ -51,6 +51,12 @@ export class ContractService {
       include: {
         parties: true,
         documents: true,
+        activation_payment: {
+          select: { id: true, status: true, payment_url: true },
+        },
+        debtClaim: {
+          select: { id: true, status: true },
+        },
       },
       orderBy: {
         created_at: "desc",
@@ -68,10 +74,10 @@ export class ContractService {
           reference_number: reference_number,
           amount: Prisma.Decimal(contract.amount),
           contract_type: contract.contract_type,
-          contract_date: contract.contract_date,
-          start_date: contract.start_date,
+          contract_date: new Date(contract.contract_date),
+          start_date: new Date(contract.start_date),
           description: contract.description,
-          end_date: contract.end_date,
+          end_date: contract.end_date ? new Date(contract.end_date) : null,
           installment_count: contract.installment_count,
           installment_amount: contract.installment_amount
             ? Prisma.Decimal(contract.installment_amount)
@@ -120,13 +126,6 @@ export class ContractService {
     });
   };
 
-  static update = async (id: string, data: Prisma.ContractUpdateInput) => {
-    return await prisma.contract.update({
-      where: { id },
-      data,
-    });
-  };
-
   static getByIdForTenant = async (id: string, tenantId: string) => {
     return prisma.contract.findFirst({
       where: { id, tenant_id: tenantId },
@@ -158,100 +157,120 @@ export class ContractService {
   static updateStatus = async (
     id: string,
     tenantId: string,
-    status: "DRAFT" | "PENDING_PAYMENT" | "REGISTERED" | "CANCELLED",
+    status: "DRAFT" | "REGISTERED",
   ) => {
     const existing = await prisma.contract.findFirst({ where: { id, tenant_id: tenantId } });
     if (!existing) throw new Error("Contract not found");
-    return prisma.contract.update({ where: { id }, data: { status: status as any } });
-  };
-
-  static updateFull = async (id: string, tenantId: string, input: CreateContractInput) => {
-    const existing = await prisma.contract.findFirst({ where: { id, tenant_id: tenantId } });
-    if (!existing) throw new Error("Contract not found");
-
-    return prisma.$transaction(async (tx) => {
-      return tx.contract.update({
-        where: { id },
-        data: {
-          contract_date: input.contract_date,
-          start_date: input.start_date,
-          end_date: input.end_date ?? null,
-          amount: input.amount,
-          installment_count: input.installment_count ?? null,
-          installment_amount: input.installment_amount ?? null,
-          description: input.description ?? null,
-          contract_type: input.contract_type,
-          parties: {
-            deleteMany: {},
-            create: input.parties.map((party) => ({
-              person_type: party.person_type as "INDIVIDUAL" | "COMPANY",
-              role: party.role,
-              fullname: party.fullname,
-              identification_type: party.identification_type,
-              identification: party.identification,
-              email: party.email,
-              phone: party.phone,
-              birth_date: party.birth_date ?? null,
-              birth_place: party.birth_place ?? null,
-              address: party.address ?? null,
-            })),
-          },
-          documents: {
-            deleteMany: {},
-            create: (input.documents ?? []).map((doc) => ({
-              file_name: doc.file_name,
-              file_path: doc.file_path,
-              mime_type: doc.mime_type,
-              file_size: doc.file_size,
-            })),
-          },
-        },
-        include: { parties: true, documents: true },
-      });
-    });
+    return prisma.contract.update({ where: { id }, data: { status } });
   };
 
   static deleteById = async (id: string, tenantId: string) => {
     const existing = await prisma.contract.findFirst({ where: { id, tenant_id: tenantId } });
     if (!existing) throw new Error("Contract not found");
+
+    if (existing.status !== "DRAFT") {
+      throw new Error(
+        "Alleen overeenkomsten in concept kunnen worden verwijderd",
+      );
+    }
+
     return prisma.contract.delete({ where: { id } });
   };
 
-  static async startFollowUp(contractId: string) {
+  /**
+   * Start het administratieve vervolgingsproces (AOP) voor een geregistreerde
+   * overeenkomst: zoekt/creëert de debiteur op basis van PARTY_B en maakt een
+   * DebtClaim + betaalverplichting aan (status OPEN, nog niet geactiveerd).
+   * De activatie (charges, AOP-stappen, aanmaning) gebeurt pas wanneer de
+   * webhook de betaling van de verplichting als "paid" bevestigt
+   * (zie `processCollectionPayment`).
+   *
+   * Idempotent: als er al een DebtClaim gekoppeld is en deze nog OPEN is
+   * (betaling nog niet bevestigd), wordt dezelfde verplichting hergebruikt
+   * i.p.v. een duplicaat aan te maken.
+   */
+  static async initiateFollowUp(contractId: string): Promise<{
+    claimId: string;
+    obligationId: string;
+    amount: number;
+  }> {
     const contract = await this.getById(contractId);
 
     if (!contract) {
       throw new Error("Contract not found");
     }
 
-    for (const party of contract.parties) {
-      if (party.role !== "PARTY_B") continue;
-
-      const { debtor } = await DebtorService.findOrCreate(
-        {
-          person_type: party.person_type,
-          identification_type: party.identification_type,
-          identification: party.identification,
-          fullname: party.fullname,
-          email: party.email,
-          phone: party.phone,
-          address: party.address,
-          birth_date: party.birth_date,
-          birth_place: party.birth_place,
-        },
-        contract.tenant_id,
+    if (contract.status !== "REGISTERED") {
+      throw new Error(
+        "Alleen geregistreerde overeenkomsten kunnen het administratieve vervolgingsproces starten",
       );
-
-      const collection = await CollectionService.createFromContract(
-        contract,
-        debtor.id,
-      );
-
-      if (collection) {
-        await this.update(contractId, {
-          status: "IN_COLLECTION",
-        });
-      }
     }
+
+    if (contract.debtClaim_id) {
+      const existingClaim = await prisma.debtClaim.findUnique({
+        where: { id: contract.debtClaim_id },
+        include: {
+          obligations: {
+            where: { beneficiary: "CFSB", type: "COLLECTION", status: "PENDING" },
+            take: 1,
+          },
+        },
+      });
+
+      const pendingObligation = existingClaim?.obligations[0];
+
+      if (existingClaim?.status === "OPEN" && pendingObligation) {
+        return {
+          claimId: existingClaim.id,
+          obligationId: pendingObligation.id,
+          amount: Number(pendingObligation.balanceAmount),
+        };
+      }
+
+      throw new Error(
+        "Voor deze overeenkomst is het vervolgingsproces al gestart",
+      );
+    }
+
+    const partyB = contract.parties.find((party) => party.role === "PARTY_B");
+
+    if (!partyB) {
+      throw new Error("Geen tegenpartij gevonden op deze overeenkomst");
+    }
+
+    const { debtor } = await DebtorService.findOrCreate(
+      {
+        person_type: partyB.person_type,
+        identification_type: partyB.identification_type,
+        identification: partyB.identification,
+        fullname: partyB.fullname,
+        email: partyB.email,
+        phone: partyB.phone,
+        address: partyB.address,
+        birth_date: partyB.birth_date,
+        birth_place: partyB.birth_place,
+      },
+      contract.tenant_id,
+    );
+
+    const pending = await CollectionService.createPendingFromContract(
+      contract,
+      debtor.id,
+    );
+
+    if (!pending.success || !pending.claimId || !pending.obligationId) {
+      throw new Error(pending.error || "Kon het vervolgingsproces niet starten");
+    }
+
+    await prisma.contract.update({
+      where: { id: contractId },
+      data: { debtClaim_id: pending.claimId },
+    });
+
+    return {
+      claimId: pending.claimId,
+      obligationId: pending.obligationId,
+      amount: pending.amount ?? 0,
+    };
   }
 }

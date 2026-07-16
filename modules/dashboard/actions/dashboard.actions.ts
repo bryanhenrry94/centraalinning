@@ -15,3 +15,7 @@ export async function getDashboardStats() {
 export const getTableSummary = async (tenantId: string) => {
   return ReportService.getTableSummary(tenantId);
 };
+
+export const getOpenDocuments = async (tenantId: string) => {
+  return ReportService.getOpenDocuments(tenantId);
+};

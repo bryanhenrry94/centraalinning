@@ -3,6 +3,7 @@
 import { formatCurrency } from "@/shared/utils/formatters";
 import { Avatar, Paper, Stack, Typography } from "@mui/material";
 import { alpha, useTheme } from "@mui/material/styles";
+import { useRouter } from "next/navigation";
 import { ReactNode } from "react";
 
 export interface StatCardProps {
@@ -12,6 +13,7 @@ export interface StatCardProps {
   icon: ReactNode;
   color?: string;
   type?: "text" | "number";
+  href?: string;
 }
 
 export default function StatCard({
@@ -21,14 +23,17 @@ export default function StatCard({
   icon,
   color,
   type = "text",
+  href,
 }: StatCardProps) {
   const theme = useTheme();
+  const router = useRouter();
 
   const cardColor = color ?? theme.palette.primary.main;
 
   return (
     <Paper
       elevation={0}
+      onClick={href ? () => router.push(href) : undefined}
       sx={{
         border: `1px solid ${theme.palette.divider}`,
         height: "100%",
@@ -37,6 +42,14 @@ export default function StatCard({
         flexDirection: "column",
         justifyContent: "space-between",
         bgcolor: "white",
+        cursor: href ? "pointer" : "default",
+        transition: "box-shadow 0.2s, border-color 0.2s",
+        ...(href && {
+          "&:hover": {
+            boxShadow: theme.shadows[2],
+            borderColor: cardColor,
+          },
+        }),
       }}
     >
       <Stack direction="row" spacing={2} alignItems="flex-start">

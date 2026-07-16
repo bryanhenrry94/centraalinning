@@ -259,15 +259,27 @@ export default function BlockCreatePage() {
 
     if (!res.ok) {
       notifyError("Fout bij het aanmaken van de betaling");
-      throw new Error("Payment creation failed");
+      return { success: false, error: "Payment creation failed" };
     }
 
-    // relaciona el paymentId con la blokkade
-    await updatePaymentReference(resBlockade.id!, {
-      paymentId: resBlockade.id!,
+    const data = await res.json();
+
+    // relaciona de daadwerkelijke betaling met de blokkade (DRAFT)
+    const linkResult = await updatePaymentReference(resBlockade.id!, {
+      paymentId: data.paymentId,
     });
 
-    const data = await res.json();
+    if (!linkResult.success) {
+      notifyError(
+        linkResult.message ||
+          "Kon de betaling niet koppelen aan de blokkade.",
+      );
+      return {
+        success: false,
+        error: linkResult.message || "Kon de betaling niet koppelen",
+      };
+    }
+
     return {
       success: true,
       paymentId: data.paymentId,

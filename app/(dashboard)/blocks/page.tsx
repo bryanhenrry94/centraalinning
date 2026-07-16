@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Card,
+  Chip,
   IconButton,
   InputAdornment,
   Stack,
@@ -28,6 +29,7 @@ import { useDebounce } from "@/shared/hooks/useDebounce";
 
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { REASONS } from "@/modules/blockade/constants/reason-blockades";
+import { getBlockadeStatusInfo } from "@/modules/blockade/utils/blockade-status";
 
 export default function BlocksPage() {
   const router = useRouter();
@@ -246,42 +248,52 @@ export default function BlocksPage() {
             </TableHead>
 
             <TableBody>
-              {blockades.map((blockade) => (
-                <TableRow key={blockade.id}>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {blockade.reference_number}
-                  </TableCell>
-                  <TableCell>{formatDate(blockade.createdAt)}</TableCell>
+              {blockades.map((blockade) => {
+                const statusInfo = getBlockadeStatusInfo(blockade.status);
 
-                  <TableCell>
-                    {blockade?.debtor?.person?.first_name}{" "}
-                    {blockade?.debtor?.person?.last_name}
-                  </TableCell>
+                return (
+                  <TableRow key={blockade.id}>
+                    <TableCell sx={{ textAlign: "center" }}>
+                      {blockade.originDebtClaim?.reference || "-"}
+                    </TableCell>
+                    <TableCell>{formatDate(blockade.createdAt)}</TableCell>
 
-                  <TableCell sx={{ textAlign: "center" }}>
-                    <Typography variant="body2">
-                      {formatCurrency(blockade.amount)}
-                    </Typography>
-                  </TableCell>
+                    <TableCell>
+                      {blockade?.debtor?.person?.first_name}{" "}
+                      {blockade?.debtor?.person?.last_name}
+                    </TableCell>
 
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {getLabelForReason(blockade.reason)}
-                  </TableCell>
+                    <TableCell sx={{ textAlign: "center" }}>
+                      <Typography variant="body2">
+                        {formatCurrency(
+                          Number(blockade.originDebtClaim?.principalAmount) || 0,
+                        )}
+                      </Typography>
+                    </TableCell>
 
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {blockade.status === "ACTIVE" ? "Actief" : "Inactief"}
-                  </TableCell>
+                    <TableCell sx={{ textAlign: "center" }}>
+                      {getLabelForReason(blockade.reason)}
+                    </TableCell>
 
-                  <TableCell align="center">
-                    <IconButton
-                      aria-haspopup="true"
-                      onClick={() => handleClicShowDetails(blockade.id)}
-                    >
-                      <VisibilityIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    <TableCell sx={{ textAlign: "center" }}>
+                      <Chip
+                        size="small"
+                        label={statusInfo.label}
+                        color={statusInfo.color}
+                      />
+                    </TableCell>
+
+                    <TableCell align="center">
+                      <IconButton
+                        aria-haspopup="true"
+                        onClick={() => handleClicShowDetails(blockade.id)}
+                      >
+                        <VisibilityIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
           <TablePagination

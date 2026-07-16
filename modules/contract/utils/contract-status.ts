@@ -6,17 +6,8 @@ export function getContractStatusLabel(status: ContractStatus): string {
     case "DRAFT":
       return "Concept";
 
-    case "PENDING_PAYMENT":
-      return "Betaling in behandeling";
-
     case "REGISTERED":
       return "Geregistreerd";
-
-    case "IN_COLLECTION":
-      return "In incasso";
-
-    case "CANCELLED":
-      return "Geannuleerd";
 
     default:
       return status;
@@ -30,17 +21,8 @@ export function getContractStatusColor(
     case "DRAFT":
       return "default";
 
-    case "PENDING_PAYMENT":
-      return "warning";
-
     case "REGISTERED":
       return "info";
-
-    case "IN_COLLECTION":
-      return "error";
-
-    case "CANCELLED":
-      return "error";
 
     default:
       return "default";

@@ -1,7 +1,7 @@
 // app/api/upload/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/infrastructure/storage/supabase/admin";
+import { StorageService } from "@/infrastructure/storage/storage.service";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
@@ -29,9 +29,24 @@ export async function POST(req: NextRequest) {
 
     const file = formData.get("file") as File | null;
     const contractId = formData.get("contractId") as string | null;
+    const tenantId = formData.get("tenantId") as string | null;
 
     if (!file) {
       return NextResponse.json({ error: "File is required" }, { status: 400 });
+    }
+
+    if (!tenantId) {
+      return NextResponse.json(
+        { error: "tenantId is required" },
+        { status: 400 },
+      );
+    }
+
+    if (!contractId) {
+      return NextResponse.json(
+        { error: "contractId is required" },
+        { status: 400 },
+      );
     }
 
     if (!ALLOWED_TYPES.includes(file.type)) {
@@ -52,26 +67,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const timestamp = Date.now();
-
     const sanitizedName = file.name
       .replace(/\s+/g, "-")
       .replace(/[^\w.-]/g, "");
 
-    const filePath = contractId
-      ? `contracts/${contractId}/${timestamp}-${sanitizedName}`
-      : `temp/${timestamp}-${sanitizedName}`;
+    const folder = `${tenantId}/contracts/${contractId}`;
 
-    const { error } = await supabaseAdmin.storage
-      .from("cfsb-storage")
-      .upload(filePath, file, {
-        upsert: false,
-        contentType: file.type,
-      });
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    const filePath = await StorageService.uploadFile(
+      folder,
+      sanitizedName,
+      file.type,
+      buffer,
+    );
 
     return NextResponse.json({
       success: true,

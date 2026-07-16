@@ -9,13 +9,7 @@ const contractTypes = [
   "OTHER",
 ] as const;
 
-const contractStatuses = [
-  "DRAFT",
-  "PENDING_PAYMENT",
-  "REGISTERED",
-  "IN_COLLECTION",
-  "CANCELLED",
-] as const;
+const contractStatuses = ["DRAFT", "REGISTERED"] as const;
 
 export const ContractPartySchema = z.object({
   role: z.enum(["PARTY_A", "PARTY_B"]),

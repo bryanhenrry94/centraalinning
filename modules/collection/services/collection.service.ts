@@ -1,5 +1,6 @@
 import { ContractService } from "@/modules/contract/services/contract.service";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 import { PersonType } from "@/shared/constants/person-type";
 import { CollectionNotificationService } from "@/modules/collection/services/collection-notification.service";
@@ -16,39 +17,30 @@ import { InvoiceService } from "@/modules/payment/services/invoice-service";
 import { sendInvoiceEmail } from "@/actions/email";
 
 export class CollectionService {
-  static createFromContract = async (
+  /**
+   * Crea un DebtClaim en estado OPEN (pre-pago) a partir de un Contract (FAR),
+   * junto con su obligación de cobranza. No activa el AOP: eso ocurre cuando
+   * el webhook confirma el pago de la obligación (ver `processCollectionPayment`).
+   */
+  static createPendingFromContract = async (
     contract: Awaited<ReturnType<typeof ContractService.getById>>,
     debtorId: string,
   ) => {
     if (!contract) throw new Error("Contract not found");
 
-    const [parameter, debtor] = await Promise.all([
-      ParameterService.getParameter(),
-      prisma.debtor.findUnique({
-        where: { id: debtorId },
-        include: { person: true },
-      }),
-    ]);
-
-    if (!parameter) throw new Error("No se encontró el parámetro");
-    if (!debtor) throw new Error("Deudor no encontrado");
-
     const principalAmount = Number(contract.amount);
     if (principalAmount <= 0) throw new Error("Invalid contract amount");
 
-    const calculations = this.calculateAmounts(principalAmount, parameter);
-
     const claimData: DebtClaimCreate = {
       debtorId,
-      reference: await this.generateClaimReference(),
-      description: contract.reference_number || "",
+      externalReference: contract.reference_number || null,
       principalAmount,
       currency: "USD",
       origin: "FAR",
-      status: "IN_PROGRESS",
+      status: "OPEN",
     };
 
-    return this.create(claimData, contract.tenant_id);
+    return this.createPending(claimData, contract.tenant_id);
   };
 
   private static calculateAmounts(amount: number, parameter: ParameterInput) {
@@ -110,6 +102,27 @@ export class CollectionService {
   }
 
   /**
+   * Genereert de interne DebtClaim-referentie (bijv. "AOP-2026-001").
+   * Accepteert optioneel een transactieclient zodat de telling consistent
+   * blijft binnen dezelfde transactie als de create.
+   *
+   * De sequence is per prefix/origin: een BLK-claim krijgt bijv. een eigen
+   * "BLK-2026-NNN"-reeks, geteld op basis van bestaande claims met origin
+   * "BLK", los van de algemene "AOP-"-reeks.
+   */
+  static generateClaimReference = async (
+    client: Prisma.TransactionClient | typeof prisma = prisma,
+    options?: { prefix?: string; origin?: Prisma.DebtClaimWhereInput["origin"] },
+  ) => {
+    const prefix = options?.prefix ?? "AOP";
+    const year = new Date().getFullYear();
+    const total = await client.debtClaim.count(
+      options?.origin ? { where: { origin: options.origin } } : undefined,
+    );
+    return `${prefix}-${year}-${String(total + 1).padStart(3, "0")}`;
+  };
+
+  /**
    * Crea un DebtClaim en estado OPEN (pre-pago).
    * No genera cargos, AOP ni notificaciones — eso ocurre en `activate`.
    */
@@ -121,6 +134,7 @@ export class CollectionService {
     error?: string;
     claimId?: string;
     obligationId?: string;
+    amount?: number;
   }> {
     const parsedData = DebtClaimCreateSchema.parse(data);
 
@@ -144,19 +158,17 @@ export class CollectionService {
     const abbAmount = Number(((feeAmount * 6) / 100).toFixed(2));
 
     const { claimId, obligationId } = await prisma.$transaction(async (tx) => {
-      const reference = parsedData.reference?.trim()
-        ? parsedData.reference
-        : await (async () => {
-            const year = new Date().getFullYear();
-            const total = await tx.debtClaim.count();
-            return `AOP-${year}-${String(total + 1).padStart(3, "0")}`;
-          })();
+      // De AOP-referentie wordt altijd door het systeem gegenereerd, nooit
+      // overgenomen van gebruikersinvoer. Het factuur-/contractnummer dat de
+      // gebruiker registreert komt terecht in `externalReference`.
+      const reference = await this.generateClaimReference(tx);
 
       const claim = await tx.debtClaim.create({
         data: {
           tenantId,
           debtorId: parsedData.debtorId,
           reference,
+          externalReference: parsedData.externalReference ?? null,
           description: parsedData.description,
           principalAmount: parsedData.principalAmount,
           currency: parsedData.currency ?? "USD",
@@ -192,7 +204,7 @@ export class CollectionService {
       return { claimId: claim.id, obligationId: cfsbObligation.id };
     });
 
-    return { success: true, claimId, obligationId };
+    return { success: true, claimId, obligationId, amount: feeAmount + abbAmount };
   }
 
   /**
@@ -361,6 +373,7 @@ export class CollectionService {
         tenantId: claim.tenantId,
         debtorId: claim.debtorId,
         reference: claim.reference,
+        externalReference: claim.externalReference,
         description: claim.description,
         principalAmount: Number(claim.principalAmount),
         currency: claim.currency,
@@ -373,12 +386,6 @@ export class CollectionService {
     };
   }
 
-  static generateClaimReference = async () => {
-    const year = new Date().getFullYear();
-    const total = await prisma.debtClaim.count();
-    return `AOP-${year}-${String(total + 1).padStart(3, "0")}`;
-  };
-
   static getById = async (id: string): Promise<DebtClaim> => {
     const claim = await prisma.debtClaim.findUnique({ where: { id } });
     if (!claim) throw new Error("DebtClaim not found");
@@ -387,6 +394,7 @@ export class CollectionService {
       tenantId: claim.tenantId,
       debtorId: claim.debtorId,
       reference: claim.reference,
+      externalReference: claim.externalReference,
       description: claim.description,
       principalAmount: Number(claim.principalAmount),
       currency: claim.currency,
@@ -409,6 +417,7 @@ export class CollectionService {
       tenantId: claim.tenantId,
       debtorId: claim.debtorId,
       reference: claim.reference,
+      externalReference: claim.externalReference,
       description: claim.description,
       principalAmount: Number(claim.principalAmount),
       currency: claim.currency,
@@ -497,6 +506,27 @@ export class CollectionService {
             data: { has_blockade: true },
           });
         }
+
+        // Genereert het formele Blockade-record voor deze vordering, zodat
+        // de blokkade net als bij een directe registratie een echte rij
+        // heeft (niet alleen de has_blockade-vlag). Geen betaling nodig:
+        // dit is een automatisch gevolg van het AOP-proces, direct ACTIVE.
+        const existingBlockade = await tx.blockade.findUnique({
+          where: { originDebtClaimId: debtClaimId },
+        });
+
+        if (!existingBlockade) {
+          await tx.blockade.create({
+            data: {
+              tenantId: aop.debtClaim.tenantId,
+              debtorId: aop.debtClaim.debtorId,
+              reason: "UNPAID_PAYMENT",
+              registeredAt: new Date(),
+              status: "ACTIVE",
+              originDebtClaimId: debtClaimId,
+            },
+          });
+        }
       }
 
       await tx.claimTimeline.create({
@@ -545,6 +575,7 @@ export class CollectionService {
       tenantId: c.tenantId,
       debtorId: c.debtorId,
       reference: c.reference,
+      externalReference: c.externalReference,
       description: c.description,
       principalAmount: Number(c.principalAmount),
       currency: c.currency,

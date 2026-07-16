@@ -4,11 +4,14 @@ export const DebtClaimSchema = z.object({
   id: z.string().cuid(),
   tenantId: z.string(),
   debtorId: z.string(),
+  // Interne AOP-referentie (bijv. "AOP-2026-001"), altijd systeemgegenereerd.
   reference: z.string().optional().nullable(),
+  // Factuur-/contractnummer dat de gebruiker registreert (extern document).
+  externalReference: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
   principalAmount: z.number(),
   currency: z.string(),
-  origin: z.enum(["FAR", "MANUAL", "IMPORT", "API"]),
+  origin: z.enum(["FAR", "MANUAL", "IMPORT", "API", "BLK"]),
   status: z.enum(["OPEN", "IN_PROGRESS", "SETTLED", "CLOSED", "CANCELLED"]),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -18,6 +21,8 @@ export const DebtClaimSchema = z.object({
 export const DebtClaimCreateSchema = DebtClaimSchema.omit({
   id: true,
   tenantId: true,
+  // "reference" wordt altijd door het systeem gegenereerd, nooit als input.
+  reference: true,
   createdAt: true,
   updatedAt: true,
   closedAt: true,

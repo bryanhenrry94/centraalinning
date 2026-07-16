@@ -286,79 +286,6 @@ const OvereenkomstenRegistrerenPage = () => {
     setDocuments((prev) => prev.filter((doc) => doc.id !== id));
   };
 
-  const createContract = async () => {
-    const paymentWindow = window.open("", "_blank");
-
-    try {
-      setLoading(true);
-
-      if (!session?.user.tenant_id) return;
-
-      const payload = {
-        ...pendingFormValues,
-        tenant_id: session?.user.tenant_id,
-      };
-
-      // 1. Registra el contrato en la base de datos
-      const contractResponse = await fetch("/api/contracts/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!contractResponse.ok) {
-        const error = await contractResponse.json();
-
-        throw new Error(error.message || "Kon overeenkomst niet registreren");
-      }
-
-      const { contract, paymentUrl } = await contractResponse.json();
-
-      // 2. Si hay documentos, súbelos y asócialos al contrato
-      if (documents.length > 0) {
-        const uploadedFiles = await uploadDocuments(contract.id);
-
-        const documentResponse = await fetch("/api/contracts/documents", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            contractId: contract.id,
-            documents: uploadedFiles,
-          }),
-        });
-
-        if (!documentResponse.ok) {
-          throw new Error("Documenten konden niet worden gekoppeld");
-        }
-      }
-
-      // TODO: Agregar lógica para enviar el correo con la factura adjunta al email del tenant
-      notifyInfo("Overeenkomst succesvol opgeslagen");
-
-      if (paymentWindow) {
-        paymentWindow.location.href = paymentUrl;
-      }
-
-      // wait a few seconds before redirecting to ensure the user sees the notification
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-
-      router.push("/contracts");
-    } catch (error) {
-      console.error(error);
-
-      notifyError(
-        error instanceof Error ? error.message : "Er is een fout opgetreden",
-      );
-    } finally {
-      setLoading(false);
-      setOpenDialog(false);
-    }
-  };
-
   const onSubmit = async (data: CreateContractInput) => {
     // si ya se generó el pago, solo abrir la url del pago
     if (paymentUrl) {
@@ -377,6 +304,7 @@ const OvereenkomstenRegistrerenPage = () => {
 
       formData.append("file", document.file);
       formData.append("contractId", contractId);
+      formData.append("tenantId", session?.user.tenant_id ?? "");
 
       const response = await fetch("/api/upload", {
         method: "POST",
@@ -401,38 +329,123 @@ const OvereenkomstenRegistrerenPage = () => {
     paymentId?: string;
     paymentUrl?: string;
   }> => {
-    // const isValid = await trigger();
-    // if (!isValid) {
-    //   return { success: false, error: "Formulario inválido" };
-    // }
+    if (!pendingFormValues) {
+      notifyError("Geen formuliergegevens beschikbaar");
+      return { success: false, error: "Geen formuliergegevens beschikbaar" };
+    }
+
+    if (!session?.user.tenant_id) {
+      notifyError("Geen tenant gevonden");
+      return { success: false, error: "Geen tenant gevonden" };
+    }
 
     if (amountService <= 0) {
       notifyError("Het servicebedrag moet groter zijn dan 0");
       return { success: false, error: "Servicebedrag is 0" };
     }
 
-    const res = await fetch("/api/payments/create", {
-      method: "POST",
-      body: JSON.stringify({
-        amount: amountService,
-        currency: "USD",
-        description: "Payment for registering contract",
-        payment_type: PaymentType.OTHER,
-      }),
-      headers: { "Content-Type": "application/json" },
-    });
+    try {
+      setLoading(true);
 
-    if (!res.ok) {
-      notifyError("Fout bij het aanmaken van de betaling");
-      throw new Error("Payment creation failed");
+      // 1. Registreer het contract als concept (DRAFT)
+      const contractResponse = await fetch("/api/contracts/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...pendingFormValues,
+          tenant_id: session.user.tenant_id,
+        }),
+      });
+
+      if (!contractResponse.ok) {
+        const error = await contractResponse.json();
+
+        return {
+          success: false,
+          error: error.message || "Kon overeenkomst niet registreren",
+        };
+      }
+
+      const { contract } = await contractResponse.json();
+
+      // 2. Upload en koppel documenten aan het contract
+      if (documents.length > 0) {
+        const uploadedFiles = await uploadDocuments(contract.id);
+
+        const documentResponse = await fetch("/api/contracts/documents", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contractId: contract.id,
+            documents: uploadedFiles,
+          }),
+        });
+
+        if (!documentResponse.ok) {
+          return {
+            success: false,
+            error: "Documenten konden niet worden gekoppeld",
+          };
+        }
+      }
+
+      // 3. Maak de betaling aan en koppel deze aan het contract.
+      // De webhook activeert het contract zodra Sentoo de betaling
+      // als "paid" bevestigt.
+      const res = await fetch("/api/payments/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: amountService,
+          currency: "USD",
+          description: `Payment for registering contract ${contract.reference_number}`,
+          payment_type: PaymentType.CONTRACT_ACTIVATION,
+          contractId: contract.id,
+        }),
+      });
+
+      if (!res.ok) {
+        return {
+          success: false,
+          error: "Fout bij het aanmaken van de betaling",
+        };
+      }
+
+      const data = await res.json();
+
+      return {
+        success: true,
+        paymentId: data.paymentId,
+        paymentUrl: data.paymentUrl,
+      };
+    } catch (error) {
+      console.error(error);
+
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Er is een fout opgetreden",
+      };
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const data = await res.json();
-    return {
-      success: true,
-      paymentId: data.paymentId,
-      paymentUrl: data.paymentUrl,
-    };
+  const handlePaymentConfirmed = async () => {
+    setShowCostDialog(false);
+    setOpenDialog(false);
+    notifyInfo("Betaling bevestigd. Overeenkomst wordt geactiveerd...");
+
+    // wait a few seconds before redirecting to ensure the user sees the notification
+    setTimeout(() => {
+      router.push("/contracts");
+    }, 3000);
+  };
+
+  const handlePaymentFailed = async () => {
+    setShowCostDialog(false);
+    setOpenDialog(false);
+    notifyError("Betaling mislukt. Probeer het opnieuw.");
   };
 
   return (
@@ -1321,18 +1334,19 @@ const OvereenkomstenRegistrerenPage = () => {
       >
         <DialogContent sx={{ p: 4 }}>
           <Stack spacing={3} alignItems="center">
-            {/* Título */}
+            {/* Titel */}
             <Stack spacing={1} textAlign="center">
               <Typography variant="h5" fontWeight={700}>
-                Confirmar pago
+                Betaling bevestigen
               </Typography>
 
               <Typography variant="body2" color="text.secondary">
-                Este servicio requiere un pago antes de registrar el bloqueo.
+                Deze service vereist betaling voordat u de overeenkomst
+                registreert.
               </Typography>
             </Stack>
 
-            {/* Precio */}
+            {/* Prijs */}
             <Paper
               variant="outlined"
               sx={{
@@ -1344,7 +1358,7 @@ const OvereenkomstenRegistrerenPage = () => {
               }}
             >
               <Typography variant="body2" color="text.secondary">
-                Valor del servicio
+                Servicewaarde
               </Typography>
 
               <Typography variant="h4" fontWeight={700} color="primary.main">
@@ -1352,16 +1366,17 @@ const OvereenkomstenRegistrerenPage = () => {
               </Typography>
             </Paper>
 
-            {/* Mensaje */}
+            {/* Bericht */}
             <Typography
               variant="body2"
               color="text.secondary"
               textAlign="center"
             >
-              Al continuar será redirigido al proceso de pago seguro.
+              Als u doorgaat, wordt u doorgestuurd naar het beveiligde
+              betalingsproces.
             </Typography>
 
-            {/* Acciones */}
+            {/* Acties */}
             <Stack direction="row" spacing={2} width="100%">
               <Button
                 fullWidth
@@ -1371,15 +1386,13 @@ const OvereenkomstenRegistrerenPage = () => {
                 onClick={() => setShowCostDialog(false)}
                 sx={{ textTransform: "none" }}
               >
-                Cancelar
+                Annuleren
               </Button>
 
               <PaymentIntent
                 onCreateTransaction={handleCreateTransaction}
-                onPaymentConfirmed={async () => {
-                  setShowCostDialog(false);
-                  await createContract();
-                }}
+                onPaymentConfirmed={handlePaymentConfirmed}
+                onPaymentFailed={handlePaymentFailed}
               />
             </Stack>
           </Stack>

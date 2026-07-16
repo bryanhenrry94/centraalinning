@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
     const payload: DebtClaimCreate = {
       debtorId: body.debtorId,
-      reference: body.reference,
+      externalReference: body.externalReference,
       description: body.description,
       principalAmount: body.principalAmount,
       currency: body.currency ?? "USD",

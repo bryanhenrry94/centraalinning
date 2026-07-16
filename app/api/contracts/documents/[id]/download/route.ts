@@ -22,9 +22,9 @@ export async function GET(
   }
 
   try {
-    const file = await StorageService.downloadFileSup(document.file_path);
+    const file = await StorageService.downloadFile(document.file_path);
 
-    return new Response(file.stream(), {
+    return new Response(Buffer.from(file), {
       headers: {
         "Content-Type": document.mime_type,
         "Content-Disposition": `attachment; filename="${document.file_name}"`,

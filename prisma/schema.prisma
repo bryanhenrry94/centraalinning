@@ -67,6 +67,7 @@ model DebtClaim {
   debtor                   Debtor                    @relation(fields: [debtorId], references: [id])
 
   reference                String?
+  externalReference        String?
   description              String?
 
   principalAmount          Decimal                    @db.Decimal(18, 2)
@@ -531,6 +532,7 @@ enum DebtClaimOrigin {
   MANUAL
   IMPORT
   API
+  BLK
 }
 
 enum DebtClaimStatus {
@@ -1238,10 +1240,7 @@ model AgreementInstallment {
 
 enum ContractStatus {
   DRAFT
-  PENDING_PAYMENT
   REGISTERED
-  IN_COLLECTION
-  CANCELLED
 }
 
 enum ContractPartyRole {

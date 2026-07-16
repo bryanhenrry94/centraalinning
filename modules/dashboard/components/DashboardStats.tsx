@@ -33,6 +33,7 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
           // subtitle="Totaal"
           icon={<AssignmentRoundedIcon />}
           color={theme.palette.primary.main}
+          href="/documents"
         />
       </Grid>
 
@@ -44,7 +45,8 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
           icon={<CheckCircleRoundedIcon />}
           color={theme.palette.success.main}
           type="number"
-        />        
+          href="/documents"
+        />
       </Grid>
 
       <Grid size={{ xs: 12, sm: 3, xl: 3 }}>
@@ -54,6 +56,7 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
           // subtitle="Afgeronde dossiers"
           icon={<FolderRoundedIcon />}
           color={theme.palette.warning.main}
+          href="/documents?status=completed"
         />
       </Grid>
 
@@ -64,6 +67,7 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
           // subtitle="Met blokkade"
           icon={<LockRoundedIcon />}
           color={theme.palette.error.main}
+          href="/blocks"
         />
       </Grid>
     </Grid>

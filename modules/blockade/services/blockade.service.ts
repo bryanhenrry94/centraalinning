@@ -3,6 +3,7 @@ import { CreateBlockadeInput } from "./blockade.validators";
 import { Prisma } from "@prisma/client";
 import { StorageService } from "@/infrastructure/storage/storage.service";
 import { sendMailBlockade } from "./blockade-mail.service";
+import { CollectionService } from "@/modules/collection/services/collection.service";
 
 export class BlockadeService {
   static createBlockade = async (
@@ -94,6 +95,12 @@ export class BlockadeService {
               person: true,
             },
           },
+          originDebtClaim: {
+            select: {
+              reference: true,
+              principalAmount: true,
+            },
+          },
         },
         orderBy: {
           createdAt: "desc",
@@ -145,15 +152,38 @@ export class BlockadeService {
       };
     }
 
-    const blockade = await prisma.blockade.create({
-      data: {
-        tenantId,
-        debtorId: input.debtorId,
-        reason: input.reason,
-        registeredAt: input.registeredAt || new Date(),
-        status: input.status || "DRAFT",
-        paymentId: input.paymentId || null,
-      },
+    const blockade = await prisma.$transaction(async (tx) => {
+      // Een directe blokkade registreert een openstaande vordering; deze wordt
+      // vastgelegd als DebtClaim (zonder verplichtingen/AOP-activatie — de
+      // blokkade zelf is de actie) en gekoppeld via originDebtClaimId.
+      const reference = await CollectionService.generateClaimReference(tx, {
+        prefix: "BLK",
+        origin: "BLK",
+      });
+
+      const debtClaim = await tx.debtClaim.create({
+        data: {
+          tenantId,
+          debtorId: input.debtorId,
+          reference,
+          principalAmount: input.amount,
+          currency: "USD",
+          origin: "BLK",
+          status: "OPEN",
+        },
+      });
+
+      return tx.blockade.create({
+        data: {
+          tenantId,
+          debtorId: input.debtorId,
+          reason: input.reason,
+          registeredAt: input.registeredAt || new Date(),
+          status: input.status || "DRAFT",
+          paymentId: input.paymentId || null,
+          originDebtClaimId: debtClaim.id,
+        },
+      });
     });
 
     const uploadedDocs = await Promise.all(

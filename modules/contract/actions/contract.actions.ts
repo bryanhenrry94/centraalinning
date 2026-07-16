@@ -64,7 +64,7 @@ export async function lastContracts(tenantId: string, limit: number = 5): Promis
 export async function updateStatusContract(
   contractId: string,
   tenantId: string,
-  status: "DRAFT" | "PENDING_PAYMENT" | "REGISTERED" | "CANCELLED",
+  status: "DRAFT" | "REGISTERED",
 ): Promise<ActionResponse> {
   try {
     const contract = await ContractService.updateStatus(contractId, tenantId, status);
@@ -72,23 +72,6 @@ export async function updateStatusContract(
   } catch (error) {
     console.error("[UPDATE_STATUS_CONTRACT]", error);
     return { success: false, error: error instanceof Error ? error.message : "Failed to update contract status" };
-  }
-}
-
-export async function updateContract(
-  contractId: string,
-  tenantId: string,
-  data: CreateContractInput,
-): Promise<ActionResponse> {
-  try {
-    const input = ContractSchema.parse(data);
-    const contract = await ContractService.updateFull(contractId, tenantId, input);
-    revalidatePath("/contracts");
-    revalidatePath(`/contracts/${contractId}`);
-    return { success: true, data: contract };
-  } catch (error) {
-    console.error("[UPDATE_CONTRACT]", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to update contract" };
   }
 }
 

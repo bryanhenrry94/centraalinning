@@ -1,22 +1,9 @@
-import { supabaseAdmin } from "@/infrastructure/storage/supabase/admin";
 import { uploadFile } from "../storage/upload-file";
 import { getFileUrl } from "../storage/get-file-url";
 import { deleteFile } from "../storage/delete-file";
 import { downloadFile } from "../storage/download-file";
 
 export class StorageService {
-  static async downloadFileSup(path: string) {
-    const { data, error } = await supabaseAdmin.storage
-      .from("cfsb-storage")
-      .download(path);
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return data;
-  }
-
   static async uploadDocumentXml(
     companyId: string,
     year: number,

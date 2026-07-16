@@ -71,7 +71,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
       currency: "USD",
       origin: "MANUAL",
       status: "IN_PROGRESS",
-      reference: "",
+      externalReference: "",
       description: "",
     },
   });
@@ -225,9 +225,9 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
               size="small"
               variant="outlined"
               placeholder="Bijv. REF-2025-001"
-              {...register("reference")}
-              error={!!errors.reference}
-              helperText={errors.reference?.message ?? ""}
+              {...register("externalReference")}
+              error={!!errors.externalReference}
+              helperText={errors.externalReference?.message ?? ""}
             />
 
             <Box sx={{ display: "flex", alignItems: "center" }}>

@@ -1,3 +1,5 @@
+import { TableSummaryResponse } from "@/modules/dashboard/types/report.types";
+
 export interface DashboardStats {
   total: number;
   active: number;
@@ -18,13 +20,5 @@ export interface DashboardResponse {
     value: number;
   }>;
 
-  documents: Array<{
-    id: string;
-    source: string;
-    date: Date;
-    reference_number: string;
-    name: string;
-    amount: number;
-    status: string;
-  }>;
+  documents: TableSummaryResponse[];
 }

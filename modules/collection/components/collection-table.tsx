@@ -23,30 +23,11 @@ import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { DebtClaimResponse } from "@/modules/collection/services/collection.type";
-import { AopStep } from "@/modules/collection/services/collection.validators";
-
-type ChipColor =
-  | "default"
-  | "primary"
-  | "warning"
-  | "info"
-  | "error"
-  | "success";
-
-const STATUS_CONFIG: Record<string, { label: string; color: ChipColor }> = {
-  OPEN: { label: "Wacht op betaling", color: "primary" },
-  IN_PROGRESS: { label: "In behandeling", color: "info" },
-  SETTLED: { label: "Vereffend", color: "success" },
-  CLOSED: { label: "Gesloten", color: "default" },
-  CANCELLED: { label: "Geannuleerd", color: "error" },
-};
-
-const AOP_STEP_CONFIG: Record<AopStep, { label: string; color: ChipColor }> = {
-  REMINDER: { label: "Aanmaning", color: "info" },
-  FINAL_NOTICE: { label: "Sommatie", color: "warning" },
-  DEFAULT_NOTICE: { label: "Ingebrekestelling", color: "error" },
-  BLK_NOTIFICATION: { label: "Blokkade", color: "error" },
-};
+import {
+  DEBT_CLAIM_STATUS_CONFIG as STATUS_CONFIG,
+  AOP_STEP_CONFIG,
+  ChipColor,
+} from "@/modules/collection/utils/debt-claim-status";
 
 const HEAD_SX = {
   backgroundColor: "secondary.main",

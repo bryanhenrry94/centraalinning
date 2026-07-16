@@ -35,6 +35,7 @@ export class PaymentService {
       reference?: string;
       payment_type?: string;
       obligationId?: string | null;
+      contractId?: string | null;
     },
   ): Promise<PaymentResult> => {
     const tenant = await prisma.tenant.findUnique({
@@ -58,6 +59,7 @@ export class PaymentService {
           (payload.payment_type as PaymentType) || PaymentType.OTHER,
         method: "TRANSFER",
         obligation_id: payload.obligationId || null,
+        contract_id: payload.contractId || null,
       },
     });
 
@@ -330,7 +332,10 @@ export class PaymentService {
   static getAllByDebtClaim = async (
     debtClaim_id: string,
   ): Promise<Payment[]> => {
-    const payments = await prisma.payment.findMany();
+    const payments = await prisma.payment.findMany({
+      where: { obligation: { debtClaimId: debtClaim_id } },
+      orderBy: { created_at: "desc" },
+    });
     return payments.map(this.mapPayment);
   };
 
