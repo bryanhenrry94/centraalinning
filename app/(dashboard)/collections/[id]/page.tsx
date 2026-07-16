@@ -113,9 +113,6 @@ const CollectionViewPage: React.FC = () => {
               <Typography variant="h4" fontWeight={700}>
                 {collection?.reference || "Vordering"}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {collection?.debtor?.fullname || "-"}
-              </Typography>
             </Box>
 
             <Stack direction="row" spacing={1}>
@@ -143,64 +140,71 @@ const CollectionViewPage: React.FC = () => {
               Vorderingsinformatie
             </Typography>
 
-            <Grid container spacing={4}>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Stack spacing={2}>
-                  <InfoRow
-                    label="Registratienummer"
-                    value={collection?.reference || "-"}
-                  />
-
-                  <InfoRow
-                    label="Factuur-/contractnummer"
-                    value={collection?.externalReference || "-"}
-                  />
-
-                  <InfoRow
-                    label="Datum vordering"
-                    value={
-                      collection?.createdAt
-                        ? formatDate(collection.createdAt.toString())
-                        : "-"
-                    }
-                  />
-
-                  <InfoRow
-                    label="Debiteurnaam"
-                    value={collection?.debtor?.fullname || "-"}
-                  />
-
-                  <InfoRow
-                    label="E-mail debiteur"
-                    value={collection?.debtor?.email || "-"}
-                  />
-                </Stack>
+            <Grid container spacing={2.5}>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <InfoField
+                  label="Registratienummer"
+                  value={collection?.reference || "-"}
+                />
               </Grid>
 
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Stack spacing={2}>
-                  <InfoRow
-                    label="Vorderingsbedrag"
-                    value={formatCurrency(
-                      Number(collection?.principalAmount) || 0,
-                    )}
-                  />
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <InfoField
+                  label="Factuur-/contractnummer"
+                  value={collection?.externalReference || "-"}
+                />
+              </Grid>
 
-                  <InfoRow
-                    label="Beschrijving"
-                    value={collection?.description || "-"}
-                  />
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <InfoField
+                  label="Datum vordering"
+                  value={
+                    collection?.createdAt
+                      ? formatDate(collection.createdAt.toString())
+                      : "-"
+                  }
+                />
+              </Grid>
 
-                  <InfoRow
-                    label="Status"
-                    value={statusInfo.label}
-                  />
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <InfoField
+                  label="Vorderingsbedrag"
+                  value={formatCurrency(
+                    Number(collection?.principalAmount) || 0,
+                  )}
+                />
+              </Grid>
 
-                  <InfoRow
-                    label="Huidige AOP-stap"
-                    value={aopInfo?.label || "-"}
-                  />
-                </Stack>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <InfoField label="Status" value={statusInfo.label} />
+              </Grid>
+
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <InfoField
+                  label="Huidige AOP-stap"
+                  value={aopInfo?.label || "-"}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <InfoField
+                  label="Debiteurnaam"
+                  value={collection?.debtor?.fullname || "-"}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <InfoField
+                  label="E-mail debiteur"
+                  value={collection?.debtor?.email || "-"}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <InfoField
+                  label="Beschrijving"
+                  value={collection?.description || "-"}
+                />
               </Grid>
             </Grid>
           </CardContent>
@@ -230,7 +234,11 @@ const CollectionViewPage: React.FC = () => {
                   {payments.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={4} align="center">
-                        <Typography variant="body2" color="text.secondary" py={2}>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          py={2}
+                        >
                           Nog geen betalingen geregistreerd
                         </Typography>
                       </TableCell>
@@ -272,7 +280,11 @@ const CollectionViewPage: React.FC = () => {
                   {(!notifications || notifications.length === 0) && (
                     <TableRow>
                       <TableCell colSpan={3} align="center">
-                        <Typography variant="body2" color="text.secondary" py={2}>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          py={2}
+                        >
                           Nog geen notificaties verzonden
                         </Typography>
                       </TableCell>
@@ -315,19 +327,32 @@ const CollectionViewPage: React.FC = () => {
   );
 };
 
-type InfoRowProps = {
+type InfoFieldProps = {
   label: string;
   value?: React.ReactNode;
 };
 
-function InfoRow({ label, value }: InfoRowProps) {
+function InfoField({ label, value }: InfoFieldProps) {
   return (
-    <Box display="flex" gap={2}>
-      <Typography color="text.secondary" minWidth={160}>
+    <Box>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{
+          textTransform: "uppercase",
+          letterSpacing: 0.4,
+          display: "block",
+          wordBreak: "break-word",
+        }}
+      >
         {label}
       </Typography>
 
-      <Typography component="span" fontWeight={500}>
+      <Typography
+        variant="body2"
+        fontWeight={600}
+        sx={{ wordBreak: "break-word" }}
+      >
         {value}
       </Typography>
     </Box>
