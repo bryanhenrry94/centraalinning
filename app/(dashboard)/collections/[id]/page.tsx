@@ -18,6 +18,9 @@ import {
   Grid,
   Stack,
   CardHeader,
+  Divider,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 
 import { DebtClaimView } from "@/modules/collection/services/collection.validators";
@@ -39,6 +42,8 @@ import {
 const CollectionViewPage: React.FC = () => {
   const router = useRouter();
   const params = useParams();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [loading, setLoading] = useState(true);
   const [collection, setCollection] = useState<DebtClaimView | null>(null);
@@ -219,50 +224,84 @@ const CollectionViewPage: React.FC = () => {
                 Betalingen
               </Typography>
 
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Betalingsdatum</TableCell>
-                      <TableCell align="right">Bedrag</TableCell>
-                      <TableCell align="right">Betaalmethode</TableCell>
-                      <TableCell align="right">Referentienummer</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {payments.length === 0 && (
+              {payments.length === 0 ? (
+                <Typography variant="body2" color="text.secondary" py={2}>
+                  Nog geen betalingen geregistreerd
+                </Typography>
+              ) : isMobile ? (
+                <Stack divider={<Divider />} spacing={1.5} sx={{ mt: 1 }}>
+                  {payments.map((payment) => (
+                    <Box key={payment.id} sx={{ py: 0.5 }}>
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="flex-start"
+                      >
+                        <InfoField
+                          label="Betalingsdatum"
+                          value={
+                            payment.paid_at
+                              ? formatDate(payment.paid_at.toString())
+                              : "-"
+                          }
+                        />
+                        <InfoField
+                          label="Bedrag"
+                          value={formatCurrency(payment.total_amount)}
+                        />
+                      </Stack>
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="flex-start"
+                        sx={{ mt: 1.5 }}
+                      >
+                        <InfoField
+                          label="Betaalmethode"
+                          value={payment.method}
+                        />
+                        <InfoField
+                          label="Referentienummer"
+                          value={payment.reference_number || "-"}
+                        />
+                      </Stack>
+                    </Box>
+                  ))}
+                </Stack>
+              ) : (
+                <TableContainer>
+                  <Table size="small">
+                    <TableHead>
                       <TableRow>
-                        <TableCell colSpan={4} align="center">
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            py={2}
-                          >
-                            Nog geen betalingen geregistreerd
-                          </Typography>
-                        </TableCell>
+                        <TableCell>Betalingsdatum</TableCell>
+                        <TableCell align="right">Bedrag</TableCell>
+                        <TableCell align="right">Betaalmethode</TableCell>
+                        <TableCell align="right">Referentienummer</TableCell>
                       </TableRow>
-                    )}
-
-                    {payments.map((payment) => (
-                      <TableRow key={payment.id}>
-                        <TableCell>
-                          {payment.paid_at
-                            ? formatDate(payment.paid_at.toString())
-                            : "-"}
-                        </TableCell>
-                        <TableCell align="right">
-                          {formatCurrency(payment.total_amount)}
-                        </TableCell>
-                        <TableCell align="right">{payment.method}</TableCell>
-                        <TableCell align="right">
-                          {payment.reference_number || "-"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                    </TableHead>
+                    <TableBody>
+                      {payments.map((payment) => (
+                        <TableRow key={payment.id}>
+                          <TableCell>
+                            {payment.paid_at
+                              ? formatDate(payment.paid_at.toString())
+                              : "-"}
+                          </TableCell>
+                          <TableCell align="right">
+                            {formatCurrency(payment.total_amount)}
+                          </TableCell>
+                          <TableCell align="right">
+                            {payment.method}
+                          </TableCell>
+                          <TableCell align="right">
+                            {payment.reference_number || "-"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
             </CardContent>
           </Card>
 
@@ -275,59 +314,95 @@ const CollectionViewPage: React.FC = () => {
                 Meldingen
               </Typography>
 
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Datum</TableCell>
-                      <TableCell align="right">Stap</TableCell>
-                      <TableCell align="right">Status</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {(!notifications || notifications.length === 0) && (
+              {!notifications || notifications.length === 0 ? (
+                <Typography variant="body2" color="text.secondary" py={2}>
+                  Nog geen notificaties verzonden
+                </Typography>
+              ) : isMobile ? (
+                <Stack divider={<Divider />} spacing={1.5} sx={{ mt: 1 }}>
+                  {notifications.map((notification) => {
+                    const stepInfo = getAopStepInfo(notification.step);
+                    const workflowStatusInfo = getWorkflowStatusInfo(
+                      notification.status,
+                    );
+
+                    return (
+                      <Box key={notification.id} sx={{ py: 0.5 }}>
+                        <Stack
+                          direction="row"
+                          justifyContent="space-between"
+                          alignItems="flex-start"
+                        >
+                          <InfoField
+                            label="Datum"
+                            value={
+                              notification.sentAt
+                                ? formatDate(notification.sentAt.toString())
+                                : "-"
+                            }
+                          />
+                          <InfoField
+                            label="Stap"
+                            value={stepInfo?.label || notification.step}
+                          />
+                        </Stack>
+                        <Box sx={{ mt: 1.5 }}>
+                          <InfoField
+                            label="Status"
+                            value={
+                              <Chip
+                                size="small"
+                                label={workflowStatusInfo.label}
+                                color={workflowStatusInfo.color}
+                              />
+                            }
+                          />
+                        </Box>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              ) : (
+                <TableContainer>
+                  <Table size="small">
+                    <TableHead>
                       <TableRow>
-                        <TableCell colSpan={3} align="center">
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            py={2}
-                          >
-                            Nog geen notificaties verzonden
-                          </Typography>
-                        </TableCell>
+                        <TableCell>Datum</TableCell>
+                        <TableCell align="right">Stap</TableCell>
+                        <TableCell align="right">Status</TableCell>
                       </TableRow>
-                    )}
+                    </TableHead>
+                    <TableBody>
+                      {notifications.map((notification) => {
+                        const stepInfo = getAopStepInfo(notification.step);
+                        const workflowStatusInfo = getWorkflowStatusInfo(
+                          notification.status,
+                        );
 
-                    {notifications?.map((notification) => {
-                      const stepInfo = getAopStepInfo(notification.step);
-                      const workflowStatusInfo = getWorkflowStatusInfo(
-                        notification.status,
-                      );
-
-                      return (
-                        <TableRow key={notification.id}>
-                          <TableCell>
-                            {notification.sentAt
-                              ? formatDate(notification.sentAt.toString())
-                              : "-"}
-                          </TableCell>
-                          <TableCell align="right">
-                            {stepInfo?.label || notification.step}
-                          </TableCell>
-                          <TableCell align="right">
-                            <Chip
-                              size="small"
-                              label={workflowStatusInfo.label}
-                              color={workflowStatusInfo.color}
-                            />
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                        return (
+                          <TableRow key={notification.id}>
+                            <TableCell>
+                              {notification.sentAt
+                                ? formatDate(notification.sentAt.toString())
+                                : "-"}
+                            </TableCell>
+                            <TableCell align="right">
+                              {stepInfo?.label || notification.step}
+                            </TableCell>
+                            <TableCell align="right">
+                              <Chip
+                                size="small"
+                                label={workflowStatusInfo.label}
+                                color={workflowStatusInfo.color}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
             </CardContent>
           </Card>
         </Stack>
