@@ -8,8 +8,6 @@ import {
   Card,
   CardContent,
   Box,
-  Tabs,
-  Tab,
   TableContainer,
   Table,
   TableHead,
@@ -19,6 +17,7 @@ import {
   Chip,
   Grid,
   Stack,
+  CardHeader,
 } from "@mui/material";
 
 import { DebtClaimView } from "@/modules/collection/services/collection.validators";
@@ -29,7 +28,6 @@ import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { getPaymentsByInvoice } from "@/modules/payment/actions/payment.actions";
 import { getAopStepsForClaim } from "@/modules/collection/actions/collection-notification.actions";
 import { AOPStepNotification } from "@/modules/notification/services/notification.validators";
-import TabPanel from "@/shared/ui/tab-panel";
 import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
 import {
@@ -48,7 +46,6 @@ const CollectionViewPage: React.FC = () => {
   const [notifications, setNotifications] = useState<
     AOPStepNotification[] | null
   >(null);
-  const [tab, setTab] = useState(0);
 
   useEffect(() => {
     if (!params.id) {
@@ -134,194 +131,206 @@ const CollectionViewPage: React.FC = () => {
         </Box>
 
         {/* AOP information */}
-        <Card>
-          <CardContent>
-            <Typography variant="h6" fontWeight={600} gutterBottom>
-              Vorderingsinformatie
-            </Typography>
+        <Stack spacing={3}>
+          <Card>
+            <CardHeader>
+              <Typography variant="h6" fontWeight={600} gutterBottom>
+                Vorderingsinformatie
+              </Typography>
+            </CardHeader>
+            <CardContent>
+              <Grid container spacing={2.5}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <InfoField
+                    label="Registratienummer"
+                    value={collection?.reference || "-"}
+                  />
+                </Grid>
 
-            <Grid container spacing={2.5}>
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField
-                  label="Registratienummer"
-                  value={collection?.reference || "-"}
-                />
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <InfoField
+                    label="Factuur-/contractnummer"
+                    value={collection?.externalReference || "-"}
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <InfoField
+                    label="Datum vordering"
+                    value={
+                      collection?.createdAt
+                        ? formatDate(collection.createdAt.toString())
+                        : "-"
+                    }
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <InfoField
+                    label="Vorderingsbedrag"
+                    value={formatCurrency(
+                      Number(collection?.principalAmount) || 0,
+                    )}
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <InfoField label="Status" value={statusInfo.label} />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <InfoField
+                    label="Huidige AOP-stap"
+                    value={aopInfo?.label || "-"}
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <InfoField
+                    label="Debiteurnaam"
+                    value={collection?.debtor?.fullname || "-"}
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <InfoField
+                    label="E-mail debiteur"
+                    value={collection?.debtor?.email || "-"}
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                  <InfoField
+                    label="Beschrijving"
+                    value={collection?.description || "-"}
+                  />
+                </Grid>
               </Grid>
+            </CardContent>
+          </Card>
 
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField
-                  label="Factuur-/contractnummer"
-                  value={collection?.externalReference || "-"}
-                />
-              </Grid>
+          {/* Payments & notifications */}
+          <Card>
+            <CardContent>
+              <Typography
+                gutterBottom
+                sx={{ color: "text.secondary", fontSize: 14 }}
+              >
+                Betalingen
+              </Typography>
 
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField
-                  label="Datum vordering"
-                  value={
-                    collection?.createdAt
-                      ? formatDate(collection.createdAt.toString())
-                      : "-"
-                  }
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField
-                  label="Vorderingsbedrag"
-                  value={formatCurrency(
-                    Number(collection?.principalAmount) || 0,
-                  )}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField label="Status" value={statusInfo.label} />
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField
-                  label="Huidige AOP-stap"
-                  value={aopInfo?.label || "-"}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField
-                  label="Debiteurnaam"
-                  value={collection?.debtor?.fullname || "-"}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField
-                  label="E-mail debiteur"
-                  value={collection?.debtor?.email || "-"}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <InfoField
-                  label="Beschrijving"
-                  value={collection?.description || "-"}
-                />
-              </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
-
-        {/* Payments & notifications */}
-        <Card>
-          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-            <Tabs value={tab} onChange={(_, value) => setTab(value)}>
-              <Tab label="Betalingen" />
-              <Tab label="Notificatiegeschiedenis" />
-            </Tabs>
-          </Box>
-
-          <TabPanel value={tab} index={0}>
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Betalingsdatum</TableCell>
-                    <TableCell align="right">Bedrag</TableCell>
-                    <TableCell align="right">Betaalmethode</TableCell>
-                    <TableCell align="right">Referentienummer</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {payments.length === 0 && (
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
                     <TableRow>
-                      <TableCell colSpan={4} align="center">
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          py={2}
-                        >
-                          Nog geen betalingen geregistreerd
-                        </Typography>
-                      </TableCell>
+                      <TableCell>Betalingsdatum</TableCell>
+                      <TableCell align="right">Bedrag</TableCell>
+                      <TableCell align="right">Betaalmethode</TableCell>
+                      <TableCell align="right">Referentienummer</TableCell>
                     </TableRow>
-                  )}
+                  </TableHead>
+                  <TableBody>
+                    {payments.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={4} align="center">
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            py={2}
+                          >
+                            Nog geen betalingen geregistreerd
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    )}
 
-                  {payments.map((payment) => (
-                    <TableRow key={payment.id}>
-                      <TableCell>
-                        {payment.paid_at
-                          ? formatDate(payment.paid_at.toString())
-                          : "-"}
-                      </TableCell>
-                      <TableCell align="right">
-                        {formatCurrency(payment.total_amount)}
-                      </TableCell>
-                      <TableCell align="right">{payment.method}</TableCell>
-                      <TableCell align="right">
-                        {payment.reference_number || "-"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </TabPanel>
-
-          <TabPanel value={tab} index={1}>
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Datum</TableCell>
-                    <TableCell align="right">Stap</TableCell>
-                    <TableCell align="right">Status</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {(!notifications || notifications.length === 0) && (
-                    <TableRow>
-                      <TableCell colSpan={3} align="center">
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          py={2}
-                        >
-                          Nog geen notificaties verzonden
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  )}
-
-                  {notifications?.map((notification) => {
-                    const stepInfo = getAopStepInfo(notification.step);
-                    const workflowStatusInfo = getWorkflowStatusInfo(
-                      notification.status,
-                    );
-
-                    return (
-                      <TableRow key={notification.id}>
+                    {payments.map((payment) => (
+                      <TableRow key={payment.id}>
                         <TableCell>
-                          {notification.sentAt
-                            ? formatDate(notification.sentAt.toString())
+                          {payment.paid_at
+                            ? formatDate(payment.paid_at.toString())
                             : "-"}
                         </TableCell>
                         <TableCell align="right">
-                          {stepInfo?.label || notification.step}
+                          {formatCurrency(payment.total_amount)}
                         </TableCell>
+                        <TableCell align="right">{payment.method}</TableCell>
                         <TableCell align="right">
-                          <Chip
-                            size="small"
-                            label={workflowStatusInfo.label}
-                            color={workflowStatusInfo.color}
-                          />
+                          {payment.reference_number || "-"}
                         </TableCell>
                       </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </TabPanel>
-        </Card>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent>
+              <Typography
+                gutterBottom
+                sx={{ color: "text.secondary", fontSize: 14 }}
+              >
+                Meldingen
+              </Typography>
+
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Datum</TableCell>
+                      <TableCell align="right">Stap</TableCell>
+                      <TableCell align="right">Status</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {(!notifications || notifications.length === 0) && (
+                      <TableRow>
+                        <TableCell colSpan={3} align="center">
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            py={2}
+                          >
+                            Nog geen notificaties verzonden
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    )}
+
+                    {notifications?.map((notification) => {
+                      const stepInfo = getAopStepInfo(notification.step);
+                      const workflowStatusInfo = getWorkflowStatusInfo(
+                        notification.status,
+                      );
+
+                      return (
+                        <TableRow key={notification.id}>
+                          <TableCell>
+                            {notification.sentAt
+                              ? formatDate(notification.sentAt.toString())
+                              : "-"}
+                          </TableCell>
+                          <TableCell align="right">
+                            {stepInfo?.label || notification.step}
+                          </TableCell>
+                          <TableCell align="right">
+                            <Chip
+                              size="small"
+                              label={workflowStatusInfo.label}
+                              color={workflowStatusInfo.color}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        </Stack>
       </Stack>
     </Container>
   );
