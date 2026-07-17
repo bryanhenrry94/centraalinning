@@ -56,20 +56,29 @@ const PaymentAgreementsPage = () => {
   };
 
   return (
-    <Box sx={{ m: 4 }}>
+    <Box sx={{ m: { xs: 1.5, sm: 4 } }}>
       <Box
         sx={{
           width: "100%",
           mt: 2,
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: { xs: "stretch", sm: "center" },
+          gap: 1,
         }}
       >
         <Typography variant="h4" gutterBottom>
           BETALINGSREGELING
         </Typography>
-        <Tabs value={value} onChange={handleChange} aria-label="example tabs">
+        <Tabs
+          value={value}
+          onChange={handleChange}
+          aria-label="example tabs"
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
+        >
           <Tab
             value={0}
             label={`In behandeling (${agreementsPending.length})`}

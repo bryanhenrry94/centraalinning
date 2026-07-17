@@ -166,7 +166,7 @@ export const EmployeeForm = () => {
         <Typography variant="h6" fontWeight="bold">
           Medewerkers
         </Typography>
-        <Stack direction="row" spacing={2} mt={1}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} mt={1}>
           <Button variant="contained" onClick={() => handleOpen()}>
             Nieuwe Medewerker
           </Button>
@@ -259,7 +259,9 @@ export const EmployeeForm = () => {
 
       {/* Dialog for Create/Edit */}
       <Dialog open={open} onClose={handleClose}>
-        <Box p={3} minWidth={400}>
+        <Box
+          sx={{ p: { xs: 2, sm: 3 }, minWidth: { xs: "auto", sm: 400 } }}
+        >
           <Typography variant="h6" gutterBottom>
             {selectedEmployee ? "Medewerker Bewerken" : "Nieuwe Medewerker"}
           </Typography>

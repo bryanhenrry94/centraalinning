@@ -221,7 +221,7 @@ const VerklaringPage: React.FC = () => {
           sx={{
             border: "1px solid #E2E8F0",
             borderRadius: 3,
-            p: { xs: 3, md: 4 },
+            p: { xs: 2, md: 4 },
             boxShadow: "0 10px 30px rgba(15,23,42,0.04)",
           }}
         >

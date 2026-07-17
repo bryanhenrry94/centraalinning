@@ -96,14 +96,16 @@ export default function BlocksPage() {
   };
 
   return (
-    <Container maxWidth="lg">
+    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 } }}>
       {/* Header */}
       <Box
         sx={{
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
-          mb: 4,
+          alignItems: { xs: "stretch", sm: "center" },
+          gap: 2,
+          mb: { xs: 2, sm: 4 },
         }}
       >
         <Box>
@@ -127,7 +129,7 @@ export default function BlocksPage() {
         </Button>
       </Box>
 
-      <Card sx={{ p: 3 }}>
+      <Card sx={{ p: { xs: 1.5, sm: 3 } }}>
         <Stack
           direction={{
             xs: "column",

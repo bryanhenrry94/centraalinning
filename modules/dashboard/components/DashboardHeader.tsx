@@ -13,9 +13,10 @@ export default function DashboardHeader({
 }: DashboardHeaderProps) {
   return (
     <Stack
-      direction="row"
+      direction={{ xs: "column", sm: "row" }}
       justifyContent="space-between"
-      alignItems="center"
+      alignItems={{ xs: "stretch", sm: "center" }}
+      gap={1}
       mb={3}
     >
       <Box>

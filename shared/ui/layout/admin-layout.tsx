@@ -45,7 +45,7 @@ export const AdminLayout = ({ children }: { children?: ReactNode }) => {
         component="main"
         sx={{
           flexGrow: 1,
-          padding: 3,
+          padding: { xs: 1, sm: 3 },
           backgroundColor: "grey.50",
           overflowY: "auto",
           height: "100%",

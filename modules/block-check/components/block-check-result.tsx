@@ -61,7 +61,7 @@ export const ResultView: React.FC<ResultViewProps> = ({ result, onClose }) => {
           </Box>
         </Stack>
       </Box>
-      <CardContent sx={{ p: 3 }}>
+      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
         {/* Información */}
         <Typography variant="subtitle1" fontWeight={600} gutterBottom>
           Persoonsgegevens

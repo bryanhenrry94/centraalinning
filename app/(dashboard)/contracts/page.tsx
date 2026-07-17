@@ -316,14 +316,16 @@ export default function ContractsPage() {
   };
 
   return (
-    <Container maxWidth="lg">
+    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 } }}>
       {/* Header */}
       <Box
         sx={{
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
-          mb: 4,
+          alignItems: { xs: "stretch", sm: "center" },
+          gap: 2,
+          mb: { xs: 2, sm: 4 },
         }}
       >
         <Box>
@@ -347,7 +349,7 @@ export default function ContractsPage() {
         </Button>
       </Box>
 
-      <Card sx={{ p: 3 }}>
+      <Card sx={{ p: { xs: 1.5, sm: 3 } }}>
         <Stack
           direction={{
             xs: "column",
@@ -380,7 +382,7 @@ export default function ContractsPage() {
                 page: 1,
               }))
             }
-            sx={{ minWidth: 180 }}
+            sx={{ minWidth: { xs: "100%", md: 180 } }}
           >
             <MenuItem value="ALL">Status: Alle</MenuItem>
 
@@ -617,7 +619,7 @@ export default function ContractsPage() {
         maxWidth="xs"
         fullWidth
       >
-        <DialogContent sx={{ p: 4 }}>
+        <DialogContent sx={{ p: { xs: 2, sm: 4 } }}>
           <Stack spacing={3} alignItems="center">
             <Stack spacing={1} textAlign="center">
               <Typography variant="h5" fontWeight={700}>

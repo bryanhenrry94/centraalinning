@@ -236,7 +236,11 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 2, sm: 4 } }}
+    >
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)}>
           {/* Action Buttons */}
@@ -245,16 +249,17 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
               mb: 2,
               mt: 2,
               display: "flex",
-              flexDirection: "row",
+              flexDirection: { xs: "column", sm: "row" },
               justifyContent: "space-between",
-              alignItems: "center",
+              alignItems: { xs: "stretch", sm: "center" },
+              gap: 1,
             }}
           >
             <Typography variant="h6" gutterBottom>
               NIEUW VONNIS TOEVOEGEN
             </Typography>
 
-            <Stack direction="row" spacing={1}>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
               <Button
                 aria-label="delete"
                 color="primary"

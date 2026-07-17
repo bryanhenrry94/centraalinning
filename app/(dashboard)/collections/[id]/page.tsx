@@ -93,7 +93,11 @@ const CollectionViewPage: React.FC = () => {
     : null;
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 2, sm: 4 } }}
+    >
       <AppBreadcrumbs
         items={[
           { label: "Incasso", href: "/collections" },

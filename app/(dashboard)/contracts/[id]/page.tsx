@@ -43,7 +43,7 @@ export default async function ContractDetailPage({
     : null;
 
   return (
-    <Container maxWidth="lg">
+    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: 2 }}>
       <AppBreadcrumbs
         items={[
           {
@@ -63,6 +63,8 @@ export default async function ContractDetailPage({
             direction="row"
             justifyContent="space-between"
             alignItems="center"
+            flexWrap="wrap"
+            gap={1}
           >
             <Box>
               <Typography variant="h4" fontWeight={700}>
@@ -206,8 +208,14 @@ type InfoRowProps = {
 
 function InfoRow({ label, value }: InfoRowProps) {
   return (
-    <Box display="flex" gap={2}>
-      <Typography color="text.secondary" minWidth={160}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: { xs: "column", sm: "row" },
+        gap: { xs: 0.25, sm: 2 },
+      }}
+    >
+      <Typography color="text.secondary" sx={{ minWidth: { xs: "auto", sm: 160 } }}>
         {label}
       </Typography>
 

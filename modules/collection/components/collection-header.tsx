@@ -89,7 +89,8 @@ export const CollectionHeader = ({ onRefresh }: CollectionHeaderProps) => {
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            width: 400,
+            width: { xs: "calc(100vw - 32px)", sm: 400 },
+            maxWidth: 400,
           }}
         >
           <Box

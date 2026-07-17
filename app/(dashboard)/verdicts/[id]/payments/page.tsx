@@ -4,6 +4,7 @@ import {
   Box,
   Typography,
   Table,
+  TableContainer,
   TableHead,
   TableRow,
   TableCell,
@@ -91,7 +92,11 @@ const StatusChip = ({ status }: { status: string }) => {
 
 export default function AccountsPage() {
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, mt: { xs: 2, sm: 4 }, mb: { xs: 2, sm: 4 } }}
+    >
       <ActionToolbar
         title="Raadplegen"
         navigation={[
@@ -113,7 +118,10 @@ export default function AccountsPage() {
         <PaymentList />
 
         {/* Tabla única de cuentas por cobrar */}
-        <Paper elevation={3} sx={{ p: 3, borderRadius: 3, overflow: "hidden" }}>
+        <Paper
+          elevation={3}
+          sx={{ p: { xs: 1.5, sm: 3 }, borderRadius: 3, overflow: "hidden" }}
+        >
           <Box
             sx={{
               display: "flex",
@@ -132,6 +140,7 @@ export default function AccountsPage() {
           </Box>
           <Divider sx={{ mb: 2 }} />
 
+          <TableContainer>
           <Table>
             <TableHead>
               <TableRow>
@@ -172,6 +181,7 @@ export default function AccountsPage() {
               ))}
             </TableBody>
           </Table>
+          </TableContainer>
         </Paper>
       </Box>
     </Container>

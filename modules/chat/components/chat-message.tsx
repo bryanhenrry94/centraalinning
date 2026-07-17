@@ -73,7 +73,7 @@ const ChatMessage = ({
         <Box
           sx={{
             position: "relative",
-            maxWidth: 300,
+            maxWidth: { xs: "75%", sm: 300 },
             "&::before": {
               content: '""',
               position: "absolute",

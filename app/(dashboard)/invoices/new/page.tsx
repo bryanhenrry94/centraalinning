@@ -7,7 +7,7 @@ import InvoiceFormPage from "@/modules/payment/components/invoice-form";
 
 const InvoicePage: React.FC = () => {
   return (
-    <Box sx={{ m: 4 }}>
+    <Box sx={{ m: { xs: 1.5, sm: 4 } }}>
       {/* <ActionToolbar
         title="Nieuwe Factuur"
         navigation={[

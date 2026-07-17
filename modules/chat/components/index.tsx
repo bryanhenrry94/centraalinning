@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Box,
   Container,
+  IconButton,
   Paper,
   TextField,
   Typography,
@@ -13,6 +14,7 @@ import {
   ListItemButton,
   Avatar,
 } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 // components
 import ChatForm from "./chat-form";
 import ChatMessage from "./chat-message";
@@ -28,7 +30,7 @@ import { useAuthSession } from "@/modules/auth/hooks/useAuthSession";
 import { ChatWindowProps, ISelectedRoom, Sender } from "./types";
 import { IChatMessage, IChatMessageCreate } from "@/modules/chat/services/chat.validators";
 
-function ChatWindow({ room, sender }: ChatWindowProps) {
+function ChatWindow({ room, sender, onBack }: ChatWindowProps) {
   const [messages, setMessages] = useState<IChatMessage[]>([]);
   const [typingMessage, setTypingMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -274,6 +276,9 @@ function ChatWindow({ room, sender }: ChatWindowProps) {
       <Box
         sx={{
           p: 2,
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
           borderBottom: "1px solid #ddd",
           // backgroundColor: "primary.main",
           // color: "#fff",
@@ -281,6 +286,15 @@ function ChatWindow({ room, sender }: ChatWindowProps) {
           borderTopRightRadius: "8px",
         }}
       >
+        {onBack && (
+          <IconButton
+            size="small"
+            onClick={onBack}
+            sx={{ display: { xs: "inline-flex", md: "none" } }}
+          >
+            <ArrowBackIcon />
+          </IconButton>
+        )}
         <Typography variant="h6">Sala: {room.name}</Typography>
       </Box>
 
@@ -369,12 +383,21 @@ export default function ChatUI() {
   const [selectedRoom, setSelectedRoom] = useState<ISelectedRoom>();
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 2, display: "flex", height: "70vh" }}>
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{
+        px: { xs: 1, sm: 3 },
+        mt: 2,
+        display: "flex",
+        height: { xs: "calc(100vh - 140px)", md: "70vh" },
+      }}
+    >
       <Paper
         elevation={3}
         sx={{
-          width: 300,
-          display: "flex",
+          width: { xs: "100%", md: 300 },
+          display: { xs: selectedRoom ? "none" : "flex", md: "flex" },
           flexDirection: "column",
           overflow: "hidden",
         }}
@@ -444,13 +467,17 @@ export default function ChatUI() {
         elevation={3}
         sx={{
           flex: 1,
-          ml: 2,
-          display: "flex",
+          ml: { xs: 0, md: 2 },
+          display: { xs: selectedRoom ? "flex" : "none", md: "flex" },
           flexDirection: "column",
         }}
       >
         {selectedRoom ? (
-          <ChatWindow room={selectedRoom} sender={sender} />
+          <ChatWindow
+            room={selectedRoom}
+            sender={sender}
+            onBack={() => setSelectedRoom(undefined)}
+          />
         ) : (
           <Box
             sx={{

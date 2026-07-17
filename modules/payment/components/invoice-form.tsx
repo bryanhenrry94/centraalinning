@@ -317,7 +317,7 @@ const InvoiceFormPage: React.FC<InvoiceFormPageProps> = ({ id }) => {
           borderRadius: 1,
           overflow: "hidden",
           mb: 2,
-          minWidth: 400,
+          minWidth: { xs: "100%", sm: 400 },
         }}
       >
         <Box sx={{ p: 2 }}>
@@ -408,9 +408,9 @@ const InvoiceFormPage: React.FC<InvoiceFormPageProps> = ({ id }) => {
               <Box
                 sx={{
                   display: "flex",
-                  flexDirection: "row",
-                  gap: 0.5,
-                  alignItems: "center",
+                  flexDirection: { xs: "column", sm: "row" },
+                  gap: { xs: 2, sm: 0.5 },
+                  alignItems: { xs: "stretch", sm: "center" },
                   width: "100%",
                   justifyContent: "space-between",
                 }}
@@ -426,7 +426,7 @@ const InvoiceFormPage: React.FC<InvoiceFormPageProps> = ({ id }) => {
                         {...field}
                         value={field.value ?? ""}
                         select
-                        sx={{ width: 200 }}
+                        sx={{ width: { xs: "100%", sm: 200 } }}
                         size="small"
                         error={!!errors.tenant_id}
                         helperText={errors.tenant_id?.message}
@@ -459,7 +459,7 @@ const InvoiceFormPage: React.FC<InvoiceFormPageProps> = ({ id }) => {
                         <TextField
                           label="Factuurnummer"
                           {...field}
-                          sx={{ maxWidth: 400 }}
+                          sx={{ maxWidth: { xs: "100%", sm: 400 } }}
                           size="small"
                           error={!!errors.invoice_number}
                           helperText={errors.invoice_number?.message}
@@ -482,7 +482,7 @@ const InvoiceFormPage: React.FC<InvoiceFormPageProps> = ({ id }) => {
                                   .substring(0, 10)
                               : ""
                           }
-                          sx={{ maxWidth: 400 }}
+                          sx={{ maxWidth: { xs: "100%", sm: 400 } }}
                           size="small"
                           type="date"
                           slotProps={{ inputLabel: { shrink: true } }}

@@ -507,6 +507,7 @@ const StatutoryInterestSection: React.FC = () => {
                 top: "50%",
                 left: "50%",
                 transform: "translate(-50%, -50%)",
+                width: { xs: "calc(100vw - 32px)", sm: "90vw", md: 1000 },
                 maxWidth: 1000,
                 bgcolor: "background.paper",
                 boxShadow: 24,

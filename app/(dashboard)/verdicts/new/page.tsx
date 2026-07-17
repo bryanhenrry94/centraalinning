@@ -22,7 +22,7 @@ const VerdictPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ m: 4 }}>
+    <Box sx={{ m: { xs: 1.5, sm: 4 } }}>
       <Box>
         <VerdictProvider>
           <VerdictFormPage defaultValues={defaultValues} modeEdit={false} />

@@ -231,7 +231,7 @@ const VerdictsPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ m: 4 }}>
+    <Box sx={{ m: { xs: 1.5, sm: 4 } }}>
       {/* <ActionToolbar
         title="Vonnis"
         navigation={[{ title: "Dashboard", href: "/" }]}
@@ -241,8 +241,10 @@ const VerdictsPage: React.FC = () => {
       <Box
         sx={{
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: { xs: "stretch", sm: "center" },
+          gap: 2,
         }}
         mb={2}
       >
@@ -256,7 +258,7 @@ const VerdictsPage: React.FC = () => {
             RECHTERLIJKE UITSPRAAK
           </Typography>
         </Box>
-        <Stack direction="row" spacing={2}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <Button
             variant="contained"
             color="primary"

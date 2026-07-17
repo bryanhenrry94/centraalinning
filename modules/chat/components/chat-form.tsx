@@ -45,9 +45,10 @@ const ChatForm = ({ onSendMessage, onSendFile, fullname, room }: ChatFormProps) 
 
     return (
         <form onSubmit={handleSubmit}>
-            <Box display="flex" gap={1}>
+            <Box display="flex" gap={1} alignItems="center">
                 <TextField
-                    fullWidth
+                    size="small"
+                    sx={{ flex: 1, minWidth: 0 }}
                     value={message}
                     onChange={(e) => {
                         setMessage(e.target.value);
@@ -55,11 +56,11 @@ const ChatForm = ({ onSendMessage, onSendFile, fullname, room }: ChatFormProps) 
                     }}
                     placeholder="Escribe un mensaje..."
                 />
-                <IconButton component="label">
+                <IconButton component="label" sx={{ flexShrink: 0 }}>
                     <AttachFileIcon />
                     <input type="file" hidden onChange={handleFileChange} />
                 </IconButton>
-                <Button type="submit" variant="contained">
+                <Button type="submit" variant="contained" sx={{ flexShrink: 0 }}>
                     Enviar
                 </Button>
             </Box>

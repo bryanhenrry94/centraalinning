@@ -50,7 +50,9 @@ const SettingPage = () => {
   return (
     <Container
       maxWidth="lg"
+      disableGutters
       sx={{
+        px: { xs: 1, sm: 3 },
         display: "flex",
         flexDirection: "column",
         gap: 3,
@@ -61,7 +63,14 @@ const SettingPage = () => {
       </Typography>
 
       <Box sx={{ width: "100%" }}>
-        <Tabs value={value} onChange={handleChange} aria-label="example tabs">
+        <Tabs
+          value={value}
+          onChange={handleChange}
+          aria-label="example tabs"
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
+        >
           <Tab value={0} label="Rekening" wrapped />
           <Tab value={1} label="Profiel" />
           <Tab value={2} label="Gebruikers" />

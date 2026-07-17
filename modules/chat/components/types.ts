@@ -7,6 +7,7 @@ export interface Sender {
 export interface ChatWindowProps {
   room: ISelectedRoom;
   sender: Sender;
+  onBack?: () => void;
 }
 
 export interface ISelectedRoom {

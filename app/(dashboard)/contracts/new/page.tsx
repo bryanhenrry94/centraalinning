@@ -451,9 +451,9 @@ const OvereenkomstenRegistrerenPage = () => {
   return (
     <Box sx={{ minHeight: "100vh" }}>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Container maxWidth="lg">
+        <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 } }}>
           {/* Header */}
-          <Box sx={{ mb: 4 }}>
+          <Box sx={{ mb: { xs: 2, sm: 4 } }}>
             <Typography variant="h4" sx={{ fontWeight: 700 }}>
               Financiële afspraak registreren
             </Typography>
@@ -1332,7 +1332,7 @@ const OvereenkomstenRegistrerenPage = () => {
         maxWidth="xs"
         fullWidth
       >
-        <DialogContent sx={{ p: 4 }}>
+        <DialogContent sx={{ p: { xs: 2, sm: 4 } }}>
           <Stack spacing={3} alignItems="center">
             {/* Titel */}
             <Stack spacing={1} textAlign="center">

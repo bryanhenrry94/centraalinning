@@ -63,7 +63,7 @@ const VerdictTotals: React.FC<VerdictTotalsProps> = () => {
   return (
     <Box
       sx={{
-        mt: 8.5,
+        mt: { xs: 3, sm: 8.5 },
         display: "flex",
         justifyContent: "right",
         width: "100%",

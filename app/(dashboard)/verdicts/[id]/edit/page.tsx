@@ -25,7 +25,7 @@ const VerdictPageEdit: React.FC = () => {
   }, [id]);
 
   return (
-    <Box sx={{ m: 4 }}>
+    <Box sx={{ m: { xs: 1.5, sm: 4 } }}>
       <Box sx={{ mt: 2 }}>
         <VerdictProvider>
           <VerdictFormPage

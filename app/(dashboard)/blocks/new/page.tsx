@@ -288,7 +288,7 @@ export default function BlockCreatePage() {
   };
 
   return (
-    <Container maxWidth="lg">
+    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 } }}>
       <Box
         sx={{
           display: "flex",
@@ -308,7 +308,7 @@ export default function BlockCreatePage() {
         </Box>
       </Box>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Stack spacing={3} sx={{ py: 8 }}>
+        <Stack spacing={3} sx={{ py: { xs: 2, sm: 8 } }}>
           {/* Cabecera */}
           <Paper
             component="section"
@@ -542,7 +542,7 @@ export default function BlockCreatePage() {
         maxWidth="xs"
         fullWidth
       >
-        <DialogContent sx={{ p: 4 }}>
+        <DialogContent sx={{ p: { xs: 2, sm: 4 } }}>
           <Stack spacing={3} alignItems="center">
             {/* Titel */}
             <Stack spacing={1} textAlign="center">
