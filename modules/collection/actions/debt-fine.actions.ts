@@ -5,7 +5,7 @@ export const applyCharge = async (
   debtClaimId: string,
   amount: number,
   concept: string,
-  service: "FAR" | "AOP" | "BLK" | "BLC" | "COL" | "GOP",
+  service: "FAR" | "AOP" | "BLK" | "BLC" | "COP" | "GOP",
 ) => {
   return DebtFineService.applyCharge(debtClaimId, amount, concept, service);
 };

@@ -77,7 +77,7 @@ export async function getDashboard(): Promise<DashboardResponse> {
       { name: "FAR - Financiele afspraken registreren", value: contractCount },
       { name: "AOP - Administrative opvolging", value: aopCount },
       { name: "BLK - Blokade", value: blockadeCount },
-      { name: "COL - Collectieve inning", value: colCount },
+      { name: "COP - Collectieve opvolging", value: colCount },
       { name: "GOP - Gerenchtelijke opvolging", value: gopCount },
     ],
     documents,

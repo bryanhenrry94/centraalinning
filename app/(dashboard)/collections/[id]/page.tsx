@@ -290,9 +290,7 @@ const CollectionViewPage: React.FC = () => {
                           <TableCell align="right">
                             {formatCurrency(payment.total_amount)}
                           </TableCell>
-                          <TableCell align="right">
-                            {payment.method}
-                          </TableCell>
+                          <TableCell align="right">{payment.method}</TableCell>
                           <TableCell align="right">
                             {payment.reference_number || "-"}
                           </TableCell>
@@ -349,13 +347,7 @@ const CollectionViewPage: React.FC = () => {
                         <Box sx={{ mt: 1.5 }}>
                           <InfoField
                             label="Status"
-                            value={
-                              <Chip
-                                size="small"
-                                label={workflowStatusInfo.label}
-                                color={workflowStatusInfo.color}
-                              />
-                            }
+                            value={workflowStatusInfo.label}
                           />
                         </Box>
                       </Box>

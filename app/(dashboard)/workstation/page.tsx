@@ -36,7 +36,7 @@ export default function WorkstationPage() {
       color: "#1976d2",
       icon: SearchIcon,
       buttonText: "Blok-Check uitvoeren →",
-      linkText: "📋 Blok-Check overzicht",     
+      linkText: "📋 Blok-Check overzicht",
       // linkList: "/block-check",
       newLink: "/block-check",
     },
@@ -78,7 +78,7 @@ export default function WorkstationPage() {
     },
     {
       id: 5,
-      title: "5. COLLECTIEVE INNING (COL)",
+      title: "5. COLLECTIEVE INNING (COP)",
       description:
         "Benut de samenwerking tussen deelnemers voor betaling of een betalingsregeling.",
       color: "#7b1fa2",
@@ -108,9 +108,12 @@ export default function WorkstationPage() {
         {/* Header */}
         <Box sx={{ mb: 4 }}>
           <Typography variant="h3" component="h1" sx={{ fontWeight: "bold" }}>
-            Diensten
+            CFSB Diensten
           </Typography>
-          <Typography variant="subtitle1" sx={{ color: "#666" }}>
+          <Typography
+            variant="subtitle1"
+            sx={{ color: "#666", fontSize: "16px" }}
+          >
             Alle CFSB diensten op één scherm
           </Typography>
         </Box>
@@ -132,7 +135,7 @@ export default function WorkstationPage() {
                       boxShadow: 6,
                     },
                   }}
-                >                  
+                >
                   <CardContent sx={{ flexGrow: 1 }}>
                     <Stack
                       direction="row"

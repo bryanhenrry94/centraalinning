@@ -5,7 +5,7 @@ export class DebtFineService {
     debtClaimId: string,
     amount: number,
     concept: string,
-    service: "FAR" | "AOP" | "BLK" | "BLC" | "COL" | "GOP",
+    service: "FAR" | "AOP" | "BLK" | "BLC" | "COP" | "GOP",
   ) {
     return prisma.claimCharge.create({
       data: { debtClaimId, amount, concept, service, status: "PENDING" },

@@ -30,7 +30,7 @@ export type HeaderMenuGroup = {
 export const menuGroups: HeaderMenuGroup[] = [
   {
     id: "dossiers",
-    label: "Diensten",
+    label: "CFSB Diensten",
     roles: [UserRole.TENANT_ADMIN],
     items: [
       {

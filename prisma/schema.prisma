@@ -422,7 +422,7 @@ enum TimelineEvent {
   BLOCKADE_RELEASED
 
   // =========================
-  // COL
+  // COP
   // =========================
   COL_STARTED
   COL_NEGOTIATION_CREATED
@@ -501,9 +501,9 @@ enum NotificationStatus {
 }
 
 enum CollectiveCollectionStatus {
-  ACTIVE             // El proceso COL está siendo gestionado activamente. Se están realizando contactos, negociaciones o seguimiento.
+  ACTIVE             // El proceso COP está siendo gestionado activamente. Se están realizando contactos, negociaciones o seguimiento.
   ON_HOLD            // El proceso está temporalmente suspendido (esperando documentación, respuesta del deudor, decisión del acreedor, etc.).
-  COMPLETED          // El servicio COL finalizó correctamente. El resultado se determina con CollectiveCollectionResult.
+  COMPLETED          // El servicio COP finalizó correctamente. El resultado se determina con CollectiveCollectionResult.
   CANCELLED          // El cliente decidió cancelar el servicio antes de finalizar.
 }
 
@@ -523,7 +523,7 @@ enum ServiceType {
   AOP
   BLK
   BLC
-  COL
+  COP
   GOP
 }
 
