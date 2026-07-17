@@ -176,14 +176,21 @@ const BlokCheckPage = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 2 }}>
+    <Container
+      maxWidth="md"
+      disableGutters
+      sx={{
+        py: { xs: 1, sm: 2 },
+        px: { xs: 1, sm: 3 },
+      }}
+    >
       {/* Header */}
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 4,
+          mb: { xs: 2, sm: 4 },
           mt: {
             sm: 8, // Tablets y pantallas más grandes
           },
@@ -194,7 +201,7 @@ const BlokCheckPage = () => {
             Blok-Check uitvoeren
           </Typography>
           <Typography variant="body2" color="textSecondary">
-            Controleer of een persoon of onderneming geregistreerd staat met een
+            Controleer of een persoon of onderneming is geregistreerd met een
             economische blokkade.
           </Typography>
         </Box>
@@ -204,8 +211,8 @@ const BlokCheckPage = () => {
       {!showResult ? (
         <>
           <Card>
-            <CardContent>
-              <Box display="flex" gap={2}>
+            <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
+              <Box display="flex" gap={{ xs: 1, sm: 2 }}>
                 <TextField
                   fullWidth
                   placeholder="ID-nummer / KVK-nummer"
@@ -251,7 +258,7 @@ const BlokCheckPage = () => {
           <Box
             sx={{
               mt: 2,
-              p: 2,
+              p: { xs: 1.5, sm: 2 },
               bgcolor: "rgba(30, 95, 177, 0.05)",
               border: "1px solid rgba(30, 95, 177, 0.1)",
               borderRadius: 1,
@@ -346,7 +353,7 @@ const BlokCheckPage = () => {
           </Box>
         </Box>
 
-        <DialogContent sx={{ p: 4 }}>
+        <DialogContent sx={{ p: { xs: 2, sm: 4 } }}>
           <Stack spacing={4}>
             {/* Servicio */}
             <Paper

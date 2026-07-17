@@ -23,6 +23,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import DashboardIcon from "@mui/icons-material/Dashboard";
+import AppsIcon from "@mui/icons-material/Apps";
 import MenuIcon from "@mui/icons-material/Menu";
 
 import { useSession } from "next-auth/react";
@@ -333,6 +334,17 @@ export default function Header() {
               <DashboardIcon sx={{ mr: 2 }} />
 
               <ListItemText primary="Dashboard" />
+            </ListItemButton>
+
+            <ListItemButton
+              onClick={() => {
+                router.push("/workstation");
+                setMobileOpen(false);
+              }}
+            >
+              <AppsIcon sx={{ mr: 2 }} />
+
+              <ListItemText primary="CFSB-Diensten" />
             </ListItemButton>
 
             {availableGroups.map((group) => (
