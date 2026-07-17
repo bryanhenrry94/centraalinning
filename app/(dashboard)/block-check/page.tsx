@@ -176,7 +176,7 @@ const BlokCheckPage = () => {
   };
 
   return (
-    <Container maxWidth="md">
+    <Container maxWidth="md" sx={{ py: 2 }}>
       {/* Header */}
       <Box
         sx={{
@@ -184,7 +184,9 @@ const BlokCheckPage = () => {
           justifyContent: "space-between",
           alignItems: "center",
           mb: 4,
-          mt: 8,
+          mt: {
+            sm: 8, // Tablets y pantallas más grandes
+          },
         }}
       >
         <Box>
