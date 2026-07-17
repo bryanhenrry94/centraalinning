@@ -41,7 +41,9 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
         }
       />
 
-      <DashboardStats stats={dashboard.stats} />
+      <Box sx={{ mt: 8 }}>
+        <DashboardStats stats={dashboard.stats} />
+      </Box>
 
       <Grid container spacing={3} mt={3}>
         <Grid size={{ xs: 12, md: 6 }}>
