@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Container, Grid } from "@mui/material";
+import { Box, Grid, useMediaQuery, useTheme } from "@mui/material";
 
 import DashboardHeader from "./DashboardHeader";
 import DashboardFilters from "./DashboardFilters";
@@ -9,7 +9,7 @@ import { StatusChart } from "./StatusChart";
 import { ModuleOverview } from "./ModuleOverview";
 import { LatestDocumentsTable } from "./LatestDocumentsTable";
 import { DashboardResponse } from "../types/dashboard.types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 
@@ -23,9 +23,16 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
   );
   const [endDate, setEndDate] = useState<dayjs.Dayjs | null>(dayjs());
   const router = useRouter();
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
-    <Box>
+    <Box sx={{ pt: { xs: 1.5, sm: 4 } }}>
       <DashboardHeader
         title="Dashboard"
         subtitle="Overzicht van uw overeenkomsten en activiteiten."
@@ -55,9 +62,11 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
         </Grid>
       </Grid>
 
-      <Box mt={3} sx={{ display: { xs: "none", md: "block" } }}>
-        <LatestDocumentsTable rows={dashboard.documents} />
-      </Box>
+      {mounted && isDesktop && (
+        <Box mt={3}>
+          <LatestDocumentsTable rows={dashboard.documents} />
+        </Box>
+      )}
     </Box>
   );
 }

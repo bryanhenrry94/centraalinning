@@ -28,7 +28,7 @@ export default function DashboardFilters({
     <Stack
       direction={{ xs: "column", md: "row" }}
       spacing={2}
-      alignItems="center"
+      alignItems={{ xs: "flex-start", md: "center" }}
     >
       {/* <TextField
         label="Desde"

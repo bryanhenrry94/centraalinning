@@ -36,14 +36,11 @@ export default function DocumentContent({
   const { title, subtitle } = PAGE_CONFIG[filter];
 
   return (
-    <Container maxWidth="lg" sx={{ mt: { xs: 2, sm: 4 }, mb: 4 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 1.5, sm: 4 } }}>
       <AppBreadcrumbs items={[{ label: title }]} />
 
       <Box sx={{ width: "100%", mb: 3 }}>
-        <Typography
-          fontWeight={700}
-          sx={{ fontSize: { xs: "1.125rem", sm: "1.5rem" } }}
-        >
+        <Typography variant="h4" sx={{ fontWeight: 700 }}>
           {`${title} (${documents.length})`}
         </Typography>
         <Typography

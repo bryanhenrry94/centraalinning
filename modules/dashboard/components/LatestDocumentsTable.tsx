@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import {
@@ -13,6 +13,7 @@ import {
   Paper,
   Stack,
   Typography,
+  useMediaQuery,
   useTheme,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -53,6 +54,12 @@ export const LatestDocumentsTable = ({
   const theme = useTheme();
   const router = useRouter();
   const [mobilePage, setMobilePage] = useState(1);
+  const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const columns: GridColDef<(typeof rows)[number]>[] = [
     {
@@ -237,43 +244,45 @@ export const LatestDocumentsTable = ({
         )}
       </Stack>
 
-      <Paper
-        elevation={0}
-        sx={{
-          display: { xs: "none", sm: "flex" },
-          border: `1px solid ${theme.palette.divider}`,
-          height: "100%",
-          padding: 2,
-          flexDirection: "column",
-          justifyContent: "space-between",
-          bgcolor: "white",
-        }}
-      >
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          hideFooter={!paginated}
-          autoHeight={paginated}
-          pageSizeOptions={paginated ? [10, 25, 50, 100] : undefined}
-          initialState={
-            paginated
-              ? { pagination: { paginationModel: { pageSize: 25 } } }
-              : undefined
-          }
-          disableColumnMenu
-          disableRowSelectionOnClick
+      {mounted && isDesktop && (
+        <Paper
+          elevation={0}
           sx={{
-            "& .MuiDataGrid-columnHeaders": {
-              backgroundColor: theme.palette.grey[100],
-              borderBottom: `1px solid ${theme.palette.divider}`,
-            },
-            "& .MuiDataGrid-cell": {
-              borderBottom: `1px solid ${theme.palette.divider}`,
-            },
+            display: "flex",
+            border: `1px solid ${theme.palette.divider}`,
+            height: "100%",
+            padding: 2,
+            flexDirection: "column",
+            justifyContent: "space-between",
             bgcolor: "white",
           }}
-        />
-      </Paper>
+        >
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            hideFooter={!paginated}
+            autoHeight
+            pageSizeOptions={paginated ? [10, 25, 50, 100] : undefined}
+            initialState={
+              paginated
+                ? { pagination: { paginationModel: { pageSize: 25 } } }
+                : undefined
+            }
+            disableColumnMenu
+            disableRowSelectionOnClick
+            sx={{
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: theme.palette.grey[100],
+                borderBottom: `1px solid ${theme.palette.divider}`,
+              },
+              "& .MuiDataGrid-cell": {
+                borderBottom: `1px solid ${theme.palette.divider}`,
+              },
+              bgcolor: "white",
+            }}
+          />
+        </Paper>
+      )}
     </>
   );
 };

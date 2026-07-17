@@ -53,12 +53,13 @@ const SettingPage = () => {
       disableGutters
       sx={{
         px: { xs: 1, sm: 3 },
+        py: { xs: 1.5, sm: 4 },
         display: "flex",
         flexDirection: "column",
         gap: 3,
       }}
     >
-      <Typography variant="h6" fontWeight="bold">
+      <Typography variant="h4" sx={{ fontWeight: 700 }}>
         Configuratie
       </Typography>
 

@@ -103,11 +103,15 @@ export default function WorkstationPage() {
   ];
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#f5f5f5", py: 2 }}>
-      <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 } }}>
+    <Box sx={{ minHeight: "100vh", bgcolor: "#f5f5f5" }}>
+      <Container
+        maxWidth="lg"
+        disableGutters
+        sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      >
         {/* Header */}
         <Box sx={{ mb: { xs: 2, sm: 4 } }}>
-          <Typography variant="h5" component="h1" sx={{ fontWeight: "bold" }}>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
             CFSB-Diensten
           </Typography>
           <Typography

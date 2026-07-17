@@ -180,7 +180,7 @@ const BlokCheckPage = () => {
       maxWidth="md"
       disableGutters
       sx={{
-        py: { xs: 1, sm: 2 },
+        py: { xs: 1.5, sm: 4 },
         px: { xs: 1, sm: 3 },
       }}
     >
@@ -191,9 +191,6 @@ const BlokCheckPage = () => {
           justifyContent: "space-between",
           alignItems: "center",
           mb: { xs: 2, sm: 4 },
-          mt: {
-            sm: 8, // Tablets y pantallas más grandes
-          },
         }}
       >
         <Box>
@@ -212,7 +209,13 @@ const BlokCheckPage = () => {
         <>
           <Card>
             <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
-              <Box display="flex" gap={{ xs: 1, sm: 2 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  gap: { xs: 1, sm: 2 },
+                }}
+              >
                 <TextField
                   fullWidth
                   placeholder="ID-nummer / KVK-nummer"
@@ -241,6 +244,7 @@ const BlokCheckPage = () => {
                     px: 4,
                     textTransform: "none",
                     fontWeight: 600,
+                    width: { xs: "100%", sm: "auto" },
                   }}
                   size="small"
                 >

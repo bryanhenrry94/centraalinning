@@ -250,10 +250,10 @@ const VerdictsPage: React.FC = () => {
       >
         <Box>
           <Typography
-            variant="h5"
+            variant="h4"
             component="h2"
             gutterBottom
-            sx={{ textAlign: "left" }}
+            sx={{ textAlign: "left", fontWeight: 700 }}
           >
             RECHTERLIJKE UITSPRAAK
           </Typography>

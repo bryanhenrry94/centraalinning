@@ -31,7 +31,7 @@ export const CollectionHeader = ({ onRefresh }: CollectionHeaderProps) => {
 
   return (
     <>
-      <Typography variant="h5" gutterBottom>
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
         Overzicht Administratieve opvolging
       </Typography>
 

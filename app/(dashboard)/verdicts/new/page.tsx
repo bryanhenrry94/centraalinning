@@ -2,7 +2,6 @@
 import React from "react";
 import VerdictFormPage from "@/modules/verdict/components/verdict-form";
 import { VerdictProvider } from "@/modules/verdict/contexts/verdict.context";
-import { Box } from "@mui/material";
 import { VerdictCreate } from "@/modules/verdict/services/verdict.validators";
 
 const VerdictPage: React.FC = () => {
@@ -22,13 +21,9 @@ const VerdictPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ m: { xs: 1.5, sm: 4 } }}>
-      <Box>
-        <VerdictProvider>
-          <VerdictFormPage defaultValues={defaultValues} modeEdit={false} />
-        </VerdictProvider>
-      </Box>
-    </Box>
+    <VerdictProvider>
+      <VerdictFormPage defaultValues={defaultValues} modeEdit={false} />
+    </VerdictProvider>
   );
 };
 

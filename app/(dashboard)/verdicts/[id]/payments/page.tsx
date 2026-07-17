@@ -95,7 +95,7 @@ export default function AccountsPage() {
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, mt: { xs: 2, sm: 4 }, mb: { xs: 2, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
     >
       <ActionToolbar
         title="Raadplegen"

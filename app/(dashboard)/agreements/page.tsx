@@ -68,7 +68,7 @@ const PaymentAgreementsPage = () => {
           gap: 1,
         }}
       >
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
           BETALINGSREGELING
         </Typography>
         <Tabs

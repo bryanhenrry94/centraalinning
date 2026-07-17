@@ -239,7 +239,7 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 2, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
     >
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)}>

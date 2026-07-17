@@ -451,7 +451,11 @@ const OvereenkomstenRegistrerenPage = () => {
   return (
     <Box sx={{ minHeight: "100vh" }}>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 } }}>
+        <Container
+          maxWidth="lg"
+          disableGutters
+          sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+        >
           {/* Header */}
           <Box sx={{ mb: { xs: 2, sm: 4 } }}>
             <Typography variant="h4" sx={{ fontWeight: 700 }}>

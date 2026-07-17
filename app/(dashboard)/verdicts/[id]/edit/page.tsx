@@ -2,7 +2,6 @@
 import React, { useEffect } from "react";
 import VerdictFormPage from "@/modules/verdict/components/verdict-form";
 import { VerdictProvider } from "@/modules/verdict/contexts/verdict.context";
-import { Box } from "@mui/material";
 import { useParams } from "next/navigation";
 import { getVerdictById } from "@/modules/verdict/actions/verdict.actions";
 
@@ -25,17 +24,9 @@ const VerdictPageEdit: React.FC = () => {
   }, [id]);
 
   return (
-    <Box sx={{ m: { xs: 1.5, sm: 4 } }}>
-      <Box sx={{ mt: 2 }}>
-        <VerdictProvider>
-          <VerdictFormPage
-            id={id}
-            defaultValues={verdictData}
-            modeEdit={true}
-          />
-        </VerdictProvider>
-      </Box>
-    </Box>
+    <VerdictProvider>
+      <VerdictFormPage id={id} defaultValues={verdictData} modeEdit={true} />
+    </VerdictProvider>
   );
 };
 
