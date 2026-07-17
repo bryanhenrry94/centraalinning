@@ -41,7 +41,7 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
         }
       />
 
-      <Box sx={{ mt: 8 }}>
+      <Box sx={{ mt: 6 }}>
         <DashboardStats stats={dashboard.stats} />
       </Box>
 
