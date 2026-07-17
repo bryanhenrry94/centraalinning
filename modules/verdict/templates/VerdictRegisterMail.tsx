@@ -38,7 +38,7 @@ export const VerdictRegisterEmail = ({
         <Text style={footer}>
           Dit bericht is automatisch gegenereerd door het Centraal
           Incassoplatform (CI).
-          <br />© CENTRAAL INNING
+          <br />© CENTRAAL OPVOLGING
         </Text>
       </Container>
     </Body>

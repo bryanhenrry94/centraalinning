@@ -47,7 +47,7 @@ export const RecoveryPasswordEmail = ({
 
         <Text style={footer}>
           Dit bericht is automatisch gegenereerd.
-          <br />© CENTRAAL INNING
+          <br />© CENTRAAL OPVOLGING
         </Text>
       </Container>
     </Body>

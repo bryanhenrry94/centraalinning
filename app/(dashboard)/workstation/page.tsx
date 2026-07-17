@@ -78,13 +78,13 @@ export default function WorkstationPage() {
     },
     {
       id: 5,
-      title: "5. COLLECTIEVE INNING (COP)",
+      title: "5. COLLECTIEVE OPVOLGING (COP)",
       description:
         "Benut de samenwerking tussen deelnemers voor betaling of een betalingsregeling.",
       color: "#7b1fa2",
       icon: GroupIcon,
-      buttonText: "Collectieve inning starten →",
-      linkText: "📋 Mijn collectieve inningen",
+      buttonText: "Collectieve Opvolging starten →",
+      linkText: "📋 Mijn collectieve opvolging",
       linkList: "/collections",
       newLink: "/collections",
     },

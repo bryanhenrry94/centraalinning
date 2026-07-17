@@ -1,91 +1,95 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Notificación del sistema central</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #f9f9f9;
-        margin: 0;
-        padding: 0;
-        color: #333;
-      }
-      .container {
-        max-width: 600px;
-        margin: 30px auto;
-        background-color: #ffffff;
-        border: 1px solid #e5e5e5;
-        border-radius: 8px;
-      }
-      .content {
-        font-size: 14px;
-        line-height: 1.6;
-        text-align: left;
-        padding: 24px;
-        margin-left: 10px;
-        margin-right: 10px;
-      }
-      .content p {
-        margin: 0 0 12px;
-      }
-      .footer {
-        font-size: 12px;
-        color: #777;
-        text-align: center;
-        border-top: 1px solid #eee;
-        padding-top: 15px;
-      }
-      .button {
-        display: inline-block;
-        padding: 10px 16px;
-        margin-top: 15px;
-        font-size: 14px;
-        color: #333;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        text-decoration: none;
-      }
-      .button:hover {
-        background-color: #f2f2f2;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <!-- Header con tabla para logo alineado a la izquierda -->
-      <table width="100%" cellspacing="0" cellpadding="0">
-        <tr>
-          <td>
-            <img
-              src="https://dazzsoft.com/wp-content/uploads/2025/09/LogoCIO.png"
-              alt="Logo Sistema Central"
-              width="200"
-              height="100"
-              style="display: block"
-            />
-          </td>
-        </tr>
-      </table>
 
-      <!-- Contenido -->
-      <div class="content">
-        <p>Beste <strong>{{recipientName}}</strong>,</p>
-        <p>
-          {{messageBody}}
-          <a href="https://www.centraalinning.com">www.centraalinning.com</a>
-        </p>
-      </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notificación del sistema central</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
 
-      <!-- Footer -->
-      <div class="footer">
-        <p>
-          Dit bericht is automatisch gegenereerd door het Centraal
-          Incassoplatform (CI).
-        </p>
-        <p>&copy; {{currentYear}} CENTRAL INNING</p>
-      </div>
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background-color: #ffffff;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+    }
+
+    .content {
+      font-size: 14px;
+      line-height: 1.6;
+      text-align: left;
+      padding: 24px;
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+
+    .content p {
+      margin: 0 0 12px;
+    }
+
+    .footer {
+      font-size: 12px;
+      color: #777;
+      text-align: center;
+      border-top: 1px solid #eee;
+      padding-top: 15px;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 10px 16px;
+      margin-top: 15px;
+      font-size: 14px;
+      color: #333;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      text-decoration: none;
+    }
+
+    .button:hover {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Header con tabla para logo alineado a la izquierda -->
+    <table width="100%" cellspacing="0" cellpadding="0">
+      <tr>
+        <td>
+          <img src="https://dazzsoft.com/wp-content/uploads/2025/09/LogoCIO.png" alt="Logo Sistema Central" width="200"
+            height="100" style="display: block" />
+        </td>
+      </tr>
+    </table>
+
+    <!-- Contenido -->
+    <div class="content">
+      <p>Beste <strong>{{recipientName}}</strong>,</p>
+      <p>
+        {{messageBody}}
+        <a href="https://www.centraalinning.com">www.centraalinning.com</a>
+      </p>
     </div>
-  </body>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        Dit bericht is automatisch gegenereerd door het Centraal
+        Incassoplatform (CI).
+      </p>
+      <p>&copy; {{currentYear}} CENTRAL OPVOLGING</p>
+    </div>
+  </div>
+</body>
+
 </html>

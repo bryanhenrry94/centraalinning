@@ -4,7 +4,7 @@ const TermsAndConditions = () => {
   return (
     <div className="max-w-4xl mx-auto px-6 py-12 text-gray-800">
       {/* <h1 className="text-2xl font-bold mb-8 text-center">
-        ALGEMENE VOORWAARDEN - CENTRAAL INNING
+        ALGEMENE VOORWAARDEN - CENTRAAL OPVOLGING
       </h1> */}
 
       <section className="space-y-8">

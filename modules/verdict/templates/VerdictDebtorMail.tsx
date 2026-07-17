@@ -28,8 +28,8 @@ export const VerdictDebtorMail = ({
         <Img src={logoUrl} width="120" height="50" alt="Plaid" style={logo} />
         <Text style={paragraph}>Waarschuwing vóór loonbeslag</Text>
         <Text style={paragraph}>
-          Er is een gerechtelijk vonnis tegen u geregistreerd (vonnisnummer
-          {" "}{vonnisNummer}, uitspraakdatum {datumVonnis}). Dit vonnis is bevestigd
+          Er is een gerechtelijk vonnis tegen u geregistreerd (vonnisnummer{" "}
+          {vonnisNummer}, uitspraakdatum {datumVonnis}). Dit vonnis is bevestigd
           door de gerechtsdeurwaarder voor centrale uitvoering. U wordt verzocht
           per direct actie te ondernemen om verdere maatregelen te voorkomen.
         </Text>
@@ -40,7 +40,7 @@ export const VerdictDebtorMail = ({
         <Text style={footer}>
           Dit bericht is automatisch gegenereerd door het Centraal
           Incassoplatform (CI).
-          <br />© CENTRAAL INNING
+          <br />© CENTRAAL OPVOLGING
         </Text>
       </Container>
     </Body>

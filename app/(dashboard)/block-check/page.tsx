@@ -259,55 +259,16 @@ const BlokCheckPage = () => {
               )}
             </CardContent>
           </Card>
-          <Box
-            sx={{
-              mt: 2,
-              p: { xs: 1.5, sm: 2 },
-              bgcolor: "rgba(30, 95, 177, 0.05)",
-              border: "1px solid rgba(30, 95, 177, 0.1)",
-              borderRadius: 1,
-              display: "flex",
-              gap: 1.5,
-            }}
-          >
-            <Box
-              sx={{
-                minWidth: 24,
-                height: 24,
-                borderRadius: "50%",
-                bgcolor: "rgba(30, 95, 177, 0.15)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#1e5fb1",
-                fontSize: 16,
-                flexShrink: 0,
-                mt: 0.25,
-              }}
-            >
-              ℹ
-            </Box>
-            <Box>
-              <Typography
-                variant="subtitle2"
-                sx={{ fontWeight: 600, mb: 0.5, color: "#1e5fb1" }}
-              >
-                Wat kunt u doen?
-              </Typography>
-              <Typography
-                sx={{
-                  color: "#5a6f8f",
-                  lineHeight: 1.5,
-                  fontSize: "0.875rem",
-                  textAlign: "justify",
-                }}
-              >
-                Voer een ID- of KVK-nummer in om te controleren of een persoon
-                of onderneming voorkomt op de lijst met economisch geblokkeerde
-                partijen.
-              </Typography>
-            </Box>
-          </Box>
+          <Alert severity="info" sx={{ mt: 3 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+              Wat kunt u doen?
+            </Typography>
+            <Typography variant="body2" sx={{ textAlign: "justify" }}>
+              Voer een ID- of KVK-nummer in om te controleren of een persoon of
+              onderneming voorkomt op de lijst met economisch geblokkeerde
+              partijen.
+            </Typography>
+          </Alert>
         </>
       ) : (
         <ResultView result={blokCheck} onClose={handleReset} />
