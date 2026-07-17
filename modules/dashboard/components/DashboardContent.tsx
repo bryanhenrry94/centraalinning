@@ -25,7 +25,7 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
   const router = useRouter();
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Box>
       <DashboardHeader
         title="Dashboard"
         subtitle="Overzicht van uw overeenkomsten en activiteiten."
@@ -36,7 +36,7 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
             onStartDateChange={(date) => setStartDate(date)}
             onEndDateChange={(date) => setEndDate(date)}
             onCreate={() => router.push("/workstation")}
-            createLabel="CFSB Diensten"
+            createLabel="CFSB-Diensten"
           />
         }
       />
@@ -56,6 +56,6 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
       <Box mt={3} sx={{ display: { xs: "none", md: "block" } }}>
         <LatestDocumentsTable rows={dashboard.documents} />
       </Box>
-    </Container>
+    </Box>
   );
 }

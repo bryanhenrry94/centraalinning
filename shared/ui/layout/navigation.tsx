@@ -30,7 +30,7 @@ const menus: MenuItem[] = [
     role: [UserRole.PLATFORM_OWNER, UserRole.DEBTOR, UserRole.BAILIFF],
   },
   {
-    label: "CFSB Diensten",
+    label: "CFSB-Diensten",
     href: "/client",
     icon: <DashboardOutlinedIcon fontSize="small" />,
     role: [UserRole.TENANT_ADMIN],

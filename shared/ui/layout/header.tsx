@@ -182,7 +182,7 @@ export default function Header() {
                   fontWeight: 500,
                 }}
               >
-                CFSB Diensten
+                CFSB-Diensten
               </Button>
 
               {/* {availableGroups.map((group) => (
