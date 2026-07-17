@@ -107,8 +107,8 @@ export default function WorkstationPage() {
       <Container maxWidth="lg">
         {/* Header */}
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h3" component="h1" sx={{ fontWeight: "bold" }}>
-            CFSB Diensten
+          <Typography variant="h5" component="h1" sx={{ fontWeight: "bold" }}>
+            CFSB-Diensten
           </Typography>
           <Typography
             variant="subtitle1"
