@@ -30,9 +30,9 @@ export default function WorkstationPage() {
   const services = [
     {
       id: 1,
-      title: "1. BLOK-CHECK (BLC)",
+      title: "1. Blok-Check (BLC)",
       description:
-        "Controleer uw (potentiële) klant op een geregistreerde blokkade binnen de CFSB-samenwerking.",
+        "Controleer vooraf of een persoon of onderneming geregistreerd staat met een economische blokkade.",
       color: "#1976d2",
       icon: SearchIcon,
       buttonText: "Blok-Check uitvoeren →",
@@ -42,9 +42,9 @@ export default function WorkstationPage() {
     },
     {
       id: 2,
-      title: "2. FINANCIËLE AFSPRAKEN REGISTREREN (FAR)",
+      title: "2. Financiële Afspraken Registreren (FAR)",
       description:
-        "Leg uw financiële afspraken centraal vast en bescherm uzelf en uw onderneming.",
+        "Registreer financiële afspraken centraal en creëer duidelijkheid tussen betrokken partijen.",
       color: "#388e3c",
       icon: DescriptionIcon,
       buttonText: "Nieuwe financiële afspraak →",
@@ -54,9 +54,9 @@ export default function WorkstationPage() {
     },
     {
       id: 3,
-      title: "3. ADMINISTRATIEVE OPVOLGING (AOP)",
+      title: "3. Administratieve Opvolging (AOP)",
       description:
-        "Start de administratieve opvolging wanneer de financiële afspraak niet wordt nagekomen.",
+        "Start administratieve opvolging wanneer een financiële afspraak niet wordt nagekomen.",
       color: "#f57c00",
       icon: DescriptionIcon,
       buttonText: "Nieuwe opvolging starten →",
@@ -66,9 +66,9 @@ export default function WorkstationPage() {
     },
     {
       id: 4,
-      title: "4. BLOKKADE (BLK)",
+      title: "4. Blokkade (BLK)",
       description:
-        "Registreer een economische blokkade binnen de CFSB-samenwerking.",
+        "Registreer een economische blokkade volgens de geldende voorwaarden.",
       color: "#d32f2f",
       icon: LockIcon,
       buttonText: "Blokkade registreren →",
@@ -78,9 +78,9 @@ export default function WorkstationPage() {
     },
     {
       id: 5,
-      title: "5. COLLECTIEVE OPVOLGING (COP)",
+      title: "5. Collectieve Opvolging (COP)",
       description:
-        "Benut de samenwerking tussen deelnemers voor betaling of een betalingsregeling.",
+        "Start een collectieve opvolging om een betaling of betalingsregeling te realiseren en gerechtelijke opvolging zoveel mogelijk te voorkomen.",
       color: "#7b1fa2",
       icon: GroupIcon,
       buttonText: "Collectieve Opvolging starten →",
@@ -90,9 +90,9 @@ export default function WorkstationPage() {
     },
     {
       id: 6,
-      title: "6. GERECHTELIJKE OPVOLGING (GOP)",
+      title: "6. Gerechtelijke Opvolging (GOP)",
       description:
-        "Draag het dossier over aan een aangesloten advocaat of deurwaarder.",
+        "Draag het dossier over aan een aangesloten advocaat of deurwaarder voor verdere gerechtelijke opvolging.",
       color: "#00897b",
       icon: GavelIcon,
       buttonText: "Gerechtelijke opvolging starten →",
@@ -118,7 +118,7 @@ export default function WorkstationPage() {
             variant="subtitle1"
             sx={{ color: "#666", fontSize: "16px" }}
           >
-            Alle CFSB diensten op één scherm
+            Alle CFSB-Diensten op één scherm
           </Typography>
         </Box>
 

@@ -39,7 +39,7 @@ import { StatusContractChip } from "./StatusContractChip";
 
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteIcon from "@mui/icons-material/Delete";
 import PaymentIcon from "@mui/icons-material/Payment";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
@@ -193,7 +193,7 @@ export default function ContractsPage() {
       body: JSON.stringify({
         amount: aopPaymentDialog.amount,
         currency: "USD",
-        description: `AOP-dienst voor overeenkomst ${aopPaymentDialog.referenceNumber}`,
+        description: "Financiële Afspraken Registreren (FAR)",
         payment_type: PaymentType.COLLECTION,
         obligationId: aopPaymentDialog.obligationId,
       }),
@@ -205,7 +205,11 @@ export default function ContractsPage() {
 
     const data = await res.json();
 
-    return { success: true, paymentId: data.paymentId, paymentUrl: data.paymentUrl };
+    return {
+      success: true,
+      paymentId: data.paymentId,
+      paymentUrl: data.paymentUrl,
+    };
   };
 
   const closeAopPaymentDialog = () => {
@@ -284,7 +288,7 @@ export default function ContractsPage() {
         body: JSON.stringify({
           amount: CONTRACT_ACTIVATION_AMOUNT,
           currency: "USD",
-          description: `Payment for registering contract ${contract.reference_number}`,
+          description: "Financiële Afspraken Registreren (FAR)",
           payment_type: PaymentType.CONTRACT_ACTIVATION,
           contractId: contract.id,
         }),

@@ -251,7 +251,7 @@ export default function BlockCreatePage() {
       body: JSON.stringify({
         amount: amountService,
         currency: "USD",
-        description: "Payment for registering blokkade",
+        description: "Blokkade (BLK)",
         payment_type: PaymentType.BLOK_CHECK,
       }),
       headers: { "Content-Type": "application/json" },
@@ -271,8 +271,7 @@ export default function BlockCreatePage() {
 
     if (!linkResult.success) {
       notifyError(
-        linkResult.message ||
-          "Kon de betaling niet koppelen aan de blokkade.",
+        linkResult.message || "Kon de betaling niet koppelen aan de blokkade.",
       );
       return {
         success: false,

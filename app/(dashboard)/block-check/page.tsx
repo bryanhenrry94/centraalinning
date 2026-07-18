@@ -156,7 +156,7 @@ const BlokCheckPage = () => {
       body: JSON.stringify({
         amount: amountService,
         currency: "USD",
-        description: "Registratie incassovordering",
+        description: "Blok-Check (BLC)",
         payment_type: PaymentType.COLLECTION,
       }),
       headers: { "Content-Type": "application/json" },

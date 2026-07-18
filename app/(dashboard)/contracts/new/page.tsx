@@ -398,7 +398,7 @@ const OvereenkomstenRegistrerenPage = () => {
         body: JSON.stringify({
           amount: amountService,
           currency: "USD",
-          description: `Payment for registering contract ${contract.reference_number}`,
+          description: "Financiële Afspraken Registreren (FAR)",
           payment_type: PaymentType.CONTRACT_ACTIVATION,
           contractId: contract.id,
         }),

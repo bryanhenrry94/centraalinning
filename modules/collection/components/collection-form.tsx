@@ -177,7 +177,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
       body: JSON.stringify({
         amount: amountService,
         currency: "USD",
-        description: "Registratie incassovordering",
+        description: "Administratieve Opvolging (AOP)",
         payment_type: PaymentType.COLLECTION,
         obligationId: claimRes.obligationId,
       }),
