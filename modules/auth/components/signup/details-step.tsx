@@ -4,15 +4,16 @@ import useClientRouter from "@/shared/hooks/useNavigations";
 import { notifyInfo, notifyWarning } from "@/shared/ui/notifications";
 import { SignUpInput } from "@/modules/auth/services/signup.type";
 import { SignUpSchema } from "@/modules/auth/services/signup.validators";
+import { ISLAND_VISUALS } from "@/modules/auth/constants/island-visuals";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
   Business,
   Email,
-  Language,
   Lock,
   Person,
   PersonAdd,
+  Place,
   Visibility,
   VisibilityOff,
 } from "@mui/icons-material";
@@ -21,12 +22,12 @@ import {
   Box,
   Button,
   Checkbox,
+  Chip,
   Divider,
   FormControlLabel,
   IconButton,
   InputAdornment,
   Link,
-  MenuItem,
   TextField,
   Typography,
 } from "@mui/material";
@@ -34,7 +35,19 @@ import {
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
-export const FormSignUp = () => {
+interface DetailsStepProps {
+  country: string;
+  planId: string;
+  billingCycle: "MONTHLY" | "YEARLY";
+  onBack: () => void;
+}
+
+export const DetailsStep = ({
+  country,
+  planId,
+  billingCycle,
+  onBack,
+}: DetailsStepProps) => {
   const { redirectToLoginCompany } = useClientRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -56,25 +69,18 @@ export const FormSignUp = () => {
       phone: "",
       kvk: "",
       company_name: "",
-      country: "BON",
+      country,
       accept_terms: false,
-      plan_id: "",
-      billing_cycle: "MONTHLY",
+      plan_id: planId,
+      billing_cycle: billingCycle,
     },
   });
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const planParam = urlParams.get("plan");
-    const cycleParam = urlParams.get("cycle");
-
-    if (cycleParam === "MONTHLY" || cycleParam === "YEARLY") {
-      setValue("billing_cycle", cycleParam);
-    }
-    if (planParam) {
-      setValue("plan_id", planParam);
-    }
-  }, []);
+    setValue("country", country);
+    setValue("plan_id", planId);
+    setValue("billing_cycle", billingCycle);
+  }, [country, planId, billingCycle, setValue]);
 
   const onSubmit = async (data: SignUpInput) => {
     try {
@@ -111,6 +117,8 @@ export const FormSignUp = () => {
     },
   };
 
+  const islandLabel = ISLAND_VISUALS[country]?.label || country;
+
   return (
     <Box
       sx={{
@@ -118,6 +126,8 @@ export const FormSignUp = () => {
         width: "100%",
       }}
     >
+      <Chip icon={<Place />} label={`Eiland: ${islandLabel}`} sx={{ mb: 2 }} />
+
       <form onSubmit={handleSubmit(onSubmit)}>
         <Box
           sx={{
@@ -293,36 +303,6 @@ export const FormSignUp = () => {
             )}
           />
 
-          {/* Location */}
-          <Controller
-            name="country"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                select
-                fullWidth
-                label="Locatie"
-                error={!!errors.country}
-                helperText={errors.country?.message}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Language sx={{ color: "#9e9e9e" }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={commonStyles}
-              >
-                <MenuItem value="BON">Bonaire</MenuItem>
-
-                <MenuItem value="CUR">Curaçao</MenuItem>
-
-                <MenuItem value="ARU">Aruba</MenuItem>
-              </TextField>
-            )}
-          />
-
           {/* Terms */}
           <Controller
             name="accept_terms"
@@ -354,16 +334,22 @@ export const FormSignUp = () => {
             )}
           />
 
-          {/* Submit */}
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            disabled={isSubmitting || watch("accept_terms") === false}
-            startIcon={<PersonAdd />}
-          >
-            Account Aanmaken
-          </Button>
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <Button variant="outlined" onClick={onBack} sx={{ py: 1.5 }}>
+              Terug
+            </Button>
+
+            {/* Submit */}
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              disabled={isSubmitting || watch("accept_terms") === false}
+              startIcon={<PersonAdd />}
+            >
+              Account Aanmaken
+            </Button>
+          </Box>
 
           <Box
             sx={{

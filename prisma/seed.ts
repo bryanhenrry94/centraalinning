@@ -7,8 +7,9 @@ const prisma = new PrismaClient();
 const ADMIN_TENANT_ID = "0874303e-6795-46ef-8416-5d76bba8071b";
 const PARAMETER_ID = "0874303e-6795-46ef-8416-5d76bba8071b";
 const ADMIN_USER_EMAIL = "bryanhenrry94@gmail.com";
-const PLAN_SMALL_ID = "plan-small-001";
-const PLAN_LARGE_ID = "plan-large-001";
+const PLAN_KLANT_ID = "plan-klant-001";
+const PLAN_ADVOCAAT_ID = "plan-advocaat-001";
+const PLAN_DEURWAARDER_ID = "plan-deurwaarder-001";
 
 async function seedParameter() {
   await prisma.parameter.upsert({
@@ -80,12 +81,12 @@ async function seedParameter() {
 async function seedPlans() {
   const plans = [
     {
-      id: PLAN_SMALL_ID,
-      name: "Starter",
-      description: "Voor kleine bedrijven tot 50 medewerkers",
-      monthly_price: 49,
-      yearly_price: 490,
-      reactivation_price: 25,
+      id: PLAN_KLANT_ID,
+      name: "Klant",
+      description: "Voor bedrijven die hun eigen vorderingen beheren",
+      monthly_price: 150,
+      yearly_price: 1800,
+      reactivation_price: 75,
       features: {
         CREATE_COLLECTION: true,
         BLOK_CHECK: true,
@@ -96,12 +97,28 @@ async function seedPlans() {
       },
     },
     {
-      id: PLAN_LARGE_ID,
-      name: "Professional",
-      description: "Voor grote bedrijven en incassokantoren",
-      monthly_price: 99,
-      yearly_price: 990,
-      reactivation_price: 50,
+      id: PLAN_ADVOCAAT_ID,
+      name: "Advocaat",
+      description: "Voor advocatenkantoren die namens cliënten incasseren",
+      monthly_price: 250,
+      yearly_price: 3000,
+      reactivation_price: 125,
+      features: {
+        CREATE_COLLECTION: true,
+        BLOK_CHECK: true,
+        CREATE_PAYMENT: true,
+        VIEW_DASHBOARD: true,
+        max_collections_per_month: -1, // ilimitado
+        max_debtors: -1,
+      },
+    },
+    {
+      id: PLAN_DEURWAARDER_ID,
+      name: "Deurwaarder",
+      description: "Voor gerechtsdeurwaarders en incassokantoren",
+      monthly_price: 200,
+      yearly_price: 2400,
+      reactivation_price: 100,
       features: {
         CREATE_COLLECTION: true,
         BLOK_CHECK: true,
