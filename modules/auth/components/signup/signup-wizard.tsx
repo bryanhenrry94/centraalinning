@@ -48,7 +48,6 @@ export const SignupWizard = () => {
           elevation={0}
           sx={{
             width: "100%",
-            borderRadius: 4,
             bgcolor: "white",
             border: "1px solid #ececec",
             p: { xs: 3, md: 5 },

@@ -30,7 +30,7 @@ export const IslandStep = ({ value, onSelect }: IslandStepProps) => {
         Selecteer het eiland waar uw organisatie is gevestigd.
       </Typography>
 
-      <Grid container spacing={2}>
+      <Grid container spacing={2} sx={{ maxWidth: 560 }}>
         {CountryList.map((island) => {
           const selected = island.value === value;
 
@@ -39,8 +39,10 @@ export const IslandStep = ({ value, onSelect }: IslandStepProps) => {
               <Card
                 elevation={0}
                 sx={{
-                  border: selected ? `2px solid ${ACCENT}` : "1px solid #e5e7eb",
-                  borderRadius: "16px",
+                  border: selected
+                    ? `2px solid ${ACCENT}`
+                    : "1px solid #e5e7eb",
+                  // borderRadius: "16px",
                   overflow: "hidden",
                   boxShadow: "0 2px 10px rgba(10, 61, 145, 0.06)",
                   transition: "all 0.2s ease-in-out",
@@ -53,21 +55,21 @@ export const IslandStep = ({ value, onSelect }: IslandStepProps) => {
                   onClick={() => onSelect(island.value)}
                   sx={{
                     display: "flex",
-                    flexDirection: "column",
+                    flexDirection: "row",
                     alignItems: "center",
                     justifyContent: "center",
                     gap: 1,
-                    py: 3.5,
+                    py: 1.5,
                   }}
                 >
                   <LocationOn
                     sx={{
-                      fontSize: 32,
+                      fontSize: 20,
                       color: selected ? ACCENT : PRIMARY,
                     }}
                   />
                   <Typography
-                    variant="subtitle1"
+                    variant="body2"
                     sx={{
                       fontWeight: 700,
                       color: selected ? ACCENT : PRIMARY,
