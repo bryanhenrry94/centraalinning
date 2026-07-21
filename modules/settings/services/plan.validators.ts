@@ -4,6 +4,10 @@ export const planSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1),
   description: z.string().optional(),
+  registration_price: z.preprocess(
+    (val) => (typeof val === "string" ? Number(val) : val),
+    z.number(),
+  ),
   monthly_price: z.preprocess(
     (val) => (typeof val === "string" ? Number(val) : val),
     z.number(),
@@ -14,6 +18,10 @@ export const planSchema = z.object({
   ),
   features: z.record(z.string(), z.any()),
   reactivation_price: z.preprocess(
+    (val) => (typeof val === "string" ? Number(val) : val),
+    z.number(),
+  ),
+  order: z.preprocess(
     (val) => (typeof val === "string" ? Number(val) : val),
     z.number(),
   ),

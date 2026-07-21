@@ -14,25 +14,25 @@ datasource db {
 }
 
 model Tenant {
-  id                        String                    @id @default(uuid())
-  name                      String
-  code                      String                    @unique
-  subdomain                 String                    @unique
-  contact_email             String
-  country_code              String
-  kvk                       String?
-  legal_name                String?
-  address                   String?
-  city                      String?
-  logo_url                  String?
-  number_of_employees       Int?
-  phone                     String?
-  website                   String?
-  terms_accepted            Boolean                   @default(false)
-  is_active                 Boolean                   @default(false)
+  id                  String  @id @default(uuid())
+  name                String
+  code                String  @unique
+  subdomain           String  @unique
+  contact_email       String
+  country_code        String
+  kvk                 String?
+  legal_name          String?
+  address             String?
+  city                String?
+  logo_url            String?
+  number_of_employees Int?
+  phone               String?
+  website             String?
+  terms_accepted      Boolean @default(false)
+  is_active           Boolean @default(false)
 
-  created_at                DateTime                  @default(now())
-  updated_at                DateTime                  @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   billing_invoice           BillingInvoice[]
   debtors                   Debtor[]
@@ -47,113 +47,112 @@ model Tenant {
   financial_report_requests FinancialReportRequest[]
   blockades                 Blockade[]
 
-  subscription              Subscription?
+  subscription Subscription?
 
-  contracts                 Contract[]
-  debt_claims               DebtClaim[]
-  lawyers                   Lawyer[]
-  block_checks              BlockCheck[]
+  contracts    Contract[]
+  debt_claims  DebtClaim[]
+  lawyers      Lawyer[]
+  block_checks BlockCheck[]
 
   @@map("tenant")
 }
 
 model DebtClaim {
-  id                       String                     @id @default(cuid())
+  id String @id @default(cuid())
 
-  tenantId                 String
-  tenant                   Tenant                    @relation(fields: [tenantId], references: [id])
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
 
-  debtorId                 String
-  debtor                   Debtor                    @relation(fields: [debtorId], references: [id])
+  debtorId String
+  debtor   Debtor @relation(fields: [debtorId], references: [id])
 
-  reference                String?
-  externalReference        String?
-  description              String?
+  reference         String?
+  externalReference String?
+  description       String?
 
-  principalAmount          Decimal                    @db.Decimal(18, 2)
+  principalAmount Decimal @db.Decimal(18, 2)
 
-  currency                 String                     @default("USD")
+  currency String @default("USD")
 
-  origin                   DebtClaimOrigin
-  status                   DebtClaimStatus
+  origin DebtClaimOrigin
+  status DebtClaimStatus
 
-  createdAt                DateTime                   @default(now())
-  updatedAt                DateTime                   @updatedAt
-  closedAt                 DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  closedAt  DateTime?
 
-
-  contract                 Contract?
+  contract Contract?
 
   administrativeCollection AdministrativeCollection?
   collectiveCollection     CollectiveCollection?
   legalProcess             LegalProcess?
 
-  blockade                 Blockade?                 @relation("ClaimOrigin")
+  blockade Blockade? @relation("ClaimOrigin")
 
-  agreements               Agreement[]
+  agreements Agreement[]
 
-  documents                ClaimDocument[]
-  charges                  ClaimCharge[]
-  timeline                 ClaimTimeline[]
-  services                 ClaimService[]
-  chatRooms                ChatRoom[]
-  obligations              DebtClaimObligation[]
+  documents   ClaimDocument[]
+  charges     ClaimCharge[]
+  timeline    ClaimTimeline[]
+  services    ClaimService[]
+  chatRooms   ChatRoom[]
+  obligations DebtClaimObligation[]
 
   @@map("debt_claim")
 }
 
 model DebtClaimObligation {
-  id             String            @id @default(cuid())
+  id String @id @default(cuid())
 
-  debtClaimId    String
-  debtClaim      DebtClaim        @relation(fields: [debtClaimId], references: [id])
+  debtClaimId String
+  debtClaim   DebtClaim @relation(fields: [debtClaimId], references: [id])
 
-  type           ObligationType
-  beneficiary    BeneficiaryType
+  type        ObligationType
+  beneficiary BeneficiaryType
 
   originalAmount Decimal
-  paidAmount     Decimal           @default(0)
+  paidAmount     Decimal @default(0)
   balanceAmount  Decimal
 
-  status         ObligationStatus
+  status ObligationStatus
 
-  dueDate        DateTime?
+  dueDate DateTime?
 
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  payments       Payment[]
+  payments Payment[]
 
-  @@map("debt_claim_obligation")
   @@index([debtClaimId])
+  @@map("debt_claim_obligation")
 }
 
 model Blockade {
-  id                String              @id @default(cuid())
+  id String @id @default(cuid())
 
-  tenantId          String
-  tenant            Tenant             @relation(fields: [tenantId], references: [id])
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
 
-  debtorId          String
-  debtor            Debtor             @relation(fields: [debtorId], references: [id])
+  debtorId String
+  debtor   Debtor @relation(fields: [debtorId], references: [id])
 
-  originDebtClaimId String?             @unique
-  originDebtClaim   DebtClaim?         @relation("ClaimOrigin",fields:[originDebtClaimId],references:[id] )
+  originDebtClaimId String?    @unique
+  originDebtClaim   DebtClaim? @relation("ClaimOrigin", fields: [originDebtClaimId], references: [id])
 
-  reason            BlockadeReason
+  reason BlockadeReason
 
-  registeredAt      DateTime            @default(now())
-  releasedAt        DateTime?
+  registeredAt DateTime  @default(now())
+  releasedAt   DateTime?
 
-  status            BlockadeStatus
+  status BlockadeStatus
 
-  paymentId         String?
-  payment           Payment?           @relation(fields: [paymentId], references: [id])
+  paymentId String?
+  payment   Payment? @relation(fields: [paymentId], references: [id])
 
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  documents         BlockadeDocument[]
+  documents BlockadeDocument[]
 
   @@index([tenantId])
   @@index([debtorId])
@@ -161,73 +160,73 @@ model Blockade {
 }
 
 model BlockCheck {
-  id            String    @id @default(cuid())
+  id String @id @default(cuid())
 
-  tenantId      String
-  tenant        Tenant   @relation(fields:[tenantId], references:[id])
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
 
-  personId      String?
-  person        Person?  @relation(fields:[personId], references:[id])
+  personId String?
+  person   Person? @relation(fields: [personId], references: [id])
 
-  debtorId      String?
-  debtor        Debtor?  @relation(fields:[debtorId], references:[id])
+  debtorId String?
+  debtor   Debtor? @relation(fields: [debtorId], references: [id])
 
   blockadeFound Boolean
 
-  price         Decimal   @db.Decimal(18,2)
+  price Decimal @db.Decimal(18, 2)
 
-  checkedAt     DateTime  @default(now())
-  checkedById   String?
-  checkedBy     User?    @relation(fields:[checkedById], references:[id])
+  checkedAt   DateTime @default(now())
+  checkedById String?
+  checkedBy   User?    @relation(fields: [checkedById], references: [id])
 
   @@map("block_check")
 }
 
 model AdministrativeCollection {
-  id          String                          @id @default(cuid())
+  id String @id @default(cuid())
 
-  debtClaimId String                          @unique
-  debtClaim   DebtClaim                      @relation(fields:[debtClaimId], references:[id])
+  debtClaimId String    @unique
+  debtClaim   DebtClaim @relation(fields: [debtClaimId], references: [id])
 
-  status      AdministrativeCollectionStatus
+  status AdministrativeCollectionStatus
 
-  startedAt   DateTime
-  finishedAt  DateTime?
+  startedAt  DateTime
+  finishedAt DateTime?
 
-  steps       AdministrativeCollectionStep[]
+  steps AdministrativeCollectionStep[]
 
   @@map("administrative_collection")
 }
 
 model AdministrativeCollectionStep {
-  id           String                    @id @default(cuid())
+  id String @id @default(cuid())
 
   collectionId String
-  collection   AdministrativeCollection @relation(fields:[collectionId], references:[id])
+  collection   AdministrativeCollection @relation(fields: [collectionId], references: [id])
 
-  step         AOPStep
+  step AOPStep
 
-  deadline     DateTime?
+  deadline DateTime?
 
-  sentAt       DateTime?
+  sentAt DateTime?
 
-  completedAt  DateTime?
+  completedAt DateTime?
 
-  status       WorkflowStatus
+  status WorkflowStatus
 
   @@map("administrative_collection_step")
 }
 
 model CollectiveCollection {
-  id            String                      @id @default(cuid())
+  id String @id @default(cuid())
 
-  debtClaimId   String                      @unique
-  debtClaim     DebtClaim                  @relation(fields:[debtClaimId], references:[id])
+  debtClaimId String    @unique
+  debtClaim   DebtClaim @relation(fields: [debtClaimId], references: [id])
 
-  status        CollectiveCollectionStatus
+  status CollectiveCollectionStatus
 
-  startedAt     DateTime
-  finishedAt    DateTime?
+  startedAt  DateTime
+  finishedAt DateTime?
 
   negotiations  COLNegotiation[]
   notifications COLNotification[]
@@ -236,73 +235,73 @@ model CollectiveCollection {
 }
 
 model COLNegotiation {
-  id             String                @id @default(cuid())
+  id String @id @default(cuid())
 
-  collectionId   String
-  collection     CollectiveCollection @relation(fields:[collectionId], references:[id])
+  collectionId String
+  collection   CollectiveCollection @relation(fields: [collectionId], references: [id])
 
-  proposalAmount Decimal               @db.Decimal(18,2)
-  acceptedAmount Decimal?              @db.Decimal(18,2)
+  proposalAmount Decimal  @db.Decimal(18, 2)
+  acceptedAmount Decimal? @db.Decimal(18, 2)
 
-  status         NegotiationStatus
+  status NegotiationStatus
 
-  notes          String?
+  notes String?
 
   @@map("col_negotiation")
 }
 
 model COLNotification {
-  id            String                 @id @default(cuid())
+  id String @id @default(cuid())
 
-  collectionId  String
-  collection    CollectiveCollection  @relation(fields:[collectionId], references:[id])
+  collectionId String
+  collection   CollectiveCollection @relation(fields: [collectionId], references: [id])
 
   recipientType NotificationRecipient
 
   recipientName String?
 
-  channel       NotificationChannel
+  channel NotificationChannel
 
-  sentAt        DateTime?
+  sentAt DateTime?
 
-  status        NotificationStatus
+  status NotificationStatus
 
   @@map("col_notification")
 }
 
 model LegalProcess {
-  id          String              @id @default(cuid())
+  id String @id @default(cuid())
 
-  debtClaimId String              @unique
-  debtClaim   DebtClaim          @relation(fields:[debtClaimId], references:[id])
+  debtClaimId String    @unique
+  debtClaim   DebtClaim @relation(fields: [debtClaimId], references: [id])
 
-  lawyerId    String?
-  lawyer      Lawyer?            @relation(fields:[lawyerId], references:[id])
+  lawyerId String?
+  lawyer   Lawyer? @relation(fields: [lawyerId], references: [id])
 
-  bailiffId   String?
-  bailiff     Bailiff?           @relation(fields:[bailiffId], references:[id])
+  bailiffId String?
+  bailiff   Bailiff? @relation(fields: [bailiffId], references: [id])
 
-  status      LegalProcessStatus
+  status LegalProcessStatus
 
-  startedAt   DateTime
-  closedAt    DateTime?
+  startedAt DateTime
+  closedAt  DateTime?
 
-  verdicts    Verdict[]
+  verdicts Verdict[]
 
   @@map("legal_process")
 }
 
 model ClaimService {
-  id           String          @id @default(cuid())
+  id String @id @default(cuid())
 
-  debtClaimId  String
-  debtClaim    DebtClaim      @relation(fields:[debtClaimId], references:[id])
+  debtClaimId String
+  debtClaim   DebtClaim @relation(fields: [debtClaimId], references: [id])
 
-  service      ServiceType
-  status       WorkflowStatus
+  service ServiceType
+  status  WorkflowStatus
 
-  startedAt    DateTime
-  finishedAt   DateTime?
+  startedAt  DateTime
+  finishedAt DateTime?
 
   startedById  String?
   finishedById String?
@@ -311,50 +310,49 @@ model ClaimService {
 }
 
 model ClaimTimeline {
-
-  id          String         @id @default(cuid())
+  id String @id @default(cuid())
 
   debtClaimId String
-  debtClaim   DebtClaim     @relation(fields:[debtClaimId], references:[id])
+  debtClaim   DebtClaim @relation(fields: [debtClaimId], references: [id])
 
   event       TimelineEvent
   description String?
   metadata    Json?
 
-  createdAt   DateTime       @default(now())
+  createdAt DateTime @default(now())
 
   @@map("claim_timeline")
 }
 
 model ClaimCharge {
-  id          String        @id @default(cuid())
+  id String @id @default(cuid())
 
   debtClaimId String
-  debtClaim   DebtClaim    @relation(fields:[debtClaimId], references:[id])
+  debtClaim   DebtClaim @relation(fields: [debtClaimId], references: [id])
 
-  service     ServiceType
-  concept     String
+  service ServiceType
+  concept String
 
-  amount      Decimal       @db.Decimal(18,2)
-  percentage  Decimal?      @db.Decimal(5,2)
+  amount     Decimal  @db.Decimal(18, 2)
+  percentage Decimal? @db.Decimal(5, 2)
 
-  status      ChargeStatus
+  status ChargeStatus
 
   @@map("claim_charge")
 }
 
 model ClaimDocument {
-  id           String       @id @default(cuid())
+  id String @id @default(cuid())
 
-  debtClaimId  String
-  debtClaim    DebtClaim   @relation(fields:[debtClaimId], references:[id])
+  debtClaimId String
+  debtClaim   DebtClaim @relation(fields: [debtClaimId], references: [id])
 
-  service      ServiceType
+  service ServiceType
 
-  fileId       String
+  fileId String
 
   uploadedById String?
-  uploadedAt   DateTime     @default(now())
+  uploadedAt   DateTime @default(now())
 
   @@map("claim_document")
 }
@@ -381,11 +379,11 @@ enum ObligationStatus {
 }
 
 enum ChargeStatus {
-  PENDING     // El cargo fue generado pero aún no es exigible o facturable.
-  INVOICED    // El cargo ya fue facturado al cliente.
-  PAID        // El cargo fue pagado.
-  WAIVED      // El cargo fue condonado o exonerado.
-  CANCELLED   // El cargo fue anulado antes de ser cobrado.
+  PENDING // El cargo fue generado pero aún no es exigible o facturable.
+  INVOICED // El cargo ya fue facturado al cliente.
+  PAID // El cargo fue pagado.
+  WAIVED // El cargo fue condonado o exonerado.
+  CANCELLED // El cargo fue anulado antes de ser cobrado.
 }
 
 enum TimelineEvent {
@@ -477,11 +475,11 @@ enum TimelineEvent {
 }
 
 enum LegalProcessStatus {
-  DRAFT               // El proceso fue creado pero aún no ha sido iniciado por el abogado o alguacil.
-  ACTIVE              // El proceso judicial está en curso.
-  ON_HOLD             // Suspendido temporalmente (esperando audiencia, documentación, resolución, etc.).
-  COMPLETED           // El proceso terminó. El resultado se consulta en LegalProcessResult.
-  CANCELLED           // El cliente canceló el proceso antes de finalizar.
+  DRAFT // El proceso fue creado pero aún no ha sido iniciado por el abogado o alguacil.
+  ACTIVE // El proceso judicial está en curso.
+  ON_HOLD // Suspendido temporalmente (esperando audiencia, documentación, resolución, etc.).
+  COMPLETED // El proceso terminó. El resultado se consulta en LegalProcessResult.
+  CANCELLED // El cliente canceló el proceso antes de finalizar.
 }
 
 enum LawyerStatus {
@@ -491,31 +489,31 @@ enum LawyerStatus {
 }
 
 enum NotificationStatus {
-  DRAFT               // La notificación fue creada pero aún no está lista para enviarse.
-  PENDING             // Está lista para ser enviada cuando el sistema procese la cola.
-  SCHEDULED           // Tiene una fecha/hora programada para su envío.
-  SENT                // Fue enviada correctamente al proveedor (correo, SMS, WhatsApp, etc.).
-  DELIVERED           // Existe confirmación de entrega al destinatario (si el canal lo soporta).
-  FAILED              // El envío falló (dirección inválida, error del proveedor, etc.).
-  CANCELLED           // Se canceló antes de enviarse.
+  DRAFT // La notificación fue creada pero aún no está lista para enviarse.
+  PENDING // Está lista para ser enviada cuando el sistema procese la cola.
+  SCHEDULED // Tiene una fecha/hora programada para su envío.
+  SENT // Fue enviada correctamente al proveedor (correo, SMS, WhatsApp, etc.).
+  DELIVERED // Existe confirmación de entrega al destinatario (si el canal lo soporta).
+  FAILED // El envío falló (dirección inválida, error del proveedor, etc.).
+  CANCELLED // Se canceló antes de enviarse.
 }
 
 enum CollectiveCollectionStatus {
-  ACTIVE             // El proceso COP está siendo gestionado activamente. Se están realizando contactos, negociaciones o seguimiento.
-  ON_HOLD            // El proceso está temporalmente suspendido (esperando documentación, respuesta del deudor, decisión del acreedor, etc.).
-  COMPLETED          // El servicio COP finalizó correctamente. El resultado se determina con CollectiveCollectionResult.
-  CANCELLED          // El cliente decidió cancelar el servicio antes de finalizar.
+  ACTIVE // El proceso COP está siendo gestionado activamente. Se están realizando contactos, negociaciones o seguimiento.
+  ON_HOLD // El proceso está temporalmente suspendido (esperando documentación, respuesta del deudor, decisión del acreedor, etc.).
+  COMPLETED // El servicio COP finalizó correctamente. El resultado se determina con CollectiveCollectionResult.
+  CANCELLED // El cliente decidió cancelar el servicio antes de finalizar.
 }
 
 enum AdministrativeCollectionStatus {
-  DRAFT              // Creado pero aún no iniciado
-  ACTIVE             // El proceso administrativo está en ejecución
-  WAITING_RESPONSE   // Esperando respuesta del deudor
-  PAID               // La deuda fue pagada durante AOP
-  DEFAULTED          // Se declaró el incumplimiento
-  BLOCKADE_CREATED   // Se registró el BLK correctamente
-  CANCELLED          // Cancelado por el acreedor
-  CLOSED             // Finalizado
+  DRAFT // Creado pero aún no iniciado
+  ACTIVE // El proceso administrativo está en ejecución
+  WAITING_RESPONSE // Esperando respuesta del deudor
+  PAID // La deuda fue pagada durante AOP
+  DEFAULTED // Se declaró el incumplimiento
+  BLOCKADE_CREATED // Se registró el BLK correctamente
+  CANCELLED // Cancelado por el acreedor
+  CLOSED // Finalizado
 }
 
 enum ServiceType {
@@ -585,18 +583,18 @@ enum NegotiationStatus {
 }
 
 model User {
-  id                    String                @id @default(uuid())
-  email                 String                @db.VarChar(80) @unique
-  password_hash         String?               @db.VarChar(120)
-  fullname              String?               @db.VarChar(80)
-  phone                 String?               @db.VarChar(25)
-  is_active             Boolean               @default(true)
+  id            String  @id @default(uuid())
+  email         String  @unique @db.VarChar(80)
+  password_hash String? @db.VarChar(120)
+  fullname      String? @db.VarChar(80)
+  phone         String? @db.VarChar(25)
+  is_active     Boolean @default(true)
 
   last_active_tenant_id String?
   memberships           Membership[]
 
-  created_at            DateTime              @default(now())
-  updated_at            DateTime              @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   debtors               Debtor[]
   bailiffs              Bailiff[]
@@ -608,14 +606,13 @@ model User {
 }
 
 model PasswordResetToken {
-  id         String     @id @default(cuid())
+  id         String    @id @default(cuid())
   user_id    String
   user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  token_hash String     @unique
+  token_hash String    @unique
   expires_at DateTime
   used_at    DateTime?
-  created_at DateTime   @default(now())
-
+  created_at DateTime  @default(now())
 
   @@index([user_id])
   @@index([expires_at])
@@ -623,33 +620,32 @@ model PasswordResetToken {
 }
 
 model Membership {
-  id         String            @id @default(uuid())
+  id String @id @default(uuid())
 
-  user_id    String
-  user       User             @relation(fields: [user_id], references: [id])
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id])
 
-  tenant_id  String
-  tenant     Tenant           @relation(fields: [tenant_id], references: [id])
+  tenant_id String
+  tenant    Tenant @relation(fields: [tenant_id], references: [id])
 
-  status     MembershipStatus  @default(PENDING)
+  status MembershipStatus @default(PENDING)
 
-  roles      MembershipRole[]
+  roles MembershipRole[]
 
-  created_at DateTime          @default(now())
+  created_at DateTime @default(now())
 
   @@unique([user_id, tenant_id]) // evita duplicados
-
   @@map("membership")
 }
 
 model MembershipRole {
-  id            String      @id @default(uuid())
+  id String @id @default(uuid())
 
   membership_id String
 
-  role          UserRole
+  role UserRole
 
-  membership    Membership @relation(fields: [membership_id], references: [id])
+  membership Membership @relation(fields: [membership_id], references: [id])
 
   @@unique([membership_id, role])
   @@map("membership_role")
@@ -663,16 +659,16 @@ enum MembershipStatus {
 }
 
 model TenantInvitation {
-  id         String     @id @default(uuid())
+  id         String    @id @default(uuid())
   tenant_id  String
   email      String
   fullname   String?
-  token      String     @unique
-  role       UserRole   @default(DEBTOR)
+  token      String    @unique
+  role       UserRole  @default(DEBTOR)
   debtor_id  String?
-  created_at DateTime   @default(now())
+  created_at DateTime  @default(now())
   expires_at DateTime
-  used       Boolean    @default(false)
+  used       Boolean   @default(false)
   used_at    DateTime?
   tenant     Tenant    @relation(fields: [tenant_id], references: [id])
 
@@ -682,26 +678,26 @@ model TenantInvitation {
 }
 
 model Person {
-  id                        String                    @id @default(uuid())
-  person_type               PersonType
+  id          String     @id @default(uuid())
+  person_type PersonType
 
-  identification_type       IdentificationType
-  identification            String                    @unique
+  identification_type IdentificationType
+  identification      String             @unique
 
-  first_name                String?
-  last_name                 String?
-  business_name             String?
+  first_name    String?
+  last_name     String?
+  business_name String?
 
-  email                     String?                   @unique
-  phone                     String?
-  address                   String?
-  birth_date                DateTime?
-  birth_place               String?
+  email       String?   @unique
+  phone       String?
+  address     String?
+  birth_date  DateTime?
+  birth_place String?
 
-  has_blockade              Boolean                   @default(false)
+  has_blockade Boolean @default(false)
 
-  created_at                DateTime                  @default(now())
-  updated_at                DateTime                  @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   debtors                   Debtor[]
   financial_report_requests FinancialReportRequest[]
@@ -714,189 +710,187 @@ model Person {
 }
 
 model Parameter {
-  id                             String    @id @default(uuid())
+  id String @id @default(uuid())
 
   //                             =========================================
   //                             COLLECTION
   //                             =========================================
-  collection_fee_rate            Float     @default(0)
-  collection_fee_minimum_amount  Float     @default(0)
+  collection_fee_rate           Float @default(0)
+  collection_fee_minimum_amount Float @default(0)
 
   //                             =========================================
   // ABB / TAXES
   //                             =========================================
-  abb_rate                       Float     @default(0)
+  abb_rate Float @default(0)
 
   //                             =========================================
   // AANMANING TERMS
   //                             =========================================
-  company_aanmaning_term_days    Int       @default(0)
-  consumer_aanmaning_term_days   Int       @default(0)
+  company_aanmaning_term_days  Int @default(0)
+  consumer_aanmaning_term_days Int @default(0)
 
   //                             =========================================
   // SOMMATIE TERMS
   //                             =========================================
-  company_sommatie_term_days     Int       @default(0)
-  consumer_sommatie_term_days    Int       @default(0)
+  company_sommatie_term_days  Int @default(0)
+  consumer_sommatie_term_days Int @default(0)
 
   //                             =========================================
   // MEMBERSHIP / PFC
   //                             =========================================
-  small_company_price            Float     @default(0)
-  small_company_pfc_contribution Float     @default(0)
+  small_company_price            Float @default(0)
+  small_company_pfc_contribution Float @default(0)
 
-  large_company_price            Float     @default(0)
-  large_company_pfc_contribution Float     @default(0)
+  large_company_price            Float @default(0)
+  large_company_pfc_contribution Float @default(0)
 
   //                             =========================================
   //                             PENALTIES
   //                             =========================================
-  company_aanmaning_penalty      Float     @default(0)
-  natural_aanmaning_penalty      Float     @default(0)
+  company_aanmaning_penalty Float @default(0)
+  natural_aanmaning_penalty Float @default(0)
 
-  company_sommatie_penalty       Float     @default(0)
-  natural_sommatie_penalty       Float     @default(0)
+  company_sommatie_penalty Float @default(0)
+  natural_sommatie_penalty Float @default(0)
 
   //                             =========================================
   //                             REACTION
   //                             =========================================
-  company_reaction_limit_days    Int       @default(0)
+  company_reaction_limit_days Int @default(0)
 
-  company_no_reaction_penalty    Float     @default(0)
-  natural_no_reaction_penalty    Float     @default(0)
+  company_no_reaction_penalty Float @default(0)
+  natural_no_reaction_penalty Float @default(0)
 
   //                             =========================================
   // PAYMENT AGREEMENTS
   //                             =========================================
-  company_payment_agreement_fee  Float     @default(0)
-  natural_payment_agreement_fee  Float     @default(0)
+  company_payment_agreement_fee Float @default(0)
+  natural_payment_agreement_fee Float @default(0)
 
   //                             =========================================
   //                             INVOICES
   //                             =========================================
-  invoice_number_length          Int       @default(8)
-  invoice_prefix                 String    @default("")
-  invoice_sequence               Int       @default(0)
+  invoice_number_length Int    @default(8)
+  invoice_prefix        String @default("")
+  invoice_sequence      Int    @default(0)
 
   //                             =========================================
   //                             BANKS
   //                             =========================================
-  bank_account                   String    @default("")
-  bank_name                      String    @default("")
+  bank_account String @default("")
+  bank_name    String @default("")
 
   //                             =========================================
   //                             COSTS
   //                             =========================================
-  digital_file_costs             Float     @default(0)
-  extra_administrative_costs     Float     @default(0)
-  report_financial_pricing       Float     @default(0)
-  blok_check_pricing             Float     @default(30)
+  digital_file_costs         Float @default(0)
+  extra_administrative_costs Float @default(0)
+  report_financial_pricing   Float @default(0)
+  blok_check_pricing         Float @default(30)
 
   //                             =========================================
   //                             SYSTEM
   //                             =========================================
-  currency_code                  String    @default("USD")
-  timezone                       String    @default("America/Kralendijk")
+  currency_code String @default("USD")
+  timezone      String @default("America/Kralendijk")
 
-  created_at                     DateTime  @default(now())
-  updated_at                     DateTime  @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("parameter")
 }
 
 model SettingCategory {
-  id          String     @id @default(cuid())
+  id String @id @default(cuid())
 
-  key         String     @unique
-  name        String
+  key  String @unique
+  name String
 
   description String?
   icon        String?
 
-  sortOrder   Int        @default(0)
+  sortOrder Int @default(0)
 
-  isActive    Boolean    @default(true)
+  isActive Boolean @default(true)
 
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  settings    Setting[]
+  settings Setting[]
 
   @@map("setting_categories")
 }
 
 model Setting {
-  id          String           @id @default(cuid())
+  id String @id @default(cuid())
 
-  tenantId    String?
+  tenantId String?
 
-  categoryId  String
-  category    SettingCategory @relation(fields: [categoryId], references: [id])
+  categoryId String
+  category   SettingCategory @relation(fields: [categoryId], references: [id])
 
   name        String
   description String?
 
-  key         String
-  value       String
+  key   String
+  value String
 
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([tenantId, key])
-
   @@index([tenantId])
   @@index([categoryId])
-
   @@map("settings")
 }
 
 model Verdict {
-  id                  String                    @id @default(uuid())
+  id String @id @default(uuid())
 
-  tenant_id           String
-  tenant              Tenant                   @relation(fields: [tenant_id], references: [id])
+  tenant_id String
+  tenant    Tenant @relation(fields: [tenant_id], references: [id])
 
-  debtor_id           String
-  debtor              Debtor                   @relation(fields: [debtor_id], references: [id])
+  debtor_id String
+  debtor    Debtor @relation(fields: [debtor_id], references: [id])
 
-  legal_process_id    String
-  legal_process       LegalProcess             @relation(fields: [legal_process_id], references: [id])
+  legal_process_id String
+  legal_process    LegalProcess @relation(fields: [legal_process_id], references: [id])
 
-  invoice_number      String                    @db.VarChar(100)
-  creditor_name       String                    @db.VarChar(100)
+  invoice_number String @db.VarChar(100)
+  creditor_name  String @db.VarChar(100)
 
-  registration_number String                    @db.VarChar(100)
+  registration_number String   @db.VarChar(100)
   sentence_amount     Float
   sentence_date       DateTime
 
-  procesal_cost       Float?                    @default(0)
-  notes               String?
-  bailiff_id          String
-  bailiff             Bailiff?                 @relation("BailiffToVerdict", fields: [bailiff_id], references: [id])
+  procesal_cost Float?   @default(0)
+  notes         String?
+  bailiff_id    String
+  bailiff       Bailiff? @relation("BailiffToVerdict", fields: [bailiff_id], references: [id])
 
-  status              VerdictStatus             @default(DRAFT)
+  status VerdictStatus @default(DRAFT)
 
-  created_at          DateTime                  @default(now())
-  updated_at          DateTime                  @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  attachments         VerdictAttachment[]
-  bailiff_services    VerdictBailiffServices[]
-  verdict_embargo     VerdictEmbargo[]
-  verdict_interest    VerdictInterest[]
+  attachments      VerdictAttachment[]
+  bailiff_services VerdictBailiffServices[]
+  verdict_embargo  VerdictEmbargo[]
+  verdict_interest VerdictInterest[]
 
   @@map("verdict")
 }
 
 model VerdictInterest {
-  id                  String                    @id @default(uuid())
+  id                  String                   @id @default(uuid())
   interest_type       String
   base_amount         Float
   calculated_interest Float?
   calculation_start   DateTime
   calculation_end     DateTime
   total_interest      Float
-  created_at          DateTime                  @default(now())
-  updated_at          DateTime                  @updatedAt
+  created_at          DateTime                 @default(now())
+  updated_at          DateTime                 @updatedAt
   verdict_id          String?
   verdict             Verdict?                 @relation(fields: [verdict_id], references: [id])
   details             VerdictInterestDetails[]
@@ -905,7 +899,7 @@ model VerdictInterest {
 }
 
 model VerdictInterestDetails {
-  id                  String           @id @default(uuid())
+  id                  String          @id @default(uuid())
   period              String
   period_start        DateTime
   period_end          DateTime
@@ -916,15 +910,15 @@ model VerdictInterestDetails {
   interest            Float
   total               Float
   verdict_interest_id String
-  created_at          DateTime         @default(now())
-  updated_at          DateTime         @updatedAt
+  created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt
   verdict_interest    VerdictInterest @relation(fields: [verdict_interest_id], references: [id])
 
   @@map("verdict_interest_details")
 }
 
 model VerdictEmbargo {
-  id              String    @id @default(uuid())
+  id              String   @id @default(uuid())
   verdict_id      String
   company_name    String
   company_phone   String
@@ -934,33 +928,33 @@ model VerdictEmbargo {
   embargo_date    DateTime
   embargo_amount  Float
   total_amount    Float
-  created_at      DateTime  @default(now())
-  updated_at      DateTime  @updatedAt
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
   verdict         Verdict  @relation(fields: [verdict_id], references: [id])
 
   @@map("verdict_embargo")
 }
 
 model VerdictBailiffServices {
-  id                     String    @id @default(uuid())
+  id                     String   @id @default(uuid())
   verdict_id             String
   service_invoice_number String
   service_type           String
   service_cost           Float
-  created_at             DateTime  @default(now())
-  updated_at             DateTime  @updatedAt
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
   verdict                Verdict  @relation(fields: [verdict_id], references: [id])
 
   @@map("verdict_bailiff_services")
 }
 
 model VerdictAttachment {
-  id         String    @id @default(uuid())
+  id         String   @id @default(uuid())
   verdict_id String
   file_path  String
   file_size  BigInt
-  created_at DateTime  @default(now())
-  updated_at DateTime  @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   file_name  String
   verdict    Verdict  @relation(fields: [verdict_id], references: [id])
 
@@ -968,7 +962,7 @@ model VerdictAttachment {
 }
 
 model InterestType {
-  id               String               @id @default(uuid())
+  id               String              @id @default(uuid())
   name             String
   calculation_type CalculationTypeEnum
   details          InterestDetail[]
@@ -977,7 +971,7 @@ model InterestType {
 }
 
 model InterestDetail {
-  id               String        @id @default(uuid())
+  id               String       @id @default(uuid())
   date             String
   rate             Float
   interest_type_id String
@@ -987,21 +981,21 @@ model InterestDetail {
 }
 
 model BillingInvoice {
-  id             String                  @id @default(uuid())
-  tenant_id      String
+  id        String @id @default(uuid())
+  tenant_id String
 
-  payment_id     String                  @unique
-  payment        Payment                @relation(fields: [payment_id], references: [id])
+  payment_id String  @unique
+  payment    Payment @relation(fields: [payment_id], references: [id])
 
-  invoice_number String                  @unique
+  invoice_number String                 @unique
   amount         Float
-  currency       String                  @default("USD")
+  currency       String                 @default("USD")
   issue_date     DateTime
   due_date       DateTime
   description    String?
-  status         String                  @default("unpaid")
-  created_at     DateTime                @default(now())
-  updated_at     DateTime                @updatedAt
+  status         String                 @default("unpaid")
+  created_at     DateTime               @default(now())
+  updated_at     DateTime               @updatedAt
   tenant         Tenant                 @relation(fields: [tenant_id], references: [id])
   details        BillingInvoiceDetail[]
   payments       BillingPayment[]
@@ -1010,7 +1004,7 @@ model BillingInvoice {
 }
 
 model BillingInvoiceDetail {
-  id                  String           @id @default(uuid())
+  id                  String          @id @default(uuid())
   item_description    String
   item_quantity       Int
   item_unit_price     Float
@@ -1018,8 +1012,8 @@ model BillingInvoiceDetail {
   item_tax_rate       Float
   item_tax_amount     Float
   item_total_with_tax Float
-  created_at          DateTime         @default(now())
-  updated_at          DateTime         @updatedAt
+  created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt
   billing_invoice_id  String?
   billing_invoice     BillingInvoice? @relation(fields: [billing_invoice_id], references: [id])
 
@@ -1027,38 +1021,37 @@ model BillingInvoiceDetail {
 }
 
 model BillingPayment {
-  id                 String           @id @default(uuid())
+  id                 String          @id @default(uuid())
   payment_date       DateTime
   amount             Float
   payment_method     String
   transaction_id     String?
   status             String
-  created_at         DateTime         @default(now())
-  updated_at         DateTime         @updatedAt
+  created_at         DateTime        @default(now())
+  updated_at         DateTime        @updatedAt
   billing_invoice_id String?
   billing_invoice    BillingInvoice? @relation(fields: [billing_invoice_id], references: [id])
 
   @@map("billing_payment")
 }
 
-
 model Debtor {
-  id           String          @id @default(uuid())
+  id String @id @default(uuid())
 
-  tenant_id    String
-  tenant       Tenant         @relation(fields: [tenant_id], references: [id])
+  tenant_id String
+  tenant    Tenant @relation(fields: [tenant_id], references: [id])
 
-  person_id    String
-  person       Person         @relation(fields: [person_id], references: [id])
+  person_id String
+  person    Person @relation(fields: [person_id], references: [id])
 
-  user_id      String?
-  user         User?          @relation(fields: [user_id], references: [id])
+  user_id String?
+  user    User?   @relation(fields: [user_id], references: [id])
 
   email        String
-  total_income Float           @default(0)
+  total_income Float  @default(0)
 
-  created_at   DateTime        @default(now())
-  updated_at   DateTime        @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   incomes      DebtorIncome[]
   verdicts     Verdict[]
@@ -1071,34 +1064,34 @@ model Debtor {
 }
 
 model DebtorIncome {
-  id         String    @id @default(uuid())
+  id         String   @id @default(uuid())
   debtor_id  String
   amount     Float
   source     String
-  created_at DateTime  @default(now())
-  updated_at DateTime  @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   debtor     Debtor   @relation(fields: [debtor_id], references: [id])
 
   @@map("debtor_incomes")
 }
 
 model Bailiff {
-  id             String          @id @default(uuid())
+  id String @id @default(uuid())
 
-  tenant_id      String
-  tenant         Tenant         @relation(fields: [tenant_id], references: [id])
+  tenant_id String
+  tenant    Tenant @relation(fields: [tenant_id], references: [id])
 
-  fullname       String
-  email          String          @unique
-  phone          String?
+  fullname String
+  email    String  @unique
+  phone    String?
 
-  user_id        String?
-  user           User?          @relation(fields: [user_id], references: [id])
+  user_id String?
+  user    User?   @relation(fields: [user_id], references: [id])
 
-  created_at     DateTime        @default(now())
-  updated_at     DateTime        @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  verdicts       Verdict[]      @relation("BailiffToVerdict")
+  verdicts Verdict[] @relation("BailiffToVerdict")
 
   legalProcesses LegalProcess[]
 
@@ -1106,46 +1099,44 @@ model Bailiff {
 }
 
 model Lawyer {
-  id                                                                        String          @id @default(cuid())
+  id String @id @default(cuid())
 
-  tenantId                                                                  String?
-  tenant                                                                    Tenant?        @relation(fields: [tenantId], references: [id])
+  tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id])
 
-  firstName                                                                 String
-  lastName                                                                  String
+  firstName String
+  lastName  String
 
-  companyName                                                               String?
+  companyName String?
 
-  identification                                                            String?
-  barRegistration   String? // Número de colegiatura o registro profesional
+  identification  String?
+  barRegistration String? // Número de colegiatura o registro profesional
 
-  email                                                                     String?
-  phone                                                                     String?
-  mobile                                                                    String?
+  email  String?
+  phone  String?
+  mobile String?
 
-  address                                                                   String?
-  city                                                                      String?
-  country                                                                   String?
+  address String?
+  city    String?
+  country String?
 
-  status                                                                    LawyerStatus
+  status LawyerStatus
 
-  notes                                                                     String?
+  notes String?
 
-  createdAt                                                                 DateTime        @default(now())
-  updatedAt                                                                 DateTime        @updatedAt
-  deletedAt                                                                 DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
-
-  legalProcesses                                                            LegalProcess[]
+  legalProcesses LegalProcess[]
 
   @@index([tenantId])
   @@index([status])
-
   @@map("lawyer")
 }
 
 model Employee {
-  id             String    @id @default(uuid())
+  id             String   @id @default(uuid())
   identification String
   first_name     String
   last_name      String
@@ -1154,86 +1145,86 @@ model Employee {
   phone          String?
   tenant_id      String
   tenant         Tenant   @relation(fields: [tenant_id], references: [id])
-  created_at     DateTime  @default(now())
-  updated_at     DateTime  @updatedAt
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
 
   @@unique([identification])
   @@map("employee")
 }
 
 model ChatRoom {
-  id          String         @id @default(cuid())
+  id          String        @id @default(cuid())
   tenant_id   String
   tenant      Tenant        @relation(fields: [tenant_id], references: [id])
   debtClaimId String
   debtClaim   DebtClaim     @relation(fields: [debtClaimId], references: [id])
   name        String
-  created_at  DateTime       @default(now())
-  updated_at  DateTime       @updatedAt
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
   messages    ChatMessage[]
 
   @@map("chat_room")
 }
 
 model ChatMessage {
-  id         String    @id @default(cuid())
-  room_id    String
-  room       ChatRoom @relation(fields: [room_id], references: [id])
+  id      String   @id @default(cuid())
+  room_id String
+  room    ChatRoom @relation(fields: [room_id], references: [id])
 
-  sender_id  String
-  sender     User     @relation(fields: [sender_id], references: [id])
-  message    String
-  file_url   String?
-  file_name  String?
+  sender_id String
+  sender    User    @relation(fields: [sender_id], references: [id])
+  message   String
+  file_url  String?
+  file_name String?
 
-  timestamp  DateTime  @default(now())
-  created_at DateTime  @default(now())
-  updated_at DateTime  @updatedAt
+  timestamp  DateTime @default(now())
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@map("chat_message")
 }
 
 model Agreement {
-  id                 String                  @id @default(cuid())
+  id String @id @default(cuid())
 
-  debtor_id          String?
+  debtor_id String?
 
   debtClaim_id       String
-  debtClaim          DebtClaim              @relation(fields: [debtClaim_id], references: [id])
-  total_amount       Decimal                 @db.Decimal(10, 2)
-  installment_amount Decimal                 @db.Decimal(10, 2)
+  debtClaim          DebtClaim       @relation(fields: [debtClaim_id], references: [id])
+  total_amount       Decimal         @db.Decimal(10, 2)
+  installment_amount Decimal         @db.Decimal(10, 2)
   installments_count Int
   start_date         DateTime
   end_date           DateTime
-  status             AgreementStatus         @default(PENDING)
+  status             AgreementStatus @default(PENDING)
   tenant_id          String
-  tenant             Tenant                 @relation(fields: [tenant_id], references: [id])
+  tenant             Tenant          @relation(fields: [tenant_id], references: [id])
   comment            String?
-  created_at         DateTime                @default(now())
-  updated_at         DateTime                @updatedAt
+  created_at         DateTime        @default(now())
+  updated_at         DateTime        @updatedAt
 
   //                 Relaciones
-  debtor             Debtor?                @relation(fields: [debtor_id], references: [id])
-  installments       AgreementInstallment[]
-  payment            Payment[]
+  debtor       Debtor?                @relation(fields: [debtor_id], references: [id])
+  installments AgreementInstallment[]
+  payment      Payment[]
 
   @@map("agreement")
 }
 
 model AgreementInstallment {
-  id           String             @id @default(cuid())
+  id           String            @id @default(cuid())
   agreement_id String
   number       Int
   due_date     DateTime
-  amount       Decimal            @db.Decimal(10, 2)
-  status       InstallmentStatus  @default(PENDING)
+  amount       Decimal           @db.Decimal(10, 2)
+  status       InstallmentStatus @default(PENDING)
   payment_id   String?
-  created_at   DateTime           @default(now())
-  updated_at   DateTime           @updatedAt
+  created_at   DateTime          @default(now())
+  updated_at   DateTime          @updatedAt
 
   //           Relaciones
-  agreement    Agreement         @relation(fields: [agreement_id], references: [id])
-  payment      Payment?          @relation(fields: [payment_id], references: [id])
+  agreement Agreement @relation(fields: [agreement_id], references: [id])
+  payment   Payment?  @relation(fields: [payment_id], references: [id])
 
   @@map("agreement_installment")
 }
@@ -1258,80 +1249,80 @@ enum ContractType {
 }
 
 model Contract {
-  id                 String              @id @default(cuid())
+  id String @id @default(cuid())
 
-  tenant_id          String
-  tenant             Tenant             @relation(fields: [tenant_id], references: [id])
+  tenant_id String
+  tenant    Tenant @relation(fields: [tenant_id], references: [id])
 
-  debtClaim_id       String?             @unique
-  debtClaim          DebtClaim?         @relation(fields: [debtClaim_id], references: [id])
+  debtClaim_id String?    @unique
+  debtClaim    DebtClaim? @relation(fields: [debtClaim_id], references: [id])
 
-  status             ContractStatus      @default(DRAFT)
+  status ContractStatus @default(DRAFT)
 
-  contract_type      ContractType
+  contract_type ContractType
 
-  contract_date      DateTime
-  start_date         DateTime
-  end_date           DateTime?
+  contract_date DateTime
+  start_date    DateTime
+  end_date      DateTime?
 
-  amount             Decimal             @db.Decimal(12,2)
+  amount Decimal @db.Decimal(12, 2)
 
   installment_count  Int?
-  installment_amount Decimal?            @db.Decimal(12,2)
+  installment_amount Decimal? @db.Decimal(12, 2)
 
-  description        String?             @db.Text
+  description String? @db.Text
 
-  reference_number   String              @unique
+  reference_number String @unique
 
   parties            ContractParty[]
   documents          ContractDocument[]
   activation_payment Payment?
 
-  created_at         DateTime            @default(now())
-  updated_at         DateTime            @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@index([tenant_id])
   @@map("contract")
 }
 
 model ContractParty {
-  id                  String              @id @default(cuid())
+  id String @id @default(cuid())
 
-  contract_id         String
-  contract            Contract           @relation(fields: [contract_id], references: [id],onDelete: Cascade)
+  contract_id String
+  contract    Contract @relation(fields: [contract_id], references: [id], onDelete: Cascade)
 
-  role                ContractPartyRole
+  role ContractPartyRole
 
   person_type         PersonType
   identification_type IdentificationType
   identification      String
 
-  fullname            String
-  email               String
-  phone               String
-  birth_date          DateTime?
-  birth_place         String?
-  address             String?
+  fullname    String
+  email       String
+  phone       String
+  birth_date  DateTime?
+  birth_place String?
+  address     String?
 
-  created_at          DateTime            @default(now())
+  created_at DateTime @default(now())
 
   @@index([contract_id])
   @@map("contract_party")
 }
 
 model ContractDocument {
-  id          String    @id @default(cuid())
+  id String @id @default(cuid())
 
   contract_id String
-  contract    Contract @relation(fields: [contract_id], references: [id],onDelete: Cascade)
+  contract    Contract @relation(fields: [contract_id], references: [id], onDelete: Cascade)
 
-  file_name   String
-  file_path   String
+  file_name String
+  file_path String
 
-  mime_type   String
-  file_size   Int
+  mime_type String
+  file_size Int
 
-  created_at  DateTime  @default(now())
+  created_at DateTime @default(now())
 
   @@index([contract_id])
   @@map("contract_document")
@@ -1349,45 +1340,45 @@ enum PaymentType {
 }
 
 model Payment {
-  id               String                  @id @default(cuid())
+  id String @id @default(cuid())
 
-  tenant_id        String
-  tenant           Tenant                 @relation(fields: [tenant_id], references: [id])
+  tenant_id String
+  tenant    Tenant @relation(fields: [tenant_id], references: [id])
 
-  obligation_id    String?
-  obligation       DebtClaimObligation?   @relation(fields: [obligation_id], references: [id])
+  obligation_id String?
+  obligation    DebtClaimObligation? @relation(fields: [obligation_id], references: [id])
 
-  total_amount     Decimal                 @db.Decimal(10, 2)
-  status           PaymentStatus           @default(pending)
-  paid_at          DateTime?               @db.Date
+  total_amount Decimal       @db.Decimal(10, 2)
+  status       PaymentStatus @default(pending)
+  paid_at      DateTime?     @db.Date
 
   // Sentoo / Pasarela
   provider         String?
-  provider_ref     String?                 @unique
+  provider_ref     String? @unique
   provider_payload Json?
 
   reference_number String?
-  created_at       DateTime                @default(now())
-  updated_at       DateTime                @updatedAt
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
 
-  payment_url      String?                 @unique
+  payment_url String? @unique
 
   processing_error String?
 
-  payment_type     PaymentType             @default(OTHER)
+  payment_type PaymentType @default(OTHER)
 
-  agreement_id     String?
-  contract_id      String?                 @unique
-  contract         Contract?              @relation(fields: [contract_id], references: [id])
+  agreement_id String?
+  contract_id  String?   @unique
+  contract     Contract? @relation(fields: [contract_id], references: [id])
 
-  method           PaymentMethod
+  method PaymentMethod
 
-  allocations      PaymentAllocation[]
-  installments     AgreementInstallment[]
-  agreements       Agreement?             @relation(fields: [agreement_id], references: [id])
-  blockades        Blockade[]
+  allocations  PaymentAllocation[]
+  installments AgreementInstallment[]
+  agreements   Agreement?             @relation(fields: [agreement_id], references: [id])
+  blockades    Blockade[]
 
-  billing_invoice  BillingInvoice?
+  billing_invoice BillingInvoice?
 
   @@map("payment")
 }
@@ -1409,112 +1400,112 @@ enum PaymentSentooStatus {
 }
 
 model PaymentAllocation {
-  id         String            @id @default(cuid())
+  id         String           @id @default(cuid())
   payment_id String
   payment    Payment          @relation(fields: [payment_id], references: [id])
   component  PaymentComponent
-  amount     Decimal           @db.Decimal(10, 2)
+  amount     Decimal          @db.Decimal(10, 2)
 
   @@map("payment_allocation")
 }
 
 model FinancialReportRequest {
-  id             String         @id @default(cuid())
+  id String @id @default(cuid())
 
-  tenant_id      String
-  tenant         Tenant        @relation(fields: [tenant_id], references: [id])
+  tenant_id String
+  tenant    Tenant @relation(fields: [tenant_id], references: [id])
 
   // 👤 Relación con persona/deudor
-  person_id      String?
-  person         Person?       @relation(fields: [person_id], references: [id])
+  person_id String?
+  person    Person? @relation(fields: [person_id], references: [id])
 
   // 💳 Pago (Sentoo)
   payment_id     String?
-  payment_status PaymentStatus  @default(pending)
+  payment_status PaymentStatus @default(pending)
 
-  amount         Decimal        @db.Decimal(10,2)
+  amount Decimal @db.Decimal(10, 2)
 
   // 🧾 Auditoría
-  created_at     DateTime       @default(now())
-  updated_at     DateTime       @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@index([tenant_id])
   @@index([payment_status])
-
   @@map("financial_report_request")
 }
 
 model Plan {
-  id                 String          @id @default(uuid())
-  name               String
-  description        String?
+  id          String  @id @default(uuid())
+  name        String
+  description String?
 
-  monthly_price      Decimal         @db.Decimal(10, 2)
-  yearly_price       Decimal         @db.Decimal(10, 2)
+  registration_price Decimal @db.Decimal(10, 2)
+  monthly_price      Decimal @db.Decimal(10, 2)
+  yearly_price       Decimal @db.Decimal(10, 2)
 
   features           Json
-  reactivation_price Decimal         @db.Decimal(10, 2)
-  created_at         DateTime        @default(now())
-  updated_at         DateTime        @updatedAt
-  is_active          Boolean         @default(true)
+  reactivation_price Decimal  @db.Decimal(10, 2)
+  order              Int      @default(0)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+  is_active          Boolean  @default(true)
 
-  subscription       Subscription[]
+  subscription Subscription[]
 
   @@map("plan")
 }
 
 model Subscription {
-  id                 String              @id @default(uuid())
-  tenant_id          String              @unique
-  tenant             Tenant             @relation(fields: [tenant_id], references: [id])
-  plan_id            String
-  plan               Plan               @relation(fields: [plan_id], references: [id])
+  id        String @id @default(uuid())
+  tenant_id String @unique
+  tenant    Tenant @relation(fields: [tenant_id], references: [id])
+  plan_id   String
+  plan      Plan   @relation(fields: [plan_id], references: [id])
 
-  billing_cycle      BillingCycle
+  billing_cycle BillingCycle
 
-  status             SubscriptionStatus  @default(PENDING)
-  activated_at       DateTime?
+  status       SubscriptionStatus @default(PENDING)
+  activated_at DateTime?
 
   current_period_end DateTime
-  created_at         DateTime            @default(now())
-  updated_at         DateTime            @updatedAt
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
 
   @@map("subscription")
 }
 
-
 model BlockadeDocument {
-  id           String    @id @default(cuid())
+  id String @id @default(cuid())
 
-  blockadeId   String
+  blockadeId String
 
   fileName     String
   originalName String
 
-  mimeType     String
+  mimeType String
 
-  size         Int
+  size Int
 
-  storageKey   String
+  storageKey String
 
-  createdAt    DateTime  @default(now())
+  createdAt DateTime @default(now())
 
-  blockade     Blockade @relation(fields: [blockadeId],references: [id], onDelete: Cascade)
+  blockade Blockade @relation(fields: [blockadeId], references: [id], onDelete: Cascade)
 
   @@index([blockadeId])
   @@map("blockade_document")
 }
 
 model Entitlement {
-  id                                                String    @id @default(uuid())
-  userId                                            String
-  feature                                           String
-  paymentStatus String   // UNPAID | PENDING | PAID
-  paymentUrl                                        String?
-  updatedAt                                         DateTime  @updatedAt
-  createdAt                                         DateTime  @default(now())
+  id            String   @id @default(uuid())
+  userId        String
+  feature       String
+  paymentStatus String // UNPAID | PENDING | PAID
+  paymentUrl    String?
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
 
-  @@index([userId,                                  feature])
+  @@index([userId, feature])
   @@map("entitlement")
 }
 
@@ -1567,7 +1558,6 @@ enum VerdictStatus {
   REJECTED
 }
 
-
 enum IdentificationType {
   KVK
   CEDULA
@@ -1591,7 +1581,6 @@ enum PaymentMethod {
   CREDIT_CARD
 }
 
-
 enum PersonType {
   INDIVIDUAL
   COMPANY
@@ -1602,7 +1591,6 @@ enum InvitationRole {
   AGENT
   SHERIFF
 }
-
 
 enum BlockadeReason {
   UNPAID_PAYMENT

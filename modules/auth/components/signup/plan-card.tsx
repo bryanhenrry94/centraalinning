@@ -1,21 +1,28 @@
 import { formatCurrency } from "@/shared/utils/formatters";
-import { ArrowForward, Check } from "@mui/icons-material";
+import { ArrowForward, Check, Star } from "@mui/icons-material";
 import {
   Box,
   Button,
   Card,
   CardContent,
+  Chip,
   Stack,
   Typography,
 } from "@mui/material";
 import { useState } from "react";
 
+const PRIMARY = "#0A3D91";
+const ACCENT = "#F7931E";
+
 export interface PlanCardProps {
   icon: React.ReactNode;
   title: string;
   description: string;
-  price: number;
+  registrationPrice: number;
+  recurringPrice: number;
+  recurringLabel: string;
   features: string[];
+  featured?: boolean;
   onSelect?: () => void;
 }
 
@@ -23,8 +30,11 @@ export const PlanCard = ({
   icon,
   title,
   description,
-  price,
+  registrationPrice,
+  recurringPrice,
+  recurringLabel,
   features,
+  featured = false,
   onSelect,
 }: PlanCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -35,37 +45,58 @@ export const PlanCard = ({
       onMouseLeave={() => setIsHovered(false)}
       sx={{
         height: "100%",
-        border: isHovered ? "2px solid #E67E22" : "1px solid #e0e0e0",
-        borderRadius: 2,
-        position: "relative",
         display: "flex",
         flexDirection: "column",
+        width: "100%",
+        overflow: "visible",
+        border: isHovered ? `2px solid ${PRIMARY}` : "1px solid #e5e7eb",
+        borderRadius: "16px",
+        position: "relative",
         cursor: "pointer",
+        boxShadow: "0 2px 10px rgba(10, 61, 145, 0.08)",
         transition: "all 0.2s ease-in-out",
         "&:hover": {
-          boxShadow: 4,
+          boxShadow: "0 8px 24px rgba(10, 61, 145, 0.16)",
         },
       }}
       elevation={0}
     >
-      <CardContent sx={{ flexGrow: 1, p: 3 }}>
-        <Box
+      {featured && (
+        <Chip
+          icon={<Star sx={{ fontSize: 16, color: "white !important" }} />}
+          label="Aanbevolen"
+          size="small"
           sx={{
-            display: "flex",
-            justifyContent: "center",
-            mb: 2,
+            position: "absolute",
+            top: -14,
+            left: "50%",
+            transform: "translateX(-50%)",
+            bgcolor: ACCENT,
+            color: "white",
+            fontWeight: 700,
           }}
-        >
+        />
+      )}
+
+      <CardContent
+        sx={{
+          p: 3,
+          flexGrow: 1,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Box sx={{ display: "flex", justifyContent: "center", mb: 1.5 }}>
           <Box
             sx={{
               width: 56,
               height: 56,
               borderRadius: "50%",
-              border: isHovered ? "2px solid #E67E22" : "2px solid #1a365d",
+              border: `2px solid ${PRIMARY}`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: isHovered ? "#E67E22" : "#1a365d",
+              color: PRIMARY,
               transition: "all 0.2s ease-in-out",
             }}
           >
@@ -79,8 +110,7 @@ export const PlanCard = ({
           align="center"
           sx={{
             fontWeight: 700,
-            color: isHovered ? "#E67E22" : "#1a365d",
-            mb: 1,
+            color: PRIMARY,
             transition: "color 0.2s ease-in-out",
           }}
         >
@@ -91,79 +121,78 @@ export const PlanCard = ({
           variant="body2"
           align="center"
           color="text.secondary"
-          sx={{ mb: 3, minHeight: 40 }}
+          sx={{ mb: 2, minHeight: 40 }}
         >
           {description}
         </Typography>
 
-        <Typography
-          variant="h3"
-          align="center"
+        <Box
           sx={{
-            fontWeight: 700,
-            color: isHovered ? "#E67E22" : "#1a365d",
-            mb: 0.5,
-            transition: "color 0.2s ease-in-out",
+            display: "flex",
+            justifyContent: "center",
+            gap: 3,
+            py: 2,
+            mb: 2,
+            borderTop: "1px solid #f0f0f0",
+            borderBottom: "1px solid #f0f0f0",
           }}
         >
-          {formatCurrency(price)}
-        </Typography>
+          <Box sx={{ textAlign: "center" }}>
+            <Typography
+              variant="subtitle1"
+              sx={{ fontWeight: 700, color: PRIMARY, lineHeight: 1.2 }}
+            >
+              {formatCurrency(registrationPrice)}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Registratiekosten
+            </Typography>
+          </Box>
 
-        <Typography
-          variant="body2"
-          align="center"
-          color="text.secondary"
-          sx={{ mb: 3 }}
-        >
-          Eenmalige registratie
-        </Typography>
+          <Box sx={{ textAlign: "center" }}>
+            <Typography
+              variant="subtitle1"
+              sx={{ fontWeight: 700, color: PRIMARY, lineHeight: 1.2 }}
+            >
+              {formatCurrency(recurringPrice)}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {recurringLabel}
+            </Typography>
+          </Box>
+        </Box>
 
-        <Stack spacing={1.5}>
+        <Stack spacing={1.25} sx={{ flexGrow: 1, mb: 2.5 }}>
           {features.map((feature, index) => (
             <Box
               key={index}
               sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}
             >
-              <Check sx={{ color: "#E67E22", fontSize: 20, mt: 0.2 }} />
+              <Check sx={{ color: ACCENT, fontSize: 20, mt: 0.2 }} />
               <Typography variant="body2" color="text.secondary">
                 {feature}
               </Typography>
             </Box>
           ))}
         </Stack>
-      </CardContent>
 
-      <Box sx={{ p: 3, pt: 0 }}>
         <Button
-          variant={isHovered ? "contained" : "outlined"}
-          fullWidth
+          variant="contained"
           endIcon={<ArrowForward />}
           onClick={onSelect}
+          fullWidth
           sx={{
-            py: 1.5,
-            borderRadius: 1,
+            py: 1.25,
+            borderRadius: "10px",
             textTransform: "none",
             fontWeight: 600,
-            transition: "all 0.2s ease-in-out",
-            ...(isHovered
-              ? {
-                  bgcolor: "#E67E22",
-                  color: "white",
-                  "&:hover": { bgcolor: "#d35400" },
-                }
-              : {
-                  borderColor: "#1a365d",
-                  color: "#1a365d",
-                  "&:hover": {
-                    borderColor: "#1a365d",
-                    bgcolor: "rgba(26, 54, 93, 0.04)",
-                  },
-                }),
+            bgcolor: PRIMARY,
+            "&:hover": { bgcolor: "#082f70" },
           }}
         >
-          Kies dit plan
+          Aansluiten
         </Button>
-      </Box>
+      </CardContent>
     </Card>
   );
 };

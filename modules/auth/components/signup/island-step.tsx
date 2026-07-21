@@ -1,8 +1,12 @@
 "use client";
 
 import { Box, Card, CardActionArea, Grid, Typography } from "@mui/material";
+import { LocationOn } from "@mui/icons-material";
 import { CountryList } from "@/shared/constants/country";
-import { IslandBanner } from "./island-banner";
+import { STEP_HEADER_GAP, STEP_SECTION_GAP } from "./layout.constants";
+
+const PRIMARY = "#0A3D91";
+const ACCENT = "#F7931E";
 
 interface IslandStepProps {
   value: string;
@@ -12,10 +16,17 @@ interface IslandStepProps {
 export const IslandStep = ({ value, onSelect }: IslandStepProps) => {
   return (
     <Box sx={{ width: "100%" }}>
-      <Typography variant="h5" sx={{ fontWeight: 700, color: "#1a365d", mb: 0.5 }}>
+      <Typography
+        variant="h5"
+        sx={{ fontWeight: 700, color: PRIMARY, mb: STEP_HEADER_GAP }}
+      >
         Kies uw eiland
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{ mb: STEP_SECTION_GAP }}
+      >
         Selecteer het eiland waar uw organisatie is gevestigd.
       </Typography>
 
@@ -28,15 +39,42 @@ export const IslandStep = ({ value, onSelect }: IslandStepProps) => {
               <Card
                 elevation={0}
                 sx={{
-                  border: selected ? "2px solid #E67E22" : "1px solid #e0e0e0",
-                  borderRadius: 2,
+                  border: selected ? `2px solid ${ACCENT}` : "1px solid #e5e7eb",
+                  borderRadius: "16px",
                   overflow: "hidden",
+                  boxShadow: "0 2px 10px rgba(10, 61, 145, 0.06)",
                   transition: "all 0.2s ease-in-out",
-                  "&:hover": { boxShadow: 4 },
+                  "&:hover": {
+                    boxShadow: "0 8px 24px rgba(10, 61, 145, 0.14)",
+                  },
                 }}
               >
-                <CardActionArea onClick={() => onSelect(island.value)}>
-                  <IslandBanner code={island.value} size="compact" />
+                <CardActionArea
+                  onClick={() => onSelect(island.value)}
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 1,
+                    py: 3.5,
+                  }}
+                >
+                  <LocationOn
+                    sx={{
+                      fontSize: 32,
+                      color: selected ? ACCENT : PRIMARY,
+                    }}
+                  />
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 700,
+                      color: selected ? ACCENT : PRIMARY,
+                    }}
+                  >
+                    {island.label}
+                  </Typography>
                 </CardActionArea>
               </Card>
             </Grid>

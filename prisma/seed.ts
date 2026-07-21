@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 const ADMIN_TENANT_ID = "0874303e-6795-46ef-8416-5d76bba8071b";
 const PARAMETER_ID = "0874303e-6795-46ef-8416-5d76bba8071b";
 const ADMIN_USER_EMAIL = "bryanhenrry94@gmail.com";
-const PLAN_KLANT_ID = "plan-klant-001";
+const PLAN_DEELNEMER_ID = "plan-klant-001";
 const PLAN_ADVOCAAT_ID = "plan-advocaat-001";
 const PLAN_DEURWAARDER_ID = "plan-deurwaarder-001";
 
@@ -78,63 +78,80 @@ async function seedParameter() {
   console.log("✓ Parameter seeded");
 }
 
+const FEATURE_FAR_REGISTER = "Financiële afspraken registreren";
+const FEATURE_BLC_EXECUTE = "Blok-Check uitvoeren";
+const FEATURE_AOP_START = "Administratieve opvolging starten";
+const FEATURE_BLK_REGISTER = "Economische blokkade registreren";
+const FEATURE_COL_START = "Collectieve opvolging starten";
+const FEATURE_GOP_TRANSFER = "Gerechtelijke opvolging overdragen";
+const FEATURE_GOP_RECEIVE = "Overgedragen GOP-dossiers ontvangen";
+const FEATURE_GOP_MANAGE_PROCEDURES = "Gerechtelijke procedures beheren";
+const FEATURE_CASE_HISTORY = "Dossiergeschiedenis bekijken";
+const FEATURE_DOCUMENTS_MANAGE = "Documenten beheren";
+const FEATURE_VERDICTS_REGISTER =
+  "Vonnissen en rechterlijke beslissingen registreren";
+const FEATURE_EXECUTION_MANAGE = "Executietraject beheren";
+
 async function seedPlans() {
   const plans = [
     {
-      id: PLAN_KLANT_ID,
-      name: "Klant",
-      description: "Voor bedrijven die hun eigen vorderingen beheren",
+      id: PLAN_DEELNEMER_ID,
+      name: "Deelnemer",
+      description: "Volledige toegang tot alle CFSB-diensten",
+      registration_price: 150,
       monthly_price: 150,
       yearly_price: 1800,
       reactivation_price: 75,
-      features: {
-        CREATE_COLLECTION: true,
-        BLOK_CHECK: true,
-        CREATE_PAYMENT: true,
-        VIEW_DASHBOARD: true,
-        max_collections_per_month: 50,
-        max_debtors: 200,
-      },
+      order: 1,
+      features: [
+        FEATURE_FAR_REGISTER,
+        FEATURE_BLC_EXECUTE,
+        FEATURE_AOP_START,
+        FEATURE_BLK_REGISTER,
+        FEATURE_COL_START,
+        FEATURE_GOP_TRANSFER,
+      ],
     },
     {
       id: PLAN_ADVOCAAT_ID,
       name: "Advocaat",
       description: "Voor advocatenkantoren die namens cliënten incasseren",
+      registration_price: 250,
       monthly_price: 250,
       yearly_price: 3000,
       reactivation_price: 125,
-      features: {
-        CREATE_COLLECTION: true,
-        BLOK_CHECK: true,
-        CREATE_PAYMENT: true,
-        VIEW_DASHBOARD: true,
-        max_collections_per_month: -1, // ilimitado
-        max_debtors: -1,
-      },
+      order: 2,
+      features: [
+        FEATURE_GOP_RECEIVE,
+        FEATURE_GOP_MANAGE_PROCEDURES,
+        FEATURE_CASE_HISTORY,
+        FEATURE_DOCUMENTS_MANAGE,
+      ],
     },
     {
       id: PLAN_DEURWAARDER_ID,
       name: "Deurwaarder",
       description: "Voor gerechtsdeurwaarders en incassokantoren",
-      monthly_price: 200,
-      yearly_price: 2400,
+      registration_price: 250,
+      monthly_price: 250,
+      yearly_price: 3000,
       reactivation_price: 100,
-      features: {
-        CREATE_COLLECTION: true,
-        BLOK_CHECK: true,
-        CREATE_PAYMENT: true,
-        VIEW_DASHBOARD: true,
-        max_collections_per_month: -1, // ilimitado
-        max_debtors: -1,
-      },
+      order: 3,
+      features: [
+        FEATURE_GOP_RECEIVE,
+        FEATURE_VERDICTS_REGISTER,
+        FEATURE_EXECUTION_MANAGE,
+        FEATURE_CASE_HISTORY,
+        FEATURE_DOCUMENTS_MANAGE,
+      ],
     },
   ];
 
-  for (const plan of plans) {
+  for (const { id, ...data } of plans) {
     await prisma.plan.upsert({
-      where: { id: plan.id },
-      update: {},
-      create: plan,
+      where: { id },
+      update: data,
+      create: { id, ...data },
     });
   }
 
