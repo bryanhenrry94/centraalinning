@@ -7,15 +7,18 @@ export async function sendWelcomeEmail(to: string, fullname: string) {
   try {
     const recipient = await getEmailByEnv(to);
 
+    const appName = process.env.NEXT_PUBLIC_APP_NAME || "CFSB";
+
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
-      subject: `Welkom bij ${process.env.NEXT_PUBLIC_APP_NAME || "Centraal Inning"}`,
+      subject: `Welkom bij ${appName}`,
       react: (
         <WelcomeEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
           fullname={fullname}
           appUrl={process.env.NEXT_PUBLIC_APP_URL || "https://www.centraalinning.com"}
+          appName={appName}
         />
       ),
     });

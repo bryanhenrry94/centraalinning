@@ -8,124 +8,177 @@ import {
   Text,
   Section,
   Button,
+  Row,
+  Column,
 } from "@react-email/components";
 
 interface WelcomeEmailProps {
   logoUrl: string;
   fullname: string;
   appUrl: string;
+  appName?: string;
 }
+
+const PRIMARY = "#0A3D91";
+const ACCENT = "#FB902C";
 
 const styles = {
   main: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f1f5f9",
     fontFamily: "HelveticaNeue,Helvetica,Arial,sans-serif",
-    display: "flex",
-    flexDirection: "column" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    padding: "20px 0",
+    padding: "40px 16px",
   },
   container: {
     backgroundColor: "#ffffff",
-    border: "1px solid #eee",
-    borderRadius: "5px",
-    boxShadow: "0 5px 10px rgba(20,50,70,.2)",
+    border: "1px solid #eef0f3",
+    borderRadius: "20px",
+    boxShadow: "0 10px 30px rgba(15, 30, 70, .06)",
     maxWidth: "600px",
+    padding: "40px 40px 32px",
   },
   logo: {
-    margin: "0 auto 30px",
+    margin: "0 auto 24px",
     display: "block",
-    marginTop: "20px",
   },
   header: {
-    fontSize: "22px",
+    fontSize: "28px",
     fontWeight: "bold",
-    color: "#333333",
-    marginBottom: "20px",
+    color: PRIMARY,
+    marginBottom: "28px",
     textAlign: "center" as const,
   },
   paragraph: {
-    color: "#444",
+    color: "#1e293b",
     fontSize: "15px",
     fontFamily: "HelveticaNeue,Helvetica,Arial,sans-serif",
     letterSpacing: "0",
-    lineHeight: "23px",
-    padding: "0 40px",
-    margin: "0",
-    textAlign: "justify" as const,
+    lineHeight: "24px",
+    margin: "0 0 16px",
+    textAlign: "left" as const,
   },
   highlight: {
-    color: "#FB902C",
+    color: ACCENT,
     fontWeight: "600",
+  },
+  featureRow: {
+    marginBottom: "12px",
+  },
+  featureIconCell: {
+    width: "28px",
+    verticalAlign: "top" as const,
+    paddingTop: "1px",
+  },
+  featureIcon: {
+    fontSize: "18px",
+    lineHeight: "22px",
+  },
+  featureText: {
+    color: "#1e293b",
+    fontSize: "15px",
+    lineHeight: "22px",
+    margin: "0",
+    textAlign: "left" as const,
+  },
+  featureTitle: {
+    color: PRIMARY,
+    fontWeight: "700",
   },
   btnContainer: {
     textAlign: "center" as const,
-    padding: "20px 40px",
-    marginTop: "20px",
+    marginTop: "28px",
+    marginBottom: "8px",
   },
   button: {
-    backgroundColor: "#FB902C",
-    borderRadius: "3px",
+    backgroundColor: ACCENT,
+    borderRadius: "8px",
     color: "#fff",
     fontSize: "16px",
+    fontWeight: "bold",
     textDecoration: "none",
     textAlign: "center" as const,
-    display: "block",
-    padding: "12px 20px",
-    width: "200px",
-    margin: "0 auto",
+    display: "inline-block",
+    padding: "14px 40px",
   },
   footer: {
-    color: "#8898aa",
+    color: "#94a3b8",
     fontSize: "12px",
     textAlign: "center" as const,
-    marginTop: "30px",
-    paddingTop: "15px",
-    borderTop: "1px solid #e5e7eb",
-    padding: "15px 40px 20px",
+    marginTop: "28px",
+    margin: "4px 0 0",
   },
 };
+
+const features = [
+  {
+    icon: "🛡️",
+    title: "Automatisch incassobeheer",
+    description: "Efficiënte en transparante opvolging.",
+  },
+  {
+    icon: "🔒",
+    title: "Veilige betalingen",
+    description: "Zekerheid in elke transactie.",
+  },
+  {
+    icon: "📊",
+    title: "Realtime inzicht",
+    description: "Altijd actuele informatie over uw dossiers.",
+  },
+];
 
 export const WelcomeEmail = ({
   logoUrl,
   fullname,
   appUrl,
+  appName = "CFSB",
 }: WelcomeEmailProps) => (
   <Html>
     <Head />
     <Body style={styles.main}>
-      <Preview>Welkom bij Centraal Inning</Preview>
+      <Preview>Welkom bij {appName}</Preview>
       <Container style={styles.container}>
         <Img
           src={logoUrl}
-          width="120"
-          height="50"
-          alt="Centraal Inning"
+          width="140"
+          height="74"
+          alt={appName}
           style={styles.logo}
         />
 
-        <Text style={styles.header}>Welkom bij Centraal Inning</Text>
+        <Text style={styles.header}>Welkom bij {appName}</Text>
 
         <Text style={styles.paragraph}>
           Beste <strong>{fullname}</strong>,
         </Text>
 
         <Text style={styles.paragraph}>
-          Uw account bij <span style={styles.highlight}>Centraal Inning</span>{" "}
-          is succesvol aangemaakt. U heeft nu toegang tot ons platform voor
-          efficiënt incassomanagement.
+          Uw account bij <span style={styles.highlight}>{appName}</span> is
+          succesvol aangemaakt. U heeft nu toegang tot ons platform dat is
+          ontwikkeld voor bescherming, controle en zekerheid in betalingen.
         </Text>
 
-        <Text style={styles.paragraph}>
-          • <strong>Automatisch incassobeheer</strong>
-          <br />• <strong>Veilige betalingen</strong>
-          <br />• <strong>Realtime inzicht</strong>
+        <Section>
+          {features.map((feature) => (
+            <Row key={feature.title} style={styles.featureRow}>
+              <Column style={styles.featureIconCell}>
+                <span style={styles.featureIcon}>{feature.icon}</span>
+              </Column>
+              <Column>
+                <Text style={styles.featureText}>
+                  <span style={styles.featureTitle}>{feature.title}</span> –{" "}
+                  {feature.description}
+                </Text>
+              </Column>
+            </Row>
+          ))}
+        </Section>
+
+        <Text style={{ ...styles.paragraph, marginTop: "20px" }}>
+          Alle communicatie verloopt via ons beveiligde platform.
+          <br />
+          U ontvangt notificaties over belangrijke updates.
         </Text>
-        <Text style={styles.paragraph}>
-          Alle communicatie verloopt via ons beveiligde platform. U ontvangt
-          notificaties over belangrijke updates.
-        </Text>
+
         <Section style={styles.btnContainer}>
           <Button style={styles.button} href={appUrl}>
             Ga naar de site
@@ -133,9 +186,10 @@ export const WelcomeEmail = ({
         </Section>
 
         <Text style={styles.footer}>
-          Dit bericht is automatisch gegenereerd door het Centraal
-          Incassoplatform (CI).
-          <br />© CENTRAAL OPVOLGING
+          Dit is een automatisch bericht. Reageer niet op deze e-mail.
+        </Text>
+        <Text style={styles.footer}>
+          © {new Date().getFullYear()} {appName}. Alle rechten voorbehouden.
         </Text>
       </Container>
     </Body>
@@ -143,9 +197,10 @@ export const WelcomeEmail = ({
 );
 
 WelcomeEmail.PreviewProps = {
-  logoUrl: "/static/logo.png",
+  logoUrl: "/static/logo-cfsb.png",
   fullname: "Alan",
   appUrl: "https://www.centraalinning.com",
+  appName: "CFSB",
 } as WelcomeEmailProps;
 
 export default WelcomeEmail;
