@@ -69,8 +69,10 @@ const styles = {
     paddingTop: "1px",
   },
   featureIcon: {
-    fontSize: "18px",
+    fontSize: "15px",
     lineHeight: "22px",
+    color: ACCENT,
+    fontWeight: "700",
   },
   featureText: {
     color: "#1e293b",
@@ -78,10 +80,6 @@ const styles = {
     lineHeight: "22px",
     margin: "0",
     textAlign: "left" as const,
-  },
-  featureTitle: {
-    color: PRIMARY,
-    fontWeight: "700",
   },
   btnContainer: {
     textAlign: "center" as const,
@@ -109,21 +107,11 @@ const styles = {
 };
 
 const features = [
-  {
-    icon: "🛡️",
-    title: "Automatisch incassobeheer",
-    description: "Efficiënte en transparante opvolging.",
-  },
-  {
-    icon: "🔒",
-    title: "Veilige betalingen",
-    description: "Zekerheid in elke transactie.",
-  },
-  {
-    icon: "📊",
-    title: "Realtime inzicht",
-    description: "Altijd actuele informatie over uw dossiers.",
-  },
+  "Financiële afspraken registreren",
+  "Blok-Check uitvoeren",
+  "Administratieve opvolging starten",
+  "Collectieve opvolging starten",
+  "Gerechtelijke opvolging overdragen",
 ];
 
 export const WelcomeEmail = ({
@@ -152,36 +140,51 @@ export const WelcomeEmail = ({
         </Text>
 
         <Text style={styles.paragraph}>
-          Uw account bij <span style={styles.highlight}>{appName}</span> is
-          succesvol aangemaakt. U heeft nu toegang tot ons platform dat is
-          ontwikkeld voor bescherming, controle en zekerheid in betalingen.
+          Uw account bij{" "}
+          <span style={styles.highlight}>{appName}</span> – Centrale
+          Financiële Samenwerking en Bescherming is succesvol aangemaakt.
+        </Text>
+
+        <Text style={styles.paragraph}>
+          Na activatie krijgt u toegang tot het {appName}-platform, waarmee u
+          uw onderneming kunt beschermen door gebruik te maken van centrale
+          registratie, controle en zekerheid in betalingen.
+        </Text>
+
+        <Text style={{ ...styles.paragraph, fontWeight: 700 }}>
+          Met uw account kunt u:
         </Text>
 
         <Section>
           {features.map((feature) => (
-            <Row key={feature.title} style={styles.featureRow}>
+            <Row key={feature} style={styles.featureRow}>
               <Column style={styles.featureIconCell}>
-                <span style={styles.featureIcon}>{feature.icon}</span>
+                <span style={styles.featureIcon}>✔</span>
               </Column>
               <Column>
-                <Text style={styles.featureText}>
-                  <span style={styles.featureTitle}>{feature.title}</span> –{" "}
-                  {feature.description}
-                </Text>
+                <Text style={styles.featureText}>{feature}</Text>
               </Column>
             </Row>
           ))}
         </Section>
 
         <Text style={{ ...styles.paragraph, marginTop: "20px" }}>
-          Alle communicatie verloopt via ons beveiligde platform.
-          <br />
-          U ontvangt notificaties over belangrijke updates.
+          Alle communicatie verloopt via het beveiligde {appName}-platform. U
+          ontvangt automatisch kennisgevingen over belangrijke updates van uw
+          account en dossiers.
+        </Text>
+
+        <Text style={{ ...styles.paragraph, fontWeight: 700 }}>
+          Volgende stap
+        </Text>
+
+        <Text style={styles.paragraph}>
+          Activeer uw account om gebruik te maken van alle {appName}-diensten.
         </Text>
 
         <Section style={styles.btnContainer}>
           <Button style={styles.button} href={appUrl}>
-            Ga naar de site
+            Account activeren
           </Button>
         </Section>
 
