@@ -4,12 +4,16 @@ import { MembershipStatus } from "@prisma/client";
 export class WorkspaceService {
   static async switchWorkspace(userId: string, tenantId: string) {
     const membership = await prisma.membership.findFirst({
-      where: { user_id: userId, tenant_id: tenantId, status: MembershipStatus.ACTIVE },
+      where: {
+        user_id: userId,
+        tenant_id: tenantId,
+        status: MembershipStatus.ACTIVE,
+      },
       include: { tenant: true, roles: true },
     });
 
     if (!membership) {
-      throw new Error("No tienes acceso a este workspace");
+      throw new Error("U hebt geen toegang tot een werkruimte.");
     }
 
     await prisma.user.update({

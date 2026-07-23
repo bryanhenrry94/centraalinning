@@ -15,7 +15,7 @@ export const canUseFeature = (
   if (!membership) {
     return {
       allowed: false,
-      reason: "No tienes membresía activa",
+      reason: "Je hebt geen actief lidmaatschap.",
     };
   }
 

@@ -117,6 +117,7 @@ export class PaymentService {
         status: (payload.status as any) || "pending",
         contract_id: payload.contract_id || null,
         provider_payload: payload.provider_payload || "",
+        payment_url: payload.payment_url || null,
         paid_at: null,
         payment_type: payload.payment_type || "OTHER",
       },

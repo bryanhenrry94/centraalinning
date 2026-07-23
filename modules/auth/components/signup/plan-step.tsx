@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Box, Button, Grid, Switch, Typography } from "@mui/material";
+import { Box, Button, Chip, Grid, Switch, Typography } from "@mui/material";
 import { Person, Balance, Gavel } from "@mui/icons-material";
 import { Plan } from "@/modules/settings/services/plan.validators";
 import { getPlans } from "@/modules/settings/actions/plan.actions";
@@ -13,7 +13,7 @@ const PRIMARY = "#0A3D91";
 interface PlanStepProps {
   billingCycle: "MONTHLY" | "YEARLY";
   onChangeBillingCycle: (cycle: "MONTHLY" | "YEARLY") => void;
-  onSelect: (planId: string) => void;
+  onSelect: (planId: string, planName: string) => void;
   onBack: () => void;
 }
 
@@ -99,6 +99,16 @@ export const PlanStep = ({
         >
           Jaarlijks
         </Typography>
+
+        <Chip
+          label="10% korting"
+          size="small"
+          sx={{
+            bgcolor: "#dcfce7",
+            color: "#16a34a",
+            fontWeight: 700,
+          }}
+        />
       </Box>
 
       <Grid container spacing={3}>
@@ -109,7 +119,7 @@ export const PlanStep = ({
           );
 
           return (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={plan.id}>
+            <Grid size={12} key={plan.id}>
               <PlanCard
                 icon={icon}
                 title={plan.name}
@@ -127,15 +137,25 @@ export const PlanStep = ({
                     : Object.values(plan.features || {})
                 }
                 featured={planNameLower === "deelnemer"}
-                onSelect={() => onSelect(plan.id)}
+                onSelect={() => onSelect(plan.id, plan.name)}
               />
             </Grid>
           );
         })}
       </Grid>
 
-      <Button variant="outlined" onClick={onBack} sx={{ mt: 3 }}>
-        Terug
+      <Button
+        variant="outlined"
+        onClick={onBack}
+        sx={{
+          mt: 3,
+          py: 1.25,
+          px: 3,
+          fontWeight: 600,
+          textTransform: "none",
+        }}
+      >
+        ← Terug
       </Button>
     </Box>
   );

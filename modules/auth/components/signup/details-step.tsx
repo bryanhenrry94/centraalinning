@@ -1,7 +1,6 @@
 "use client";
 
-import useClientRouter from "@/shared/hooks/useNavigations";
-import { notifyInfo, notifyWarning } from "@/shared/ui/notifications";
+import { notifyWarning } from "@/shared/ui/notifications";
 import { SignUpInput } from "@/modules/auth/services/signup.type";
 import { SignUpSchema } from "@/modules/auth/services/signup.validators";
 import { CountryList } from "@/shared/constants/country";
@@ -14,6 +13,7 @@ import {
   Lock,
   Person,
   PersonAdd,
+  Phone,
   Place,
   Visibility,
   VisibilityOff,
@@ -23,7 +23,6 @@ import {
   Box,
   Button,
   Checkbox,
-  Chip,
   Divider,
   FormControlLabel,
   Grid,
@@ -43,17 +42,20 @@ const ACCENT = "#F7931E";
 interface DetailsStepProps {
   country: string;
   planId: string;
+  planName: string;
   billingCycle: "MONTHLY" | "YEARLY";
   onBack: () => void;
+  onSuccess: () => void;
 }
 
 export const DetailsStep = ({
   country,
   planId,
+  planName,
   billingCycle,
   onBack,
+  onSuccess,
 }: DetailsStepProps) => {
-  const { redirectToLoginCompany } = useClientRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -97,22 +99,19 @@ export const DetailsStep = ({
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) {
-        notifyWarning("Sign up failed. Please try again.");
+      const result = await response.json();
+
+      if (!response.ok || !result?.success) {
+        notifyWarning(
+          result?.error || "Er is een fout opgetreden. Probeer het opnieuw.",
+        );
         return;
       }
 
-      const account = await response.json();
-
-      if (account) {
-        notifyInfo(
-          "Account created successfully! Please check your email to confirm your account.",
-        );
-
-        redirectToLoginCompany();
-      }
+      onSuccess();
     } catch (error) {
       console.error("Error during sign up:", error);
+      notifyWarning("Er is een fout opgetreden. Probeer het opnieuw.");
     }
   };
 
@@ -142,16 +141,55 @@ export const DetailsStep = ({
         Vul uw bedrijfs- en contactgegevens in om de registratie af te ronden.
       </Typography>
 
-      <Chip
-        icon={<Place sx={{ color: `${PRIMARY} !important` }} />}
-        label={`Eiland: ${islandLabel}`}
-        sx={{
-          mb: STEP_SECTION_GAP,
-          bgcolor: "#eef2fb",
-          color: PRIMARY,
-          fontWeight: 600,
-        }}
-      />
+      <Grid container spacing={2} sx={{ mb: STEP_SECTION_GAP }}>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              bgcolor: "#f7f8fa",
+              border: "1px solid #ececec",
+              borderRadius: 2,
+              p: 1.5,
+            }}
+          >
+            <Place sx={{ color: PRIMARY }} />
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Eiland
+              </Typography>
+              <Typography sx={{ fontWeight: 700, color: PRIMARY }}>
+                {islandLabel}
+              </Typography>
+            </Box>
+          </Box>
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              bgcolor: "#f7f8fa",
+              border: "1px solid #ececec",
+              borderRadius: 2,
+              p: 1.5,
+            }}
+          >
+            <Person sx={{ color: PRIMARY }} />
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Gekozen plan
+              </Typography>
+              <Typography sx={{ fontWeight: 700, color: PRIMARY }}>
+                {planName}
+              </Typography>
+            </Box>
+          </Box>
+        </Grid>
+      </Grid>
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container spacing={2.5}>
@@ -286,6 +324,31 @@ export const DetailsStep = ({
             />
           </Grid>
 
+          {/* Phone */}
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Controller
+              name="phone"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  placeholder="Telefoonnummer"
+                  error={!!errors.phone}
+                  helperText={errors.phone?.message}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Phone sx={{ color: "#9e9e9e" }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={commonStyles}
+                />
+              )}
+            />
+          </Grid>
+
           {/* KVK */}
           <Grid size={{ xs: 12, sm: 6 }}>
             <Controller
@@ -371,8 +434,12 @@ export const DetailsStep = ({
 
           <Grid size={12}>
             <Box sx={{ display: "flex", gap: 2 }}>
-              <Button variant="outlined" onClick={onBack} sx={{ py: 1.5 }}>
-                Terug
+              <Button
+                variant="outlined"
+                onClick={onBack}
+                sx={{ py: 1.5, fontWeight: 600, textTransform: "none" }}
+              >
+                ← Terug
               </Button>
 
               {/* Submit */}
@@ -383,11 +450,13 @@ export const DetailsStep = ({
                 startIcon={<PersonAdd />}
                 sx={{
                   py: 1.5,
+                  fontWeight: 600,
+                  textTransform: "none",
                   bgcolor: PRIMARY,
                   "&:hover": { bgcolor: "#082f70" },
                 }}
               >
-                Account Aanmaken
+                Account aanmaken
               </Button>
             </Box>
           </Grid>
@@ -411,19 +480,32 @@ export const DetailsStep = ({
           </Grid>
 
           <Grid size={12}>
-            <Typography variant="body2" align="center" color="text.secondary">
-              Heeft u al een account?{" "}
-              <Link
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 1.5,
+                flexWrap: "wrap",
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                Heeft u al een account?
+              </Typography>
+              <Button
+                component={Link}
                 href="/login"
+                variant="outlined"
                 sx={{
-                  color: ACCENT,
                   fontWeight: 600,
-                  textDecoration: "none",
+                  textTransform: "none",
+                  borderColor: PRIMARY,
+                  color: PRIMARY,
                 }}
               >
-                INLOGGEN
-              </Link>
-            </Typography>
+                Inloggen
+              </Button>
+            </Box>
           </Grid>
         </Grid>
       </form>

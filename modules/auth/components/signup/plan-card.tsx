@@ -69,11 +69,11 @@ export const PlanCard = ({
           sx={{
             position: "absolute",
             top: -14,
-            left: "50%",
-            transform: "translateX(-50%)",
+            right: 16,
             bgcolor: ACCENT,
             color: "white",
             fontWeight: 700,
+            textTransform: "uppercase",
           }}
         />
       )}
@@ -86,11 +86,12 @@ export const PlanCard = ({
           flexDirection: "column",
         }}
       >
-        <Box sx={{ display: "flex", justifyContent: "center", mb: 1.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
           <Box
             sx={{
               width: 56,
               height: 56,
+              flexShrink: 0,
               borderRadius: "50%",
               border: `2px solid ${PRIMARY}`,
               display: "flex",
@@ -102,29 +103,26 @@ export const PlanCard = ({
           >
             {icon}
           </Box>
+
+          <Box>
+            <Typography
+              variant="h6"
+              component="h3"
+              sx={{
+                fontWeight: 700,
+                color: PRIMARY,
+                lineHeight: 1.2,
+                transition: "color 0.2s ease-in-out",
+              }}
+            >
+              {title}
+            </Typography>
+
+            <Typography variant="body2" color="text.secondary">
+              {description}
+            </Typography>
+          </Box>
         </Box>
-
-        <Typography
-          variant="h6"
-          component="h3"
-          align="center"
-          sx={{
-            fontWeight: 700,
-            color: PRIMARY,
-            transition: "color 0.2s ease-in-out",
-          }}
-        >
-          {title}
-        </Typography>
-
-        <Typography
-          variant="body2"
-          align="center"
-          color="text.secondary"
-          sx={{ mb: 2, minHeight: 40 }}
-        >
-          {description}
-        </Typography>
 
         <Box
           sx={{

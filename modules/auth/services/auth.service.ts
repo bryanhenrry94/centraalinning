@@ -77,12 +77,16 @@ export class AuthService {
     }
 
     if (user.memberships.length === 0) {
-      return { success: false, error: "No tienes acceso a ningún espacio de trabajo" };
+      return {
+        success: false,
+        error: "U hebt geen toegang tot een werkruimte.",
+      };
     }
 
     const activeMembership =
-      user.memberships.find((m) => m.tenant_id === user.last_active_tenant_id) ??
-      user.memberships[0];
+      user.memberships.find(
+        (m) => m.tenant_id === user.last_active_tenant_id,
+      ) ?? user.memberships[0];
 
     return {
       success: true,
@@ -111,7 +115,9 @@ export class AuthService {
 
   static async emailExists(email: string): Promise<boolean> {
     if (!email) throw new Error("Email is required");
-    const user = await prisma.user.findFirst({ where: { email, is_active: true } });
+    const user = await prisma.user.findFirst({
+      where: { email, is_active: true },
+    });
     return !!user;
   }
 
@@ -125,7 +131,10 @@ export class AuthService {
     });
 
     const rawToken = crypto.randomBytes(32).toString("hex");
-    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
 
     await prisma.passwordResetToken.create({
       data: {

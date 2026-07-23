@@ -1,5 +1,9 @@
 import { SentooPaymentCreate, SentooPaymentResult } from "./sentoo.types";
 
+// Sentoo rechaza el pago (400 - "missing a required parameter") si
+// sentoo_description supera los 50 caracteres. Ver SentooService.createTransaction.
+const SENTOO_DESCRIPTION_MAX_LENGTH = 50;
+
 export class SentooService {
   static createTransaction = async (
     payload: SentooPaymentCreate,
@@ -19,6 +23,11 @@ export class SentooService {
           ? payload.reference
           : `debt_${Date.now()}`;
 
+      const description = payload.description.slice(
+        0,
+        SENTOO_DESCRIPTION_MAX_LENGTH,
+      );
+
       const today = new Date();
 
       // expira en 24 horas
@@ -30,7 +39,7 @@ export class SentooService {
         sentoo_merchant: process.env.SENTOO_MERCHANT!,
         sentoo_currency: payload.currency ?? "USD",
         sentoo_amount: amountSentoo.toString(),
-        sentoo_description: payload.description,
+        sentoo_description: description,
         sentoo_expires: expires,
         sentoo_reference: reference,
         sentoo_return_url: `${process.env.APP_URL}/payment/return`,

@@ -35,7 +35,7 @@ export class SignupService {
       if (existingTenant) {
         return {
           success: false,
-          error: "El KVK ya está registrado",
+          error: "Dit KVK-nummer is al geregistreerd",
         };
       }
 
@@ -45,7 +45,7 @@ export class SignupService {
       if (!parameter) {
         return {
           success: false,
-          error: "No se encontró la configuración",
+          error: "Systeemconfiguratie niet gevonden",
         };
       }
 
@@ -59,7 +59,7 @@ export class SignupService {
       if (!plan) {
         return {
           success: false,
-          error: "Plan no encontrado",
+          error: "Abonnement niet gevonden",
         };
       }
 
@@ -71,7 +71,7 @@ export class SignupService {
       if (!pricePlan) {
         return {
           success: false,
-          error: "No se encontró el precio del plan",
+          error: "Kon de prijs van het abonnement niet vinden",
         };
       }
 
@@ -138,10 +138,12 @@ export class SignupService {
             return {
               status: false,
               result: null,
-              error: "El usuario ya pertenece a esta organización",
+              error: "De gebruiker maakt al deel uit van deze organisatie",
             };
           }
 
+          // Het lidmaatschap wordt pas actief nadat de betaling bij Sentoo
+          // is bevestigd (zie processSubscriptionPayment in de webhook).
           const membership = await tx.membership.create({
             data: {
               tenant_id: tenant.id,
@@ -190,16 +192,23 @@ export class SignupService {
       if (!transactionResult.status || !transactionResult.result) {
         return {
           success: false,
-          error: transactionResult.error || "Error en la transacción",
+          error:
+            transactionResult.error ||
+            "Er is een fout opgetreden tijdens de registratie",
         };
       }
 
-      const { tenant, user } = transactionResult.result;
+      const { tenant } = transactionResult.result;
+
+      const billingLabel =
+        validatedData.billing_cycle === "YEARLY" ? "Jaarlijks" : "Maandelijks";
 
       // 7. Crear el pago en Sentoo.
+      // Let op: Sentoo staat maximaal 50 tekens toe in sentoo_description,
+      // dus de bedrijfsnaam (variabele lengte) mag hier niet in verwerkt worden.
       const sentooResponse = await SentooService.createTransaction({
-        amount: pricePlan, // YA en centavos
-        description: "Prueba",
+        amount: pricePlan,
+        description: `CFSB Registratie - ${plan.name} (${billingLabel})`,
         reference: tenant.kvk || "",
       });
 
@@ -212,6 +221,9 @@ export class SignupService {
         );
       }
 
+      // 6. Devolver la URL de pago al frontend.
+      const paymentUrl = sentooResponse.payment.url;
+
       // 8. Registra el pago en la base de datos
       const paymentData: PaymentCreate = {
         debtClaim_id: null, // No hay una deuda previa, este es un pago directo por activación
@@ -223,6 +235,7 @@ export class SignupService {
         provider: "sentoo",
         provider_ref: sentooResponse?.payment?.id,
         provider_payload: JSON.stringify(sentooResponse.raw),
+        payment_url: paymentUrl,
         reference_number: tenant.kvk || "",
         agreement_id: null,
         payment_type: PaymentType.SUBSCRIPTION,
@@ -237,9 +250,6 @@ export class SignupService {
       if (!paymentRes) {
         throw new Error("Kon de betaling niet registreren.");
       }
-
-      // 6. Devolver la URL de pago al frontend.
-      const paymentUrl = sentooResponse.payment.url;
 
       await MailService.sendPaymentLinkEmail(
         tenant.contact_email,
@@ -258,7 +268,7 @@ export class SignupService {
 
       return {
         success: false,
-        error: error?.message || "Error creating account",
+        error: error?.message || "Er is een fout opgetreden bij het aanmaken van uw account",
       };
     }
   };
