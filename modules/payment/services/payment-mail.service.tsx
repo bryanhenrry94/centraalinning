@@ -71,9 +71,7 @@ export const sendInvoiceEmail = async (
   }
 };
 
-export const sendFinancialReportMail = async (
-  financial_report_id: string,
-) => {
+export const sendFinancialReportMail = async (financial_report_id: string) => {
   try {
     const financial_report = await prisma.financialReportRequest.findUnique({
       where: { id: financial_report_id },
