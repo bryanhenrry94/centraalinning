@@ -25,6 +25,7 @@ import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import AppsIcon from "@mui/icons-material/Apps";
 import MenuIcon from "@mui/icons-material/Menu";
+import CheckIcon from "@mui/icons-material/Check";
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -33,12 +34,14 @@ import Image from "next/image";
 import { HeaderMenuGroup, menuGroups } from "./menus";
 import { UserRole } from "@/shared/constants/user-role";
 import useClientRouter from "@/shared/hooks/useNavigations";
+import { switchWorkspace } from "@/modules/auth/actions/workspace.actions";
+import { notifyError } from "@/shared/ui/notifications";
 import Link from "next/link";
 
 export default function Header() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const router = useRouter();
-  const { redirectToLogout } = useClientRouter();
+  const { redirectToLogout, redirectToDashboard } = useClientRouter();
 
   const [avatarAnchorEl, setAvatarAnchorEl] = useState<null | HTMLElement>(
     null,
@@ -46,15 +49,55 @@ export default function Header() {
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
+  const [switchingTenantId, setSwitchingTenantId] = useState<string | null>(
+    null,
+  );
+
+  const memberships = session?.user?.memberships ?? [];
+  const activeTenantId = session?.user?.tenant_id;
+
+  const handleSwitchWorkspace = async (tenantId: string, subdomain: string) => {
+    if (tenantId === activeTenantId || !session?.user?.id) return;
+
+    setSwitchingTenantId(tenantId);
+    try {
+      await switchWorkspace(session.user.id, tenantId);
+      await update({ tenant_id: tenantId });
+      redirectToDashboard(subdomain);
+    } catch (error) {
+      console.error(error);
+      notifyError("Kon niet van werkruimte wisselen.");
+      setSwitchingTenantId(null);
+    }
+  };
+
   const [activeGroup, setActiveGroup] = useState<HeaderMenuGroup | null>(null);
 
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const userRoles = ((session?.user as any)?.roles as UserRole[]) ?? [];
 
+  const STAFF_ROLES = [
+    UserRole.PLATFORM_OWNER,
+    UserRole.TENANT_ADMIN,
+    UserRole.AGENT,
+    UserRole.EMPLOYEE,
+    UserRole.BAILIFF,
+    UserRole.LAWYER,
+    UserRole.BANK,
+  ];
+
+  const isPureDebtor =
+    userRoles.includes(UserRole.DEBTOR) &&
+    !userRoles.some((role) => STAFF_ROLES.includes(role));
+
   const availableGroups = menuGroups.filter((group) =>
     group.roles.some((role) => userRoles.includes(role)),
   );
+
+  // "dossiers" (CFSB-Diensten) ya tiene su propio botón fijo hacia /workstation;
+  // acá sólo mostramos los demás grupos (p.ej. el del deudor) como dropdown.
+  const dropdownGroups = availableGroups.filter((group) => group.id !== "dossiers");
 
   const handleSignOut = () => {
     redirectToLogout();
@@ -175,18 +218,20 @@ export default function Header() {
                 Dashboard
               </Button>
 
-              <Button
-                color="inherit"
-                onClick={() => router.push("/workstation")}
-                sx={{
-                  textTransform: "none",
-                  fontWeight: 500,
-                }}
-              >
-                CFSB-Diensten
-              </Button>
+              {!isPureDebtor && (
+                <Button
+                  color="inherit"
+                  onClick={() => router.push("/workstation")}
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 500,
+                  }}
+                >
+                  CFSB-Diensten
+                </Button>
+              )}
 
-              {/* {availableGroups.map((group) => (
+              {dropdownGroups.map((group) => (
                 <Button
                   key={group.id}
                   color="inherit"
@@ -199,7 +244,7 @@ export default function Header() {
                 >
                   {group.label}
                 </Button>
-              ))} */}
+              ))}
             </Box>
 
             <Menu
@@ -285,6 +330,46 @@ export default function Header() {
 
               <Divider />
 
+              {memberships.length > 1 && (
+                <>
+                  <Typography
+                    variant="caption"
+                    sx={{ px: 2, pt: 1, display: "block", color: "text.secondary" }}
+                  >
+                    Werkruimte wisselen
+                  </Typography>
+
+                  {memberships.map((membership) => (
+                    <MenuItem
+                      key={membership.tenantId}
+                      disabled={switchingTenantId !== null}
+                      onClick={() =>
+                        handleSwitchWorkspace(
+                          membership.tenantId,
+                          membership.subdomain,
+                        )
+                      }
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          width: 20,
+                          mr: 1,
+                        }}
+                      >
+                        {membership.tenantId === activeTenantId && (
+                          <CheckIcon fontSize="small" color="primary" />
+                        )}
+                      </Box>
+                      {membership.tenantName}
+                    </MenuItem>
+                  ))}
+
+                  <Divider />
+                </>
+              )}
+
               <MenuItem onClick={() => router.push("/settings")}>
                 <SettingsIcon fontSize="small" sx={{ mr: 1 }} />
                 Configuratie
@@ -336,18 +421,20 @@ export default function Header() {
               <ListItemText primary="Dashboard" />
             </ListItemButton>
 
-            <ListItemButton
-              onClick={() => {
-                router.push("/workstation");
-                setMobileOpen(false);
-              }}
-            >
-              <AppsIcon sx={{ mr: 2 }} />
+            {!isPureDebtor && (
+              <ListItemButton
+                onClick={() => {
+                  router.push("/workstation");
+                  setMobileOpen(false);
+                }}
+              >
+                <AppsIcon sx={{ mr: 2 }} />
 
-              <ListItemText primary="CFSB-Diensten" />
-            </ListItemButton>
+                <ListItemText primary="CFSB-Diensten" />
+              </ListItemButton>
+            )}
 
-            {availableGroups.map((group) => (
+            {dropdownGroups.map((group) => (
               <React.Fragment key={group.id}>
                 <Box
                   sx={{

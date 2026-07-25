@@ -4,6 +4,7 @@ export const MembershipSchema = z.object({
   id: z.string(),
   tenantId: z.string(),
   tenantName: z.string(),
+  tenantCode: z.string().optional(),
   subdomain: z.string(),
   status: z.string(),
   roles: z.array(z.string()),

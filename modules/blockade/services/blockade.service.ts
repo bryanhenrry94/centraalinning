@@ -135,6 +135,13 @@ export class BlockadeService {
     });
   };
 
+  static getByDebtorId = async (debtorId: string, tenantId: string) => {
+    return prisma.blockade.findMany({
+      where: { debtorId, tenantId },
+      orderBy: { registeredAt: "desc" },
+    });
+  };
+
   static createFull = async (input: CreateBlockadeInput, tenantId: string) => {
     const debtor = await prisma.debtor.findUnique({
       where: { id: input.debtorId },

@@ -49,7 +49,7 @@ export const authOptions: AuthOptions = {
       return url;
     },
 
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
 
@@ -72,6 +72,24 @@ export const authOptions: AuthOptions = {
         token.email_verified = user.email_verified;
 
         token.memberships = user.memberships as Membership[];
+      }
+
+      if (trigger === "update" && session?.tenant_id) {
+        const membership = (token.memberships as Membership[])?.find(
+          (m) => m.tenantId === session.tenant_id && m.status === "ACTIVE",
+        );
+
+        if (membership) {
+          token.tenant_id = membership.tenantId;
+
+          token.subdomain = membership.subdomain;
+
+          token.company = membership.tenantName;
+
+          token.code = membership.tenantCode;
+
+          token.roles = membership.roles as UserRole[];
+        }
       }
 
       return token;

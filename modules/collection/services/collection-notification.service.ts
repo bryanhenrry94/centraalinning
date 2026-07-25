@@ -57,7 +57,7 @@ export class CollectionNotificationService {
         `${debtor.person?.first_name ?? ""} ${debtor.person?.last_name ?? ""}`.trim() ||
         debtor.person?.business_name;
 
-      let invitationLink = `${protocol}://${rootDomain}/`;
+      let invitationLink = `${protocol}://auth.${rootDomain}/login`;
 
       if (debtor.user_id === null) {
         const invitation = await registerInvitation({
@@ -68,7 +68,7 @@ export class CollectionNotificationService {
           debtor_id: debtor.id,
         });
         if (invitation.status === true && invitation.token) {
-          invitationLink = `${protocol}://${rootDomain}/invitation/${invitation.token}`;
+          invitationLink = `${protocol}://auth.${rootDomain}/invitation/${invitation.token}`;
         }
       }
 

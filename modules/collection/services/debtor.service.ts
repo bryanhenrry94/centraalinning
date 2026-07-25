@@ -172,9 +172,12 @@ export class DebtorService {
     return debtor as DebtorInput | null;
   }
 
-  static async getByUserId(user_id: string): Promise<DebtorInput | null> {
+  static async getByUserId(
+    user_id: string,
+    tenant_id: string,
+  ): Promise<DebtorInput | null> {
     const debtor = await prisma.debtor.findFirst({
-      where: { user_id },
+      where: { user_id, tenant_id },
       include: { incomes: true },
     });
     return debtor as DebtorInput | null;

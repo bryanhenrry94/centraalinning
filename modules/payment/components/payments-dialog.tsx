@@ -16,7 +16,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { formatCurrency } from "@/shared/utils/formatters";
 import React, { useEffect } from "react";
 import { Payment } from "@/modules/payment/services/payment.validators";
-import { getPayments } from "@/modules/payment/actions/payment.actions";
+import { getPaymentsByInvoice } from "@/modules/payment/actions/payment.actions";
 
 interface PaymentsDialogProps {
   open: boolean;
@@ -38,13 +38,8 @@ export const PaymentsDialog: React.FC<PaymentsDialogProps> = ({
   }, [debtId]);
 
   const fetchPayments = async (debtId: string) => {
-    const response = await getPayments({});
-
-    if (response.success) {
-      setPayments(response.data || []);
-    } else {
-      setPayments([]);
-    }
+    const response = await getPaymentsByInvoice(debtId);
+    setPayments(response || []);
   };
 
   return (

@@ -105,6 +105,7 @@ export class AuthService {
           id: membership.id,
           tenantId: membership.tenant.id,
           tenantName: membership.tenant.name,
+          tenantCode: membership.tenant.code,
           subdomain: membership.tenant.subdomain,
           status: membership.status,
           roles: membership.roles.map((r) => r.role),

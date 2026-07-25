@@ -22,12 +22,12 @@ WITH last_agreement AS (
 ),
 payments_summary AS (
     SELECT
-        `debtClaim_id`,
-        SUM(total_amount) AS paid_amount
-    FROM payment
-    WHERE `debtClaim_id` IS NOT NULL
-      AND status = 'paid'
-    GROUP BY `debtClaim_id`
+        dco.`debtClaimId` AS debtClaim_id,
+        SUM(p.total_amount) AS paid_amount
+    FROM payment p
+    JOIN debt_claim_obligation dco ON dco.id = p.obligation_id
+    WHERE p.status = 'paid'
+    GROUP BY dco.`debtClaimId`
 ),
 charges_summary AS (
     SELECT
@@ -38,15 +38,20 @@ charges_summary AS (
 ),
 aop_summary AS (
     SELECT
+        ac.id AS collection_id,
         ac.`debtClaimId`,
         ac.status AS aop_status,
         ac.`startedAt` AS aop_started_at,
-        acs.step AS latest_aop_step
+        acs.step AS latest_aop_step,
+        acs.`sentAt` AS latest_aop_sent_at,
+        acs.deadline AS latest_aop_deadline
     FROM administrative_collection ac
     LEFT JOIN (
         SELECT
             `collectionId`,
             step,
+            `sentAt`,
+            deadline,
             ROW_NUMBER() OVER (
                 PARTITION BY `collectionId`
                 ORDER BY id DESC
@@ -78,20 +83,31 @@ verdict_summary AS (
 )
 SELECT
     dc.id,
-    dc.`tenantId`       AS tenant_id,
-    dc.`debtorId`       AS debtor_id,
+    'DEBT_CLAIM'         AS type,
+    dc.`tenantId`        AS tenant_id,
+    t.name               AS tenant_name,
+    dc.`debtorId`        AS debtor_id,
+    deb.person_id        AS person_id,
+    dc.origin            AS source_type,
+    COALESCE(aop.collection_id, dc.id) AS source_id,
+    COALESCE(aop.latest_aop_step, dc.status) AS source_status,
     dc.reference,
     dc.description,
     dc.`principalAmount` AS principal_amount,
-    dc.`currentAmount`   AS current_amount,
+    dc.`principalAmount` AS amount,
     dc.currency,
     dc.origin,
     dc.status,
-    dc.`createdAt`      AS created_at,
-    dc.`updatedAt`      AS updated_at,
-    dc.`closedAt`       AS closed_at,
+    dc.`createdAt`       AS created_at,
+    dc.`updatedAt`       AS updated_at,
+    dc.`closedAt`        AS closed_at,
 
+    aop.latest_aop_sent_at  AS issue_date,
+    aop.latest_aop_deadline AS due_date,
+
+    COALESCE(pay.paid_amount, 0)     AS total_paid,
     COALESCE(pay.paid_amount, 0)     AS paid_amount,
+    COALESCE(ch.charged_amount, 0)   AS total_fined,
     COALESCE(ch.charged_amount, 0)   AS charged_amount,
     (dc.`principalAmount` - COALESCE(pay.paid_amount, 0)) AS balance,
 
@@ -112,7 +128,9 @@ SELECT
     agre.status                AS agreement_status
 
 FROM debt_claim dc
-LEFT JOIN payments_summary pay  ON pay.`debtClaim_id`  = dc.id
+JOIN tenant t  ON t.id = dc.`tenantId`
+JOIN debtor deb ON deb.id = dc.`debtorId`
+LEFT JOIN payments_summary pay  ON pay.debtClaim_id    = dc.id
 LEFT JOIN charges_summary ch    ON ch.`debtClaimId`    = dc.id
 LEFT JOIN aop_summary aop       ON aop.`debtClaimId`   = dc.id
 LEFT JOIN verdict_summary verd  ON verd.`debtClaimId`  = dc.id

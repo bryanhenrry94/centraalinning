@@ -1,5 +1,5 @@
 "use server";
-import { Payment } from "@/modules/payment/services/payment.validators";
+import { Payment, PaymentCreate } from "@/modules/payment/services/payment.validators";
 import { PaymentService } from "@/modules/payment/services/payment.service";
 
 interface PaymentFilter {
@@ -17,10 +17,16 @@ export const getPaymentsByInvoice = async (debtClaim_id: string): Promise<Paymen
 };
 
 export const getPaymentsByDebtor = async (
-  _tenant_id: string,
-  _debtor_id: string,
+  debtor_id: string,
+): Promise<Payment[]> => {
+  return PaymentService.getByDebtorId(debtor_id);
+};
+
+export const registerDebtPayment = async (
+  tenant_id: string,
+  payload: PaymentCreate,
 ) => {
-  // not implemented
+  return PaymentService.registerPayment(tenant_id, payload);
 };
 
 export const getPaymentById = async (_paymentId: string) => {

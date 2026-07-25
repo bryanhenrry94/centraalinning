@@ -174,10 +174,10 @@ const DashboardHeader = ({
                 onChange={(e) => onStatusChange(e.target.value)}
               >
                 <MenuItem value="">Alles</MenuItem>
-                <MenuItem value="AANMANING">Aanmaning</MenuItem>
-                <MenuItem value="SOMMATIE">Sommatie</MenuItem>
-                <MenuItem value="INGEBREKESTELLING">Ingebrekestelling</MenuItem>
-                <MenuItem value="BLOKKADE">Blokkade</MenuItem>
+                <MenuItem value="REMINDER">Aanmaning</MenuItem>
+                <MenuItem value="FINAL_NOTICE">Sommatie</MenuItem>
+                <MenuItem value="DEFAULT_NOTICE">Ingebrekestelling</MenuItem>
+                <MenuItem value="BLK_NOTIFICATION">Blokkade</MenuItem>
               </TextField>
             </Grid>
 

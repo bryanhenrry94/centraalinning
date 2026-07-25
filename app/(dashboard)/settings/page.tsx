@@ -17,13 +17,16 @@ import { updateUserProfile } from "@/modules/auth/actions/user.actions";
 import { notifyInfo } from "@/shared/ui/notifications";
 import UserTable from "@/modules/auth/components/user-table";
 import { EmployeeForm } from "@/modules/employee/components/employee-form";
+import { UserRole } from "@/shared/constants/user-role";
 
 const SettingPage = () => {
   const [value, setValue] = useState(0);
 
   const { user } = useAuthSession();
 
-  console.log("User in settings page:", user);
+  const isPureDebtor =
+    !!user?.roles?.includes(UserRole.DEBTOR) &&
+    !user?.roles?.some((role) => role !== UserRole.DEBTOR);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -46,6 +49,35 @@ const SettingPage = () => {
 
     notifyInfo("Perfil actualizado correctamente.");
   };
+
+  if (isPureDebtor) {
+    return (
+      <Container
+        maxWidth="lg"
+        disableGutters
+        sx={{
+          px: { xs: 1, sm: 3 },
+          py: { xs: 1.5, sm: 4 },
+          display: "flex",
+          flexDirection: "column",
+          gap: 3,
+        }}
+      >
+        <Typography variant="h4" sx={{ fontWeight: 700 }}>
+          Configuratie
+        </Typography>
+
+        <ProfileForm
+          initial={{
+            email: user?.email || "",
+            fullname: user?.fullname || "",
+            phone: user?.phone,
+          }}
+          onSave={handleSaveProfile}
+        />
+      </Container>
+    );
+  }
 
   return (
     <Container

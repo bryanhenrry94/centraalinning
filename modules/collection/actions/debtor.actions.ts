@@ -33,9 +33,12 @@ export const getDebtorById = async (id: string): Promise<DebtorInput | null> => 
   }
 };
 
-export const getDebtorByUserId = async (user_id: string): Promise<DebtorInput | null> => {
+export const getDebtorByUserId = async (
+  user_id: string,
+  tenant_id: string,
+): Promise<DebtorInput | null> => {
   try {
-    return DebtorService.getByUserId(user_id);
+    return DebtorService.getByUserId(user_id, tenant_id);
   } catch {
     throw new Error("Error fetching debtor by user ID");
   }

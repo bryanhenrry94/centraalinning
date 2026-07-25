@@ -118,7 +118,10 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
       }
 
       // CREATE MODE
-      const debtor = await getDebtorByUserId(session.user.id);
+      const debtor = await getDebtorByUserId(
+        session.user.id,
+        session.user.tenant_id,
+      );
       if (!debtor)
         return notifyError("No se encontró deudor asociado al usuario");
 

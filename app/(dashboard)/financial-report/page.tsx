@@ -28,8 +28,8 @@ import {
 } from "@/modules/payment/services/payment.validators";
 import { createFinancialReportRequest } from "@/modules/payment/actions/financial-report.actions";
 import { getDebtorByUserId } from "@/modules/collection/actions/debtor.actions";
-import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
-import { PaymentService } from "@/modules/payment/services/payment.service";
+import { getParameterAction } from "@/modules/settings/actions/parameter.actions";
+import { registerDebtPayment } from "@/modules/payment/actions/payment.actions";
 
 const VerklaringPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -41,7 +41,7 @@ const VerklaringPage: React.FC = () => {
   useEffect(() => {
     const fetchPrice = async () => {
       try {
-        const parameter = await ParameterService.getParameter();
+        const parameter = await getParameterAction();
 
         if (parameter?.report_financial_pricing) {
           setPrice(Number(parameter.report_financial_pricing));
@@ -143,10 +143,7 @@ const VerklaringPage: React.FC = () => {
         reference_number: reference,
       };
 
-      const paymentResult = await PaymentService.registerPayment(
-        tenantId,
-        payment,
-      );
+      const paymentResult = await registerDebtPayment(tenantId, payment);
 
       if (!paymentResult) {
         paymentWindow?.close();
@@ -154,7 +151,10 @@ const VerklaringPage: React.FC = () => {
         throw new Error("Kon de betaling niet registreren.");
       }
 
-      const debtor = await getDebtorByUserId(session?.user?.id || "");
+      const debtor = await getDebtorByUserId(
+        session?.user?.id || "",
+        session?.user?.tenant_id || "",
+      );
 
       if (!debtor) {
         throw new Error("Debiteur niet gevonden voor de huidige gebruiker.");

@@ -340,6 +340,14 @@ export class PaymentService {
     return payments.map(this.mapPayment);
   };
 
+  static getByDebtorId = async (debtor_id: string): Promise<Payment[]> => {
+    const payments = await prisma.payment.findMany({
+      where: { obligation: { debtClaim: { debtorId: debtor_id } } },
+      orderBy: { created_at: "desc" },
+    });
+    return payments.map(this.mapPayment);
+  };
+
   static hasPending = async (debtClaim_id: string): Promise<boolean> => {
     const count = await prisma.payment.count();
     return count > 0;

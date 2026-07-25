@@ -5,6 +5,7 @@ import {
   InvitationRegistrationSchema,
 } from "@/modules/auth/services/invitation.validators";
 import bcrypt from "bcryptjs";
+import { MembershipStatus } from "@prisma/client";
 
 type InvitationParams = {
   tenantId: string;
@@ -131,7 +132,12 @@ export class InvitationService {
       });
 
       const membership = await prisma.membership.create({
-        data: { user_id: user.id, tenant_id: invitation.tenant_id, created_at: new Date() },
+        data: {
+          user_id: user.id,
+          tenant_id: invitation.tenant_id,
+          status: MembershipStatus.ACTIVE,
+          created_at: new Date(),
+        },
       });
 
       await prisma.membershipRole.create({

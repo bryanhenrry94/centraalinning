@@ -37,6 +37,16 @@ export function getAopStepInfo(step: AopStep) {
   return AOP_STEP_CONFIG[step];
 }
 
+// vw_debtor_summary.source_status is the latest AOPStep when the debt claim
+// has an administrative collection, otherwise it falls back to the raw
+// DebtClaimStatus. Try both configs before giving up.
+export function getSourceStatusInfo(status: string) {
+  return (
+    AOP_STEP_CONFIG[status as AopStep] ??
+    DEBT_CLAIM_STATUS_CONFIG[status] ?? { label: status, color: "default" as ChipColor }
+  );
+}
+
 // Status van een AdministrativeCollectionStep (WorkflowStatus in het schema).
 export const WORKFLOW_STATUS_CONFIG: Record<
   string,

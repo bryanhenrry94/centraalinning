@@ -8,8 +8,25 @@ import { useSession } from "next-auth/react";
 import { AgreementTableApprove } from "@/modules/agreement/components/agreement-table-approve";
 import AgreementTable from "@/modules/agreement/components/agreement-table";
 import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
+import { UserRole } from "@/shared/constants/user-role";
+import { DebtorAgreementsView } from "@/modules/agreement/components/debtor-agreements-view";
+import LoadingUI from "@/shared/ui/loading-ui";
 
 const PaymentAgreementsPage = () => {
+  const { data: session, status } = useSession();
+
+  if (status === "loading") {
+    return <LoadingUI />;
+  }
+
+  if (session?.user?.roles?.includes(UserRole.DEBTOR)) {
+    return <DebtorAgreementsView />;
+  }
+
+  return <StaffAgreementsView />;
+};
+
+const StaffAgreementsView = () => {
   const { data: session } = useSession();
   const [value, setValue] = useState(0);
   const [agreementsPending, setAgreementsPending] = useState<

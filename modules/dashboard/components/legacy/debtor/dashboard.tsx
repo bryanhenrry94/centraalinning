@@ -26,16 +26,9 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
-import {
-  notifyError,
-  notifyInfo,
-  notifyWarning,
-} from "@/shared/ui/notifications";
+import { notifyError } from "@/shared/ui/notifications";
 
-import {
-  getAgreementByDebtClaimId,
-  getAgreementsByDebtClaimId,
-} from "@/modules/agreement/actions/agreement.actions";
+import { getAgreementsByDebtClaimId } from "@/modules/agreement/actions/agreement.actions";
 
 import {
   getDebtorByUserId,
@@ -46,19 +39,10 @@ import { AgreementDialog } from "@/modules/agreement/components/agreement-dialog
 import { PaymentsDialog } from "@/modules/payment/components/payments-dialog";
 import { AgreementFormDialog } from "@/modules/agreement/components/agreement-form-dialog";
 import { PaymentFormDialog } from "@/modules/payment/components/payment-form-dialog";
-import { createSentooPayment } from "@/actions/sentoo.actions";
-import { AlertService } from "@/shared/ui/alerts";
-import {
-  PaymentCreate,
-  PaymentType,
-} from "@/modules/payment/services/payment.validators";
-import {
-  getPaymentByDebtClaimId,
-  hasPendingPayments,
-} from "@/modules/payment/actions/payment.actions";
+import { payDebt } from "@/modules/payment/utils/pay-debt";
 import DashboardHeader from "./DashboardHeader";
 import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
-import { PaymentService } from "@/modules/payment/services/payment.service";
+import { getSourceStatusInfo } from "@/modules/collection/utils/debt-claim-status";
 
 type TenantTypes = {
   id: string;
@@ -116,7 +100,10 @@ const DashboardDebtor = () => {
    * -------------------------------------------------------------------- */
   const fetchDebts = useCallback(async () => {
     try {
-      const debtor = await getDebtorByUserId(user?.id as string);
+      const debtor = await getDebtorByUserId(
+        user?.id as string,
+        session?.user?.tenant_id as string,
+      );
       if (!debtor) {
         notifyError("No se encontró el deudor asociado al usuario");
         return;
@@ -149,7 +136,7 @@ const DashboardDebtor = () => {
       console.error("Error fetching debts:", error);
       notifyError("Error al obtener deudas");
     }
-  }, [user?.id]);
+  }, [user?.id, session?.user?.tenant_id]);
 
   useEffect(() => {
     if (user?.id) fetchDebts();
@@ -201,160 +188,14 @@ const DashboardDebtor = () => {
   };
 
   const handlePaymentDebtor = async (debt: DebtorSummary) => {
-    if (!debt) {
-      notifyError("No se seleccionó una deuda para pagar");
-      return;
-    }
-
     setLoadingPayment(true);
-
     try {
-      const collectionCaseId = debt.source_id;
-
-      if (!collectionCaseId) {
-        notifyError("No se encontró el caso de cobranza asociado a esta deuda");
-        return;
-      }
-
-      // 1. Validar pagos pendientes
-      const existingPayment = await getPendingPayment(debt.id);
-      if (existingPayment) {
-        handleExistingPayment(existingPayment);
-        return;
-      }
-
-      // 2. Validar acuerdos
-      const agreement = await getAgreementByDebtClaimId(debt.id);
-
-      if (agreement?.status === AgreementStatus.PENDING) {
-        notifyWarning(
-          "Tu solicitud de acuerdo de pago está pendiente de aprobación.",
-        );
-        return;
-      }
-
-      const amountToPay = agreement?.installment_amount ?? debt.balance;
-
-      // 3. Confirmación usuario (await real)
-      const confirmed = await AlertService.showConfirm(
-        "¿Estás seguro?",
-        `Vas a pagar ${formatCurrency(amountToPay)} para la deuda ${debt.reference}.`,
-        "Sí, pagar",
-        "Cancelar",
-      );
-
-      if (!confirmed) return;
-
-      // 4. Crear pago
-      await processPayment({
-        debt,
-        amountToPay,
-        collectionCaseId,
-      });
+      await payDebt(debt);
     } catch (error) {
       console.error(error);
       notifyError("Error al procesar el pago");
     } finally {
       setLoadingPayment(false);
-    }
-  };
-
-  const getPendingPayment = async (debtId: string) => {
-    const hasPending = await hasPendingPayments(debtId);
-    if (!hasPending) return null;
-
-    return await getPaymentByDebtClaimId(debtId);
-  };
-
-  const handleExistingPayment = (payment: any) => {
-    notifyWarning("Tienes un pago pendiente. Redirigiendo al proveedor...");
-
-    if (payment?.provider === "sentoo") {
-      try {
-        const payload = JSON.parse(payment.provider_payload || "{}");
-        const url = payload?.success?.data?.url;
-
-        if (url) window.location.href = url;
-      } catch {
-        notifyError("No se pudo recuperar el link de pago");
-      }
-    }
-  };
-
-  const processPayment = async ({
-    debt,
-    amountToPay,
-    collectionCaseId,
-  }: {
-    debt: DebtorSummary;
-    amountToPay: number;
-    collectionCaseId: string;
-  }) => {
-    const newTab = window.open("", "_blank");
-
-    try {
-      const res = await createSentooPayment({
-        amount: amountToPay,
-        description: `Pago deuda ${debt.reference}`,
-        reference: `debt-${debt.id}-case-${collectionCaseId}-${Date.now()}`,
-      });
-
-      if (!res.success || !res.payment?.url) {
-        throw new Error("Error al crear el pago en Sentoo");
-      }
-
-      const payment: PaymentCreate = {
-        debtClaim_id: debt.id,
-        method: "TRANSFER",
-        total_amount: amountToPay,
-        paid_at: null,
-        status: "pending",
-        provider: "sentoo",
-        provider_ref: res.payment.id,
-        provider_payload: JSON.stringify(res.raw),
-        reference_number: "",
-        agreement_id: null,
-        payment_type: PaymentType.DEBT_PAYMENT,
-      };
-
-      const paymentRes = await PaymentService.registerPayment(
-        debt.tenant_id,
-        payment,
-      );
-
-      if (!paymentRes.id) {
-        notifyError("Error al registrar el pago");
-        newTab?.close();
-        return;
-      }
-
-      notifyInfo("Redirigiendo a la pasarela de pago...");
-
-      if (newTab) {
-        newTab.location.href = res.payment.url;
-      } else {
-        window.location.href = res.payment.url;
-      }
-    } catch (error) {
-      console.error(error);
-      notifyError("Error al crear el pago");
-      newTab?.close();
-    }
-  };
-
-  const formatStatus = (status: string) => {
-    // AANMANING, SOMMATIE, ETC
-    switch (status) {
-      case "AANMANING":
-        return { label: "Aanmaning", color: "info" as const };
-      case "SOMMATIE":
-        return { label: "Sommatie", color: "warning" as const };
-      case "INGEBREKESTELLING":
-        return { label: "Ingebrekestelling", color: "warning" as const };
-      case "BLOKKADE":
-        return { label: "Blokkade", color: "error" as const };
-      default:
-        return { label: status, color: "default" as const };
     }
   };
 
@@ -489,7 +330,7 @@ const DashboardDebtor = () => {
                   <TableCell>{debt.reference}</TableCell>
                   <TableCell align="center">
                     {(() => {
-                      const status = formatStatus(debt.source_status);
+                      const status = getSourceStatusInfo(debt.source_status);
                       return (
                         <Chip
                           label={status.label}
