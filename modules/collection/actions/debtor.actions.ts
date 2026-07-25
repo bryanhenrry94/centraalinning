@@ -44,6 +44,13 @@ export const getDebtorByUserId = async (
   }
 };
 
+export const getDebtorPersonalNumber = async (
+  user_id: string,
+  tenant_id: string,
+): Promise<string | null> => {
+  return DebtorService.getPersonalNumberByUserId(user_id, tenant_id);
+};
+
 export const createDebtor = async (
   debtor: DebtorCreate,
   tenant_id: string,

@@ -21,7 +21,6 @@ import {
 
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import PaymentsIcon from "@mui/icons-material/Payments";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
@@ -43,6 +42,7 @@ import { payDebt } from "@/modules/payment/utils/pay-debt";
 import DashboardHeader from "./DashboardHeader";
 import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
 import { getSourceStatusInfo } from "@/modules/collection/utils/debt-claim-status";
+import { getBlockadesByDebtorAction } from "@/modules/blockade/actions/get-blockades-by-debtor";
 
 type TenantTypes = {
   id: string;
@@ -63,6 +63,8 @@ const DashboardDebtor = () => {
   const [openModalPaymentForm, setOpenModalPaymentForm] = useState(false);
 
   const [loadingPayment, setLoadingPayment] = useState(false);
+
+  const [hasActiveBlockade, setHasActiveBlockade] = useState(false);
 
   const [tenants, setTenants] = useState<TenantTypes[]>([]);
 
@@ -112,7 +114,11 @@ const DashboardDebtor = () => {
       if (!session?.user?.tenant_id) return;
       const response = await getDebts({ debtor_id: debtor.id });
 
-      console.log("response: ", response);
+      const blockades = await getBlockadesByDebtorAction(
+        debtor.id,
+        session.user.tenant_id,
+      );
+      setHasActiveBlockade(blockades.some((b) => b.status === "ACTIVE"));
 
       if (response.success) {
         setDebts(response.data || []);
@@ -167,6 +173,14 @@ const DashboardDebtor = () => {
     setDebtSelected(debt);
     await fetchAgreements(debt.id);
     setOpenModalNotifications(true);
+  };
+
+  const handleBetaalregelingClick = (debt: DebtorSummary) => {
+    if (debt.agreement_installment_amount) {
+      openNotificationsModal(debt);
+    } else {
+      openAgreementModal(debt);
+    }
   };
 
   const onSaveAgreement = async () => {
@@ -260,6 +274,10 @@ const DashboardDebtor = () => {
           ).toFixed(2),
         )}
         count={filteredDebts.length}
+        totalPaid={parseFloat(
+          filteredDebts.reduce((t, d) => t + (d.total_paid || 0), 0).toFixed(2),
+        )}
+        hasActiveBlockade={hasActiveBlockade}
         tenants={tenants}
         onSearch={handleSearch}
         onTenantChange={handleTenantChange}
@@ -296,15 +314,13 @@ const DashboardDebtor = () => {
             <TableHead>
               <TableRow>
                 {[
-                  "Schuldeiser",
+                  "Deelnemer",
                   "Referentie",
                   "Status",
-                  "Datum",
+                  "Registratiedatum",
                   "Reactietermijn",
-                  "Totaal",
-                  "Boet",
-                  "Betaling",
-                  "Open",
+                  "Openstaand",
+                  "Betaalregeling",
                   "Actie",
                 ].map((col) => (
                   <TableCell
@@ -351,43 +367,42 @@ const DashboardDebtor = () => {
                       : "-"}
                   </TableCell>
                   <TableCell align="right">
-                    {debt.amount ? formatCurrency(debt.amount) : "-"}
+                    {formatCurrency(debt.balance + (debt.total_fined || 0))}
                   </TableCell>
-                  <TableCell align="right">
-                    {formatCurrency(debt.total_fined || 0)}
-                  </TableCell>
-                  <TableCell align="right">
-                    {formatCurrency(debt.total_paid || 0)}
-                  </TableCell>
-                  <TableCell align="right">
-                    {formatCurrency(debt.balance)}
+                  <TableCell align="center">
+                    <Tooltip
+                      title={
+                        debt.agreement_installment_amount
+                          ? "Betalingsregeling bekijken"
+                          : "Betalingsregeling aanvragen"
+                      }
+                    >
+                      <Chip
+                        icon={<HandshakeIcon fontSize="small" />}
+                        label={
+                          debt.agreement_installment_amount
+                            ? "Actief"
+                            : "Geen"
+                        }
+                        color={
+                          debt.agreement_installment_amount
+                            ? "info"
+                            : "default"
+                        }
+                        size="small"
+                        clickable
+                        onClick={() => handleBetaalregelingClick(debt)}
+                      />
+                    </Tooltip>
                   </TableCell>
                   <TableCell align="center">
                     <Stack direction="row" spacing={1} justifyContent="center">
-                      <Tooltip title="Betalingsregeling">
-                        <IconButton
-                          size="small"
-                          onClick={() => openAgreementModal(debt)}
-                        >
-                          <HandshakeIcon color="info" fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-
                       <Tooltip title="Betalingen">
                         <IconButton
                           size="small"
                           onClick={() => openPaymentModal(debt)}
                         >
                           <PaymentsIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-
-                      <Tooltip title="Overzicht">
-                        <IconButton
-                          size="small"
-                          onClick={() => openNotificationsModal(debt)}
-                        >
-                          <VisibilityIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
 
@@ -405,8 +420,6 @@ const DashboardDebtor = () => {
                         </Button>
                       </Tooltip>
                     </Stack>
-
-                    {/* {JSON.stringify(debt)} */}
                   </TableCell>
                 </TableRow>
               ))}

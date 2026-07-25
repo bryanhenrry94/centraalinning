@@ -92,7 +92,7 @@ const PaymentsPage = () => {
         <Table size="small">
           <TableHead>
             <TableRow>
-              {["Schuldeiser", "Referentie", "Status", "Openstaand", "Actie"].map(
+              {["Deelnemer", "Referentie", "Status", "Openstaand", "Actie"].map(
                 (col) => (
                   <TableCell
                     key={col}

@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { IdentificationType as IdentificationTypeEnum } from "@/shared/constants/identification-type";
 import { PersonInput } from "@/modules/collection/services/person.validators";
 
+type PersonClient = Pick<typeof prisma, "person">;
+
 export const PersonType = ["INDIVIDUAL", "COMPANY"] as const;
 export const IdentificationType = [
   "KVK",
@@ -43,5 +45,51 @@ export class PersonService {
     return prisma.person.findFirst({
       where: { identification_type: identificationType, identification },
     });
+  }
+
+  // Formato: CFSB-P-<COUNTRY_CODE>-###### (secuencial por país, 6 dígitos).
+  // `client` puede ser el cliente global de Prisma o una transacción activa.
+  static async generatePersonalNumber(
+    countryCode: string | null | undefined,
+    client: PersonClient = prisma,
+  ): Promise<string> {
+    const prefix = `CFSB-P-${countryCode || "XX"}-`;
+
+    const last = await client.person.findFirst({
+      where: { personal_number: { startsWith: prefix } },
+      orderBy: { personal_number: "desc" },
+      select: { personal_number: true },
+    });
+
+    const lastSeq = last?.personal_number
+      ? parseInt(last.personal_number.slice(prefix.length), 10)
+      : 0;
+
+    const nextSeq = (Number.isNaN(lastSeq) ? 0 : lastSeq) + 1;
+
+    return `${prefix}${String(nextSeq).padStart(6, "0")}`;
+  }
+
+  static async ensurePersonalNumber(
+    personId: string,
+    countryCode: string | null | undefined,
+  ): Promise<string> {
+    const person = await prisma.person.findUnique({ where: { id: personId } });
+    if (!person) throw new Error("Person not found");
+    if (person.personal_number) return person.personal_number;
+
+    const personal_number = await this.generatePersonalNumber(
+      person.country_code ?? countryCode,
+    );
+
+    await prisma.person.update({
+      where: { id: personId },
+      data: {
+        personal_number,
+        country_code: person.country_code ?? countryCode,
+      },
+    });
+
+    return personal_number;
   }
 }

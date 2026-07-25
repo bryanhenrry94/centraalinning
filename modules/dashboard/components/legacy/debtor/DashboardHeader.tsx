@@ -61,6 +61,8 @@ type TenantTypes = {
 const DashboardHeader = ({
   total,
   count,
+  totalPaid,
+  hasActiveBlockade,
   tenants,
   onSearch,
   onTenantChange,
@@ -68,6 +70,8 @@ const DashboardHeader = ({
 }: {
   total: number;
   count: number;
+  totalPaid: number;
+  hasActiveBlockade: boolean;
   tenants: TenantTypes[];
   onSearch: (query: string) => void;
   onTenantChange: (tenantId: string) => void;
@@ -79,7 +83,7 @@ const DashboardHeader = ({
       <Grid container spacing={2} mb={2}>
         <Grid size={{ xs: 12, md: 3 }}>
           <StatCard
-            title="Totale openstaand"
+            title="Totaal openstaand"
             value={total}
             type="currency"
             color="#1976d2"
@@ -99,7 +103,7 @@ const DashboardHeader = ({
         <Grid size={{ xs: 12, md: 3 }}>
           <StatCard
             title="Totaal betaald"
-            value="0"
+            value={totalPaid}
             type="currency"
             color="#ed6c02"
             icon={<AttachMoney sx={{ color: "#ed6c02" }} />}
@@ -108,10 +112,14 @@ const DashboardHeader = ({
 
         <Grid size={{ xs: 12, md: 3 }}>
           <StatCard
-            title="Blokkade"
-            value="Actief / Niet actief"
-            color="#d32f2f"
-            icon={<Pause sx={{ color: "#d32f2f" }} />}
+            title="Economische blokkade"
+            value={hasActiveBlockade ? "Actief" : "Niet actief"}
+            color={hasActiveBlockade ? "#d32f2f" : "#2e7d32"}
+            icon={
+              <Pause
+                sx={{ color: hasActiveBlockade ? "#d32f2f" : "#2e7d32" }}
+              />
+            }
           />
         </Grid>
       </Grid>
@@ -140,10 +148,10 @@ const DashboardHeader = ({
               />
             </Grid>
 
-            {/* Acreedor */}
+            {/* Deelnemer */}
             <Grid size={{ xs: 12, md: 3 }}>
               <Typography variant="body2" mb={0.5}>
-                Schuldeiser
+                Deelnemer
               </Typography>
               <TextField
                 select

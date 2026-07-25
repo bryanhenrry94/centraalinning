@@ -15,6 +15,7 @@ import { Prisma } from "@prisma/client";
 import { IdentificationType } from "@/shared/constants/identification-type";
 import { PersonType } from "@/shared/constants/person-type";
 import { DebtorSummary } from "@/modules/collection/types/DebtorSummary";
+import { PersonService } from "@/modules/collection/services/person.service";
 
 interface FindOrCreateDebtorParams {
   person_type: string;
@@ -45,6 +46,11 @@ export class DebtorService {
       // 2. Crear persona si no existe
       if (!person) {
         const names = debtorData.fullname.trim().split(" ");
+        const tenant = await tx.tenant.findUnique({ where: { id: tenant_id } });
+        const personal_number = await PersonService.generatePersonalNumber(
+          tenant?.country_code,
+          tx,
+        );
 
         person = await tx.person.create({
           data: {
@@ -59,6 +65,8 @@ export class DebtorService {
             birth_date: debtorData.birth_date,
             birth_place: debtorData.birth_place,
             has_blockade: false,
+            country_code: tenant?.country_code,
+            personal_number,
           },
         });
       }
@@ -183,6 +191,17 @@ export class DebtorService {
     return debtor as DebtorInput | null;
   }
 
+  static async getPersonalNumberByUserId(
+    user_id: string,
+    tenant_id: string,
+  ): Promise<string | null> {
+    const debtor = await prisma.debtor.findFirst({
+      where: { user_id, tenant_id },
+      include: { person: { select: { personal_number: true } } },
+    });
+    return debtor?.person?.personal_number ?? null;
+  }
+
   static async create(
     debtor: DebtorCreate,
     tenant_id: string,
@@ -195,6 +214,11 @@ export class DebtorService {
       });
 
       if (!existingPerson) {
+        const tenant = await prisma.tenant.findUnique({ where: { id: tenant_id } });
+        const personal_number = await PersonService.generatePersonalNumber(
+          tenant?.country_code,
+        );
+
         const newPerson = await prisma.person.create({
           data: {
             person_type: debtorFormatted.person?.person_type as PersonType,
@@ -207,6 +231,8 @@ export class DebtorService {
             business_name: debtorFormatted.person?.business_name || "",
             address: debtorFormatted.person?.address || "",
             phone: debtorFormatted.person?.phone || "",
+            country_code: tenant?.country_code,
+            personal_number,
           },
         });
 

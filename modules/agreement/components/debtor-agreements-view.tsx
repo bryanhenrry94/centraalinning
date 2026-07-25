@@ -84,7 +84,7 @@ export const DebtorAgreementsView = () => {
         <Table size="small">
           <TableHead>
             <TableRow>
-              {["Schuldeiser", "Referentie", "Openstaand", "Regeling", "Actie"].map(
+              {["Deelnemer", "Referentie", "Openstaand", "Regeling", "Actie"].map(
                 (col) => (
                   <TableCell
                     key={col}

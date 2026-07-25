@@ -696,6 +696,9 @@ model Person {
 
   has_blockade Boolean @default(false)
 
+  country_code    String?
+  personal_number String? @unique
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 

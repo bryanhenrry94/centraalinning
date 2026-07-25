@@ -1,10 +1,12 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import Header from "./header";
 import { useAuthSession } from "@/modules/auth/hooks/useAuthSession";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { Box, Typography } from "@mui/material";
+import { UserRole } from "@/shared/constants/user-role";
+import { getDebtorPersonalNumber } from "@/modules/collection/actions/debtor.actions";
 
 export const UnauthorizedPage = () => {
   return (
@@ -28,6 +30,15 @@ export const UnauthorizedPage = () => {
 
 export const AdminLayout = ({ children }: { children?: ReactNode }) => {
   const { user, isLoading } = useAuthSession();
+  const [personalNumber, setPersonalNumber] = useState<string | null>(null);
+
+  const isDebtor = !!user?.roles?.includes(UserRole.DEBTOR);
+
+  useEffect(() => {
+    if (isDebtor && user?.id && user?.tenant_id) {
+      getDebtorPersonalNumber(user.id, user.tenant_id).then(setPersonalNumber);
+    }
+  }, [isDebtor, user?.id, user?.tenant_id]);
 
   if (isLoading) {
     return <LoadingUI />;
@@ -36,6 +47,12 @@ export const AdminLayout = ({ children }: { children?: ReactNode }) => {
   if (!user) {
     return <UnauthorizedPage />;
   }
+
+  const footerLabel = isDebtor
+    ? personalNumber
+      ? `Persoonlijk nummer: ${personalNumber}`
+      : ""
+    : user.code;
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
@@ -63,7 +80,7 @@ export const AdminLayout = ({ children }: { children?: ReactNode }) => {
         }}
       >
         <Typography variant="body2" color="white">
-          {user.code}
+          {footerLabel}
         </Typography>
       </Box>
     </Box>
