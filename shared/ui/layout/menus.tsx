@@ -67,7 +67,7 @@ export const menuGroups: HeaderMenuGroup[] = [
     roles: [UserRole.DEBTOR],
     items: [
       {
-        label: "Dossier bekijken",
+        label: "Mijn dossiers",
         href: "/dashboard",
         icon: <AssignmentOutlined fontSize="small" />,
       },
@@ -82,12 +82,12 @@ export const menuGroups: HeaderMenuGroup[] = [
         icon: <HandshakeOutlined fontSize="small" />,
       },
       {
-        label: "Financiële verklaring aanvragen",
+        label: "Mijn financiële verklaring",
         href: "/financial-report",
         icon: <DescriptionOutlined fontSize="small" />,
       },
       {
-        label: "Status economische blokkade bekijken",
+        label: "Economische blokkade",
         href: "/block-status",
         icon: <ShieldOutlined fontSize="small" />,
       },

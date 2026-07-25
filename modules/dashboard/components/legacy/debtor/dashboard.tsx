@@ -17,11 +17,14 @@ import {
   Tooltip,
   Button,
   Chip,
+  Divider,
 } from "@mui/material";
 
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import FolderOffOutlinedIcon from "@mui/icons-material/FolderOffOutlined";
+import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
 
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
@@ -31,6 +34,7 @@ import { getAgreementsByDebtClaimId } from "@/modules/agreement/actions/agreemen
 
 import {
   getDebtorByUserId,
+  getDebtorPersonalNumber,
   getDebts,
 } from "@/modules/collection/actions/debtor.actions";
 import { DebtorSummary } from "@/modules/collection/types/DebtorSummary";
@@ -64,13 +68,17 @@ const DashboardDebtor = () => {
 
   const [loadingPayment, setLoadingPayment] = useState(false);
 
-  const [hasActiveBlockade, setHasActiveBlockade] = useState(false);
+  const [blockadeActiveCount, setBlockadeActiveCount] = useState(0);
+  const [blockadeInactiveCount, setBlockadeInactiveCount] = useState(0);
+
+  const [personalNumber, setPersonalNumber] = useState<string | null>(null);
 
   const [tenants, setTenants] = useState<TenantTypes[]>([]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [tenantFilter, setTenantFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [filtersKey, setFiltersKey] = useState(0);
 
   const [filteredDebts, setFilteredDebts] = useState<DebtorSummary[]>([]);
 
@@ -118,7 +126,15 @@ const DashboardDebtor = () => {
         debtor.id,
         session.user.tenant_id,
       );
-      setHasActiveBlockade(blockades.some((b) => b.status === "ACTIVE"));
+      const activeBlockades = blockades.filter((b) => b.status === "ACTIVE").length;
+      setBlockadeActiveCount(activeBlockades);
+      setBlockadeInactiveCount(blockades.length - activeBlockades);
+
+      const number = await getDebtorPersonalNumber(
+        user?.id as string,
+        session.user.tenant_id,
+      );
+      setPersonalNumber(number);
 
       if (response.success) {
         setDebts(response.data || []);
@@ -228,6 +244,13 @@ const DashboardDebtor = () => {
     // Implementar lógica de filtrado por estado aquí
   };
 
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setTenantFilter("");
+    setStatusFilter("");
+    setFiltersKey((k) => k + 1);
+  };
+
   const ReactietermijnLabel = (dateStr: string) => {
     const date = new Date(dateStr);
     const now = new Date();
@@ -263,9 +286,15 @@ const DashboardDebtor = () => {
   /** ---------------------------------------------------------------------
    * RENDER
    * -------------------------------------------------------------------- */
+  const activeCount = filteredDebts.filter(
+    (d) => d.status === "OPEN" || d.status === "IN_PROGRESS",
+  ).length;
+  const paidCount = filteredDebts.filter((d) => (d.total_paid || 0) > 0).length;
+
   return (
     <Container maxWidth="xl">
       <DashboardHeader
+        key={filtersKey}
         total={parseFloat(
           (
             filteredDebts.reduce((t, d) => t + (d.amount || 0), 0) +
@@ -274,14 +303,18 @@ const DashboardDebtor = () => {
           ).toFixed(2),
         )}
         count={filteredDebts.length}
+        activeCount={activeCount}
         totalPaid={parseFloat(
           filteredDebts.reduce((t, d) => t + (d.total_paid || 0), 0).toFixed(2),
         )}
-        hasActiveBlockade={hasActiveBlockade}
+        paidCount={paidCount}
+        blockadeActiveCount={blockadeActiveCount}
+        blockadeInactiveCount={blockadeInactiveCount}
         tenants={tenants}
         onSearch={handleSearch}
         onTenantChange={handleTenantChange}
         onStatusChange={handleStatusChange}
+        onReset={handleResetFilters}
       />
 
       <Box
@@ -289,11 +322,11 @@ const DashboardDebtor = () => {
           display: "flex",
           justifyContent: "space-between",
           mb: 2,
-          mt: 2,
+          mt: 3,
           alignItems: "center",
         }}
       >
-        <Typography variant="h4" gutterBottom sx={{ mt: 1 }}>
+        <Typography variant="h5" fontWeight={700} color="primary.dark">
           Mijn verplichtingen
         </Typography>
       </Box>
@@ -340,6 +373,31 @@ const DashboardDebtor = () => {
             </TableHead>
 
             <TableBody>
+              {filteredDebts.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={8} align="center" sx={{ border: 0, py: 6 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <FolderOffOutlinedIcon
+                        sx={{ fontSize: 48, color: "grey.400" }}
+                      />
+                      <Typography variant="subtitle1" fontWeight={700}>
+                        Geen resultaten gevonden
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Er zijn geen dossiers die overeenkomen met uw
+                        zoekcriteria.
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              )}
               {filteredDebts.map((debt) => (
                 <TableRow key={debt.id}>
                   <TableCell>{debt.tenant_name}</TableCell>
@@ -427,6 +485,60 @@ const DashboardDebtor = () => {
           </Table>
         </TableContainer>
       </Suspense>
+
+      {personalNumber && (
+        <Paper
+          elevation={0}
+          sx={{
+            mt: 3,
+            p: 3,
+            borderRadius: 3,
+            bgcolor: "#eef1fc",
+          }}
+        >
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2}
+            alignItems={{ xs: "flex-start", sm: "center" }}
+          >
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Box
+                sx={{
+                  backgroundColor: "primary.dark",
+                  borderRadius: "50%",
+                  width: 48,
+                  height: 48,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <BadgeOutlinedIcon sx={{ color: "#fff" }} fontSize="small" />
+              </Box>
+              <Box>
+                <Typography variant="body2" fontWeight={600}>
+                  Uw persoonlijk CFSB-nummer
+                </Typography>
+                <Typography variant="h6" fontWeight={700}>
+                  {personalNumber}
+                </Typography>
+              </Box>
+            </Stack>
+
+            <Divider
+              orientation="vertical"
+              flexItem
+              sx={{ display: { xs: "none", sm: "block" } }}
+            />
+
+            <Typography variant="body2" color="text.secondary">
+              Dit is uw unieke en permanente CFSB-identiteit. Bewaar dit
+              nummer goed.
+            </Typography>
+          </Stack>
+        </Paper>
+      )}
 
       <AgreementFormDialog
         open={openModalAgreement}
