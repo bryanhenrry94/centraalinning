@@ -73,9 +73,20 @@ export class PaymentService {
 
     if (!sentooRes.success) {
       console.error("Error creating Sentoo payment:", sentooRes.raw);
+
+      await prisma.payment.update({
+        where: { id: paymentRes.id },
+        data: { status: "failed" },
+      });
+
+      const message =
+        sentooRes.reason === "BANK_REJECTED"
+          ? "De betaling werd geweigerd door de bank. Probeer het opnieuw of gebruik een andere betaalmethode."
+          : "Het aanmaken van de betaling bij Sentoo is mislukt.";
+
       return {
         success: false,
-        message: "Failed to create payment with Sentoo",
+        message,
       };
     }
 

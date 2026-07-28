@@ -404,14 +404,13 @@ const OvereenkomstenRegistrerenPage = () => {
         }),
       });
 
-      if (!res.ok) {
-        return {
-          success: false,
-          error: "Fout bij het aanmaken van de betaling",
-        };
-      }
-
       const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        const message = data.error || "Fout bij het aanmaken van de betaling";
+        notifyError(message);
+        return { success: false, error: message };
+      }
 
       return {
         success: true,

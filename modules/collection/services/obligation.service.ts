@@ -34,7 +34,7 @@ export class ObligationService {
         ? "PAID"
         : "PARTIALLY_PAID";
 
-    await prisma.debtClaimObligation.update({
+    return prisma.debtClaimObligation.update({
       where: {
         id: payment.obligation.id,
       },

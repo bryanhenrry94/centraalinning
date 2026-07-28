@@ -7,6 +7,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import LockIcon from "@mui/icons-material/Lock";
+import { notifyError } from "@/shared/ui/notifications";
 
 export interface PaymentIntentProps {
   onCreateTransaction: () => Promise<{
@@ -40,6 +41,7 @@ export const PaymentIntent: React.FC<PaymentIntentProps> = ({
 
       if (!success || !paymentId || !paymentUrl) {
         console.error("Error creando transacción", error);
+        notifyError(error || "Kon de betaling niet aanmaken.");
         return;
       }
 
@@ -48,6 +50,7 @@ export const PaymentIntent: React.FC<PaymentIntentProps> = ({
       setOpen(true);
     } catch (err) {
       console.error("Error creando transacción", err);
+      notifyError("Kon de betaling niet aanmaken.");
     } finally {
       setLoading(false);
     }

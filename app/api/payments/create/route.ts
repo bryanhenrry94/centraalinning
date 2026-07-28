@@ -36,6 +36,13 @@ export async function POST(req: NextRequest) {
       payload,
     );
 
+    if (!paymentRes.success) {
+      return NextResponse.json(
+        { success: false, error: paymentRes.message },
+        { status: 502 },
+      );
+    }
+
     return NextResponse.json({
       success: true,
       paymentId: paymentRes.data?.paymentId,

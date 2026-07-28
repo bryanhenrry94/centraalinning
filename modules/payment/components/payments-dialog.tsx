@@ -1,5 +1,6 @@
 import {
   Box,
+  Chip,
   Dialog,
   IconButton,
   Modal,
@@ -17,6 +18,23 @@ import { formatCurrency } from "@/shared/utils/formatters";
 import React, { useEffect } from "react";
 import { Payment } from "@/modules/payment/services/payment.validators";
 import { getPaymentsByInvoice } from "@/modules/payment/actions/payment.actions";
+
+type ChipColor =
+  | "default"
+  | "warning"
+  | "success"
+  | "error"
+  | "info"
+  | "primary"
+  | "secondary";
+
+const PAYMENT_STATUS_LABELS: Record<string, { label: string; color: ChipColor }> = {
+  pending: { label: "In behandeling", color: "warning" },
+  paid: { label: "Betaald", color: "success" },
+  failed: { label: "Afgewezen", color: "error" },
+  expired: { label: "Verlopen", color: "default" },
+  reversed: { label: "Teruggedraaid", color: "error" },
+};
 
 interface PaymentsDialogProps {
   open: boolean;
@@ -128,6 +146,18 @@ export const PaymentsDialog: React.FC<PaymentsDialogProps> = ({
                   >
                     Betaald
                   </TableCell>
+                  <TableCell
+                    sx={{
+                      minWidth: 50,
+                      backgroundColor: "paper.main",
+                      color: "#000",
+                      fontWeight: "bold",
+                      border: "1px solid #bdbdbd",
+                    }}
+                    align="center"
+                  >
+                    Status
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -135,7 +165,7 @@ export const PaymentsDialog: React.FC<PaymentsDialogProps> = ({
                 {payments.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={4}
+                      colSpan={5}
                       align="center"
                       sx={{ fontStyle: "italic" }}
                     >
@@ -143,22 +173,35 @@ export const PaymentsDialog: React.FC<PaymentsDialogProps> = ({
                     </TableCell>
                   </TableRow>
                 )}
-                {payments.map((payment) => (
-                  <TableRow key={payment.id}>
-                    <TableCell align="center">{payment.method}</TableCell>
-                    <TableCell align="center">
-                      {payment.reference_number}
-                    </TableCell>
-                    <TableCell align="center">
-                      {payment.paid_at
-                        ? new Date(payment.paid_at).toLocaleDateString()
-                        : "-"}
-                    </TableCell>
-                    <TableCell align="center">
-                      {formatCurrency(payment.total_amount)}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {payments.map((payment) => {
+                  const statusInfo = PAYMENT_STATUS_LABELS[
+                    payment.status
+                  ] || { label: payment.status, color: "default" as ChipColor };
+
+                  return (
+                    <TableRow key={payment.id}>
+                      <TableCell align="center">{payment.method}</TableCell>
+                      <TableCell align="center">
+                        {payment.reference_number}
+                      </TableCell>
+                      <TableCell align="center">
+                        {payment.paid_at
+                          ? new Date(payment.paid_at).toLocaleDateString()
+                          : "-"}
+                      </TableCell>
+                      <TableCell align="center">
+                        {formatCurrency(payment.total_amount)}
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip
+                          label={statusInfo.label}
+                          color={statusInfo.color}
+                          size="small"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </TableContainer>

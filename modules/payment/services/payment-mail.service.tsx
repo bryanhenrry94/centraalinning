@@ -111,10 +111,6 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
       );
     }
 
-    const openDebtsCount = await prisma.debtClaim.count({
-      where: { debtorId: debtor.id, status: "OPEN" },
-    });
-
     const debtsResponse = await DebtorService.getDebts({
       debtor_id: debtor.id,
       tenant_id: financial_report.tenant_id,
@@ -124,14 +120,16 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
       (debt) => debt.balance > 0,
     );
 
-    const balanceTotalResult = await prisma.$queryRaw<{ balance: number }[]>`
-      SELECT COALESCE(SUM(balance), 0) as balance
-      FROM vw_debtor_summary
-      WHERE debtor_id = ${debtor.id}
-        AND status = 'OPEN'
-    `;
-
-    const balanceTotal = balanceTotalResult?.[0]?.balance || 0;
+    // El resumen agregado se deriva de la misma lista que alimenta la tabla
+    // de detalle, para que ambos coincidan (openDebts ya usa balance > 0,
+    // igual que el botón "Betalen" del dashboard del deudor — no se filtra
+    // por DebtClaim.status, ya que una deuda en AANMANING/SOMMATIE sigue
+    // pendiente aunque su status ya no sea "OPEN").
+    const openDebtsCount = openDebts.length;
+    const balanceTotal = openDebts.reduce(
+      (total, debt) => total + debt.balance + (debt.total_fined || 0),
+      0,
+    );
 
     const activePaymentPlansCount = await prisma.agreement.count({
       where: { debtor_id: debtor.id, status: "ACCEPTED" },

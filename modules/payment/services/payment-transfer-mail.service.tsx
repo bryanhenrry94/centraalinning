@@ -3,8 +3,14 @@ import { getEmailByEnv } from "@/shared/utils/mail";
 import { TransferPaymentVerificationEmail } from "@/modules/payment/templates/TransferPaymentVerificationEmail";
 import { TransferPaymentApprovedEmail } from "@/modules/payment/templates/TransferPaymentApprovedEmail";
 import { TransferPaymentRejectedEmail } from "@/modules/payment/templates/TransferPaymentRejectedEmail";
+import { TransferPaymentReceiptEmail } from "@/modules/payment/templates/TransferPaymentReceiptEmail";
 
-const APP_URL = process.env.APP_URL;
+const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "cio.test:3000";
+const PROTOCOL = process.env.NODE_ENV === "production" ? "https" : "http";
+
+function buildTenantUrl(subdomain: string, path: string) {
+  return `${PROTOCOL}://${subdomain}.${ROOT_DOMAIN}${path}`;
+}
 
 type SendVerificationInput = {
   to: string;
@@ -13,6 +19,7 @@ type SendVerificationInput = {
   amount: number;
   referenceNumber: string;
   token: string;
+  tenantSubdomain: string;
 };
 
 export async function sendTransferPaymentVerificationEmail(
@@ -30,7 +37,10 @@ export async function sendTransferPaymentVerificationEmail(
           debtClaimReference={input.debtClaimReference}
           amount={input.amount}
           referenceNumber={input.referenceNumber}
-          verificationLink={`${APP_URL}/payment-verification/${input.token}`}
+          verificationLink={buildTenantUrl(
+            input.tenantSubdomain,
+            `/payment-verification/${input.token}`,
+          )}
         />
       ),
     });
@@ -97,6 +107,37 @@ export async function sendTransferPaymentRejectedEmail(
     return true;
   } catch (error) {
     console.error("Error sending transfer rejected email:", error);
+    return false;
+  }
+}
+
+type SendReceiptInput = {
+  to: string;
+  debtClaimReference: string;
+  amount: number;
+  decidedByName: string;
+};
+
+export async function sendTransferPaymentReceiptToTenant(
+  input: SendReceiptInput,
+): Promise<boolean> {
+  try {
+    const recipient = await getEmailByEnv(input.to);
+    await resend.emails.send({
+      from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
+      to: recipient,
+      subject: `Betaling bevestigd - ${input.debtClaimReference}`,
+      react: (
+        <TransferPaymentReceiptEmail
+          debtClaimReference={input.debtClaimReference}
+          amount={input.amount}
+          decidedByName={input.decidedByName}
+        />
+      ),
+    });
+    return true;
+  } catch (error) {
+    console.error("Error sending transfer receipt email:", error);
     return false;
   }
 }

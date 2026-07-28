@@ -440,25 +440,15 @@ const DashboardDebtor = () => {
                     {formatCurrency(debt.balance + (debt.total_fined || 0))}
                   </TableCell>
                   <TableCell align="center">
-                    <Tooltip
-                      title={
-                        debt.agreement_installment_amount
-                          ? "Betalingsregeling bekijken"
-                          : "Betalingsregeling aanvragen"
+                    <Chip
+                      icon={<HandshakeIcon fontSize="small" />}
+                      label={
+                        debt.agreement_installment_amount ? "Actief" : "Geen"
                       }
-                    >
-                      <Chip
-                        icon={<HandshakeIcon fontSize="small" />}
-                        label={
-                          debt.agreement_installment_amount ? "Actief" : "Geen"
-                        }
-                        color={
-                          debt.agreement_installment_amount ? "info" : "default"
-                        }
-                        clickable
-                        onClick={() => handleBetaalregelingClick(debt)}
-                      />
-                    </Tooltip>
+                      color={
+                        debt.agreement_installment_amount ? "info" : "default"
+                      }
+                    />
                   </TableCell>
                   <TableCell align="center">
                     <Stack direction="row" spacing={1} justifyContent="center">
@@ -481,6 +471,26 @@ const DashboardDebtor = () => {
                           disabled={debt.balance <= 0}
                         >
                           Betalen
+                        </Button>
+                      </Tooltip>
+
+                      <Tooltip
+                        title={
+                          debt.agreement_installment_amount
+                            ? "Betalingsregeling bekijken"
+                            : "Betalingsregeling aanvragen"
+                        }
+                      >
+                        <Button
+                          size="small"
+                          onClick={() => handleBetaalregelingClick(debt)}
+                          variant="outlined"
+                          color="secondary"
+                          startIcon={<HandshakeIcon fontSize="small" />}
+                        >
+                          {debt.agreement_installment_amount
+                            ? "Regeling"
+                            : "Regeling aanvragen"}
                         </Button>
                       </Tooltip>
                     </Stack>

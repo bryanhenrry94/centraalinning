@@ -1,11 +1,36 @@
 "use server";
 
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { UserRole } from "@/shared/constants/user-role";
 import { PaymentTransferService } from "@/modules/payment/services/payment-transfer.service";
 import {
   ALLOWED_RECEIPT_MIME_TYPES,
   MAX_RECEIPT_FILE_SIZE,
   initiateTransferPaymentSchema,
 } from "@/modules/payment/services/payment-transfer.validators";
+
+async function requireTenantAdmin() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id || !session.user.tenant_id) {
+    return { error: "U bent niet ingelogd." } as const;
+  }
+
+  if (!session.user.roles?.includes(UserRole.TENANT_ADMIN)) {
+    return {
+      error: "Alleen een tenantbeheerder kan deze actie uitvoeren.",
+    } as const;
+  }
+
+  return {
+    actingUser: {
+      id: session.user.id,
+      tenantId: session.user.tenant_id,
+      displayName: session.user.fullname || session.user.email || "Onbekend",
+    },
+  } as const;
+}
 
 export async function initiateTransferPayment(
   formData: FormData,
@@ -65,12 +90,22 @@ export async function getTransferVerificationByToken(token: string) {
 export async function approveTransferPayment(
   token: string,
 ): Promise<{ success: boolean; error?: string }> {
-  return PaymentTransferService.approve(token);
+  const auth = await requireTenantAdmin();
+  if ("error" in auth) {
+    return { success: false, error: auth.error };
+  }
+
+  return PaymentTransferService.approve(token, auth.actingUser);
 }
 
 export async function rejectTransferPayment(
   token: string,
   reason?: string,
 ): Promise<{ success: boolean; error?: string }> {
-  return PaymentTransferService.reject(token, reason);
+  const auth = await requireTenantAdmin();
+  if ("error" in auth) {
+    return { success: false, error: auth.error };
+  }
+
+  return PaymentTransferService.reject(token, auth.actingUser, reason);
 }

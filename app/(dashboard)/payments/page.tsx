@@ -16,6 +16,7 @@ import {
   Typography,
 } from "@mui/material";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import HandshakeIcon from "@mui/icons-material/Handshake";
 import HistoryIcon from "@mui/icons-material/History";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
@@ -30,6 +31,11 @@ import { DebtorSummary } from "@/modules/collection/types/DebtorSummary";
 import { TransferPaymentDialog } from "@/modules/payment/components/transfer-payment-dialog";
 import { getSourceStatusInfo } from "@/modules/collection/utils/debt-claim-status";
 import { PaymentsDialog } from "@/modules/payment/components/payments-dialog";
+import { getAgreementsByDebtClaimId } from "@/modules/agreement/actions/agreement.actions";
+import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
+import { AgreementDialog } from "@/modules/agreement/components/agreement-dialog";
+import { AgreementFormDialog } from "@/modules/agreement/components/agreement-form-dialog";
+import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
 
 const PaymentsPage = () => {
   const { data: session } = useSession();
@@ -38,6 +44,12 @@ const PaymentsPage = () => {
   const [debts, setDebts] = useState<DebtorSummary[]>([]);
   const [historyDebtId, setHistoryDebtId] = useState<string | null>(null);
   const [transferDebt, setTransferDebt] = useState<DebtorSummary | null>(null);
+  const [agreementDebt, setAgreementDebt] = useState<DebtorSummary | null>(
+    null,
+  );
+  const [openModalAgreement, setOpenModalAgreement] = useState(false);
+  const [openModalAgreementView, setOpenModalAgreementView] = useState(false);
+  const [agreements, setAgreements] = useState<AgreementResponse[]>([]);
 
   const fetchDebts = useCallback(async () => {
     if (!user?.id || !user?.tenant_id) return;
@@ -65,6 +77,23 @@ const PaymentsPage = () => {
 
   const handlePay = (debt: DebtorSummary) => {
     setTransferDebt(debt);
+  };
+
+  const handleBetaalregelingClick = async (debt: DebtorSummary) => {
+    setAgreementDebt(debt);
+
+    if (debt.agreement_installment_amount) {
+      const response = await getAgreementsByDebtClaimId(debt.id);
+      setAgreements(response || []);
+      setOpenModalAgreementView(true);
+    } else {
+      setOpenModalAgreement(true);
+    }
+  };
+
+  const onSaveAgreement = async () => {
+    setOpenModalAgreement(false);
+    await fetchDebts();
   };
 
   const outstandingDebts = debts.filter((d) => d.balance > 0);
@@ -140,6 +169,18 @@ const PaymentsPage = () => {
                   >
                     Betalen
                   </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="secondary"
+                    startIcon={<HandshakeIcon fontSize="small" />}
+                    onClick={() => handleBetaalregelingClick(debt)}
+                    sx={{ ml: 1 }}
+                  >
+                    {debt.agreement_installment_amount
+                      ? "Regeling"
+                      : "Regeling aanvragen"}
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -159,6 +200,32 @@ const PaymentsPage = () => {
         debt={transferDebt}
         debtorEmail={user?.email || ""}
         onSuccess={fetchDebts}
+      />
+
+      <AgreementFormDialog
+        open={openModalAgreement}
+        onClose={() => setOpenModalAgreement(false)}
+        title="NIEUWE OVEREENKOMST"
+        onSave={onSaveAgreement}
+        debtClaim_id={agreementDebt?.id || ""}
+        initialData={{
+          debtClaim_id: agreementDebt?.id || "",
+          total_amount: agreementDebt?.amount || 0,
+          installments_count: 1,
+          installment_amount: 0,
+          start_date: new Date(
+            new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
+          ),
+          end_date: new Date(),
+          status: AgreementStatus.PENDING,
+          debtor_id: agreementDebt?.debtor_id,
+        }}
+      />
+
+      <AgreementDialog
+        open={openModalAgreementView}
+        onClose={() => setOpenModalAgreementView(false)}
+        agreements={agreements}
       />
     </Container>
   );

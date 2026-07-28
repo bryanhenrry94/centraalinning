@@ -22,17 +22,21 @@ import {
 } from "@/modules/payment/actions/payment-transfer.actions";
 import { formatCurrency } from "@/shared/utils/formatters";
 import { notifyError, notifyInfo } from "@/shared/ui/notifications";
+import { useAuthSession } from "@/modules/auth/hooks/useAuthSession";
+import { UserRole } from "@/shared/constants/user-role";
 
 type ViewState =
   | "loading"
   | "not_found"
   | "expired"
   | "already_decided"
+  | "not_authorized"
   | "pending"
   | "done";
 
 export const TransferVerificationReview = () => {
   const { token } = useParams();
+  const { user, isLoading: isSessionLoading } = useAuthSession();
   const [state, setState] = React.useState<ViewState>("loading");
   const [details, setDetails] = React.useState<Awaited<
     ReturnType<typeof getTransferVerificationByToken>
@@ -43,7 +47,7 @@ export const TransferVerificationReview = () => {
   const [resultMessage, setResultMessage] = React.useState("");
 
   const load = React.useCallback(async () => {
-    if (!token) return;
+    if (!token || isSessionLoading) return;
     setState("loading");
     const response = await getTransferVerificationByToken(token as string);
     setDetails(response);
@@ -53,13 +57,21 @@ export const TransferVerificationReview = () => {
       return;
     }
 
+    const isTenantAdmin = !!user?.roles?.includes(UserRole.TENANT_ADMIN);
+
+    const isSameTenant = user?.tenant_id === response.data.tenantId;
+    if (!isTenantAdmin || !isSameTenant) {
+      setState("not_authorized");
+      return;
+    }
+
     if (response.data.decision !== "PENDING") {
       setState("already_decided");
       return;
     }
 
     setState("pending");
-  }, [token]);
+  }, [token, isSessionLoading, user]);
 
   React.useEffect(() => {
     load();
@@ -114,11 +126,23 @@ export const TransferVerificationReview = () => {
           )}
 
           {state === "not_found" && (
-            <Alert severity="error">Dit verificatieverzoek is niet gevonden.</Alert>
+            <Alert severity="error">
+              Dit verificatieverzoek is niet gevonden.
+            </Alert>
           )}
 
           {state === "expired" && (
-            <Alert severity="warning">Dit verificatieverzoek is verlopen.</Alert>
+            <Alert severity="warning">
+              Dit verificatieverzoek is verlopen.
+            </Alert>
+          )}
+
+          {state === "not_authorized" && (
+            <Alert severity="error">
+              U bent niet gemachtigd om deze betaling te bekijken. Alleen een
+              tenantbeheerder van de betreffende klant kan deze
+              betalingsverificatie behandelen.
+            </Alert>
           )}
 
           {state === "already_decided" && details?.success && (
@@ -131,7 +155,9 @@ export const TransferVerificationReview = () => {
             </Alert>
           )}
 
-          {state === "done" && <Alert severity="success">{resultMessage}</Alert>}
+          {state === "done" && (
+            <Alert severity="success">{resultMessage}</Alert>
+          )}
 
           {state === "pending" && details?.success && (
             <Stack spacing={2} mt={1}>
@@ -157,7 +183,12 @@ export const TransferVerificationReview = () => {
               </Button>
 
               {!showRejectForm ? (
-                <Stack direction="row" spacing={2} justifyContent="flex-end" mt={2}>
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  justifyContent="flex-end"
+                  mt={2}
+                >
                   <Button
                     color="error"
                     onClick={() => setShowRejectForm(true)}

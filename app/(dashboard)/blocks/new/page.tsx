@@ -257,12 +257,13 @@ export default function BlockCreatePage() {
       headers: { "Content-Type": "application/json" },
     });
 
-    if (!res.ok) {
-      notifyError("Fout bij het aanmaken van de betaling");
-      return { success: false, error: "Payment creation failed" };
-    }
-
     const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      const message = data.error || "Fout bij het aanmaken van de betaling";
+      notifyError(message);
+      return { success: false, error: message };
+    }
 
     // relaciona de daadwerkelijke betaling met de blokkade (DRAFT)
     const linkResult = await updatePaymentReference(resBlockade.id!, {

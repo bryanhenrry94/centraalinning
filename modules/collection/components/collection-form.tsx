@@ -184,12 +184,14 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
       headers: { "Content-Type": "application/json" },
     });
 
-    if (!res.ok) {
-      notifyError("Fout bij het aanmaken van de betaling");
-      return { success: false, error: "Payment creation failed" };
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      const message = data.error || "Fout bij het aanmaken van de betaling";
+      notifyError(message);
+      return { success: false, error: message };
     }
 
-    const data = await res.json();
     return {
       success: true,
       paymentId: data.paymentId,

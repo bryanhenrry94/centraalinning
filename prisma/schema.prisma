@@ -602,6 +602,7 @@ model User {
   messages              ChatMessage[]
   password_reset_tokens PasswordResetToken[]
   block_checks          BlockCheck[]
+  payment_transfer_verifications PaymentTransferVerification[]
 
   @@map("user")
 }
@@ -1413,6 +1414,9 @@ model PaymentTransferVerification {
   token_expires_at  DateTime
   decision          TransferVerificationDecision @default(PENDING)
   decided_at        DateTime?
+  decided_by_id     String?
+  decided_by        User?     @relation(fields: [decided_by_id], references: [id])
+  balance_after     Decimal?  @db.Decimal(18, 2)
   rejection_reason  String?
   created_at        DateTime  @default(now())
   updated_at        DateTime  @updatedAt
