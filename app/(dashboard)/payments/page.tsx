@@ -27,7 +27,7 @@ import {
   getDebts,
 } from "@/modules/collection/actions/debtor.actions";
 import { DebtorSummary } from "@/modules/collection/types/DebtorSummary";
-import { payDebt } from "@/modules/payment/utils/pay-debt";
+import { TransferPaymentDialog } from "@/modules/payment/components/transfer-payment-dialog";
 import { getSourceStatusInfo } from "@/modules/collection/utils/debt-claim-status";
 import { PaymentsDialog } from "@/modules/payment/components/payments-dialog";
 
@@ -36,8 +36,8 @@ const PaymentsPage = () => {
   const user = session?.user;
 
   const [debts, setDebts] = useState<DebtorSummary[]>([]);
-  const [loadingId, setLoadingId] = useState<string | null>(null);
   const [historyDebtId, setHistoryDebtId] = useState<string | null>(null);
+  const [transferDebt, setTransferDebt] = useState<DebtorSummary | null>(null);
 
   const fetchDebts = useCallback(async () => {
     if (!user?.id || !user?.tenant_id) return;
@@ -63,16 +63,8 @@ const PaymentsPage = () => {
     fetchDebts();
   }, [fetchDebts]);
 
-  const handlePay = async (debt: DebtorSummary) => {
-    setLoadingId(debt.id);
-    try {
-      await payDebt(debt);
-    } catch (error) {
-      console.error(error);
-      notifyError("Error al procesar el pago");
-    } finally {
-      setLoadingId(null);
-    }
+  const handlePay = (debt: DebtorSummary) => {
+    setTransferDebt(debt);
   };
 
   const outstandingDebts = debts.filter((d) => d.balance > 0);
@@ -143,8 +135,6 @@ const PaymentsPage = () => {
                     variant="contained"
                     color="error"
                     startIcon={<AttachMoneyIcon fontSize="small" />}
-                    disabled={loadingId === debt.id}
-                    loading={loadingId === debt.id}
                     onClick={() => handlePay(debt)}
                     sx={{ ml: 1 }}
                   >
@@ -161,6 +151,14 @@ const PaymentsPage = () => {
         open={!!historyDebtId}
         onClose={() => setHistoryDebtId(null)}
         debtId={historyDebtId || ""}
+      />
+
+      <TransferPaymentDialog
+        open={!!transferDebt}
+        onClose={() => setTransferDebt(null)}
+        debt={transferDebt}
+        debtorEmail={user?.email || ""}
+        onSuccess={fetchDebts}
       />
     </Container>
   );

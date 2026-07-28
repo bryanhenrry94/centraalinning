@@ -45,6 +45,23 @@ const FinancialSummaryPage = async () => {
 
     // SUMMARY
     summary: "Actieve betalingsregelingen worden correct nagekomen.",
+
+    // OPEN DEBTS DETAIL
+    debts: [
+      {
+        reference: "AOP-2026-001",
+        dueDate: "05-06-2026",
+        status: "In behandeling",
+        balance: "1,200.00",
+      },
+      {
+        reference: "AOP-2026-014",
+        dueDate: "18-06-2026",
+        status: "Wacht op betaling",
+        balance: "1,250.00",
+      },
+    ],
+
     qrCode: qrCode,
   };
 

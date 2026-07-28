@@ -21,6 +21,7 @@ import { createSentooPayment } from "@/actions/sentoo.actions";
 
 import { formatCurrency } from "@/shared/utils/formatters";
 import { notifyError, notifyInfo } from "@/shared/ui/notifications";
+import { generateUUID } from "@/shared/utils/uuid";
 
 import {
   PaymentCreate,
@@ -79,7 +80,7 @@ const VerklaringPage: React.FC = () => {
       /**
        * Generar identificador único
        */
-      const requestId = crypto.randomUUID();
+      const requestId = generateUUID();
 
       const reference = `FIN-${requestId}`;
 

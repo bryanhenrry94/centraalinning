@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
-class ObligationService {
+export class ObligationService {
   static async applyPayment(paymentId: string) {
-    // Obtener pago
     const payment = await prisma.payment.findUnique({
       where: {
         id: paymentId,
@@ -24,30 +23,56 @@ class ObligationService {
       throw new Error("Obligation not found");
     }
 
-    // Actualizar monto pagado
-    const totalPaid = payment.obligation.paidAmount;
+    const newPaidAmount =
+      Number(payment.obligation.paidAmount) + Number(payment.total_amount);
+    const newBalanceAmount = Math.max(
+      Number(payment.obligation.originalAmount) - newPaidAmount,
+      0,
+    );
+    const status =
+      newPaidAmount >= Number(payment.obligation.originalAmount)
+        ? "PAID"
+        : "PARTIALLY_PAID";
 
-    // Cambiar estado
-    if (totalPaid >= payment.obligation.originalAmount) {
-      await prisma.debtClaimObligation.update({
-        where: {
-          id: payment.obligation.id,
-        },
-        data: {
-          paidAmount: totalPaid,
-          status: "PAID",
-        },
-      });
-    } else {
-      await prisma.debtClaimObligation.update({
-        where: {
-          id: payment.obligation.id,
-        },
-        data: {
-          paidAmount: totalPaid,
-          status: "PARTIALLY_PAID",
-        },
-      });
+    await prisma.debtClaimObligation.update({
+      where: {
+        id: payment.obligation.id,
+      },
+      data: {
+        paidAmount: newPaidAmount,
+        balanceAmount: newBalanceAmount,
+        status,
+      },
+    });
+  }
+
+  static async ensurePrincipalDebtObligation(
+    debtClaimId: string,
+    fallbackAmount: number,
+  ) {
+    const existing = await prisma.debtClaimObligation.findFirst({
+      where: {
+        debtClaimId,
+        type: "PRINCIPAL_DEBT",
+        beneficiary: "PARTICIPANT",
+        status: { in: ["PENDING", "PARTIALLY_PAID"] },
+      },
+    });
+
+    if (existing) {
+      return existing;
     }
+
+    return prisma.debtClaimObligation.create({
+      data: {
+        debtClaimId,
+        type: "PRINCIPAL_DEBT",
+        beneficiary: "PARTICIPANT",
+        originalAmount: fallbackAmount,
+        paidAmount: 0,
+        balanceAmount: fallbackAmount,
+        status: "PENDING",
+      },
+    });
   }
 }

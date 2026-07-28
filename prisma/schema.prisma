@@ -53,6 +53,7 @@ model Tenant {
   debt_claims  DebtClaim[]
   lawyers      Lawyer[]
   block_checks BlockCheck[]
+  bank_accounts BankAccount[]
 
   @@map("tenant")
 }
@@ -1155,6 +1156,20 @@ model Employee {
   @@map("employee")
 }
 
+model BankAccount {
+  id             String          @id @default(uuid())
+  bank_name      String
+  account_number String
+  account_type   BankAccountType
+  tenant_id      String
+  tenant         Tenant          @relation(fields: [tenant_id], references: [id])
+  created_at     DateTime        @default(now())
+  updated_at     DateTime        @updatedAt
+
+  @@unique([tenant_id, account_number])
+  @@map("bank_account")
+}
+
 model ChatRoom {
   id          String        @id @default(cuid())
   tenant_id   String
@@ -1383,7 +1398,32 @@ model Payment {
 
   billing_invoice BillingInvoice?
 
+  transfer_verification PaymentTransferVerification?
+
   @@map("payment")
+}
+
+model PaymentTransferVerification {
+  id                String    @id @default(cuid())
+  payment_id        String    @unique
+  payment           Payment   @relation(fields: [payment_id], references: [id])
+  receipt_file_path String
+  receipt_file_name String
+  token             String    @unique
+  token_expires_at  DateTime
+  decision          TransferVerificationDecision @default(PENDING)
+  decided_at        DateTime?
+  rejection_reason  String?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  @@map("payment_transfer_verification")
+}
+
+enum TransferVerificationDecision {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum PaymentStatus {
@@ -1597,4 +1637,9 @@ enum InvitationRole {
 
 enum BlockadeReason {
   UNPAID_PAYMENT
+}
+
+enum BankAccountType {
+  SAVINGS
+  CHECKING
 }

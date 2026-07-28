@@ -1,10 +1,22 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import Header from "./header";
 import { useAuthSession } from "@/modules/auth/hooks/useAuthSession";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { Box, Typography } from "@mui/material";
+import { UserRole } from "@/shared/constants/user-role";
+import { getDebtorPersonalNumber } from "@/modules/collection/actions/debtor.actions";
+
+const STAFF_ROLES = [
+  UserRole.PLATFORM_OWNER,
+  UserRole.TENANT_ADMIN,
+  UserRole.AGENT,
+  UserRole.EMPLOYEE,
+  UserRole.BAILIFF,
+  UserRole.LAWYER,
+  UserRole.BANK,
+];
 
 export const UnauthorizedPage = () => {
   return (
@@ -28,6 +40,28 @@ export const UnauthorizedPage = () => {
 
 export const AdminLayout = ({ children }: { children?: ReactNode }) => {
   const { user, isLoading } = useAuthSession();
+
+  const userRoles = (user?.roles as UserRole[]) ?? [];
+  const isPureDebtor =
+    userRoles.includes(UserRole.DEBTOR) &&
+    !userRoles.some((role) => STAFF_ROLES.includes(role));
+
+  const [footerCode, setFooterCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+
+    if (!isPureDebtor) {
+      setFooterCode(user.code ?? null);
+      return;
+    }
+
+    getDebtorPersonalNumber(user.id, user.tenant_id)
+      .then((personalNumber) =>
+        setFooterCode(personalNumber ?? user.code ?? null),
+      )
+      .catch(() => setFooterCode(user.code ?? null));
+  }, [user, isPureDebtor]);
 
   if (isLoading) {
     return <LoadingUI />;
@@ -60,10 +94,14 @@ export const AdminLayout = ({ children }: { children?: ReactNode }) => {
           padding: 2,
           textAlign: "center",
           backgroundColor: "secondary.main",
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "center",
         }}
       >
         <Typography variant="body2" color="white">
-          {user.code}
+          {isPureDebtor && `Uw persoonlijk CFSB-nummer`}
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{footerCode ?? user.code}
         </Typography>
       </Box>
     </Box>

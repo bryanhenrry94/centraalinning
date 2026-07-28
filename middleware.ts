@@ -52,6 +52,7 @@ export async function middleware(req: NextRequest) {
     "/logout",
     "/payment/return",
     "/invitation",
+    "/payment-verification",
   ];
 
   const isPublicRoute = publicRoutes.some(

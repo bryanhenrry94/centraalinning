@@ -14,6 +14,8 @@ import FinancialSummaryPDF, {
   FinancialSummaryPDFProps,
 } from "@/modules/payment/templates/pdfs/FinancialSummaryPDF";
 import { getDataInvoicePDF } from "@/modules/payment/actions/billing-invoice.actions";
+import { DebtorService } from "@/modules/collection/services/debtor.service";
+import { getSourceStatusInfo } from "@/modules/collection/utils/debt-claim-status";
 import QRCode from "qrcode";
 
 export const sendInvoiceEmail = async (
@@ -97,7 +99,10 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
     }
 
     const debtor = await prisma.debtor.findFirst({
-      where: { person_id: financial_report.person_id },
+      where: {
+        person_id: financial_report.person_id,
+        tenant_id: financial_report.tenant_id,
+      },
     });
 
     if (!debtor) {
@@ -109,6 +114,15 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
     const openDebtsCount = await prisma.debtClaim.count({
       where: { debtorId: debtor.id, status: "OPEN" },
     });
+
+    const debtsResponse = await DebtorService.getDebts({
+      debtor_id: debtor.id,
+      tenant_id: financial_report.tenant_id,
+    });
+
+    const openDebts = (debtsResponse.data || []).filter(
+      (debt) => debt.balance > 0,
+    );
 
     const balanceTotalResult = await prisma.$queryRaw<{ balance: number }[]>`
       SELECT COALESCE(SUM(balance), 0) as balance
@@ -176,6 +190,12 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
         ? "Met Blokkade"
         : "Geen Blokkade",
       summary,
+      debts: openDebts.map((debt) => ({
+        reference: debt.reference || debt.id,
+        dueDate: debt.due_date ? formatDate(debt.due_date.toString()) : "-",
+        status: getSourceStatusInfo(debt.source_status).label,
+        balance: formatCurrency(debt.balance + (debt.total_fined || 0)),
+      })),
       qrCode,
     };
 

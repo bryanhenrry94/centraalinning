@@ -2,6 +2,11 @@ import React from "react";
 import {
   Box,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Grid,
   IconButton,
   InputAdornment,
@@ -16,16 +21,48 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import CloseIcon from "@mui/icons-material/Close";
 import CollectionForm from "@/modules/collection/components/collection-form";
 import AddIcon from "@mui/icons-material/Add";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { getAllBankAccountsByTenantId } from "@/modules/tenant/actions/bank-account.actions";
 
 interface CollectionHeaderProps {
   onRefresh?: () => void;
 }
 
 export const CollectionHeader = ({ onRefresh }: CollectionHeaderProps) => {
-  const [open, setOpen] = React.useState(false);
+  const { data: session } = useSession();
+  const router = useRouter();
 
-  const handleOpenModal = () => setOpen(true);
+  const [open, setOpen] = React.useState(false);
+  const [bankAccountDialogOpen, setBankAccountDialogOpen] =
+    React.useState(false);
+  const [checkingBankAccount, setCheckingBankAccount] = React.useState(false);
+
+  const handleOpenModal = async () => {
+    const tenantId = session?.user?.tenant_id;
+    if (!tenantId) return;
+
+    setCheckingBankAccount(true);
+    try {
+      const response = await getAllBankAccountsByTenantId(tenantId);
+      const hasBankAccount = !!response.success && !!response.data?.length;
+
+      if (!hasBankAccount) {
+        setBankAccountDialogOpen(true);
+        return;
+      }
+
+      setOpen(true);
+    } finally {
+      setCheckingBankAccount(false);
+    }
+  };
   const handleCloseModal = () => setOpen(false);
+  const handleCloseBankAccountDialog = () => setBankAccountDialogOpen(false);
+  const handleGoToBankAccountSettings = () => {
+    setBankAccountDialogOpen(false);
+    router.push("/settings?tab=5");
+  };
 
   const handleSave = () => {};
 
@@ -64,6 +101,7 @@ export const CollectionHeader = ({ onRefresh }: CollectionHeaderProps) => {
               color="primary"
               sx={{ textTransform: "none", whiteSpace: "nowrap" }}
               startIcon={<AddIcon />}
+              disabled={checkingBankAccount}
             >
               Nieuwe
             </Button>
@@ -117,6 +155,29 @@ export const CollectionHeader = ({ onRefresh }: CollectionHeaderProps) => {
           <CollectionForm onSave={handleSave} onClose={handleCloseModal} />
         </Paper>
       </Modal>
+
+      <Dialog
+        open={bankAccountDialogOpen}
+        onClose={handleCloseBankAccountDialog}
+      >
+        <DialogTitle>Geen bankrekening geregistreerd</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            U moet eerst een bankrekening registreren voordat u een nieuwe
+            AOP-vordering kunt aanmaken.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseBankAccountDialog}>Annuleren</Button>
+          <Button
+            onClick={handleGoToBankAccountSettings}
+            variant="contained"
+            color="primary"
+          >
+            Ga naar configuratie
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

@@ -42,7 +42,7 @@ import { AgreementDialog } from "@/modules/agreement/components/agreement-dialog
 import { PaymentsDialog } from "@/modules/payment/components/payments-dialog";
 import { AgreementFormDialog } from "@/modules/agreement/components/agreement-form-dialog";
 import { PaymentFormDialog } from "@/modules/payment/components/payment-form-dialog";
-import { payDebt } from "@/modules/payment/utils/pay-debt";
+import { TransferPaymentDialog } from "@/modules/payment/components/transfer-payment-dialog";
 import DashboardHeader from "./DashboardHeader";
 import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
 import { getSourceStatusInfo } from "@/modules/collection/utils/debt-claim-status";
@@ -65,8 +65,8 @@ const DashboardDebtor = () => {
   const [openModalNotifications, setOpenModalNotifications] = useState(false);
   const [openModalPayment, setOpenModalPayment] = useState(false);
   const [openModalPaymentForm, setOpenModalPaymentForm] = useState(false);
-
-  const [loadingPayment, setLoadingPayment] = useState(false);
+  const [openModalTransferPayment, setOpenModalTransferPayment] =
+    useState(false);
 
   const [blockadeActiveCount, setBlockadeActiveCount] = useState(0);
   const [blockadeInactiveCount, setBlockadeInactiveCount] = useState(0);
@@ -103,7 +103,7 @@ const DashboardDebtor = () => {
     }
 
     setFilteredDebts(filtered);
-  }, [searchQuery, tenantFilter, statusFilter]);
+  }, [debts, searchQuery, tenantFilter, statusFilter]);
 
   /** ---------------------------------------------------------------------
    * FETCH DEBTS
@@ -126,7 +126,9 @@ const DashboardDebtor = () => {
         debtor.id,
         session.user.tenant_id,
       );
-      const activeBlockades = blockades.filter((b) => b.status === "ACTIVE").length;
+      const activeBlockades = blockades.filter(
+        (b) => b.status === "ACTIVE",
+      ).length;
       setBlockadeActiveCount(activeBlockades);
       setBlockadeInactiveCount(blockades.length - activeBlockades);
 
@@ -161,8 +163,11 @@ const DashboardDebtor = () => {
   }, [user?.id, session?.user?.tenant_id]);
 
   useEffect(() => {
-    if (user?.id) fetchDebts();
-  }, [user?.id, fetchDebts]);
+    if (!user?.id) return;
+    if (!session?.user?.tenant_id) return;
+
+    fetchDebts();
+  }, [user?.id, session?.user?.tenant_id, fetchDebts]);
 
   /** ---------------------------------------------------------------------
    * FETCH AGREEMENTS
@@ -217,16 +222,9 @@ const DashboardDebtor = () => {
     await fetchDebts();
   };
 
-  const handlePaymentDebtor = async (debt: DebtorSummary) => {
-    setLoadingPayment(true);
-    try {
-      await payDebt(debt);
-    } catch (error) {
-      console.error(error);
-      notifyError("Error al procesar el pago");
-    } finally {
-      setLoadingPayment(false);
-    }
+  const handlePaymentDebtor = (debt: DebtorSummary) => {
+    setDebtSelected(debt);
+    setOpenModalTransferPayment(true);
   };
 
   const handleSearch = (query: string) => {
@@ -259,7 +257,13 @@ const DashboardDebtor = () => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays > 0) {
-      return `${diffDays} dagen`;
+      return (
+        <Chip
+          label={`${diffDays} dagen`}
+          color="success"
+          sx={{ width: 150, borderRadius: "6px" }}
+        />
+      );
     }
 
     if (diffDays === 0) {
@@ -268,7 +272,7 @@ const DashboardDebtor = () => {
           label="Vandaag"
           size="small"
           color="error"
-          sx={{ fontWeight: 600 }}
+          sx={{ fontWeight: 600, width: 150, borderRadius: "6px" }}
         />
       );
     }
@@ -276,9 +280,9 @@ const DashboardDebtor = () => {
     return (
       <Chip
         label={`${Math.abs(diffDays)} dagen geleden`}
-        size="small"
         color="error"
         variant="filled"
+        sx={{ width: 150, borderRadius: "6px" }}
       />
     );
   };
@@ -375,7 +379,11 @@ const DashboardDebtor = () => {
             <TableBody>
               {filteredDebts.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ border: 0, py: 6 }}>
+                  <TableCell
+                    colSpan={8}
+                    align="center"
+                    sx={{ border: 0, py: 6 }}
+                  >
                     <Box
                       sx={{
                         display: "flex",
@@ -409,7 +417,11 @@ const DashboardDebtor = () => {
                         <Chip
                           label={status.label}
                           color={status.color}
-                          sx={{ color: "#000" }}
+                          sx={{
+                            color: "#000",
+                            width: 150,
+                            borderRadius: "6px",
+                          }}
                         />
                       );
                     })()}
@@ -438,16 +450,11 @@ const DashboardDebtor = () => {
                       <Chip
                         icon={<HandshakeIcon fontSize="small" />}
                         label={
-                          debt.agreement_installment_amount
-                            ? "Actief"
-                            : "Geen"
+                          debt.agreement_installment_amount ? "Actief" : "Geen"
                         }
                         color={
-                          debt.agreement_installment_amount
-                            ? "info"
-                            : "default"
+                          debt.agreement_installment_amount ? "info" : "default"
                         }
-                        size="small"
                         clickable
                         onClick={() => handleBetaalregelingClick(debt)}
                       />
@@ -471,8 +478,7 @@ const DashboardDebtor = () => {
                           variant="contained"
                           color="error"
                           startIcon={<AttachMoneyIcon fontSize="small" />}
-                          disabled={debt.balance <= 0 || loadingPayment}
-                          loading={loadingPayment}
+                          disabled={debt.balance <= 0}
                         >
                           Betalen
                         </Button>
@@ -485,60 +491,6 @@ const DashboardDebtor = () => {
           </Table>
         </TableContainer>
       </Suspense>
-
-      {personalNumber && (
-        <Paper
-          elevation={0}
-          sx={{
-            mt: 3,
-            p: 3,
-            borderRadius: 3,
-            bgcolor: "#eef1fc",
-          }}
-        >
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={2}
-            alignItems={{ xs: "flex-start", sm: "center" }}
-          >
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Box
-                sx={{
-                  backgroundColor: "primary.dark",
-                  borderRadius: "50%",
-                  width: 48,
-                  height: 48,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <BadgeOutlinedIcon sx={{ color: "#fff" }} fontSize="small" />
-              </Box>
-              <Box>
-                <Typography variant="body2" fontWeight={600}>
-                  Uw persoonlijk CFSB-nummer
-                </Typography>
-                <Typography variant="h6" fontWeight={700}>
-                  {personalNumber}
-                </Typography>
-              </Box>
-            </Stack>
-
-            <Divider
-              orientation="vertical"
-              flexItem
-              sx={{ display: { xs: "none", sm: "block" } }}
-            />
-
-            <Typography variant="body2" color="text.secondary">
-              Dit is uw unieke en permanente CFSB-identiteit. Bewaar dit
-              nummer goed.
-            </Typography>
-          </Stack>
-        </Paper>
-      )}
 
       <AgreementFormDialog
         open={openModalAgreement}
@@ -576,6 +528,14 @@ const DashboardDebtor = () => {
         open={openModalPaymentForm}
         onClose={handleClosePaymentForm}
         onSave={handleSavePayment}
+      />
+
+      <TransferPaymentDialog
+        open={openModalTransferPayment}
+        onClose={() => setOpenModalTransferPayment(false)}
+        debt={debtSelected}
+        debtorEmail={user?.email || ""}
+        onSuccess={fetchDebts}
       />
     </Container>
   );

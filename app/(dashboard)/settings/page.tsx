@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import TabPanel from "@/shared/ui/tab-panel";
 import {
   Box,
@@ -17,10 +18,17 @@ import { updateUserProfile } from "@/modules/auth/actions/user.actions";
 import { notifyInfo } from "@/shared/ui/notifications";
 import UserTable from "@/modules/auth/components/user-table";
 import { EmployeeForm } from "@/modules/employee/components/employee-form";
+import { BankAccountForm } from "@/modules/tenant/components/bank-account-form";
 import { UserRole } from "@/shared/constants/user-role";
 
-const SettingPage = () => {
-  const [value, setValue] = useState(0);
+const SettingPageContent = () => {
+  const searchParams = useSearchParams();
+  const initialTab = Number(searchParams.get("tab"));
+  const [value, setValue] = useState(
+    Number.isInteger(initialTab) && initialTab >= 0 && initialTab <= 5
+      ? initialTab
+      : 0,
+  );
 
   const { user } = useAuthSession();
 
@@ -109,6 +117,7 @@ const SettingPage = () => {
           <Tab value={2} label="Gebruikers" />
           <Tab value={3} label="Facturering" />
           <Tab value={4} label="Medewerkers" />
+          <Tab value={5} label="Bankrekeningen" />
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
@@ -131,8 +140,17 @@ const SettingPage = () => {
       <TabPanel value={value} index={4}>
         <EmployeeForm />
       </TabPanel>
+      <TabPanel value={value} index={5}>
+        <BankAccountForm />
+      </TabPanel>
     </Container>
   );
 };
+
+const SettingPage = () => (
+  <Suspense fallback={null}>
+    <SettingPageContent />
+  </Suspense>
+);
 
 export default SettingPage;

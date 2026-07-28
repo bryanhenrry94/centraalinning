@@ -7,6 +7,7 @@ import React, {
   useMemo,
 } from "react";
 import { AlertService } from "@/shared/ui/alerts";
+import { generateUUID } from "@/shared/utils/uuid";
 import { embargoTipos } from "@/modules/blockade/constants/embargo";
 import {
   VerdictEmbargo,
@@ -55,7 +56,7 @@ export const VerdictProvider: React.FC<VerdictProviderProps> = ({
 
       const newEmbargo: VerdictEmbargo = {
         ...data,
-        id: crypto.randomUUID(), // Simulate a UUID string ID
+        id: generateUUID(), // Simulate a UUID string ID
         embargo_type: embargoTipo?.nombre || "Desconocido",
         created_at: new Date(),
         updated_at: new Date(),

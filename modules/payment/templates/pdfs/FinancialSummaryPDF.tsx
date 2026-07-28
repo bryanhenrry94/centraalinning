@@ -31,6 +31,14 @@ export interface FinancialSummaryPDFProps {
   // SUMMARY
   summary: string;
 
+  // OPEN DEBTS DETAIL
+  debts: {
+    reference: string;
+    dueDate: string;
+    status: string;
+    balance: string;
+  }[];
+
   // QR
   qrCode?: string;
 }
@@ -117,6 +125,45 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
 
+  // DEBTS TABLE
+  debtsTableHeader: {
+    flexDirection: "row",
+    backgroundColor: "#f5f5f5",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+    paddingVertical: 4,
+    paddingHorizontal: 4,
+  },
+
+  debtsTableRow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#efefef",
+    paddingVertical: 4,
+    paddingHorizontal: 4,
+  },
+
+  debtsColReference: {
+    flex: 2,
+    fontSize: 9,
+  },
+
+  debtsColDueDate: {
+    flex: 1,
+    fontSize: 9,
+  },
+
+  debtsColStatus: {
+    flex: 1,
+    fontSize: 9,
+  },
+
+  debtsColBalance: {
+    flex: 1,
+    fontSize: 9,
+    textAlign: "right",
+  },
+
   // TEXT
   paragraph: {
     fontSize: 10,
@@ -200,6 +247,8 @@ const FinancialSummaryPDF: React.FC<FinancialSummaryPDFProps> = ({
   economicBlockRegistered,
 
   summary,
+
+  debts,
 
   qrCode,
 }) => {
@@ -297,6 +346,38 @@ const FinancialSummaryPDF: React.FC<FinancialSummaryPDFProps> = ({
 
             <View style={styles.divider} />
           </View>
+        </View>
+        {/* OPEN DEBTS DETAIL */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Openstaande Vorderingen</Text>
+
+          {debts.length === 0 ? (
+            <Text style={styles.paragraph}>
+              Er zijn geen openstaande vorderingen geregistreerd.
+            </Text>
+          ) : (
+            <View>
+              <View style={styles.debtsTableHeader}>
+                <Text style={styles.debtsColReference}>Referentie</Text>
+                <Text style={styles.debtsColDueDate}>Vervaldatum</Text>
+                <Text style={styles.debtsColStatus}>Status</Text>
+                <Text style={styles.debtsColBalance}>Openstaand</Text>
+              </View>
+
+              {debts.map((debt, index) => (
+                <View key={index} style={styles.debtsTableRow}>
+                  <Text style={styles.debtsColReference}>
+                    {debt.reference}
+                  </Text>
+                  <Text style={styles.debtsColDueDate}>{debt.dueDate}</Text>
+                  <Text style={styles.debtsColStatus}>{debt.status}</Text>
+                  <Text style={styles.debtsColBalance}>{debt.balance}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <View style={[styles.divider, { marginTop: 10 }]} />
         </View>
         {/* BLOCK STATUS */}
         <View style={styles.section}>
