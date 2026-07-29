@@ -17,6 +17,7 @@ import { useAuthSession } from "@/modules/auth/hooks/useAuthSession";
 import { updateUserProfile } from "@/modules/auth/actions/user.actions";
 import { notifyInfo } from "@/shared/ui/notifications";
 import UserTable from "@/modules/auth/components/user-table";
+import InvitationTable from "@/modules/auth/components/invitation-table";
 import { EmployeeForm } from "@/modules/employee/components/employee-form";
 import { BankAccountForm } from "@/modules/tenant/components/bank-account-form";
 import { UserRole } from "@/shared/constants/user-role";
@@ -25,7 +26,7 @@ const SettingPageContent = () => {
   const searchParams = useSearchParams();
   const initialTab = Number(searchParams.get("tab"));
   const [value, setValue] = useState(
-    Number.isInteger(initialTab) && initialTab >= 0 && initialTab <= 5
+    Number.isInteger(initialTab) && initialTab >= 0 && initialTab <= 6
       ? initialTab
       : 0,
   );
@@ -118,6 +119,7 @@ const SettingPageContent = () => {
           <Tab value={3} label="Facturering" />
           <Tab value={4} label="Medewerkers" />
           <Tab value={5} label="Bankrekeningen" />
+          <Tab value={6} label="Uitnodigingen" />
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
@@ -142,6 +144,9 @@ const SettingPageContent = () => {
       </TabPanel>
       <TabPanel value={value} index={5}>
         <BankAccountForm />
+      </TabPanel>
+      <TabPanel value={value} index={6}>
+        <InvitationTable tenant_id={user?.tenant_id || ""} />
       </TabPanel>
     </Container>
   );

@@ -31,6 +31,10 @@ import { AgreementResponse } from "@/modules/agreement/services/agreement.valida
 import { notifyError } from "@/shared/ui/notifications";
 
 import { getAgreementsByDebtClaimId } from "@/modules/agreement/actions/agreement.actions";
+import {
+  isAgreementApproved,
+  hasOpenAgreement,
+} from "@/modules/agreement/constants/agreement-status";
 
 import {
   getDebtorByUserId,
@@ -197,7 +201,7 @@ const DashboardDebtor = () => {
   };
 
   const handleBetaalregelingClick = (debt: DebtorSummary) => {
-    if (debt.agreement_installment_amount) {
+    if (hasOpenAgreement(debt.agreement_status)) {
       openNotificationsModal(debt);
     } else {
       openAgreementModal(debt);
@@ -443,10 +447,18 @@ const DashboardDebtor = () => {
                     <Chip
                       icon={<HandshakeIcon fontSize="small" />}
                       label={
-                        debt.agreement_installment_amount ? "Actief" : "Geen"
+                        isAgreementApproved(debt.agreement_status)
+                          ? "Actief"
+                          : hasOpenAgreement(debt.agreement_status)
+                            ? "In behandeling"
+                            : "Geen"
                       }
                       color={
-                        debt.agreement_installment_amount ? "info" : "default"
+                        isAgreementApproved(debt.agreement_status)
+                          ? "info"
+                          : hasOpenAgreement(debt.agreement_status)
+                            ? "warning"
+                            : "default"
                       }
                     />
                   </TableCell>
@@ -476,7 +488,7 @@ const DashboardDebtor = () => {
 
                       <Tooltip
                         title={
-                          debt.agreement_installment_amount
+                          hasOpenAgreement(debt.agreement_status)
                             ? "Betalingsregeling bekijken"
                             : "Betalingsregeling aanvragen"
                         }
@@ -488,7 +500,7 @@ const DashboardDebtor = () => {
                           color="secondary"
                           startIcon={<HandshakeIcon fontSize="small" />}
                         >
-                          {debt.agreement_installment_amount
+                          {hasOpenAgreement(debt.agreement_status)
                             ? "Regeling"
                             : "Regeling aanvragen"}
                         </Button>

@@ -24,4 +24,5 @@ export type DebtorSummary = {
   agreement_installments_count: number | null;
   agreement_start_date: Date | null;
   agreement_end_date: Date | null;
+  agreement_status: string | null;
 };

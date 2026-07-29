@@ -25,7 +25,11 @@ import {
 } from "@/modules/collection/actions/debtor.actions";
 import { DebtorSummary } from "@/modules/collection/types/DebtorSummary";
 import { AgreementFormDialog } from "@/modules/agreement/components/agreement-form-dialog";
-import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
+import {
+  AgreementStatus,
+  isAgreementApproved,
+  isAgreementPending,
+} from "@/modules/agreement/constants/agreement-status";
 
 export const DebtorAgreementsView = () => {
   const { data: session } = useSession();
@@ -115,8 +119,10 @@ export const DebtorAgreementsView = () => {
                 <TableCell align="center">{debt.reference}</TableCell>
                 <TableCell align="right">{formatCurrency(debt.balance)}</TableCell>
                 <TableCell align="center">
-                  {debt.agreement_installment_amount ? (
+                  {isAgreementApproved(debt.agreement_status) ? (
                     <Chip label="Actief" color="info" size="small" />
+                  ) : isAgreementPending(debt.agreement_status) ? (
+                    <Chip label="In behandeling" color="warning" size="small" />
                   ) : (
                     <Chip label="Geen" size="small" />
                   )}

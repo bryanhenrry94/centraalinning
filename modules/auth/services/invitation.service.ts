@@ -24,21 +24,32 @@ type InvitationDetails = {
   debtor_id?: string;
 };
 
+export type PendingInvitation = {
+  id: string;
+  email: string;
+  fullname: string | null;
+  role: UserRole;
+  created_at: Date;
+  expires_at: Date;
+};
+
 export class InvitationService {
   static async register(
     params: InvitationParams,
   ): Promise<{ status: boolean; message: string; token?: string }> {
-    const { tenantId, email, role, fullname, debtor_id } = params;
-
-    const user = await prisma.user.findFirst({ where: { email } });
-
-    if (user) {
-      return { status: false, message: "User with this email already exists" };
-    }
+    const { tenantId, email, role, debtor_id } = params;
 
     if (!tenantId || !email || !role) {
       throw new Error("tenantId, email and role are required");
     }
+
+    const user = await prisma.user.findFirst({ where: { email } });
+
+    if (user) {
+      return this.linkExistingUserToTenant(user.id, params);
+    }
+
+    const { fullname } = params;
 
     const existingInvitation = await prisma.tenantInvitation.findFirst({
       where: { tenant_id: tenantId, email, expires_at: { gt: new Date() } },
@@ -65,6 +76,57 @@ export class InvitationService {
     });
 
     return { status: true, message: "Invitation registered", token: invitation.token };
+  }
+
+  // El usuario ya existe (posiblemente en otro tenant): un mismo User puede
+  // tener una Membership por tenant, cada una con su propio rol.
+  private static async linkExistingUserToTenant(
+    userId: string,
+    { tenantId, role, debtor_id }: InvitationParams,
+  ): Promise<{ status: boolean; message: string; token?: string }> {
+    const membership = await prisma.membership.upsert({
+      where: { user_id_tenant_id: { user_id: userId, tenant_id: tenantId } },
+      update: {},
+      create: {
+        user_id: userId,
+        tenant_id: tenantId,
+        status: MembershipStatus.ACTIVE,
+      },
+    });
+
+    await prisma.membershipRole.upsert({
+      where: { membership_id_role: { membership_id: membership.id, role } },
+      update: {},
+      create: { membership_id: membership.id, role },
+    });
+
+    if (role === UserRole.DEBTOR && debtor_id) {
+      await prisma.debtor.update({
+        where: { id: debtor_id },
+        data: { user_id: userId },
+      });
+    }
+
+    return {
+      status: true,
+      message: "Existing user linked to tenant with the requested role",
+    };
+  }
+
+  static async getPendingByTenant(tenantId: string): Promise<PendingInvitation[]> {
+    const invitations = await prisma.tenantInvitation.findMany({
+      where: { tenant_id: tenantId, used: false, expires_at: { gt: new Date() } },
+      orderBy: { created_at: "desc" },
+    });
+
+    return invitations.map((invitation) => ({
+      id: invitation.id,
+      email: invitation.email,
+      fullname: invitation.fullname,
+      role: invitation.role as UserRole,
+      created_at: invitation.created_at,
+      expires_at: invitation.expires_at,
+    }));
   }
 
   static async isValid(token: string): Promise<boolean> {

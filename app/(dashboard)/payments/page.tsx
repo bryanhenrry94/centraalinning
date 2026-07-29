@@ -35,7 +35,10 @@ import { getAgreementsByDebtClaimId } from "@/modules/agreement/actions/agreemen
 import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
 import { AgreementDialog } from "@/modules/agreement/components/agreement-dialog";
 import { AgreementFormDialog } from "@/modules/agreement/components/agreement-form-dialog";
-import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
+import {
+  AgreementStatus,
+  hasOpenAgreement,
+} from "@/modules/agreement/constants/agreement-status";
 
 const PaymentsPage = () => {
   const { data: session } = useSession();
@@ -82,7 +85,7 @@ const PaymentsPage = () => {
   const handleBetaalregelingClick = async (debt: DebtorSummary) => {
     setAgreementDebt(debt);
 
-    if (debt.agreement_installment_amount) {
+    if (hasOpenAgreement(debt.agreement_status)) {
       const response = await getAgreementsByDebtClaimId(debt.id);
       setAgreements(response || []);
       setOpenModalAgreementView(true);
@@ -177,7 +180,7 @@ const PaymentsPage = () => {
                     onClick={() => handleBetaalregelingClick(debt)}
                     sx={{ ml: 1 }}
                   >
-                    {debt.agreement_installment_amount
+                    {hasOpenAgreement(debt.agreement_status)
                       ? "Regeling"
                       : "Regeling aanvragen"}
                   </Button>

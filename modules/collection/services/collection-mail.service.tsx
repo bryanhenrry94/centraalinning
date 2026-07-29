@@ -22,6 +22,7 @@ export const sendAanmaningEmail = async (
   to: string,
   caseId: string,
   invitationLink?: string,
+  requiresRegistration?: boolean,
 ) => {
   try {
     const claim = await prisma.debtClaim.findUnique({
@@ -94,6 +95,7 @@ export const sendAanmaningEmail = async (
           invitationLink={
             invitationLink ? invitationLink : "https://centraalinning.com/"
           }
+          requiresRegistration={requiresRegistration}
         />
       ),
       attachments,

@@ -12,12 +12,14 @@ interface AanmanningEmailProps {
   logoUrl: string;
   fullname: string;
   invitationLink?: string;
+  requiresRegistration?: boolean;
 }
 
 export const AanmanningEmail = ({
   logoUrl,
   fullname,
   invitationLink,
+  requiresRegistration,
 }: AanmanningEmailProps) => (
   <Html>
     <Head />
@@ -34,9 +36,19 @@ export const AanmanningEmail = ({
         </Text>
 
         <Text style={{ ...paragraph, marginTop: "10px" }}>
-          U kunt de gegevens bekijken, een betaling uitvoeren of een
-          betalingsregeling voorstellen door in te loggen via{" "}
-          <Link href={invitationLink}>www.cfsbgroup.com</Link>.
+          {requiresRegistration ? (
+            <>
+              Maak eerst uw account aan om de gegevens te bekijken, een
+              betaling uit te voeren of een betalingsregeling voor te stellen:{" "}
+              <Link href={invitationLink}>Registreer u hier</Link>.
+            </>
+          ) : (
+            <>
+              U kunt de gegevens bekijken, een betaling uitvoeren of een
+              betalingsregeling voorstellen door in te loggen:{" "}
+              <Link href={invitationLink}>Log hier in</Link>.
+            </>
+          )}
         </Text>
 
         <Text style={footer}>

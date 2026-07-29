@@ -1,7 +1,10 @@
 "use server";
 import { UserRole } from "@/shared/constants/user-role";
 import { InvitationRegistration } from "@/modules/auth/services/invitation.validators";
-import { InvitationService } from "@/modules/auth/services/invitation.service";
+import {
+  InvitationService,
+  PendingInvitation,
+} from "@/modules/auth/services/invitation.service";
 import { revalidatePath } from "next/cache";
 
 type InvitationParams = {
@@ -28,6 +31,12 @@ export const invitationIsUsed = async (token: string): Promise<boolean> => {
 
 export const getInvitationDetails = async (token: string) => {
   return InvitationService.getDetails(token);
+};
+
+export const getPendingInvitations = async (
+  tenantId: string,
+): Promise<PendingInvitation[]> => {
+  return InvitationService.getPendingByTenant(tenantId);
 };
 
 export const completeRegistration = async (

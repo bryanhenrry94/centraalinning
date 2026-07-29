@@ -45,7 +45,28 @@ export class AgreementService {
     return agreements.map(mapAgreementResponse);
   }
 
-  static async create(tenant_id: string, data: CreateAgreement) {
+  static async create(
+    tenant_id: string,
+    data: CreateAgreement,
+    requestingUserId?: string,
+  ) {
+    const debtClaim = await prisma.debtClaim.findUnique({
+      where: { id: data.debtClaim_id },
+      include: { debtor: true },
+    });
+
+    if (!debtClaim || debtClaim.tenantId !== tenant_id) {
+      throw new Error("DebtClaim not found for this tenant");
+    }
+
+    if (requestingUserId && debtClaim.debtor.user_id !== requestingUserId) {
+      throw new Error("No tiene permiso para solicitar un acuerdo sobre esta deuda");
+    }
+
+    if (data.debtor_id && data.debtor_id !== debtClaim.debtorId) {
+      throw new Error("El debtor_id no coincide con la deuda indicada");
+    }
+
     const newAgreement = await prisma.agreement.create({
       data: {
         tenant_id,
@@ -227,12 +248,21 @@ export class AgreementService {
     return agreements.map(mapAgreementResponse);
   }
 
+  // Prioriza el acuerdo ACCEPTED (el único vinculante); si no hay uno,
+  // devuelve la solicitud más reciente (útil para mostrar el estado "en
+  // revisión" mientras se espera la aprobación del tenant).
   static async getByDebtClaimId(debtClaim_id: string): Promise<AgreementResponse | null> {
-    const a = await prisma.agreement.findFirst({
-      where: { debtClaim_id },
+    const accepted = await prisma.agreement.findFirst({
+      where: { debtClaim_id, status: AgreementStatus.ACCEPTED },
       include: { debtor: { include: { person: true } }, debtClaim: true },
     });
-    if (!a) return null;
-    return mapAgreementResponse(a);
+    if (accepted) return mapAgreementResponse(accepted);
+
+    const latest = await prisma.agreement.findFirst({
+      where: { debtClaim_id },
+      orderBy: { created_at: "desc" },
+      include: { debtor: { include: { person: true } }, debtClaim: true },
+    });
+    return latest ? mapAgreementResponse(latest) : null;
   }
 }

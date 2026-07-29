@@ -18,7 +18,10 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 import { DebtorSummary } from "@/modules/collection/types/DebtorSummary";
 import { getAgreementByDebtClaimId } from "@/modules/agreement/actions/agreement.actions";
-import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
+import {
+  isAgreementApproved,
+  isAgreementPending,
+} from "@/modules/agreement/constants/agreement-status";
 import { getAllBankAccountsByTenantId } from "@/modules/tenant/actions/bank-account.actions";
 import { BankAccount } from "@/modules/tenant/services/bank-account.validators";
 import { initiateTransferPayment } from "@/modules/payment/actions/payment-transfer.actions";
@@ -68,7 +71,7 @@ export const TransferPaymentDialog = ({
           getAgreementByDebtClaimId(debt.id),
         ]);
 
-        if (agreement?.status === AgreementStatus.PENDING) {
+        if (isAgreementPending(agreement?.status)) {
           setBlockedMessage(
             "Uw verzoek voor een betalingsregeling wacht nog op goedkeuring.",
           );
@@ -76,7 +79,11 @@ export const TransferPaymentDialog = ({
 
         setBankAccounts(accountsResponse.data || []);
         setAmount(
-          String(agreement?.installment_amount ?? debt.balance ?? ""),
+          String(
+            isAgreementApproved(agreement?.status)
+              ? agreement!.installment_amount
+              : (debt.balance ?? ""),
+          ),
         );
         setReferenceNumber("");
         setFile(null);

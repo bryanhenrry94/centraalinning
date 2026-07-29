@@ -58,6 +58,7 @@ export class CollectionNotificationService {
         debtor.person?.business_name;
 
       let invitationLink = `${protocol}://auth.${rootDomain}/login`;
+      let requiresRegistration = false;
 
       if (debtor.user_id === null) {
         const invitation = await registerInvitation({
@@ -69,10 +70,16 @@ export class CollectionNotificationService {
         });
         if (invitation.status === true && invitation.token) {
           invitationLink = `${protocol}://auth.${rootDomain}/invitation/${invitation.token}`;
+          requiresRegistration = true;
         }
       }
 
-      await sendAanmaningEmail(debtor.email, debtClaimId, invitationLink);
+      await sendAanmaningEmail(
+        debtor.email,
+        debtClaimId,
+        invitationLink,
+        requiresRegistration,
+      );
       return "Aanmaning sent successfully";
     } catch (error) {
       console.error("Error sending Aanmaning:", error);
