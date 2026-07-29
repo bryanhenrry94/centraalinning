@@ -21,6 +21,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import PaidIcon from "@mui/icons-material/Paid";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import HandshakeIcon from "@mui/icons-material/Handshake";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { DebtClaimResponse } from "@/modules/collection/services/collection.type";
 import {
@@ -28,6 +29,7 @@ import {
   AOP_STEP_CONFIG,
   ChipColor,
 } from "@/modules/collection/utils/debt-claim-status";
+import { isAgreementPending } from "@/modules/agreement/constants/agreement-status";
 
 const HEAD_SX = {
   backgroundColor: "secondary.main",
@@ -39,7 +41,12 @@ const HEAD_SX = {
 
 const ROWS_PER_PAGE_OPTIONS = [10, 25, 50];
 
-const CollectionTable = ({ invoices }: { invoices: DebtClaimResponse[] }) => {
+interface CollectionTableProps {
+  invoices: DebtClaimResponse[];
+  onReviewAgreement?: (debtClaimId: string) => void;
+}
+
+const CollectionTable = ({ invoices, onReviewAgreement }: CollectionTableProps) => {
   const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -181,6 +188,30 @@ const CollectionTable = ({ invoices }: { invoices: DebtClaimResponse[] }) => {
                         >
                           <VisibilityIcon fontSize="small" />
                         </IconButton>
+                        {row.agreementStatus && (
+                          <Tooltip
+                            title={
+                              isAgreementPending(row.agreementStatus)
+                                ? "Betalingsregeling te beoordelen"
+                                : "Betalingsregeling bekijken"
+                            }
+                          >
+                            <IconButton
+                              size="small"
+                              color={
+                                isAgreementPending(row.agreementStatus)
+                                  ? "warning"
+                                  : "default"
+                              }
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onReviewAgreement?.(row.id);
+                              }}
+                            >
+                              <HandshakeIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
                       </>
                     )}
                   </TableCell>

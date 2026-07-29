@@ -10,6 +10,8 @@ interface AgreementFormDialogProps {
   title: string;
   initialData?: CreateAgreement;
   debtClaim_id: string;
+  referenceLabel?: string;
+  outstandingAmount?: number;
   onSave: () => void;
 }
 
@@ -20,10 +22,12 @@ export const AgreementFormDialog: React.FC<AgreementFormDialogProps> = ({
   title,
   initialData,
   debtClaim_id,
+  referenceLabel,
+  outstandingAmount,
   onSave,
 }) => {
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <Box
         sx={{
           bgcolor: "secondary.main",
@@ -47,7 +51,10 @@ export const AgreementFormDialog: React.FC<AgreementFormDialogProps> = ({
         id={id}
         debtClaim_id={debtClaim_id}
         initialData={initialData}
+        referenceLabel={referenceLabel}
+        outstandingAmount={outstandingAmount}
         onSave={onSave}
+        onClose={onClose}
       />
     </Dialog>
   );

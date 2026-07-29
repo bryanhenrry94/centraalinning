@@ -6,10 +6,14 @@ import { DebtClaimResponse } from "@/modules/collection/services/collection.type
 import { useAuthSession } from "@/modules/auth/hooks/useAuthSession";
 import { getDebtClaimsAction } from "@/modules/collection/actions/collection-case.actions";
 import CollectionTable from "@/modules/collection/components/collection-table";
+import { AgreementReviewDialog } from "@/modules/agreement/components/agreement-review-dialog";
 
 export default function CollectionsPage() {
   const { session } = useAuthSession();
   const [invoices, setInvoices] = React.useState<DebtClaimResponse[]>([]);
+  const [agreementClaimId, setAgreementClaimId] = React.useState<string | null>(
+    null,
+  );
 
   const [loading, setLoading] = React.useState(false);
 
@@ -50,8 +54,18 @@ export default function CollectionsPage() {
       {loading ? (
         <Skeleton variant="rectangular" width={"100%"} height={200} />
       ) : (
-        <CollectionTable invoices={invoices} />
+        <CollectionTable
+          invoices={invoices}
+          onReviewAgreement={setAgreementClaimId}
+        />
       )}
+
+      <AgreementReviewDialog
+        open={!!agreementClaimId}
+        onClose={() => setAgreementClaimId(null)}
+        debtClaimId={agreementClaimId || ""}
+        onUpdated={handleRefresh}
+      />
     </Box>
   );
 }

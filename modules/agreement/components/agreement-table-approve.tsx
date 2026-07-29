@@ -307,6 +307,12 @@ export const AgreementTableApprove = ({
         onClose={handleCloseModal}
         id={agreementSelected?.id || ""}
         debtClaim_id={agreementSelected?.debtClaim_id || ""}
+        referenceLabel={
+          agreementSelected?.debtor
+            ? agreementSelected.debtor.fullname
+            : undefined
+        }
+        outstandingAmount={agreementSelected?.total_amount}
         initialData={{
           debtClaim_id: agreementSelected?.debtClaim_id || "",
           ...agreementSelected,

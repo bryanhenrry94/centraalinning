@@ -517,7 +517,7 @@ const DashboardDebtor = () => {
       <AgreementFormDialog
         open={openModalAgreement}
         onClose={() => setOpenModalAgreement(false)}
-        title="NIEUWE OVEREENKOMST"
+        title="Betalingsregeling aanvragen"
         onSave={onSaveAgreement}
         debtClaim_id={debtSelected?.id || ""}
         initialData={{

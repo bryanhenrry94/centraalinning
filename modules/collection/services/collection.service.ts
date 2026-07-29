@@ -565,37 +565,50 @@ export class CollectionService {
           },
           take: 1,
         },
+        agreements: {
+          orderBy: { created_at: "desc" },
+          select: { status: true },
+        },
       },
     });
 
-    console.log("Fetched claims:", claims);
+    return claims.map((c: any) => {
+      // El estado que se muestra en el listado es el ACCEPTED vigente si
+      // existe; si no, el de la solicitud más reciente (para señalar que
+      // hay algo pendiente de revisión).
+      const agreementStatus =
+        c.agreements?.find((a: any) => a.status === "ACCEPTED")?.status ??
+        c.agreements?.[0]?.status ??
+        null;
 
-    return claims.map((c: any) => ({
-      id: c.id,
-      tenantId: c.tenantId,
-      debtorId: c.debtorId,
-      reference: c.reference,
-      externalReference: c.externalReference,
-      description: c.description,
-      principalAmount: Number(c.principalAmount),
-      currency: c.currency,
-      origin: c.origin,
-      status: c.status,
-      createdAt: c.createdAt,
-      updatedAt: c.updatedAt,
-      closedAt: c.closedAt,
-      debtor: {
-        id: c.debtor.id,
-        fullname:
-          `${c.debtor.person?.first_name ?? ""} ${c.debtor.person?.last_name ?? ""}`.trim() ||
-          c.debtor.person?.business_name ||
-          "",
-        email: c.debtor.email ?? "",
-        total_income: c.debtor.total_income ?? 0,
-      },
-      aopStep: c.administrativeCollection?.steps[0]?.step ?? null,
-      paymentLink: c.obligations[0]?.payments[0]?.payment_url ?? null,
-    }));
+      return {
+        id: c.id,
+        tenantId: c.tenantId,
+        debtorId: c.debtorId,
+        reference: c.reference,
+        externalReference: c.externalReference,
+        description: c.description,
+        principalAmount: Number(c.principalAmount),
+        currency: c.currency,
+        origin: c.origin,
+        status: c.status,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+        closedAt: c.closedAt,
+        debtor: {
+          id: c.debtor.id,
+          fullname:
+            `${c.debtor.person?.first_name ?? ""} ${c.debtor.person?.last_name ?? ""}`.trim() ||
+            c.debtor.person?.business_name ||
+            "",
+          email: c.debtor.email ?? "",
+          total_income: c.debtor.total_income ?? 0,
+        },
+        aopStep: c.administrativeCollection?.steps[0]?.step ?? null,
+        paymentLink: c.obligations[0]?.payments[0]?.payment_url ?? null,
+        agreementStatus,
+      };
+    });
   };
 
   static getPaymentLinkFromDebtClaimId = async (

@@ -147,9 +147,15 @@ export const DebtorAgreementsView = () => {
       <AgreementFormDialog
         open={openModalAgreement}
         onClose={() => setOpenModalAgreement(false)}
-        title="NIEUWE OVEREENKOMST"
+        title="Betalingsregeling aanvragen"
         onSave={onSaveAgreement}
         debtClaim_id={debtSelected?.id || ""}
+        referenceLabel={
+          debtSelected
+            ? `${debtSelected.reference || debtSelected.id} – ${debtSelected.tenant_name}`
+            : undefined
+        }
+        outstandingAmount={debtSelected?.balance}
         initialData={{
           debtClaim_id: debtSelected?.id || "",
           total_amount: debtSelected?.amount || 0,
@@ -161,6 +167,7 @@ export const DebtorAgreementsView = () => {
           end_date: new Date(),
           status: AgreementStatus.PENDING,
           debtor_id: debtSelected?.debtor_id,
+          comment: "",
         }}
       />
     </Container>

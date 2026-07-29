@@ -78,6 +78,7 @@ export class AgreementService {
         end_date: data.end_date,
         status: AgreementStatus.PENDING,
         debtor_id: data.debtor_id,
+        comment: data.comment || null,
       },
     });
 

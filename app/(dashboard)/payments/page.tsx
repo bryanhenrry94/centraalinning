@@ -208,9 +208,15 @@ const PaymentsPage = () => {
       <AgreementFormDialog
         open={openModalAgreement}
         onClose={() => setOpenModalAgreement(false)}
-        title="NIEUWE OVEREENKOMST"
+        title="Betalingsregeling aanvragen"
         onSave={onSaveAgreement}
         debtClaim_id={agreementDebt?.id || ""}
+        referenceLabel={
+          agreementDebt
+            ? `${agreementDebt.reference || agreementDebt.id} – ${agreementDebt.tenant_name}`
+            : undefined
+        }
+        outstandingAmount={agreementDebt?.balance}
         initialData={{
           debtClaim_id: agreementDebt?.id || "",
           total_amount: agreementDebt?.amount || 0,
@@ -222,6 +228,7 @@ const PaymentsPage = () => {
           end_date: new Date(),
           status: AgreementStatus.PENDING,
           debtor_id: agreementDebt?.debtor_id,
+          comment: "",
         }}
       />
 
