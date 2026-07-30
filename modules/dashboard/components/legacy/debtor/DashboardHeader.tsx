@@ -11,7 +11,6 @@ import {
   InputAdornment,
   MenuItem,
   Button,
-  Stack,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
@@ -26,27 +25,23 @@ const StatCard = ({
   value,
   subtitle,
   icon,
-  color,
-  bgColor,
   type,
 }: {
   title: string;
   value: string | number;
   subtitle?: string;
   icon: React.ReactNode;
-  color: string;
-  bgColor: string;
   type?: "currency" | "text";
 }) => (
-  <Card elevation={0} sx={{ borderRadius: 3, bgcolor: bgColor, height: "100%" }}>
+  <Card variant="outlined" sx={{ height: "100%", borderColor: "grey.200" }}>
     <CardContent>
       <Box display="flex" alignItems="center" gap={2}>
         <Box
           sx={{
-            backgroundColor: color,
+            bgcolor: "grey.100",
             borderRadius: "50%",
-            width: 48,
-            height: 48,
+            width: 44,
+            height: 44,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -106,8 +101,8 @@ const DashboardHeader = ({
   onReset: () => void;
 }) => {
   return (
-    <Box>
-      {/* 🔹 STATS */}
+    <Box sx={{ mt: 4 }}>
+      {/* Stats */}
       <Grid container spacing={2} mb={2}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
@@ -115,9 +110,12 @@ const DashboardHeader = ({
             value={total}
             type="currency"
             subtitle={`${count} dossiers`}
-            color="#1976d2"
-            bgColor="#e8f1fb"
-            icon={<DescriptionIcon sx={{ color: "#fff" }} fontSize="small" />}
+            icon={
+              <DescriptionIcon
+                fontSize="small"
+                sx={{ color: "text.secondary" }}
+              />
+            }
           />
         </Grid>
 
@@ -126,9 +124,12 @@ const DashboardHeader = ({
             title="Totaal dossiers"
             value={count}
             subtitle={`${activeCount} actief`}
-            color="#2e7d32"
-            bgColor="#e9f6ec"
-            icon={<CheckCircleIcon sx={{ color: "#fff" }} fontSize="small" />}
+            icon={
+              <CheckCircleIcon
+                fontSize="small"
+                sx={{ color: "text.secondary" }}
+              />
+            }
           />
         </Grid>
 
@@ -138,68 +139,75 @@ const DashboardHeader = ({
             value={totalPaid}
             type="currency"
             subtitle={`${paidCount} dossiers`}
-            color="#ed6c02"
-            bgColor="#fdf1e6"
-            icon={<AttachMoneyIcon sx={{ color: "#fff" }} fontSize="small" />}
+            icon={
+              <AttachMoneyIcon
+                fontSize="small"
+                sx={{ color: "text.secondary" }}
+              />
+            }
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card elevation={0} sx={{ borderRadius: 3, bgcolor: "#f2edfb", height: "100%" }}>
+          <Card
+            variant="outlined"
+            sx={{ height: "100%", borderColor: "grey.200" }}
+          >
             <CardContent>
               <Box display="flex" alignItems="center" gap={2}>
                 <Box
                   sx={{
-                    backgroundColor: "#7b3fe4",
+                    bgcolor: "grey.100",
                     borderRadius: "50%",
-                    width: 48,
-                    height: 48,
+                    width: 44,
+                    height: 44,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     flexShrink: 0,
                   }}
                 >
-                  <ShieldIcon sx={{ color: "#fff" }} fontSize="small" />
+                  <ShieldIcon
+                    fontSize="small"
+                    sx={{ color: "text.secondary" }}
+                  />
                 </Box>
                 <Box>
                   <Typography variant="body2" color="text.secondary">
                     Economische blokkade
                   </Typography>
-                  <Stack spacing={0.3} mt={0.5}>
-                    <Stack direction="row" alignItems="center" spacing={1}>
+                  <Box sx={{ display: "flex", gap: 2, mt: 0.5 }}>
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", gap: 0.75 }}
+                    >
                       <Box
                         sx={{
-                          width: 8,
-                          height: 8,
+                          width: 7,
+                          height: 7,
                           borderRadius: "50%",
-                          bgcolor: "#2e7d32",
+                          bgcolor: "success.main",
                         }}
                       />
-                      <Typography variant="body2" fontWeight={600}>
-                        Actief
+                      <Typography variant="body2">
+                        <strong>{blockadeActiveCount}</strong> actief
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {blockadeActiveCount}
-                      </Typography>
-                    </Stack>
-                    <Stack direction="row" alignItems="center" spacing={1}>
+                    </Box>
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", gap: 0.75 }}
+                    >
                       <Box
                         sx={{
-                          width: 8,
-                          height: 8,
+                          width: 7,
+                          height: 7,
                           borderRadius: "50%",
                           bgcolor: "grey.400",
                         }}
                       />
-                      <Typography variant="body2" fontWeight={600}>
-                        Niet actief
+                      <Typography variant="body2">
+                        <strong>{blockadeInactiveCount}</strong> niet actief
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {blockadeInactiveCount}
-                      </Typography>
-                    </Stack>
-                  </Stack>
+                    </Box>
+                  </Box>
                 </Box>
               </Box>
             </CardContent>
@@ -207,39 +215,35 @@ const DashboardHeader = ({
         </Grid>
       </Grid>
 
-      {/* 🔹 FILTROS */}
-      <Card elevation={0} sx={{ borderRadius: 3, border: "1px solid", borderColor: "grey.200" }}>
+      {/* Filtros */}
+      <Card variant="outlined" sx={{ borderColor: "grey.200", mt: 4 }}>
         <CardContent>
           <Grid container spacing={2} alignItems="center">
-            {/* Buscar */}
             <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant="body2" fontWeight={600} mb={0.5}>
-                Zoeken
-              </Typography>
               <TextField
                 fullWidth
                 size="small"
+                label="Zoeken"
                 placeholder="Zoeken op referentie..."
                 onChange={(e) => onSearch(e.target.value)}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <SearchIcon fontSize="small" />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon fontSize="small" color="disabled" />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
             </Grid>
 
-            {/* Deelnemer */}
-            <Grid size={{ xs: 12, md: 3 }}>
-              <Typography variant="body2" fontWeight={600} mb={0.5}>
-                Deelnemer
-              </Typography>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <TextField
                 select
                 fullWidth
                 size="small"
+                label="Deelnemer"
                 defaultValue=""
                 onChange={(e) => onTenantChange(e.target.value)}
               >
@@ -252,15 +256,12 @@ const DashboardHeader = ({
               </TextField>
             </Grid>
 
-            {/* Estado */}
-            <Grid size={{ xs: 12, md: 3 }}>
-              <Typography variant="body2" fontWeight={600} mb={0.5}>
-                Status
-              </Typography>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <TextField
                 select
                 fullWidth
                 size="small"
+                label="Status"
                 defaultValue=""
                 onChange={(e) => onStatusChange(e.target.value)}
               >
@@ -272,14 +273,14 @@ const DashboardHeader = ({
               </TextField>
             </Grid>
 
-            {/* Botón */}
             <Grid size={{ xs: 12, md: 2 }}>
               <Button
                 fullWidth
-                variant="outlined"
-                startIcon={<FilterAltOffIcon />}
-                sx={{ mt: { xs: 1, md: 3 } }}
-                color="primary"
+                size="small"
+                variant="text"
+                color="inherit"
+                startIcon={<FilterAltOffIcon fontSize="small" />}
+                sx={{ height: 40, color: "text.secondary" }}
                 onClick={onReset}
               >
                 Filters wissen

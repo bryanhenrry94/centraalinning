@@ -49,7 +49,10 @@ import { PaymentFormDialog } from "@/modules/payment/components/payment-form-dia
 import { TransferPaymentDialog } from "@/modules/payment/components/transfer-payment-dialog";
 import DashboardHeader from "./DashboardHeader";
 import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
-import { getSourceStatusInfo } from "@/modules/collection/utils/debt-claim-status";
+import {
+  getSourceStatusInfo,
+  ChipColor,
+} from "@/modules/collection/utils/debt-claim-status";
 import { getBlockadesByDebtorAction } from "@/modules/blockade/actions/get-blockades-by-debtor";
 
 type TenantTypes = {
@@ -264,42 +267,19 @@ const DashboardDebtor = () => {
     return new Date(dueDate).getTime() < Date.now();
   };
 
-  const ReactietermijnLabel = (dateStr: string) => {
+  // Misma forma que getSourceStatusInfo (label + color semántico MUI), para
+  // que todos los chips de la tabla compartan un único lenguaje visual.
+  const getReactietermijnInfo = (
+    dateStr: string,
+  ): { label: string; color: ChipColor } => {
     const date = new Date(dateStr);
-    const now = new Date();
-
-    const diffTime = date.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays > 0) {
-      return (
-        <Chip
-          label={`${diffDays} dagen`}
-          color="success"
-          sx={{ width: 150, borderRadius: "6px" }}
-        />
-      );
-    }
-
-    if (diffDays === 0) {
-      return (
-        <Chip
-          label="Vandaag"
-          size="small"
-          color="error"
-          sx={{ fontWeight: 600, width: 150, borderRadius: "6px" }}
-        />
-      );
-    }
-
-    return (
-      <Chip
-        label={`${Math.abs(diffDays)} dagen geleden`}
-        color="error"
-        variant="filled"
-        sx={{ width: 150, borderRadius: "6px" }}
-      />
+    const diffDays = Math.ceil(
+      (date.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
     );
+
+    if (diffDays > 0) return { label: `${diffDays} dagen`, color: "success" };
+    if (diffDays === 0) return { label: "Vandaag", color: "warning" };
+    return { label: `${Math.abs(diffDays)} dagen geleden`, color: "error" };
   };
 
   /** ---------------------------------------------------------------------
@@ -336,31 +316,21 @@ const DashboardDebtor = () => {
         onReset={handleResetFilters}
       />
 
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          mb: 2,
-          mt: 3,
-          alignItems: "center",
-        }}
-      >
-        <Typography variant="h5" fontWeight={700} color="primary.dark">
-          Mijn verplichtingen
-        </Typography>
-      </Box>
-
       <Suspense fallback={<h1>Loading collection cases...</h1>}>
-        <TableContainer component={Paper} sx={{ mt: 2 }}>
+        <TableContainer
+          component={Paper}
+          variant="outlined"
+          sx={{ borderColor: "grey.200" }}
+        >
           <Table
             stickyHeader
             size="small"
             sx={{
               "& .MuiTableCell-root": {
-                border: "1px solid #e0e0e0",
-                padding: "4px 8px",
+                borderBottom: "1px solid",
+                borderColor: "grey.200",
+                padding: "8px 12px",
               },
-              "& .MuiTableRow-root": { height: "32px" },
             }}
           >
             <TableHead>
@@ -382,7 +352,7 @@ const DashboardDebtor = () => {
                       minWidth: 50,
                       backgroundColor: "secondary.main",
                       color: "#fff",
-                      fontWeight: "bold",
+                      fontWeight: 600,
                     }}
                   >
                     {col}
@@ -397,7 +367,7 @@ const DashboardDebtor = () => {
                   <TableCell
                     colSpan={8}
                     align="center"
-                    sx={{ border: 0, py: 6 }}
+                    sx={{ borderBottom: 0, py: 6 }}
                   >
                     <Box
                       sx={{
@@ -422,7 +392,7 @@ const DashboardDebtor = () => {
                 </TableRow>
               )}
               {filteredDebts.map((debt) => (
-                <TableRow key={debt.id}>
+                <TableRow key={debt.id} hover>
                   <TableCell>{debt.tenant_name}</TableCell>
                   <TableCell>{debt.reference}</TableCell>
                   <TableCell align="center">
@@ -432,11 +402,8 @@ const DashboardDebtor = () => {
                         <Chip
                           label={status.label}
                           color={status.color}
-                          sx={{
-                            color: "#000",
-                            width: 150,
-                            borderRadius: "6px",
-                          }}
+                          size="small"
+                          variant="outlined"
                         />
                       );
                     })()}
@@ -448,7 +415,19 @@ const DashboardDebtor = () => {
                   </TableCell>
                   <TableCell align="center">
                     {debt.due_date
-                      ? ReactietermijnLabel(debt.due_date.toString())
+                      ? (() => {
+                          const reaction = getReactietermijnInfo(
+                            debt.due_date.toString(),
+                          );
+                          return (
+                            <Chip
+                              label={reaction.label}
+                              color={reaction.color}
+                              size="small"
+                              variant="outlined"
+                            />
+                          );
+                        })()
                       : "-"}
                   </TableCell>
                   <TableCell align="right">
@@ -471,6 +450,8 @@ const DashboardDebtor = () => {
                             ? "warning"
                             : "default"
                       }
+                      size="small"
+                      variant="outlined"
                     />
                   </TableCell>
                   <TableCell align="center">
