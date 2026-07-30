@@ -72,7 +72,7 @@ export const AgreementDialog: React.FC<AgreementDialogProps> = ({
           }}
         >
           <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
-            BETALINGSREGELING OVERZICHT
+            Betalingsregeling geaccepteerd
           </Typography>
           <IconButton sx={{ color: "white" }}>
             <CloseIcon onClick={onClose} />

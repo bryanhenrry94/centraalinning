@@ -36,6 +36,7 @@ import { UserRole } from "@/shared/constants/user-role";
 import useClientRouter from "@/shared/hooks/useNavigations";
 import { switchWorkspace } from "@/modules/auth/actions/workspace.actions";
 import { notifyError } from "@/shared/ui/notifications";
+import NotificationBell from "@/modules/notification/components/notification-bell";
 import Link from "next/link";
 
 export default function Header() {
@@ -286,6 +287,8 @@ export default function Header() {
                 },
               }}
             />
+
+            <NotificationBell />
 
             <IconButton onClick={(e) => setAvatarAnchorEl(e.currentTarget)}>
               <Avatar

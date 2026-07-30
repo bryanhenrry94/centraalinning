@@ -49,11 +49,12 @@ model Tenant {
 
   subscription Subscription?
 
-  contracts    Contract[]
-  debt_claims  DebtClaim[]
-  lawyers      Lawyer[]
-  block_checks BlockCheck[]
+  contracts     Contract[]
+  debt_claims   DebtClaim[]
+  lawyers       Lawyer[]
+  block_checks  BlockCheck[]
   bank_accounts BankAccount[]
+  notifications Notification[]
 
   @@map("tenant")
 }
@@ -597,12 +598,13 @@ model User {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  debtors               Debtor[]
-  bailiffs              Bailiff[]
-  messages              ChatMessage[]
-  password_reset_tokens PasswordResetToken[]
-  block_checks          BlockCheck[]
+  debtors                        Debtor[]
+  bailiffs                       Bailiff[]
+  messages                       ChatMessage[]
+  password_reset_tokens          PasswordResetToken[]
+  block_checks                   BlockCheck[]
   payment_transfer_verifications PaymentTransferVerification[]
+  notifications                  Notification[]
 
   @@map("user")
 }
@@ -1219,6 +1221,7 @@ model Agreement {
   tenant_id          String
   tenant             Tenant          @relation(fields: [tenant_id], references: [id])
   comment            String?
+  rejection_reason   String?         @db.Text
   created_at         DateTime        @default(now())
   updated_at         DateTime        @updatedAt
 
@@ -1246,6 +1249,41 @@ model AgreementInstallment {
   payment   Payment?  @relation(fields: [payment_id], references: [id])
 
   @@map("agreement_installment")
+}
+
+enum NotificationType {
+  AGREEMENT_PENDING_REVIEW
+  AGREEMENT_ACCEPTED
+  AGREEMENT_REJECTED
+  AGREEMENT_COUNTEROFFER
+  GENERIC
+}
+
+model Notification {
+  id String @id @default(cuid())
+
+  tenant_id String
+  tenant    Tenant @relation(fields: [tenant_id], references: [id])
+
+  user_id String
+  user    User   @relation(fields: [user_id], references: [id])
+
+  type    NotificationType
+  title   String
+  message String           @db.Text
+  link    String?
+
+  entity_type String?
+  entity_id   String?
+
+  is_read Boolean   @default(false)
+  read_at DateTime?
+
+  created_at DateTime @default(now())
+
+  @@index([user_id, is_read])
+  @@index([tenant_id])
+  @@map("notification")
 }
 
 enum ContractStatus {
@@ -1405,21 +1443,21 @@ model Payment {
 }
 
 model PaymentTransferVerification {
-  id                String    @id @default(cuid())
-  payment_id        String    @unique
-  payment           Payment   @relation(fields: [payment_id], references: [id])
+  id                String                       @id @default(cuid())
+  payment_id        String                       @unique
+  payment           Payment                      @relation(fields: [payment_id], references: [id])
   receipt_file_path String
   receipt_file_name String
-  token             String    @unique
+  token             String                       @unique
   token_expires_at  DateTime
   decision          TransferVerificationDecision @default(PENDING)
   decided_at        DateTime?
   decided_by_id     String?
-  decided_by        User?     @relation(fields: [decided_by_id], references: [id])
-  balance_after     Decimal?  @db.Decimal(18, 2)
+  decided_by        User?                        @relation(fields: [decided_by_id], references: [id])
+  balance_after     Decimal?                     @db.Decimal(18, 2)
   rejection_reason  String?
-  created_at        DateTime  @default(now())
-  updated_at        DateTime  @updatedAt
+  created_at        DateTime                     @default(now())
+  updated_at        DateTime                     @updatedAt
 
   @@map("payment_transfer_verification")
 }

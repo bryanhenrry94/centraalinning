@@ -2,6 +2,9 @@ import { prisma } from "@/lib/prisma";
 import { Agreement, CreateAgreement, AgreementResponse } from "@/modules/agreement/services/agreement.validators";
 import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
 import { InstallmentStatus } from "@/modules/agreement/constants/installment-status";
+import { NotificationService } from "@/modules/notification/services/notification.service";
+import { NotificationType } from "@/modules/notification/constants/notification-type";
+import { formatCurrency } from "@/shared/utils/formatters";
 
 type PaymentAgreementFilter = {
   debtClaim_id?: string;
@@ -14,6 +17,7 @@ const mapAgreementResponse = (a: any): AgreementResponse => ({
   id: a.id,
   tenant_id: a.tenant_id,
   debtClaim_id: a.debtClaim_id,
+  debtClaim_reference: a.debtClaim?.reference ?? undefined,
   total_amount: Number(a.total_amount),
   installment_amount: Number(a.installment_amount),
   installments_count: a.installments_count,
@@ -24,6 +28,7 @@ const mapAgreementResponse = (a: any): AgreementResponse => ({
   updated_at: a.updated_at ?? undefined,
   debtor_id: a.debtor_id ?? undefined,
   comment: a.comment ?? undefined,
+  rejection_reason: a.rejection_reason ?? undefined,
   debtor: a.debtor
     ? {
         id: a.debtor.id,
@@ -32,6 +37,8 @@ const mapAgreementResponse = (a: any): AgreementResponse => ({
           a.debtor.person?.business_name ||
           "",
         email: a.debtor.email ?? undefined,
+        phone: a.debtor.person?.phone ?? undefined,
+        personal_number: a.debtor.person?.personal_number ?? undefined,
       }
     : undefined,
 });
@@ -67,6 +74,43 @@ export class AgreementService {
       throw new Error("El debtor_id no coincide con la deuda indicada");
     }
 
+    // El deudor sólo puede solicitar un acuerdo mientras el AOP siga dentro
+    // de su plazo de reacción. Sólo el primer paso (Aanmaning) persiste hoy
+    // un deadline real; si un paso posterior no tiene deadline registrado,
+    // se permite (no se penaliza al deudor por un dato faltante).
+    const aop = await prisma.administrativeCollection.findUnique({
+      where: { debtClaimId: data.debtClaim_id },
+      include: { steps: { orderBy: { id: "desc" }, take: 1 } },
+    });
+    const latestDeadline = aop?.steps[0]?.deadline;
+    if (latestDeadline && new Date() > latestDeadline) {
+      throw new Error(
+        "De reactietermijn voor dit dossier is verstreken. U kunt geen nieuwe betalingsregeling meer aanvragen.",
+      );
+    }
+
+    const [pendingCount, acceptedCount] = await Promise.all([
+      prisma.agreement.count({
+        where: {
+          debtClaim_id: data.debtClaim_id,
+          status: { in: [AgreementStatus.PENDING, AgreementStatus.IN_NEGOTIATION, AgreementStatus.COUNTEROFFER] },
+        },
+      }),
+      prisma.agreement.count({
+        where: { debtClaim_id: data.debtClaim_id, status: AgreementStatus.ACCEPTED },
+      }),
+    ]);
+
+    if (pendingCount > 0) {
+      throw new Error(
+        "Er is al een betalingsregeling in behandeling voor dit dossier. Wacht tot deze is beoordeeld.",
+      );
+    }
+
+    if (acceptedCount > 0) {
+      throw new Error("Er bestaat al een goedgekeurde betalingsregeling voor dit dossier.");
+    }
+
     const newAgreement = await prisma.agreement.create({
       data: {
         tenant_id,
@@ -94,6 +138,28 @@ export class AgreementService {
           status: InstallmentStatus.PENDING,
         },
       });
+    }
+
+    // Cada creación pasa por este método sólo cuando la solicita el propio
+    // deudor (ver el chequeo requestingUserId más arriba); el personal usa
+    // update() para contraofertas. Por eso siempre se notifica al tenant.
+    try {
+      await NotificationService.notifyTenantStaff(
+        tenant_id,
+        {
+          type: NotificationType.AGREEMENT_PENDING_REVIEW,
+          title: "Nieuw voorstel betalingsregeling",
+          message: `Er is een nieuwe betalingsregeling aangevraagd van ${formatCurrency(
+            Number(data.total_amount),
+          )} over ${data.installments_count} termijnen (dossier ${debtClaim.reference || debtClaim.id}). Beoordeel het voorstel.`,
+          link: `/agreements?open=${newAgreement.id}`,
+          entity_type: "Agreement",
+          entity_id: newAgreement.id,
+        },
+        { excludeUserId: requestingUserId },
+      );
+    } catch (error) {
+      console.error("Error notifying tenant staff of new agreement request:", error);
     }
 
     return {
@@ -124,8 +190,26 @@ export class AgreementService {
     if (data.status !== undefined) updateData.status = data.status as unknown as AgreementStatus;
     if (data.debtor_id !== undefined) updateData.debtor_id = data.debtor_id ?? null;
     if (data.comment !== undefined) updateData.comment = data.comment ?? "";
+    if (data.rejection_reason !== undefined) updateData.rejection_reason = data.rejection_reason ?? null;
+
+    // El deudor debe poder saber por qué se rechazó su solicitud y ajustarla
+    // en consecuencia; sin motivo obligatorio el rechazo queda sin contexto.
+    if (updateData.status === AgreementStatus.REJECTED && !updateData.rejection_reason?.trim()) {
+      throw new Error("Debe indicar un motivo de rechazo.");
+    }
 
     const updated = await prisma.agreement.update({ where: { id }, data: updateData });
+
+    if (
+      updateData.status &&
+      [
+        AgreementStatus.ACCEPTED,
+        AgreementStatus.REJECTED,
+        AgreementStatus.COUNTEROFFER,
+      ].includes(updateData.status)
+    ) {
+      await this.notifyDebtorOfDecision(updated);
+    }
 
     if (updateData.installments_count) {
       await prisma.agreementInstallment.deleteMany({ where: { agreement_id: id } });
@@ -155,7 +239,59 @@ export class AgreementService {
       created_at: updated.created_at ?? undefined,
       updated_at: updated.updated_at ?? undefined,
       debtor_id: updated.debtor_id ?? undefined,
+      rejection_reason: updated.rejection_reason ?? undefined,
     };
+  }
+
+  // Informa al deudor la decisión del tenant sobre su solicitud; sin
+  // notificación el deudor sólo se entera si vuelve a consultar la página.
+  static async notifyDebtorOfDecision(agreement: {
+    id: string;
+    tenant_id: string;
+    debtor_id: string | null;
+    status: string;
+    rejection_reason?: string | null;
+  }): Promise<void> {
+    if (!agreement.debtor_id) return;
+
+    const debtor = await prisma.debtor.findUnique({ where: { id: agreement.debtor_id } });
+    if (!debtor?.user_id) return;
+
+    const copy: Record<string, { type: NotificationType; title: string; message: string }> = {
+      [AgreementStatus.ACCEPTED]: {
+        type: NotificationType.AGREEMENT_ACCEPTED,
+        title: "Betalingsregeling goedgekeurd",
+        message: "Uw voorstel voor een betalingsregeling is goedgekeurd.",
+      },
+      [AgreementStatus.REJECTED]: {
+        type: NotificationType.AGREEMENT_REJECTED,
+        title: "Betalingsregeling afgewezen",
+        message: `Uw voorstel voor een betalingsregeling is afgewezen. Reden: ${agreement.rejection_reason}. U kunt een nieuw voorstel indienen dat hiermee rekening houdt.`,
+      },
+      [AgreementStatus.COUNTEROFFER]: {
+        type: NotificationType.AGREEMENT_COUNTEROFFER,
+        title: "Tegenvoorstel ontvangen",
+        message: "De deelnemer heeft een tegenvoorstel gedaan voor uw betalingsregeling. Bekijk en reageer.",
+      },
+    };
+
+    const entry = copy[agreement.status];
+    if (!entry) return;
+
+    try {
+      await NotificationService.create({
+        tenant_id: agreement.tenant_id,
+        user_id: debtor.user_id,
+        type: entry.type,
+        title: entry.title,
+        message: entry.message,
+        link: "/agreements",
+        entity_type: "Agreement",
+        entity_id: agreement.id,
+      });
+    } catch (error) {
+      console.error("Error notifying debtor of agreement decision:", error);
+    }
   }
 
   static async existsAccepted(debtClaim_id: string): Promise<boolean> {
@@ -182,6 +318,14 @@ export class AgreementService {
       updated_at: a.updated_at ?? undefined,
       debtor_id: a.debtor_id ?? undefined,
     };
+  }
+
+  static async getResponseById(id: string): Promise<AgreementResponse | null> {
+    const a = await prisma.agreement.findUnique({
+      where: { id },
+      include: { debtor: { include: { person: true } }, debtClaim: true },
+    });
+    return a ? mapAgreementResponse(a) : null;
   }
 
   static async countByClaimId(debtClaim_id: string): Promise<number> {

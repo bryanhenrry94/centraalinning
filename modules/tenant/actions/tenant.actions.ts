@@ -1,6 +1,4 @@
 "use server";
-import { sendEmail } from "@/infrastructure/mail/resend-client";
-import { CreateAgreement } from "@/modules/agreement/services/agreement.validators";
 import { Tenant } from "@/modules/tenant/services/tenant.validators";
 import { TenantService } from "@/modules/tenant/services/tenant.service";
 
@@ -57,19 +55,4 @@ export const getAllTenants = async (): Promise<Tenant[]> => {
 
 export const validaSubdomain = async (subdomain: string) => {
   return TenantService.subdomainExists(subdomain);
-};
-
-export const notifyTenantNewAgreement = async (
-  tenant_id: string,
-  agreementData: CreateAgreement,
-) => {
-  const tenant = await TenantService.getById(tenant_id);
-  if (tenant) {
-    await sendEmail({
-      to: tenant.contact_email,
-      subject: "Nuevo Acuerdo de Pago Creado",
-      html: `Se ha creado un nuevo acuerdo de pago con los siguientes detalles: ${JSON.stringify(agreementData)}`,
-    });
-  }
-  console.log(`Notificación enviada al tenant ${tenant_id} sobre el nuevo acuerdo de pago:`, agreementData);
 };

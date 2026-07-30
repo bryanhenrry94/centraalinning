@@ -23,7 +23,6 @@ import {
   existsPaymentAgreement,
   updatePaymentAgreement,
 } from "@/modules/agreement/actions/agreement.actions";
-import { notifyTenantNewAgreement } from "@/modules/tenant/actions/tenant.actions";
 import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
 
 interface AgreementFormProps {
@@ -159,14 +158,10 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
       await createPaymentAgreement(session.user.tenant_id, payload);
       notifyInfo("Acuerdo de pago creado correctamente");
 
-      // notifica al tenant que se ha creado un nuevo acuerdo de pago (para que pueda revisar y aceptar/rechazar)
-      await notifyTenantNewAgreement(session.user.tenant_id, payload);
-      notifyInfo("El tenant ha sido notificado sobre el nuevo acuerdo de pago");
-
       onSave?.();
     } catch (err) {
       console.error(err);
-      notifyError("Error al procesar el acuerdo de pago");
+      notifyError(err instanceof Error ? err.message : "Error al procesar el acuerdo de pago");
     } finally {
       setLoading(false);
     }

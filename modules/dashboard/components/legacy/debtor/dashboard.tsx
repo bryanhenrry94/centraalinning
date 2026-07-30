@@ -178,7 +178,10 @@ const DashboardDebtor = () => {
    * -------------------------------------------------------------------- */
   const fetchAgreements = async (debtId: string) => {
     const response = await getAgreementsByDebtClaimId(debtId);
-    setAgreements(response || []);
+    // El overzicht sólo debe mostrar acuerdos activos (aprobado o en
+    // behandeling); solicitudes afgewezen/geannuleerd de rondas anteriores
+    // no deben acumularse en este resumen.
+    setAgreements((response || []).filter((a) => hasOpenAgreement(a.status)));
   };
 
   /** ---------------------------------------------------------------------
@@ -251,6 +254,14 @@ const DashboardDebtor = () => {
     setTenantFilter("");
     setStatusFilter("");
     setFiltersKey((k) => k + 1);
+  };
+
+  // Sólo se gatea cuando hay un deadline registrado; los pasos AOP
+  // posteriores al primero (Aanmaning) aún no persisten uno, y en ese caso
+  // no se penaliza al deudor por un dato faltante.
+  const isReactionTermExpired = (dueDate?: string | Date | null) => {
+    if (!dueDate) return false;
+    return new Date(dueDate).getTime() < Date.now();
   };
 
   const ReactietermijnLabel = (dateStr: string) => {
@@ -490,20 +501,28 @@ const DashboardDebtor = () => {
                         title={
                           hasOpenAgreement(debt.agreement_status)
                             ? "Betalingsregeling bekijken"
-                            : "Betalingsregeling aanvragen"
+                            : isReactionTermExpired(debt.due_date)
+                              ? "De reactietermijn is verstreken. Neem contact op met de deelnemer."
+                              : "Betalingsregeling aanvragen"
                         }
                       >
-                        <Button
-                          size="small"
-                          onClick={() => handleBetaalregelingClick(debt)}
-                          variant="outlined"
-                          color="secondary"
-                          startIcon={<HandshakeIcon fontSize="small" />}
-                        >
-                          {hasOpenAgreement(debt.agreement_status)
-                            ? "Regeling"
-                            : "Regeling aanvragen"}
-                        </Button>
+                        <span>
+                          <Button
+                            size="small"
+                            onClick={() => handleBetaalregelingClick(debt)}
+                            variant="outlined"
+                            color="secondary"
+                            startIcon={<HandshakeIcon fontSize="small" />}
+                            disabled={
+                              !hasOpenAgreement(debt.agreement_status) &&
+                              isReactionTermExpired(debt.due_date)
+                            }
+                          >
+                            {hasOpenAgreement(debt.agreement_status)
+                              ? "Regeling"
+                              : "Regeling aanvragen"}
+                          </Button>
+                        </span>
                       </Tooltip>
                     </Stack>
                   </TableCell>

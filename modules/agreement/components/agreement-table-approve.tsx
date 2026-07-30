@@ -11,21 +11,12 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
-import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
-import EditIcon from "@mui/icons-material/Edit";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 // components
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
-import { AlertService } from "@/shared/ui/alerts";
-import {
-  notifyApprovalAgreement,
-  updatePaymentAgreement,
-} from "@/modules/agreement/actions/agreement.actions";
-import { notifyInfo } from "@/shared/ui/notifications";
-import { AgreementFormDialog } from "./agreement-form-dialog";
-import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
+import { AgreementRequestDialog } from "./agreement-request-dialog";
 
 interface AgreementTableApproveProps {
   agreements: AgreementResponse[];
@@ -41,51 +32,19 @@ export const AgreementTableApprove = ({
   onUpdate,
 }: AgreementTableApproveProps) => {
   const [openModal, setOpenModal] = React.useState(false);
-  const [agreementSelected, setAgreementSelected] =
-    React.useState<AgreementResponse | null>(null);
-  const handleOpenModal = () => setOpenModal(true);
+  const [agreementSelectedId, setAgreementSelectedId] = React.useState<string | null>(null);
+
+  const handleOpenModal = (id: string) => {
+    setAgreementSelectedId(id);
+    setOpenModal(true);
+  };
   const handleCloseModal = () => setOpenModal(false);
 
-  const handleApprove = (id: string) => {
-    AlertService.showConfirm(
-      "¿Wilt u deze betalingsregeling accepteren?",
-      "",
-      "JA",
-      "NEE",
-    ).then(async (confirmed) => {
-      if (confirmed) {
-        await updatePaymentAgreement(id, {
-          status: AgreementStatus.ACCEPTED,
-        });
-        await notifyInfo("Betalingsregeling succesvol goedgekeurd.");
-        // await fetchAgreements();
-
-        await notifyApprovalAgreement(id);
-        notifyInfo(
-          "De debiteur is op de hoogte gebracht van de goedkeuring van de betalingsregeling.",
-        );
-
-        onApprove();
-      }
-    });
-  };
-
-  const handleReject = (id: string) => {
-    AlertService.showConfirm(
-      "¿Bent u zeker dat u deze wilt annuleren?",
-      "",
-      "JA",
-      "NEE",
-    ).then(async (confirmed) => {
-      if (confirmed) {
-        await updatePaymentAgreement(id, {
-          status: AgreementStatus.REJECTED,
-        });
-        await notifyInfo("Betalingsregeling afgewezen.");
-        // await fetchAgreements();
-        onReject();
-      }
-    });
+  // Todas las acciones (aceptar/rechazar/tegenvoorstel) se resuelven dentro
+  // del diálogo; en ambos consumidores actuales los tres callbacks del padre
+  // apuntan al mismo refresco de la lista, así que basta con onUpdate.
+  const handleResolved = () => {
+    onUpdate();
   };
 
   return (
@@ -111,7 +70,7 @@ export const AgreementTableApprove = ({
                 }}
                 align="center"
               >
-                Akkoord
+                Acties
               </TableCell>
               <TableCell
                 sx={{
@@ -223,16 +182,6 @@ export const AgreementTableApprove = ({
               >
                 Open
               </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-                align="center"
-              >
-                Edit
-              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -241,15 +190,9 @@ export const AgreementTableApprove = ({
                 <TableCell align="center">
                   <IconButton
                     color="primary"
-                    onClick={() => handleApprove(agreement.id)}
+                    onClick={() => handleOpenModal(agreement.id)}
                   >
-                    <ThumbUpAltIcon />
-                  </IconButton>
-                  <IconButton
-                    color="secondary"
-                    onClick={() => handleReject(agreement.id)}
-                  >
-                    <ThumbDownAltIcon />
+                    <VisibilityIcon />
                   </IconButton>
                 </TableCell>
                 <TableCell align="center">
@@ -284,46 +227,17 @@ export const AgreementTableApprove = ({
                 <TableCell align="right">
                   {formatCurrency(agreement.total_amount)}
                 </TableCell>
-
-                <TableCell align="center">
-                  <IconButton>
-                    <EditIcon
-                      onClick={() => {
-                        setAgreementSelected(agreement);
-                        handleOpenModal();
-                      }}
-                    />
-                  </IconButton>
-                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
 
-      <AgreementFormDialog
-        title="BETALINGSREGELING AANPASSEN"
+      <AgreementRequestDialog
         open={openModal}
+        agreementId={agreementSelectedId}
         onClose={handleCloseModal}
-        id={agreementSelected?.id || ""}
-        debtClaim_id={agreementSelected?.debtClaim_id || ""}
-        referenceLabel={
-          agreementSelected?.debtor
-            ? agreementSelected.debtor.fullname
-            : undefined
-        }
-        outstandingAmount={agreementSelected?.total_amount}
-        initialData={{
-          debtClaim_id: agreementSelected?.debtClaim_id || "",
-          ...agreementSelected,
-          total_amount: agreementSelected?.total_amount || 0,
-          installment_amount: agreementSelected?.installment_amount || 0,
-          installments_count: agreementSelected?.installments_count || 0,
-          start_date: agreementSelected?.start_date || new Date(),
-          end_date: agreementSelected?.end_date || new Date(),
-          status: AgreementStatus.COUNTEROFFER,
-        }}
-        onSave={onUpdate}
+        onResolved={handleResolved}
       />
     </>
   );

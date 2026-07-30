@@ -81,6 +81,12 @@ export const getPaymentAgreementById = async (id: string): Promise<Agreement | n
   return AgreementService.getById(id);
 };
 
+export const getPaymentAgreementDetail = async (
+  id: string,
+): Promise<AgreementResponse | null> => {
+  return AgreementService.getResponseById(id);
+};
+
 export const countPaymentAgreementsByCliam = async (debtClaim_id: string): Promise<number> => {
   return AgreementService.countByClaimId(debtClaim_id);
 };
