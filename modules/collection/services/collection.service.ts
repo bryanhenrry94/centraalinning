@@ -499,18 +499,10 @@ export class CollectionService {
         nextStep === "BLK_NOTIFICATION" ||
         (!nextStep && currentStep?.step === "DEFAULT_NOTICE")
       ) {
-        const personId = aop.debtClaim.debtor.person?.id;
-        if (personId) {
-          await tx.person.update({
-            where: { id: personId },
-            data: { has_blockade: true },
-          });
-        }
-
-        // Genereert het formele Blockade-record voor deze vordering, zodat
-        // de blokkade net als bij een directe registratie een echte rij
-        // heeft (niet alleen de has_blockade-vlag). Geen betaling nodig:
-        // dit is een automatisch gevolg van het AOP-proces, direct ACTIVE.
+        // Genereert het formele Blockade-record voor deze vordering. Geen
+        // betaling nodig: dit is een automatisch gevolg van het AOP-proces,
+        // direct ACTIVE. La tabla Blockade (vía releasedAt) es la única
+        // fuente de verdad para "está bloqueado", ya no existe person.has_blockade.
         const existingBlockade = await tx.blockade.findUnique({
           where: { originDebtClaimId: debtClaimId },
         });

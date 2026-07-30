@@ -698,8 +698,6 @@ model Person {
   birth_date  DateTime?
   birth_place String?
 
-  has_blockade Boolean @default(false)
-
   country_code    String?
   personal_number String? @unique
 
@@ -1256,6 +1254,8 @@ enum NotificationType {
   AGREEMENT_ACCEPTED
   AGREEMENT_REJECTED
   AGREEMENT_COUNTEROFFER
+  BLOCKADE_SUSPENDED
+  BLOCKADE_REACTIVATED
   GENERIC
 }
 

@@ -282,6 +282,57 @@ export class BlockadeService {
     };
   };
 
+  // Suspende temporalmente el/los bloqueo(s) ACTIVE de este deudor con este
+  // tenant cuando se acepta un acuerdo de pago. releasedAt se limpia porque
+  // BlockCheckService (y ahora también el reporte financiero) usan ese campo
+  // como única señal de "está bloqueado" en tiempo real.
+  static suspendActiveForDebtor = async (debtorId: string, tenantId: string) => {
+    const blockades = await prisma.blockade.findMany({
+      where: { debtorId, tenantId, status: "ACTIVE" },
+    });
+    if (blockades.length === 0) return [];
+
+    await prisma.blockade.updateMany({
+      where: { id: { in: blockades.map((b) => b.id) } },
+      data: { status: "SUSPENDED", releasedAt: new Date() },
+    });
+
+    return blockades;
+  };
+
+  // Reactiva un bloqueo SUSPENDED (incumplimiento del acuerdo de pago) y
+  // envía la notificación de bloqueo al deudor, igual que en el resto del
+  // flujo de blokkade.
+  static reactivate = async (blockadeId: string) => {
+    const blockade = await prisma.blockade.findUnique({
+      where: { id: blockadeId },
+      include: { debtor: { include: { person: true, tenant: true } } },
+    });
+    if (!blockade || blockade.status !== "SUSPENDED") return null;
+
+    await prisma.blockade.update({
+      where: { id: blockadeId },
+      data: { status: "ACTIVE", releasedAt: null },
+    });
+
+    if (blockade.debtor.email) {
+      await sendMailBlockade(
+        blockade.debtor.email,
+        `${blockade.debtor.person?.first_name ?? ""} ${blockade.debtor.person?.last_name ?? ""}`.trim(),
+        blockade.debtor.tenant?.name || "",
+      );
+    }
+
+    return blockade;
+  };
+
+  static getSuspended = async () => {
+    return prisma.blockade.findMany({
+      where: { status: "SUSPENDED" },
+      include: { debtor: true },
+    });
+  };
+
   static processBlokCheckPayment = async (paymentId: string) => {
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId },

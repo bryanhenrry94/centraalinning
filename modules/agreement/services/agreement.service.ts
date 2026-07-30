@@ -4,6 +4,7 @@ import { AgreementStatus } from "@/modules/agreement/constants/agreement-status"
 import { InstallmentStatus } from "@/modules/agreement/constants/installment-status";
 import { NotificationService } from "@/modules/notification/services/notification.service";
 import { NotificationType } from "@/modules/notification/constants/notification-type";
+import { BlockadeService } from "@/modules/blockade/services/blockade.service";
 import { formatCurrency } from "@/shared/utils/formatters";
 
 type PaymentAgreementFilter = {
@@ -211,6 +212,10 @@ export class AgreementService {
       await this.notifyDebtorOfDecision(updated);
     }
 
+    if (updateData.status === AgreementStatus.ACCEPTED) {
+      await this.suspendBlockadeIfAny(updated);
+    }
+
     if (updateData.installments_count) {
       await prisma.agreementInstallment.deleteMany({ where: { agreement_id: id } });
       for (let i = 0; i < updateData.installments_count; i++) {
@@ -291,6 +296,42 @@ export class AgreementService {
       });
     } catch (error) {
       console.error("Error notifying debtor of agreement decision:", error);
+    }
+  }
+
+  // Un acuerdo aceptado con este tenant justifica levantar temporalmente su
+  // bloqueo económico mientras lo cumpla; si luego incumple, el job de
+  // reactivación (lib/jobs/check_blockade_reactivation.ts) lo revierte.
+  static async suspendBlockadeIfAny(agreement: {
+    id: string;
+    tenant_id: string;
+    debtor_id: string | null;
+  }): Promise<void> {
+    if (!agreement.debtor_id) return;
+
+    try {
+      const suspended = await BlockadeService.suspendActiveForDebtor(
+        agreement.debtor_id,
+        agreement.tenant_id,
+      );
+      if (suspended.length === 0) return;
+
+      const debtor = await prisma.debtor.findUnique({ where: { id: agreement.debtor_id } });
+      if (!debtor?.user_id) return;
+
+      await NotificationService.create({
+        tenant_id: agreement.tenant_id,
+        user_id: debtor.user_id,
+        type: NotificationType.BLOCKADE_SUSPENDED,
+        title: "Economische blokkade tijdelijk opgeheven",
+        message:
+          "Uw betalingsregeling is goedgekeurd en uw economische blokkade is tijdelijk opgeheven. Bij het niet nakomen van de termijnen wordt de blokkade automatisch weer geactiveerd.",
+        link: "/agreements",
+        entity_type: "Agreement",
+        entity_id: agreement.id,
+      });
+    } catch (error) {
+      console.error("Error suspending blockade for accepted agreement:", error);
     }
   }
 

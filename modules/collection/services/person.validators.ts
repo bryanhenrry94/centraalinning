@@ -14,7 +14,6 @@ export const PersonSchema = z.object({
   address: z.string().optional().nullable(),
   birth_date: z.coerce.date().optional().nullable(),
   birth_place: z.string().optional().nullable(),
-  has_blockade: z.boolean().optional(),
 });
 
 export const PersonSummarySchema = PersonSchema.pick({

@@ -64,7 +64,6 @@ export class DebtorService {
             address: debtorData.address,
             birth_date: debtorData.birth_date,
             birth_place: debtorData.birth_place,
-            has_blockade: false,
             country_code: tenant?.country_code,
             personal_number,
           },

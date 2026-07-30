@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { processCollectionCaseWorkflow } from "@/lib/jobs/process_collection_case_workflow";
 import { checkBlockadeReactivation } from "@/lib/jobs/check_blockade_reactivation";
 
 export async function GET(req: NextRequest) {
@@ -10,17 +9,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const notifResult = await processCollectionCaseWorkflow();
-    const blockadeResult = await checkBlockadeReactivation();
-
-    return NextResponse.json({
-      success: true,
-      message: "Todos los procesos ejecutados correctamente",
-      stats: {
-        notified: notifResult.sent,
-        blockadesReactivated: blockadeResult.reactivated,
-      },
-    });
+    const result = await checkBlockadeReactivation();
+    return NextResponse.json({ success: true, ...result });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

@@ -34,7 +34,6 @@ export class PersonService {
       email: person.email,
       phone: person.phone,
       address: person.address,
-      has_blockade: person.has_blockade,
     })) as PersonInput[];
   }
 

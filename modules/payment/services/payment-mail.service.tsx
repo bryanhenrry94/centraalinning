@@ -139,26 +139,29 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
       where: { debtor_id: debtor.id, status: "CANCELLED" },
     });
 
+    // Igual que BlockCheckService.existsBlockCheck: la fuente de verdad es la
+    // tabla Blockade (cross-tenant, vía releasedAt), no person.has_blockade
+    // — ese flag no se actualiza en los flujos de registro directo ni de
+    // activación por block-check, así que puede quedar desactualizado.
+    const activeBlockade = await prisma.blockade.findFirst({
+      where: {
+        debtor: { person_id: financial_report.person_id },
+        releasedAt: null,
+      },
+    });
+    const hasActiveBlockade = !!activeBlockade;
+
     let summary = "";
 
-    if (
-      financial_report?.person?.has_blockade === false &&
-      overduePaymentPlansCount <= 0
-    ) {
+    if (!hasActiveBlockade && overduePaymentPlansCount <= 0) {
       summary = "Actieve betalingsregelingen worden correct nagekomen.";
     }
 
-    if (
-      financial_report?.person?.has_blockade === true &&
-      overduePaymentPlansCount <= 0
-    ) {
+    if (hasActiveBlockade && overduePaymentPlansCount <= 0) {
       summary = "Er is een actieve economische blokkade geregistreerd.";
     }
 
-    if (
-      financial_report?.person?.has_blockade === true &&
-      activePaymentPlansCount > 0
-    ) {
+    if (hasActiveBlockade && activePaymentPlansCount > 0) {
       summary =
         "Er is een actieve economische blokkade geregistreerd. Een betalingsregeling is actief.";
     }
@@ -184,9 +187,7 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
       overduePaymentPlans: overduePaymentPlansCount
         ? overduePaymentPlansCount.toString()
         : "0",
-      economicBlockRegistered: financial_report?.person?.has_blockade
-        ? "Met Blokkade"
-        : "Geen Blokkade",
+      economicBlockRegistered: hasActiveBlockade ? "Met Blokkade" : "Geen Blokkade",
       summary,
       debts: openDebts.map((debt) => ({
         reference: debt.reference || debt.id,
