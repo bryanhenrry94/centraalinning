@@ -1196,7 +1196,7 @@ const OvereenkomstenRegistrerenPage = () => {
                   {watch("contract_type") === "DELIVERY_OF_GOODS"
                     ? "Levering van goederen"
                     : watch("contract_type") === "SERVICES"
-                      ? "CFSB-Diensten"
+                      ? "Diensten"
                       : watch("contract_type") === "RENT"
                         ? "Huur"
                         : watch("contract_type") === "LOAN"

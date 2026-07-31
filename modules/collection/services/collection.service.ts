@@ -561,6 +561,7 @@ export class CollectionService {
           orderBy: { created_at: "desc" },
           select: { status: true },
         },
+        legalProcess: { select: { id: true } },
       },
     });
 
@@ -599,6 +600,7 @@ export class CollectionService {
         aopStep: c.administrativeCollection?.steps[0]?.step ?? null,
         paymentLink: c.obligations[0]?.payments[0]?.payment_url ?? null,
         agreementStatus,
+        legalProcessId: c.legalProcess?.id ?? null,
       };
     });
   };

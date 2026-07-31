@@ -173,7 +173,21 @@ export class BillingInvoiceService {
     return { ...invoice, status: invoice.status as "unpaid" | "paid" | "overdue" };
   }
 
-  static async create(invoice: BillingInvoiceCreate, tenant_id: string): Promise<BillingInvoiceBase> {
+  // `payment_id` es obligatorio en el modelo (relación 1:1 con Payment) y
+  // debe apuntar a un Payment real creado previamente (ver PaymentService.create,
+  // que primero abre el "payment intent" contra Sentoo). Sin esto, el insert
+  // viola la foreign key de forma silenciosa-hasta-que-truena en producción.
+  static async create(
+    invoice: BillingInvoiceCreate,
+    tenant_id: string,
+    payment_id?: string,
+  ): Promise<BillingInvoiceBase> {
+    if (!payment_id) {
+      throw new Error(
+        "BillingInvoiceService.create requiere un payment_id válido. Crea el Payment primero (PaymentService.create) y pasa su id aquí.",
+      );
+    }
+
     const newInvoice = await prisma.billingInvoice.create({
       data: {
         invoice_number: invoice.invoice_number,
@@ -184,7 +198,7 @@ export class BillingInvoiceService {
         tenant_id,
         currency: "USD",
         amount: invoice.amount ?? 0,
-        payment_id: "",
+        payment_id,
       },
     });
 

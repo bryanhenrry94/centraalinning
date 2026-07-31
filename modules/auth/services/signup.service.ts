@@ -155,9 +155,48 @@ export class SignupService {
           await tx.membershipRole.create({
             data: {
               membership_id: membership.id,
-              role: "TENANT_ADMIN",
+              role: plan.target_role,
             },
           });
+
+          // El plan elegido determina el rol de la cuenta (Deelnemer,
+          // Advocaat, Deurwaarder). Si es Advocaat/Deurwaarder, la cuenta
+          // también aparece como abogado/alguacil autorregistrado,
+          // disponible platform-wide para que cualquier tenant lo elija al
+          // transferir un GOP (ver LawyerService.getAllActive /
+          // BailiffService.getAllActive). Queda INACTIVE hasta que se
+          // confirme el pago (ver processSubscriptionPayment).
+          if (plan.target_role === "LAWYER") {
+            const [firstName, ...rest] = validatedData.fullname.trim().split(/\s+/);
+            await tx.lawyer.create({
+              data: {
+                tenantId: tenant.id,
+                userId: user.id,
+                firstName: firstName || validatedData.fullname,
+                lastName: rest.join(" ") || "",
+                companyName: validatedData.company_name,
+                email: normalizedEmail,
+                phone: validatedData.phone,
+                status: "INACTIVE",
+              },
+            });
+          } else if (plan.target_role === "BAILIFF") {
+            const existingBailiffEmail = await tx.bailiff.findUnique({
+              where: { email: normalizedEmail },
+            });
+            if (!existingBailiffEmail) {
+              await tx.bailiff.create({
+                data: {
+                  tenant_id: tenant.id,
+                  user_id: user.id,
+                  fullname: validatedData.fullname,
+                  email: normalizedEmail,
+                  phone: validatedData.phone,
+                  status: "INACTIVE",
+                },
+              });
+            }
+          }
 
           const subscription = await tx.subscription.create({
             data: {

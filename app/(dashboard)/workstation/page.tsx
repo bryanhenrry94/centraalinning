@@ -95,10 +95,10 @@ export default function WorkstationPage() {
         "Draag het dossier over aan een aangesloten advocaat of deurwaarder voor verdere gerechtelijke opvolging.",
       color: "#00897b",
       icon: GavelIcon,
-      buttonText: "Gerechtelijke opvolging starten →",
+      buttonText: "Dossier kiezen om over te dragen →",
       linkText: "📋 Mijn gerechtelijke dossiers",
-      linkList: "/verdicts",
-      newLink: "/verdicts/new",
+      linkList: "/legal-processes",
+      newLink: "/collections",
     },
   ];
 
@@ -112,13 +112,13 @@ export default function WorkstationPage() {
         {/* Header */}
         <Box sx={{ mb: { xs: 2, sm: 4 } }}>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
-            CFSB-Diensten
+            Diensten
           </Typography>
           <Typography
             variant="subtitle1"
             sx={{ color: "#666", fontSize: "16px" }}
           >
-            Alle CFSB-Diensten op één scherm
+            Alle Diensten op één scherm
           </Typography>
         </Box>
 

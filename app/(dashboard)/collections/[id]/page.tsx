@@ -38,6 +38,11 @@ import {
   getAopStepInfo,
   getWorkflowStatusInfo,
 } from "@/modules/collection/utils/debt-claim-status";
+import { getLegalProcessByDebtClaimId } from "@/modules/legal-process/actions/legal-process.actions";
+import { TransferToLawyerDialog } from "@/modules/legal-process/components/transfer-to-lawyer-dialog";
+import Button from "@mui/material/Button";
+import Tooltip from "@mui/material/Tooltip";
+import GavelIcon from "@mui/icons-material/Gavel";
 
 const CollectionViewPage: React.FC = () => {
   const router = useRouter();
@@ -51,6 +56,8 @@ const CollectionViewPage: React.FC = () => {
   const [notifications, setNotifications] = useState<
     AOPStepNotification[] | null
   >(null);
+  const [legalProcessId, setLegalProcessId] = useState<string | null>(null);
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!params.id) {
@@ -66,15 +73,18 @@ const CollectionViewPage: React.FC = () => {
     try {
       setLoading(true);
 
-      const [claim, paymentsData, notificationsData] = await Promise.all([
-        getDebtClaimViewById(debtClaimId),
-        getPaymentsByInvoice(debtClaimId),
-        getAopStepsForClaim(debtClaimId),
-      ]);
+      const [claim, paymentsData, notificationsData, legalProcess] =
+        await Promise.all([
+          getDebtClaimViewById(debtClaimId),
+          getPaymentsByInvoice(debtClaimId),
+          getAopStepsForClaim(debtClaimId),
+          getLegalProcessByDebtClaimId(debtClaimId),
+        ]);
 
       setCollection(claim ?? null);
       setPayments(paymentsData ?? []);
       setNotifications(notificationsData ?? []);
+      setLegalProcessId(legalProcess?.id ?? null);
     } catch (error) {
       console.error("Error fetching collection detail:", error);
       notifyError("Er is een fout opgetreden bij het laden van het dossier");
@@ -121,7 +131,7 @@ const CollectionViewPage: React.FC = () => {
               </Typography>
             </Box>
 
-            <Stack direction="row" spacing={1}>
+            <Stack direction="row" spacing={1} alignItems="center">
               <Chip
                 label={statusInfo.label}
                 color={statusInfo.color}
@@ -134,6 +144,38 @@ const CollectionViewPage: React.FC = () => {
                   color={aopInfo.color}
                   sx={{ fontWeight: 700 }}
                 />
+              )}
+              {legalProcessId ? (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<GavelIcon />}
+                  onClick={() =>
+                    router.push(`/legal-processes/${legalProcessId}`)
+                  }
+                >
+                  GOP-dossier
+                </Button>
+              ) : (
+                <Tooltip
+                  title={
+                    collection?.aopStep === "BLK_NOTIFICATION"
+                      ? ""
+                      : "Vereist AOP-fase Blokkade voordat het dossier kan worden overgedragen aan gerechtelijke opvolging."
+                  }
+                >
+                  <span>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      startIcon={<GavelIcon />}
+                      disabled={collection?.aopStep !== "BLK_NOTIFICATION"}
+                      onClick={() => setTransferDialogOpen(true)}
+                    >
+                      Dossieroverdracht voor mogelijke gerechtelijke opvolging
+                    </Button>
+                  </span>
+                </Tooltip>
               )}
             </Stack>
           </Stack>
@@ -403,6 +445,15 @@ const CollectionViewPage: React.FC = () => {
           </Card>
         </Stack>
       </Stack>
+
+      {params.id && (
+        <TransferToLawyerDialog
+          open={transferDialogOpen}
+          onClose={() => setTransferDialogOpen(false)}
+          debtClaimId={params.id as string}
+          onTransferred={() => loadData(params.id as string)}
+        />
+      )}
     </Container>
   );
 };

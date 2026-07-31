@@ -40,6 +40,9 @@ export const canUseFeature = (
     const restrictedActions: AppAction[] = [
       AppAction.CREATE_COLLECTION,
       AppAction.BLOK_CHECK,
+      // Un tenant en mora no puede iniciar un nuevo GOP, pero sí debe poder
+      // seguir gestionando y cancelando los expedientes GOP ya en curso.
+      AppAction.TRANSFER_TO_LAWYER,
     ];
 
     if (restrictedActions.includes(action)) {

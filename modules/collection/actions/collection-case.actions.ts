@@ -8,6 +8,7 @@ import {
 } from "@/modules/collection/services/collection.validators";
 import { DebtClaimFilter } from "@/modules/collection/services/collection.type";
 import { CollectionService } from "@/modules/collection/services/collection.service";
+import { ClaimTimelineService } from "@/modules/collection/services/claim-timeline.service";
 
 export const getDebtClaimById = async (id: string): Promise<DebtClaim> => {
   return CollectionService.getById(id);
@@ -44,3 +45,7 @@ export async function createPendingDebtClaimAction(data: DebtClaimCreate) {
 
   return CollectionService.createPending(data, session.user.tenant_id);
 }
+
+export const getClaimTimelineForDebtClaim = async (debtClaimId: string) => {
+  return ClaimTimelineService.getForDebtClaim(debtClaimId);
+};

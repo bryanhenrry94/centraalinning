@@ -5,6 +5,7 @@ import { processFinancialReportPayment } from "./financial-report-processor";
 import { PaymentType } from "./payment.validators";
 import { processCollectionPayment } from "@/modules/collection/services/collection.service";
 import { BlockadeService } from "@/modules/blockade/services/blockade.service";
+import { LegalProcessService } from "@/modules/legal-process/services/legal-process.service";
 
 export async function processSuccessfulPayment(paymentId: string) {
   const payment = await prisma.payment.findUnique({
@@ -30,6 +31,9 @@ export async function processSuccessfulPayment(paymentId: string) {
 
     case PaymentType.BLOK_CHECK:
       return BlockadeService.processBlokCheckPayment(payment.id);
+
+    case PaymentType.GOP:
+      return LegalProcessService.processGopFeePaymentConfirmed(payment.id);
 
     default:
       console.warn(`No processor found for ${payment.payment_type}`);

@@ -5,34 +5,16 @@ import {
   getContractStatusColor,
 } from "@/modules/contract/utils/contract-status";
 import { getDebtClaimStatusInfo } from "@/modules/collection/utils/debt-claim-status";
+import {
+  OPEN_LEGAL_PROCESS_STATUSES,
+  COMPLETED_LEGAL_PROCESS_STATUSES,
+  getLegalProcessStatusInfo,
+} from "@/modules/legal-process/utils/legal-process-status";
 
 export type DocumentFilter = "open" | "completed" | "all";
 
 export const OPEN_DEBT_CLAIM_STATUSES = ["OPEN", "IN_PROGRESS"] as const;
 export const COMPLETED_DEBT_CLAIM_STATUSES = ["SETTLED", "CLOSED"] as const;
-
-const OPEN_LEGAL_PROCESS_STATUSES = ["DRAFT", "ACTIVE", "ON_HOLD"] as const;
-const COMPLETED_LEGAL_PROCESS_STATUSES = ["COMPLETED"] as const;
-
-const LEGAL_PROCESS_STATUS_CONFIG: Record<
-  string,
-  { label: string; color: TableSummaryResponse["statusColor"] }
-> = {
-  DRAFT: { label: "Concept", color: "default" },
-  ACTIVE: { label: "In behandeling", color: "info" },
-  ON_HOLD: { label: "Aangehouden", color: "warning" },
-  COMPLETED: { label: "Voltooid", color: "success" },
-  CANCELLED: { label: "Geannuleerd", color: "error" },
-};
-
-function getLegalProcessStatusInfo(status: string) {
-  return (
-    LEGAL_PROCESS_STATUS_CONFIG[status] ?? {
-      label: status,
-      color: "default" as TableSummaryResponse["statusColor"],
-    }
-  );
-}
 
 export class ReportService {
   static getTableSummary = async (

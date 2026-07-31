@@ -30,7 +30,7 @@ const menus: MenuItem[] = [
     role: [UserRole.PLATFORM_OWNER, UserRole.DEBTOR, UserRole.BAILIFF],
   },
   {
-    label: "CFSB-Diensten",
+    label: "Diensten",
     href: "/client",
     icon: <DashboardOutlinedIcon fontSize="small" />,
     role: [UserRole.TENANT_ADMIN],
@@ -61,9 +61,9 @@ const menus: MenuItem[] = [
   },
   {
     label: "Gerechtelijke opvolging",
-    href: "/client/verdicts",
+    href: "/legal-processes",
     icon: <GavelOutlinedIcon fontSize="small" />,
-    role: [UserRole.TENANT_ADMIN],
+    role: [UserRole.TENANT_ADMIN, UserRole.BAILIFF, UserRole.LAWYER],
   },
   {
     label: "Gerechtelijk Vonnis",

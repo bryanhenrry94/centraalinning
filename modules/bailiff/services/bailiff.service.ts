@@ -75,6 +75,16 @@ export class BailiffService {
     }) as Promise<Bailiff[]>;
   }
 
+  // Directorio platform-wide: cualquier alguacil autorregistrado (plan
+  // Deurwaarder) y con la suscripción al día, sin filtrar por tenant — así
+  // lo puede elegir cualquier participante al transferir un expediente a GOP.
+  static async getAllActive(): Promise<Bailiff[]> {
+    return prisma.bailiff.findMany({
+      where: { status: "ACTIVE", user_id: { not: null } },
+      orderBy: { fullname: "asc" },
+    }) as Promise<Bailiff[]>;
+  }
+
   static async getByUserId(
     user_id: string,
   ): Promise<{ success: boolean; data?: Bailiff; error?: string }> {

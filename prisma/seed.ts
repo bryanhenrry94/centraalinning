@@ -103,6 +103,7 @@ async function seedPlans() {
       yearly_price: 1800,
       reactivation_price: 75,
       order: 1,
+      target_role: "TENANT_ADMIN" as const,
       features: [
         FEATURE_FAR_REGISTER,
         FEATURE_BLC_EXECUTE,
@@ -121,6 +122,7 @@ async function seedPlans() {
       yearly_price: 3000,
       reactivation_price: 125,
       order: 2,
+      target_role: "LAWYER" as const,
       features: [
         FEATURE_GOP_RECEIVE,
         FEATURE_GOP_MANAGE_PROCEDURES,
@@ -137,6 +139,7 @@ async function seedPlans() {
       yearly_price: 3000,
       reactivation_price: 100,
       order: 3,
+      target_role: "BAILIFF" as const,
       features: [
         FEATURE_GOP_RECEIVE,
         FEATURE_VERDICTS_REGISTER,

@@ -53,6 +53,7 @@ export const DebtClaimResponseSchema = DebtClaimSchema.extend({
   aopStep: AopStepEnum.nullable().optional(),
   paymentLink: z.string().nullable().optional(),
   agreementStatus: z.string().nullable().optional(),
+  legalProcessId: z.string().nullable().optional(),
 });
 
 export type DebtClaim = z.infer<typeof DebtClaimSchema>;

@@ -96,9 +96,11 @@ export default function Header() {
     group.roles.some((role) => userRoles.includes(role)),
   );
 
-  // "dossiers" (CFSB-Diensten) ya tiene su propio botón fijo hacia /workstation;
+  // "dossiers" (Diensten) ya tiene su propio botón fijo hacia /workstation;
   // acá sólo mostramos los demás grupos (p.ej. el del deudor) como dropdown.
-  const dropdownGroups = availableGroups.filter((group) => group.id !== "dossiers");
+  const dropdownGroups = availableGroups.filter(
+    (group) => group.id !== "dossiers",
+  );
 
   const handleSignOut = () => {
     redirectToLogout();
@@ -228,7 +230,7 @@ export default function Header() {
                     fontWeight: 500,
                   }}
                 >
-                  CFSB-Diensten
+                  Diensten
                 </Button>
               )}
 
@@ -337,7 +339,12 @@ export default function Header() {
                 <>
                   <Typography
                     variant="caption"
-                    sx={{ px: 2, pt: 1, display: "block", color: "text.secondary" }}
+                    sx={{
+                      px: 2,
+                      pt: 1,
+                      display: "block",
+                      color: "text.secondary",
+                    }}
                   >
                     Werkruimte wisselen
                   </Typography>
@@ -433,7 +440,7 @@ export default function Header() {
               >
                 <AppsIcon sx={{ mr: 2 }} />
 
-                <ListItemText primary="CFSB-Diensten" />
+                <ListItemText primary="Diensten" />
               </ListItemButton>
             )}
 

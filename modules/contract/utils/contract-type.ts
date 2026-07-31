@@ -3,7 +3,7 @@ export const getContractTypeLabel = (type: string) => {
     case "DELIVERY_OF_GOODS":
       return "Levering van goederen";
     case "SERVICES":
-      return "CFSB-Diensten";
+      return "Diensten";
     case "RENT":
       return "Huur";
     case "LOAN":

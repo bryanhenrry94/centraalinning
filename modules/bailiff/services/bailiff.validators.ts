@@ -7,6 +7,9 @@ export const bailiffBaseSchema = z.object({
   phone: z.string().nullable().optional(),
   tenant_id: z.string().uuid(),
   user_id: z.string().uuid().nullable().optional(),
+  // String en vez del enum de Prisma a propósito: evita el choque nominal
+  // entre el BailiffStatus generado por Prisma y un enum TS propio.
+  status: z.string().optional(),
   created_at: z.date(),
   updated_at: z.date(),
 });
@@ -14,6 +17,7 @@ export const bailiffBaseSchema = z.object({
 export const bailiffCreateSchema = bailiffBaseSchema.omit({
   id: true,
   tenant_id: true,
+  status: true,
   created_at: true,
   updated_at: true,
 });

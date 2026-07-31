@@ -64,6 +64,18 @@ export const processSubscriptionPayment = async (payment: Payment) => {
       });
     }
 
+    // Si esta suscripción es de un abogado o alguacil autorregistrado
+    // (planes Advocaat/Deurwaarder), activarlo también — recién ahí queda
+    // disponible en el directorio platform-wide para transferencias de GOP.
+    await tx.lawyer.updateMany({
+      where: { tenantId: payment.tenant_id, status: "INACTIVE" },
+      data: { status: "ACTIVE" },
+    });
+    await tx.bailiff.updateMany({
+      where: { tenant_id: payment.tenant_id, status: "INACTIVE" },
+      data: { status: "ACTIVE" },
+    });
+
     // Generar factura y enviar email al tenant
     const invoiceData = await InvoiceService.generateInvoiceData(payment.id);
     const invoice = await InvoiceService.createInvoice(invoiceData);

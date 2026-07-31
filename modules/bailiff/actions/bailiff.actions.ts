@@ -30,6 +30,12 @@ export async function getAllBailiffs(tenant_id: string): Promise<Bailiff[]> {
   return BailiffService.getAll(tenant_id);
 }
 
+// Directorio platform-wide (alguaciles autorregistrados y activos), para
+// elegir a quién transferir un expediente GOP — no depende del tenant que llama.
+export async function getActiveBailiffsDirectory(): Promise<Bailiff[]> {
+  return BailiffService.getAllActive();
+}
+
 export const getBailiffByUserId = async (
   user_id: string,
 ): Promise<{ success: boolean; data?: Bailiff; error?: string }> => {

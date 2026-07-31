@@ -43,7 +43,7 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
             onStartDateChange={(date) => setStartDate(date)}
             onEndDateChange={(date) => setEndDate(date)}
             onCreate={() => router.push("/workstation")}
-            createLabel="CFSB-Diensten"
+            createLabel="Diensten"
           />
         }
       />

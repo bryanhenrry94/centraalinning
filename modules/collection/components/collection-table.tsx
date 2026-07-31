@@ -22,6 +22,7 @@ import PaidIcon from "@mui/icons-material/Paid";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import HandshakeIcon from "@mui/icons-material/Handshake";
+import GavelIcon from "@mui/icons-material/Gavel";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { DebtClaimResponse } from "@/modules/collection/services/collection.type";
 import {
@@ -30,6 +31,7 @@ import {
   ChipColor,
 } from "@/modules/collection/utils/debt-claim-status";
 import { isAgreementPending } from "@/modules/agreement/constants/agreement-status";
+import { TransferToLawyerDialog } from "@/modules/legal-process/components/transfer-to-lawyer-dialog";
 
 const HEAD_SX = {
   backgroundColor: "secondary.main",
@@ -44,15 +46,23 @@ const ROWS_PER_PAGE_OPTIONS = [10, 25, 50];
 interface CollectionTableProps {
   invoices: DebtClaimResponse[];
   onReviewAgreement?: (debtClaimId: string) => void;
+  onRefresh?: () => void;
 }
 
-const CollectionTable = ({ invoices, onReviewAgreement }: CollectionTableProps) => {
+const CollectionTable = ({
+  invoices,
+  onReviewAgreement,
+  onRefresh,
+}: CollectionTableProps) => {
   const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [transferDebtClaimId, setTransferDebtClaimId] = React.useState<
+    string | null
+  >(null);
 
   const paginatedData = useMemo(
     () => invoices.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
@@ -212,6 +222,43 @@ const CollectionTable = ({ invoices, onReviewAgreement }: CollectionTableProps) 
                             </IconButton>
                           </Tooltip>
                         )}
+                        {row.legalProcessId ? (
+                          <Tooltip title="GOP-dossier bekijken">
+                            <IconButton
+                              size="small"
+                              color="secondary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(
+                                  `/legal-processes/${row.legalProcessId}`,
+                                );
+                              }}
+                            >
+                              <GavelIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        ) : (
+                          <Tooltip
+                            title={
+                              row.aopStep === "BLK_NOTIFICATION"
+                                ? "Dossieroverdracht voor mogelijke gerechtelijke opvolging"
+                                : "Dossieroverdracht voor mogelijke gerechtelijke opvolging (vereist AOP-fase Blokkade)"
+                            }
+                          >
+                            <span>
+                              <IconButton
+                                size="small"
+                                disabled={row.aopStep !== "BLK_NOTIFICATION"}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setTransferDebtClaimId(row.id);
+                                }}
+                              >
+                                <GavelIcon fontSize="small" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        )}
                       </>
                     )}
                   </TableCell>
@@ -234,6 +281,15 @@ const CollectionTable = ({ invoices, onReviewAgreement }: CollectionTableProps) 
           `${from}–${to} van ${count}`
         }
       />
+
+      {transferDebtClaimId && (
+        <TransferToLawyerDialog
+          open={!!transferDebtClaimId}
+          onClose={() => setTransferDebtClaimId(null)}
+          debtClaimId={transferDebtClaimId}
+          onTransferred={() => onRefresh?.()}
+        />
+      )}
     </Box>
   );
 };

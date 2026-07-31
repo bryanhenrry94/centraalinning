@@ -57,6 +57,7 @@ export default function CollectionsPage() {
         <CollectionTable
           invoices={invoices}
           onReviewAgreement={setAgreementClaimId}
+          onRefresh={handleRefresh}
         />
       )}
 
