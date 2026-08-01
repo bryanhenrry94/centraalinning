@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   Container,
@@ -15,6 +15,8 @@ import {
   Paper,
   Chip,
   Stack,
+  Tabs,
+  Tab,
 } from "@mui/material";
 
 import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
@@ -30,17 +32,25 @@ import {
   getMyLegalProcessesAsBailiff,
 } from "@/modules/legal-process/actions/legal-process.actions";
 import { getLegalProcessStatusInfo } from "@/modules/legal-process/utils/legal-process-status";
+import { LegalProcessStatus } from "@/modules/legal-process/constants/legal-process-status";
 
 type LegalProcessListItem = Awaited<ReturnType<typeof getAllLegalProcessesForTenant>>[number];
 
-const LegalProcessesListPage: React.FC = () => {
+const LegalProcessesListPageContent: React.FC = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { tenant } = useTenant();
   const { data: session } = useSession();
   const roles = (session?.user?.roles as string[] | undefined) ?? [];
+  const isLawyer = roles.includes(UserRole.LAWYER);
+  const isBailiffRole = roles.includes(UserRole.BAILIFF);
+  const showPendingTabs = isLawyer || isBailiffRole;
 
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<LegalProcessListItem[]>([]);
+  const [tab, setTab] = useState<"pending" | "all">(
+    searchParams.get("tab") === "pending" ? "pending" : "all",
+  );
 
   useEffect(() => {
     const load = async () => {
@@ -65,6 +75,15 @@ const LegalProcessesListPage: React.FC = () => {
     if (session) load();
   }, [tenant?.id, session]);
 
+  const filteredItems = useMemo(() => {
+    if (!showPendingTabs) return items;
+    return items.filter((item) =>
+      tab === "pending"
+        ? item.status === LegalProcessStatus.PENDING_ACCEPTANCE
+        : item.status !== LegalProcessStatus.PENDING_ACCEPTANCE,
+    );
+  }, [items, showPendingTabs, tab]);
+
   if (loading) return <LoadingUI />;
 
   return (
@@ -75,6 +94,13 @@ const LegalProcessesListPage: React.FC = () => {
         <Typography variant="h4" fontWeight={700}>
           Gerechtelijke opvolging
         </Typography>
+
+        {showPendingTabs && (
+          <Tabs value={tab} onChange={(_, value) => setTab(value)}>
+            <Tab label="Nieuwe overdrachten" value="pending" />
+            <Tab label="Mijn dossiers" value="all" />
+          </Tabs>
+        )}
 
         <TableContainer component={Paper}>
           <Table>
@@ -90,7 +116,7 @@ const LegalProcessesListPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {items.length === 0 && (
+              {filteredItems.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7}>
                     <Typography variant="body2" color="text.secondary" py={2}>
@@ -99,7 +125,7 @@ const LegalProcessesListPage: React.FC = () => {
                   </TableCell>
                 </TableRow>
               )}
-              {items.map((item) => {
+              {filteredItems.map((item) => {
                 const statusInfo = getLegalProcessStatusInfo(item.status);
                 const debtorName = item.debtClaim.debtor?.person
                   ? `${item.debtClaim.debtor.person.first_name ?? ""} ${item.debtClaim.debtor.person.last_name ?? ""}`.trim()
@@ -135,5 +161,11 @@ const LegalProcessesListPage: React.FC = () => {
     </Container>
   );
 };
+
+const LegalProcessesListPage: React.FC = () => (
+  <Suspense fallback={<LoadingUI />}>
+    <LegalProcessesListPageContent />
+  </Suspense>
+);
 
 export default LegalProcessesListPage;

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Box, Stack, Typography, Divider, Chip } from "@mui/material";
 import { formatDate } from "@/shared/utils/formatters";
 import { getClaimTimelineForDebtClaim } from "@/modules/collection/actions/collection-case.actions";
+import { getTimelineEventLabel } from "@/modules/collection/utils/timeline-event";
 
 interface GopTimelineProps {
   debtClaimId: string;
@@ -44,8 +45,8 @@ export const GopTimeline: React.FC<GopTimelineProps> = ({ debtClaimId, refreshKe
       {entries.map((entry) => (
         <Box key={entry.id}>
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
-            <Typography variant="body2">{entry.description || entry.event}</Typography>
-            <Chip size="small" variant="outlined" label={entry.event} />
+            <Typography variant="body2">{entry.description || getTimelineEventLabel(entry.event)}</Typography>
+            <Chip size="small" variant="outlined" label={getTimelineEventLabel(entry.event)} />
           </Stack>
           <Typography variant="caption" color="text.secondary">
             {formatDate(entry.createdAt.toString())}

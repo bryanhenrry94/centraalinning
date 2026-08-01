@@ -4,14 +4,17 @@ import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Box, Card, CardContent, Grid, Stack, Typography, Button } from "@mui/material";
 
-import { getMyLegalProcessesAsBailiff } from "@/modules/legal-process/actions/legal-process.actions";
+import { getMyLegalProcessesAsLawyer } from "@/modules/legal-process/actions/legal-process.actions";
 import {
   LegalProcessStatus,
   OPEN_LEGAL_PROCESS_STATUSES,
 } from "@/modules/legal-process/constants/legal-process-status";
+import { LatestTransfersTable } from "@/modules/legal-process/components/latest-transfers-table";
 import { notifyError } from "@/shared/ui/notifications";
 
-type LegalProcessListItem = Awaited<ReturnType<typeof getMyLegalProcessesAsBailiff>>[number];
+const LATEST_TRANSFERS_LIMIT = 5;
+
+type LegalProcessListItem = Awaited<ReturnType<typeof getMyLegalProcessesAsLawyer>>[number];
 
 function MetricCard({ title, value }: { title: string; value: number }) {
   return (
@@ -26,14 +29,14 @@ function MetricCard({ title, value }: { title: string; value: number }) {
   );
 }
 
-export const DashboardBailiff = () => {
+export const DashboardLawyer = () => {
   const [items, setItems] = useState<LegalProcessListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getMyLegalProcessesAsBailiff();
+      const data = await getMyLegalProcessesAsLawyer();
       setItems(data);
     } catch (error) {
       notifyError("Kon dossiers niet laden");
@@ -46,9 +49,9 @@ export const DashboardBailiff = () => {
     load();
   }, [load]);
 
-  const pendingCount = items.filter(
+  const pendingItems = items.filter(
     (item) => item.status === LegalProcessStatus.PENDING_ACCEPTANCE,
-  ).length;
+  );
   const activeCount = items.filter((item) =>
     (OPEN_LEGAL_PROCESS_STATUSES as string[]).includes(item.status),
   ).length;
@@ -61,7 +64,7 @@ export const DashboardBailiff = () => {
 
       <Grid container spacing={3} mb={3}>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <MetricCard title="Nieuwe overdrachten" value={loading ? 0 : pendingCount} />
+          <MetricCard title="Nieuwe dossieroverdrachten" value={loading ? 0 : pendingItems.length} />
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
           <MetricCard title="Actieve dossiers" value={loading ? 0 : activeCount} />
@@ -78,15 +81,20 @@ export const DashboardBailiff = () => {
           variant="contained"
           size="large"
         >
-          Nieuwe overdrachten
+          Nieuwe dossieroverdrachten
         </Button>
         <Button component={Link} href="/legal-processes" variant="outlined" size="large">
-          Expedienten GOP
+          Mijn gerechtelijke dossiers
         </Button>
         <Button component={Link} href="/documents" variant="outlined" size="large">
           Documenten
         </Button>
       </Stack>
+
+      <Typography variant="h6" fontWeight={700} mt={4} mb={2}>
+        Laatste dossieroverdrachten
+      </Typography>
+      <LatestTransfersTable items={pendingItems.slice(0, LATEST_TRANSFERS_LIMIT)} onChanged={load} />
     </Box>
   );
 };

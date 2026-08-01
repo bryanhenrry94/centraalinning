@@ -109,6 +109,55 @@ export async function requireStaffOrAssignedBailiff(legalProcessId: string) {
   return { session, legalProcess };
 }
 
+// Registrar una sentencia es un acto exclusivo del alguacil asignado: a
+// diferencia del resto de la gestión operativa del GOP, esta acción no
+// admite el fallback de "back-office en nombre del alguacil" — solo el
+// alguacil puede registrar el vonnis.
+export async function requireAssignedBailiff(legalProcessId: string) {
+  const session = await getSessionOrThrow();
+
+  const legalProcess = await prisma.legalProcess.findUnique({
+    where: { id: legalProcessId },
+    include: { debtClaim: true, bailiff: true },
+  });
+  if (!legalProcess) throw new Error("Dossier niet gevonden.");
+
+  if (isPlatformOwner(session)) return { session, legalProcess };
+
+  const isAssignedBailiff = legalProcess.bailiff?.user_id === session.user.id;
+  if (!isAssignedBailiff) {
+    throw new Error("Alleen de toegewezen deurwaarder kan een vonnis registreren.");
+  }
+  return { session, legalProcess };
+}
+
+// Ver/descargar documentos del expediente es de lectura, no una acción
+// operativa: además del alguacil, también el abogado asignado (aunque no
+// gestione la operativa del GOP) necesita poder consultar los documentos.
+export async function requireStaffOrAssignedLawyerOrBailiff(legalProcessId: string) {
+  const session = await getSessionOrThrow();
+
+  const legalProcess = await prisma.legalProcess.findUnique({
+    where: { id: legalProcessId },
+    include: { debtClaim: true, lawyer: true, bailiff: true },
+  });
+  if (!legalProcess) throw new Error("Dossier niet gevonden.");
+
+  if (isPlatformOwner(session)) return { session, legalProcess };
+
+  const isStaffOfTenant =
+    isTenantStaff(session) && session.user.tenant_id === legalProcess.debtClaim.tenantId;
+  const isAssignedLawyer = legalProcess.lawyer?.userId === session.user.id;
+  const isAssignedBailiff = legalProcess.bailiff?.user_id === session.user.id;
+
+  if (!isStaffOfTenant && !isAssignedLawyer && !isAssignedBailiff) {
+    throw new Error(
+      "Alleen de toegewezen advocaat, deurwaarder of medewerkers van deze organisatie kunnen deze actie uitvoeren.",
+    );
+  }
+  return { session, legalProcess };
+}
+
 export async function requireStaffOrAssignedBailiffForVerdict(verdictId: string) {
   const verdict = await prisma.verdict.findUnique({
     where: { id: verdictId },

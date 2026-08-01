@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import {
   Box,
   Container,
@@ -19,9 +20,20 @@ import LockIcon from "@mui/icons-material/Lock";
 import GroupIcon from "@mui/icons-material/Group";
 import GavelIcon from "@mui/icons-material/Gavel";
 import { useRouter } from "next/navigation";
+import { useAuthSession } from "@/modules/auth/hooks/useAuthSession";
+import { UserRole } from "@/shared/constants/user-role";
 
 export default function WorkstationPage() {
   const router = useRouter();
+  const { user } = useAuthSession();
+
+  // El alguacil ni el abogado tienen acceso a las diensten pre-judiciales:
+  // si llegan por URL directa, se los redirige en vez de mostrarles el panel.
+  useEffect(() => {
+    if (user?.roles.includes(UserRole.BAILIFF) || user?.roles.includes(UserRole.LAWYER)) {
+      router.replace("/dashboard");
+    }
+  }, [user, router]);
 
   const handleServiceClick = (link: string) => {
     router.push(link);

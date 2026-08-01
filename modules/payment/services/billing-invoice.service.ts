@@ -133,8 +133,31 @@ export class BillingInvoiceService {
 
   static async getAll(): Promise<BillingInvoiceResponse[]> {
     const invoices = await prisma.billingInvoice.findMany({ include: { details: true } });
+    return invoices.map(this.mapInvoiceResponse);
+  }
 
-    return invoices.map((invoice: any) => ({
+  // La factura GOP no tiene FK directa a debtClaimId (el modelo Payment es
+  // compartido por suscripciones/contratos/etc. y no queremos ampliarlo para
+  // esto); generateGopFeeInvoice codifica el debtClaimId en el
+  // reference_number del Payment (`gop_${debtClaimId}_...`), así que ese es
+  // el único rastro disponible para escopear facturas GOP por expediente.
+  static async getForDebtClaimIds(debtClaimIds: string[]): Promise<BillingInvoiceResponse[]> {
+    if (debtClaimIds.length === 0) return [];
+
+    const invoices = await prisma.billingInvoice.findMany({
+      where: {
+        OR: debtClaimIds.map((debtClaimId) => ({
+          payment: { reference_number: { startsWith: `gop_${debtClaimId}_` } },
+        })),
+      },
+      include: { details: true },
+    });
+
+    return invoices.map(this.mapInvoiceResponse);
+  }
+
+  private static mapInvoiceResponse(invoice: any): BillingInvoiceResponse {
+    return {
       tenant_id: invoice.tenant_id,
       id: invoice.id,
       invoice_number: invoice.invoice_number,
@@ -159,7 +182,7 @@ export class BillingInvoiceService {
         created_at: detail.created_at,
         updated_at: detail.updated_at,
       })),
-    }));
+    };
   }
 
   static async getById(id: string): Promise<BillingInvoiceBase | null> {

@@ -17,7 +17,13 @@ export const processSubscriptionPayment = async (payment: Payment) => {
     return;
   }
 
-  await prisma.$transaction(async (tx) => {
+  // El envío de correos hace una llamada de red a Resend; si corre dentro
+  // de la $transaction puede superar el timeout por defecto de Prisma
+  // (5s) y hacer fallar/rollback toda la activación (membership,
+  // subscription, lawyer, bailiff) aunque el pago ya haya quedado "paid"
+  // — el webhook de Sentoo no reintenta porque igual responde 200. Por
+  // eso los envíos de correo van después de que la transacción cierra.
+  const { membershipUser, invoiceId } = await prisma.$transaction(async (tx) => {
     const membership = await tx.membership.findFirst({
       where: {
         tenant_id: payment.tenant_id,
@@ -76,20 +82,23 @@ export const processSubscriptionPayment = async (payment: Payment) => {
       data: { status: "ACTIVE" },
     });
 
-    // Generar factura y enviar email al tenant
+    // Generar factura (solo escritura en BD, sin I/O externo)
     const invoiceData = await InvoiceService.generateInvoiceData(payment.id);
     const invoice = await InvoiceService.createInvoice(invoiceData);
 
-    await sendInvoiceEmail(tenant.contact_email, invoice.id, true);
-
-    // Enviar correo de bienvenida al administrador de la organización
-    if (membership?.user) {
-      await sendWelcomeEmail(
-        tenant.contact_email,
-        membership.user.fullname || tenant.name,
-      );
-    }
+    return { membershipUser: membership?.user ?? null, invoiceId: invoice.id };
   });
+
+  // Envíos de correo fuera de la transacción: si fallan, la activación ya
+  // quedó comprometida en la base de datos.
+  await sendInvoiceEmail(tenant.contact_email, invoiceId, true);
+
+  if (membershipUser) {
+    await sendWelcomeEmail(
+      tenant.contact_email,
+      membershipUser.fullname || tenant.name,
+    );
+  }
 
   console.log("✅ Subscription activated for tenant:", payment.tenant_id);
 };

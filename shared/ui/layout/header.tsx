@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 
 import SettingsIcon from "@mui/icons-material/Settings";
+import PersonIcon from "@mui/icons-material/Person";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -91,6 +92,14 @@ export default function Header() {
   const isPureDebtor =
     userRoles.includes(UserRole.DEBTOR) &&
     !userRoles.some((role) => STAFF_ROLES.includes(role));
+
+  // El alguacil y el abogado solo operan dentro del GOP (expedientes ya
+  // transferidos); las diensten pre-judiciales (BLC/FAR/AOP/BLK/COP) no son
+  // de su competencia.
+  const canAccessWorkstation =
+    !isPureDebtor &&
+    !userRoles.includes(UserRole.BAILIFF) &&
+    !userRoles.includes(UserRole.LAWYER);
 
   const availableGroups = menuGroups.filter((group) =>
     group.roles.some((role) => userRoles.includes(role)),
@@ -221,7 +230,7 @@ export default function Header() {
                 Dashboard
               </Button>
 
-              {!isPureDebtor && (
+              {canAccessWorkstation && (
                 <Button
                   color="inherit"
                   onClick={() => router.push("/workstation")}
@@ -385,6 +394,11 @@ export default function Header() {
                 Configuratie
               </MenuItem>
 
+              <MenuItem onClick={() => router.push("/settings?tab=1")}>
+                <PersonIcon fontSize="small" sx={{ mr: 1 }} />
+                Profiel
+              </MenuItem>
+
               <MenuItem onClick={handleSignOut}>
                 <ExitToAppIcon fontSize="small" sx={{ mr: 1 }} />
                 Afmelden
@@ -431,7 +445,7 @@ export default function Header() {
               <ListItemText primary="Dashboard" />
             </ListItemButton>
 
-            {!isPureDebtor && (
+            {canAccessWorkstation && (
               <ListItemButton
                 onClick={() => {
                   router.push("/workstation");

@@ -18,6 +18,7 @@ const mapAgreementResponse = (a: any): AgreementResponse => ({
   id: a.id,
   tenant_id: a.tenant_id,
   debtClaim_id: a.debtClaim_id,
+  legalProcessId: a.legalProcessId ?? undefined,
   debtClaim_reference: a.debtClaim?.reference ?? undefined,
   total_amount: Number(a.total_amount),
   installment_amount: Number(a.installment_amount),
@@ -116,6 +117,7 @@ export class AgreementService {
       data: {
         tenant_id,
         debtClaim_id: data.debtClaim_id,
+        legalProcessId: data.legalProcessId ?? null,
         total_amount: data.total_amount,
         installment_amount: data.installment_amount,
         installments_count: data.installments_count,
@@ -424,6 +426,15 @@ export class AgreementService {
       where: { debtClaim_id, status: AgreementStatus.ACCEPTED },
       data: { status: AgreementStatus.CANCELLED },
     });
+  }
+
+  static async getAllByLegalProcessId(legalProcessId: string): Promise<AgreementResponse[]> {
+    const agreements = await prisma.agreement.findMany({
+      where: { legalProcessId },
+      include: { debtor: { include: { person: true } }, debtClaim: true },
+      orderBy: { created_at: "desc" },
+    });
+    return agreements.map(mapAgreementResponse);
   }
 
   static async getAllByDebtClaimId(debtClaim_id: string): Promise<AgreementResponse[]> {

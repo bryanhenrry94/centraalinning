@@ -37,6 +37,9 @@ const SettingPageContent = () => {
     !!user?.roles?.includes(UserRole.DEBTOR) &&
     !user?.roles?.some((role) => role !== UserRole.DEBTOR);
 
+  const isSimplifiedSettingsRole =
+    !!user?.roles?.includes(UserRole.LAWYER) || !!user?.roles?.includes(UserRole.BAILIFF);
+
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
@@ -84,6 +87,46 @@ const SettingPageContent = () => {
           }}
           onSave={handleSaveProfile}
         />
+      </Container>
+    );
+  }
+
+  if (isSimplifiedSettingsRole) {
+    return (
+      <Container
+        maxWidth="lg"
+        disableGutters
+        sx={{
+          px: { xs: 1, sm: 3 },
+          py: { xs: 1.5, sm: 4 },
+          display: "flex",
+          flexDirection: "column",
+          gap: 3,
+        }}
+      >
+        <Typography variant="h4" sx={{ fontWeight: 700 }}>
+          Configuratie
+        </Typography>
+
+        <Box sx={{ width: "100%" }}>
+          <Tabs value={value > 1 ? 0 : value} onChange={handleChange} aria-label="settings tabs">
+            <Tab value={0} label="Rekening" wrapped />
+            <Tab value={1} label="Profiel" />
+          </Tabs>
+        </Box>
+        <TabPanel value={value > 1 ? 0 : value} index={0}>
+          <AccountForm />
+        </TabPanel>
+        <TabPanel value={value > 1 ? 0 : value} index={1}>
+          <ProfileForm
+            initial={{
+              email: user?.email || "",
+              fullname: user?.fullname || "",
+              phone: user?.phone,
+            }}
+            onSave={handleSaveProfile}
+          />
+        </TabPanel>
       </Container>
     );
   }

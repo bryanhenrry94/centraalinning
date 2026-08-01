@@ -299,9 +299,38 @@ model LegalProcess {
   startedAt DateTime
   closedAt  DateTime?
 
-  verdicts Verdict[]
+  verdicts   Verdict[]
+  documents  LegalProcessDocument[]
+  agreements Agreement[]
 
   @@map("legal_process")
+}
+
+model LegalProcessDocument {
+  id String @id @default(cuid())
+
+  legalProcessId String
+
+  fileName     String
+  originalName String
+
+  mimeType String
+
+  size Int
+
+  storageKey String
+
+  // Texto libre: sentencia, notificación, embargo, correspondencia, acuerdo, otro.
+  category String?
+
+  uploadedById String?
+
+  createdAt DateTime @default(now())
+
+  legalProcess LegalProcess @relation(fields: [legalProcessId], references: [id], onDelete: Cascade)
+
+  @@index([legalProcessId])
+  @@map("legal_process_document")
 }
 
 model ClaimService {
@@ -1257,6 +1286,8 @@ model Agreement {
 
   debtClaim_id       String
   debtClaim          DebtClaim       @relation(fields: [debtClaim_id], references: [id])
+  legalProcessId     String?
+  legalProcess       LegalProcess?   @relation(fields: [legalProcessId], references: [id])
   total_amount       Decimal         @db.Decimal(10, 2)
   installment_amount Decimal         @db.Decimal(10, 2)
   installments_count Int

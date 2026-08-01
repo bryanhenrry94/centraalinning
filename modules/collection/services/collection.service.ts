@@ -15,6 +15,7 @@ import {
 } from "./collection.validators";
 import { InvoiceService } from "@/modules/payment/services/invoice-service";
 import { sendInvoiceEmail } from "@/actions/email";
+import { AOP_STEP_CONFIG } from "@/modules/collection/utils/debt-claim-status";
 
 export class CollectionService {
   /**
@@ -521,12 +522,17 @@ export class CollectionService {
         }
       }
 
+      const currentStepLabel = currentStep
+        ? AOP_STEP_CONFIG[currentStep.step].label
+        : "start";
+      const nextStepLabel = nextStep ? AOP_STEP_CONFIG[nextStep].label : null;
+
       await tx.claimTimeline.create({
         data: {
           debtClaimId,
           event: nextStep ? "AOP_STEP_COMPLETED" : "AOP_COMPLETED",
-          description: nextStep
-            ? `Stap ${currentStep?.step ?? "start"} voltooid, volgende: ${nextStep}`
+          description: nextStepLabel
+            ? `Stap ${currentStepLabel} voltooid, volgende: ${nextStepLabel}`
             : "AOP-proces afgerond",
         },
       });

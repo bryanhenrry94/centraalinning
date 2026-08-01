@@ -7,11 +7,15 @@ import {
   requireTenantStaffForDebtClaim,
   requireTenantStaffForLegalProcess,
   requireAssignedLawyerOrBailiff,
+  requireAssignedBailiff,
   requireStaffOrAssignedBailiff,
   requireStaffOrAssignedBailiffForVerdict,
 } from "@/modules/legal-process/services/legal-process-guards";
 import { canUseFeature } from "@/shared/utils/permission";
 import { AppAction } from "@/shared/constants/AppAction";
+import { toDocumentRow } from "@/modules/legal-process/utils/legal-process-document";
+import { AgreementService } from "@/modules/agreement/services/agreement.service";
+import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
 import {
   TransferToLawyerInput,
   TransferToLawyerSchema,
@@ -51,10 +55,24 @@ export const getMyLegalProcessesAsLawyer = async () => {
   return LegalProcessService.getForLawyerUser(session.user.id);
 };
 
+export const getMyLegalProcessDocuments = async () => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) throw new Error("U bent niet ingelogd.");
+  const items = await LegalProcessService.getForLawyerUser(session.user.id);
+  return items.map(toDocumentRow);
+};
+
 export const getMyLegalProcessesAsBailiff = async () => {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) throw new Error("U bent niet ingelogd.");
   return LegalProcessService.getForBailiffUser(session.user.id);
+};
+
+export const getMyLegalProcessDocumentsAsBailiff = async () => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) throw new Error("U bent niet ingelogd.");
+  const items = await LegalProcessService.getForBailiffUser(session.user.id);
+  return items.map(toDocumentRow);
 };
 
 export const transferToLawyer = async (input: TransferToLawyerInput) => {
@@ -84,7 +102,7 @@ export const rejectLegalProcessTransfer = async (legalProcessId: string, reason:
 
 export const registerGopVerdict = async (data: RegisterVerdictInput) => {
   const parsed = RegisterVerdictSchema.parse(data);
-  const { session, legalProcess } = await requireStaffOrAssignedBailiff(parsed.legalProcessId);
+  const { session, legalProcess } = await requireAssignedBailiff(parsed.legalProcessId);
   return LegalProcessService.registerVerdict(parsed, legalProcess.debtClaim.tenantId, session.user.id);
 };
 
@@ -144,4 +162,79 @@ export const closeGop = async (legalProcessId: string) => {
 export const checkAndCloseGopIfSettled = async (legalProcessId: string) => {
   const { session, legalProcess } = await requireStaffOrAssignedBailiff(legalProcessId);
   return LegalProcessService.checkAndCloseIfSettled(legalProcess.debtClaimId, session.user.id);
+};
+
+export const uploadLegalProcessDocument = async (
+  legalProcessId: string,
+  file: File,
+  category?: string,
+) => {
+  const { session, legalProcess } = await requireStaffOrAssignedBailiff(legalProcessId);
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  return LegalProcessService.uploadDocument({
+    legalProcessId,
+    tenantId: legalProcess.debtClaim.tenantId,
+    uploadedById: session.user.id,
+    fileName: file.name,
+    mimeType: file.type,
+    size: file.size,
+    buffer,
+    category,
+  });
+};
+
+export const getLegalProcessDocuments = async (legalProcessId: string) => {
+  return LegalProcessService.getDocuments(legalProcessId);
+};
+
+export const deleteLegalProcessDocument = async (documentId: string) => {
+  const document = await LegalProcessService.getDocumentById(documentId);
+  if (!document) throw new Error("Document niet gevonden");
+
+  await requireStaffOrAssignedBailiff(document.legalProcessId);
+  return LegalProcessService.deleteDocument(documentId);
+};
+
+// El agente judicial registra el acuerdo de pago negociado con el deudor;
+// queda PENDING hasta que el participante lo aprueba o rechaza (mismo flujo
+// que AgreementService.update ya usa en /agreements).
+export const createGopAgreement = async (
+  legalProcessId: string,
+  data: {
+    total_amount: number;
+    installment_amount: number;
+    installments_count: number;
+    start_date: Date;
+    end_date: Date;
+    comment?: string;
+  },
+) => {
+  const { legalProcess } = await requireStaffOrAssignedBailiff(legalProcessId);
+
+  return AgreementService.create(legalProcess.debtClaim.tenantId, {
+    debtClaim_id: legalProcess.debtClaimId,
+    legalProcessId,
+    debtor_id: legalProcess.debtClaim.debtorId,
+    total_amount: data.total_amount,
+    installment_amount: data.installment_amount,
+    installments_count: data.installments_count,
+    start_date: data.start_date,
+    end_date: data.end_date,
+    comment: data.comment,
+    status: AgreementStatus.PENDING,
+  });
+};
+
+export const getGopAgreements = async (legalProcessId: string) => {
+  return AgreementService.getAllByLegalProcessId(legalProcessId);
+};
+
+export const getGopPrincipalObligation = async (debtClaimId: string) => {
+  return LegalProcessService.getPrincipalObligation(debtClaimId);
+};
+
+export const registerGopPayment = async (legalProcessId: string, amount: number) => {
+  const { session } = await requireStaffOrAssignedBailiff(legalProcessId);
+  return LegalProcessService.registerPayment(legalProcessId, amount, session.user.id);
 };

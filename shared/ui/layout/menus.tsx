@@ -8,6 +8,7 @@ import {
   HandshakeOutlined,
   AssignmentOutlined,
   CreditCardOutlined,
+  MoveToInboxOutlined,
 } from "@mui/icons-material";
 
 export type HeaderMenuItem = {
@@ -90,6 +91,57 @@ export const menuGroups: HeaderMenuGroup[] = [
         label: "Economische blokkade",
         href: "/block-status",
         icon: <ShieldOutlined fontSize="small" />,
+      },
+    ],
+  },
+
+  {
+    id: "advocaat",
+    label: "Advocaat",
+    roles: [UserRole.LAWYER],
+    items: [
+      {
+        label: "Nieuwe dossieroverdrachten",
+        href: "/legal-processes?tab=pending",
+        icon: <MoveToInboxOutlined fontSize="small" />,
+      },
+      {
+        label: "Mijn gerechtelijke dossiers",
+        href: "/legal-processes",
+        icon: <GavelOutlined fontSize="small" />,
+      },
+      {
+        label: "Documenten",
+        href: "/documents",
+        icon: <DescriptionOutlined fontSize="small" />,
+      },
+    ],
+  },
+
+  {
+    id: "deurwaarder",
+    label: "Deurwaarder",
+    roles: [UserRole.BAILIFF],
+    items: [
+      {
+        label: "Nieuwe overdrachten",
+        href: "/legal-processes?tab=pending",
+        icon: <MoveToInboxOutlined fontSize="small" />,
+      },
+      {
+        label: "Expedienten GOP",
+        href: "/legal-processes",
+        icon: <GavelOutlined fontSize="small" />,
+      },
+      {
+        label: "Documenten",
+        href: "/documents",
+        icon: <DescriptionOutlined fontSize="small" />,
+      },
+      {
+        label: "Facturen",
+        href: "/invoices",
+        icon: <ReceiptOutlined fontSize="small" />,
       },
     ],
   },

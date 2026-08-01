@@ -2,6 +2,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { UserRole } from "@/shared/constants/user-role";
 import DashboardDebtor from "@/modules/dashboard/components/legacy/debtor/dashboard";
+import { DashboardLawyer } from "@/modules/dashboard/components/legacy/lawyer/dashboard";
+import { DashboardBailiff } from "@/modules/dashboard/components/legacy/bailiff/dashboard";
 import DashboardContent from "@/modules/dashboard/components/DashboardContent";
 import { getDashboard } from "@/modules/dashboard/server/dashboard.service";
 
@@ -10,6 +12,14 @@ export default async function Page() {
 
   if (session?.user?.roles?.includes(UserRole.DEBTOR)) {
     return <DashboardDebtor />;
+  }
+
+  if (session?.user?.roles?.includes(UserRole.LAWYER)) {
+    return <DashboardLawyer />;
+  }
+
+  if (session?.user?.roles?.includes(UserRole.BAILIFF)) {
+    return <DashboardBailiff />;
   }
 
   const dashboard = await getDashboard();

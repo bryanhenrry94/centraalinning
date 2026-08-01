@@ -17,6 +17,7 @@ import {
   GOP_OPERABLE_STATUSES,
 } from "@/modules/legal-process/constants/legal-process-status";
 import { ClaimTimelineService } from "@/modules/collection/services/claim-timeline.service";
+import { ObligationService } from "@/modules/collection/services/obligation.service";
 import { DebtFineService } from "@/modules/collection/services/debt-fine.service";
 import { BlockadeService } from "@/modules/blockade/services/blockade.service";
 import { NotificationService } from "@/modules/notification/services/notification.service";
@@ -26,6 +27,7 @@ import { sendInvoiceEmail } from "@/modules/payment/services/payment-mail.servic
 import { PaymentService } from "@/modules/payment/services/payment.service";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
+import { StorageService } from "@/infrastructure/storage/storage.service";
 
 const legalProcessInclude = {
   debtClaim: { include: { debtor: { include: { person: true }, }, tenant: true } },
@@ -33,6 +35,21 @@ const legalProcessInclude = {
   bailiff: true,
   verdicts: true,
 } satisfies Prisma.LegalProcessInclude;
+
+type LegalProcessWithInclude = Prisma.LegalProcessGetPayload<{ include: typeof legalProcessInclude }>;
+
+// Next.js no puede serializar instancias de Decimal al cruzar de una Server
+// Action a un Client Component ("Only plain objects can be passed..."); acá
+// se convierte a number antes de que la respuesta salga del servidor.
+function serializeLegalProcess<T extends LegalProcessWithInclude>(legalProcess: T) {
+  return {
+    ...legalProcess,
+    debtClaim: {
+      ...legalProcess.debtClaim,
+      principalAmount: Number(legalProcess.debtClaim.principalAmount),
+    },
+  };
+}
 
 export class LegalProcessService {
   static generateReferenceNumber = async () => {
@@ -42,41 +59,46 @@ export class LegalProcessService {
   };
 
   static getById = async (id: string) => {
-    return prisma.legalProcess.findUnique({
+    const legalProcess = await prisma.legalProcess.findUnique({
       where: { id },
       include: legalProcessInclude,
     });
+    return legalProcess ? serializeLegalProcess(legalProcess) : null;
   };
 
   static getByDebtClaimId = async (debtClaimId: string) => {
-    return prisma.legalProcess.findUnique({
+    const legalProcess = await prisma.legalProcess.findUnique({
       where: { debtClaimId },
       include: legalProcessInclude,
     });
+    return legalProcess ? serializeLegalProcess(legalProcess) : null;
   };
 
   static getForLawyerUser = async (userId: string) => {
-    return prisma.legalProcess.findMany({
+    const legalProcesses = await prisma.legalProcess.findMany({
       where: { lawyer: { userId } },
       include: legalProcessInclude,
       orderBy: { startedAt: "desc" },
     });
+    return legalProcesses.map(serializeLegalProcess);
   };
 
   static getForBailiffUser = async (userId: string) => {
-    return prisma.legalProcess.findMany({
+    const legalProcesses = await prisma.legalProcess.findMany({
       where: { bailiff: { user_id: userId } },
       include: legalProcessInclude,
       orderBy: { startedAt: "desc" },
     });
+    return legalProcesses.map(serializeLegalProcess);
   };
 
   static getAllForTenant = async (tenantId: string) => {
-    return prisma.legalProcess.findMany({
+    const legalProcesses = await prisma.legalProcess.findMany({
       where: { debtClaim: { tenantId } },
       include: legalProcessInclude,
       orderBy: { startedAt: "desc" },
     });
+    return legalProcesses.map(serializeLegalProcess);
   };
 
   // ---------------------------------------------------------------------
@@ -142,13 +164,13 @@ export class LegalProcessService {
         });
 
     const assignedLabel = lawyer
-      ? `abogado ${lawyer.firstName} ${lawyer.lastName}`
-      : `alguacil ${bailiff!.fullname}`;
+      ? `advocaat ${lawyer.firstName} ${lawyer.lastName}`
+      : `deurwaarder ${bailiff!.fullname}`;
 
     await ClaimTimelineService.logEvent(
       input.debtClaimId,
       "GOP_STARTED",
-      `Expediente transferido al ${assignedLabel}`,
+      `Dossier overgedragen aan ${assignedLabel}`,
       { lawyerId: lawyer?.id ?? null, bailiffId: bailiff?.id ?? null },
       actorUserId,
     );
@@ -190,7 +212,7 @@ export class LegalProcessService {
     await ClaimTimelineService.logEvent(
       legalProcess.debtClaimId,
       acceptedByLawyer ? "LAWYER_ASSIGNED" : "BAILIFF_ASSIGNED",
-      `El ${acceptedByLawyer ? "abogado" : "alguacil"} aceptó el expediente. Procedimiento judicial en curso.`,
+      `De ${acceptedByLawyer ? "advocaat" : "deurwaarder"} heeft het dossier geaccepteerd. Gerechtelijke procedure gestart.`,
       undefined,
       actorUserId,
     );
@@ -240,7 +262,7 @@ export class LegalProcessService {
     await ClaimTimelineService.logEvent(
       legalProcess.debtClaimId,
       "STATUS_CHANGED",
-      `El ${rejectedByLawyer ? "abogado" : "alguacil"} rechazó el expediente: ${reason}`,
+      `De ${rejectedByLawyer ? "advocaat" : "deurwaarder"} heeft het dossier afgewezen: ${reason}`,
       undefined,
       actorUserId,
     );
@@ -333,6 +355,25 @@ export class LegalProcessService {
         },
       });
 
+      // Registrar una sentencia activa el bloqueo económico automáticamente,
+      // igual que el paso BLK_NOTIFICATION del flujo AOP (ver
+      // collection.service.ts) — idempotente vía originDebtClaimId.
+      const existingBlockade = await tx.blockade.findUnique({
+        where: { originDebtClaimId: legalProcess.debtClaimId },
+      });
+      if (!existingBlockade) {
+        await tx.blockade.create({
+          data: {
+            tenantId: legalProcess.debtClaim.tenantId,
+            debtorId: legalProcess.debtClaim.debtorId,
+            reason: "UNPAID_PAYMENT",
+            registeredAt: new Date(),
+            status: "ACTIVE",
+            originDebtClaimId: legalProcess.debtClaimId,
+          },
+        });
+      }
+
       const existingGopService = await tx.claimService.findFirst({
         where: { debtClaimId: legalProcess.debtClaimId, service: "GOP" },
       });
@@ -357,7 +398,7 @@ export class LegalProcessService {
         data: {
           debtClaimId: legalProcess.debtClaimId,
           event: "VERDICT_REGISTERED",
-          description: `Sentencia ${data.registration_number} registrada. GOP activado (${referenceNumber}).`,
+          description: `Vonnis ${data.registration_number} geregistreerd. GOP geactiveerd (${referenceNumber}).`,
           metadata: { verdictId: newVerdict.id, sentence_amount: data.sentence_amount, totalInterest },
           createdById: actorUserId,
         },
@@ -414,7 +455,7 @@ export class LegalProcessService {
     await ClaimTimelineService.logEvent(
       verdict.debtClaimId,
       "SERVICE_STARTED",
-      `Medida de ejecución registrada: ${data.embargo_type}`,
+      `Executiemaatregel geregistreerd: ${data.embargo_type}`,
       { verdictId: data.verdictId, embargoId: measure.id, embargo_amount: data.embargo_amount },
       actorUserId,
     );
@@ -458,7 +499,7 @@ export class LegalProcessService {
     await ClaimTimelineService.logEvent(
       verdict.debtClaimId,
       "STATUS_CHANGED",
-      `Actualización de intereses (${data.interest.interest_type})`,
+      `Rente-update geregistreerd (${data.interest.interest_type})`,
       { verdictId: data.verdictId, total_interest: data.interest.total_interest },
       actorUserId,
     );
@@ -488,7 +529,7 @@ export class LegalProcessService {
     await ClaimTimelineService.logEvent(
       verdict.debtClaimId,
       "SERVICE_COMPLETED",
-      `Costo definitivo del alguacil registrado: ${data.service_type}`,
+      `Definitieve deurwaarderskosten geregistreerd: ${data.service_type}`,
       { verdictId: data.verdictId, costId: cost.id, service_cost: data.service_cost },
       actorUserId,
     );
@@ -530,7 +571,7 @@ export class LegalProcessService {
     await ClaimTimelineService.logEvent(
       legalProcess.debtClaimId,
       "STATUS_CHANGED",
-      `GOP marcado como Inactivo (${data.reason}). Revisión: ${data.reviewDate.toISOString()}`,
+      `GOP gemarkeerd als Inactief (${data.reason}). Revisiedatum: ${data.reviewDate.toISOString()}`,
       undefined,
       actorUserId,
     );
@@ -567,7 +608,7 @@ export class LegalProcessService {
     await ClaimTimelineService.logEvent(
       legalProcess.debtClaimId,
       "STATUS_CHANGED",
-      "GOP reactivado automáticamente por registro de nueva medida de ejecución",
+      "GOP automatisch gereactiveerd door registratie van een nieuwe executiemaatregel",
       undefined,
       actorUserId,
     );
@@ -622,7 +663,7 @@ export class LegalProcessService {
     await ClaimTimelineService.logEvent(
       legalProcess.debtClaimId,
       "BAILIFF_ASSIGNED",
-      `Cambio de alguacil registrado`,
+      `Wijziging van deurwaarder geregistreerd`,
       { field: "bailiffId", oldValue: previousBailiffId, newValue: data.newBailiffId },
       actorUserId,
     );
@@ -664,15 +705,20 @@ export class LegalProcessService {
   static cancel = async (data: CancelLegalProcessInput, actorUserId?: string) => {
     const legalProcess = await prisma.legalProcess.findUnique({
       where: { id: data.legalProcessId },
-      include: { debtClaim: true, bailiff: true },
+      include: { debtClaim: true, bailiff: true, verdicts: true },
     });
-    if (!legalProcess) throw new Error("Expediente GOP no encontrado");
+    if (!legalProcess) throw new Error("Dossier niet gevonden");
     if (
       [LegalProcessStatus.CLOSED, LegalProcessStatus.GOP_CANCELLED].includes(
         legalProcess.status as LegalProcessStatus,
       )
     ) {
-      throw new Error("El expediente ya está cerrado o cancelado");
+      throw new Error("Het dossier is al gesloten of geannuleerd");
+    }
+    // Una vez registrada una sentencia, el GOP solo puede cerrarse
+    // (cumplimiento) — ya no cancelarse.
+    if (legalProcess.verdicts.length > 0) {
+      throw new Error("Een GOP met een geregistreerd vonnis kan niet meer geannuleerd worden");
     }
 
     const updated = await prisma.legalProcess.update({
@@ -692,7 +738,7 @@ export class LegalProcessService {
     await ClaimTimelineService.logEvent(
       legalProcess.debtClaimId,
       "STATUS_CHANGED",
-      `GOP cancelado por el participante: ${data.reason}`,
+      `GOP geannuleerd door de deelnemer: ${data.reason}`,
       undefined,
       actorUserId,
     );
@@ -754,7 +800,7 @@ export class LegalProcessService {
     await ClaimTimelineService.logEvent(
       legalProcess.debtClaimId,
       "GOP_COMPLETED",
-      "Sentencia cumplida en su totalidad. Expediente GOP cerrado.",
+      "Vonnis volledig voldaan. GOP-dossier gesloten.",
       undefined,
       actorUserId,
     );
@@ -937,5 +983,134 @@ export class LegalProcessService {
       where: { id: invoice.id },
       data: { status: "paid" },
     });
+  };
+
+  // ---------------------------------------------------------------------
+  // Documentos del expediente
+  // ---------------------------------------------------------------------
+
+  static uploadDocument = async (params: {
+    legalProcessId: string;
+    tenantId: string;
+    uploadedById?: string;
+    fileName: string;
+    mimeType: string;
+    size: number;
+    buffer: Buffer;
+    category?: string;
+  }) => {
+    const sanitizedName = `${crypto.randomUUID()}-${params.fileName}`.replace(/\s+/g, "-");
+    const folder = `${params.tenantId}/legal-processes/${params.legalProcessId}`;
+    const storageKey = await StorageService.uploadFile(
+      folder,
+      sanitizedName,
+      params.mimeType,
+      params.buffer,
+    );
+
+    return prisma.legalProcessDocument.create({
+      data: {
+        legalProcessId: params.legalProcessId,
+        fileName: sanitizedName,
+        originalName: params.fileName,
+        mimeType: params.mimeType,
+        size: params.size,
+        storageKey,
+        category: params.category,
+        uploadedById: params.uploadedById,
+      },
+    });
+  };
+
+  static getDocuments = async (legalProcessId: string) => {
+    return prisma.legalProcessDocument.findMany({
+      where: { legalProcessId },
+      orderBy: { createdAt: "desc" },
+    });
+  };
+
+  static getDocumentById = async (documentId: string) => {
+    return prisma.legalProcessDocument.findUnique({ where: { id: documentId } });
+  };
+
+  static deleteDocument = async (documentId: string) => {
+    const document = await prisma.legalProcessDocument.findUnique({ where: { id: documentId } });
+    if (!document) throw new Error("Document niet gevonden");
+
+    await StorageService.removeDocument(document.storageKey);
+    await prisma.legalProcessDocument.delete({ where: { id: documentId } });
+  };
+
+  // ---------------------------------------------------------------------
+  // Pagos del deudor durante el GOP
+  // ---------------------------------------------------------------------
+
+  // Solo lectura — no crea la obligación si no existe, a diferencia de
+  // ensurePrincipalDebtObligation (usado al registrar un pago real).
+  static getPrincipalObligation = async (debtClaimId: string) => {
+    const obligation = await prisma.debtClaimObligation.findFirst({
+      where: {
+        debtClaimId,
+        type: "PRINCIPAL_DEBT",
+        beneficiary: "PARTICIPANT",
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    if (!obligation) return null;
+
+    // Ver comentario en serializeLegalProcess: Decimal no cruza a un Client
+    // Component.
+    return {
+      ...obligation,
+      originalAmount: Number(obligation.originalAmount),
+      paidAmount: Number(obligation.paidAmount),
+      balanceAmount: Number(obligation.balanceAmount),
+    };
+  };
+
+  // El alguacil es un actor de confianza dentro del proceso judicial: el
+  // pago se aplica de inmediato al saldo, sin el paso de verificación
+  // posterior que sí usa el comprobante de transferencia del deudor
+  // (ver payment-transfer.service.ts).
+  static registerPayment = async (
+    legalProcessId: string,
+    amount: number,
+    actorUserId?: string,
+  ) => {
+    const legalProcess = await prisma.legalProcess.findUnique({
+      where: { id: legalProcessId },
+      include: { debtClaim: true },
+    });
+    if (!legalProcess) throw new Error("Expediente GOP no encontrado");
+
+    const obligation = await ObligationService.ensurePrincipalDebtObligation(
+      legalProcess.debtClaimId,
+      Number(legalProcess.debtClaim.principalAmount),
+    );
+
+    const payment = await prisma.payment.create({
+      data: {
+        tenant_id: legalProcess.debtClaim.tenantId,
+        obligation_id: obligation.id,
+        total_amount: amount,
+        status: "paid",
+        paid_at: new Date(),
+        method: "TRANSFER",
+        payment_type: PaymentType.DEBT_PAYMENT,
+        reference_number: `gop_payment_${legalProcess.id}_${Date.now()}`,
+      },
+    });
+
+    const updatedObligation = await ObligationService.applyPayment(payment.id);
+
+    await ClaimTimelineService.logEvent(
+      legalProcess.debtClaimId,
+      "PAYMENT_REGISTERED",
+      `Betaling van ${amount} geregistreerd door deurwaarder. Nieuw saldo: ${updatedObligation.balanceAmount}.`,
+      { paymentId: payment.id, amount, balanceAmount: Number(updatedObligation.balanceAmount) },
+      actorUserId,
+    );
+
+    return { payment, obligation: updatedObligation };
   };
 }

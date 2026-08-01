@@ -1,6 +1,7 @@
 "use client";
 import React, { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 import {
   Box,
@@ -34,11 +35,15 @@ import { AlertService } from "@/shared/ui/alerts";
 import { formatCurrency } from "@/shared/utils/formatters";
 // hooks and services
 import { useTenant } from "@/modules/auth/hooks/useTenant";
-import { getAllInvoices } from "@/modules/payment/actions/billing-invoice.actions";
+import {
+  getAllInvoices,
+  getMyGopInvoicesAsBailiff,
+} from "@/modules/payment/actions/billing-invoice.actions";
 import {
   BillingInvoiceBase,
   BillingInvoiceResponse,
 } from "@/modules/payment/services/billing-invoice.validators";
+import { UserRole } from "@/shared/constants/user-role";
 
 interface TablePaginationActionsProps {
   count: number;
@@ -122,6 +127,10 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
 
 const InvoicesPage: React.FC = () => {
   const router = useRouter();
+  const { data: session } = useSession();
+  const isBailiff = (session?.user?.roles as string[] | undefined)?.includes(
+    UserRole.BAILIFF,
+  );
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] =
     React.useState<BillingInvoiceBase | null>(null);
@@ -205,7 +214,7 @@ const InvoicesPage: React.FC = () => {
   const fetchData = async () => {
     if (!tenant) return;
 
-    const invoices = await getAllInvoices();
+    const invoices = isBailiff ? await getMyGopInvoicesAsBailiff() : await getAllInvoices();
     setInvoices(invoices);
   };
 
@@ -247,17 +256,19 @@ const InvoicesPage: React.FC = () => {
             OVERZICHT FACTUREN
           </Typography>
         </Box>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleCreate}
-            startIcon={<AddIcon />}
-            sx={{ textTransform: "none" }}
-          >
-            NIEUWE FACTUUR
-          </Button>
-        </Stack>
+        {!isBailiff && (
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleCreate}
+              startIcon={<AddIcon />}
+              sx={{ textTransform: "none" }}
+            >
+              NIEUWE FACTUUR
+            </Button>
+          </Stack>
+        )}
       </Box>
 
       <Suspense
@@ -419,6 +430,8 @@ const InvoicesPage: React.FC = () => {
                     <Chip label={invoice.status} color={"default"} />
                   </TableCell>
                   <TableCell sx={{ textAlign: "center" }}>
+                    {!isBailiff && (
+                      <>
                     <IconButton
                       id={`actions-button-${invoice.id}`}
                       aria-controls={
@@ -484,6 +497,8 @@ const InvoicesPage: React.FC = () => {
                         Eliminar
                       </MenuItem>
                     </Menu>
+                      </>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

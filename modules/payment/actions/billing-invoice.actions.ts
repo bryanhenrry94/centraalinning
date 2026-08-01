@@ -1,4 +1,6 @@
 "use server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import {
   BillingInvoiceBase,
   BillingInvoiceCreate,
@@ -7,6 +9,7 @@ import {
 import { InvoicePDFProps } from "@/modules/payment/templates/pdfs/InvoicePDF";
 import { ActivationInvoiceInput } from "@/modules/payment/services/invoice.type";
 import { BillingInvoiceService } from "@/modules/payment/services/billing-invoice.service";
+import { LegalProcessService } from "@/modules/legal-process/services/legal-process.service";
 
 export const createCollectionInvoice = async (params: ActivationInvoiceInput) => {
   return BillingInvoiceService.createCollectionInvoice(params);
@@ -26,6 +29,18 @@ export const getAllInvoices = async (): Promise<BillingInvoiceResponse[]> => {
   } catch {
     throw new Error("Error fetching invoices");
   }
+};
+
+// Las facturas GOP (honorarios del 5%) del alguacil, escopeadas a los
+// expedientes que tiene asignados — no a la facturación completa del tenant.
+export const getMyGopInvoicesAsBailiff = async (): Promise<BillingInvoiceResponse[]> => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) throw new Error("U bent niet ingelogd.");
+
+  const legalProcesses = await LegalProcessService.getForBailiffUser(session.user.id);
+  const debtClaimIds = legalProcesses.map((lp) => lp.debtClaimId);
+
+  return BillingInvoiceService.getForDebtClaimIds(debtClaimIds);
 };
 
 export const getInvoiceById = async (id: string): Promise<BillingInvoiceBase | null> => {
