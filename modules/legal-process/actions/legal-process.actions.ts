@@ -87,7 +87,7 @@ export const transferToLawyer = async (input: TransferToLawyerInput) => {
     throw new Error(permission.reason ?? "Deze actie is niet toegestaan.");
   }
 
-  return LegalProcessService.transferToLawyer(parsed, session.user.id);
+  return LegalProcessService.requestTransfer(parsed, session.user.id);
 };
 
 export const acceptLegalProcessTransfer = async (legalProcessId: string) => {

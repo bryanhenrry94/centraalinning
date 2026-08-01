@@ -100,6 +100,8 @@ model DebtClaim {
   chatRooms   ChatRoom[]
   obligations DebtClaimObligation[]
 
+  gopTransferRequests GopTransferRequest[]
+
   @@map("debt_claim")
 }
 
@@ -269,6 +271,29 @@ model COLNotification {
   status NotificationStatus
 
   @@map("col_notification")
+}
+
+// Registra la solicitud de transferencia a GOP mientras se espera la
+// confirmación del pago (5% del saldo pendiente). El LegalProcess real
+// (PENDING_ACCEPTANCE + notificación al abogado/alguacil) solo se crea
+// cuando el webhook de Sentoo confirma el Payment vinculado aquí.
+model GopTransferRequest {
+  id String @id @default(cuid())
+
+  debtClaimId String
+  debtClaim   DebtClaim @relation(fields: [debtClaimId], references: [id])
+
+  lawyerId  String?
+  bailiffId String?
+
+  paymentId String  @unique
+  payment   Payment @relation(fields: [paymentId], references: [id])
+
+  status      String    @default("PENDING") // PENDING | COMPLETED
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  @@map("gop_transfer_request")
 }
 
 model LegalProcess {
@@ -1483,6 +1508,7 @@ enum PaymentType {
   FINANCIAL_REPORT
   COLLECTION
   GOP
+  GOP_TRANSFER
   OTHER
 }
 
@@ -1528,6 +1554,8 @@ model Payment {
   billing_invoice BillingInvoice?
 
   transfer_verification PaymentTransferVerification?
+
+  gop_transfer_request GopTransferRequest?
 
   @@map("payment")
 }

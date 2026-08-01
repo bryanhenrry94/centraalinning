@@ -105,7 +105,11 @@ export class LegalProcessService {
   // 1-2. Transferencia al seguimiento judicial y aceptación del abogado
   // ---------------------------------------------------------------------
 
-  static transferToLawyer = async (input: TransferToLawyerInput, actorUserId?: string) => {
+  // Valida y cobra el 5% del saldo pendiente vía Sentoo antes de dejar
+  // ninguna huella del expediente GOP — el LegalProcess recién se crea
+  // (y se notifica al abogado/alguacil) cuando el pago se confirma, ver
+  // confirmTransferPayment.
+  static requestTransfer = async (input: TransferToLawyerInput, actorUserId: string) => {
     const debtClaim = await prisma.debtClaim.findUnique({ where: { id: input.debtClaimId } });
     if (!debtClaim) throw new Error("Expediente (DebtClaim) no encontrado");
 
@@ -126,17 +130,80 @@ export class LegalProcessService {
 
     // Siempre se transfiere a UNA sola parte: abogado o alguacil, nunca
     // ambos (validado también en TransferToLawyerSchema).
+    if (input.lawyerId) {
+      const lawyer = await prisma.lawyer.findUnique({ where: { id: input.lawyerId } });
+      if (!lawyer) throw new Error("Abogado no encontrado");
+    } else if (input.bailiffId) {
+      const bailiff = await prisma.bailiff.findUnique({ where: { id: input.bailiffId } });
+      if (!bailiff) throw new Error("Alguacil no encontrado");
+    } else {
+      throw new Error("Selecteer een advocaat of een deurwaarder.");
+    }
+
+    // Si ya hay un cobro pendiente para este dossier, reusar ese pago en
+    // vez de cobrar dos veces.
+    const existingRequest = await prisma.gopTransferRequest.findFirst({
+      where: { debtClaimId: input.debtClaimId, status: "PENDING" },
+      include: { payment: true },
+    });
+    if (
+      existingRequest &&
+      existingRequest.payment.status === "pending" &&
+      existingRequest.payment.payment_url
+    ) {
+      return {
+        paymentId: existingRequest.paymentId,
+        paymentUrl: existingRequest.payment.payment_url,
+      };
+    }
+
+    const obligation = await ObligationService.ensurePrincipalDebtObligation(
+      input.debtClaimId,
+      Number(debtClaim.principalAmount),
+    );
+    const fee = Math.round(Number(obligation.balanceAmount) * GOP_FEE_RATE * 100) / 100;
+
+    const paymentResult = await PaymentService.create(debtClaim.tenantId, {
+      amount: fee,
+      currency: "USD",
+      description: `GOP-transfercommissie (5%) — dossier ${debtClaim.reference ?? debtClaim.id}`,
+      payment_type: PaymentType.GOP_TRANSFER,
+    });
+
+    if (!paymentResult.success || !paymentResult.data) {
+      throw new Error(
+        paymentResult.message || "Kon geen betaling aanmaken voor de GOP-overdracht.",
+      );
+    }
+
+    await prisma.gopTransferRequest.create({
+      data: {
+        debtClaimId: input.debtClaimId,
+        lawyerId: input.lawyerId ?? null,
+        bailiffId: input.bailiffId ?? null,
+        paymentId: paymentResult.data.paymentId,
+      },
+    });
+
+    return { paymentId: paymentResult.data.paymentId, paymentUrl: paymentResult.data.paymentUrl };
+  };
+
+  // Crea/activa el LegalProcess y notifica al abogado/alguacil — solo se
+  // invoca después de confirmado el pago (ver confirmTransferPayment).
+  private static finalizeTransfer = async (
+    input: TransferToLawyerInput,
+    actorUserId?: string,
+  ) => {
+    const debtClaim = await prisma.debtClaim.findUnique({ where: { id: input.debtClaimId } });
+    if (!debtClaim) throw new Error("Expediente (DebtClaim) no encontrado");
+
     let lawyer: Prisma.LawyerGetPayload<{}> | null = null;
     let bailiff: Prisma.BailiffGetPayload<{}> | null = null;
 
     if (input.lawyerId) {
       lawyer = await prisma.lawyer.findUnique({ where: { id: input.lawyerId } });
-      if (!lawyer) throw new Error("Abogado no encontrado");
     } else if (input.bailiffId) {
       bailiff = await prisma.bailiff.findUnique({ where: { id: input.bailiffId } });
-      if (!bailiff) throw new Error("Alguacil no encontrado");
-    } else {
-      throw new Error("Selecteer een advocaat of een deurwaarder.");
     }
 
     const existing = await prisma.legalProcess.findUnique({
@@ -190,6 +257,34 @@ export class LegalProcessService {
     }
 
     return legalProcess;
+  };
+
+  // Se llama desde el webhook de Sentoo cuando el Payment de tipo
+  // GOP_TRANSFER se confirma como pagado.
+  static confirmTransferPayment = async (paymentId: string) => {
+    const request = await prisma.gopTransferRequest.findUnique({ where: { paymentId } });
+    if (!request || request.status === "COMPLETED") return;
+
+    await this.finalizeTransfer({
+      debtClaimId: request.debtClaimId,
+      lawyerId: request.lawyerId,
+      bailiffId: request.bailiffId,
+    });
+
+    const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
+    if (payment) {
+      await DebtFineService.applyCharge(
+        request.debtClaimId,
+        Number(payment.total_amount),
+        "GOP-transfercommissie (5%)",
+        "GOP",
+      );
+    }
+
+    await prisma.gopTransferRequest.update({
+      where: { id: request.id },
+      data: { status: "COMPLETED", completedAt: new Date() },
+    });
   };
 
   static acceptTransfer = async (legalProcessId: string, actorUserId?: string) => {

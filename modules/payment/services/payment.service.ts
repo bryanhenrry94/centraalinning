@@ -60,6 +60,11 @@ export class PaymentService {
         method: "TRANSFER",
         obligation_id: payload.obligationId || null,
         contract_id: payload.contractId || null,
+        // Se guarda también acá (no solo como referencia externa en Sentoo)
+        // porque hay código que necesita ubicar un Payment por su contexto
+        // de negocio (p.ej. facturas GOP filtradas por debtClaimId) sin
+        // depender de provider_payload.
+        reference_number: payload.reference || null,
       },
     });
 

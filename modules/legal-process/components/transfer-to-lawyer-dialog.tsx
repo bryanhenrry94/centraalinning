@@ -18,6 +18,7 @@ import { Lawyer } from "@/modules/lawyer/services/lawyer.validators";
 import { getActiveBailiffsDirectory } from "@/modules/bailiff/actions/bailiff.actions";
 import { Bailiff } from "@/modules/bailiff/services/bailiff.validators";
 import { transferToLawyer } from "@/modules/legal-process/actions/legal-process.actions";
+import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 
 interface TransferToLawyerDialogProps {
   open: boolean;
@@ -39,7 +40,6 @@ export const TransferToLawyerDialog: React.FC<TransferToLawyerDialogProps> = ({
   const [assigneeType, setAssigneeType] = useState<AssigneeType>("LAWYER");
   const [lawyerId, setLawyerId] = useState("");
   const [bailiffId, setBailiffId] = useState("");
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -68,37 +68,48 @@ export const TransferToLawyerDialog: React.FC<TransferToLawyerDialogProps> = ({
     setBailiffId("");
   };
 
-  const handleSubmit = async () => {
+  // De overdracht wordt pas definitief (LegalProcess + melding aan de
+  // advocaat/deurwaarder) zodra de betaling van de GOP-transfercommissie
+  // (5% van het openstaande saldo) bevestigd is — zie confirmTransferPayment
+  // (webhook). Hier wordt alleen de betaling aangemaakt.
+  const handleCreateTransaction = async (): Promise<{
+    success: boolean;
+    error?: string;
+    paymentId?: string;
+    paymentUrl?: string;
+  }> => {
     if (assigneeType === "LAWYER" && !lawyerId) {
-      notifyError("Selecteer een advocaat");
-      return;
+      return { success: false, error: "Selecteer een advocaat" };
     }
     if (assigneeType === "BAILIFF" && !bailiffId) {
-      notifyError("Selecteer een deurwaarder");
-      return;
+      return { success: false, error: "Selecteer een deurwaarder" };
     }
 
-    setLoading(true);
     try {
-      await transferToLawyer({
+      const result = await transferToLawyer({
         debtClaimId,
         lawyerId: assigneeType === "LAWYER" ? lawyerId : null,
         bailiffId: assigneeType === "BAILIFF" ? bailiffId : null,
       });
-      notifySuccess(
-        assigneeType === "LAWYER"
-          ? "Dossier overgedragen aan de advocaat"
-          : "Dossier overgedragen aan de deurwaarder",
-      );
-      onTransferred();
-      handleClose();
+      return { success: true, paymentId: result.paymentId, paymentUrl: result.paymentUrl };
     } catch (error) {
-      notifyError(
-        error instanceof Error ? error.message : "Overdracht mislukt",
-      );
-    } finally {
-      setLoading(false);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Overdracht mislukt",
+      };
     }
+  };
+
+  const handlePaymentConfirmed = async () => {
+    notifySuccess(
+      "Betaling bevestigd. De advocaat/deurwaarder ontvangt een melding zodra de overdracht is verwerkt.",
+    );
+    onTransferred();
+    handleClose();
+  };
+
+  const handlePaymentFailed = async () => {
+    notifyError("De betaling is niet gelukt. Probeer het opnieuw.");
   };
 
   return (
@@ -154,11 +165,13 @@ export const TransferToLawyerDialog: React.FC<TransferToLawyerDialogProps> = ({
           )}
         </Stack>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ flexDirection: "column", alignItems: "stretch", gap: 1, px: 3, pb: 2 }}>
+        <PaymentIntent
+          onCreateTransaction={handleCreateTransaction}
+          onPaymentConfirmed={handlePaymentConfirmed}
+          onPaymentFailed={handlePaymentFailed}
+        />
         <Button onClick={handleClose}>Annuleren</Button>
-        <Button variant="contained" onClick={handleSubmit} disabled={loading}>
-          Overdragen
-        </Button>
       </DialogActions>
     </Dialog>
   );

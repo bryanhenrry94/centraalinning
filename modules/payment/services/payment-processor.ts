@@ -35,6 +35,9 @@ export async function processSuccessfulPayment(paymentId: string) {
     case PaymentType.GOP:
       return LegalProcessService.processGopFeePaymentConfirmed(payment.id);
 
+    case PaymentType.GOP_TRANSFER:
+      return LegalProcessService.confirmTransferPayment(payment.id);
+
     default:
       console.warn(`No processor found for ${payment.payment_type}`);
   }
