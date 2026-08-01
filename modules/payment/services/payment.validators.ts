@@ -21,6 +21,7 @@ export const enum PaymentType {
   COLLECTION = "COLLECTION",
   GOP = "GOP",
   GOP_TRANSFER = "GOP_TRANSFER",
+  GOP_LAWYER_FEE = "GOP_LAWYER_FEE",
   OTHER = "OTHER",
 }
 
@@ -34,6 +35,7 @@ const PaymentTypeEnum = z.enum([
   PaymentType.COLLECTION,
   PaymentType.GOP,
   PaymentType.GOP_TRANSFER,
+  PaymentType.GOP_LAWYER_FEE,
   PaymentType.OTHER,
 ]);
 

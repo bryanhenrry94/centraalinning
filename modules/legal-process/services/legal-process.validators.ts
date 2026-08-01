@@ -99,3 +99,17 @@ export const CancelLegalProcessSchema = z.object({
   reason: z.string().min(1, "El motivo de la cancelación es obligatorio"),
 });
 export type CancelLegalProcessInput = z.infer<typeof CancelLegalProcessSchema>;
+
+export const SubmitLawyerFeeInvoiceSchema = z.object({
+  legalProcessId: z.string().min(1),
+  totalAmount: z.coerce.number().positive(),
+  invoiceNumber: z.string().nullable().optional(),
+  invoiceDate: z.coerce.date().nullable().optional(),
+});
+export type SubmitLawyerFeeInvoiceInput = z.infer<typeof SubmitLawyerFeeInvoiceSchema>;
+
+export const TransferVerdictToBailiffSchema = z.object({
+  legalProcessId: z.string().min(1),
+  bailiffId: z.string().min(1),
+});
+export type TransferVerdictToBailiffInput = z.infer<typeof TransferVerdictToBailiffSchema>;

@@ -50,6 +50,8 @@ import { ChangeBailiffDialog } from "@/modules/legal-process/components/change-b
 import { CancelGopDialog } from "@/modules/legal-process/components/cancel-gop-dialog";
 import { CreateAgreementDialog } from "@/modules/legal-process/components/create-agreement-dialog";
 import { RegisterPaymentDialog } from "@/modules/legal-process/components/register-payment-dialog";
+import { FinalizeLawyerWorkDialog } from "@/modules/legal-process/components/finalize-lawyer-work-dialog";
+import { TransferToBailiffDialog } from "@/modules/legal-process/components/transfer-to-bailiff-dialog";
 
 type LegalProcessDetail = Awaited<ReturnType<typeof getLegalProcessById>>;
 
@@ -103,6 +105,8 @@ const LegalProcessDetailPage: React.FC = () => {
     | "cancel"
     | "create-agreement"
     | "register-payment"
+    | "finalize-lawyer-work"
+    | "transfer-to-bailiff"
   >(null);
 
   const load = useCallback(async () => {
@@ -196,6 +200,23 @@ const LegalProcessDetailPage: React.FC = () => {
   // tenant ya no puede hacerlo en su nombre.
   const showVerdictButton =
     legalProcess.status === LegalProcessStatus.IN_PROCEDURE && isBailiffRole;
+
+  // Un expediente asignado a un abogado (en vez de a un alguacil) no tiene
+  // ningún camino para activar el GOP hasta que el abogado finalice su
+  // trabajo (factura + comisión CFSB pagada) y transfiera la sentencia a un
+  // alguacil — recién ahí ese alguacil puede registrar el vonnis.
+  const isLawyerTrack = !!legalProcess.lawyer;
+  const showFinalizeLawyerWorkButton =
+    isLawyer &&
+    isLawyerTrack &&
+    legalProcess.status === LegalProcessStatus.IN_PROCEDURE &&
+    !legalProcess.lawyerWorkCompletedAt;
+  const showTransferToBailiffButton =
+    isLawyer &&
+    isLawyerTrack &&
+    legalProcess.status === LegalProcessStatus.IN_PROCEDURE &&
+    !!legalProcess.lawyerWorkCompletedAt &&
+    !legalProcess.bailiffId;
 
   // Solo el participante puede cancelar el GOP, y únicamente mientras no
   // haya ninguna sentencia registrada.
@@ -360,7 +381,7 @@ const LegalProcessDetailPage: React.FC = () => {
           <CardContent>
             <LegalProcessDocuments
               legalProcessId={legalProcess.id}
-              canUpload={isStaff || isBailiffRole}
+              canUpload={isStaff || isBailiffRole || isLawyer}
             />
           </CardContent>
         </Card>
@@ -432,6 +453,39 @@ const LegalProcessDetailPage: React.FC = () => {
                   </Button>
                 )}
               </Stack>
+            </CardContent>
+          </Card>
+        )}
+
+        {(showFinalizeLawyerWorkButton || showTransferToBailiffButton) && (
+          <Card>
+            <CardHeader title="Finalización del trabajo del abogado" />
+            <Divider />
+            <CardContent>
+              {showFinalizeLawyerWorkButton && (
+                <Stack spacing={2} alignItems="flex-start">
+                  <Typography variant="body2" color="text.secondary">
+                    Antes de transferir la sentencia al agente judicial, registre sus honorarios,
+                    suba su factura y pague la comisión del CFSB (5%) sobre ese monto.
+                  </Typography>
+                  <Button variant="contained" onClick={() => setDialog("finalize-lawyer-work")}>
+                    Finalizar trabajo
+                  </Button>
+                </Stack>
+              )}
+              {showTransferToBailiffButton && (
+                <Stack spacing={2} alignItems="flex-start">
+                  <Chip label="Trabajo finalizado" color="success" sx={{ fontWeight: 700 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    Antes de continuar, adjunte el documento del Vonnis en la sección Documenten
+                    (tipo &quot;Vonnis&quot;). Sin ese documento no se puede transferir el
+                    expediente al agente judicial.
+                  </Typography>
+                  <Button variant="contained" onClick={() => setDialog("transfer-to-bailiff")}>
+                    Transferir sentencia al agente judicial
+                  </Button>
+                </Stack>
+              )}
             </CardContent>
           </Card>
         )}
@@ -524,6 +578,18 @@ const LegalProcessDetailPage: React.FC = () => {
         legalProcessId={legalProcess.id}
         balanceAmount={obligation ? Number(obligation.balanceAmount) : undefined}
         onRegistered={refresh}
+      />
+      <FinalizeLawyerWorkDialog
+        open={dialog === "finalize-lawyer-work"}
+        onClose={() => setDialog(null)}
+        legalProcessId={legalProcess.id}
+        onFinalized={refresh}
+      />
+      <TransferToBailiffDialog
+        open={dialog === "transfer-to-bailiff"}
+        onClose={() => setDialog(null)}
+        legalProcessId={legalProcess.id}
+        onTransferred={refresh}
       />
     </Container>
   );

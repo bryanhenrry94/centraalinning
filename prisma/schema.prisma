@@ -324,11 +324,42 @@ model LegalProcess {
   startedAt DateTime
   closedAt  DateTime?
 
-  verdicts   Verdict[]
-  documents  LegalProcessDocument[]
-  agreements Agreement[]
+  // Se setea cuando el abogado paga la comisión CFSB del 5% sobre sus
+  // honorarios (LawyerFeeInvoice.status = PAID). Habilita transferVerdictToBailiff.
+  lawyerWorkCompletedAt DateTime?
+
+  verdicts          Verdict[]
+  documents         LegalProcessDocument[]
+  agreements        Agreement[]
+  lawyerFeeInvoices LawyerFeeInvoice[]
 
   @@map("legal_process")
+}
+
+model LawyerFeeInvoice {
+  id             String       @id @default(cuid())
+  legalProcessId String
+  legalProcess   LegalProcess @relation(fields: [legalProcessId], references: [id])
+
+  totalAmount   Decimal   @db.Decimal(18, 2) // Honorarios + gastos declarados por el abogado
+  invoiceNumber String?
+  invoiceDate   DateTime?
+
+  storageKey   String // Factura subida por el abogado
+  originalName String
+  mimeType     String
+  size         Int
+
+  cfsbFeeAmount Decimal @db.Decimal(18, 2) // 5% de totalAmount
+
+  paymentId String  @unique
+  payment   Payment @relation(fields: [paymentId], references: [id])
+
+  status    String    @default("PENDING_PAYMENT") // PENDING_PAYMENT | PAID
+  createdAt DateTime  @default(now())
+  paidAt    DateTime?
+
+  @@map("lawyer_fee_invoice")
 }
 
 model LegalProcessDocument {
@@ -1370,6 +1401,8 @@ enum NotificationType {
   GOP_CLOSED
   GOP_PRESCRIPTION_REMINDER
   GOP_REVIEW_REMINDER
+  GOP_LAWYER_WORK_FINALIZED
+  GOP_TRANSFERRED_TO_BAILIFF
   GENERIC
 }
 
@@ -1509,6 +1542,7 @@ enum PaymentType {
   COLLECTION
   GOP
   GOP_TRANSFER
+  GOP_LAWYER_FEE
   OTHER
 }
 
@@ -1556,6 +1590,8 @@ model Payment {
   transfer_verification PaymentTransferVerification?
 
   gop_transfer_request GopTransferRequest?
+
+  lawyer_fee_invoice LawyerFeeInvoice?
 
   @@map("payment")
 }

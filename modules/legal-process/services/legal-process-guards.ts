@@ -131,9 +131,33 @@ export async function requireAssignedBailiff(legalProcessId: string) {
   return { session, legalProcess };
 }
 
-// Ver/descargar documentos del expediente es de lectura, no una acción
-// operativa: además del alguacil, también el abogado asignado (aunque no
-// gestione la operativa del GOP) necesita poder consultar los documentos.
+// Finalizar el trabajo del abogado (factura + pago CFSB) y transferir la
+// sentencia al alguacil son, igual que registrar una sentencia, actos
+// exclusivos de la parte asignada — aquí el abogado — sin fallback de
+// back-office.
+export async function requireAssignedLawyer(legalProcessId: string) {
+  const session = await getSessionOrThrow();
+
+  const legalProcess = await prisma.legalProcess.findUnique({
+    where: { id: legalProcessId },
+    include: { debtClaim: true, lawyer: true },
+  });
+  if (!legalProcess) throw new Error("Dossier niet gevonden.");
+
+  if (isPlatformOwner(session)) return { session, legalProcess };
+
+  const isAssignedLawyer = legalProcess.lawyer?.userId === session.user.id;
+  if (!isAssignedLawyer) {
+    throw new Error("Alleen de toegewezen advocaat kan deze actie uitvoeren.");
+  }
+  return { session, legalProcess };
+}
+
+// Ver/descargar documentos del expediente no es una acción operativa del
+// GOP: además del alguacil, también el abogado asignado (aunque no gestione
+// la operativa del GOP) necesita poder consultar los documentos — y, desde
+// la finalización de su trabajo, subir/eliminar el suyo propio (p.ej. el
+// Vonnis que habilita transferVerdictToBailiff).
 export async function requireStaffOrAssignedLawyerOrBailiff(legalProcessId: string) {
   const session = await getSessionOrThrow();
 

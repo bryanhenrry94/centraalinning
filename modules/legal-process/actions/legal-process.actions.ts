@@ -8,8 +8,10 @@ import {
   requireTenantStaffForLegalProcess,
   requireAssignedLawyerOrBailiff,
   requireAssignedBailiff,
+  requireAssignedLawyer,
   requireStaffOrAssignedBailiff,
   requireStaffOrAssignedBailiffForVerdict,
+  requireStaffOrAssignedLawyerOrBailiff,
 } from "@/modules/legal-process/services/legal-process-guards";
 import { canUseFeature } from "@/shared/utils/permission";
 import { AppAction } from "@/shared/constants/AppAction";
@@ -33,6 +35,10 @@ import {
   ChangeBailiffSchema,
   CancelLegalProcessInput,
   CancelLegalProcessSchema,
+  SubmitLawyerFeeInvoiceInput,
+  SubmitLawyerFeeInvoiceSchema,
+  TransferVerdictToBailiffInput,
+  TransferVerdictToBailiffSchema,
 } from "@/modules/legal-process/services/legal-process.validators";
 
 export const getLegalProcessById = async (id: string) => {
@@ -169,7 +175,7 @@ export const uploadLegalProcessDocument = async (
   file: File,
   category?: string,
 ) => {
-  const { session, legalProcess } = await requireStaffOrAssignedBailiff(legalProcessId);
+  const { session, legalProcess } = await requireStaffOrAssignedLawyerOrBailiff(legalProcessId);
   const buffer = Buffer.from(await file.arrayBuffer());
 
   return LegalProcessService.uploadDocument({
@@ -192,7 +198,7 @@ export const deleteLegalProcessDocument = async (documentId: string) => {
   const document = await LegalProcessService.getDocumentById(documentId);
   if (!document) throw new Error("Document niet gevonden");
 
-  await requireStaffOrAssignedBailiff(document.legalProcessId);
+  await requireStaffOrAssignedLawyerOrBailiff(document.legalProcessId);
   return LegalProcessService.deleteDocument(documentId);
 };
 
@@ -237,4 +243,35 @@ export const getGopPrincipalObligation = async (debtClaimId: string) => {
 export const registerGopPayment = async (legalProcessId: string, amount: number) => {
   const { session } = await requireStaffOrAssignedBailiff(legalProcessId);
   return LegalProcessService.registerPayment(legalProcessId, amount, session.user.id);
+};
+
+// El abogado declara honorarios + gastos y sube su factura; el sistema abre
+// el payment intent de la comisión CFSB (5%) y devuelve la URL de pago.
+export const submitLawyerFeeInvoice = async (
+  data: SubmitLawyerFeeInvoiceInput,
+  file: File,
+) => {
+  const parsed = SubmitLawyerFeeInvoiceSchema.parse(data);
+  const { session } = await requireAssignedLawyer(parsed.legalProcessId);
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  return LegalProcessService.submitLawyerFeeInvoice(
+    {
+      ...parsed,
+      fileName: file.name,
+      mimeType: file.type,
+      size: file.size,
+      buffer,
+    },
+    session.user.id,
+  );
+};
+
+// El abogado transfiere el expediente al alguacil para que este pueda
+// iniciar el GOP — solo se permite si el trabajo del abogado ya quedó
+// finalizado (ver LegalProcessService.transferVerdictToBailiff).
+export const transferLegalProcessToBailiff = async (data: TransferVerdictToBailiffInput) => {
+  const parsed = TransferVerdictToBailiffSchema.parse(data);
+  const { session } = await requireAssignedLawyer(parsed.legalProcessId);
+  return LegalProcessService.transferVerdictToBailiff(parsed, session.user.id);
 };
