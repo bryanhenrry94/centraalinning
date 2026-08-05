@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { processCollectionCaseWorkflow } from "@/lib/jobs/process_collection_case_workflow";
 import { checkBlockadeReactivation } from "@/lib/jobs/check_blockade_reactivation";
 import { checkGopDeadlines } from "@/lib/jobs/check_gop_deadlines";
+import { checkCaseTransferDeadlines } from "@/lib/jobs/check_case_transfer_deadlines";
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,6 +15,7 @@ export async function GET(req: NextRequest) {
     const notifResult = await processCollectionCaseWorkflow();
     const blockadeResult = await checkBlockadeReactivation();
     const gopDeadlinesResult = await checkGopDeadlines();
+    const caseTransferDeadlinesResult = await checkCaseTransferDeadlines();
 
     return NextResponse.json({
       success: true,
@@ -23,6 +25,7 @@ export async function GET(req: NextRequest) {
         blockadesReactivated: blockadeResult.reactivated,
         gopPrescriptionReminders: gopDeadlinesResult.prescriptionReminders,
         gopReviewReminders: gopDeadlinesResult.reviewReminders,
+        caseTransfersExpired: caseTransferDeadlinesResult.expired,
       },
     });
   } catch (error) {

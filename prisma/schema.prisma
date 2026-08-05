@@ -56,6 +56,8 @@ model Tenant {
   bank_accounts BankAccount[]
   notifications Notification[]
 
+  financial_agreements FinancialAgreement[]
+
   @@map("tenant")
 }
 
@@ -100,9 +102,51 @@ model DebtClaim {
   chatRooms   ChatRoom[]
   obligations DebtClaimObligation[]
 
-  gopTransferRequests GopTransferRequest[]
+  caseTransfers                 CaseTransfer[]
+  originatingFinancialAgreement FinancialAgreement?
 
   @@map("debt_claim")
+}
+
+// FAR (Financiële Afspraken Registreren) — servicio preventivo independiente,
+// no es un DebtClaim/reclamo. Si hay incumplimiento, se escala a un DebtClaim
+// (AOP) nuevo vía escalatedToDebtClaimId, no por conversión de tipo.
+// Ver docs/schema-design-far-overdracht.md
+model FinancialAgreement {
+  id String @id @default(cuid())
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  debtorId String
+  debtor   Debtor @relation(fields: [debtorId], references: [id])
+
+  contractId String?
+  contract   Contract? @relation(fields: [contractId], references: [id])
+
+  reference   String?
+  description String? @db.Text
+
+  amount   Decimal @db.Decimal(18, 2)
+  currency String  @default("USD")
+
+  status FinancialAgreementStatus @default(PENDING_PAYMENT)
+
+  registrationFeePaymentId String?  @unique
+  registrationFeePayment   Payment? @relation(fields: [registrationFeePaymentId], references: [id])
+
+  registeredAt DateTime?
+
+  escalatedToDebtClaimId String?    @unique
+  escalatedToDebtClaim   DebtClaim? @relation(fields: [escalatedToDebtClaimId], references: [id])
+  escalatedAt            DateTime?
+  escalationReason       String?    @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([debtorId])
+  @@map("financial_agreement")
 }
 
 model DebtClaimObligation {
@@ -273,73 +317,47 @@ model COLNotification {
   @@map("col_notification")
 }
 
-// Registra la solicitud de transferencia a GOP mientras se espera la
-// confirmación del pago (5% del saldo pendiente). El LegalProcess real
-// (PENDING_ACCEPTANCE + notificación al abogado/alguacil) solo se crea
-// cuando el webhook de Sentoo confirma el Payment vinculado aquí.
-model GopTransferRequest {
-  id String @id @default(cuid())
-
-  debtClaimId String
-  debtClaim   DebtClaim @relation(fields: [debtClaimId], references: [id])
-
-  lawyerId  String?
-  bailiffId String?
-
-  paymentId String  @unique
-  payment   Payment @relation(fields: [paymentId], references: [id])
-
-  status      String    @default("PENDING") // PENDING | COMPLETED
-  createdAt   DateTime  @default(now())
-  completedAt DateTime?
-
-  @@map("gop_transfer_request")
-}
-
 model LegalProcess {
   id String @id @default(cuid())
 
   debtClaimId String    @unique
   debtClaim   DebtClaim @relation(fields: [debtClaimId], references: [id])
 
+  // El GOP nace siempre a partir de una transferencia aceptada — ver
+  // LegalProcessService.registerVerdict / CaseTransfer más abajo.
+  caseTransferId String       @unique
+  caseTransfer   CaseTransfer @relation(fields: [caseTransferId], references: [id])
+
   referenceNumber String? @unique
 
-  lawyerId String?
-  lawyer   Lawyer? @relation(fields: [lawyerId], references: [id])
-
-  bailiffId String?
-  bailiff   Bailiff? @relation(fields: [bailiffId], references: [id])
+  bailiffId String
+  bailiff   Bailiff @relation(fields: [bailiffId], references: [id])
 
   status LegalProcessStatus
-
-  rejectionReason String? @db.Text
 
   inactiveReason GopInactiveReason?
   inactiveNotes  String?            @db.Text
   reviewDate     DateTime?
 
-  cancelledAt  DateTime?
-  cancelReason String?   @db.Text
-
   startedAt DateTime
   closedAt  DateTime?
 
-  // Se setea cuando el abogado paga la comisión CFSB del 5% sobre sus
-  // honorarios (LawyerFeeInvoice.status = PAID). Habilita transferVerdictToBailiff.
-  lawyerWorkCompletedAt DateTime?
+  // Se setea cuando el alguacil paga la comisión CFSB del 5% (BailiffFeeInvoice.status = PAID).
+  gopCompletedGateAt DateTime?
 
-  verdicts          Verdict[]
-  documents         LegalProcessDocument[]
-  agreements        Agreement[]
-  lawyerFeeInvoices LawyerFeeInvoice[]
+  verdicts           Verdict[]
+  documents          LegalProcessDocument[]
+  agreements         Agreement[]
+  lawyerFeeInvoices  LawyerFeeInvoice[]
+  bailiffFeeInvoices BailiffFeeInvoice[]
 
   @@map("legal_process")
 }
 
 model LawyerFeeInvoice {
   id             String       @id @default(cuid())
-  legalProcessId String
-  legalProcess   LegalProcess @relation(fields: [legalProcessId], references: [id])
+  caseTransferId String
+  caseTransfer   CaseTransfer @relation(fields: [caseTransferId], references: [id])
 
   totalAmount   Decimal   @db.Decimal(18, 2) // Honorarios + gastos declarados por el abogado
   invoiceNumber String?
@@ -355,11 +373,118 @@ model LawyerFeeInvoice {
   paymentId String  @unique
   payment   Payment @relation(fields: [paymentId], references: [id])
 
+  status         String        @default("PENDING_PAYMENT") // PENDING_PAYMENT | PAID
+  createdAt      DateTime      @default(now())
+  paidAt         DateTime?
+  legalProcess   LegalProcess? @relation(fields: [legalProcessId], references: [id])
+  legalProcessId String?
+
+  @@map("lawyer_fee_invoice")
+}
+
+// Overdracht — fase de transferencia/aceptación por abogado o alguacil,
+// separada de LegalProcess (GOP). A propósito SIN @unique en debtClaimId:
+// permite varios intentos (rechazos) sin perder historial, a diferencia de
+// como funciona hoy LegalProcess. Ver docs/schema-design-far-overdracht.md.
+model CaseTransfer {
+  id String @id @default(cuid())
+
+  debtClaimId String
+  debtClaim   DebtClaim @relation(fields: [debtClaimId], references: [id])
+
+  lawyerId String?
+  lawyer   Lawyer? @relation(fields: [lawyerId], references: [id])
+
+  // Puede completarse más adelante aunque el expediente haya iniciado con
+  // un abogado: representa a qué alguacil se le entrega la sentencia para
+  // ejecutar una vez el abogado terminó su trabajo.
+  bailiffId String?
+  bailiff   Bailiff? @relation(fields: [bailiffId], references: [id])
+
+  status CaseTransferStatus @default(PENDING_PAYMENT)
+
+  rejectionReason String? @db.Text
+
+  paymentId String?  @unique
+  payment   Payment? @relation(fields: [paymentId], references: [id])
+
+  acceptanceDeadline DateTime? // límite de 7 días para aceptar/rechazar
+  respondedAt        DateTime?
+
+  workCompletedAt DateTime? // solo camino abogado: honorarios + 5% CFSB pagados
+
+  isEmergencyTransfer Boolean @default(false) // noodoverdracht (fallecimiento/incapacidad)
+  emergencyReason     String? @db.Text
+
+  cancelledAt  DateTime?
+  cancelReason String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lawyerFeeInvoices LawyerFeeInvoice[]
+  agreements        Agreement[]
+  documents         CaseTransferDocument[]
+
+  legalProcess LegalProcess?
+
+  @@index([debtClaimId])
+  @@map("case_transfer")
+}
+
+// Documentos de la fase de transferencia (p.ej. el Vonnis que el abogado
+// adjunta antes de transferir la ejecución al alguacil) — antes de que
+// exista un LegalProcess no hay dónde adjuntarlos salvo aquí.
+model CaseTransferDocument {
+  id String @id @default(cuid())
+
+  caseTransferId String
+  caseTransfer   CaseTransfer @relation(fields: [caseTransferId], references: [id], onDelete: Cascade)
+
+  fileName     String
+  originalName String
+
+  mimeType String
+  size     Int
+
+  storageKey String
+
+  category String?
+
+  uploadedById String?
+
+  createdAt DateTime @default(now())
+
+  @@index([caseTransferId])
+  @@map("case_transfer_document")
+}
+
+// Ítem 1.8 del plan — mismo patrón que LawyerFeeInvoice, pero para el 5%
+// del alguacil sobre la ejecución de la sentencia (GOP).
+model BailiffFeeInvoice {
+  id             String       @id @default(cuid())
+  legalProcessId String
+  legalProcess   LegalProcess @relation(fields: [legalProcessId], references: [id])
+
+  totalAmount   Decimal   @db.Decimal(18, 2) // Monto facturado al debiteur por el alguacil
+  invoiceNumber String?
+  invoiceDate   DateTime?
+
+  storageKey   String
+  originalName String
+  mimeType     String
+  size         Int
+
+  cfsbFeeAmount Decimal @db.Decimal(18, 2) // 5% de totalAmount
+
+  paymentId String  @unique
+  payment   Payment @relation(fields: [paymentId], references: [id])
+
   status    String    @default("PENDING_PAYMENT") // PENDING_PAYMENT | PAID
   createdAt DateTime  @default(now())
   paidAt    DateTime?
 
-  @@map("lawyer_fee_invoice")
+  @@map("bailiff_fee_invoice")
 }
 
 model LegalProcessDocument {
@@ -575,14 +700,29 @@ enum TimelineEvent {
   SERVICE_COMPLETED
 }
 
+// El GOP solo existe desde el vonnis en adelante; los estados previos
+// (transferencia, aceptación, procedimiento con el abogado, cancelación
+// antes de sentencia) viven en CaseTransferStatus.
 enum LegalProcessStatus {
-  PENDING_ACCEPTANCE // Transferido al abogado, esperando que acepte o rechace el expediente.
-  REJECTED // El abogado rechazó el expediente; el participante debe elegir otro.
-  IN_PROCEDURE // Aceptado por el abogado; procedimiento judicial en curso (antes de sentencia).
   GOP_ACTIVE // Sentencia registrada; el alguacil administra la ejecución judicial.
   GOP_INACTIVE // Sin resultados temporales; en espera de la fecha de revisión.
-  GOP_CANCELLED // El participante decidió retirar la gestión judicial.
   CLOSED // La sentencia fue cumplida en su totalidad.
+}
+
+enum CaseTransferStatus {
+  PENDING_PAYMENT // comisión de transferencia (5%) generada, esperando pago
+  PENDING_ACCEPTANCE // pagado, notificado al abogado/alguacil, esperando respuesta (7 días)
+  ACCEPTED // procedimiento en curso (antes IN_PROCEDURE dentro de LegalProcess)
+  REJECTED
+  WORK_COMPLETED // solo camino abogado: honorarios + 5% CFSB pagados, trabajo cerrado
+  CANCELLED
+}
+
+enum FinancialAgreementStatus {
+  PENDING_PAYMENT // registrado, esperando el pago del fee de $10
+  REGISTERED // pagado — único estado estable; sin recordatorios ni monitoreo
+  ESCALATED // hubo incumplimiento; se abrió un DebtClaim (AOP) a partir de este FAR
+  CANCELLED
 }
 
 enum GopInactiveReason {
@@ -1189,6 +1329,8 @@ model Debtor {
   block_checks BlockCheck[]
   debt_claims  DebtClaim[]
 
+  financial_agreements FinancialAgreement[]
+
   @@map("debtor")
 }
 
@@ -1227,6 +1369,7 @@ model Bailiff {
   verdicts Verdict[] @relation("BailiffToVerdict")
 
   legalProcesses LegalProcess[]
+  caseTransfers  CaseTransfer[]
 
   @@index([status])
   @@map("bailiff")
@@ -1265,7 +1408,7 @@ model Lawyer {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  legalProcesses LegalProcess[]
+  caseTransfers CaseTransfer[]
 
   @@index([tenantId])
   @@index([status])
@@ -1344,6 +1487,10 @@ model Agreement {
   debtClaim          DebtClaim       @relation(fields: [debtClaim_id], references: [id])
   legalProcessId     String?
   legalProcess       LegalProcess?   @relation(fields: [legalProcessId], references: [id])
+  // Nuevo (fase 1, aditivo): regelingen negociadas antes del vonnis, durante
+  // la fase de transferencia/procedimiento (sección 6.4 del doc CFSB).
+  caseTransferId     String?
+  caseTransfer       CaseTransfer?   @relation(fields: [caseTransferId], references: [id])
   total_amount       Decimal         @db.Decimal(10, 2)
   installment_amount Decimal         @db.Decimal(10, 2)
   installments_count Int
@@ -1402,6 +1549,7 @@ enum NotificationType {
   GOP_PRESCRIPTION_REMINDER
   GOP_REVIEW_REMINDER
   GOP_LAWYER_WORK_FINALIZED
+  GOP_BAILIFF_WORK_FINALIZED
   GOP_TRANSFERRED_TO_BAILIFF
   GENERIC
 }
@@ -1482,6 +1630,8 @@ model Contract {
   documents          ContractDocument[]
   activation_payment Payment?
 
+  financial_agreements FinancialAgreement[]
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -1543,6 +1693,8 @@ enum PaymentType {
   GOP
   GOP_TRANSFER
   GOP_LAWYER_FEE
+  GOP_BAILIFF_FEE
+  FAR_REGISTRATION
   OTHER
 }
 
@@ -1589,9 +1741,11 @@ model Payment {
 
   transfer_verification PaymentTransferVerification?
 
-  gop_transfer_request GopTransferRequest?
+  lawyer_fee_invoice  LawyerFeeInvoice?
+  bailiff_fee_invoice BailiffFeeInvoice?
 
-  lawyer_fee_invoice LawyerFeeInvoice?
+  case_transfer                    CaseTransfer?
+  financial_agreement_registration FinancialAgreement?
 
   @@map("payment")
 }

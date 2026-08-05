@@ -1,0 +1,58 @@
+Modulo,Funcionalidad,Estado,Notas
+auth,Login con credenciales (NextAuth JWT),Implementado,
+auth,Registro (signup) de tenant/usuario,Implementado,
+auth,Invitaciones a miembros,Implementado,
+auth,Recuperacion y reset de password,Implementado,
+auth,Roles y membresias multi-tenant,Implementado,
+tenant,Gestion de datos del tenant,Implementado,
+tenant,Cuentas bancarias del tenant,Implementado,
+collection,Registro de deudores y personas,Implementado,
+collection,Casos de cobranza (AANMANING/SOMMATIE/INGEBREKESTELLING),Implementado,Verificado: el modelo vigente es DebtClaim; CollectionCase ya no existe en el schema, solo queda naming heredado en 5 archivos
+collection,Multas por mora (debt fine),Implementado,
+collection,Linea de tiempo del reclamo (audit trail),Implementado,ClaimTimeline
+collection,Notificaciones de cobranza automatizadas,Implementado,job process_collection_case_workflow
+block-check,Verificacion de bloqueo/credito previo (BLC),Implementado,
+blockade,Registro de bloqueo (BLK / Blokkade),Implementado,
+blockade,Reactivacion automatica de bloqueo,Implementado,job check_blockade_reactivation
+blockade,Documentos de bloqueo,Implementado,
+legal-process,Transferencia de expediente a abogado (GOP),Implementado,
+legal-process,Aceptacion/rechazo por abogado,Implementado,
+legal-process,Seguimiento de vencimientos judiciales,Implementado,job check_gop_deadlines
+legal-process,Cierre y cancelacion de proceso judicial,Implementado,
+lawyer,Gestion de abogados,Implementado,
+lawyer,Facturacion de honorarios de abogado,Implementado,
+bailiff,Gestion de alguaciles (deurwaarders),Implementado,
+verdict,Registro de sentencias (vonnis),Implementado,
+verdict,Calculo de intereses sobre sentencia,Implementado,
+verdict,Embargos,Implementado,
+verdict,Servicios de alguacil sobre sentencia,Implementado,
+verdict,Adjuntos de sentencia,Implementado,
+agreement,Acuerdos de pago / negociacion con deudor,Implementado,
+agreement,Contraofertas,Implementado,
+agreement,Cuotas (installments),Implementado,
+contract,Registro de contratos cliente-deudor,Implementado,
+contract,Partes del contrato,Implementado,
+contract,Documentos de contrato,Implementado,
+contract,Inicio de seguimiento (start-follow-up),Implementado,
+payment,Pagos de deudores,Implementado,
+payment,Facturacion (billing invoices),Implementado,
+payment,Verificacion de transferencias,Implementado,payment-transfer con validacion antes de transferir archivo (commit reciente)
+payment,Reportes financieros,Implementado,
+payment,Planes y suscripciones SaaS de la plataforma,Implementado,
+payment,Integracion pasarela Sentoo + webhook,Implementado,
+employee,Gestion de empleados,Implementado,
+employee,Importacion masiva de empleados (archivo),Implementado,
+notification,Notificaciones multicanal,Implementado,EMAIL/SMS/WHATSAPP/LETTER (verificar si SMS/WhatsApp estan conectados a proveedor real)
+chat,Chat en tiempo real,Implementado,Socket.IO
+dashboard,Panel general,Implementado,
+dashboard,Vista operativa (workstation),Implementado,
+settings,Parametros de plataforma,Implementado,Existen dos pantallas (parameters y parameters_vs2) - revisar duplicidad
+settings,Tipos de interes,Implementado,
+settings,Planes,Implementado,
+plataforma,Multi-tenant por subdominio,Implementado,
+plataforma,Gating de features por estado de membresia,Implementado,PAST_DUE bloquea CREATE_COLLECTION y BLOK_CHECK
+plataforma,Generacion de PDFs legales,Implementado,AanmaningPDF/SommatiePDF/IngebrekestellingPDF/BlokkadePDF/FinancialSummaryPDF
+plataforma,Envio de correo transaccional,Implementado,Resend
+plataforma,Pruebas automatizadas,No implementado,Confirmado en CLAUDE.md - "no hay tests automatizados"
+plataforma,Reportes/analitica mas alla de dashboard basico,Parcial,Solo financial-report visible
+plataforma,Internacionalizacion (i18n),No verificado,No se detectaron carpetas de i18n

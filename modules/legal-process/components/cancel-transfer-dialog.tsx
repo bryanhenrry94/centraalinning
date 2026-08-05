@@ -10,19 +10,19 @@ import {
   Alert,
 } from "@mui/material";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
-import { cancelGop } from "@/modules/legal-process/actions/legal-process.actions";
+import { cancelCaseTransfer } from "@/modules/legal-process/actions/case-transfer.actions";
 
-interface CancelGopDialogProps {
+interface CancelTransferDialogProps {
   open: boolean;
   onClose: () => void;
-  legalProcessId: string;
+  caseTransferId: string;
   onRegistered: () => void;
 }
 
-export const CancelGopDialog: React.FC<CancelGopDialogProps> = ({
+export const CancelTransferDialog: React.FC<CancelTransferDialogProps> = ({
   open,
   onClose,
-  legalProcessId,
+  caseTransferId,
   onRegistered,
 }) => {
   const [reason, setReason] = useState("");
@@ -41,7 +41,7 @@ export const CancelGopDialog: React.FC<CancelGopDialogProps> = ({
 
     setLoading(true);
     try {
-      await cancelGop({ legalProcessId, reason });
+      await cancelCaseTransfer({ caseTransferId, reason });
       notifySuccess("GOP geannuleerd");
       onRegistered();
       handleClose();

@@ -12,13 +12,13 @@ import {
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
-import { submitLawyerFeeInvoice } from "@/modules/legal-process/actions/case-transfer.actions";
+import { submitBailiffFeeInvoice } from "@/modules/legal-process/actions/legal-process.actions";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 
-interface FinalizeLawyerWorkDialogProps {
+interface FinalizeBailiffWorkDialogProps {
   open: boolean;
   onClose: () => void;
-  caseTransferId: string;
+  legalProcessId: string;
   onFinalized: () => void;
 }
 
@@ -28,10 +28,10 @@ const emptyState = {
   invoiceDate: "",
 };
 
-export const FinalizeLawyerWorkDialog: React.FC<FinalizeLawyerWorkDialogProps> = ({
+export const FinalizeBailiffWorkDialog: React.FC<FinalizeBailiffWorkDialogProps> = ({
   open,
   onClose,
-  caseTransferId,
+  legalProcessId,
   onFinalized,
 }) => {
   const [form, setForm] = useState(emptyState);
@@ -51,8 +51,8 @@ export const FinalizeLawyerWorkDialog: React.FC<FinalizeLawyerWorkDialogProps> =
   };
 
   // El registro de la factura (subida + cálculo del 5%) y la apertura del
-  // payment intent contra Sentoo ocurren en un solo paso: no tiene sentido
-  // guardar la factura sin también cobrar la comisión CFSB que la habilita.
+  // payment intent contra Sentoo ocurren en un solo paso, igual que en el
+  // flujo equivalente del abogado (FinalizeLawyerWorkDialog).
   const handleCreateTransaction = async (): Promise<{
     success: boolean;
     error?: string;
@@ -60,16 +60,16 @@ export const FinalizeLawyerWorkDialog: React.FC<FinalizeLawyerWorkDialogProps> =
     paymentUrl?: string;
   }> => {
     if (!Number(form.totalAmount)) {
-      return { success: false, error: "Voer het totale honorariumbedrag in" };
+      return { success: false, error: "Voer het totale kostenbedrag in" };
     }
     if (!file) {
-      return { success: false, error: "Upload uw honorariumfactuur" };
+      return { success: false, error: "Upload uw kostenfactuur" };
     }
 
     try {
-      const result = await submitLawyerFeeInvoice(
+      const result = await submitBailiffFeeInvoice(
         {
-          caseTransferId,
+          legalProcessId,
           totalAmount: Number(form.totalAmount),
           invoiceNumber: form.invoiceNumber || null,
           invoiceDate: form.invoiceDate ? new Date(form.invoiceDate) : null,
@@ -97,16 +97,15 @@ export const FinalizeLawyerWorkDialog: React.FC<FinalizeLawyerWorkDialogProps> =
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Trabajo finalizado: honorarios y comisión CFSB</DialogTitle>
+      <DialogTitle>Trabajo finalizado: costos y comisión CFSB</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Alert severity="info">
             Al registrar la factura se calcula automáticamente la comisión del CFSB (5%) sobre el
-            monto total. Debe pagarla para que el expediente quede &quot;Trabajo finalizado&quot; y
-            pueda transferir la sentencia al agente judicial.
+            monto total. Debe pagarla para poder cerrar el expediente GOP.
           </Alert>
           <TextField
-            label="Monto total (honorarios + gastos)"
+            label="Monto total facturado al debiteur"
             type="number"
             size="small"
             required
@@ -128,7 +127,7 @@ export const FinalizeLawyerWorkDialog: React.FC<FinalizeLawyerWorkDialogProps> =
             onChange={set("invoiceDate")}
           />
           <Button component="label" variant="outlined" startIcon={<UploadFileIcon />}>
-            {file ? file.name : "Subir factura de honorarios"}
+            {file ? file.name : "Subir factura de costos"}
             <input type="file" hidden onChange={handleFileChange} />
           </Button>
         </Stack>

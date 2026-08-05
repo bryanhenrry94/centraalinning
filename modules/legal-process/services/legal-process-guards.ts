@@ -26,8 +26,7 @@ const isPlatformOwner = (session: Session) =>
 const isTenantStaff = (session: Session) =>
   !!session.user.roles?.some((role) => (TENANT_STAFF_ROLES as string[]).includes(role));
 
-// Transferir, cambiar de alguacil y cancelar el GOP son decisiones que solo
-// puede tomar el participante (secciones 1, 13 y 14 del proceso GOP).
+// Cambiar de alguacil es una decisión que solo puede tomar el participante.
 export async function requireTenantStaffForTenant(tenantId: string) {
   const session = await getSessionOrThrow();
   if (isPlatformOwner(session)) return session;
@@ -36,14 +35,6 @@ export async function requireTenantStaffForTenant(tenantId: string) {
     throw new Error("Alleen medewerkers van deze organisatie kunnen deze actie uitvoeren.");
   }
   return session;
-}
-
-export async function requireTenantStaffForDebtClaim(debtClaimId: string) {
-  const debtClaim = await prisma.debtClaim.findUnique({ where: { id: debtClaimId } });
-  if (!debtClaim) throw new Error("Dossier niet gevonden.");
-
-  const session = await requireTenantStaffForTenant(debtClaim.tenantId);
-  return { session, debtClaim };
 }
 
 export async function requireTenantStaffForLegalProcess(legalProcessId: string) {
@@ -57,35 +48,11 @@ export async function requireTenantStaffForLegalProcess(legalProcessId: string) 
   return { session, legalProcess };
 }
 
-// Aceptar/rechazar una transferencia es, por definición, una decisión de la
-// parte asignada (abogado O alguacil, según cuál se haya elegido al
-// transferir — nunca ambos) — si el participante pudiera auto-aprobarla, el
-// paso de aceptación del spec (sección 2) no tendría ningún efecto.
-export async function requireAssignedLawyerOrBailiff(legalProcessId: string) {
-  const session = await getSessionOrThrow();
-
-  const legalProcess = await prisma.legalProcess.findUnique({
-    where: { id: legalProcessId },
-    include: { lawyer: true, bailiff: true, debtClaim: true },
-  });
-  if (!legalProcess) throw new Error("Dossier niet gevonden.");
-
-  if (isPlatformOwner(session)) return { session, legalProcess };
-
-  const isAssignedLawyer = legalProcess.lawyer?.userId === session.user.id;
-  const isAssignedBailiff = legalProcess.bailiff?.user_id === session.user.id;
-
-  if (!isAssignedLawyer && !isAssignedBailiff) {
-    throw new Error("Alleen de toegewezen advocaat of deurwaarder kan deze actie uitvoeren.");
-  }
-  return { session, legalProcess };
-}
-
 // La gestión operativa del GOP (sentencia, medidas de ejecución, intereses,
 // costos, inactivo/reactivación, cierre) la hace el alguacil asignado, pero
 // hoy el back-office del participante también puede registrarla en su
 // nombre porque el portal de autoservicio del alguacil aún no está en
-// producción (ver plan GOP, Fase 7).
+// producción.
 export async function requireStaffOrAssignedBailiff(legalProcessId: string) {
   const session = await getSessionOrThrow();
 
@@ -109,10 +76,8 @@ export async function requireStaffOrAssignedBailiff(legalProcessId: string) {
   return { session, legalProcess };
 }
 
-// Registrar una sentencia es un acto exclusivo del alguacil asignado: a
-// diferencia del resto de la gestión operativa del GOP, esta acción no
-// admite el fallback de "back-office en nombre del alguacil" — solo el
-// alguacil puede registrar el vonnis.
+// Registrar una sentencia ADICIONAL sobre un GOP ya activo es un acto
+// exclusivo del alguacil asignado — sin fallback de back-office.
 export async function requireAssignedBailiff(legalProcessId: string) {
   const session = await getSessionOrThrow();
 
@@ -131,55 +96,10 @@ export async function requireAssignedBailiff(legalProcessId: string) {
   return { session, legalProcess };
 }
 
-// Finalizar el trabajo del abogado (factura + pago CFSB) y transferir la
-// sentencia al alguacil son, igual que registrar una sentencia, actos
-// exclusivos de la parte asignada — aquí el abogado — sin fallback de
-// back-office.
-export async function requireAssignedLawyer(legalProcessId: string) {
-  const session = await getSessionOrThrow();
-
-  const legalProcess = await prisma.legalProcess.findUnique({
-    where: { id: legalProcessId },
-    include: { debtClaim: true, lawyer: true },
-  });
-  if (!legalProcess) throw new Error("Dossier niet gevonden.");
-
-  if (isPlatformOwner(session)) return { session, legalProcess };
-
-  const isAssignedLawyer = legalProcess.lawyer?.userId === session.user.id;
-  if (!isAssignedLawyer) {
-    throw new Error("Alleen de toegewezen advocaat kan deze actie uitvoeren.");
-  }
-  return { session, legalProcess };
-}
-
-// Ver/descargar documentos del expediente no es una acción operativa del
-// GOP: además del alguacil, también el abogado asignado (aunque no gestione
-// la operativa del GOP) necesita poder consultar los documentos — y, desde
-// la finalización de su trabajo, subir/eliminar el suyo propio (p.ej. el
-// Vonnis que habilita transferVerdictToBailiff).
-export async function requireStaffOrAssignedLawyerOrBailiff(legalProcessId: string) {
-  const session = await getSessionOrThrow();
-
-  const legalProcess = await prisma.legalProcess.findUnique({
-    where: { id: legalProcessId },
-    include: { debtClaim: true, lawyer: true, bailiff: true },
-  });
-  if (!legalProcess) throw new Error("Dossier niet gevonden.");
-
-  if (isPlatformOwner(session)) return { session, legalProcess };
-
-  const isStaffOfTenant =
-    isTenantStaff(session) && session.user.tenant_id === legalProcess.debtClaim.tenantId;
-  const isAssignedLawyer = legalProcess.lawyer?.userId === session.user.id;
-  const isAssignedBailiff = legalProcess.bailiff?.user_id === session.user.id;
-
-  if (!isStaffOfTenant && !isAssignedLawyer && !isAssignedBailiff) {
-    throw new Error(
-      "Alleen de toegewezen advocaat, deurwaarder of medewerkers van deze organisatie kunnen deze actie uitvoeren.",
-    );
-  }
-  return { session, legalProcess };
+// Ver/descargar documentos del expediente post-vonnis: staff del tenant o
+// el alguacil asignado.
+export async function requireStaffOrAssignedBailiffForDocuments(legalProcessId: string) {
+  return requireStaffOrAssignedBailiff(legalProcessId);
 }
 
 export async function requireStaffOrAssignedBailiffForVerdict(verdictId: string) {

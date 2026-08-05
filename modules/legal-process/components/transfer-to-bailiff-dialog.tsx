@@ -12,19 +12,19 @@ import {
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { getActiveBailiffsDirectory } from "@/modules/bailiff/actions/bailiff.actions";
 import { Bailiff } from "@/modules/bailiff/services/bailiff.validators";
-import { transferLegalProcessToBailiff } from "@/modules/legal-process/actions/legal-process.actions";
+import { assignBailiffForExecution } from "@/modules/legal-process/actions/case-transfer.actions";
 
 interface TransferToBailiffDialogProps {
   open: boolean;
   onClose: () => void;
-  legalProcessId: string;
+  caseTransferId: string;
   onTransferred: () => void;
 }
 
 export const TransferToBailiffDialog: React.FC<TransferToBailiffDialogProps> = ({
   open,
   onClose,
-  legalProcessId,
+  caseTransferId,
   onTransferred,
 }) => {
   const [bailiffs, setBailiffs] = useState<Bailiff[]>([]);
@@ -51,7 +51,7 @@ export const TransferToBailiffDialog: React.FC<TransferToBailiffDialogProps> = (
 
     setLoading(true);
     try {
-      await transferLegalProcessToBailiff({ legalProcessId, bailiffId });
+      await assignBailiffForExecution({ caseTransferId, bailiffId });
       notifySuccess("Sentencia transferida al agente judicial");
       onTransferred();
       handleClose();

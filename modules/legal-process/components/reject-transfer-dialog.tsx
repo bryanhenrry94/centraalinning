@@ -9,19 +9,19 @@ import {
   TextField,
 } from "@mui/material";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
-import { rejectLegalProcessTransfer } from "@/modules/legal-process/actions/legal-process.actions";
+import { rejectCaseTransfer } from "@/modules/legal-process/actions/case-transfer.actions";
 
 interface RejectTransferDialogProps {
   open: boolean;
   onClose: () => void;
-  legalProcessId: string;
+  caseTransferId: string;
   onRegistered: () => void;
 }
 
 export const RejectTransferDialog: React.FC<RejectTransferDialogProps> = ({
   open,
   onClose,
-  legalProcessId,
+  caseTransferId,
   onRegistered,
 }) => {
   const [reason, setReason] = useState("");
@@ -40,7 +40,7 @@ export const RejectTransferDialog: React.FC<RejectTransferDialogProps> = ({
 
     setLoading(true);
     try {
-      await rejectLegalProcessTransfer(legalProcessId, reason);
+      await rejectCaseTransfer({ caseTransferId, reason });
       notifySuccess("Dossier afgewezen");
       onRegistered();
       handleClose();

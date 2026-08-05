@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   Container,
@@ -30,7 +30,6 @@ import { UserRole } from "@/shared/constants/user-role";
 
 import {
   getLegalProcessById,
-  acceptLegalProcessTransfer,
   reactivateGop,
   closeGop,
   getGopAgreements,
@@ -40,18 +39,14 @@ import { getLegalProcessStatusInfo } from "@/modules/legal-process/utils/legal-p
 import { LegalProcessStatus } from "@/modules/legal-process/constants/legal-process-status";
 import { GopTimeline } from "@/modules/legal-process/components/gop-timeline";
 import { LegalProcessDocuments } from "@/modules/legal-process/components/legal-process-documents";
-import { RegisterVerdictDialog } from "@/modules/legal-process/components/register-verdict-dialog";
-import { RejectTransferDialog } from "@/modules/legal-process/components/reject-transfer-dialog";
 import { ExecutionMeasureDialog } from "@/modules/legal-process/components/execution-measure-dialog";
 import { InterestUpdateDialog } from "@/modules/legal-process/components/interest-update-dialog";
 import { BailiffCostDialog } from "@/modules/legal-process/components/bailiff-cost-dialog";
 import { MarkInactiveDialog } from "@/modules/legal-process/components/mark-inactive-dialog";
 import { ChangeBailiffDialog } from "@/modules/legal-process/components/change-bailiff-dialog";
-import { CancelGopDialog } from "@/modules/legal-process/components/cancel-gop-dialog";
 import { CreateAgreementDialog } from "@/modules/legal-process/components/create-agreement-dialog";
 import { RegisterPaymentDialog } from "@/modules/legal-process/components/register-payment-dialog";
-import { FinalizeLawyerWorkDialog } from "@/modules/legal-process/components/finalize-lawyer-work-dialog";
-import { TransferToBailiffDialog } from "@/modules/legal-process/components/transfer-to-bailiff-dialog";
+import { FinalizeBailiffWorkDialog } from "@/modules/legal-process/components/finalize-bailiff-work-dialog";
 
 type LegalProcessDetail = Awaited<ReturnType<typeof getLegalProcessById>>;
 
@@ -74,7 +69,6 @@ function InfoField({ label, value }: { label: string; value?: React.ReactNode })
 
 const LegalProcessDetailPage: React.FC = () => {
   const params = useParams();
-  const router = useRouter();
   const { data: session } = useSession();
   const roles = (session?.user?.roles as string[] | undefined) ?? [];
   const isStaff = roles.some((r) =>
@@ -82,7 +76,6 @@ const LegalProcessDetailPage: React.FC = () => {
       r as UserRole,
     ),
   );
-  const isLawyer = roles.includes(UserRole.LAWYER);
   const isBailiffRole = roles.includes(UserRole.BAILIFF);
 
   const [loading, setLoading] = useState(true);
@@ -95,18 +88,14 @@ const LegalProcessDetailPage: React.FC = () => {
 
   const [dialog, setDialog] = useState<
     | null
-    | "register-verdict"
-    | "reject"
     | "execution-measure"
     | "interest-update"
     | "bailiff-cost"
     | "mark-inactive"
     | "change-bailiff"
-    | "cancel"
     | "create-agreement"
     | "register-payment"
-    | "finalize-lawyer-work"
-    | "transfer-to-bailiff"
+    | "finalize-bailiff-work"
   >(null);
 
   const load = useCallback(async () => {
@@ -154,16 +143,6 @@ const LegalProcessDetailPage: React.FC = () => {
     ? `${legalProcess.debtClaim.debtor.person.first_name ?? ""} ${legalProcess.debtClaim.debtor.person.last_name ?? ""}`.trim()
     : "-";
 
-  const handleAccept = async () => {
-    try {
-      await acceptLegalProcessTransfer(legalProcess.id);
-      notifySuccess("Dossier geaccepteerd");
-      refresh();
-    } catch (error) {
-      notifyError(error instanceof Error ? error.message : "Actie mislukt");
-    }
-  };
-
   const handleReactivate = async () => {
     try {
       await reactivateGop(legalProcess.id);
@@ -190,42 +169,10 @@ const LegalProcessDetailPage: React.FC = () => {
       legalProcess.status as LegalProcessStatus,
     );
 
-  // El abogado/alguacil decide aceptar o rechazar la transferencia al final
-  // de la página, después de haber visto toda la información del expediente.
-  const canDecideTransfer =
-    legalProcess.status === LegalProcessStatus.PENDING_ACCEPTANCE &&
-    (legalProcess.lawyer ? isLawyer : isBailiffRole);
-
-  // Solo el alguacil asignado registra la sentencia — el personal del
-  // tenant ya no puede hacerlo en su nombre.
-  const showVerdictButton =
-    legalProcess.status === LegalProcessStatus.IN_PROCEDURE && isBailiffRole;
-
-  // Un expediente asignado a un abogado (en vez de a un alguacil) no tiene
-  // ningún camino para activar el GOP hasta que el abogado finalice su
-  // trabajo (factura + comisión CFSB pagada) y transfiera la sentencia a un
-  // alguacil — recién ahí ese alguacil puede registrar el vonnis.
-  const isLawyerTrack = !!legalProcess.lawyer;
-  const showFinalizeLawyerWorkButton =
-    isLawyer &&
-    isLawyerTrack &&
-    legalProcess.status === LegalProcessStatus.IN_PROCEDURE &&
-    !legalProcess.lawyerWorkCompletedAt;
-  const showTransferToBailiffButton =
-    isLawyer &&
-    isLawyerTrack &&
-    legalProcess.status === LegalProcessStatus.IN_PROCEDURE &&
-    !!legalProcess.lawyerWorkCompletedAt &&
-    !legalProcess.bailiffId;
-
-  // Solo el participante puede cancelar el GOP, y únicamente mientras no
-  // haya ninguna sentencia registrada.
-  const showCancelButton =
-    isStaff &&
-    legalProcess.status === LegalProcessStatus.IN_PROCEDURE &&
-    legalProcess.verdicts.length === 0;
-
-  const hasActionsCard = showVerdictButton || canManageOperations || showCancelButton;
+  // El cierre exige haber facturado los costos del alguacil y pagado la
+  // comisión CFSB (5%) sobre ese monto — mismo gate que el trabajo del
+  // abogado en el flujo de CaseTransfer.
+  const isBailiffWorkFinalized = !!legalProcess.gopCompletedGateAt;
 
   return (
     <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
@@ -261,8 +208,8 @@ const LegalProcessDetailPage: React.FC = () => {
                 <InfoField
                   label="Advocaat"
                   value={
-                    legalProcess.lawyer
-                      ? `${legalProcess.lawyer.firstName} ${legalProcess.lawyer.lastName}`
+                    legalProcess.caseTransfer?.lawyer
+                      ? `${legalProcess.caseTransfer.lawyer.firstName} ${legalProcess.caseTransfer.lawyer.lastName}`
                       : "-"
                   }
                 />
@@ -287,16 +234,6 @@ const LegalProcessDetailPage: React.FC = () => {
                     />
                   </Grid>
                 </>
-              )}
-              {legalProcess.status === LegalProcessStatus.REJECTED && (
-                <Grid size={{ xs: 12 }}>
-                  <InfoField label="Reden afwijzing" value={legalProcess.rejectionReason ?? "-"} />
-                </Grid>
-              )}
-              {legalProcess.status === LegalProcessStatus.GOP_CANCELLED && (
-                <Grid size={{ xs: 12 }}>
-                  <InfoField label="Reden annulering" value={legalProcess.cancelReason ?? "-"} />
-                </Grid>
               )}
             </Grid>
           </CardContent>
@@ -381,7 +318,7 @@ const LegalProcessDetailPage: React.FC = () => {
           <CardContent>
             <LegalProcessDocuments
               legalProcessId={legalProcess.id}
-              canUpload={isStaff || isBailiffRole || isLawyer}
+              canUpload={isStaff || isBailiffRole}
             />
           </CardContent>
         </Card>
@@ -394,137 +331,64 @@ const LegalProcessDetailPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Acties staan onderaan: eerst alle informatie bekijken, dan beslissen. */}
-        {hasActionsCard && (
+        {canManageOperations && (
           <Card>
             <CardHeader title="Acties" />
             <Divider />
             <CardContent>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {showVerdictButton && (
-                  <Button variant="contained" onClick={() => setDialog("register-verdict")}>
-                    Vonnis registreren
+                <Button variant="outlined" onClick={() => setDialog("execution-measure")}>
+                  Executiemaatregel
+                </Button>
+                <Button variant="outlined" onClick={() => setDialog("interest-update")}>
+                  Rente-update
+                </Button>
+                <Button variant="outlined" onClick={() => setDialog("bailiff-cost")}>
+                  Deurwaarderskosten
+                </Button>
+                {legalProcess.status === LegalProcessStatus.GOP_ACTIVE && (
+                  <Button variant="outlined" color="warning" onClick={() => setDialog("mark-inactive")}>
+                    Zonder resultaat
                   </Button>
                 )}
-
-                {canManageOperations && (
-                  <>
-                    <Button variant="outlined" onClick={() => setDialog("execution-measure")}>
-                      Executiemaatregel
-                    </Button>
-                    <Button variant="outlined" onClick={() => setDialog("interest-update")}>
-                      Rente-update
-                    </Button>
-                    <Button variant="outlined" onClick={() => setDialog("bailiff-cost")}>
-                      Deurwaarderskosten
-                    </Button>
-                    {legalProcess.status === LegalProcessStatus.GOP_ACTIVE && (
-                      <Button
-                        variant="outlined"
-                        color="warning"
-                        onClick={() => setDialog("mark-inactive")}
-                      >
-                        Zonder resultaat
-                      </Button>
-                    )}
-                    {legalProcess.status === LegalProcessStatus.GOP_INACTIVE && (
-                      <Button variant="outlined" color="success" onClick={handleReactivate}>
-                        Reactiveren
-                      </Button>
-                    )}
-                    <Button variant="outlined" onClick={() => setDialog("change-bailiff")}>
-                      Deurwaarder wijzigen
-                    </Button>
-                    <Button variant="outlined" onClick={() => setDialog("create-agreement")}>
-                      Betalingsregeling registreren
-                    </Button>
-                    <Button variant="outlined" onClick={() => setDialog("register-payment")}>
-                      Betaling registreren
-                    </Button>
-                    <Button variant="contained" color="success" onClick={handleClose}>
-                      Sluiten (vonnis volledig voldaan)
-                    </Button>
-                  </>
+                {legalProcess.status === LegalProcessStatus.GOP_INACTIVE && (
+                  <Button variant="outlined" color="success" onClick={handleReactivate}>
+                    Reactiveren
+                  </Button>
                 )}
-
-                {showCancelButton && (
-                  <Button variant="outlined" color="error" onClick={() => setDialog("cancel")}>
-                    GOP annuleren
+                <Button variant="outlined" onClick={() => setDialog("change-bailiff")}>
+                  Deurwaarder wijzigen
+                </Button>
+                <Button variant="outlined" onClick={() => setDialog("create-agreement")}>
+                  Betalingsregeling registreren
+                </Button>
+                <Button variant="outlined" onClick={() => setDialog("register-payment")}>
+                  Betaling registreren
+                </Button>
+                {isBailiffWorkFinalized ? (
+                  <Button variant="contained" color="success" onClick={handleClose}>
+                    Sluiten (vonnis volledig voldaan)
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    onClick={() => setDialog("finalize-bailiff-work")}
+                  >
+                    Trabajo finalizado (costos + comisión CFSB)
                   </Button>
                 )}
               </Stack>
-            </CardContent>
-          </Card>
-        )}
-
-        {(showFinalizeLawyerWorkButton || showTransferToBailiffButton) && (
-          <Card>
-            <CardHeader title="Finalización del trabajo del abogado" />
-            <Divider />
-            <CardContent>
-              {showFinalizeLawyerWorkButton && (
-                <Stack spacing={2} alignItems="flex-start">
-                  <Typography variant="body2" color="text.secondary">
-                    Antes de transferir la sentencia al agente judicial, registre sus honorarios,
-                    suba su factura y pague la comisión del CFSB (5%) sobre ese monto.
-                  </Typography>
-                  <Button variant="contained" onClick={() => setDialog("finalize-lawyer-work")}>
-                    Finalizar trabajo
-                  </Button>
-                </Stack>
+              {!isBailiffWorkFinalized && (
+                <Typography variant="body2" color="text.secondary" mt={1.5}>
+                  Antes de poder cerrar el expediente, registre los costos facturados al debiteur y
+                  pague la comisión del CFSB (5%) sobre ese monto.
+                </Typography>
               )}
-              {showTransferToBailiffButton && (
-                <Stack spacing={2} alignItems="flex-start">
-                  <Chip label="Trabajo finalizado" color="success" sx={{ fontWeight: 700 }} />
-                  <Typography variant="body2" color="text.secondary">
-                    Antes de continuar, adjunte el documento del Vonnis en la sección Documenten
-                    (tipo &quot;Vonnis&quot;). Sin ese documento no se puede transferir el
-                    expediente al agente judicial.
-                  </Typography>
-                  <Button variant="contained" onClick={() => setDialog("transfer-to-bailiff")}>
-                    Transferir sentencia al agente judicial
-                  </Button>
-                </Stack>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {canDecideTransfer && (
-          <Card>
-            <CardHeader title="Beslissing dossieroverdracht" />
-            <Divider />
-            <CardContent>
-              <Typography variant="body2" color="text.secondary" mb={2}>
-                Bekijk alle informatie hierboven en beslis vervolgens of u dit dossier accepteert of
-                afwijst.
-              </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                <Button variant="contained" onClick={handleAccept}>
-                  Dossier accepteren
-                </Button>
-                <Button variant="outlined" color="error" onClick={() => setDialog("reject")}>
-                  Dossier afwijzen
-                </Button>
-              </Stack>
             </CardContent>
           </Card>
         )}
       </Stack>
 
-      <RegisterVerdictDialog
-        open={dialog === "register-verdict"}
-        onClose={() => setDialog(null)}
-        legalProcessId={legalProcess.id}
-        defaultBailiffId={legalProcess.bailiffId}
-        onRegistered={refresh}
-      />
-      <RejectTransferDialog
-        open={dialog === "reject"}
-        onClose={() => setDialog(null)}
-        legalProcessId={legalProcess.id}
-        onRegistered={refresh}
-      />
       {latestVerdict && (
         <>
           <ExecutionMeasureDialog
@@ -560,12 +424,6 @@ const LegalProcessDetailPage: React.FC = () => {
         currentBailiffId={legalProcess.bailiffId}
         onRegistered={refresh}
       />
-      <CancelGopDialog
-        open={dialog === "cancel"}
-        onClose={() => setDialog(null)}
-        legalProcessId={legalProcess.id}
-        onRegistered={refresh}
-      />
       <CreateAgreementDialog
         open={dialog === "create-agreement"}
         onClose={() => setDialog(null)}
@@ -579,17 +437,11 @@ const LegalProcessDetailPage: React.FC = () => {
         balanceAmount={obligation ? Number(obligation.balanceAmount) : undefined}
         onRegistered={refresh}
       />
-      <FinalizeLawyerWorkDialog
-        open={dialog === "finalize-lawyer-work"}
+      <FinalizeBailiffWorkDialog
+        open={dialog === "finalize-bailiff-work"}
         onClose={() => setDialog(null)}
         legalProcessId={legalProcess.id}
         onFinalized={refresh}
-      />
-      <TransferToBailiffDialog
-        open={dialog === "transfer-to-bailiff"}
-        onClose={() => setDialog(null)}
-        legalProcessId={legalProcess.id}
-        onTransferred={refresh}
       />
     </Container>
   );

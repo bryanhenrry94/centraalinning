@@ -26,15 +26,75 @@ import { notifyError } from "@/shared/ui/notifications";
 import { useTenant } from "@/modules/auth/hooks/useTenant";
 import { UserRole } from "@/shared/constants/user-role";
 
+import { getAllLegalProcessesForTenant, getMyLegalProcessesAsBailiff } from "@/modules/legal-process/actions/legal-process.actions";
 import {
-  getAllLegalProcessesForTenant,
-  getMyLegalProcessesAsLawyer,
-  getMyLegalProcessesAsBailiff,
-} from "@/modules/legal-process/actions/legal-process.actions";
+  getAllCaseTransfersForTenant,
+  getMyCaseTransfersAsLawyer,
+  getMyCaseTransfersAsBailiff,
+} from "@/modules/legal-process/actions/case-transfer.actions";
 import { getLegalProcessStatusInfo } from "@/modules/legal-process/utils/legal-process-status";
-import { LegalProcessStatus } from "@/modules/legal-process/constants/legal-process-status";
+import { getCaseTransferStatusInfo } from "@/modules/legal-process/utils/case-transfer-status";
+import { CaseTransferStatus } from "@/modules/legal-process/constants/case-transfer-status";
 
+type CaseTransferListItem = Awaited<ReturnType<typeof getAllCaseTransfersForTenant>>[number];
 type LegalProcessListItem = Awaited<ReturnType<typeof getAllLegalProcessesForTenant>>[number];
+
+// Fila unificada para la tabla: un CaseTransfer (todavía sin vonnis) o un
+// LegalProcess (GOP real, ya con vonnis) normalizados a la misma forma.
+type Row = {
+  id: string;
+  kind: "transfer" | "gop";
+  href: string;
+  reference: string;
+  debtorName: string;
+  lawyerName: string;
+  bailiffName: string;
+  amount: number;
+  statusLabel: string;
+  statusColor: ReturnType<typeof getCaseTransferStatusInfo>["color"];
+  date: Date;
+};
+
+function debtorNameOf(item: { debtClaim: { debtor?: { person?: { first_name?: string | null; last_name?: string | null } | null } | null } }) {
+  const person = item.debtClaim.debtor?.person;
+  return person ? `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim() : "-";
+}
+
+function toTransferRow(item: CaseTransferListItem): Row {
+  const statusInfo = getCaseTransferStatusInfo(item.status);
+  return {
+    id: item.id,
+    kind: "transfer",
+    href: `/legal-processes/transfers/${item.id}`,
+    reference: item.debtClaim.reference || "-",
+    debtorName: debtorNameOf(item),
+    lawyerName: item.lawyer ? `${item.lawyer.firstName} ${item.lawyer.lastName}` : "-",
+    bailiffName: item.bailiff?.fullname ?? "-",
+    amount: Number(item.debtClaim.principalAmount) || 0,
+    statusLabel: statusInfo.label,
+    statusColor: statusInfo.color,
+    date: item.createdAt,
+  };
+}
+
+function toLegalProcessRow(item: LegalProcessListItem): Row {
+  const statusInfo = getLegalProcessStatusInfo(item.status);
+  return {
+    id: item.id,
+    kind: "gop",
+    href: `/legal-processes/${item.id}`,
+    reference: item.referenceNumber || item.debtClaim.reference || "-",
+    debtorName: debtorNameOf(item),
+    lawyerName: item.caseTransfer?.lawyer
+      ? `${item.caseTransfer.lawyer.firstName} ${item.caseTransfer.lawyer.lastName}`
+      : "-",
+    bailiffName: item.bailiff?.fullname ?? "-",
+    amount: Number(item.debtClaim.principalAmount) || 0,
+    statusLabel: statusInfo.label,
+    statusColor: statusInfo.color,
+    date: item.startedAt,
+  };
+}
 
 const LegalProcessesListPageContent: React.FC = () => {
   const router = useRouter();
@@ -47,7 +107,8 @@ const LegalProcessesListPageContent: React.FC = () => {
   const showPendingTabs = isLawyer || isBailiffRole;
 
   const [loading, setLoading] = useState(true);
-  const [items, setItems] = useState<LegalProcessListItem[]>([]);
+  const [transferRows, setTransferRows] = useState<Row[]>([]);
+  const [legalProcessRows, setLegalProcessRows] = useState<Row[]>([]);
   const [tab, setTab] = useState<"pending" | "all">(
     searchParams.get("tab") === "pending" ? "pending" : "all",
   );
@@ -56,15 +117,25 @@ const LegalProcessesListPageContent: React.FC = () => {
     const load = async () => {
       try {
         setLoading(true);
-        let data: LegalProcessListItem[] = [];
-        if (roles.includes(UserRole.LAWYER)) {
-          data = await getMyLegalProcessesAsLawyer();
-        } else if (roles.includes(UserRole.BAILIFF)) {
-          data = await getMyLegalProcessesAsBailiff();
+        let transfers: CaseTransferListItem[] = [];
+        let legalProcesses: LegalProcessListItem[] = [];
+
+        if (isLawyer) {
+          transfers = await getMyCaseTransfersAsLawyer();
+        } else if (isBailiffRole) {
+          [transfers, legalProcesses] = await Promise.all([
+            getMyCaseTransfersAsBailiff(),
+            getMyLegalProcessesAsBailiff(),
+          ]);
         } else if (tenant?.id) {
-          data = await getAllLegalProcessesForTenant(tenant.id);
+          [transfers, legalProcesses] = await Promise.all([
+            getAllCaseTransfersForTenant(tenant.id),
+            getAllLegalProcessesForTenant(tenant.id),
+          ]);
         }
-        setItems(data);
+
+        setTransferRows(transfers.map(toTransferRow));
+        setLegalProcessRows(legalProcesses.map(toLegalProcessRow));
       } catch (error) {
         notifyError("Kon GOP-dossiers niet laden");
       } finally {
@@ -73,16 +144,26 @@ const LegalProcessesListPageContent: React.FC = () => {
     };
 
     if (session) load();
-  }, [tenant?.id, session]);
+  }, [tenant?.id, session, isLawyer, isBailiffRole]);
 
-  const filteredItems = useMemo(() => {
-    if (!showPendingTabs) return items;
-    return items.filter((item) =>
-      tab === "pending"
-        ? item.status === LegalProcessStatus.PENDING_ACCEPTANCE
-        : item.status !== LegalProcessStatus.PENDING_ACCEPTANCE,
+  const filteredRows = useMemo(() => {
+    const pendingTransfers = transferRows.filter(
+      (row) => row.statusLabel === getCaseTransferStatusInfo(CaseTransferStatus.PENDING_ACCEPTANCE).label,
     );
-  }, [items, showPendingTabs, tab]);
+
+    if (!showPendingTabs) {
+      return [...transferRows, ...legalProcessRows].sort(
+        (a, b) => b.date.valueOf() - a.date.valueOf(),
+      );
+    }
+
+    if (tab === "pending") return pendingTransfers;
+
+    const nonPendingTransfers = transferRows.filter((row) => !pendingTransfers.includes(row));
+    return [...nonPendingTransfers, ...legalProcessRows].sort(
+      (a, b) => b.date.valueOf() - a.date.valueOf(),
+    );
+  }, [transferRows, legalProcessRows, showPendingTabs, tab]);
 
   if (loading) return <LoadingUI />;
 
@@ -116,7 +197,7 @@ const LegalProcessesListPageContent: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredItems.length === 0 && (
+              {filteredRows.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7}>
                     <Typography variant="body2" color="text.secondary" py={2}>
@@ -125,35 +206,24 @@ const LegalProcessesListPageContent: React.FC = () => {
                   </TableCell>
                 </TableRow>
               )}
-              {filteredItems.map((item) => {
-                const statusInfo = getLegalProcessStatusInfo(item.status);
-                const debtorName = item.debtClaim.debtor?.person
-                  ? `${item.debtClaim.debtor.person.first_name ?? ""} ${item.debtClaim.debtor.person.last_name ?? ""}`.trim()
-                  : "-";
-
-                return (
-                  <TableRow
-                    key={item.id}
-                    hover
-                    sx={{ cursor: "pointer" }}
-                    onClick={() => router.push(`/legal-processes/${item.id}`)}
-                  >
-                    <TableCell>{item.referenceNumber || item.debtClaim.reference}</TableCell>
-                    <TableCell>{debtorName}</TableCell>
-                    <TableCell>
-                      {item.lawyer ? `${item.lawyer.firstName} ${item.lawyer.lastName}` : "-"}
-                    </TableCell>
-                    <TableCell>{item.bailiff?.fullname ?? "-"}</TableCell>
-                    <TableCell align="right">
-                      {formatCurrency(Number(item.debtClaim.principalAmount) || 0)}
-                    </TableCell>
-                    <TableCell>
-                      <Chip size="small" label={statusInfo.label} color={statusInfo.color} />
-                    </TableCell>
-                    <TableCell>{formatDate(item.startedAt.toString())}</TableCell>
-                  </TableRow>
-                );
-              })}
+              {filteredRows.map((row) => (
+                <TableRow
+                  key={`${row.kind}-${row.id}`}
+                  hover
+                  sx={{ cursor: "pointer" }}
+                  onClick={() => router.push(row.href)}
+                >
+                  <TableCell>{row.reference}</TableCell>
+                  <TableCell>{row.debtorName}</TableCell>
+                  <TableCell>{row.lawyerName}</TableCell>
+                  <TableCell>{row.bailiffName}</TableCell>
+                  <TableCell align="right">{formatCurrency(row.amount)}</TableCell>
+                  <TableCell>
+                    <Chip size="small" label={row.statusLabel} color={row.statusColor} />
+                  </TableCell>
+                  <TableCell>{formatDate(row.date.toString())}</TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </TableContainer>

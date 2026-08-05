@@ -2,11 +2,11 @@ import { TableSummaryResponse } from "@/modules/dashboard/types/report.types";
 import { LegalProcessService } from "@/modules/legal-process/services/legal-process.service";
 import { getLegalProcessStatusInfo } from "@/modules/legal-process/utils/legal-process-status";
 
-type LegalProcessForLawyer = Awaited<
-  ReturnType<typeof LegalProcessService.getForLawyerUser>
+type LegalProcessForBailiff = Awaited<
+  ReturnType<typeof LegalProcessService.getForBailiffUser>
 >[number];
 
-export function toDocumentRow(legalProcess: LegalProcessForLawyer): TableSummaryResponse {
+export function toDocumentRow(legalProcess: LegalProcessForBailiff): TableSummaryResponse {
   const statusInfo = getLegalProcessStatusInfo(legalProcess.status);
   const person = legalProcess.debtClaim.debtor?.person;
 

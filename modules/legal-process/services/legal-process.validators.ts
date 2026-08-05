@@ -13,27 +13,11 @@ export const VerdictInterestInputSchema = z.object({
 });
 export type VerdictInterestInput = z.infer<typeof VerdictInterestInputSchema>;
 
-// El participante transfiere siempre a UNA sola parte: un abogado o un
-// alguacil, nunca ambos a la vez ni ninguno.
-export const TransferToLawyerSchema = z
-  .object({
-    debtClaimId: z.string().min(1),
-    lawyerId: z.string().nullable().optional(),
-    bailiffId: z.string().nullable().optional(),
-  })
-  .refine((data) => Boolean(data.lawyerId) !== Boolean(data.bailiffId), {
-    message: "Selecteer een advocaat of een deurwaarder, niet beide en niet geen van beide.",
-  });
-export type TransferToLawyerInput = z.infer<typeof TransferToLawyerSchema>;
-
-export const RejectTransferSchema = z.object({
-  legalProcessId: z.string().min(1),
-  reason: z.string().min(1, "El motivo del rechazo es obligatorio"),
-});
-export type RejectTransferInput = z.infer<typeof RejectTransferSchema>;
-
-export const RegisterVerdictSchema = z.object({
-  legalProcessId: z.string().min(1),
+// Base sin el refine, para poder usar .omit()/.extend() en formularios (los
+// ZodEffects que devuelve .refine() no exponen esos métodos).
+export const RegisterVerdictObjectSchema = z.object({
+  caseTransferId: z.string().nullable().optional(),
+  legalProcessId: z.string().nullable().optional(),
   invoice_number: z.string().min(1),
   creditor_name: z.string().min(1),
   registration_number: z.string().min(1),
@@ -48,6 +32,14 @@ export const RegisterVerdictSchema = z.object({
   bailiff_id: z.string().min(1),
   verdict_interest: z.array(VerdictInterestInputSchema).default([]),
 });
+
+// Exactamente uno de los dos: caseTransferId para el PRIMER vonnis (crea el
+// LegalProcess), legalProcessId para una sentencia ADICIONAL sobre un GOP
+// ya activo.
+export const RegisterVerdictSchema = RegisterVerdictObjectSchema.refine(
+  (data) => Boolean(data.caseTransferId) !== Boolean(data.legalProcessId),
+  { message: "Se requiere exactamente uno de caseTransferId o legalProcessId." },
+);
 export type RegisterVerdictInput = z.infer<typeof RegisterVerdictSchema>;
 
 export const RegisterExecutionMeasureSchema = z.object({
@@ -94,22 +86,13 @@ export const ChangeBailiffSchema = z.object({
 });
 export type ChangeBailiffInput = z.infer<typeof ChangeBailiffSchema>;
 
-export const CancelLegalProcessSchema = z.object({
-  legalProcessId: z.string().min(1),
-  reason: z.string().min(1, "El motivo de la cancelación es obligatorio"),
-});
-export type CancelLegalProcessInput = z.infer<typeof CancelLegalProcessSchema>;
-
-export const SubmitLawyerFeeInvoiceSchema = z.object({
+// El alguacil declara el monto facturado al debiteur y sube su factura; el
+// sistema calcula la comisión CFSB (5%) — mismo patrón que
+// SubmitLawyerFeeInvoiceSchema en case-transfer.validators.ts.
+export const SubmitBailiffFeeInvoiceSchema = z.object({
   legalProcessId: z.string().min(1),
   totalAmount: z.coerce.number().positive(),
   invoiceNumber: z.string().nullable().optional(),
   invoiceDate: z.coerce.date().nullable().optional(),
 });
-export type SubmitLawyerFeeInvoiceInput = z.infer<typeof SubmitLawyerFeeInvoiceSchema>;
-
-export const TransferVerdictToBailiffSchema = z.object({
-  legalProcessId: z.string().min(1),
-  bailiffId: z.string().min(1),
-});
-export type TransferVerdictToBailiffInput = z.infer<typeof TransferVerdictToBailiffSchema>;
+export type SubmitBailiffFeeInvoiceInput = z.infer<typeof SubmitBailiffFeeInvoiceSchema>;

@@ -16,28 +16,29 @@ import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { getActiveBailiffsDirectory } from "@/modules/bailiff/actions/bailiff.actions";
 import { Bailiff } from "@/modules/bailiff/services/bailiff.validators";
 import {
-  RegisterVerdictSchema,
-  RegisterVerdictInput,
+  RegisterVerdictObjectSchema,
 } from "@/modules/legal-process/services/legal-process.validators";
 import { registerGopVerdict } from "@/modules/legal-process/actions/legal-process.actions";
 
 interface RegisterVerdictDialogProps {
   open: boolean;
   onClose: () => void;
-  legalProcessId: string;
+  caseTransferId: string;
   defaultBailiffId?: string | null;
-  onRegistered: () => void;
+  onRegistered: (legalProcessId: string) => void;
 }
 
 // La versión simplificada del formulario de sentencia: en vez del cálculo
 // tramo por tramo de intereses (ya disponible en el módulo `verdict`), aquí
 // se captura un único monto total de interés acumulado a la fecha de la
 // sentencia, suficiente para la base de facturación del 5% (sección 6).
-const formSchema = RegisterVerdictSchema.omit({ legalProcessId: true, verdict_interest: true }).extend(
-  {
-    total_interest: RegisterVerdictSchema.shape.procesal_cost,
-  },
-);
+const formSchema = RegisterVerdictObjectSchema.omit({
+  caseTransferId: true,
+  legalProcessId: true,
+  verdict_interest: true,
+}).extend({
+  total_interest: RegisterVerdictObjectSchema.shape.procesal_cost,
+});
 type FormValues = ReturnType<typeof formSchema.parse>;
 
 const defaultValues = {
@@ -59,7 +60,7 @@ const defaultValues = {
 export const RegisterVerdictDialog: React.FC<RegisterVerdictDialogProps> = ({
   open,
   onClose,
-  legalProcessId,
+  caseTransferId,
   defaultBailiffId,
   onRegistered,
 }) => {
@@ -85,9 +86,9 @@ export const RegisterVerdictDialog: React.FC<RegisterVerdictDialogProps> = ({
     try {
       const { total_interest, ...rest } = values;
 
-      await registerGopVerdict({
+      const verdict = await registerGopVerdict({
         ...rest,
-        legalProcessId,
+        caseTransferId,
         verdict_interest:
           total_interest && total_interest > 0
             ? [
@@ -104,7 +105,7 @@ export const RegisterVerdictDialog: React.FC<RegisterVerdictDialogProps> = ({
       });
 
       notifySuccess("Vonnis geregistreerd. GOP is actief.");
-      onRegistered();
+      onRegistered(verdict.legal_process_id);
       onClose();
     } catch (error) {
       notifyError(error instanceof Error ? error.message : "Registratie mislukt");

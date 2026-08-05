@@ -5,13 +5,10 @@ import Link from "next/link";
 import { Box, Card, CardContent, Grid, Stack, Typography, Button } from "@mui/material";
 
 import { getMyLegalProcessesAsBailiff } from "@/modules/legal-process/actions/legal-process.actions";
-import {
-  LegalProcessStatus,
-  OPEN_LEGAL_PROCESS_STATUSES,
-} from "@/modules/legal-process/constants/legal-process-status";
+import { getMyCaseTransfersAsBailiff } from "@/modules/legal-process/actions/case-transfer.actions";
+import { OPEN_LEGAL_PROCESS_STATUSES } from "@/modules/legal-process/constants/legal-process-status";
+import { CaseTransferStatus } from "@/modules/legal-process/constants/case-transfer-status";
 import { notifyError } from "@/shared/ui/notifications";
-
-type LegalProcessListItem = Awaited<ReturnType<typeof getMyLegalProcessesAsBailiff>>[number];
 
 function MetricCard({ title, value }: { title: string; value: number }) {
   return (
@@ -27,14 +24,23 @@ function MetricCard({ title, value }: { title: string; value: number }) {
 }
 
 export const DashboardBailiff = () => {
-  const [items, setItems] = useState<LegalProcessListItem[]>([]);
+  const [legalProcesses, setLegalProcesses] = useState<
+    Awaited<ReturnType<typeof getMyLegalProcessesAsBailiff>>
+  >([]);
+  const [caseTransfers, setCaseTransfers] = useState<
+    Awaited<ReturnType<typeof getMyCaseTransfersAsBailiff>>
+  >([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getMyLegalProcessesAsBailiff();
-      setItems(data);
+      const [legalProcessData, caseTransferData] = await Promise.all([
+        getMyLegalProcessesAsBailiff(),
+        getMyCaseTransfersAsBailiff(),
+      ]);
+      setLegalProcesses(legalProcessData);
+      setCaseTransfers(caseTransferData);
     } catch (error) {
       notifyError("Kon dossiers niet laden");
     } finally {
@@ -46,12 +52,19 @@ export const DashboardBailiff = () => {
     load();
   }, [load]);
 
-  const pendingCount = items.filter(
-    (item) => item.status === LegalProcessStatus.PENDING_ACCEPTANCE,
+  // Pendiente de aceptación (bailiff-directo) o esperando registro de
+  // vonnis tras el trabajo finalizado del abogado.
+  const PENDING_BAILIFF_STATUSES: CaseTransferStatus[] = [
+    CaseTransferStatus.PENDING_ACCEPTANCE,
+    CaseTransferStatus.WORK_COMPLETED,
+  ];
+  const pendingCount = caseTransfers.filter((item) =>
+    PENDING_BAILIFF_STATUSES.includes(item.status),
   ).length;
-  const activeCount = items.filter((item) =>
+  const activeCount = legalProcesses.filter((item) =>
     (OPEN_LEGAL_PROCESS_STATUSES as string[]).includes(item.status),
   ).length;
+  const totalCount = legalProcesses.length + caseTransfers.length;
 
   return (
     <Box p={3}>
@@ -67,7 +80,7 @@ export const DashboardBailiff = () => {
           <MetricCard title="Actieve dossiers" value={loading ? 0 : activeCount} />
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <MetricCard title="Totaal toegewezen" value={loading ? 0 : items.length} />
+          <MetricCard title="Totaal toegewezen" value={loading ? 0 : totalCount} />
         </Grid>
       </Grid>
 

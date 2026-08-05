@@ -3,8 +3,6 @@ import { LegalProcessStatus } from "@/modules/legal-process/constants/legal-proc
 type StatusColor = "default" | "info" | "warning" | "success" | "error";
 
 export const OPEN_LEGAL_PROCESS_STATUSES = [
-  LegalProcessStatus.PENDING_ACCEPTANCE,
-  LegalProcessStatus.IN_PROCEDURE,
   LegalProcessStatus.GOP_ACTIVE,
   LegalProcessStatus.GOP_INACTIVE,
 ] as const;
@@ -12,12 +10,8 @@ export const OPEN_LEGAL_PROCESS_STATUSES = [
 export const COMPLETED_LEGAL_PROCESS_STATUSES = [LegalProcessStatus.CLOSED] as const;
 
 const LEGAL_PROCESS_STATUS_CONFIG: Record<string, { label: string; color: StatusColor }> = {
-  PENDING_ACCEPTANCE: { label: "Wacht op advocaat", color: "default" },
-  REJECTED: { label: "Afgewezen", color: "error" },
-  IN_PROCEDURE: { label: "In gerechtelijke procedure", color: "info" },
   GOP_ACTIVE: { label: "GOP Actief", color: "info" },
   GOP_INACTIVE: { label: "GOP Inactief", color: "warning" },
-  GOP_CANCELLED: { label: "GOP Geannuleerd", color: "error" },
   CLOSED: { label: "Gesloten", color: "success" },
 };
 

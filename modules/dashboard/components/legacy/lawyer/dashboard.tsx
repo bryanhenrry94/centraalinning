@@ -4,17 +4,17 @@ import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Box, Card, CardContent, Grid, Stack, Typography, Button } from "@mui/material";
 
-import { getMyLegalProcessesAsLawyer } from "@/modules/legal-process/actions/legal-process.actions";
+import { getMyCaseTransfersAsLawyer } from "@/modules/legal-process/actions/case-transfer.actions";
 import {
-  LegalProcessStatus,
-  OPEN_LEGAL_PROCESS_STATUSES,
-} from "@/modules/legal-process/constants/legal-process-status";
+  CaseTransferStatus,
+  OPEN_CASE_TRANSFER_STATUSES,
+} from "@/modules/legal-process/constants/case-transfer-status";
 import { LatestTransfersTable } from "@/modules/legal-process/components/latest-transfers-table";
 import { notifyError } from "@/shared/ui/notifications";
 
 const LATEST_TRANSFERS_LIMIT = 5;
 
-type LegalProcessListItem = Awaited<ReturnType<typeof getMyLegalProcessesAsLawyer>>[number];
+type CaseTransferListItem = Awaited<ReturnType<typeof getMyCaseTransfersAsLawyer>>[number];
 
 function MetricCard({ title, value }: { title: string; value: number }) {
   return (
@@ -30,13 +30,13 @@ function MetricCard({ title, value }: { title: string; value: number }) {
 }
 
 export const DashboardLawyer = () => {
-  const [items, setItems] = useState<LegalProcessListItem[]>([]);
+  const [items, setItems] = useState<CaseTransferListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getMyLegalProcessesAsLawyer();
+      const data = await getMyCaseTransfersAsLawyer();
       setItems(data);
     } catch (error) {
       notifyError("Kon dossiers niet laden");
@@ -50,10 +50,10 @@ export const DashboardLawyer = () => {
   }, [load]);
 
   const pendingItems = items.filter(
-    (item) => item.status === LegalProcessStatus.PENDING_ACCEPTANCE,
+    (item) => item.status === CaseTransferStatus.PENDING_ACCEPTANCE,
   );
   const activeCount = items.filter((item) =>
-    (OPEN_LEGAL_PROCESS_STATUSES as string[]).includes(item.status),
+    (OPEN_CASE_TRANSFER_STATUSES as string[]).includes(item.status),
   ).length;
 
   return (

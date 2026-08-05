@@ -1,10 +1,9 @@
+// GOP (Gerechtelijke Opvolging) solo existe desde que se registra un
+// vonnis. Los estados previos (transferencia, aceptación, procedimiento con
+// el abogado) viven en CaseTransferStatus — ver case-transfer-status.ts.
 export enum LegalProcessStatus {
-  PENDING_ACCEPTANCE = "PENDING_ACCEPTANCE",
-  REJECTED = "REJECTED",
-  IN_PROCEDURE = "IN_PROCEDURE",
   GOP_ACTIVE = "GOP_ACTIVE",
   GOP_INACTIVE = "GOP_INACTIVE",
-  GOP_CANCELLED = "GOP_CANCELLED",
   CLOSED = "CLOSED",
 }
 
@@ -17,19 +16,15 @@ export enum GopInactiveReason {
 }
 
 export const OPEN_LEGAL_PROCESS_STATUSES = [
-  LegalProcessStatus.PENDING_ACCEPTANCE,
-  LegalProcessStatus.IN_PROCEDURE,
   LegalProcessStatus.GOP_ACTIVE,
   LegalProcessStatus.GOP_INACTIVE,
 ];
 
-// Estados en los que se puede registrar una sentencia: el procedimiento debe
-// haber sido aceptado (IN_PROCEDURE), o ya haber una sentencia previa sobre
-// el mismo expediente (GOP_ACTIVE/GOP_INACTIVE, p.ej. una sentencia
-// adicional en un litigio en curso). Nunca sobre PENDING_ACCEPTANCE,
-// REJECTED, GOP_CANCELLED o CLOSED.
+// Estados en los que se puede registrar una sentencia ADICIONAL sobre un GOP
+// ya activo (p.ej. un litigio en curso con más de una sentencia). El primer
+// vonnis, el que crea el LegalProcess, se registra a partir de un
+// CaseTransfer — ver CASE_TRANSFER_VERDICT_REGISTRABLE_STATUSES.
 export const VERDICT_REGISTRABLE_STATUSES = [
-  LegalProcessStatus.IN_PROCEDURE,
   LegalProcessStatus.GOP_ACTIVE,
   LegalProcessStatus.GOP_INACTIVE,
 ];

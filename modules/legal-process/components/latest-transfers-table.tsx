@@ -24,16 +24,16 @@ import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import {
-  acceptLegalProcessTransfer,
-  getMyLegalProcessesAsLawyer,
-} from "@/modules/legal-process/actions/legal-process.actions";
-import { getLegalProcessStatusInfo } from "@/modules/legal-process/utils/legal-process-status";
+  acceptCaseTransfer,
+  getMyCaseTransfersAsLawyer,
+} from "@/modules/legal-process/actions/case-transfer.actions";
+import { getCaseTransferStatusInfo } from "@/modules/legal-process/utils/case-transfer-status";
 import { RejectTransferDialog } from "@/modules/legal-process/components/reject-transfer-dialog";
 
-type LegalProcessListItem = Awaited<ReturnType<typeof getMyLegalProcessesAsLawyer>>[number];
+type CaseTransferListItem = Awaited<ReturnType<typeof getMyCaseTransfersAsLawyer>>[number];
 
 interface LatestTransfersTableProps {
-  items: LegalProcessListItem[];
+  items: CaseTransferListItem[];
   onChanged: () => void;
 }
 
@@ -45,7 +45,7 @@ export const LatestTransfersTable = ({ items, onChanged }: LatestTransfersTableP
 
   const handleAccept = async (id: string) => {
     try {
-      await acceptLegalProcessTransfer(id);
+      await acceptCaseTransfer(id);
       notifySuccess("Dossier geaccepteerd");
       onChanged();
     } catch (error) {
@@ -53,18 +53,18 @@ export const LatestTransfersTable = ({ items, onChanged }: LatestTransfersTableP
     }
   };
 
-  const debtorName = (item: LegalProcessListItem) =>
+  const debtorName = (item: CaseTransferListItem) =>
     item.debtClaim.debtor?.person
       ? `${item.debtClaim.debtor.person.first_name ?? ""} ${item.debtClaim.debtor.person.last_name ?? ""}`.trim()
       : "-";
 
-  const columns: GridColDef<LegalProcessListItem>[] = [
+  const columns: GridColDef<CaseTransferListItem>[] = [
     {
       field: "startedAt",
       headerName: "Datum",
       width: 100,
       flex: 1,
-      valueGetter: (_, row) => row.startedAt,
+      valueGetter: (_, row) => row.createdAt,
       renderCell: (params) => formatDate(params.value.toString()),
     },
     {
@@ -72,7 +72,7 @@ export const LatestTransfersTable = ({ items, onChanged }: LatestTransfersTableP
       headerName: "Referentie",
       width: 130,
       flex: 1,
-      valueGetter: (_, row) => row.referenceNumber || row.debtClaim.reference,
+      valueGetter: (_, row) => row.debtClaim.reference,
     },
     {
       field: "debtor",
@@ -99,7 +99,7 @@ export const LatestTransfersTable = ({ items, onChanged }: LatestTransfersTableP
       align: "center" as const,
       headerAlign: "center" as const,
       renderCell: (params) => {
-        const statusInfo = getLegalProcessStatusInfo(params.row.status);
+        const statusInfo = getCaseTransferStatusInfo(params.row.status);
         return (
           <Chip
             label={statusInfo.label}
@@ -125,7 +125,7 @@ export const LatestTransfersTable = ({ items, onChanged }: LatestTransfersTableP
           <Tooltip title="Bekijken">
             <IconButton
               size="small"
-              onClick={() => router.push(`/legal-processes/${params.row.id}`)}
+              onClick={() => router.push(`/legal-processes/transfers/${params.row.id}`)}
             >
               <VisibilityIcon fontSize="small" />
             </IconButton>
@@ -169,15 +169,15 @@ export const LatestTransfersTable = ({ items, onChanged }: LatestTransfersTableP
         )}
 
         {items.map((item) => {
-          const statusInfo = getLegalProcessStatusInfo(item.status);
+          const statusInfo = getCaseTransferStatusInfo(item.status);
           return (
             <Card key={item.id} elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
-              <CardActionArea onClick={() => router.push(`/legal-processes/${item.id}`)}>
+              <CardActionArea onClick={() => router.push(`/legal-processes/transfers/${item.id}`)}>
                 <Box sx={{ p: 2 }}>
                   <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
                     <Box sx={{ minWidth: 0 }}>
                       <Typography variant="caption" color="text.secondary" noWrap component="div">
-                        {item.referenceNumber || item.debtClaim.reference}
+                        {item.debtClaim.reference}
                       </Typography>
                       <Typography variant="subtitle2" fontWeight={700} noWrap>
                         {debtorName(item)}
@@ -193,7 +193,7 @@ export const LatestTransfersTable = ({ items, onChanged }: LatestTransfersTableP
 
                   <Stack direction="row" justifyContent="space-between" alignItems="center" mt={1.5}>
                     <Typography variant="caption" color="text.secondary">
-                      {formatDate(item.startedAt.toString())}
+                      {formatDate(item.createdAt.toString())}
                     </Typography>
                     <Stack direction="row" alignItems="center" spacing={0.5}>
                       <Typography variant="subtitle2" fontWeight={700}>
@@ -257,7 +257,7 @@ export const LatestTransfersTable = ({ items, onChanged }: LatestTransfersTableP
       <RejectTransferDialog
         open={!!rejectId}
         onClose={() => setRejectId(null)}
-        legalProcessId={rejectId ?? ""}
+        caseTransferId={rejectId ?? ""}
         onRegistered={onChanged}
       />
     </>

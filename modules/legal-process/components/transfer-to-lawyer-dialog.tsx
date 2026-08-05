@@ -11,13 +11,15 @@ import {
   MenuItem,
   ToggleButton,
   ToggleButtonGroup,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { getActiveLawyersDirectory } from "@/modules/lawyer/actions/lawyer.actions";
 import { Lawyer } from "@/modules/lawyer/services/lawyer.validators";
 import { getActiveBailiffsDirectory } from "@/modules/bailiff/actions/bailiff.actions";
 import { Bailiff } from "@/modules/bailiff/services/bailiff.validators";
-import { transferToLawyer } from "@/modules/legal-process/actions/legal-process.actions";
+import { transferToLawyer } from "@/modules/legal-process/actions/case-transfer.actions";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 
 interface TransferToLawyerDialogProps {
@@ -40,6 +42,8 @@ export const TransferToLawyerDialog: React.FC<TransferToLawyerDialogProps> = ({
   const [assigneeType, setAssigneeType] = useState<AssigneeType>("LAWYER");
   const [lawyerId, setLawyerId] = useState("");
   const [bailiffId, setBailiffId] = useState("");
+  const [isEmergencyTransfer, setIsEmergencyTransfer] = useState(false);
+  const [emergencyReason, setEmergencyReason] = useState("");
 
   useEffect(() => {
     if (!open) return;
@@ -58,6 +62,8 @@ export const TransferToLawyerDialog: React.FC<TransferToLawyerDialogProps> = ({
     setAssigneeType("LAWYER");
     setLawyerId("");
     setBailiffId("");
+    setIsEmergencyTransfer(false);
+    setEmergencyReason("");
     onClose();
   };
 
@@ -84,12 +90,17 @@ export const TransferToLawyerDialog: React.FC<TransferToLawyerDialogProps> = ({
     if (assigneeType === "BAILIFF" && !bailiffId) {
       return { success: false, error: "Selecteer een deurwaarder" };
     }
+    if (isEmergencyTransfer && !emergencyReason.trim()) {
+      return { success: false, error: "Vermeld de reden van de noodoverdracht" };
+    }
 
     try {
       const result = await transferToLawyer({
         debtClaimId,
         lawyerId: assigneeType === "LAWYER" ? lawyerId : null,
         bailiffId: assigneeType === "BAILIFF" ? bailiffId : null,
+        isEmergencyTransfer,
+        emergencyReason: isEmergencyTransfer ? emergencyReason.trim() : null,
       });
       return { success: true, paymentId: result.paymentId, paymentUrl: result.paymentUrl };
     } catch (error) {
@@ -162,6 +173,27 @@ export const TransferToLawyerDialog: React.FC<TransferToLawyerDialogProps> = ({
                 </MenuItem>
               ))}
             </TextField>
+          )}
+
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={isEmergencyTransfer}
+                onChange={(e) => setIsEmergencyTransfer(e.target.checked)}
+              />
+            }
+            label="Noodoverdracht (overlijden of arbeidsongeschiktheid van de huidige advocaat/deurwaarder)"
+          />
+          {isEmergencyTransfer && (
+            <TextField
+              label="Reden van de noodoverdracht"
+              required
+              multiline
+              minRows={2}
+              size="small"
+              value={emergencyReason}
+              onChange={(e) => setEmergencyReason(e.target.value)}
+            />
           )}
         </Stack>
       </DialogContent>

@@ -3,10 +3,8 @@ import { authOptions } from "@/lib/auth";
 import DocumentContent from "@/modules/dashboard/components/DocumentContent";
 import { getDocuments } from "@/modules/dashboard/server/dashboard.service";
 import { DocumentFilter } from "@/modules/dashboard/server/report.service";
-import {
-  getMyLegalProcessDocuments,
-  getMyLegalProcessDocumentsAsBailiff,
-} from "@/modules/legal-process/actions/legal-process.actions";
+import { getMyLegalProcessDocumentsAsBailiff } from "@/modules/legal-process/actions/legal-process.actions";
+import { getMyCaseTransferDocuments } from "@/modules/legal-process/actions/case-transfer.actions";
 import { UserRole } from "@/shared/constants/user-role";
 
 interface PageProps {
@@ -22,7 +20,7 @@ export default async function Page({ searchParams }: PageProps) {
   const isBailiff = session?.user?.roles?.includes(UserRole.BAILIFF);
 
   const documents = isLawyer
-    ? await getMyLegalProcessDocuments()
+    ? await getMyCaseTransferDocuments()
     : isBailiff
       ? await getMyLegalProcessDocumentsAsBailiff()
       : await getDocuments(filter);
