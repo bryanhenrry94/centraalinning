@@ -1,58 +1,80 @@
 Modulo,Funcionalidad,Estado,Notas
 auth,Login con credenciales (NextAuth JWT),Implementado,
-auth,Registro (signup) de tenant/usuario,Implementado,
+auth,Registro (signup) de tenant/usuario,Implementado,Ahora resuelve y guarda Tenant.jurisdictionId segun la isla elegida (punto 13)
 auth,Invitaciones a miembros,Implementado,
 auth,Recuperacion y reset de password,Implementado,
 auth,Roles y membresias multi-tenant,Implementado,
 tenant,Gestion de datos del tenant,Implementado,
 tenant,Cuentas bancarias del tenant,Implementado,
+jurisdiction,Tabla Jurisdiction (isla/pais/timezone/ABB/prefijo/tarifas/plazos por isla),Implementado,Punto 13 - sin nombres de isla hardcodeados en codigo; Bonaire activa, Curazao/Aruba preparadas
+jurisdiction,Servicios activos por isla (JurisdictionService join),Implementado,Punto 13
 collection,Registro de deudores y personas,Implementado,
-collection,Casos de cobranza (AANMANING/SOMMATIE/INGEBREKESTELLING),Implementado,Verificado: el modelo vigente es DebtClaim; CollectionCase ya no existe en el schema, solo queda naming heredado en 5 archivos
+collection,Numeracion permanente CFSBP-xxx / CFSB-xxx por persona,Implementado,Punto 11 - generador atomico con SELECT FOR UPDATE + reintento ante deadlock
+collection,Casos de cobranza (AANMANING/SOMMATIE/INGEBREKESTELLING),Implementado,Modelo vigente es DebtClaim; CollectionCase ya no existe en el schema, solo queda naming heredado en algunos archivos
 collection,Multas por mora (debt fine),Implementado,
 collection,Linea de tiempo del reclamo (audit trail),Implementado,ClaimTimeline
-collection,Notificaciones de cobranza automatizadas,Implementado,job process_collection_case_workflow
-block-check,Verificacion de bloqueo/credito previo (BLC),Implementado,
-blockade,Registro de bloqueo (BLK / Blokkade),Implementado,
+collection,Notificaciones de cobranza automatizadas,Implementado,job process_collection_case_workflow; plazos ahora resueltos por isla/tenant via Setting (punto 14)
+financial-agreement,FAR - registro de acuerdo financiero independiente,Implementado,Punto 4 - fee fijo $10, sin seguimiento activo, independiente de AOP
+financial-agreement,Escalamiento FAR -> AOP ante incumplimiento,No implementado,Campo escalatedToDebtClaimId existe en schema, sin logica que lo setee
+block-check,Verificacion de bloqueo/credito previo (BLC),Implementado,Precio configurable por Setting (blok_check_pricing); valor sembrado sigue en $30, CFSB pide $35 (cambio de dato)
+blockade,Registro de bloqueo (BLK / Blokkade) via AOP fallido o vonnis GOP,Implementado,
+blockade,Ruta BLK directa (sin pasar por AOP),Implementado,Punto 6 - exige motivo + nota + confirmacion explicita, registra auditoria en ClaimTimeline
+blockade,Multiples razones de bloqueo,Implementado,Punto 6 - enum ampliado a UNPAID_PAYMENT/EXTERNAL_PROCEDURE_COMPLETED/OTHER
 blockade,Reactivacion automatica de bloqueo,Implementado,job check_blockade_reactivation
-blockade,Documentos de bloqueo,Implementado,
-legal-process,Transferencia de expediente a abogado (GOP),Implementado,
-legal-process,Aceptacion/rechazo por abogado,Implementado,
-legal-process,Seguimiento de vencimientos judiciales,Implementado,job check_gop_deadlines
-legal-process,Cierre y cancelacion de proceso judicial,Implementado,
+blockade,Bloqueo permanece activo si existe otro expediente abierto para la misma persona,Implementado,Punto 9 - fix real: antes se liberaban todos los bloqueos del deudor al cerrar un solo GOP
+blockade,Documentos de bloqueo (con descarga real),Implementado,Fix del punto 10 - la ruta de descarga no existia antes
+case-transfer,Transferencia de expediente a abogado/alguacil (Overdracht),Implementado,Modelo CaseTransfer separado de LegalProcess
+case-transfer,Plazo de aceptacion de 7 dias - extensible, sin vencimiento automatico,Implementado,Punto 2 - recordatorio dia 5 al profesional; dia 7 el participante decide extender o reasignar
+case-transfer,Acuerdos de pago con volmacht del participante,Implementado,Punto 7 - profesional solo decide si hasPowerOfAttorney = true
+legal-process,GOP nace solo al registrar la sentencia (vonnis),Implementado,Verificado - no existe camino que cree LegalProcess sin vonnis
+legal-process,Confirmacion dual de pagos (doble control),Implementado,Punto 8 - GopPaymentConfirmation; quien registra no puede confirmar
+legal-process,Validaciones de cierre de GOP (no puede cerrarse antes de tiempo),Implementado,Punto 9 - assertCloseable valida saldo, confirmaciones, embargos, servicios de alguacil, acuerdos pendientes
+legal-process,Acuerdos de pago (regeling) con volmacht,Implementado,Punto 7
+legal-process,Medidas de ejecucion - listado y marcado de completadas en UI,Implementado,Punto 9
+legal-process,Seguimiento de vencimientos judiciales (prescripcion/revision),Implementado,job check_gop_deadlines - dias de antelacion configurables por isla/tenant (punto 14)
 lawyer,Gestion de abogados,Implementado,
-lawyer,Facturacion de honorarios de abogado,Implementado,
+lawyer,Facturacion de honorarios de abogado (comision CFSB 5%),Implementado,Calculada sobre el monto adeudado al momento de la solicitud
 bailiff,Gestion de alguaciles (deurwaarders),Implementado,
+bailiff,Facturacion de honorarios de alguacil (comision CFSB 5%),Implementado,Mismo patron que abogado
 verdict,Registro de sentencias (vonnis),Implementado,
 verdict,Calculo de intereses sobre sentencia,Implementado,
 verdict,Embargos,Implementado,
 verdict,Servicios de alguacil sobre sentencia,Implementado,
 verdict,Adjuntos de sentencia,Implementado,
 agreement,Acuerdos de pago / negociacion con deudor,Implementado,
+agreement,Aprobacion del participante requerida (volmacht),Implementado,Punto 7 - AgreementService.decide
 agreement,Contraofertas,Implementado,
 agreement,Cuotas (installments),Implementado,
 contract,Registro de contratos cliente-deudor,Implementado,
 contract,Partes del contrato,Implementado,
 contract,Documentos de contrato,Implementado,
 contract,Inicio de seguimiento (start-follow-up),Implementado,
+case-file,Expediente digital centralizado (dossier agregado),Implementado,Punto 10 - servicio de solo lectura sobre contrato/FAR/AOP/BLK/transferencia/GOP/vonnis/facturas/comprobantes, sin tabla nueva
 payment,Pagos de deudores,Implementado,
 payment,Facturacion (billing invoices),Implementado,
-payment,Verificacion de transferencias,Implementado,payment-transfer con validacion antes de transferir archivo (commit reciente)
+payment,Verificacion de transferencias,Implementado,
 payment,Reportes financieros,Implementado,
 payment,Planes y suscripciones SaaS de la plataforma,Implementado,
-payment,Integracion pasarela Sentoo + webhook,Implementado,
+payment,Integracion pasarela Sentoo + webhook,Implementado,Solo tarifas propias de CFSB (suscripcion/FAR/AOP/BLC/GOP/comisiones) - el pago de la deuda del deudor no pasa por Sentoo
 employee,Gestion de empleados,Implementado,
 employee,Importacion masiva de empleados (archivo),Implementado,
 notification,Notificaciones multicanal,Implementado,EMAIL/SMS/WHATSAPP/LETTER (verificar si SMS/WhatsApp estan conectados a proveedor real)
-chat,Chat en tiempo real,Implementado,Socket.IO
+chat,Chat en tiempo real,Implementado,Socket.IO - aislado del flujo core
 dashboard,Panel general,Implementado,
 dashboard,Vista operativa (workstation),Implementado,
-settings,Parametros de plataforma,Implementado,Existen dos pantallas (parameters y parameters_vs2) - revisar duplicidad
+dashboard,Vistas segmentadas por nivel (Directie/Management/Operationeel),No implementado,
+settings,Configuracion por isla/tenant sin tocar codigo (Setting reemplaza a Parameter singleton),Implementado,Punto 14 - jerarquia tenant > isla > global; UI real con selector de isla en /admin/settings/parameters
 settings,Tipos de interes,Implementado,
 settings,Planes,Implementado,
+settings,Pantalla duplicada parameters_vs2 (mockup estatico),Resuelto,Confirmado mockup sin wiring real y sin referencias de navegacion - eliminada al hacer el punto 14
 plataforma,Multi-tenant por subdominio,Implementado,
+plataforma,Multi-isla configurable (Bonaire/Curazao/Aruba),Implementado,Punto 13 - Jurisdiction como tabla de datos, sin nombres de isla hardcodeados
+plataforma,Branding CFSB (reemplazo de Centraal Inning/CI),Implementado,Punto 12 - 0 menciones en app/modules/shared/infrastructure; se mantiene razon social legal y URLs externas hasta dominio definitivo
 plataforma,Gating de features por estado de membresia,Implementado,PAST_DUE bloquea CREATE_COLLECTION y BLOK_CHECK
 plataforma,Generacion de PDFs legales,Implementado,AanmaningPDF/SommatiePDF/IngebrekestellingPDF/BlokkadePDF/FinancialSummaryPDF
 plataforma,Envio de correo transaccional,Implementado,Resend
-plataforma,Pruebas automatizadas,No implementado,Confirmado en CLAUDE.md - "no hay tests automatizados"
+plataforma,Pruebas automatizadas,No implementado,Punto 15 - pausado a pedido del usuario, se retoma en la proxima sesion
 plataforma,Reportes/analitica mas alla de dashboard basico,Parcial,Solo financial-report visible
 plataforma,Internacionalizacion (i18n),No verificado,No se detectaron carpetas de i18n
+plataforma,Auditoria transversal de plataforma (AuditLog),No implementado,ClaimTimeline solo cubre el dominio de cobranza
+cop,Modulo de cobro colectivo (Collectieve Opvolging),No implementado,Modelo CollectiveCollection existe en schema sin ningun modulo/action/service real - mayor esfuerzo pendiente de todo el roadmap

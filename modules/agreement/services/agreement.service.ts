@@ -19,6 +19,7 @@ const mapAgreementResponse = (a: any): AgreementResponse => ({
   tenant_id: a.tenant_id,
   debtClaim_id: a.debtClaim_id,
   legalProcessId: a.legalProcessId ?? undefined,
+  caseTransferId: a.caseTransferId ?? undefined,
   debtClaim_reference: a.debtClaim?.reference ?? undefined,
   total_amount: Number(a.total_amount),
   installment_amount: Number(a.installment_amount),
@@ -58,6 +59,7 @@ export class AgreementService {
     tenant_id: string,
     data: CreateAgreement,
     requestingUserId?: string,
+    actorUserId?: string,
   ) {
     const debtClaim = await prisma.debtClaim.findUnique({
       where: { id: data.debtClaim_id },
@@ -118,6 +120,7 @@ export class AgreementService {
         tenant_id,
         debtClaim_id: data.debtClaim_id,
         legalProcessId: data.legalProcessId ?? null,
+        caseTransferId: data.caseTransferId ?? null,
         total_amount: data.total_amount,
         installment_amount: data.installment_amount,
         installments_count: data.installments_count,
@@ -126,6 +129,18 @@ export class AgreementService {
         status: AgreementStatus.PENDING,
         debtor_id: data.debtor_id,
         comment: data.comment || null,
+      },
+    });
+
+    // Auditoría: toda propuesta de acuerdo queda registrada, sin importar
+    // quién la registre (deudor, participante, abogado o alguacil).
+    await prisma.claimTimeline.create({
+      data: {
+        debtClaimId: data.debtClaim_id,
+        event: "AGREEMENT_CREATED",
+        description: `Betalingsregeling voorgesteld: ${data.installments_count} termijnen van ${data.installment_amount}.`,
+        metadata: { agreementId: newAgreement.id, legalProcessId: data.legalProcessId ?? null, caseTransferId: data.caseTransferId ?? null },
+        createdById: actorUserId ?? requestingUserId,
       },
     });
 
@@ -234,6 +249,133 @@ export class AgreementService {
         });
       }
     }
+
+    return {
+      id: updated.id,
+      debtClaim_id: updated.debtClaim_id,
+      total_amount: Number(updated.total_amount),
+      installment_amount: Number(updated.installment_amount),
+      installments_count: updated.installments_count,
+      start_date: updated.start_date,
+      status: String(updated.status),
+      created_at: updated.created_at ?? undefined,
+      updated_at: updated.updated_at ?? undefined,
+      debtor_id: updated.debtor_id ?? undefined,
+      rejection_reason: updated.rejection_reason ?? undefined,
+    };
+  }
+
+  // ---------------------------------------------------------------------
+  // Decisión sobre acuerdos de GOP/CaseTransfer con regla de volmacht:
+  // el abogado/alguacil asignado solo puede registrar propuestas
+  // (create); decidir (aceptar, modificar o rechazar) es del participante,
+  // salvo que exista power of attorney otorgado expresamente para ese
+  // CaseTransfer — ver requireAuthorizedToDecide* en los guards de
+  // legal-process/case-transfer.
+  // ---------------------------------------------------------------------
+
+  static async decide(
+    id: string,
+    decision: {
+      status: "ACCEPTED" | "REJECTED";
+      rejection_reason?: string;
+      total_amount?: number;
+      installment_amount?: number;
+      installments_count?: number;
+      start_date?: Date;
+      end_date?: Date;
+      comment?: string;
+    },
+    actor: {
+      userId?: string;
+      isTenantStaff: boolean;
+      isAssignedProfessional: boolean;
+      hasPowerOfAttorney: boolean;
+    },
+  ) {
+    const existing = await prisma.agreement.findUnique({ where: { id } });
+    if (!existing) throw new Error("Betalingsregeling niet gevonden.");
+
+    if (!actor.isTenantStaff) {
+      if (!actor.isAssignedProfessional) {
+        throw new Error("U heeft geen toestemming om over deze betalingsregeling te beslissen.");
+      }
+      if (!actor.hasPowerOfAttorney) {
+        throw new Error(
+          "U kunt alleen een voorstel registreren. Alleen de deelnemer beslist (accepteren, aanpassen of afwijzen), tenzij u een uitdrukkelijk verleende volmacht heeft.",
+        );
+      }
+    }
+
+    if (decision.status === "REJECTED" && !decision.rejection_reason?.trim()) {
+      throw new Error("Debe indicar un motivo de rechazo.");
+    }
+
+    const modified =
+      (decision.total_amount !== undefined &&
+        decision.total_amount !== Number(existing.total_amount)) ||
+      (decision.installment_amount !== undefined &&
+        decision.installment_amount !== Number(existing.installment_amount)) ||
+      (decision.installments_count !== undefined &&
+        decision.installments_count !== existing.installments_count);
+
+    const updateData: any = {
+      status: decision.status,
+      rejection_reason: decision.status === "REJECTED" ? decision.rejection_reason : null,
+    };
+    if (decision.total_amount !== undefined) updateData.total_amount = decision.total_amount;
+    if (decision.installment_amount !== undefined) updateData.installment_amount = decision.installment_amount;
+    if (decision.installments_count !== undefined) updateData.installments_count = decision.installments_count;
+    if (decision.start_date !== undefined) updateData.start_date = decision.start_date;
+    if (decision.end_date !== undefined) updateData.end_date = decision.end_date;
+    if (decision.comment !== undefined) updateData.comment = decision.comment;
+
+    const updated = await prisma.agreement.update({ where: { id }, data: updateData });
+
+    if (decision.installments_count !== undefined) {
+      await prisma.agreementInstallment.deleteMany({ where: { agreement_id: id } });
+      for (let i = 0; i < decision.installments_count; i++) {
+        const d = new Date(decision.start_date || updated.start_date);
+        d.setMonth(d.getMonth() + i);
+        await prisma.agreementInstallment.create({
+          data: {
+            agreement_id: id,
+            number: i + 1,
+            due_date: d,
+            amount: Number(updated.installment_amount),
+            status: InstallmentStatus.PENDING,
+          },
+        });
+      }
+    }
+
+    if (decision.status === "ACCEPTED") {
+      await this.suspendBlockadeIfAny(updated);
+    }
+
+    const actorLabel = actor.isTenantStaff
+      ? "de deelnemer"
+      : "de gemachtigde advocaat/deurwaarder (volmacht)";
+    const decisionLabel =
+      decision.status === "ACCEPTED" ? (modified ? "geaccepteerd (met aanpassingen)" : "geaccepteerd") : "afgewezen";
+
+    await prisma.claimTimeline.create({
+      data: {
+        debtClaimId: updated.debtClaim_id,
+        event: decision.status === "ACCEPTED" ? "AGREEMENT_SIGNED" : "STATUS_CHANGED",
+        description: `Betalingsregeling ${decisionLabel} door ${actorLabel}.${
+          decision.status === "REJECTED" ? ` Reden: ${decision.rejection_reason}` : ""
+        }`,
+        metadata: {
+          agreementId: id,
+          status: decision.status,
+          modified,
+          isTenantStaff: actor.isTenantStaff,
+          hasPowerOfAttorney: actor.hasPowerOfAttorney,
+        },
+        createdById: actor.userId,
+      },
+    });
 
     return {
       id: updated.id,
@@ -431,6 +573,15 @@ export class AgreementService {
   static async getAllByLegalProcessId(legalProcessId: string): Promise<AgreementResponse[]> {
     const agreements = await prisma.agreement.findMany({
       where: { legalProcessId },
+      include: { debtor: { include: { person: true } }, debtClaim: true },
+      orderBy: { created_at: "desc" },
+    });
+    return agreements.map(mapAgreementResponse);
+  }
+
+  static async getAllByCaseTransferId(caseTransferId: string): Promise<AgreementResponse[]> {
+    const agreements = await prisma.agreement.findMany({
+      where: { caseTransferId },
       include: { debtor: { include: { person: true } }, debtClaim: true },
       orderBy: { created_at: "desc" },
     });

@@ -183,10 +183,10 @@ const VerdictDebtorPDF: React.FC<VerdictDebtorPDFProps> = ({
           </Text>
 
           <Text style={styles.paragraph}>
-            Er is in het Centraal Incassoplatform (CI) een gerechtelijk vonnis
+            Er is bij CFSB een gerechtelijk vonnis
             tegen u geregistreerd (vonnisnummer {reference}, uitspraakdatum{" "}
             {sentence_date}). Dit vonnis is bevestigd door de deurwaarder Juan Perez van de
-            schuldeiser en opgenomen voor centrale betaling via het CI, waartoe
+            schuldeiser en opgenomen voor centrale betaling via CFSB, waartoe
             u verplicht bent.
           </Text>
 
@@ -204,15 +204,14 @@ const VerdictDebtorPDF: React.FC<VerdictDebtorPDFProps> = ({
 
           <Text style={styles.paragraph}>
             Om het vonnis te bekijken kunt u zich registreren of inloggen via{" "}
-            <Text style={styles.link}>www.centraalinning.com</Text>.
+            <Text style={styles.link}>CFSB</Text>.
           </Text>
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
           <Text>
-            Dit bericht is automatisch gegenereerd door het Centraal
-            Incassoplatform (CI).
+            Dit bericht is automatisch gegenereerd door CFSB.
           </Text>
         </View>
       </Page>

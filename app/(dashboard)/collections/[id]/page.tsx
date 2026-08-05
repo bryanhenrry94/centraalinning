@@ -40,6 +40,7 @@ import {
 } from "@/modules/collection/utils/debt-claim-status";
 import { getLegalProcessByDebtClaimId } from "@/modules/legal-process/actions/legal-process.actions";
 import { TransferToLawyerDialog } from "@/modules/legal-process/components/transfer-to-lawyer-dialog";
+import { CaseFileList } from "@/modules/case-file/components/case-file-list";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import GavelIcon from "@mui/icons-material/Gavel";
@@ -441,6 +442,15 @@ const CollectionViewPage: React.FC = () => {
                   </Table>
                 </TableContainer>
               )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent>
+              <Typography gutterBottom sx={{ color: "text.secondary", fontSize: 14 }}>
+                Digitaal dossier
+              </Typography>
+              {params.id && <CaseFileList debtClaimId={params.id as string} />}
             </CardContent>
           </Card>
         </Stack>

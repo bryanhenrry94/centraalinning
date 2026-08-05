@@ -4,12 +4,13 @@ import { ClaimTimelineService } from "@/modules/collection/services/claim-timeli
 import { NotificationService } from "@/modules/notification/services/notification.service";
 import { NotificationType } from "@/modules/notification/constants/notification-type";
 import { LegalProcessStatus } from "@/modules/legal-process/constants/legal-process-status";
+import { SettingsService } from "@/modules/settings/services/settings/settings.service";
 
-// Días de antelación para avisar del vencimiento de un plazo. Podría
-// convertirse en un Parameter configurable si el negocio lo pide más
-// adelante (como collection_fee_rate en Parameter).
-const PRESCRIPTION_REMINDER_DAYS = 30;
-const REVIEW_REMINDER_DAYS = 7;
+// Valores por defecto — el Superadministrador configura la frecuencia real
+// por isla/tenant editando los Settings gop_prescription_reminder_days /
+// gop_review_reminder_days (punto 14 del análisis CFSB), sin tocar código.
+const DEFAULT_PRESCRIPTION_REMINDER_DAYS = 30;
+const DEFAULT_REVIEW_REMINDER_DAYS = 7;
 
 async function alreadyNotifiedToday(entityId: string, type: NotificationType, today: Date) {
   const count = await prisma.notification.count({
@@ -29,18 +30,29 @@ export async function checkGopDeadlines() {
   let reviewReminders = 0;
 
   // Sección 11: plazo de prescripción de expedientes GOP Activos.
+  // Sin límite superior en la consulta: cada tenant/isla puede tener su
+  // propia antelación configurada (Setting), así que el filtro exacto se
+  // aplica en memoria por expediente.
   const verdictsAtRisk = await prisma.verdict.findMany({
     where: {
-      prescription_due_date: { not: null, gte: today, lte: addDays(today, PRESCRIPTION_REMINDER_DAYS) },
+      prescription_due_date: { not: null, gte: today },
       legal_process: { status: LegalProcessStatus.GOP_ACTIVE },
     },
     include: {
-      legal_process: { include: { debtClaim: true, bailiff: true } },
+      legal_process: { include: { debtClaim: { include: { tenant: true } }, bailiff: true } },
     },
   });
 
   for (const verdict of verdictsAtRisk) {
     const legalProcess = verdict.legal_process;
+    const tenant = legalProcess.debtClaim.tenant;
+    const prescriptionReminderDays = await SettingsService.resolveNumber(
+      "gop_prescription_reminder_days",
+      { tenantId: tenant.id, jurisdictionId: tenant.jurisdictionId },
+      DEFAULT_PRESCRIPTION_REMINDER_DAYS,
+    );
+    if (verdict.prescription_due_date! > addDays(today, prescriptionReminderDays)) continue;
+
     if (await alreadyNotifiedToday(legalProcess.id, NotificationType.GOP_PRESCRIPTION_REMINDER, today)) {
       continue;
     }
@@ -80,16 +92,25 @@ export async function checkGopDeadlines() {
     prescriptionReminders++;
   }
 
-  // Sección 11: fecha de revisión de expedientes GOP Inactivos.
+  // Sección 11: fecha de revisión de expedientes GOP Inactivos. Sin límite
+  // superior en la consulta por el mismo motivo que arriba.
   const inactiveDue = await prisma.legalProcess.findMany({
     where: {
       status: LegalProcessStatus.GOP_INACTIVE,
-      reviewDate: { lte: addDays(today, REVIEW_REMINDER_DAYS) },
+      reviewDate: { not: null },
     },
-    include: { debtClaim: true, bailiff: true },
+    include: { debtClaim: { include: { tenant: true } }, bailiff: true },
   });
 
   for (const legalProcess of inactiveDue) {
+    const tenant = legalProcess.debtClaim.tenant;
+    const reviewReminderDays = await SettingsService.resolveNumber(
+      "gop_review_reminder_days",
+      { tenantId: tenant.id, jurisdictionId: tenant.jurisdictionId },
+      DEFAULT_REVIEW_REMINDER_DAYS,
+    );
+    if (legalProcess.reviewDate! > addDays(today, reviewReminderDays)) continue;
+
     if (await alreadyNotifiedToday(legalProcess.id, NotificationType.GOP_REVIEW_REMINDER, today)) {
       continue;
     }

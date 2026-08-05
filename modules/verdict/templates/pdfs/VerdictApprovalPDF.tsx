@@ -177,14 +177,14 @@ const VerdictApprovalPDF: React.FC<VerdictApprovalPDFProps> = ({
           </Text>
 
           <Text style={styles.paragraph}>
-            De schuldeiser {creditor_name} heeft in het Centraal Incassoplatform
-            (CI) een vonnis geregistreerd, betreffende vonnisnummer {reference},
+            De schuldeiser {creditor_name} heeft bij CFSB een vonnis
+            geregistreerd, betreffende vonnisnummer {reference},
             uitspraakdatum {sentence_date}, met een toegewezen vordering van USD{" "}
             {sentence_amount}.
           </Text>
 
           <Text style={styles.paragraph}>
-            De schuldeiser is voor deze registratie aan het CI 15% van het
+            De schuldeiser is voor deze registratie aan CFSB 15% van het
             vorderingsbedrag verschuldigd. Deze kosten gelden als proceskosten
             en kunnen worden verhaald op de debiteur. Het vonnis is aan dit
             bericht toegevoegd.
@@ -193,8 +193,8 @@ const VerdictApprovalPDF: React.FC<VerdictApprovalPDFProps> = ({
           <Text style={styles.paragraph}>
             Voor de uitvoering is de tussenkomst van een deurwaarder vereist. U
             wordt hierbij verzocht dit vonnis te controleren en de centrale
-            tenuitvoerlegging via het CI te bevestigen. Door centrale uitvoering
-            via het CI wordt het vonnis namens u als deurwaarder uitgevoerd,
+            tenuitvoerlegging via CFSB te bevestigen. Door centrale uitvoering
+            via CFSB wordt het vonnis namens u als deurwaarder uitgevoerd,
             waarbij alle aangesloten bedrijven en organisaties verplicht zijn
             inhoudingen te verrichten ten gunste van de schuldeiser.
           </Text>
@@ -227,7 +227,7 @@ const VerdictApprovalPDF: React.FC<VerdictApprovalPDFProps> = ({
           <Text style={styles.paragraph}>
             U kunt zich registreren of inloggen via{" "}
             <Link src="https://www.centraalinning.com" style={styles.link}>
-              www.centraalinning.com
+              CFSB
             </Link>{" "}
             om het vonnis te bekijken en de centrale tenuitvoerlegging te
             bevestigen.
@@ -237,8 +237,7 @@ const VerdictApprovalPDF: React.FC<VerdictApprovalPDFProps> = ({
         {/* Footer */}
         <View style={styles.footer}>
           <Text>
-            Dit bericht is automatisch gegenereerd door het Centraal
-            Incassoplatform (CI).
+            Dit bericht is automatisch gegenereerd door CFSB.
           </Text>
         </View>
       </Page>

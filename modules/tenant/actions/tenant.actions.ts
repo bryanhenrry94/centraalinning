@@ -49,7 +49,7 @@ export const getAllTenants = async (): Promise<Tenant[]> => {
   const tenants = await TenantService.getAll();
   return tenants.map((tenant: any) => ({
     ...tenant,
-    country_code: tenant.country_code as "BON" | "CUR" | "ARU",
+    country_code: tenant.country_code as string,
   }));
 };
 

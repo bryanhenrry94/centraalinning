@@ -208,7 +208,7 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
           bedrag reeds heeft voldaan, kunt u deze aanmaning als niet verzonden
           beschouwen. Voor betaling, het treffen van een regeling of contact met
           de schuldeiser kunt u zich registreren of inloggen via:
-          www.centraalinning.com
+          CFSB
         </Text>
 
         <Text style={styles.paragraph}>
@@ -234,7 +234,7 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
       {/* Footer */}
       <Text style={styles.footer}>
         Dit bericht is automatisch opgesteld en verzonden via het Centraal
-        Incassoplatform (CI).
+        CFSB.
       </Text>
     </Page>
   </Document>

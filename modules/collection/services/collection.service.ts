@@ -82,10 +82,12 @@ export class CollectionService {
   private static async calculateDeadline(
     personType: PersonType,
     startDate: Date,
+    tenantId: string,
   ): Promise<Date> {
     const days = await CollectionNotificationService.getNotificationDays(
       "REMINDER",
       personType,
+      tenantId,
     );
     const daysToAdd = typeof days === "number" && !isNaN(days) ? days : 0;
     return new Date(startDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
@@ -228,7 +230,9 @@ export class CollectionService {
       return;
     }
 
-    const parameter = await ParameterService.getParameter();
+    // Plazos y tarifas AOP por isla/jurisdicción del tenant (punto 13 del
+    // análisis CFSB).
+    const parameter = await ParameterService.getParameterForTenant(claim.tenantId);
     if (!parameter) throw new Error("Parameter not found");
 
     const personType =
@@ -238,7 +242,7 @@ export class CollectionService {
       parameter,
     );
     const startedAt = new Date();
-    const deadline = await this.calculateDeadline(personType, startedAt);
+    const deadline = await this.calculateDeadline(personType, startedAt, claim.tenantId);
     const reference = claim.reference ?? claimId;
 
     await prisma.$transaction(async (tx) => {

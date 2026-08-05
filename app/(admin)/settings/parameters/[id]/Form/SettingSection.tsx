@@ -7,9 +7,11 @@ import {
   Breadcrumbs,
   Button,
   Card,
+  Chip,
   CircularProgress,
   Grid,
   Link,
+  Stack,
   TextField,
   Typography,
 } from "@mui/material";
@@ -22,6 +24,8 @@ import {
   useFieldArray,
   useForm,
 } from "react-hook-form";
+import { useSearchParams } from "next/navigation";
+import { JurisdictionSelect } from "@/modules/settings/components/JurisdictionSelect";
 
 interface Setting {
   id: string;
@@ -30,6 +34,7 @@ interface Setting {
   name: string;
   description: string | null;
   value_type?: string;
+  jurisdiction?: { id: string; islandCode: string; islandName: string } | null;
 }
 
 interface SettingsCategory {
@@ -42,6 +47,9 @@ interface FormValues {
 }
 
 export const SettingSection = ({ id }: { id: string }) => {
+  const searchParams = useSearchParams();
+  const jurisdictionId = searchParams.get("jurisdictionId");
+
   const [category, setCategory] = React.useState<SettingsCategory | null>(null);
 
   const [loading, setLoading] = React.useState(true);
@@ -71,8 +79,12 @@ export const SettingSection = ({ id }: { id: string }) => {
       try {
         setLoading(true);
 
+        const settingsUrl = jurisdictionId
+          ? `/api/admin/settings?categoryId=${id}&jurisdictionId=${jurisdictionId}`
+          : `/api/admin/settings?categoryId=${id}`;
+
         const [settingsResponse, categoryResponse] = await Promise.all([
-          fetch(`/api/admin/settings?categoryId=${id}`),
+          fetch(settingsUrl),
 
           fetch(`/api/admin/settings/categories/${id}`),
         ]);
@@ -100,7 +112,7 @@ export const SettingSection = ({ id }: { id: string }) => {
     }
 
     loadData();
-  }, [id, reset]);
+  }, [id, jurisdictionId, reset]);
 
   async function onSubmit(values: FormValues) {
     try {
@@ -141,24 +153,33 @@ export const SettingSection = ({ id }: { id: string }) => {
   return (
     <FormProvider {...methods}>
       <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-        {/* BREADCRUMBS */}
-        {/* <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
-          <Link underline="hover" color="inherit" href="/dashboard">
-            Home
-          </Link>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
+          alignItems={{ xs: "flex-start", sm: "center" }}
+          spacing={2}
+          sx={{ mt: 3 }}
+        >
+          <Box>
+            <Link
+              underline="hover"
+              color="inherit"
+              href={
+                jurisdictionId
+                  ? `/admin/settings/parameters?jurisdictionId=${jurisdictionId}`
+                  : "/admin/settings/parameters"
+              }
+              sx={{ fontSize: 14, display: "block", mb: 0.5 }}
+            >
+              ← Parameters
+            </Link>
+            <Typography variant="h5" sx={{ fontWeight: 600 }}>
+              {category?.name || "Sin categoría"}
+            </Typography>
+          </Box>
 
-          <Link
-            underline="hover"
-            color="inherit"
-            href="/admin/settings/parameters"
-          >
-            Parameters
-          </Link>
-
-          <Typography color="text.primary">
-            {category?.name || "Sin categoría"}
-          </Typography>
-        </Breadcrumbs> */}
+          <JurisdictionSelect />
+        </Stack>
 
         {/* SETTINGS CARD */}
         <Card
@@ -208,6 +229,14 @@ export const SettingSection = ({ id }: { id: string }) => {
                           }}
                         />
                       )}
+
+                      <Chip
+                        label={setting.jurisdiction?.islandName ?? "Global"}
+                        size="small"
+                        variant="outlined"
+                        color={setting.jurisdiction ? "primary" : "default"}
+                        sx={{ height: 20, fontSize: 11 }}
+                      />
                     </Box>
 
                     {/* DESCRIPTION */}

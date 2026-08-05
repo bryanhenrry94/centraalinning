@@ -9,23 +9,47 @@ export const BlockadeDocumentSchema = z.object({
   storageKey: z.string().optional(), // este campo es opcional porque en el frontend aún no se genera un storageKey real
 });
 
-export const BlockadeSchema = z.object({
-  debtorId: z.string().min(1, "Debe seleccionar un deudor"),
+// Motivos que requieren una nota explicando el contexto además del motivo
+// en sí — no alcanza con el enum solo.
+const REASONS_REQUIRING_NOTE = ["EXTERNAL_PROCEDURE_COMPLETED", "OTHER"] as const;
 
-  amount: z.number().positive("El monto debe ser un número positivo"),
+export const BlockadeSchema = z
+  .object({
+    debtorId: z.string().min(1, "Debe seleccionar un deudor"),
 
-  reason: z.enum(["UNPAID_PAYMENT"]),
+    amount: z.number().positive("El monto debe ser un número positivo"),
 
-  registeredAt: z.date().optional(),
+    reason: z.enum(["UNPAID_PAYMENT", "EXTERNAL_PROCEDURE_COMPLETED", "OTHER"]),
 
-  status: z.enum(["DRAFT", "ACTIVE", "SUSPENDED"]).optional(),
+    // Obligatoria cuando el motivo es "trayecto externo completado" u
+    // "otro" — describe qué trayecto/evidencia respalda el bloqueo directo.
+    reasonNote: z.string().nullable().optional(),
 
-  paymentId: z.string().optional(),
+    registeredAt: z.date().optional(),
 
-  documents: z
-    .array(BlockadeDocumentSchema)
-    .min(1, "Debe adjuntar al menos un documento"),
-});
+    status: z.enum(["DRAFT", "ACTIVE", "SUSPENDED"]).optional(),
+
+    paymentId: z.string().optional(),
+
+    documents: z
+      .array(BlockadeDocumentSchema)
+      .min(1, "Debe adjuntar al menos un documento"),
+
+    // Confirmación explícita: quien registra declara que la información y
+    // los documentos adjuntos son verídicos (ruta directa, sin pasar por
+    // AOP/GOP, así que no hay otra verificación previa del sistema).
+    confirmed: z.boolean(),
+  })
+  .refine(
+    (data) =>
+      !REASONS_REQUIRING_NOTE.includes(data.reason as (typeof REASONS_REQUIRING_NOTE)[number]) ||
+      !!data.reasonNote?.trim(),
+    { message: "Beschrijf de reden van de blokkade.", path: ["reasonNote"] },
+  )
+  .refine((data) => data.confirmed === true, {
+    message: "U moet bevestigen dat de gegevens juist zijn voordat u doorgaat.",
+    path: ["confirmed"],
+  });
 
 export type CreateBlockadeInput = z.infer<typeof BlockadeSchema>;
 export type BlockadeDocument = z.infer<typeof BlockadeDocumentSchema>;

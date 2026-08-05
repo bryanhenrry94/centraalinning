@@ -35,12 +35,11 @@ export const VerdictDebtorMail = ({
         </Text>
         <Text style={paragraph}>
           Om direct te betalen, klikt u op de onderstaande link of logt u in op{" "}
-          <Link href={link}>www.centraalinning.com</Link>
+          <Link href={link}>CFSB</Link>
         </Text>
         <Text style={footer}>
-          Dit bericht is automatisch gegenereerd door het Centraal
-          Incassoplatform (CI).
-          <br />© CENTRAAL OPVOLGING
+          Dit bericht is automatisch gegenereerd door CFSB.
+          <br />© CFSB
         </Text>
       </Container>
     </Body>

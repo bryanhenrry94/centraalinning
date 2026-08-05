@@ -40,7 +40,15 @@ export const menuGroups: HeaderMenuGroup[] = [
         icon: <ShieldOutlined fontSize="small" />,
       },
       {
-        label: "Financiële afspraak registreren",
+        label: "FAR — Financiële Afspraken Registreren",
+        href: "/financial-agreements",
+        icon: <DescriptionOutlined fontSize="small" />,
+      },
+      {
+        // Antes etiquetado como "Financiële afspraak registreren" — ese
+        // nombre ahora corresponde al servicio FAR real (ver arriba). Esta
+        // entrada sigue siendo el módulo Contract existente.
+        label: "Overeenkomst registreren",
         href: "/contracts",
         icon: <DescriptionOutlined fontSize="small" />,
       },

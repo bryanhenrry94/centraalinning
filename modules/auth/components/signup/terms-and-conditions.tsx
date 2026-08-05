@@ -4,7 +4,7 @@ const TermsAndConditions = () => {
   return (
     <div className="max-w-4xl mx-auto px-6 py-12 text-gray-800">
       {/* <h1 className="text-2xl font-bold mb-8 text-center">
-        ALGEMENE VOORWAARDEN - CENTRAAL OPVOLGING
+        ALGEMENE VOORWAARDEN - CFSB
       </h1> */}
 
       <section className="space-y-8">
@@ -14,7 +14,7 @@ const TermsAndConditions = () => {
           </h2>
           <p className="text-justify">
             Door toegang te krijgen tot of gebruik te maken van het platform
-            Centraal Inning (“het Platform”), verklaart de Gebruiker dat hij
+            CFSB (“het Platform”), verklaart de Gebruiker dat hij
             deze Algemene Voorwaarden heeft gelezen, begrepen en ermee instemt
             gebonden te zijn aan de bepalingen hierin. Indien de Gebruiker niet
             akkoord gaat met een deel van deze voorwaarden, dient hij het
@@ -56,10 +56,10 @@ const TermsAndConditions = () => {
           <p className="text-justify">
             Alle inhoud van het Platform, inclusief maar niet beperkt tot
             teksten, logo’s, afbeeldingen, ontwerpen, software en databanken, is
-            eigendom van Centraal Inning of haar licentiegevers. Het is verboden
+            eigendom van CFSB of haar licentiegevers. Het is verboden
             enig onderdeel van de inhoud te kopiëren, reproduceren, verspreiden
             of op enige wijze te gebruiken zonder voorafgaande schriftelijke
-            toestemming van Centraal Inning.
+            toestemming van CFSB.
           </p>
         </div>
 
@@ -72,7 +72,7 @@ const TermsAndConditions = () => {
             berichten via e-mail, SMS, WhatsApp of andere geconfigureerde
             kanalen als onderdeel van de automatische incassoprocessen. De
             Gebruiker geeft hierbij expliciete toestemming voor het verzenden
-            van dergelijke berichten namens zijn organisatie. Centraal Inning is
+            van dergelijke berichten namens zijn organisatie. CFSB is
             niet verantwoordelijk voor het niet bezorgen of foutief afleveren
             van berichten veroorzaakt door externe dienstverleners of onjuiste
             contactgegevens.
@@ -98,9 +98,9 @@ const TermsAndConditions = () => {
             7. Integraties met Externe Systemen
           </h2>
           <p className="text-justify">
-            Centraal Inning kan gegevens uitwisselen met externe platforms zoals
+            CFSB kan gegevens uitwisselen met externe platforms zoals
             CRM-systemen, betalingsgateways of boekhoudsoftware. De Gebruiker
-            autoriseert dit gegevensverkeer en erkent dat Centraal Inning niet
+            autoriseert dit gegevensverkeer en erkent dat CFSB niet
             aansprakelijk is voor fouten of onderbrekingen die voortkomen uit
             deze externe diensten.
           </p>
@@ -111,10 +111,10 @@ const TermsAndConditions = () => {
             8. Gegevensbescherming en Vertrouwelijkheid
           </h2>
           <p className="text-justify">
-            Centraal Inning behandelt alle ingevoerde en verwerkte gegevens als
+            CFSB behandelt alle ingevoerde en verwerkte gegevens als
             strikt vertrouwelijk. Alle persoonlijke of financiële informatie
             wordt uitsluitend gebruikt om de diensten van het Platform te
-            leveren. Centraal Inning past passende technische en
+            leveren. CFSB past passende technische en
             organisatorische beveiligingsmaatregelen toe, zoals versleuteling en
             toegangscontrole.
           </p>
@@ -125,7 +125,7 @@ const TermsAndConditions = () => {
             9. Updates en Wijzigingen aan het Platform
           </h2>
           <p className="text-justify">
-            Centraal Inning behoudt zich het recht voor om op elk moment
+            CFSB behoudt zich het recht voor om op elk moment
             updates, verbeteringen of wijzigingen aan te brengen in het Platform
             zonder voorafgaande kennisgeving. Wanneer dergelijke wijzigingen
             invloed hebben op de functionaliteit of het gebruik, zal dit op
@@ -138,7 +138,7 @@ const TermsAndConditions = () => {
             10. Beperking van Aansprakelijkheid
           </h2>
           <p className="text-justify">
-            Centraal Inning is niet aansprakelijk voor enige directe of
+            CFSB is niet aansprakelijk voor enige directe of
             indirecte schade, winstderving, verlies van gegevens of
             bedrijfsstilstand die voortvloeit uit het gebruik van het Platform.
             Het gebruik van het Platform is volledig op eigen risico van de
@@ -151,7 +151,7 @@ const TermsAndConditions = () => {
             11. Wijzigingen in de Algemene Voorwaarden
           </h2>
           <p className="text-justify">
-            Centraal Inning kan deze Algemene Voorwaarden op elk moment
+            CFSB kan deze Algemene Voorwaarden op elk moment
             wijzigen. De bijgewerkte versie wordt gepubliceerd op het Platform
             en de voortgezette toegang of gebruik ervan betekent aanvaarding van
             de gewijzigde voorwaarden.

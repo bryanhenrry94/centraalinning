@@ -14,7 +14,7 @@ export async function sendEmail({
   attachments?: { filename: string; content: string }[];
 }) {
   return resend.emails.send({
-    from: `PortalCI <${process.env.MAIL_FROM || "no-reply@centraalinning.com"}>`,
+    from: `CFSB <${process.env.MAIL_FROM || "no-reply@centraalinning.com"}>`,
     to,
     subject,
     html,

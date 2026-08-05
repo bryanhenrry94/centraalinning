@@ -2,19 +2,26 @@
 
 import { Box, Button, Card, CardActionArea, Typography } from "@mui/material";
 import { InfoOutlined, LocationOn, Lock } from "@mui/icons-material";
-import { CountryList } from "@/shared/constants/country";
 import { STEP_HEADER_GAP, STEP_SECTION_GAP } from "./layout.constants";
 
 const PRIMARY = "#0A3D91";
 const ACCENT = "#F7931E";
 
+interface IslandOption {
+  islandCode: string;
+  islandName: string;
+}
+
 interface IslandStepProps {
   value: string;
+  // Islas activas — vienen de Jurisdiction (dato), nunca de un array
+  // hardcodeado en el código (punto 13 del análisis CFSB).
+  islands: IslandOption[];
   onSelect: (code: string) => void;
   onNext: () => void;
 }
 
-export const IslandStep = ({ value, onSelect, onNext }: IslandStepProps) => {
+export const IslandStep = ({ value, islands, onSelect, onNext }: IslandStepProps) => {
   return (
     <Box sx={{ width: "100%", maxWidth: 560, mx: "auto" }}>
       <Typography
@@ -51,12 +58,12 @@ export const IslandStep = ({ value, onSelect, onNext }: IslandStepProps) => {
       </Box>
 
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 4 }}>
-        {CountryList.map((island) => {
-          const selected = island.value === value;
+        {islands.map((island) => {
+          const selected = island.islandCode === value;
 
           return (
             <Card
-              key={island.value}
+              key={island.islandCode}
               elevation={0}
               sx={{
                 border: selected ? `2px solid ${ACCENT}` : "1px solid #e5e7eb",
@@ -70,7 +77,7 @@ export const IslandStep = ({ value, onSelect, onNext }: IslandStepProps) => {
               }}
             >
               <CardActionArea
-                onClick={() => onSelect(island.value)}
+                onClick={() => onSelect(island.islandCode)}
                 sx={{
                   display: "flex",
                   alignItems: "center",
@@ -89,7 +96,7 @@ export const IslandStep = ({ value, onSelect, onNext }: IslandStepProps) => {
                       color: selected ? ACCENT : PRIMARY,
                     }}
                   >
-                    {island.label}
+                    {island.islandName}
                   </Typography>
                 </Box>
 

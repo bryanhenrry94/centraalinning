@@ -26,6 +26,10 @@ import { UserRole } from "@/shared/constants/user-role";
 import {
   getCaseTransferById,
   acceptCaseTransfer,
+  extendCaseTransferAcceptanceDeadline,
+  rejectOverdueCaseTransfer,
+  getCaseTransferAgreements,
+  decideCaseTransferAgreement,
 } from "@/modules/legal-process/actions/case-transfer.actions";
 import { getCaseTransferStatusInfo } from "@/modules/legal-process/utils/case-transfer-status";
 import { CaseTransferStatus } from "@/modules/legal-process/constants/case-transfer-status";
@@ -36,6 +40,10 @@ import { RejectTransferDialog } from "@/modules/legal-process/components/reject-
 import { CancelTransferDialog } from "@/modules/legal-process/components/cancel-transfer-dialog";
 import { FinalizeLawyerWorkDialog } from "@/modules/legal-process/components/finalize-lawyer-work-dialog";
 import { TransferToBailiffDialog } from "@/modules/legal-process/components/transfer-to-bailiff-dialog";
+import { PowerOfAttorneyDialog } from "@/modules/legal-process/components/power-of-attorney-dialog";
+import { ProposeCaseTransferAgreementDialog } from "@/modules/legal-process/components/propose-case-transfer-agreement-dialog";
+import { AgreementDecisionDialog } from "@/modules/agreement/components/agreement-decision-dialog";
+import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
 
 type CaseTransferDetail = Awaited<ReturnType<typeof getCaseTransferById>>;
 
@@ -71,18 +79,32 @@ const CaseTransferDetailPage: React.FC = () => {
 
   const [loading, setLoading] = useState(true);
   const [caseTransfer, setCaseTransfer] = useState<CaseTransferDetail | null>(null);
+  const [agreements, setAgreements] = useState<AgreementResponse[]>([]);
+  const [selectedAgreement, setSelectedAgreement] = useState<AgreementResponse | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [dialog, setDialog] = useState<
-    null | "register-verdict" | "reject" | "cancel" | "finalize-lawyer-work" | "transfer-to-bailiff"
+    | null
+    | "register-verdict"
+    | "reject"
+    | "cancel"
+    | "finalize-lawyer-work"
+    | "transfer-to-bailiff"
+    | "power-of-attorney"
+    | "propose-agreement"
+    | "decide-agreement"
   >(null);
 
   const load = useCallback(async () => {
     if (!params.id) return;
     try {
       setLoading(true);
-      const data = await getCaseTransferById(params.id as string);
+      const [data, agreementsData] = await Promise.all([
+        getCaseTransferById(params.id as string),
+        getCaseTransferAgreements(params.id as string),
+      ]);
       setCaseTransfer(data);
+      setAgreements(agreementsData);
     } catch (error) {
       notifyError("Kon dossier niet laden");
     } finally {
@@ -127,6 +149,26 @@ const CaseTransferDetailPage: React.FC = () => {
     }
   };
 
+  const handleExtendDeadline = async () => {
+    try {
+      await extendCaseTransferAcceptanceDeadline(caseTransfer.id);
+      notifySuccess("Acceptatietermijn met 7 dagen verlengd");
+      refresh();
+    } catch (error) {
+      notifyError(error instanceof Error ? error.message : "Actie mislukt");
+    }
+  };
+
+  const handleRejectOverdue = async () => {
+    try {
+      await rejectOverdueCaseTransfer(caseTransfer.id);
+      notifySuccess("Dossier afgewezen. U kunt nu een andere advocaat/deurwaarder selecteren.");
+      router.push(`/collections/${caseTransfer.debtClaimId}`);
+    } catch (error) {
+      notifyError(error instanceof Error ? error.message : "Actie mislukt");
+    }
+  };
+
   // El abogado/alguacil decide aceptar o rechazar la transferencia al final
   // de la página, después de haber visto toda la información del expediente.
   const canDecideTransfer =
@@ -165,7 +207,25 @@ const CaseTransferDetailPage: React.FC = () => {
   ];
   const showCancelButton = isStaff && CANCELLABLE_STATUSES.includes(caseTransfer.status);
 
+  // Día 7: el plazo de aceptación venció sin respuesta — el participante
+  // decide (nunca vence ni se rechaza automáticamente). Ver
+  // CaseTransferService.sendAcceptanceReminders.
+  const showAcceptanceDeadlineDecision =
+    isStaff &&
+    caseTransfer.status === CaseTransferStatus.PENDING_ACCEPTANCE &&
+    !!caseTransfer.acceptanceDeadline &&
+    new Date(caseTransfer.acceptanceDeadline) <= new Date();
+
   const hasActionsCard = showVerdictButton || showCancelButton;
+
+  // Propuestas de acuerdo de pago: el participante, el abogado o el
+  // alguacil asignado pueden proponer mientras el expediente esté aceptado.
+  const isAssignedProfessional = (isLawyer && isLawyerTrack) || (isBailiffRole && !!caseTransfer.bailiffId);
+  const canProposeAgreement =
+    (isStaff || isAssignedProfessional) && caseTransfer.status === CaseTransferStatus.ACCEPTED;
+  // Decidir (aceptar, modificar o rechazar) es del participante, salvo que
+  // exista volmacht (power of attorney) otorgada al profesional asignado.
+  const canDecideAgreements = isStaff || (isAssignedProfessional && caseTransfer.hasPowerOfAttorney);
 
   return (
     <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
@@ -249,6 +309,75 @@ const CaseTransferDetailPage: React.FC = () => {
         </Card>
 
         <Card>
+          <CardHeader
+            title="Betalingsregeling"
+            action={
+              <Stack direction="row" spacing={1}>
+                {isStaff && (
+                  <Button size="small" onClick={() => setDialog("power-of-attorney")}>
+                    Volmacht beheren
+                  </Button>
+                )}
+                {canProposeAgreement && (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    onClick={() => setDialog("propose-agreement")}
+                  >
+                    Voorstellen
+                  </Button>
+                )}
+              </Stack>
+            }
+          />
+          <Divider />
+          <CardContent>
+            <Chip
+              size="small"
+              sx={{ mb: 2, fontWeight: 700 }}
+              color={caseTransfer.hasPowerOfAttorney ? "success" : "default"}
+              label={
+                caseTransfer.hasPowerOfAttorney
+                  ? "Volmacht verleend aan de professional"
+                  : "Geen volmacht — de deelnemer beslist altijd"
+              }
+            />
+            {agreements.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                Nog geen betalingsregeling voorgesteld.
+              </Typography>
+            ) : (
+              <Stack spacing={1}>
+                {agreements.map((agreement) => (
+                  <Box
+                    key={agreement.id}
+                    onClick={() => {
+                      setSelectedAgreement(agreement);
+                      setDialog("decide-agreement");
+                    }}
+                    sx={{
+                      p: 1.5,
+                      border: "1px solid",
+                      borderColor: "divider",
+                      borderRadius: 1,
+                      cursor: "pointer",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Typography variant="body2">
+                      {formatCurrency(agreement.total_amount)} — {agreement.installments_count} termijnen
+                    </Typography>
+                    <Chip size="small" label={agreement.status} />
+                  </Box>
+                ))}
+              </Stack>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardHeader title="Audit trail" />
           <Divider />
           <CardContent>
@@ -310,6 +439,28 @@ const CaseTransferDetailPage: React.FC = () => {
           </Card>
         )}
 
+        {showAcceptanceDeadlineDecision && (
+          <Card>
+            <CardHeader title="Vencimiento del plazo de aceptación" />
+            <Divider />
+            <CardContent>
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                El plazo de 7 días para que acepte o rechace el expediente venció sin respuesta.
+                Decidí si le concedés 7 días más o seleccionás otro profesional. El expediente no se
+                cierra ni se rechaza automáticamente.
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                <Button variant="contained" onClick={handleExtendDeadline}>
+                  Conceder 7 días más
+                </Button>
+                <Button variant="outlined" color="error" onClick={handleRejectOverdue}>
+                  Elegir otro profesional
+                </Button>
+              </Stack>
+            </CardContent>
+          </Card>
+        )}
+
         {canDecideTransfer && (
           <Card>
             <CardHeader title="Beslissing dossieroverdracht" />
@@ -362,6 +513,29 @@ const CaseTransferDetailPage: React.FC = () => {
         onClose={() => setDialog(null)}
         caseTransferId={caseTransfer.id}
         onTransferred={refresh}
+      />
+      <PowerOfAttorneyDialog
+        open={dialog === "power-of-attorney"}
+        onClose={() => setDialog(null)}
+        caseTransferId={caseTransfer.id}
+        currentlyGranted={caseTransfer.hasPowerOfAttorney}
+        onUpdated={refresh}
+      />
+      <ProposeCaseTransferAgreementDialog
+        open={dialog === "propose-agreement"}
+        onClose={() => setDialog(null)}
+        caseTransferId={caseTransfer.id}
+        onRegistered={refresh}
+      />
+      <AgreementDecisionDialog
+        open={dialog === "decide-agreement"}
+        onClose={() => setDialog(null)}
+        agreement={selectedAgreement}
+        canDecide={canDecideAgreements}
+        onDecide={(agreementId, decision) =>
+          decideCaseTransferAgreement(caseTransfer.id, agreementId, decision)
+        }
+        onDecided={refresh}
       />
     </Container>
   );

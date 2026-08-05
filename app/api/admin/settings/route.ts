@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const categoryId = url.searchParams.get("categoryId");
+  const jurisdictionId = url.searchParams.get("jurisdictionId");
 
   if (!categoryId) {
     return NextResponse.json(
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const settings = await SettingsService.getByCategory(categoryId);
+  const settings = await SettingsService.getByCategoryForAdmin(categoryId, jurisdictionId);
 
   return NextResponse.json({
     status: 200,

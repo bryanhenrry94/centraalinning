@@ -4,6 +4,10 @@ import { Prisma } from "@prisma/client";
 import { StorageService } from "@/infrastructure/storage/storage.service";
 import { sendMailBlockade } from "./blockade-mail.service";
 import { CollectionService } from "@/modules/collection/services/collection.service";
+import { REASONS } from "@/modules/blockade/constants/reason-blockades";
+import { ClaimTimelineService } from "@/modules/collection/services/claim-timeline.service";
+import { NotificationService } from "@/modules/notification/services/notification.service";
+import { NotificationType } from "@/modules/notification/constants/notification-type";
 
 export class BlockadeService {
   static createBlockade = async (
@@ -142,7 +146,11 @@ export class BlockadeService {
     });
   };
 
-  static createFull = async (input: CreateBlockadeInput, tenantId: string) => {
+  static createFull = async (
+    input: CreateBlockadeInput,
+    tenantId: string,
+    actorUserId?: string,
+  ) => {
     const debtor = await prisma.debtor.findUnique({
       where: { id: input.debtorId },
       include: { person: true, tenant: true },
@@ -180,17 +188,40 @@ export class BlockadeService {
         },
       });
 
-      return tx.blockade.create({
+      const createdBlockade = await tx.blockade.create({
         data: {
           tenantId,
           debtorId: input.debtorId,
           reason: input.reason,
+          reasonNote: input.reasonNote,
           registeredAt: input.registeredAt || new Date(),
           status: input.status || "DRAFT",
           paymentId: input.paymentId || null,
           originDebtClaimId: debtClaim.id,
         },
       });
+
+      // Registro de auditoría de la ruta directa: quién la registró, con
+      // qué motivo y con cuántos documentos de respaldo — bypassa AOP/GOP,
+      // así que este es el único rastro de verificación previa que existe.
+      const reasonLabel = REASONS.find((r) => r.value === input.reason)?.label ?? input.reason;
+      await tx.claimTimeline.create({
+        data: {
+          debtClaimId: debtClaim.id,
+          event: "BLOCKADE_REGISTERED",
+          description: `Bloqueo económico registrado directamente. Motivo: ${reasonLabel}.${
+            input.reasonNote ? ` ${input.reasonNote}` : ""
+          } Confirmado por el usuario, ${input.documents.length} documento(s) adjunto(s).`,
+          metadata: {
+            reason: input.reason,
+            reasonNote: input.reasonNote ?? null,
+            documentsCount: input.documents.length,
+          },
+          createdById: actorUserId,
+        },
+      });
+
+      return createdBlockade;
     });
 
     const uploadedDocs = await Promise.all(
@@ -298,6 +329,78 @@ export class BlockadeService {
     });
 
     return blockades;
+  };
+
+  // Se llama cuando UN expediente puntual (p.ej. un GOP) queda saldado en
+  // su totalidad. A diferencia de suspendActiveForDebtor (que suspende
+  // TODOS los bloqueos activos de un deudor+tenant sin distinguir causa),
+  // esto libera ÚNICAMENTE el bloqueo cuyo origen es este debtClaim — y
+  // solo si, además, no existe ningún OTRO bloqueo activo para la misma
+  // persona (verificado a través de todos sus Debtor, en cualquier
+  // tenant — misma consulta que BlockCheckService). El bloqueo económico
+  // solo se considera efectivamente levantado cuando ya no queda ninguna
+  // razón vigente.
+  static releaseForSettledDebtClaim = async (
+    debtClaimId: string,
+    debtorId: string,
+    tenantId: string,
+    actorUserId?: string,
+  ) => {
+    const blockade = await prisma.blockade.findFirst({
+      where: { originDebtClaimId: debtClaimId, status: "ACTIVE" },
+    });
+    if (!blockade) return null;
+
+    const updated = await prisma.blockade.update({
+      where: { id: blockade.id },
+      data: { status: "SUSPENDED", releasedAt: new Date() },
+    });
+
+    const debtor = await prisma.debtor.findUnique({ where: { id: debtorId } });
+
+    const otherActiveBlockade = debtor
+      ? await prisma.blockade.findFirst({
+          where: {
+            id: { not: blockade.id },
+            status: "ACTIVE",
+            debtor: { person_id: debtor.person_id },
+          },
+        })
+      : null;
+
+    if (otherActiveBlockade) {
+      await ClaimTimelineService.logEvent(
+        debtClaimId,
+        "BLOCKADE_RELEASED",
+        "Dit dossier is volledig voldaan en het bijbehorende bloqueo werd opgeheven, maar de persoon blijft geblokkeerd wegens een ander openstaand dossier.",
+        { blockadeId: updated.id, otherActiveBlockadeId: otherActiveBlockade.id },
+        actorUserId,
+      );
+      return updated;
+    }
+
+    await ClaimTimelineService.logEvent(
+      debtClaimId,
+      "BLOCKADE_RELEASED",
+      "Dit dossier is volledig voldaan. Geen andere actieve bloqueos gevonden — de economische blokkade is volledig opgeheven.",
+      { blockadeId: updated.id },
+      actorUserId,
+    );
+
+    if (debtor?.user_id) {
+      await NotificationService.create({
+        tenant_id: tenantId,
+        user_id: debtor.user_id,
+        type: NotificationType.BLOCKADE_SUSPENDED,
+        title: "Economische blokkade opgeheven",
+        message: "Su deuda fue saldada en su totalidad y no tiene otros bloqueos activos: su bloqueo económico fue levantado.",
+        link: "/block-status",
+        entity_type: "Blockade",
+        entity_id: updated.id,
+      });
+    }
+
+    return updated;
   };
 
   // Reactiva un bloqueo SUSPENDED (incumplimiento del acuerdo de pago) y

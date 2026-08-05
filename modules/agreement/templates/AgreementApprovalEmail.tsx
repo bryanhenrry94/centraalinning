@@ -29,9 +29,9 @@ export const AgreementApprovalEmail = ({
         </Text>
         <Text style={paragraph}>
           Uw betalingsovereenkomst is succesvol goedgekeurd. De details van uw
-          goedgekeurde overeenkomst zijn beschikbaar op het Centraal Inning (CI)
-          Platform. U kunt deze op elk moment raadplegen door in te loggen:{" "}
-          {invitationLink && <Link href={invitationLink}>Centraal Inning</Link>}
+          goedgekeurde overeenkomst zijn beschikbaar op het CFSB-platform. U
+          kunt deze op elk moment raadplegen door in te loggen:{" "}
+          {invitationLink && <Link href={invitationLink}>CFSB</Link>}
         </Text>
         <Text style={paragraph}>
           Dank u voor uw medewerking. Heeft u vragen, neem dan contact met ons
@@ -39,9 +39,8 @@ export const AgreementApprovalEmail = ({
         </Text>
 
         <Text style={footer}>
-          Dit bericht is automatisch gegenereerd door het Centraal
-          Incassoplatform (CI).
-          <br />© CENTRAAL OPVOLGING
+          Dit bericht is automatisch gegenereerd door CFSB.
+          <br />© CFSB
         </Text>
       </Container>
     </Body>

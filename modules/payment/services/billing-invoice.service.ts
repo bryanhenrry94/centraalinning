@@ -45,7 +45,7 @@ export class BillingInvoiceService {
         currency: "USD",
         issue_date,
         due_date,
-        description: "Factura por activación de cuenta del sistema Centraal Inning",
+        description: "Factura por activación de cuenta del sistema CFSB",
         status: "unpaid",
         payment_id: "",
       },

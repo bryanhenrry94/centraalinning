@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Paper } from "@mui/material";
 import LogoComponent from "@/shared/ui/logo-app";
 import useClientRouter from "@/shared/hooks/useNavigations";
@@ -10,6 +10,7 @@ import { DetailsStep } from "./details-step";
 import { SuccessStep } from "./success-step";
 import { SignupStepper } from "./signup-stepper";
 import { STEP_SECTION_GAP } from "./layout.constants";
+import { getActiveJurisdictions } from "@/modules/jurisdiction/actions/jurisdiction.actions";
 
 const steps = ["Eiland", "Plan", "Gegevens"];
 
@@ -23,6 +24,16 @@ export const SignupWizard = () => {
   const [billingCycle, setBillingCycle] = useState<"MONTHLY" | "YEARLY">(
     "MONTHLY",
   );
+  // Islas seleccionables: solo las activas en Jurisdiction (dato), nunca un
+  // array hardcodeado en el código — hoy solo Bonaire, según el orden de
+  // implementación acordado (punto 13 del análisis CFSB).
+  const [jurisdictions, setJurisdictions] = useState<
+    Awaited<ReturnType<typeof getActiveJurisdictions>>
+  >([]);
+
+  useEffect(() => {
+    getActiveJurisdictions().then(setJurisdictions);
+  }, []);
 
   const handleSelectPlan = (id: string, name: string) => {
     setPlanId(id);
@@ -68,6 +79,7 @@ export const SignupWizard = () => {
           {!isCompleted && activeStep === 0 && (
             <IslandStep
               value={country}
+              islands={jurisdictions}
               onSelect={setCountry}
               onNext={() => setActiveStep(1)}
             />
@@ -85,6 +97,7 @@ export const SignupWizard = () => {
           {!isCompleted && activeStep === 2 && (
             <DetailsStep
               country={country}
+              jurisdictions={jurisdictions}
               planId={planId}
               planName={planName}
               billingCycle={billingCycle}

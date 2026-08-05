@@ -137,8 +137,13 @@ export class CollectionNotificationService {
   static getNotificationDays = async (
     step: AOPStep,
     person_type: PersonType,
+    tenantId?: string,
   ): Promise<number> => {
-    const param = await ParameterService.getParameter();
+    // Plazos AOP por isla/jurisdicción del tenant (punto 13 del análisis
+    // CFSB); sin tenantId cae al Parameter global histórico.
+    const param = tenantId
+      ? await ParameterService.getParameterForTenant(tenantId)
+      : await ParameterService.getParameter();
     if (!param) throw new Error("Parameter not found");
 
     if (step === "REMINDER") {

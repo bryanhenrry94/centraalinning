@@ -24,7 +24,7 @@ export const InvoiceEmail = ({ logoUrl, fullname }: InvoiceEmailProps) => (
           src={logoUrl}
           width="120"
           height="50"
-          alt="Centraal Inning"
+          alt="CFSB"
           style={logo}
         />
 
@@ -44,8 +44,7 @@ export const InvoiceEmail = ({ logoUrl, fullname }: InvoiceEmailProps) => (
         <Text style={paragraph}>Hartelijk dank voor uw betaling.</Text>
 
         <Text style={footer}>
-          Dit bericht is automatisch gegenereerd door het Centraal
-          Incassoplatform (CI).
+          Dit bericht is automatisch gegenereerd door CFSB.
           <br />© Centrale Financiële Samenwerking & Bescherming
         </Text>
       </Container>

@@ -4,6 +4,7 @@ export const agreementSchema = z.object({
   id: z.string().cuid(),
   debtClaim_id: z.string().cuid(),
   legalProcessId: z.string().optional().nullable(),
+  caseTransferId: z.string().optional().nullable(),
   tenant_id: z.string().uuid(),
   total_amount: z.number(),
   installment_amount: z.number(),

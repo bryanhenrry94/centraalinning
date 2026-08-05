@@ -47,8 +47,11 @@ export class DebtorService {
       if (!person) {
         const names = debtorData.fullname.trim().split(" ");
         const tenant = await tx.tenant.findUnique({ where: { id: tenant_id } });
+        const jurisdictionId =
+          tenant?.jurisdictionId ?? (await PersonService.resolveDefaultJurisdictionId());
         const personal_number = await PersonService.generatePersonalNumber(
-          tenant?.country_code,
+          debtorData.person_type,
+          jurisdictionId,
           tx,
         );
 
@@ -65,6 +68,7 @@ export class DebtorService {
             birth_date: debtorData.birth_date,
             birth_place: debtorData.birth_place,
             country_code: tenant?.country_code,
+            jurisdictionId,
             personal_number,
           },
         });
@@ -214,8 +218,11 @@ export class DebtorService {
 
       if (!existingPerson) {
         const tenant = await prisma.tenant.findUnique({ where: { id: tenant_id } });
+        const jurisdictionId =
+          tenant?.jurisdictionId ?? (await PersonService.resolveDefaultJurisdictionId());
         const personal_number = await PersonService.generatePersonalNumber(
-          tenant?.country_code,
+          debtorFormatted.person?.person_type ?? "INDIVIDUAL",
+          jurisdictionId,
         );
 
         const newPerson = await prisma.person.create({
@@ -231,6 +238,7 @@ export class DebtorService {
             address: debtorFormatted.person?.address || "",
             phone: debtorFormatted.person?.phone || "",
             country_code: tenant?.country_code,
+            jurisdictionId,
             personal_number,
           },
         });

@@ -32,7 +32,7 @@ export default function NewClientEmail({
     <Html>
       <Head />
 
-      <Preview>Nuevo cliente registrado en Centraal Inning</Preview>
+      <Preview>Nuevo cliente registrado en CFSB</Preview>
 
       <Body
         style={{
@@ -154,8 +154,8 @@ export default function NewClientEmail({
               lineHeight: 1.6,
             }}
           >
-            Dit is een automatisch bericht van Centraal Inning. ©{" "}
-            {new Date().getFullYear()} Centraal Inning.
+            Dit is een automatisch bericht van CFSB. ©{" "}
+            {new Date().getFullYear()} CFSB.
           </Text>
         </Container>
       </Body>

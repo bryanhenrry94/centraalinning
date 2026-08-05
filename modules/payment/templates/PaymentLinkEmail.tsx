@@ -149,8 +149,7 @@ export function PaymentLinkEmail({
               marginTop: "20px",
             }}
           >
-            Dit bericht is automatisch gegenereerd door het Centraal
-            Incassoplatform (CI).
+            Dit bericht is automatisch gegenereerd door CFSB.
           </Text>
 
           <Text

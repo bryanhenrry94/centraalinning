@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     const html = await render(React.createElement(TestEmail, { name }));
 
     const data = await resend.emails.send({
-      from: `PortalCI <${process.env.MAIL_FROM || "no-reply@centraalinning.com"}>`, // Debe ser un dominio verificado en Resend
+      from: `CFSB <${process.env.MAIL_FROM || "no-reply@centraalinning.com"}>`, // Debe ser un dominio verificado en Resend
       to,
       subject: "Correo de prueba desde Next.js",
       html,

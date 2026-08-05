@@ -230,7 +230,7 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({
           Wij verzoeken u vriendelijk om het factuurbedrag binnen 30 dagen na
           factuurdatum over te maken naar bankrekening {bank_name}{" "}
           {bank_account} onder vermelding van het factuurnummer. Deze factuur is
-          automatisch aangemaakt door ons systeem CI.
+          automatisch aangemaakt door ons systeem CFSB.
         </Text>
       </View>
     </Page>

@@ -7,9 +7,11 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   Container,
   Dialog,
   DialogContent,
+  FormControlLabel,
   Grid,
   IconButton,
   MenuItem,
@@ -81,6 +83,7 @@ export default function BlockCreatePage() {
   const {
     control,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
     setValue,
   } = useForm<CreateBlockadeInput>({
@@ -89,9 +92,15 @@ export default function BlockCreatePage() {
       debtorId: "",
       amount: 0,
       reason: "UNPAID_PAYMENT",
+      reasonNote: "",
+      confirmed: false,
       documents: [],
     },
   });
+
+  const selectedReason = watch("reason");
+  const reasonNoteRequired =
+    selectedReason === "EXTERNAL_PROCEDURE_COMPLETED" || selectedReason === "OTHER";
 
   const onSubmit = async (data: CreateBlockadeInput) => {
     // Validación con react-hook-form + zod ya pasó
@@ -431,6 +440,27 @@ export default function BlockCreatePage() {
                     )}
                   />
                 </Grid>
+                {reasonNoteRequired && (
+                  <Grid size={{ xs: 12 }}>
+                    <Controller
+                      name="reasonNote"
+                      control={control}
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          value={field.value ?? ""}
+                          fullWidth
+                          multiline
+                          minRows={2}
+                          size="small"
+                          label="Beschrijf het externe traject / de reden"
+                          error={!!errors.reasonNote}
+                          helperText={errors.reasonNote?.message}
+                        />
+                      )}
+                    />
+                  </Grid>
+                )}
               </Grid>
             </Box>
           </Paper>
@@ -517,6 +547,32 @@ export default function BlockCreatePage() {
                   sx={{ mt: 1, display: "block" }}
                 >
                   {errors.documents.message}
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Bevestiging */}
+          <Card>
+            <CardContent>
+              <Controller
+                name="confirmed"
+                control={control}
+                render={({ field }) => (
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={field.value}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                      />
+                    }
+                    label="Confirmo que la información y los documentos adjuntos son verídicos y, si corresponde, que el trayecto externo fue completado correctamente."
+                  />
+                )}
+              />
+              {errors.confirmed && (
+                <Typography color="error" variant="caption" sx={{ display: "block", mt: 0.5 }}>
+                  {errors.confirmed.message}
                 </Typography>
               )}
             </CardContent>

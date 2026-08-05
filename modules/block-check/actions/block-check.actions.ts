@@ -12,7 +12,9 @@ export const existsBlockCheck = async (search: string) => {
     return { success: false };
   }
 
-  const parameter = await ParameterService.getParameter();
+  // Precio del Blok-Check por isla/jurisdicción del tenant (punto 13 del
+  // análisis CFSB).
+  const parameter = await ParameterService.getParameterForTenant(session.user.tenant_id);
   const price = parameter?.blok_check_pricing ?? 0;
 
   return BlockCheckService.existsBlockCheck(search, {

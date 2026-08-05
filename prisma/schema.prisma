@@ -31,6 +31,13 @@ model Tenant {
   terms_accepted      Boolean @default(false)
   is_active           Boolean @default(false)
 
+  // Jurisdicción/isla operativa de este deelnemer — determina zona horaria,
+  // ABB, prefijo de numeración, servicios activos y tarifas/plazos locales
+  // (ver Jurisdiction). Nullable por compatibilidad con tenants existentes
+  // sin isla asignada todavía; el seed y el onboarding la fijan.
+  jurisdictionId String?
+  jurisdiction   Jurisdiction? @relation(fields: [jurisdictionId], references: [id])
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -187,7 +194,8 @@ model Blockade {
   originDebtClaimId String?    @unique
   originDebtClaim   DebtClaim? @relation("ClaimOrigin", fields: [originDebtClaimId], references: [id])
 
-  reason BlockadeReason
+  reason     BlockadeReason
+  reasonNote String?        @db.Text
 
   registeredAt DateTime  @default(now())
   releasedAt   DateTime?
@@ -350,8 +358,64 @@ model LegalProcess {
   agreements         Agreement[]
   lawyerFeeInvoices  LawyerFeeInvoice[]
   bailiffFeeInvoices BailiffFeeInvoice[]
+  paymentConfirmations GopPaymentConfirmation[]
 
   @@map("legal_process")
+}
+
+// Confirmación centralizada de pagos durante el GOP (AT-009 revisado): el
+// deudor puede pagar al alguacil o directamente al participante. Quien
+// recibe registra + sube comprobante; la OTRA parte confirma o disputa.
+// Solo al confirmar se aplica el pago al saldo (ver LegalProcessService).
+enum GopPaymentConfirmationStatus {
+  REGISTERED // recién creado por quien recibió el pago
+  AWAITING_CONFIRMATION // comprobante adjunto, notificado a la otra parte
+  CONFIRMED // la otra parte confirmó — el pago ya se aplicó al saldo
+  DISPUTED // la otra parte no reconoce el pago (monto/comprobante incorrecto)
+  CORRECTED // quien lo registró corrigió el monto/comprobante tras la disputa
+}
+
+enum GopPaymentReceiver {
+  BAILIFF
+  PARTICIPANT
+}
+
+model GopPaymentConfirmation {
+  id String @id @default(cuid())
+
+  legalProcessId String
+  legalProcess   LegalProcess @relation(fields: [legalProcessId], references: [id])
+
+  paymentId String  @unique
+  payment   Payment @relation(fields: [paymentId], references: [id])
+
+  status     GopPaymentConfirmationStatus @default(REGISTERED)
+  receivedBy GopPaymentReceiver
+
+  recordedById String?
+  recordedAt   DateTime @default(now())
+
+  proofStorageKey   String
+  proofOriginalName String
+  proofMimeType     String
+  proofSize         Int
+
+  confirmedById String?
+  confirmedAt   DateTime?
+
+  disputeReason String?   @db.Text
+  disputedById  String?
+  disputedAt    DateTime?
+
+  correctionNote String?   @db.Text
+  correctedById  String?
+  correctedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([legalProcessId])
+  @@map("gop_payment_confirmation")
 }
 
 model LawyerFeeInvoice {
@@ -415,6 +479,14 @@ model CaseTransfer {
 
   isEmergencyTransfer Boolean @default(false) // noodoverdracht (fallecimiento/incapacidad)
   emergencyReason     String? @db.Text
+
+  // Poder otorgado expresamente por el participante: sin esto, el abogado o
+  // el alguacil asignado solo puede negociar/registrar propuestas de
+  // acuerdo de pago — el participante siempre decide (acepta, modifica o
+  // rechaza). Con esto, el profesional también puede decidir por sí mismo.
+  hasPowerOfAttorney       Boolean   @default(false)
+  powerOfAttorneyGrantedAt DateTime?
+  powerOfAttorneyNote      String?   @db.Text
 
   cancelledAt  DateTime?
   cancelReason String?   @db.Text
@@ -958,6 +1030,13 @@ model Person {
   country_code    String?
   personal_number String? @unique
 
+  // Jurisdicción/isla de registro para la numeración permanente CFSBP/CFSB
+  // (ver PersonService.generatePersonalNumber). Es una FK a datos, nunca un
+  // enum de código — los nombres de isla no deben hardcodearse en el
+  // código fuente (punto 13 del análisis CFSB).
+  jurisdictionId String?
+  jurisdiction   Jurisdiction? @relation(fields: [jurisdictionId], references: [id])
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -969,6 +1048,102 @@ model Person {
   // employee            Employee?
 
   @@map("person")
+}
+
+// Contador seguro para la numeración permanente CFSBP-<ISLA>-000001
+// (persona física) / CFSB-<ISLA>-000001 (empresa). Una fila por
+// combinación prefix+jurisdicción; PersonService la bloquea con SELECT ...
+// FOR UPDATE antes de incrementar, así dos altas concurrentes nunca reciben
+// el mismo número.
+model PersonIdentitySequence {
+  id             String       @id @default(cuid())
+  prefix         String
+  jurisdictionId String
+  jurisdiction   Jurisdiction @relation(fields: [jurisdictionId], references: [id])
+  lastValue      Int          @default(0)
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([prefix, jurisdictionId])
+  @@map("person_identity_sequence")
+}
+
+// Isla/jurisdicción operativa de CFSB — DATO, no enum: los nombres de isla
+// nunca deben hardcodearse en el código fuente (punto 13 del análisis
+// CFSB). Bonaire es la primera activa; Curaçao y Aruba quedan preparadas
+// (isActive = false) en el orden de implementación acordado (ver seed.ts).
+// Reúne, por jurisdicción: identidad (isla + jurisdicción legal), zona
+// horaria, configuración de ABB, prefijo de numeración, servicios activos
+// (JurisdictionService) y las tarifas/plazos locales que hasta ahora vivían
+// en el singleton global Parameter — ver ParameterService.getParameterForJurisdiction.
+model Jurisdiction {
+  id String @id @default(cuid())
+
+  islandCode       String @unique // "BON" | "CUR" | "ARU" (dato, cargado por seed/admin)
+  islandName       String
+  jurisdictionName String
+  countryCode      String
+
+  timezone String
+
+  // Configuración de ABB (impuesto) de esta jurisdicción.
+  abbRate Float @default(0)
+
+  // Prefijo de numeración permanente (CFSBP-<prefix>-000001). Normalmente
+  // igual a islandCode, pero queda separado por si CFSB pide otro código.
+  numberingPrefix String
+
+  isActive     Boolean @default(false)
+  rolloutOrder Int     @default(0)
+
+  // Tarifas y plazos locales — mismo dominio que el histórico Parameter
+  // global, ahora variable por jurisdicción.
+  collectionFeeRate          Float  @default(0)
+  collectionFeeMinimumAmount Float  @default(0)
+  companyAanmaningTermDays   Int    @default(0)
+  consumerAanmaningTermDays  Int    @default(0)
+  companySommatieTermDays    Int    @default(0)
+  consumerSommatieTermDays   Int    @default(0)
+  companyAanmaningPenalty    Float  @default(0)
+  naturalAanmaningPenalty    Float  @default(0)
+  companySommatiePenalty     Float  @default(0)
+  naturalSommatiePenalty     Float  @default(0)
+  companyReactionLimitDays   Int    @default(0)
+  companyNoReactionPenalty   Float  @default(0)
+  naturalNoReactionPenalty   Float  @default(0)
+  companyPaymentAgreementFee Float  @default(0)
+  naturalPaymentAgreementFee Float  @default(0)
+  blokCheckPricing           Float  @default(30)
+  digitalFileCosts           Float  @default(0)
+  extraAdministrativeCosts   Float  @default(0)
+  reportFinancialPricing     Float  @default(0)
+  currencyCode               String @default("USD")
+  bankName                   String @default("")
+  bankAccount                String @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenants   Tenant[]
+  persons   Person[]
+  services  JurisdictionService[]
+  sequences PersonIdentitySequence[]
+  settings  Setting[]
+
+  @@map("jurisdiction")
+}
+
+// Qué servicios CFSB (FAR/AOP/BLC/BLK/COP/GOP) están habilitados en cada
+// jurisdicción — el rollout no tiene por qué activar los seis servicios al
+// mismo tiempo en una isla nueva.
+model JurisdictionService {
+  id             String       @id @default(cuid())
+  jurisdictionId String
+  jurisdiction   Jurisdiction @relation(fields: [jurisdictionId], references: [id])
+  service        ServiceType
+  isActive       Boolean      @default(false)
+
+  @@unique([jurisdictionId, service])
+  @@map("jurisdiction_service")
 }
 
 model Parameter {
@@ -1083,10 +1258,19 @@ model SettingCategory {
   @@map("setting_categories")
 }
 
+// Configuración editable por el Superadministrador sin tocar código (punto
+// 14 del análisis CFSB): reemplaza al singleton global Parameter. Jerarquía
+// de resolución (ver SettingService.resolveValue): override de tenant >
+// valor por jurisdicción/isla > valor global. jurisdictionId es lo que
+// permite tarifas/plazos/ABB/notificaciones/frecuencia de recordatorios
+// distintos por isla sin ningún cambio de código, solo datos.
 model Setting {
   id String @id @default(cuid())
 
   tenantId String?
+
+  jurisdictionId String?
+  jurisdiction   Jurisdiction? @relation(fields: [jurisdictionId], references: [id])
 
   categoryId String
   category   SettingCategory @relation(fields: [categoryId], references: [id])
@@ -1100,8 +1284,9 @@ model Setting {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([tenantId, key])
+  @@unique([tenantId, jurisdictionId, key])
   @@index([tenantId])
+  @@index([jurisdictionId])
   @@index([categoryId])
   @@map("settings")
 }
@@ -1186,7 +1371,7 @@ model VerdictInterestDetails {
 }
 
 model VerdictEmbargo {
-  id              String   @id @default(uuid())
+  id              String        @id @default(uuid())
   verdict_id      String
   company_name    String
   company_phone   String
@@ -1196,11 +1381,18 @@ model VerdictEmbargo {
   embargo_date    DateTime
   embargo_amount  Float
   total_amount    Float
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
-  verdict         Verdict  @relation(fields: [verdict_id], references: [id])
+  status          EmbargoStatus @default(IN_PROGRESS)
+  completed_at    DateTime?
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+  verdict         Verdict       @relation(fields: [verdict_id], references: [id])
 
   @@map("verdict_embargo")
+}
+
+enum EmbargoStatus {
+  IN_PROGRESS
+  COMPLETED
 }
 
 model VerdictBailiffServices {
@@ -1540,6 +1732,15 @@ enum NotificationType {
   LEGAL_PROCESS_TRANSFER_REQUEST
   LEGAL_PROCESS_ACCEPTED
   LEGAL_PROCESS_REJECTED
+  CASE_TRANSFER_ACCEPTANCE_REMINDER
+  CASE_TRANSFER_ACCEPTANCE_DEADLINE_REACHED
+  CASE_TRANSFER_ACCEPTANCE_EXTENDED
+  FAR_REGISTERED
+  CASE_TRANSFER_POWER_OF_ATTORNEY_CHANGED
+  GOP_PAYMENT_AWAITING_CONFIRMATION
+  GOP_PAYMENT_CONFIRMED
+  GOP_PAYMENT_DISPUTED
+  GOP_PAYMENT_CORRECTED
   GOP_ACTIVATED
   GOP_INACTIVE
   GOP_REACTIVATED
@@ -1746,6 +1947,7 @@ model Payment {
 
   case_transfer                    CaseTransfer?
   financial_agreement_registration FinancialAgreement?
+  gop_payment_confirmation         GopPaymentConfirmation?
 
   @@map("payment")
 }
@@ -1992,6 +2194,10 @@ enum InvitationRole {
 
 enum BlockadeReason {
   UNPAID_PAYMENT
+  // Ruta directa (AT-BLK-directo): el trayecto externo (fuera de AOP/GOP)
+  // ya se completó correctamente y se declara el bloqueo directamente.
+  EXTERNAL_PROCEDURE_COMPLETED
+  OTHER
 }
 
 enum BankAccountType {

@@ -9,6 +9,9 @@ import {
   requireStaffOrAssignedBailiff,
   requireStaffOrAssignedBailiffForVerdict,
   requireStaffOrAssignedBailiffForDocuments,
+  requireAuthorizedToDecideGopAgreement,
+  requireAuthorizedToConfirmGopPayment,
+  requireAuthorizedToCorrectGopPayment,
 } from "@/modules/legal-process/services/legal-process-guards";
 import { requireAssignedBailiffForTransfer } from "@/modules/legal-process/services/case-transfer-guards";
 import { toDocumentRow } from "@/modules/legal-process/utils/legal-process-document";
@@ -75,6 +78,18 @@ export const registerGopExecutionMeasure = async (data: RegisterExecutionMeasure
   const parsed = RegisterExecutionMeasureSchema.parse(data);
   const { session } = await requireStaffOrAssignedBailiffForVerdict(parsed.verdictId);
   return LegalProcessService.registerExecutionMeasure(parsed, session.user.id);
+};
+
+export const getGopExecutionMeasures = async (legalProcessId: string) => {
+  await requireStaffOrAssignedBailiff(legalProcessId);
+  return LegalProcessService.getExecutionMeasures(legalProcessId);
+};
+
+// Requisito para poder cerrar el GOP: toda actuación oficial debe quedar
+// explícitamente marcada como concluida.
+export const completeGopExecutionMeasure = async (legalProcessId: string, embargoId: string) => {
+  const { session } = await requireStaffOrAssignedBailiff(legalProcessId);
+  return LegalProcessService.completeExecutionMeasure(embargoId, session.user.id);
 };
 
 export const registerGopInterestUpdate = async (data: RegisterInterestUpdateInput) => {
@@ -173,9 +188,10 @@ export const deleteLegalProcessDocument = async (documentId: string) => {
   return LegalProcessService.deleteDocument(documentId);
 };
 
-// El agente judicial registra el acuerdo de pago negociado con el deudor;
-// queda PENDING hasta que el participante lo aprueba o rechaza (mismo flujo
-// que AgreementService.update ya usa en /agreements).
+// El alguacil (o el participante) registra una PROPUESTA de acuerdo de
+// pago; queda PENDING hasta que el participante decide (acepta, modifica o
+// rechaza) — salvo que exista power of attorney otorgado, ver
+// decideGopAgreement.
 export const createGopAgreement = async (
   legalProcessId: string,
   data: {
@@ -187,31 +203,123 @@ export const createGopAgreement = async (
     comment?: string;
   },
 ) => {
-  const { legalProcess } = await requireStaffOrAssignedBailiff(legalProcessId);
+  const { session, legalProcess } = await requireStaffOrAssignedBailiff(legalProcessId);
 
-  return AgreementService.create(legalProcess.debtClaim.tenantId, {
-    debtClaim_id: legalProcess.debtClaimId,
-    legalProcessId,
-    debtor_id: legalProcess.debtClaim.debtorId,
-    total_amount: data.total_amount,
-    installment_amount: data.installment_amount,
-    installments_count: data.installments_count,
-    start_date: data.start_date,
-    end_date: data.end_date,
-    comment: data.comment,
-    status: AgreementStatus.PENDING,
-  });
+  return AgreementService.create(
+    legalProcess.debtClaim.tenantId,
+    {
+      debtClaim_id: legalProcess.debtClaimId,
+      legalProcessId,
+      debtor_id: legalProcess.debtClaim.debtorId,
+      total_amount: data.total_amount,
+      installment_amount: data.installment_amount,
+      installments_count: data.installments_count,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      comment: data.comment,
+      status: AgreementStatus.PENDING,
+    },
+    undefined,
+    session.user.id,
+  );
 };
 
 export const getGopAgreements = async (legalProcessId: string) => {
   return AgreementService.getAllByLegalProcessId(legalProcessId);
 };
 
+// El participante siempre puede decidir (aceptar, modificar o rechazar);
+// el alguacil asignado solo si el CaseTransfer de origen tiene power of
+// attorney otorgado (ver requireAuthorizedToDecideGopAgreement).
+export const decideGopAgreement = async (
+  legalProcessId: string,
+  agreementId: string,
+  decision: {
+    status: "ACCEPTED" | "REJECTED";
+    rejection_reason?: string;
+    total_amount?: number;
+    installment_amount?: number;
+    installments_count?: number;
+    start_date?: Date;
+    end_date?: Date;
+    comment?: string;
+  },
+) => {
+  const { session, isTenantStaff, isAssignedProfessional, hasPowerOfAttorney } =
+    await requireAuthorizedToDecideGopAgreement(legalProcessId);
+
+  return AgreementService.decide(agreementId, decision, {
+    userId: session.user.id,
+    isTenantStaff,
+    isAssignedProfessional,
+    hasPowerOfAttorney,
+  });
+};
+
 export const getGopPrincipalObligation = async (debtClaimId: string) => {
   return LegalProcessService.getPrincipalObligation(debtClaimId);
 };
 
-export const registerGopPayment = async (legalProcessId: string, amount: number) => {
+// Quien recibió el pago (alguacil o participante) lo registra + sube el
+// comprobante. No se aplica al saldo hasta que la otra parte confirme.
+export const registerGopPayment = async (
+  legalProcessId: string,
+  data: { amount: number; receivedBy: "BAILIFF" | "PARTICIPANT" },
+  file: File,
+) => {
   const { session } = await requireStaffOrAssignedBailiff(legalProcessId);
-  return LegalProcessService.registerPayment(legalProcessId, amount, session.user.id);
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  return LegalProcessService.registerGopPayment(
+    legalProcessId,
+    {
+      amount: data.amount,
+      receivedBy: data.receivedBy,
+      fileName: file.name,
+      mimeType: file.type,
+      size: file.size,
+      buffer,
+    },
+    session.user.id,
+  );
+};
+
+export const getGopPaymentConfirmations = async (legalProcessId: string) => {
+  return LegalProcessService.getPaymentConfirmations(legalProcessId);
+};
+
+// La contraparte de quien recibió el pago lo confirma — recién ahí se
+// aplica al saldo del expediente.
+export const confirmGopPayment = async (confirmationId: string) => {
+  const { session } = await requireAuthorizedToConfirmGopPayment(confirmationId);
+  return LegalProcessService.confirmGopPayment(confirmationId, session.user.id);
+};
+
+export const disputeGopPayment = async (confirmationId: string, reason: string) => {
+  const { session } = await requireAuthorizedToConfirmGopPayment(confirmationId);
+  return LegalProcessService.disputeGopPayment(confirmationId, reason, session.user.id);
+};
+
+// Solo quien registró originalmente el pago puede corregirlo tras una
+// disputa; opcionalmente sube un comprobante nuevo.
+export const correctGopPayment = async (
+  confirmationId: string,
+  data: { amount?: number; note?: string },
+  file?: File,
+) => {
+  const { session } = await requireAuthorizedToCorrectGopPayment(confirmationId);
+  const fileData = file
+    ? {
+        fileName: file.name,
+        mimeType: file.type,
+        size: file.size,
+        buffer: Buffer.from(await file.arrayBuffer()),
+      }
+    : {};
+
+  return LegalProcessService.correctGopPayment(
+    confirmationId,
+    { amount: data.amount, note: data.note, ...fileData },
+    session.user.id,
+  );
 };

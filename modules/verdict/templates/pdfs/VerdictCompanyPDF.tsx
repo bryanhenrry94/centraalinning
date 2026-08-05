@@ -239,7 +239,7 @@ const VerdictCompanyPDF: React.FC<VerdictCompanyPDFProps> = ({
           samenwerking. Voor vragen kunt u contact opnemen met de deurwaarder
           via{" "}
           <Text style={styles.link}>
-            <Link href="www.centraalinning.com">www.centraalinning.com</Link>
+            <Link href="www.centraalinning.com">CFSB</Link>
           </Text>
         </Text>
       </View>
@@ -328,7 +328,7 @@ const VerdictCompanyPDF: React.FC<VerdictCompanyPDFProps> = ({
           <View style={styles.tableRow}>
             <Text style={styles.tableCell}>Ten name van</Text>
             <Text style={styles.tableCellDescription}>
-              : Centraal Inning (CI)
+              : CFSB
             </Text>
           </View>
 

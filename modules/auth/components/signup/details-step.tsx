@@ -3,7 +3,6 @@
 import { notifyWarning } from "@/shared/ui/notifications";
 import { SignUpInput } from "@/modules/auth/services/signup.type";
 import { SignUpSchema } from "@/modules/auth/services/signup.validators";
-import { CountryList } from "@/shared/constants/country";
 import { STEP_HEADER_GAP, STEP_SECTION_GAP } from "./layout.constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -41,6 +40,9 @@ const ACCENT = "#F7931E";
 
 interface DetailsStepProps {
   country: string;
+  // Islas activas — vienen de Jurisdiction (dato), nunca de un array
+  // hardcodeado en el código (punto 13 del análisis CFSB).
+  jurisdictions: { islandCode: string; islandName: string }[];
   planId: string;
   planName: string;
   billingCycle: "MONTHLY" | "YEARLY";
@@ -50,6 +52,7 @@ interface DetailsStepProps {
 
 export const DetailsStep = ({
   country,
+  jurisdictions,
   planId,
   planName,
   billingCycle,
@@ -122,7 +125,7 @@ export const DetailsStep = ({
   };
 
   const islandLabel =
-    CountryList.find((item) => item.value === country)?.label || country;
+    jurisdictions.find((item) => item.islandCode === country)?.islandName || country;
 
   return (
     <Box

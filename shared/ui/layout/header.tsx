@@ -202,7 +202,7 @@ export default function Header() {
                   },
                 }}
               >
-                CI Systeem
+                CFSB
               </Typography>
             </Link>
           </Box>
@@ -427,7 +427,7 @@ export default function Header() {
             }}
           >
             <Typography variant="h6" fontWeight={700}>
-              CI Systeem
+              CFSB
             </Typography>
           </Box>
 

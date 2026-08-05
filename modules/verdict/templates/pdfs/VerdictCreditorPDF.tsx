@@ -191,7 +191,7 @@ const VerdictCreditorPDF: React.FC<VerdictCreditorPDFProps> = ({
             <Text style={styles.bold}>
               ({reference_number}) {creditor_name} vs {debtorName}{" "}
             </Text>
-            via het Centraal Incassoplatform (CI), factuurnummer CI{" "}
+            via CFSB, factuurnummer CFSB{" "}
             {invoice_number}, ten bedrage van USD {total_amount}. Deze factuur
             zal rechtstreeks worden verrekend met het bedrag dat u te ontvangen
             heeft via de debiteur.
@@ -201,8 +201,7 @@ const VerdictCreditorPDF: React.FC<VerdictCreditorPDFProps> = ({
         {/* Footer */}
         <View style={styles.footer}>
           <Text>
-            Dit bericht is automatisch gegenereerd door het Centraal
-            Incassoplatform (CI).
+            Dit bericht is automatisch gegenereerd door CFSB.
           </Text>
         </View>
       </Page>

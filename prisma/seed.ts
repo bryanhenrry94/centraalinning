@@ -78,6 +78,225 @@ async function seedParameter() {
   console.log("✓ Parameter seeded");
 }
 
+// Orden de implementación acordado: Bonaire (activa) → Curaçao → Aruba
+// (preparadas, isActive=false). Los nombres de isla viven acá como datos,
+// nunca como enum en el código fuente (punto 13 del análisis CFSB).
+const JURISDICTIONS = [
+  {
+    id: "jurisdiction-bon-001",
+    islandCode: "BON",
+    islandName: "Bonaire",
+    jurisdictionName: "Openbaar Lichaam Bonaire",
+    countryCode: "BQ",
+    timezone: "America/Kralendijk",
+    numberingPrefix: "BON",
+    isActive: true,
+    rolloutOrder: 1,
+    // Mismos valores que el Parameter global histórico — Bonaire es la
+    // única isla operativa hoy, así que esto no cambia su comportamiento.
+    collectionFeeRate: 15,
+    collectionFeeMinimumAmount: 40,
+    abbRate: 6,
+    companyAanmaningTermDays: 5,
+    consumerAanmaningTermDays: 14,
+    companySommatieTermDays: 7,
+    consumerSommatieTermDays: 14,
+    companyAanmaningPenalty: 25,
+    naturalAanmaningPenalty: 15,
+    companySommatiePenalty: 50,
+    naturalSommatiePenalty: 25,
+    companyReactionLimitDays: 5,
+    companyNoReactionPenalty: 100,
+    naturalNoReactionPenalty: 50,
+    companyPaymentAgreementFee: 50,
+    naturalPaymentAgreementFee: 25,
+    blokCheckPricing: 30,
+    digitalFileCosts: 10,
+    extraAdministrativeCosts: 0,
+    reportFinancialPricing: 35,
+    currencyCode: "USD",
+    bankName: "MCB (Maduro & Curiel's Bank)",
+    bankAccount: "123456789",
+    services: ["FAR", "AOP", "BLC", "BLK", "COP", "GOP"] as const,
+  },
+  {
+    id: "jurisdiction-cur-001",
+    islandCode: "CUR",
+    islandName: "Curaçao",
+    jurisdictionName: "Land Curaçao",
+    countryCode: "CW",
+    timezone: "America/Curacao",
+    numberingPrefix: "CUR",
+    isActive: false,
+    rolloutOrder: 2,
+    // Placeholder — mismos valores que Bonaire hasta que CFSB confirme las
+    // tarifas reales de Curaçao; queda preparada, no activa.
+    collectionFeeRate: 15,
+    collectionFeeMinimumAmount: 40,
+    abbRate: 6,
+    companyAanmaningTermDays: 5,
+    consumerAanmaningTermDays: 14,
+    companySommatieTermDays: 7,
+    consumerSommatieTermDays: 14,
+    companyAanmaningPenalty: 25,
+    naturalAanmaningPenalty: 15,
+    companySommatiePenalty: 50,
+    naturalSommatiePenalty: 25,
+    companyReactionLimitDays: 5,
+    companyNoReactionPenalty: 100,
+    naturalNoReactionPenalty: 50,
+    companyPaymentAgreementFee: 50,
+    naturalPaymentAgreementFee: 25,
+    blokCheckPricing: 30,
+    digitalFileCosts: 10,
+    extraAdministrativeCosts: 0,
+    reportFinancialPricing: 35,
+    currencyCode: "USD",
+    bankName: "",
+    bankAccount: "",
+    services: [] as const,
+  },
+  {
+    id: "jurisdiction-aru-001",
+    islandCode: "ARU",
+    islandName: "Aruba",
+    jurisdictionName: "Land Aruba",
+    countryCode: "AW",
+    timezone: "America/Aruba",
+    numberingPrefix: "ARU",
+    isActive: false,
+    rolloutOrder: 3,
+    // Placeholder — última en el orden de implementación acordado.
+    collectionFeeRate: 15,
+    collectionFeeMinimumAmount: 40,
+    abbRate: 6,
+    companyAanmaningTermDays: 5,
+    consumerAanmaningTermDays: 14,
+    companySommatieTermDays: 7,
+    consumerSommatieTermDays: 14,
+    companyAanmaningPenalty: 25,
+    naturalAanmaningPenalty: 15,
+    companySommatiePenalty: 50,
+    naturalSommatiePenalty: 25,
+    companyReactionLimitDays: 5,
+    companyNoReactionPenalty: 100,
+    naturalNoReactionPenalty: 50,
+    companyPaymentAgreementFee: 50,
+    naturalPaymentAgreementFee: 25,
+    blokCheckPricing: 30,
+    digitalFileCosts: 10,
+    extraAdministrativeCosts: 0,
+    reportFinancialPricing: 35,
+    currencyCode: "USD",
+    bankName: "",
+    bankAccount: "",
+    services: [] as const,
+  },
+];
+
+async function seedJurisdictions() {
+  for (const { services, ...jurisdiction } of JURISDICTIONS) {
+    await prisma.jurisdiction.upsert({
+      where: { id: jurisdiction.id },
+      update: {},
+      create: jurisdiction,
+    });
+
+    for (const service of services) {
+      await prisma.jurisdictionService.upsert({
+        where: { jurisdictionId_service: { jurisdictionId: jurisdiction.id, service } },
+        update: {},
+        create: { jurisdictionId: jurisdiction.id, service, isActive: true },
+      });
+    }
+  }
+
+  console.log("✓ Jurisdictions seeded (Bonaire activa; Curaçao/Aruba preparadas)");
+}
+
+// Categorías nuevas para la configuración por isla (punto 14 del análisis
+// CFSB — reemplaza al singleton global Parameter). "Notificaties" reusa la
+// categoría general ya sembrada; acá solo se agregan las filas
+// específicas por jurisdicción bajo esa categoría existente.
+const JURISDICTION_SETTING_CATEGORIES = [
+  { id: "cat-rates", key: "rates", name: "Tarieven", description: "Tarieven per eiland", icon: "payments", sortOrder: 10 },
+  { id: "cat-deadlines", key: "deadlines", name: "Termijnen", description: "Termijnen per eiland", icon: "schedule", sortOrder: 11 },
+  { id: "cat-abb", key: "abb", name: "ABB", description: "ABB-tarief per eiland", icon: "percent", sortOrder: 12 },
+  { id: "cat-percentages", key: "percentages", name: "Percentages", description: "Percentages en boetes per eiland", icon: "percent", sortOrder: 13 },
+  { id: "cat-reminder-frequency", key: "reminder_frequency", name: "Herinneringsfrequentie", description: "Wanneer automatische herinneringen verzonden worden", icon: "alarm", sortOrder: 14 },
+];
+
+async function seedJurisdictionSettings() {
+  for (const cat of JURISDICTION_SETTING_CATEGORIES) {
+    await prisma.settingCategory.upsert({
+      where: { key: cat.key },
+      update: {},
+      create: cat,
+    });
+  }
+
+  for (const jurisdiction of JURISDICTIONS) {
+    const rows: { key: string; name: string; categoryId: string; value: string }[] = [
+      // Tarieven
+      { key: "collection_fee_minimum_amount", name: "Minimum incassokosten", categoryId: "cat-rates", value: String(jurisdiction.collectionFeeMinimumAmount) },
+      { key: "blok_check_pricing", name: "Blok-Check prijs", categoryId: "cat-rates", value: String(jurisdiction.blokCheckPricing) },
+      { key: "report_financial_pricing", name: "Financieel verslag prijs", categoryId: "cat-rates", value: String(jurisdiction.reportFinancialPricing) },
+      { key: "digital_file_costs", name: "Digitaal dossierkosten", categoryId: "cat-rates", value: String(jurisdiction.digitalFileCosts) },
+      { key: "extra_administrative_costs", name: "Extra administratiekosten", categoryId: "cat-rates", value: String(jurisdiction.extraAdministrativeCosts) },
+      { key: "company_payment_agreement_fee", name: "Betalingsregeling fee (bedrijf)", categoryId: "cat-rates", value: String(jurisdiction.companyPaymentAgreementFee) },
+      { key: "natural_payment_agreement_fee", name: "Betalingsregeling fee (particulier)", categoryId: "cat-rates", value: String(jurisdiction.naturalPaymentAgreementFee) },
+      // Termijnen
+      { key: "company_aanmaning_term_days", name: "Aanmaningstermijn (bedrijf)", categoryId: "cat-deadlines", value: String(jurisdiction.companyAanmaningTermDays) },
+      { key: "consumer_aanmaning_term_days", name: "Aanmaningstermijn (particulier)", categoryId: "cat-deadlines", value: String(jurisdiction.consumerAanmaningTermDays) },
+      { key: "company_sommatie_term_days", name: "Sommatietermijn (bedrijf)", categoryId: "cat-deadlines", value: String(jurisdiction.companySommatieTermDays) },
+      { key: "consumer_sommatie_term_days", name: "Sommatietermijn (particulier)", categoryId: "cat-deadlines", value: String(jurisdiction.consumerSommatieTermDays) },
+      { key: "company_reaction_limit_days", name: "Reactietermijn (bedrijf)", categoryId: "cat-deadlines", value: String(jurisdiction.companyReactionLimitDays) },
+      // ABB
+      { key: "abb_rate", name: "ABB-tarief", categoryId: "cat-abb", value: String(jurisdiction.abbRate) },
+      // Percentages
+      { key: "collection_fee_rate", name: "Incassotarief (%)", categoryId: "cat-percentages", value: String(jurisdiction.collectionFeeRate) },
+      { key: "company_aanmaning_penalty", name: "Aanmaningsboete (bedrijf)", categoryId: "cat-percentages", value: String(jurisdiction.companyAanmaningPenalty) },
+      { key: "natural_aanmaning_penalty", name: "Aanmaningsboete (particulier)", categoryId: "cat-percentages", value: String(jurisdiction.naturalAanmaningPenalty) },
+      { key: "company_sommatie_penalty", name: "Sommatieboete (bedrijf)", categoryId: "cat-percentages", value: String(jurisdiction.companySommatiePenalty) },
+      { key: "natural_sommatie_penalty", name: "Sommatieboete (particulier)", categoryId: "cat-percentages", value: String(jurisdiction.naturalSommatiePenalty) },
+      { key: "company_no_reaction_penalty", name: "Boete geen reactie (bedrijf)", categoryId: "cat-percentages", value: String(jurisdiction.companyNoReactionPenalty) },
+      { key: "natural_no_reaction_penalty", name: "Boete geen reactie (particulier)", categoryId: "cat-percentages", value: String(jurisdiction.naturalNoReactionPenalty) },
+      // Herinneringsfrequentie — nuevas claves, antes constantes hardcodeadas
+      // en lib/jobs/check_gop_deadlines.ts y check_case_transfer_deadlines.ts.
+      { key: "gop_prescription_reminder_days", name: "GOP verjaringsherinnering (dagen vooraf)", categoryId: "cat-reminder-frequency", value: "30" },
+      { key: "gop_review_reminder_days", name: "GOP revisieherinnering (dagen vooraf)", categoryId: "cat-reminder-frequency", value: "7" },
+      { key: "case_transfer_acceptance_reminder_days_before", name: "Overdracht acceptatieherinnering (dagen vooraf)", categoryId: "cat-reminder-frequency", value: "2" },
+      // Notificaties — reusa la categoría general ya sembrada, con filas
+      // propias por isla.
+      { key: "notifications_email_enabled", name: "E-mail meldingen actief", categoryId: "cat-notifications", value: "true" },
+      { key: "notifications_sms_enabled", name: "SMS meldingen actief", categoryId: "cat-notifications", value: "false" },
+      { key: "notifications_whatsapp_enabled", name: "WhatsApp meldingen actief", categoryId: "cat-notifications", value: "false" },
+    ];
+
+    for (const row of rows) {
+      // Prisma no acepta `null` dentro de una where compuesta única
+      // (tenantId_jurisdictionId_key) en esta versión — se resuelve con
+      // findFirst + create/update en vez de upsert.
+      const existing = await prisma.setting.findFirst({
+        where: { tenantId: null, jurisdictionId: jurisdiction.id, key: row.key },
+      });
+      if (existing) continue;
+
+      await prisma.setting.create({
+        data: {
+          jurisdictionId: jurisdiction.id,
+          categoryId: row.categoryId,
+          name: row.name,
+          key: row.key,
+          value: row.value,
+        },
+      });
+    }
+  }
+
+  console.log("✓ Jurisdiction settings seeded (tarieven/termijnen/ABB/percentages/herinneringen per eiland)");
+}
+
 const FEATURE_FAR_REGISTER = "Financiële afspraken registreren";
 const FEATURE_BLC_EXECUTE = "Blok-Check uitvoeren";
 const FEATURE_AOP_START = "Administratieve opvolging starten";
@@ -167,12 +386,15 @@ async function seedAdminTenant() {
     update: {},
     create: {
       id: ADMIN_TENANT_ID,
-      name: "CFSB - Centraal Inning",
+      name: "CFSB",
       code: "CFSB",
       subdomain: "admin",
       contact_email: "bryanhenrry94@gmail.com",
       country_code: "BQ", // Bonaire
-      legal_name: "CFSB N.V.",
+      // Entidad jurídica real (nomenclatura acordada) — "CFSB" es la marca
+      // de toda la plataforma, no la razón social.
+      legal_name: "Centraal Inning Onderneming B.V.",
+      jurisdictionId: "jurisdiction-bon-001",
       is_active: true,
       terms_accepted: true,
     },
@@ -336,7 +558,7 @@ async function seedSettingCategories() {
       categoryId: "cat-general",
       name: "Applicatienaam",
       key: "app_name",
-      value: "Centraal Inning",
+      value: "CFSB",
     },
     {
       id: "setting-support-email",
@@ -358,7 +580,7 @@ async function seedSettingCategories() {
       categoryId: "cat-notifications",
       name: "Naam afzender",
       key: "email_sender_name",
-      value: "CFSB – Centraal Inning",
+      value: "CFSB",
     },
     // Facturering
     {
@@ -406,12 +628,14 @@ async function seedSettingCategories() {
 async function main() {
   console.log("🌱 Seeding database…\n");
 
+  await seedJurisdictions();
   await seedAdminTenant();
   await seedAdminUser();
   await seedParameter();
   await seedPlans();
   await seedInterestTypes();
   await seedSettingCategories();
+  await seedJurisdictionSettings();
 
   console.log("\n✅ Seed completo.");
 }

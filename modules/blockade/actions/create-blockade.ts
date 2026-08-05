@@ -1,4 +1,6 @@
 "use server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { CreateBlockadeInput } from "@/modules/blockade/services/blockade.validators";
 import { BlockadeService } from "@/modules/blockade/services/blockade.service";
 import { sendMailBlockade } from "@/modules/blockade/services/blockade-mail.service";
@@ -14,7 +16,8 @@ export async function createBlockadeAction(
   tenantId: string,
 ): Promise<CreateBlockadeResponse> {
   try {
-    const result = await BlockadeService.createFull(input, tenantId);
+    const session = await getServerSession(authOptions);
+    const result = await BlockadeService.createFull(input, tenantId, session?.user?.id);
 
     if (!result.success) {
       return result;

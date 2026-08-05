@@ -384,6 +384,40 @@ export class LegalProcessService {
     return measure;
   };
 
+  // Requisito para poder cerrar el GOP: toda actuación oficial registrada
+  // debe quedar explícitamente marcada como concluida.
+  static getExecutionMeasures = async (legalProcessId: string) => {
+    return prisma.verdictEmbargo.findMany({
+      where: { verdict: { legal_process_id: legalProcessId } },
+      include: { verdict: { select: { registration_number: true } } },
+      orderBy: { created_at: "desc" },
+    });
+  };
+
+  static completeExecutionMeasure = async (embargoId: string, actorUserId?: string) => {
+    const measure = await prisma.verdictEmbargo.findUnique({
+      where: { id: embargoId },
+      include: { verdict: { include: { legal_process: true } } },
+    });
+    if (!measure) throw new Error("Executiemaatregel niet gevonden.");
+    if (measure.status === "COMPLETED") return measure;
+
+    const updated = await prisma.verdictEmbargo.update({
+      where: { id: embargoId },
+      data: { status: "COMPLETED", completed_at: new Date() },
+    });
+
+    await ClaimTimelineService.logEvent(
+      measure.verdict.legal_process.debtClaimId,
+      "SERVICE_COMPLETED",
+      `Executiemaatregel afgerond: ${measure.embargo_type}`,
+      { verdictId: measure.verdict_id, embargoId },
+      actorUserId,
+    );
+
+    return updated;
+  };
+
   static registerInterestUpdate = async (
     data: RegisterInterestUpdateInput,
     actorUserId?: string,
@@ -500,7 +534,9 @@ export class LegalProcessService {
       params.buffer,
     );
 
-    const parameter = await ParameterService.getParameter();
+    // ABB por isla/jurisdicción del tenant (punto 13 del análisis CFSB) —
+    // cae al Parameter global si el tenant no tiene jurisdiction asignada.
+    const parameter = await ParameterService.getParameterForTenant(tenantId);
     const fee = Math.round(params.totalAmount * GOP_FEE_RATE * 100) / 100;
     const tax_rate = parameter?.abb_rate ?? 0;
     const tax_amount = Math.round(((fee * tax_rate) / 100) * 100) / 100;
@@ -773,10 +809,19 @@ export class LegalProcessService {
   // Cierre
   // ---------------------------------------------------------------------
 
-  static close = async (legalProcessId: string, actorUserId?: string) => {
+  // Checklist completo antes de permitir el cierre manual del GOP. Cada
+  // ítem corresponde a una validación de negocio explícita — no alcanza
+  // con el gate de la factura CFSB del alguacil (gopCompletedGateAt), que
+  // solo cubre 2 de los 8 puntos requeridos.
+  private static assertCloseable = async (legalProcessId: string) => {
     const legalProcess = await prisma.legalProcess.findUnique({
       where: { id: legalProcessId },
-      include: { debtClaim: { include: { debtor: true } }, bailiff: true },
+      include: {
+        debtClaim: { include: { debtor: true } },
+        bailiff: true,
+        agreements: true,
+        verdicts: { include: { bailiff_services: true, verdict_embargo: true } },
+      },
     });
     if (!legalProcess) throw new Error("Expediente GOP no encontrado");
     if (
@@ -786,11 +831,75 @@ export class LegalProcessService {
     ) {
       throw new Error("Solo un expediente GOP Activo o Inactivo puede cerrarse");
     }
+
+    // 1) Factura del alguacil registrada + 2) factura CFSB pagada — ambos
+    // cubiertos por gopCompletedGateAt (ver submitBailiffFeeInvoice /
+    // processBailiffFeePaymentConfirmed).
     if (!legalProcess.gopCompletedGateAt) {
       throw new Error(
-        "Debe finalizar su trabajo (factura de costos y pago de la comisión CFSB) antes de cerrar el GOP.",
+        "Debe registrar la factura del alguacil y pagar la comisión CFSB (5%) antes de cerrar el GOP.",
       );
     }
+
+    // 3) Cobro total de la deuda confirmado por el participante.
+    const obligation = await prisma.debtClaimObligation.findFirst({
+      where: { debtClaimId: legalProcess.debtClaimId, type: "PRINCIPAL_DEBT", beneficiary: "PARTICIPANT" },
+      orderBy: { createdAt: "desc" },
+    });
+    if (obligation && Number(obligation.balanceAmount) > 0) {
+      throw new Error(
+        `Nog niet volledig betaald: openstaand saldo van ${Number(obligation.balanceAmount)}.`,
+      );
+    }
+
+    // 4) Todos los pagos confirmados + 5) ningún pago en disputa.
+    const unresolvedPayments = await prisma.gopPaymentConfirmation.findMany({
+      where: { legalProcessId, status: { not: "CONFIRMED" } },
+    });
+    const disputed = unresolvedPayments.filter((p) => p.status === "DISPUTED");
+    if (disputed.length > 0) {
+      throw new Error(
+        `Er ${disputed.length === 1 ? "is" : "zijn"} nog ${disputed.length} betwiste betaling(en) die eerst opgelost moeten worden.`,
+      );
+    }
+    if (unresolvedPayments.length > 0) {
+      throw new Error(
+        `Er ${unresolvedPayments.length === 1 ? "is" : "zijn"} nog ${unresolvedPayments.length} betaling(en) die niet bevestigd zijn door de andere partij.`,
+      );
+    }
+
+    // 6) Todos los costos del alguacil finalizados (al menos facturados,
+    // ninguno todavía en borrador).
+    const pendingCosts = legalProcess.verdicts.flatMap((v) =>
+      v.bailiff_services.filter((c) => c.status === "PENDING"),
+    );
+    if (pendingCosts.length > 0) {
+      throw new Error("Er zijn nog niet-gefactureerde deurwaarderskosten voor dit dossier.");
+    }
+
+    // 7) Todas las actuaciones oficiales (medidas de ejecución) concluidas.
+    const pendingMeasures = legalProcess.verdicts.flatMap((v) =>
+      v.verdict_embargo.filter((e) => e.status === "IN_PROGRESS"),
+    );
+    if (pendingMeasures.length > 0) {
+      throw new Error(
+        `Er ${pendingMeasures.length === 1 ? "is" : "zijn"} nog ${pendingMeasures.length} executiemaatregel(en) niet afgerond.`,
+      );
+    }
+
+    // 8) Ningún acuerdo de pago pendiente.
+    const pendingAgreements = legalProcess.agreements.filter((a) =>
+      ["PENDING", "IN_NEGOTIATION", "COUNTEROFFER"].includes(a.status),
+    );
+    if (pendingAgreements.length > 0) {
+      throw new Error("Er is nog een betalingsregeling in behandeling voor dit dossier.");
+    }
+
+    return legalProcess;
+  };
+
+  static close = async (legalProcessId: string, actorUserId?: string) => {
+    const legalProcess = await this.assertCloseable(legalProcessId);
 
     const updated = await prisma.legalProcess.update({
       where: { id: legalProcess.id },
@@ -802,9 +911,11 @@ export class LegalProcessService {
       data: { status: "COMPLETED", finishedAt: new Date(), finishedById: actorUserId },
     });
 
-    await BlockadeService.suspendActiveForDebtor(
+    await BlockadeService.releaseForSettledDebtClaim(
+      legalProcess.debtClaimId,
       legalProcess.debtClaim.debtorId,
       legalProcess.debtClaim.tenantId,
+      actorUserId,
     );
 
     await ClaimTimelineService.logEvent(
@@ -864,7 +975,15 @@ export class LegalProcessService {
     });
     if (pendingObligations > 0) return null;
 
-    return this.close(legalProcess.id, actorUserId);
+    // El cierre automático es "mejor esfuerzo": si la deuda quedó saldada
+    // pero todavía falta algún otro requisito del checklist (factura del
+    // alguacil, actuación oficial sin concluir, etc.), no se fuerza el
+    // cierre — el alguacil lo cierra manualmente cuando esté todo listo.
+    try {
+      return await this.close(legalProcess.id, actorUserId);
+    } catch {
+      return null;
+    }
   };
 
   // ---------------------------------------------------------------------
@@ -898,7 +1017,8 @@ export class LegalProcessService {
       const tenant = await prisma.tenant.findUnique({ where: { id: params.tenantId } });
       if (!tenant) throw new Error("Tenant not found");
 
-      const parameter = await ParameterService.getParameter();
+      // ABB por isla/jurisdicción del tenant (punto 13 del análisis CFSB).
+      const parameter = await ParameterService.getParameterForTenant(params.tenantId);
       const fee = Math.round(params.amountBase * GOP_FEE_RATE * 100) / 100;
       const tax_rate = parameter?.abb_rate ?? 0;
       const tax_amount = Math.round(((fee * tax_rate) / 100) * 100) / 100;
@@ -1059,17 +1179,35 @@ export class LegalProcessService {
     };
   };
 
-  // El alguacil es un actor de confianza dentro del proceso judicial: el
-  // pago se aplica de inmediato al saldo, sin el paso de verificación
-  // posterior que sí usa el comprobante de transferencia del deudor.
-  static registerPayment = async (
+  // ---------------------------------------------------------------------
+  // Confirmación centralizada de pagos (AT-009 revisado): el deudor puede
+  // pagar al alguacil o directamente al participante. Quien recibe
+  // registra + sube comprobante (REGISTERED → AWAITING_CONFIRMATION); la
+  // OTRA parte confirma (CONFIRMED, recién ahí se aplica al saldo) o
+  // disputa (DISPUTED); quien registró puede entonces corregir (CORRECTED)
+  // y vuelve a quedar a la espera de confirmación.
+  // ---------------------------------------------------------------------
+
+  private static paymentConfirmationInclude = {
+    payment: true,
+    legalProcess: { include: { debtClaim: true, bailiff: true } },
+  } satisfies Prisma.GopPaymentConfirmationInclude;
+
+  static registerGopPayment = async (
     legalProcessId: string,
-    amount: number,
+    data: {
+      amount: number;
+      receivedBy: "BAILIFF" | "PARTICIPANT";
+      fileName: string;
+      mimeType: string;
+      size: number;
+      buffer: Buffer;
+    },
     actorUserId?: string,
   ) => {
     const legalProcess = await prisma.legalProcess.findUnique({
       where: { id: legalProcessId },
-      include: { debtClaim: true },
+      include: { debtClaim: true, bailiff: true },
     });
     if (!legalProcess) throw new Error("Expediente GOP no encontrado");
 
@@ -1078,29 +1216,281 @@ export class LegalProcessService {
       Number(legalProcess.debtClaim.principalAmount),
     );
 
+    const tenantId = legalProcess.debtClaim.tenantId;
+    const sanitizedName = `${crypto.randomUUID()}-${data.fileName}`.replace(/\s+/g, "-");
+    const folder = `${tenantId}/legal-processes/${legalProcessId}/payment-proofs`;
+    const storageKey = await StorageService.uploadFile(folder, sanitizedName, data.mimeType, data.buffer);
+
     const payment = await prisma.payment.create({
       data: {
-        tenant_id: legalProcess.debtClaim.tenantId,
+        tenant_id: tenantId,
         obligation_id: obligation.id,
-        total_amount: amount,
-        status: "paid",
-        paid_at: new Date(),
+        total_amount: data.amount,
+        // Solo se marca "paid" cuando la otra parte confirma — ver
+        // confirmGopPayment. Hasta entonces no se aplica al saldo.
+        status: "pending",
         method: "TRANSFER",
         payment_type: PaymentType.DEBT_PAYMENT,
         reference_number: `gop_payment_${legalProcess.id}_${Date.now()}`,
       },
     });
 
-    const updatedObligation = await ObligationService.applyPayment(payment.id);
+    const confirmation = await prisma.gopPaymentConfirmation.create({
+      data: {
+        legalProcessId,
+        paymentId: payment.id,
+        status: "AWAITING_CONFIRMATION",
+        receivedBy: data.receivedBy,
+        recordedById: actorUserId,
+        proofStorageKey: storageKey,
+        proofOriginalName: data.fileName,
+        proofMimeType: data.mimeType,
+        proofSize: data.size,
+      },
+    });
 
+    const receivedByLabel = data.receivedBy === "BAILIFF" ? "de deurwaarder" : "de deelnemer";
     await ClaimTimelineService.logEvent(
       legalProcess.debtClaimId,
       "PAYMENT_REGISTERED",
-      `Betaling van ${amount} geregistreerd door deurwaarder. Nieuw saldo: ${updatedObligation.balanceAmount}.`,
-      { paymentId: payment.id, amount, balanceAmount: Number(updatedObligation.balanceAmount) },
+      `Betaling van ${data.amount} geregistreerd (ontvangen door ${receivedByLabel}). In afwachting van bevestiging door de andere partij.`,
+      { paymentId: payment.id, confirmationId: confirmation.id, amount: data.amount, receivedBy: data.receivedBy },
       actorUserId,
     );
 
-    return { payment, obligation: updatedObligation };
+    const notification = {
+      type: NotificationType.GOP_PAYMENT_AWAITING_CONFIRMATION,
+      title: "Betaling ter bevestiging",
+      message: `Se registró un pago de ${data.amount} en el expediente ${legalProcess.debtClaim.reference}, recibido por ${
+        data.receivedBy === "BAILIFF" ? "el alguacil" : "el participante"
+      }. Revisá el comprobante y confirmalo o disputalo.`,
+      link: `/legal-processes/${legalProcessId}`,
+      entity_type: "GopPaymentConfirmation",
+      entity_id: confirmation.id,
+    };
+
+    if (data.receivedBy === "PARTICIPANT") {
+      if (legalProcess.bailiff.user_id) {
+        await NotificationService.create({
+          tenant_id: tenantId,
+          user_id: legalProcess.bailiff.user_id,
+          ...notification,
+        });
+      }
+    } else {
+      await NotificationService.notifyTenantStaff(tenantId, notification);
+    }
+
+    return confirmation;
+  };
+
+  static getPaymentConfirmations = async (legalProcessId: string) => {
+    const items = await prisma.gopPaymentConfirmation.findMany({
+      where: { legalProcessId },
+      include: { payment: true },
+      orderBy: { createdAt: "desc" },
+    });
+    // Decimal no cruza de un Server Action a un Client Component.
+    return items.map((item) => ({
+      ...item,
+      payment: { ...item.payment, total_amount: Number(item.payment.total_amount) },
+    }));
+  };
+
+  static getPaymentConfirmationById = async (id: string) => {
+    return prisma.gopPaymentConfirmation.findUnique({
+      where: { id },
+      include: this.paymentConfirmationInclude,
+    });
+  };
+
+  // La parte que NO recibió el pago (según receivedBy) lo confirma. Recién
+  // acá se marca el Payment como pagado y se aplica al saldo.
+  static confirmGopPayment = async (confirmationId: string, actorUserId?: string) => {
+    const confirmation = await prisma.gopPaymentConfirmation.findUnique({
+      where: { id: confirmationId },
+      include: this.paymentConfirmationInclude,
+    });
+    if (!confirmation) throw new Error("Betalingsregistratie niet gevonden.");
+    if (!["AWAITING_CONFIRMATION", "CORRECTED"].includes(confirmation.status)) {
+      throw new Error(`Deze betaling kan niet bevestigd worden in de status ${confirmation.status}.`);
+    }
+
+    await prisma.payment.update({
+      where: { id: confirmation.paymentId },
+      data: { status: "paid", paid_at: new Date() },
+    });
+    const updatedObligation = await ObligationService.applyPayment(confirmation.paymentId);
+
+    const updated = await prisma.gopPaymentConfirmation.update({
+      where: { id: confirmationId },
+      data: { status: "CONFIRMED", confirmedById: actorUserId, confirmedAt: new Date() },
+    });
+
+    const legalProcess = confirmation.legalProcess;
+    await ClaimTimelineService.logEvent(
+      legalProcess.debtClaimId,
+      "PAYMENT_VERIFIED",
+      `Betaling van ${Number(confirmation.payment.total_amount)} bevestigd door de andere partij. Nieuw saldo: ${updatedObligation.balanceAmount}.`,
+      { paymentId: confirmation.paymentId, balanceAmount: Number(updatedObligation.balanceAmount) },
+      actorUserId,
+    );
+
+    const recordedUserId = confirmation.recordedById;
+    if (recordedUserId) {
+      await NotificationService.create({
+        tenant_id: legalProcess.debtClaim.tenantId,
+        user_id: recordedUserId,
+        type: NotificationType.GOP_PAYMENT_CONFIRMED,
+        title: "Betaling bevestigd",
+        message: `Tu registro de pago del expediente ${legalProcess.debtClaim.reference} fue confirmado.`,
+        link: `/legal-processes/${legalProcess.id}`,
+        entity_type: "GopPaymentConfirmation",
+        entity_id: updated.id,
+      });
+    }
+
+    await this.checkAndCloseIfSettled(legalProcess.debtClaimId, actorUserId);
+
+    return { confirmation: updated, obligation: updatedObligation };
+  };
+
+  // La parte que NO recibió el pago no lo reconoce (monto o comprobante
+  // incorrecto). No se aplica nada al saldo.
+  static disputeGopPayment = async (confirmationId: string, reason: string, actorUserId?: string) => {
+    const confirmation = await prisma.gopPaymentConfirmation.findUnique({
+      where: { id: confirmationId },
+      include: this.paymentConfirmationInclude,
+    });
+    if (!confirmation) throw new Error("Betalingsregistratie niet gevonden.");
+    if (!["AWAITING_CONFIRMATION", "CORRECTED"].includes(confirmation.status)) {
+      throw new Error(`Deze betaling kan niet betwist worden in de status ${confirmation.status}.`);
+    }
+
+    const updated = await prisma.gopPaymentConfirmation.update({
+      where: { id: confirmationId },
+      data: {
+        status: "DISPUTED",
+        disputeReason: reason,
+        disputedById: actorUserId,
+        disputedAt: new Date(),
+      },
+    });
+
+    const legalProcess = confirmation.legalProcess;
+    await ClaimTimelineService.logEvent(
+      legalProcess.debtClaimId,
+      "PAYMENT_REJECTED",
+      `Betaling van ${Number(confirmation.payment.total_amount)} betwist: ${reason}`,
+      { paymentId: confirmation.paymentId, reason },
+      actorUserId,
+    );
+
+    const recordedUserId = confirmation.recordedById;
+    if (recordedUserId) {
+      await NotificationService.create({
+        tenant_id: legalProcess.debtClaim.tenantId,
+        user_id: recordedUserId,
+        type: NotificationType.GOP_PAYMENT_DISPUTED,
+        title: "Betaling betwist",
+        message: `Tu registro de pago del expediente ${legalProcess.debtClaim.reference} fue disputado: ${reason}. Podés corregirlo.`,
+        link: `/legal-processes/${legalProcess.id}`,
+        entity_type: "GopPaymentConfirmation",
+        entity_id: updated.id,
+      });
+    }
+
+    return updated;
+  };
+
+  // Solo quien registró originalmente el pago puede corregirlo, y solo
+  // tras una disputa. Vuelve a quedar a la espera de confirmación.
+  static correctGopPayment = async (
+    confirmationId: string,
+    data: {
+      amount?: number;
+      note?: string;
+      fileName?: string;
+      mimeType?: string;
+      size?: number;
+      buffer?: Buffer;
+    },
+    actorUserId?: string,
+  ) => {
+    const confirmation = await prisma.gopPaymentConfirmation.findUnique({
+      where: { id: confirmationId },
+      include: this.paymentConfirmationInclude,
+    });
+    if (!confirmation) throw new Error("Betalingsregistratie niet gevonden.");
+    if (confirmation.status !== "DISPUTED") {
+      throw new Error("Alleen een betwiste betaling kan gecorrigeerd worden.");
+    }
+    if (actorUserId && confirmation.recordedById && confirmation.recordedById !== actorUserId) {
+      throw new Error("Alleen wie de betaling oorspronkelijk registreerde kan deze corrigeren.");
+    }
+
+    if (data.amount !== undefined) {
+      await prisma.payment.update({
+        where: { id: confirmation.paymentId },
+        data: { total_amount: data.amount },
+      });
+    }
+
+    let proofUpdate: Record<string, unknown> = {};
+    if (data.fileName && data.buffer && data.mimeType && data.size) {
+      const legalProcess = confirmation.legalProcess;
+      const sanitizedName = `${crypto.randomUUID()}-${data.fileName}`.replace(/\s+/g, "-");
+      const folder = `${legalProcess.debtClaim.tenantId}/legal-processes/${legalProcess.id}/payment-proofs`;
+      const storageKey = await StorageService.uploadFile(folder, sanitizedName, data.mimeType, data.buffer);
+      proofUpdate = {
+        proofStorageKey: storageKey,
+        proofOriginalName: data.fileName,
+        proofMimeType: data.mimeType,
+        proofSize: data.size,
+      };
+    }
+
+    const updated = await prisma.gopPaymentConfirmation.update({
+      where: { id: confirmationId },
+      data: {
+        status: "CORRECTED",
+        correctionNote: data.note,
+        correctedById: actorUserId,
+        correctedAt: new Date(),
+        ...proofUpdate,
+      },
+    });
+
+    const legalProcess = confirmation.legalProcess;
+    await ClaimTimelineService.logEvent(
+      legalProcess.debtClaimId,
+      "STATUS_CHANGED",
+      `Betaling gecorrigeerd na betwisting.${data.note ? ` ${data.note}` : ""} Opnieuw in afwachting van bevestiging.`,
+      { paymentId: confirmation.paymentId, amount: data.amount ?? null },
+      actorUserId,
+    );
+
+    const counterpartNotification = {
+      type: NotificationType.GOP_PAYMENT_CORRECTED,
+      title: "Betaling gecorrigeerd",
+      message: `Se corrigió el registro de pago disputado del expediente ${legalProcess.debtClaim.reference}. Revisalo nuevamente.`,
+      link: `/legal-processes/${legalProcess.id}`,
+      entity_type: "GopPaymentConfirmation",
+      entity_id: updated.id,
+    };
+
+    if (confirmation.receivedBy === "PARTICIPANT") {
+      if (legalProcess.bailiff.user_id) {
+        await NotificationService.create({
+          tenant_id: legalProcess.debtClaim.tenantId,
+          user_id: legalProcess.bailiff.user_id,
+          ...counterpartNotification,
+        });
+      }
+    } else {
+      await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, counterpartNotification);
+    }
+
+    return updated;
   };
 }

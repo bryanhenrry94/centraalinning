@@ -80,7 +80,7 @@ EconomischeBlokkadeEmail.PreviewProps = {
   logoUrl:
     "https://www.centraalinning.com/wp-content/uploads/2020/06/CI-Logo-Orange.png",
   fullname: "Alan Turing",
-  creditorName: "Centraal Inning",
+  creditorName: "CFSB",
 } satisfies EconomischeBlokkadeEmailProps;
 
 const main = {

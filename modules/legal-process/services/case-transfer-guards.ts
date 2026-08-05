@@ -117,6 +117,47 @@ export async function requireAssignedBailiffForTransfer(caseTransferId: string) 
   return { session, caseTransfer };
 }
 
+// Registrar una propuesta de acuerdo de pago: el participante, o el
+// abogado/alguacil asignado (sin necesidad de volmacht — proponer siempre
+// está permitido, decidir es lo que requiere autorización).
+export async function requireStaffOrAssignedLawyerOrBailiffForAgreementProposal(
+  caseTransferId: string,
+) {
+  return requireStaffOrAssignedLawyerOrBailiffForTransfer(caseTransferId);
+}
+
+// Decidir (aceptar, modificar o rechazar) un acuerdo de pago del GOP: el
+// participante siempre puede; el abogado/alguacil asignado solo si el
+// CaseTransfer tiene power of attorney otorgado — esa última condición la
+// valida AgreementService.decide, acá solo se resuelve QUIÉN es el actor.
+export async function requireAuthorizedToDecideCaseTransferAgreement(caseTransferId: string) {
+  const session = await getSessionOrThrow();
+
+  const caseTransfer = await prisma.caseTransfer.findUnique({
+    where: { id: caseTransferId },
+    include: { debtClaim: true, lawyer: true, bailiff: true },
+  });
+  if (!caseTransfer) throw new Error("Dossier niet gevonden.");
+
+  if (isPlatformOwner(session)) {
+    return { session, caseTransfer, isTenantStaff: true, isAssignedProfessional: false };
+  }
+
+  const isStaffOfTenant =
+    isTenantStaff(session) && session.user.tenant_id === caseTransfer.debtClaim.tenantId;
+  const isAssignedProfessional =
+    caseTransfer.lawyer?.userId === session.user.id ||
+    caseTransfer.bailiff?.user_id === session.user.id;
+
+  if (!isStaffOfTenant && !isAssignedProfessional) {
+    throw new Error(
+      "Alleen de deelnemer of de toegewezen advocaat/deurwaarder (met volmacht) kan hierover beslissen.",
+    );
+  }
+
+  return { session, caseTransfer, isTenantStaff: isStaffOfTenant, isAssignedProfessional };
+}
+
 // Ver/descargar documentos, además del staff, lo necesitan el abogado o
 // alguacil asignados.
 export async function requireStaffOrAssignedLawyerOrBailiffForTransfer(caseTransferId: string) {

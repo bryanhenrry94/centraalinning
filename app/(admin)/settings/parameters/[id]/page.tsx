@@ -1,4 +1,5 @@
-import { Container } from "@mui/material";
+import { Suspense } from "react";
+import { Container, Box, CircularProgress } from "@mui/material";
 import { SettingSection } from "./Form/SettingSection";
 
 export default async function ParameterPageEdit({
@@ -10,7 +11,15 @@ export default async function ParameterPageEdit({
 
   return (
     <Container maxWidth="lg">
-      <SettingSection id={id} />
+      <Suspense
+        fallback={
+          <Box display="flex" justifyContent="center" py={10}>
+            <CircularProgress />
+          </Box>
+        }
+      >
+        <SettingSection id={id} />
+      </Suspense>
     </Container>
   );
 }

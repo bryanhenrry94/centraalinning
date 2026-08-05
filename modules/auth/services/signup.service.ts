@@ -83,6 +83,12 @@ export class SignupService {
       );
 
       const code = await TenantService.generateCode(validatedData.country);
+      // La isla elegida en el signup (island-step.tsx) ya viene de
+      // Jurisdiction — acá se resuelve el FK correspondiente (punto 13 del
+      // análisis CFSB).
+      const jurisdiction = await prisma.jurisdiction.findUnique({
+        where: { islandCode: validatedData.country },
+      });
 
       // 6. CREATE TENANT, USER, MEMBERSHIP AND SUBSCRIPTION IN A TRANSACTION
       const transactionResult = await prisma.$transaction(
@@ -95,6 +101,7 @@ export class SignupService {
               kvk: validatedData.kvk,
               code,
               country_code: validatedData.country,
+              jurisdictionId: jurisdiction?.id,
               contact_email: normalizedEmail,
               address: "",
               number_of_employees: 0,

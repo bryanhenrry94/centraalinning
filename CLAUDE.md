@@ -21,7 +21,7 @@ There are no automated tests in this codebase.
 
 ## Architecture Overview
 
-This is a **Next.js 15 multi-tenant debt collection SaaS** (App Router, React 19, TypeScript). The domain is called "Centraal Inning" and targets the Dutch-Caribbean market (Curaçao/Bonaire — Dutch terminology throughout).
+This is a **Next.js 15 multi-tenant debt collection SaaS** (App Router, React 19, TypeScript) and targets the Dutch-Caribbean market (Curaçao/Bonaire — Dutch terminology throughout). The platform's brand — used everywhere in the UI, PDFs, emails and other communications — is **CFSB**. "Centraal Inning" (CI) is retired as a brand name; it survives only as part of the legal entity name **Centraal Inning Onderneming B.V.** (`Tenant.legal_name` for the admin tenant) and in the repo/package name for historical reasons. Never introduce new "Centraal Inning" or "CI" branding in code — use "CFSB".
 
 ### Multi-tenant subdomain routing
 

@@ -23,14 +23,12 @@ export const VerdictApprovalEmail = ({
       <Container style={container}>
         <Img src={logoUrl} width="120" height="50" alt="Plaid" style={logo} />
         <Text style={paragraph}>
-          Er is een nieuwe opdracht voor u geregistreerd in het centrale systeem
-          (CI). Log in op <Link href={link}>www.centraalinning.com</Link> om de
+          Er is een nieuwe opdracht voor u geregistreerd in CFSB. Log in op <Link href={link}>CFSB</Link> om de
           details te bekijken.
         </Text>
         <Text style={footer}>
-          Dit bericht is automatisch gegenereerd door het Centraal
-          Incassoplatform (CI).
-          <br />© CENTRAAL OPVOLGING
+          Dit bericht is automatisch gegenereerd door CFSB.
+          <br />© CFSB
         </Text>
       </Container>
     </Body>

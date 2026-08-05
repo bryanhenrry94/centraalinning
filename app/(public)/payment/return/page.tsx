@@ -79,7 +79,7 @@ function ReturnPageContent() {
           <Box sx={{ display: "flex", justifyContent: "space-between", mb: 4 }}>
             <Image
               src="/static/logo.png"
-              alt="Centraal Inning"
+              alt="CFSB"
               height={48}
               width={140}
             />
@@ -124,7 +124,7 @@ function ReturnPageContent() {
               variant="body2"
               sx={{ color: "#6B7280", textAlign: "center", fontSize: 14 }}
             >
-              Puedes cerrar esta ventana o volver a Centraal Inning.
+              Puedes cerrar esta ventana o volver a CFSB.
             </Typography>
           </Stack>
         </CardContent>

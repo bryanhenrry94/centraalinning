@@ -1,7 +1,10 @@
 import { prisma } from "@/lib/prisma";
 
 export class SettingsCategoryService {
-  static async getAll() {
+  // El conteo por categoría respeta el mismo alcance que
+  // SettingsService.getByCategoryForAdmin: valores globales (jurisdictionId
+  // null) más los de la isla seleccionada, nunca overrides de un tenant.
+  static async getAll(jurisdictionId?: string | null) {
     return prisma.settingCategory.findMany({
       where: {
         isActive: true,
@@ -14,7 +17,14 @@ export class SettingsCategoryService {
       include: {
         _count: {
           select: {
-            settings: true,
+            settings: {
+              where: {
+                tenantId: null,
+                OR: jurisdictionId
+                  ? [{ jurisdictionId: null }, { jurisdictionId }]
+                  : [{ jurisdictionId: null }],
+              },
+            },
           },
         },
       },

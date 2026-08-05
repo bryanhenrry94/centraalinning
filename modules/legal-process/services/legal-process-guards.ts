@@ -102,6 +102,48 @@ export async function requireStaffOrAssignedBailiffForDocuments(legalProcessId: 
   return requireStaffOrAssignedBailiff(legalProcessId);
 }
 
+// Decidir (aceptar, modificar o rechazar) un acuerdo de pago post-vonnis:
+// el participante siempre puede; el alguacil asignado solo si el
+// CaseTransfer de origen tiene power of attorney otorgado — esa condición
+// la valida AgreementService.decide, acá solo se resuelve QUIÉN es el actor.
+export async function requireAuthorizedToDecideGopAgreement(legalProcessId: string) {
+  const session = await getSessionOrThrow();
+
+  const legalProcess = await prisma.legalProcess.findUnique({
+    where: { id: legalProcessId },
+    include: { debtClaim: true, bailiff: true, caseTransfer: true },
+  });
+  if (!legalProcess) throw new Error("Dossier niet gevonden.");
+
+  if (isPlatformOwner(session)) {
+    return {
+      session,
+      legalProcess,
+      isTenantStaff: true,
+      isAssignedProfessional: false,
+      hasPowerOfAttorney: legalProcess.caseTransfer.hasPowerOfAttorney,
+    };
+  }
+
+  const isStaffOfTenant =
+    isTenantStaff(session) && session.user.tenant_id === legalProcess.debtClaim.tenantId;
+  const isAssignedProfessional = legalProcess.bailiff?.user_id === session.user.id;
+
+  if (!isStaffOfTenant && !isAssignedProfessional) {
+    throw new Error(
+      "Alleen de deelnemer of de toegewezen deurwaarder (met volmacht) kan hierover beslissen.",
+    );
+  }
+
+  return {
+    session,
+    legalProcess,
+    isTenantStaff: isStaffOfTenant,
+    isAssignedProfessional,
+    hasPowerOfAttorney: legalProcess.caseTransfer.hasPowerOfAttorney,
+  };
+}
+
 export async function requireStaffOrAssignedBailiffForVerdict(verdictId: string) {
   const verdict = await prisma.verdict.findUnique({
     where: { id: verdictId },
@@ -110,4 +152,58 @@ export async function requireStaffOrAssignedBailiffForVerdict(verdictId: string)
   if (!verdict) throw new Error("Vonnis niet gevonden.");
 
   return requireStaffOrAssignedBailiff(verdict.legal_process_id);
+}
+
+// Confirmar o disputar un pago del GOP es exclusivo de la CONTRAPARTE de
+// quien lo registró: si lo recibió el alguacil, confirma el participante;
+// si lo recibió el participante, confirma el alguacil asignado. Ninguna de
+// las dos partes puede confirmar su propio registro.
+export async function requireAuthorizedToConfirmGopPayment(confirmationId: string) {
+  const session = await getSessionOrThrow();
+
+  const confirmation = await prisma.gopPaymentConfirmation.findUnique({
+    where: { id: confirmationId },
+    include: { legalProcess: { include: { debtClaim: true, bailiff: true } } },
+  });
+  if (!confirmation) throw new Error("Betalingsregistratie niet gevonden.");
+
+  const legalProcess = confirmation.legalProcess;
+
+  if (isPlatformOwner(session)) return { session, confirmation };
+
+  const isStaffOfTenant =
+    isTenantStaff(session) && session.user.tenant_id === legalProcess.debtClaim.tenantId;
+  const isAssignedBailiff = legalProcess.bailiff?.user_id === session.user.id;
+
+  const isAuthorized = confirmation.receivedBy === "BAILIFF" ? isStaffOfTenant : isAssignedBailiff;
+
+  if (!isAuthorized) {
+    throw new Error(
+      confirmation.receivedBy === "BAILIFF"
+        ? "Alleen de deelnemer kan deze betaling bevestigen of betwisten."
+        : "Alleen de toegewezen deurwaarder kan deze betaling bevestigen of betwisten.",
+    );
+  }
+
+  return { session, confirmation };
+}
+
+// Corregir tras una disputa es exclusivo de quien registró originalmente
+// el pago (verificado también, de forma definitiva, en el Service).
+export async function requireAuthorizedToCorrectGopPayment(confirmationId: string) {
+  const session = await getSessionOrThrow();
+
+  const confirmation = await prisma.gopPaymentConfirmation.findUnique({
+    where: { id: confirmationId },
+    include: { legalProcess: { include: { debtClaim: true } } },
+  });
+  if (!confirmation) throw new Error("Betalingsregistratie niet gevonden.");
+
+  if (isPlatformOwner(session)) return { session, confirmation };
+
+  if (confirmation.recordedById && confirmation.recordedById !== session.user.id) {
+    throw new Error("Alleen wie de betaling oorspronkelijk registreerde kan deze corrigeren.");
+  }
+
+  return { session, confirmation };
 }

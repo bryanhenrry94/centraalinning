@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 
 import { SettingsCategoryService } from "@/modules/settings/services/settings/settings-category.service";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const categories = await SettingsCategoryService.getAll();
+    const url = new URL(request.url);
+    const jurisdictionId = url.searchParams.get("jurisdictionId");
+    const categories = await SettingsCategoryService.getAll(jurisdictionId);
 
     return NextResponse.json(categories);
   } catch (error) {

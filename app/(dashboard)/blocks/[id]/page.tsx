@@ -16,6 +16,7 @@ import { DocumentsList } from "./DocumentsList";
 import { formatDate } from "@/shared/utils/formatters";
 import { BlockadeService } from "@/modules/blockade/services/blockade.service";
 import { REASONS } from "@/modules/blockade/constants/reason-blockades";
+import { ClaimTimelineService } from "@/modules/collection/services/claim-timeline.service";
 
 export default async function BlockadeDetailPage({
   params,
@@ -29,6 +30,10 @@ export default async function BlockadeDetailPage({
   if (!blockade) {
     notFound();
   }
+
+  const timeline = blockade.originDebtClaimId
+    ? await ClaimTimelineService.getForDebtClaim(blockade.originDebtClaimId)
+    : [];
 
   const getLabelForReason = (reason: string) => {
     return REASONS.find((r) => r.value === reason)?.label || reason;
@@ -81,11 +86,40 @@ export default async function BlockadeDetailPage({
                     label="Reden blokade"
                     value={getLabelForReason(blockade.reason)}
                   />
+
+                  {blockade.reasonNote && (
+                    <InfoRow label="Toelichting" value={blockade.reasonNote} />
+                  )}
                 </Stack>
               </Grid>
             </Grid>
           </CardContent>
         </Card>
+
+        {/* Audit trail */}
+        {timeline.length > 0 && (
+          <Card>
+            <CardContent>
+              <Typography variant="h6" fontWeight={600} gutterBottom>
+                Auditlog
+              </Typography>
+
+              <Stack spacing={1.5}>
+                {timeline.map((entry) => (
+                  <Box key={entry.id} sx={{ borderBottom: "1px solid", borderColor: "divider", pb: 1.5 }}>
+                    <Typography variant="body2" fontWeight={500}>
+                      {entry.description}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {formatDate(entry.createdAt.toISOString())}
+                      {entry.createdBy?.fullname ? ` — ${entry.createdBy.fullname}` : ""}
+                    </Typography>
+                  </Box>
+                ))}
+              </Stack>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Documents */}
         <Grid container spacing={3}>

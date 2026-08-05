@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { CountryList } from "@/shared/constants/country";
 
 export class TenantService {
   static getById = async (tenantId: string) => {
@@ -64,9 +63,14 @@ export class TenantService {
     return !!tenant;
   };
 
+  // El prefijo viene de Jurisdiction (dato), nunca de un array hardcodeado
+  // en el código (punto 13 del análisis CFSB). country_code de Tenant
+  // coincide con Jurisdiction.islandCode.
   static generateCode = async (country_code: string): Promise<string> => {
-    const island = CountryList.find((c) => c.value === country_code);
-    const prefix = island?.value.toUpperCase().slice(0, 3) || "XXX";
+    const jurisdiction = await prisma.jurisdiction.findUnique({
+      where: { islandCode: country_code },
+    });
+    const prefix = jurisdiction?.islandCode ?? "XXX";
     const last_sequence = await prisma.tenant.count({
       where: {
         country_code,

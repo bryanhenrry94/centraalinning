@@ -1,10 +1,9 @@
 import { CaseTransferService } from "@/modules/legal-process/services/case-transfer.service";
 
-// AT-012/AT-013: si el abogado/alguacil no acepta ni rechaza un dossier
-// dentro del plazo de 7 días desde que se confirmó el pago de la comisión
-// de transferencia, el dossier se rechaza automáticamente para que el
-// participante pueda elegir otro profesional.
+// AT-012/AT-013: día 5 recordatorio al abogado/alguacil, día 7 aviso al
+// participante para que decida (extender 7 días más o elegir otro
+// profesional). El plazo nunca vence ni se rechaza automáticamente.
 export async function checkCaseTransferDeadlines() {
-  const expired = await CaseTransferService.expireOverdueTransfers();
-  return { message: "Overdracht-termijnen gecontroleerd", expired };
+  const result = await CaseTransferService.sendAcceptanceReminders();
+  return { message: "Overdracht-termijnen gecontroleerd", ...result };
 }

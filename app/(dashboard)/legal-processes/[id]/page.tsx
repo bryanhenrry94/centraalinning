@@ -34,6 +34,7 @@ import {
   closeGop,
   getGopAgreements,
   getGopPrincipalObligation,
+  decideGopAgreement,
 } from "@/modules/legal-process/actions/legal-process.actions";
 import { getLegalProcessStatusInfo } from "@/modules/legal-process/utils/legal-process-status";
 import { LegalProcessStatus } from "@/modules/legal-process/constants/legal-process-status";
@@ -47,6 +48,10 @@ import { ChangeBailiffDialog } from "@/modules/legal-process/components/change-b
 import { CreateAgreementDialog } from "@/modules/legal-process/components/create-agreement-dialog";
 import { RegisterPaymentDialog } from "@/modules/legal-process/components/register-payment-dialog";
 import { FinalizeBailiffWorkDialog } from "@/modules/legal-process/components/finalize-bailiff-work-dialog";
+import { GopPaymentConfirmations } from "@/modules/legal-process/components/gop-payment-confirmations";
+import { GopExecutionMeasures } from "@/modules/legal-process/components/gop-execution-measures";
+import { AgreementDecisionDialog } from "@/modules/agreement/components/agreement-decision-dialog";
+import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
 
 type LegalProcessDetail = Awaited<ReturnType<typeof getLegalProcessById>>;
 
@@ -84,6 +89,7 @@ const LegalProcessDetailPage: React.FC = () => {
   const [obligation, setObligation] = useState<Awaited<
     ReturnType<typeof getGopPrincipalObligation>
   > | null>(null);
+  const [selectedAgreement, setSelectedAgreement] = useState<AgreementResponse | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [dialog, setDialog] = useState<
@@ -96,6 +102,7 @@ const LegalProcessDetailPage: React.FC = () => {
     | "create-agreement"
     | "register-payment"
     | "finalize-bailiff-work"
+    | "decide-agreement"
   >(null);
 
   const load = useCallback(async () => {
@@ -173,6 +180,12 @@ const LegalProcessDetailPage: React.FC = () => {
   // comisión CFSB (5%) sobre ese monto — mismo gate que el trabajo del
   // abogado en el flujo de CaseTransfer.
   const isBailiffWorkFinalized = !!legalProcess.gopCompletedGateAt;
+
+  // Decidir (aceptar, modificar o rechazar) un acuerdo de pago: el
+  // participante siempre puede; el alguacil asignado solo si el
+  // CaseTransfer de origen tiene volmacht (power of attorney) otorgada.
+  const hasPowerOfAttorney = !!legalProcess.caseTransfer?.hasPowerOfAttorney;
+  const canDecideAgreements = isStaff || (isBailiffRole && hasPowerOfAttorney);
 
   return (
     <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
@@ -277,12 +290,24 @@ const LegalProcessDetailPage: React.FC = () => {
           <CardHeader title="Saldo & betalingsregeling" />
           <Divider />
           <CardContent>
-            <Grid container spacing={2.5} mb={agreements.length > 0 ? 2 : 0}>
+            <Grid container spacing={2.5} mb={2}>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <InfoField
                   label="Openstaand saldo"
                   value={
                     obligation ? formatCurrency(Number(obligation.balanceAmount)) : "Nog geen betalingen"
+                  }
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                <Chip
+                  size="small"
+                  sx={{ fontWeight: 700 }}
+                  color={hasPowerOfAttorney ? "success" : "default"}
+                  label={
+                    hasPowerOfAttorney
+                      ? "Volmacht verleend aan de deurwaarder"
+                      : "Geen volmacht — de deelnemer beslist altijd"
                   }
                 />
               </Grid>
@@ -299,7 +324,15 @@ const LegalProcessDetailPage: React.FC = () => {
                 </TableHead>
                 <TableBody>
                   {agreements.map((agreement) => (
-                    <TableRow key={agreement.id}>
+                    <TableRow
+                      key={agreement.id}
+                      hover
+                      sx={{ cursor: "pointer" }}
+                      onClick={() => {
+                        setSelectedAgreement(agreement);
+                        setDialog("decide-agreement");
+                      }}
+                    >
                       <TableCell>{formatCurrency(agreement.total_amount)}</TableCell>
                       <TableCell>{agreement.installments_count}</TableCell>
                       <TableCell>{agreement.status}</TableCell>
@@ -309,6 +342,32 @@ const LegalProcessDetailPage: React.FC = () => {
                 </TableBody>
               </Table>
             )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader title="Betalingen" />
+          <Divider />
+          <CardContent>
+            <GopPaymentConfirmations
+              legalProcessId={legalProcess.id}
+              currentUserId={session?.user?.id}
+              isStaff={isStaff}
+              isBailiffRole={isBailiffRole}
+              onChanged={refresh}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader title="Executiemaatregelen" />
+          <Divider />
+          <CardContent>
+            <GopExecutionMeasures
+              legalProcessId={legalProcess.id}
+              canManage={isStaff || isBailiffRole}
+              onChanged={refresh}
+            />
           </CardContent>
         </Card>
 
@@ -442,6 +501,16 @@ const LegalProcessDetailPage: React.FC = () => {
         onClose={() => setDialog(null)}
         legalProcessId={legalProcess.id}
         onFinalized={refresh}
+      />
+      <AgreementDecisionDialog
+        open={dialog === "decide-agreement"}
+        onClose={() => setDialog(null)}
+        agreement={selectedAgreement}
+        canDecide={canDecideAgreements}
+        onDecide={(agreementId, decision) =>
+          decideGopAgreement(legalProcess.id, agreementId, decision)
+        }
+        onDecided={refresh}
       />
     </Container>
   );

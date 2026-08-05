@@ -33,12 +33,11 @@ export const VerdictRegisterEmail = ({
           factuur voor de uitvoering hiervan.
         </Text>
         <Text style={paragraph}>
-          Met vriendelijke groet, Centraal Inning (CI)
+          Met vriendelijke groet, CFSB
         </Text>
         <Text style={footer}>
-          Dit bericht is automatisch gegenereerd door het Centraal
-          Incassoplatform (CI).
-          <br />© CENTRAAL OPVOLGING
+          Dit bericht is automatisch gegenereerd door CFSB.
+          <br />© CFSB
         </Text>
       </Container>
     </Body>

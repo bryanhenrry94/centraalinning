@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+import { addDays, startOfDay } from "date-fns";
 import {
   TransferToLawyerInput,
   SubmitLawyerFeeInvoiceInput,
@@ -16,9 +17,15 @@ import { sendInvoiceEmail } from "@/modules/payment/services/payment-mail.servic
 import { PaymentService } from "@/modules/payment/services/payment.service";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
+import { SettingsService } from "@/modules/settings/services/settings/settings.service";
 import { StorageService } from "@/infrastructure/storage/storage.service";
 
 const ACCEPTANCE_WINDOW_DAYS = 7;
+// Valor por defecto — el Superadministrador puede configurar la antelación
+// real por isla/tenant editando el Setting
+// case_transfer_acceptance_reminder_days_before (punto 14 del análisis
+// CFSB), sin tocar código.
+const DEFAULT_ACCEPTANCE_REMINDER_DAYS_BEFORE = 2;
 
 const caseTransferInclude = {
   debtClaim: { include: { debtor: { include: { person: true } }, tenant: true } },
@@ -299,62 +306,198 @@ export class CaseTransferService {
   };
 
   // ---------------------------------------------------------------------
-  // Vencimiento automático del plazo de aceptación (AT-012/AT-013: 7 días)
+  // Plazo de aceptación (AT-012/AT-013): recordatorio día 5, decisión del
+  // participante día 7. El plazo NUNCA vence ni se rechaza automáticamente
+  // — solo se notifica; el participante decide vía extendAcceptanceDeadline
+  // o rejectTransfer (llamado por él mismo, ver requireTenantStaffForCaseTransfer
+  // en case-transfer.actions.ts). Ese ciclo puede repetirse cada 7 días.
   // ---------------------------------------------------------------------
 
-  // Llamado por el job programado check_case_transfer_deadlines. A
-  // diferencia de rejectTransfer (rechazo activo del abogado/alguacil), acá
-  // no hay actorUserId — es el sistema el que expira el plazo — por eso
-  // también se notifica a la parte asignada, que de otro modo no se
-  // enteraría de que perdió el expediente por falta de respuesta.
-  static expireOverdueTransfers = async () => {
-    const overdue = await prisma.caseTransfer.findMany({
-      where: { status: "PENDING_ACCEPTANCE", acceptanceDeadline: { lt: new Date() } },
-      include: { debtClaim: true, lawyer: true, bailiff: true },
+  // Llamado por el job programado check_case_transfer_deadlines.
+  static sendAcceptanceReminders = async () => {
+    const now = new Date();
+    const today = startOfDay(now);
+    let reminders = 0;
+    let deadlineNotices = 0;
+
+    const pending = await prisma.caseTransfer.findMany({
+      where: { status: "PENDING_ACCEPTANCE", acceptanceDeadline: { not: null } },
+      include: { debtClaim: { include: { tenant: true } }, lawyer: true, bailiff: true },
     });
 
-    for (const caseTransfer of overdue) {
+    for (const caseTransfer of pending) {
+      const deadline = caseTransfer.acceptanceDeadline!;
+      const assignedUserId = caseTransfer.lawyer?.userId ?? caseTransfer.bailiff?.user_id;
       const assignedLabel = caseTransfer.lawyer
         ? `advocaat ${caseTransfer.lawyer.firstName} ${caseTransfer.lawyer.lastName}`
         : `deurwaarder ${caseTransfer.bailiff!.fullname}`;
-      const reason = `Automatisch afgewezen: geen reactie binnen de acceptatietermijn van ${ACCEPTANCE_WINDOW_DAYS} dagen.`;
-
-      const updated = await prisma.caseTransfer.update({
-        where: { id: caseTransfer.id },
-        data: { status: "REJECTED", rejectionReason: reason, respondedAt: new Date() },
-      });
-
-      await ClaimTimelineService.logEvent(
-        caseTransfer.debtClaimId,
-        "STATUS_CHANGED",
-        `Overdracht automatisch afgewezen: ${assignedLabel} heeft niet binnen ${ACCEPTANCE_WINDOW_DAYS} dagen gereageerd.`,
+      const tenant = caseTransfer.debtClaim.tenant;
+      const reminderDaysBefore = await SettingsService.resolveNumber(
+        "case_transfer_acceptance_reminder_days_before",
+        { tenantId: tenant.id, jurisdictionId: tenant.jurisdictionId },
+        DEFAULT_ACCEPTANCE_REMINDER_DAYS_BEFORE,
       );
 
-      await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.tenantId, {
-        type: NotificationType.LEGAL_PROCESS_REJECTED,
-        title: "Expediente rechazado automáticamente",
-        message: `El plazo de aceptación del expediente ${caseTransfer.debtClaim.reference} venció sin respuesta del ${assignedLabel}. Selecciona otro abogado o alguacil.`,
+      const alreadyNotifiedToday = async (type: NotificationType) =>
+        (await prisma.notification.count({
+          where: {
+            entity_type: "CaseTransfer",
+            entity_id: caseTransfer.id,
+            type,
+            created_at: { gte: today },
+          },
+        })) > 0;
+
+      // Día 5: recordatorio al abogado/alguacil asignado.
+      if (
+        deadline > now &&
+        deadline <= addDays(now, reminderDaysBefore) &&
+        assignedUserId &&
+        !(await alreadyNotifiedToday(NotificationType.CASE_TRANSFER_ACCEPTANCE_REMINDER))
+      ) {
+        await NotificationService.create({
+          tenant_id: caseTransfer.debtClaim.tenantId,
+          user_id: assignedUserId,
+          type: NotificationType.CASE_TRANSFER_ACCEPTANCE_REMINDER,
+          title: "Recordatorio: expediente pendiente de aceptación",
+          message: `Tenés hasta el ${deadline.toLocaleDateString()} para aceptar o rechazar el expediente ${caseTransfer.debtClaim.reference}.`,
+          link: `/legal-processes/transfers/${caseTransfer.id}`,
+          entity_type: "CaseTransfer",
+          entity_id: caseTransfer.id,
+        });
+        reminders++;
+      }
+
+      // Día 7: el plazo venció — se notifica al participante, que decide
+      // (extender 7 días más o elegir otro profesional). Se repite cada día
+      // que siga sin resolverse, para que la decisión pendiente no se pierda.
+      if (
+        deadline <= now &&
+        !(await alreadyNotifiedToday(NotificationType.CASE_TRANSFER_ACCEPTANCE_DEADLINE_REACHED))
+      ) {
+        await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.tenantId, {
+          type: NotificationType.CASE_TRANSFER_ACCEPTANCE_DEADLINE_REACHED,
+          title: "Decisión requerida: plazo de aceptación vencido",
+          message: `El ${assignedLabel} no respondió dentro del plazo para el expediente ${caseTransfer.debtClaim.reference}. Decidí si le concedés 7 días más o seleccionás otro profesional.`,
+          link: `/legal-processes/transfers/${caseTransfer.id}`,
+          entity_type: "CaseTransfer",
+          entity_id: caseTransfer.id,
+        });
+        deadlineNotices++;
+      }
+    }
+
+    return { reminders, deadlineNotices };
+  };
+
+  // El participante concede 7 días más al mismo abogado/alguacil asignado.
+  static extendAcceptanceDeadline = async (caseTransferId: string, actorUserId?: string) => {
+    const caseTransfer = await prisma.caseTransfer.findUnique({
+      where: { id: caseTransferId },
+      include: { debtClaim: true, lawyer: true, bailiff: true },
+    });
+    if (!caseTransfer) throw new Error("Expediente no encontrado");
+    if (caseTransfer.status !== "PENDING_ACCEPTANCE") {
+      throw new Error("El expediente no está pendiente de aceptación");
+    }
+
+    const newDeadline = new Date(Date.now() + ACCEPTANCE_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+    const updated = await prisma.caseTransfer.update({
+      where: { id: caseTransferId },
+      data: { acceptanceDeadline: newDeadline },
+    });
+
+    const assignedLabel = caseTransfer.lawyer
+      ? `advocaat ${caseTransfer.lawyer.firstName} ${caseTransfer.lawyer.lastName}`
+      : `deurwaarder ${caseTransfer.bailiff!.fullname}`;
+
+    await ClaimTimelineService.logEvent(
+      caseTransfer.debtClaimId,
+      "STATUS_CHANGED",
+      `De deelnemer heeft de acceptatietermijn met ${ACCEPTANCE_WINDOW_DAYS} dagen verlengd voor ${assignedLabel} (nieuwe deadline: ${newDeadline.toLocaleDateString()}).`,
+      undefined,
+      actorUserId,
+    );
+
+    const assignedUserId = caseTransfer.lawyer?.userId ?? caseTransfer.bailiff?.user_id;
+    if (assignedUserId) {
+      await NotificationService.create({
+        tenant_id: caseTransfer.debtClaim.tenantId,
+        user_id: assignedUserId,
+        type: NotificationType.CASE_TRANSFER_ACCEPTANCE_EXTENDED,
+        title: "Se extendió tu plazo de aceptación",
+        message: `El participante te concedió ${ACCEPTANCE_WINDOW_DAYS} días más para aceptar o rechazar el expediente ${caseTransfer.debtClaim.reference} (nuevo plazo: ${newDeadline.toLocaleDateString()}).`,
         link: `/legal-processes/transfers/${updated.id}`,
         entity_type: "CaseTransfer",
         entity_id: updated.id,
       });
-
-      const assignedUserId = caseTransfer.lawyer?.userId ?? caseTransfer.bailiff?.user_id;
-      if (assignedUserId) {
-        await NotificationService.create({
-          tenant_id: caseTransfer.debtClaim.tenantId,
-          user_id: assignedUserId,
-          type: NotificationType.LEGAL_PROCESS_REJECTED,
-          title: "Plazo de aceptación vencido",
-          message: `No respondiste a tiempo la solicitud de transferencia del expediente ${caseTransfer.debtClaim.reference}; fue rechazada automáticamente.`,
-          link: `/legal-processes/transfers/${updated.id}`,
-          entity_type: "CaseTransfer",
-          entity_id: updated.id,
-        });
-      }
     }
 
-    return overdue.length;
+    return updated;
+  };
+
+  // ---------------------------------------------------------------------
+  // Power of attorney: solo el participante puede concederlo o revocarlo.
+  // Sin esto, el abogado/alguacil asignado solo puede registrar propuestas
+  // de acuerdo de pago (AgreementService.create); decidir queda siempre en
+  // manos del participante salvo que esto esté en true (ver
+  // AgreementService.decide).
+  // ---------------------------------------------------------------------
+
+  static setPowerOfAttorney = async (
+    caseTransferId: string,
+    granted: boolean,
+    note: string | undefined,
+    actorUserId?: string,
+  ) => {
+    const caseTransfer = await prisma.caseTransfer.findUnique({
+      where: { id: caseTransferId },
+      include: { debtClaim: true, lawyer: true, bailiff: true },
+    });
+    if (!caseTransfer) throw new Error("Expediente no encontrado");
+
+    const updated = await prisma.caseTransfer.update({
+      where: { id: caseTransferId },
+      data: {
+        hasPowerOfAttorney: granted,
+        powerOfAttorneyGrantedAt: granted ? new Date() : null,
+        powerOfAttorneyNote: granted ? (note ?? null) : null,
+      },
+    });
+
+    const assignedLabel = caseTransfer.lawyer
+      ? `advocaat ${caseTransfer.lawyer.firstName} ${caseTransfer.lawyer.lastName}`
+      : caseTransfer.bailiff
+        ? `deurwaarder ${caseTransfer.bailiff.fullname}`
+        : null;
+
+    await ClaimTimelineService.logEvent(
+      caseTransfer.debtClaimId,
+      "STATUS_CHANGED",
+      granted
+        ? `De deelnemer heeft een volmacht (power of attorney) verleend aan ${assignedLabel ?? "de toegewezen professional"}.${note ? ` ${note}` : ""}`
+        : `De deelnemer heeft de volmacht (power of attorney) ingetrokken.`,
+      { hasPowerOfAttorney: granted, note: note ?? null },
+      actorUserId,
+    );
+
+    const assignedUserId = caseTransfer.lawyer?.userId ?? caseTransfer.bailiff?.user_id;
+    if (assignedUserId) {
+      await NotificationService.create({
+        tenant_id: caseTransfer.debtClaim.tenantId,
+        user_id: assignedUserId,
+        type: NotificationType.CASE_TRANSFER_POWER_OF_ATTORNEY_CHANGED,
+        title: granted ? "Volmacht verleend" : "Volmacht ingetrokken",
+        message: granted
+          ? `El participante te otorgó poder para decidir por tu cuenta los acuerdos de pago del expediente ${caseTransfer.debtClaim.reference}.`
+          : `El participante revocó tu poder para decidir los acuerdos de pago del expediente ${caseTransfer.debtClaim.reference}. Las decisiones vuelven a requerir su aprobación.`,
+        link: `/legal-processes/transfers/${updated.id}`,
+        entity_type: "CaseTransfer",
+        entity_id: updated.id,
+      });
+    }
+
+    return updated;
   };
 
   // Solo el participante puede cancelar, y únicamente mientras no exista un
@@ -449,7 +592,9 @@ export class CaseTransferService {
       params.buffer,
     );
 
-    const parameter = await ParameterService.getParameter();
+    // ABB por isla/jurisdicción del tenant (punto 13 del análisis CFSB) —
+    // cae al Parameter global si el tenant no tiene jurisdiction asignada.
+    const parameter = await ParameterService.getParameterForTenant(tenantId);
     const fee = Math.round(params.totalAmount * GOP_FEE_RATE * 100) / 100;
     const tax_rate = parameter?.abb_rate ?? 0;
     const tax_amount = Math.round(((fee * tax_rate) / 100) * 100) / 100;

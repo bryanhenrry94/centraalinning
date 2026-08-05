@@ -25,7 +25,8 @@ export async function GET(req: NextRequest) {
         blockadesReactivated: blockadeResult.reactivated,
         gopPrescriptionReminders: gopDeadlinesResult.prescriptionReminders,
         gopReviewReminders: gopDeadlinesResult.reviewReminders,
-        caseTransfersExpired: caseTransferDeadlinesResult.expired,
+        caseTransferAcceptanceReminders: caseTransferDeadlinesResult.reminders,
+        caseTransferDeadlineNotices: caseTransferDeadlinesResult.deadlineNotices,
       },
     });
   } catch (error) {

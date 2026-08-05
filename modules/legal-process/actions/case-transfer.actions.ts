@@ -3,12 +3,16 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { CaseTransferService } from "@/modules/legal-process/services/case-transfer.service";
+import { AgreementService } from "@/modules/agreement/services/agreement.service";
+import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
 import {
   requireTenantStaffForDebtClaim,
   requireTenantStaffForCaseTransfer,
   requireAssignedLawyerOrBailiff,
   requireAssignedLawyer,
   requireStaffOrAssignedLawyerOrBailiffForTransfer,
+  requireStaffOrAssignedLawyerOrBailiffForAgreementProposal,
+  requireAuthorizedToDecideCaseTransferAgreement,
 } from "@/modules/legal-process/services/case-transfer-guards";
 import { canUseFeature } from "@/shared/utils/permission";
 import { AppAction } from "@/shared/constants/AppAction";
@@ -25,6 +29,26 @@ import {
   AssignBailiffForExecutionInput,
   AssignBailiffForExecutionSchema,
 } from "@/modules/legal-process/services/case-transfer.validators";
+
+type ProposeAgreementInput = {
+  total_amount: number;
+  installment_amount: number;
+  installments_count: number;
+  start_date: Date;
+  end_date: Date;
+  comment?: string;
+};
+
+type DecideAgreementInput = {
+  status: "ACCEPTED" | "REJECTED";
+  rejection_reason?: string;
+  total_amount?: number;
+  installment_amount?: number;
+  installments_count?: number;
+  start_date?: Date;
+  end_date?: Date;
+  comment?: string;
+};
 
 export const getCaseTransferById = async (id: string) => {
   return CaseTransferService.getById(id);
@@ -86,6 +110,31 @@ export const cancelCaseTransfer = async (input: CancelCaseTransferInput) => {
   return CaseTransferService.cancelTransfer(parsed.caseTransferId, parsed.reason, session.user.id);
 };
 
+// El participante concede 7 días más al mismo abogado/alguacil (decisión
+// del día 7, ver CaseTransferService.sendAcceptanceReminders).
+export const extendCaseTransferAcceptanceDeadline = async (caseTransferId: string) => {
+  const { session } = await requireTenantStaffForCaseTransfer(caseTransferId);
+  return CaseTransferService.extendAcceptanceDeadline(caseTransferId, session.user.id);
+};
+
+// El participante decide no esperar más y elegir otro profesional — solo
+// disponible una vez vencido el plazo de aceptación (nunca automático).
+// El participante vuelve luego al expediente (DebtClaim) para transferir a
+// otro abogado/alguacil vía transferToLawyer.
+export const rejectOverdueCaseTransfer = async (caseTransferId: string) => {
+  const { session, caseTransfer } = await requireTenantStaffForCaseTransfer(caseTransferId);
+  if (caseTransfer.status !== "PENDING_ACCEPTANCE") {
+    throw new Error("Dit dossier is niet in afwachting van acceptatie.");
+  }
+  if (!caseTransfer.acceptanceDeadline || caseTransfer.acceptanceDeadline > new Date()) {
+    throw new Error("De acceptatietermijn is nog niet verstreken.");
+  }
+
+  const reason =
+    "El participante decidió transferir el expediente a otro profesional tras vencer el plazo de aceptación.";
+  return CaseTransferService.rejectTransfer(caseTransferId, reason, session.user.id);
+};
+
 export const submitLawyerFeeInvoice = async (data: SubmitLawyerFeeInvoiceInput, file: File) => {
   const parsed = SubmitLawyerFeeInvoiceSchema.parse(data);
   const { session } = await requireAssignedLawyer(parsed.caseTransferId);
@@ -139,4 +188,64 @@ export const deleteCaseTransferDocument = async (documentId: string) => {
 
   await requireStaffOrAssignedLawyerOrBailiffForTransfer(document.caseTransferId);
   return CaseTransferService.deleteDocument(documentId);
+};
+
+// ---------------------------------------------------------------------
+// Power of attorney y acuerdos de pago pre-vonnis (regla definitiva:
+// el abogado/alguacil propone, el participante decide, salvo volmacht).
+// ---------------------------------------------------------------------
+
+export const setCaseTransferPowerOfAttorney = async (
+  caseTransferId: string,
+  granted: boolean,
+  note?: string,
+) => {
+  const { session } = await requireTenantStaffForCaseTransfer(caseTransferId);
+  return CaseTransferService.setPowerOfAttorney(caseTransferId, granted, note, session.user.id);
+};
+
+export const proposeCaseTransferAgreement = async (
+  caseTransferId: string,
+  data: ProposeAgreementInput,
+) => {
+  const { session, caseTransfer } =
+    await requireStaffOrAssignedLawyerOrBailiffForAgreementProposal(caseTransferId);
+
+  return AgreementService.create(
+    caseTransfer.debtClaim.tenantId,
+    {
+      debtClaim_id: caseTransfer.debtClaimId,
+      caseTransferId,
+      debtor_id: caseTransfer.debtClaim.debtorId,
+      total_amount: data.total_amount,
+      installment_amount: data.installment_amount,
+      installments_count: data.installments_count,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      comment: data.comment,
+      status: AgreementStatus.PENDING,
+    },
+    undefined,
+    session.user.id,
+  );
+};
+
+export const getCaseTransferAgreements = async (caseTransferId: string) => {
+  return AgreementService.getAllByCaseTransferId(caseTransferId);
+};
+
+export const decideCaseTransferAgreement = async (
+  caseTransferId: string,
+  agreementId: string,
+  decision: DecideAgreementInput,
+) => {
+  const { session, caseTransfer, isTenantStaff, isAssignedProfessional } =
+    await requireAuthorizedToDecideCaseTransferAgreement(caseTransferId);
+
+  return AgreementService.decide(agreementId, decision, {
+    userId: session.user.id,
+    isTenantStaff,
+    isAssignedProfessional,
+    hasPowerOfAttorney: caseTransfer.hasPowerOfAttorney,
+  });
 };

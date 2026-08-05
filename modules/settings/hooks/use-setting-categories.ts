@@ -12,11 +12,12 @@ const fetcher = async (url: string) => {
   return response.json();
 };
 
-export function useSettingCategories() {
-  const { data, error, isLoading, mutate } = useSWR(
-    "/api/admin/settings/categories",
-    fetcher,
-  );
+export function useSettingCategories(jurisdictionId?: string | null) {
+  const key = jurisdictionId
+    ? `/api/admin/settings/categories?jurisdictionId=${jurisdictionId}`
+    : "/api/admin/settings/categories";
+
+  const { data, error, isLoading, mutate } = useSWR(key, fetcher);
 
   return {
     categories: data || [],
