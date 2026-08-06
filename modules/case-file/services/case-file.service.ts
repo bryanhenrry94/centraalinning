@@ -29,6 +29,7 @@ export class CaseFileService {
         contract: { include: { documents: true } },
         blockade: { include: { documents: true } },
         administrativeCollection: { include: { steps: true } },
+        collectiveCollection: { include: { negotiations: true } },
         caseTransfers: { include: { documents: true, lawyerFeeInvoices: true } },
         legalProcess: {
           include: {
@@ -198,9 +199,34 @@ export class CaseFileService {
       });
     }
 
-    // FAR y COP: sin documentos propios hoy (FAR no tiene seguimiento
-    // activo; COP aún no está construido) — quedan como categorías vacías,
-    // listas para poblarse el día que existan sin tocar este servicio.
+    // Collectieve Opvolging (COP): no hay PDF persistido, mismo criterio que
+    // AOP-brieven — se incluye el inicio y cada regeling propuesta como
+    // registro del expediente (sin descarga).
+    if (debtClaim.collectiveCollection) {
+      const cop = debtClaim.collectiveCollection;
+      items.push({
+        id: cop.id,
+        category: CaseFileCategory.COP,
+        categoryLabel: CASE_FILE_CATEGORY_LABEL[CaseFileCategory.COP],
+        title: "Collectieve Opvolging gestart",
+        sourceLabel: cop.status,
+        createdAt: cop.startedAt,
+      });
+      for (const negotiation of cop.negotiations) {
+        items.push({
+          id: negotiation.id,
+          category: CaseFileCategory.COP,
+          categoryLabel: CASE_FILE_CATEGORY_LABEL[CaseFileCategory.COP],
+          title: `Betalingsregeling voorgesteld: ${Number(negotiation.proposalAmount)}`,
+          sourceLabel: negotiation.status,
+          createdAt: cop.startedAt,
+        });
+      }
+    }
+
+    // FAR: sin seguimiento activo hoy, sin documentos propios — queda como
+    // categoría vacía, lista para poblarse el día que exista sin tocar este
+    // servicio.
 
     return items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   };

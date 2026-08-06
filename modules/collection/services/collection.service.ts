@@ -529,6 +529,15 @@ export class CollectionService {
               originDebtClaimId: debtClaimId,
             },
           });
+
+          await tx.claimService.create({
+            data: {
+              debtClaimId,
+              service: "BLK",
+              status: "IN_PROGRESS",
+              startedAt: new Date(),
+            },
+          });
         }
       }
 

@@ -201,6 +201,16 @@ export class BlockadeService {
         },
       });
 
+      await tx.claimService.create({
+        data: {
+          debtClaimId: debtClaim.id,
+          service: "BLK",
+          status: "IN_PROGRESS",
+          startedAt: new Date(),
+          startedById: actorUserId,
+        },
+      });
+
       // Registro de auditoría de la ruta directa: quién la registró, con
       // qué motivo y con cuántos documentos de respaldo — bypassa AOP/GOP,
       // así que este es el único rastro de verificación previa que existe.
@@ -354,6 +364,11 @@ export class BlockadeService {
     const updated = await prisma.blockade.update({
       where: { id: blockade.id },
       data: { status: "SUSPENDED", releasedAt: new Date() },
+    });
+
+    await prisma.claimService.updateMany({
+      where: { debtClaimId, service: "BLK" },
+      data: { status: "COMPLETED", finishedAt: new Date(), finishedById: actorUserId },
     });
 
     const debtor = await prisma.debtor.findUnique({ where: { id: debtorId } });
