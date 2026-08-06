@@ -157,13 +157,13 @@ export class BlockadeService {
     });
 
     if (!debtor) {
-      return { success: false, message: "Deudor no encontrado" };
+      return { success: false, message: "Debiteur niet gevonden" };
     }
 
     if (!debtor.email || !debtor.person.email) {
       return {
         success: false,
-        message: "El deudor no tiene un correo electrónico asociado",
+        message: "De debiteur heeft geen gekoppeld e-mailadres",
       };
     }
 
@@ -294,13 +294,13 @@ export class BlockadeService {
     });
 
     if (!debtor) {
-      return { success: false, message: "Deudor no encontrado" };
+      return { success: false, message: "Debiteur niet gevonden" };
     }
 
     if (!debtor.email || !debtor.person.email) {
       return {
         success: false,
-        message: "El deudor no tiene un correo electrónico asociado",
+        message: "De debiteur heeft geen gekoppeld e-mailadres",
       };
     }
 
@@ -393,7 +393,7 @@ export class BlockadeService {
         user_id: debtor.user_id,
         type: NotificationType.BLOCKADE_SUSPENDED,
         title: "Economische blokkade opgeheven",
-        message: "Su deuda fue saldada en su totalidad y no tiene otros bloqueos activos: su bloqueo económico fue levantado.",
+        message: "Uw schuld werd volledig voldaan en u heeft geen andere actieve blokkades: uw economische blokkade werd opgeheven.",
         link: "/block-status",
         entity_type: "Blockade",
         entity_id: updated.id,
@@ -442,11 +442,11 @@ export class BlockadeService {
     });
 
     if (!payment) {
-      throw new Error("Payment not found");
+      throw new Error("Betaling niet gevonden");
     }
 
     if (payment.status !== "paid") {
-      throw new Error("Payment is not marked as paid");
+      throw new Error("De betaling is niet als betaald gemarkeerd");
     }
 
     const blockade = await prisma.blockade.findFirst({
@@ -462,7 +462,7 @@ export class BlockadeService {
     });
 
     if (!blockade) {
-      throw new Error("Blockade not found");
+      throw new Error("Blokkade niet gevonden");
     }
 
     // Aquí puedes agregar la lógica específica para procesar el pago de la blokkade

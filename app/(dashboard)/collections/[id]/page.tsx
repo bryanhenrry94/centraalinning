@@ -25,7 +25,7 @@ import {
 
 import { DebtClaimView } from "@/modules/collection/services/collection.validators";
 import { Payment } from "@/modules/payment/services/payment.validators";
-import { getDebtClaimViewById } from "@/modules/collection/actions/collection-case.actions";
+import { getDebtClaimViewById } from "@/modules/collection/actions/debt-claim.actions";
 import { notifyError } from "@/shared/ui/notifications";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { getPaymentsByInvoice } from "@/modules/payment/actions/payment.actions";

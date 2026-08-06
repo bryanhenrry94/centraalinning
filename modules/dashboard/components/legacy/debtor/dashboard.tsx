@@ -122,7 +122,7 @@ const DashboardDebtor = () => {
         session?.user?.tenant_id as string,
       );
       if (!debtor) {
-        notifyError("No se encontró el deudor asociado al usuario");
+        notifyError("Geen debiteur gevonden voor deze gebruiker");
         return;
       }
 
@@ -165,7 +165,7 @@ const DashboardDebtor = () => {
       }
     } catch (error) {
       console.error("Error fetching debts:", error);
-      notifyError("Error al obtener deudas");
+      notifyError("Fout bij het ophalen van schulden");
     }
   }, [user?.id, session?.user?.tenant_id]);
 

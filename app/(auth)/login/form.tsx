@@ -87,7 +87,7 @@ export default function LoginForm() {
         notifyError(result?.error || "Onjuiste inloggegevens");
       }
     } catch (error) {
-      notifyError("Error inesperado");
+      notifyError("Onverwachte fout");
     } finally {
       setIsLoading(false);
     }

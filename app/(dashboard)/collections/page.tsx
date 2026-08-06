@@ -4,7 +4,7 @@ import { Box, Skeleton } from "@mui/material";
 import { CollectionHeader } from "@/modules/collection/components/collection-header";
 import { DebtClaimResponse } from "@/modules/collection/services/collection.type";
 import { useAuthSession } from "@/modules/auth/hooks/useAuthSession";
-import { getDebtClaimsAction } from "@/modules/collection/actions/collection-case.actions";
+import { getDebtClaimsAction } from "@/modules/collection/actions/debt-claim.actions";
 import CollectionTable from "@/modules/collection/components/collection-table";
 import { AgreementReviewDialog } from "@/modules/agreement/components/agreement-review-dialog";
 

@@ -9,7 +9,7 @@ import { NotificationService } from "@/modules/notification/services/notificatio
 import { NotificationType } from "@/modules/notification/constants/notification-type";
 import { prisma } from "@/lib/prisma";
 
-// El job principal de AOP (process_collection_case_workflow.ts) excluye los
+// El job principal de AOP (process_aop_workflow.ts) excluye los
 // dossiers que ya llegaron a BLK_NOTIFICATION, así que nunca vuelve a
 // revisarlos. Un bloqueo SUSPENDED por un acuerdo aceptado necesita este
 // chequeo aparte para detectar incumplimientos y reactivar el bloqueo.

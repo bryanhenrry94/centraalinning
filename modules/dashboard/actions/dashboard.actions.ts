@@ -7,8 +7,8 @@ export async function getDashboardStats() {
     const data = await DashboardService.getStats();
     return { success: true, data };
   } catch (error) {
-    console.error("[v0] Error al obtener estadísticas:", error);
-    return { success: false, error: "Error al obtener estadísticas" };
+    console.error("[v0] Fout bij het ophalen van statistieken:", error);
+    return { success: false, error: "Fout bij het ophalen van statistieken" };
   }
 }
 

@@ -5,8 +5,8 @@ export const bankAccountTypeEnum = z.enum(["SAVINGS", "CHECKING"]);
 // Base bank account schema with all fields
 export const bankAccountSchema = z.object({
   id: z.string().uuid(),
-  bank_name: z.string().min(1, "El nombre del banco es obligatorio"),
-  account_number: z.string().min(1, "El número de cuenta es obligatorio"),
+  bank_name: z.string().min(1, "De banknaam is verplicht"),
+  account_number: z.string().min(1, "Het rekeningnummer is verplicht"),
   account_type: bankAccountTypeEnum,
   tenant_id: z.string().uuid(),
   created_at: z.date(),

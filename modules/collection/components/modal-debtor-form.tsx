@@ -134,7 +134,7 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
         const updDebtor = await updateDebtor(values, tenant.id, id);
 
         if (!updDebtor.success) {
-          notifyError("Error updating debtor");
+          notifyError("Fout bij het bijwerken van de debiteur");
           return;
         }
 
@@ -143,7 +143,7 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
         const newDebtor = await createDebtor(values, tenant.id);
 
         if (!newDebtor.success) {
-          notifyError(newDebtor.error || "Error creating debtor");
+          notifyError(newDebtor.error || "Fout bij het aanmaken van de debiteur");
           return;
         }
 
@@ -332,7 +332,7 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Email"
+                      label="E-mailadres"
                       type="email"
                       required={true}
                       size="small"
@@ -348,12 +348,12 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
                 />
                 <InputHookForm
                   name="person.phone"
-                  label="Phone"
+                  label="Telefoonnummer"
                   required={true}
                 />
                 <InputHookForm
                   name="person.address"
-                  label="Address"
+                  label="Adres"
                   required={true}
                 />
                 <Controller

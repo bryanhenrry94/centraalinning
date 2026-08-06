@@ -14,7 +14,7 @@ export const lawyerBaseSchema = z.object({
 
   email: z
     .string()
-    .email("Correo electrónico no válido")
+    .email("Ongeldig e-mailadres")
     .nullable()
     .optional(),
   phone: z.string().nullable().optional(),

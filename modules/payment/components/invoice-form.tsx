@@ -270,7 +270,7 @@ const InvoiceFormPage: React.FC<InvoiceFormPageProps> = ({ id }) => {
             invoice_details: data.invoice_details || [],
           });
         } else {
-          notifyError("No se encontró la factura");
+          notifyError("Factuur niet gevonden");
         }
       };
       fetchInvoice();
@@ -507,7 +507,7 @@ const InvoiceFormPage: React.FC<InvoiceFormPageProps> = ({ id }) => {
                   border: "1px solid #e0e0e0",
                 },
               }}
-              aria-label="tabla de embargo"
+              aria-label="factuurtabel"
               size="small"
             >
               <TableHead>

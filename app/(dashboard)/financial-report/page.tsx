@@ -70,7 +70,7 @@ const VerklaringPage: React.FC = () => {
       const tenantId = session?.user?.tenant_id;
 
       if (!tenantId) {
-        throw new Error("Geen tenant gevonden.");
+        throw new Error("Geen organisatie gevonden.");
       }
 
       if (!price || price <= 0) {

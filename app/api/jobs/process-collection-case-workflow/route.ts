@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { processCollectionCaseWorkflow } from "@/lib/jobs/process_collection_case_workflow";
+import { processAopWorkflow } from "@/lib/jobs/process_aop_workflow";
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const result = await processCollectionCaseWorkflow();
+    const result = await processAopWorkflow();
     return NextResponse.json({ success: true, ...result });
   } catch (error) {
     console.error(error);

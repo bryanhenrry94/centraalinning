@@ -3,10 +3,10 @@ import { z } from "zod";
 // Base employee schema with all fields
 export const employeeSchema = z.object({
   id: z.string().uuid(),
-  identification: z.string().min(1, "La identificación es obligatoria"),
+  identification: z.string().min(1, "Het identificatienummer is verplicht"),
   first_name: z.string().min(1, "El nombre es obligatorio"),
   last_name: z.string().min(1, "El apellido es obligatorio"),
-  email: z.string().email("Formato de correo electrónico inválido"),
+  email: z.string().email("Ongeldig e-mailadresformaat"),
   address: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),
   tenant_id: z.string().uuid(),

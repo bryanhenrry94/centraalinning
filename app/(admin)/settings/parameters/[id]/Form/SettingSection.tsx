@@ -105,7 +105,7 @@ export const SettingSection = ({ id }: { id: string }) => {
       } catch (err) {
         console.error(err);
 
-        setError("No se pudieron cargar los parámetros");
+        setError("De parameters konden niet worden geladen");
       } finally {
         setLoading(false);
       }
@@ -130,11 +130,11 @@ export const SettingSection = ({ id }: { id: string }) => {
         throw new Error("Error updating settings");
       }
 
-      alert("Configuraciones guardadas correctamente");
+      alert("Instellingen succesvol opgeslagen");
     } catch (error) {
       console.error(error);
 
-      alert("Error al guardar configuraciones");
+      alert("Fout bij het opslaan van de instellingen");
     }
   }
 
@@ -174,7 +174,7 @@ export const SettingSection = ({ id }: { id: string }) => {
               ← Parameters
             </Link>
             <Typography variant="h5" sx={{ fontWeight: 600 }}>
-              {category?.name || "Sin categoría"}
+              {category?.name || "Geen categorie"}
             </Typography>
           </Box>
 
@@ -231,7 +231,7 @@ export const SettingSection = ({ id }: { id: string }) => {
                       )}
 
                       <Chip
-                        label={setting.jurisdiction?.islandName ?? "Global"}
+                        label={setting.jurisdiction?.islandName ?? "Algemeen"}
                         size="small"
                         variant="outlined"
                         color={setting.jurisdiction ? "primary" : "default"}
@@ -261,7 +261,7 @@ export const SettingSection = ({ id }: { id: string }) => {
                           fullWidth
                           size="small"
                           variant="outlined"
-                          placeholder={`Enter ${setting.name}`}
+                          placeholder={`Voer ${setting.name} in`}
                           sx={{ bgcolor: "#DDDBDA" }}
                         />
                       )}
@@ -289,7 +289,7 @@ export const SettingSection = ({ id }: { id: string }) => {
                   boxShadow: "none",
                 }}
               >
-                {isSubmitting ? "Saving..." : "Save Changes"}
+                {isSubmitting ? "Opslaan..." : "Wijzigingen opslaan"}
               </Button>
             </Box>
           </Box>

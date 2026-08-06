@@ -15,7 +15,7 @@ export class LawyerService {
       const parsedData = lawyerCreateSchema.parse(data);
 
       if (!parsedData.firstName || !parsedData.lastName) {
-        throw new Error("First name and last name are required");
+        throw new Error("Voornaam en achternaam zijn verplicht");
       }
 
       const lawyer = await prisma.lawyer.create({
@@ -33,11 +33,11 @@ export class LawyerService {
     id: string,
   ): Promise<{ success: boolean; data?: Lawyer; error?: string }> {
     try {
-      if (!id) throw new Error("Lawyer ID is required");
+      if (!id) throw new Error("Advocaat-ID is verplicht");
 
       const lawyer = await prisma.lawyer.findUnique({ where: { id } });
 
-      if (!lawyer) throw new Error("Lawyer not found");
+      if (!lawyer) throw new Error("Advocaat niet gevonden");
 
       return { success: true, data: lawyer as Lawyer };
     } catch (error) {
@@ -51,7 +51,7 @@ export class LawyerService {
     data: Partial<LawyerUpdate>,
   ): Promise<{ success: boolean; data?: Lawyer; error?: string }> {
     try {
-      if (!id) throw new Error("Lawyer ID is required");
+      if (!id) throw new Error("Advocaat-ID is verplicht");
 
       const {
         firstName,
@@ -122,13 +122,13 @@ export class LawyerService {
       const lawyer = await prisma.lawyer.findFirst({ where: { userId: user_id } });
 
       if (!lawyer) {
-        throw new Error("Abogado no encontrado para el ID de usuario proporcionado");
+        throw new Error("Geen advocaat gevonden voor de opgegeven gebruikers-ID");
       }
 
       return { success: true, data: lawyer as Lawyer };
     } catch (error) {
       console.error("Error getting lawyer by user ID:", error);
-      return { success: false, error: "Error al obtener el abogado por ID de usuario" };
+      return { success: false, error: "Fout bij het ophalen van de advocaat via gebruikers-ID" };
     }
   }
 }

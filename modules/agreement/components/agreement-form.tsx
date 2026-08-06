@@ -90,7 +90,7 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
       setLoading(true);
 
       if (!session?.user?.tenant_id) {
-        return notifyError("No se encontró el tenant del usuario");
+        return notifyError("Geen organisatie gevonden voor deze gebruiker");
       }
 
       if (new Date(data.start_date) < new Date()) {
@@ -99,7 +99,7 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
 
       const installmentsCount = Number(data.installments_count);
       if (!installmentsCount || installmentsCount <= 0) {
-        return notifyError("El número de cuotas debe ser mayor a 0");
+        return notifyError("Het aantal termijnen moet groter zijn dan 0");
       }
 
       const installmentAmount =
@@ -141,7 +141,7 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
         session.user.tenant_id,
       );
       if (!debtor)
-        return notifyError("No se encontró deudor asociado al usuario");
+        return notifyError("Geen debiteur gevonden voor deze gebruiker");
 
       const payload: CreateAgreement = {
         debtClaim_id,
@@ -161,7 +161,7 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
       onSave?.();
     } catch (err) {
       console.error(err);
-      notifyError(err instanceof Error ? err.message : "Error al procesar el acuerdo de pago");
+      notifyError(err instanceof Error ? err.message : "Fout bij het verwerken van de betalingsregeling");
     } finally {
       setLoading(false);
     }

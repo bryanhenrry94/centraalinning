@@ -136,7 +136,7 @@ const OvereenkomstenRegistrerenPage = () => {
       const response = await fetch("/api/tenant");
 
       if (!response.ok) {
-        notifyError("Kon tenantgegevens niet laden");
+        notifyError("Kon organisatiegegevens niet laden");
         return;
       }
 
@@ -335,8 +335,8 @@ const OvereenkomstenRegistrerenPage = () => {
     }
 
     if (!session?.user.tenant_id) {
-      notifyError("Geen tenant gevonden");
-      return { success: false, error: "Geen tenant gevonden" };
+      notifyError("Geen organisatie gevonden");
+      return { success: false, error: "Geen organisatie gevonden" };
     }
 
     if (amountService <= 0) {

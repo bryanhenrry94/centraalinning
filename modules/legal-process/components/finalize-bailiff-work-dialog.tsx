@@ -97,15 +97,15 @@ export const FinalizeBailiffWorkDialog: React.FC<FinalizeBailiffWorkDialogProps>
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Trabajo finalizado: costos y comisión CFSB</DialogTitle>
+      <DialogTitle>Werk afgerond: kosten en CFSB-commissie</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Alert severity="info">
-            Al registrar la factura se calcula automáticamente la comisión del CFSB (5%) sobre el
-            monto total. Debe pagarla para poder cerrar el expediente GOP.
+            Bij het registreren van de factuur wordt automatisch de CFSB-commissie (5%) over het
+            totaalbedrag berekend. Deze moet betaald worden om het GOP-dossier te kunnen sluiten.
           </Alert>
           <TextField
-            label="Monto total facturado al debiteur"
+            label="Totaalbedrag gefactureerd aan de debiteur"
             type="number"
             size="small"
             required
@@ -113,13 +113,13 @@ export const FinalizeBailiffWorkDialog: React.FC<FinalizeBailiffWorkDialogProps>
             onChange={set("totalAmount")}
           />
           <TextField
-            label="Número de factura (opcional)"
+            label="Factuurnummer (optioneel)"
             size="small"
             value={form.invoiceNumber}
             onChange={set("invoiceNumber")}
           />
           <TextField
-            label="Fecha de factura (opcional)"
+            label="Factuurdatum (optioneel)"
             type="date"
             size="small"
             slotProps={{ inputLabel: { shrink: true } }}
@@ -127,7 +127,7 @@ export const FinalizeBailiffWorkDialog: React.FC<FinalizeBailiffWorkDialogProps>
             onChange={set("invoiceDate")}
           />
           <Button component="label" variant="outlined" startIcon={<UploadFileIcon />}>
-            {file ? file.name : "Subir factura de costos"}
+            {file ? file.name : "Kostenfactuur uploaden"}
             <input type="file" hidden onChange={handleFileChange} />
           </Button>
         </Stack>

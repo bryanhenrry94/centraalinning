@@ -97,16 +97,16 @@ export const FinalizeLawyerWorkDialog: React.FC<FinalizeLawyerWorkDialogProps> =
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Trabajo finalizado: honorarios y comisión CFSB</DialogTitle>
+      <DialogTitle>Werk afgerond: honorarium en CFSB-commissie</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Alert severity="info">
-            Al registrar la factura se calcula automáticamente la comisión del CFSB (5%) sobre el
-            monto total. Debe pagarla para que el expediente quede &quot;Trabajo finalizado&quot; y
-            pueda transferir la sentencia al agente judicial.
+            Bij het registreren van de factuur wordt automatisch de CFSB-commissie (5%) over het
+            totaalbedrag berekend. Deze moet betaald worden zodat het dossier de status
+            &quot;Werk afgerond&quot; krijgt en het vonnis overgedragen kan worden aan de deurwaarder.
           </Alert>
           <TextField
-            label="Monto total (honorarios + gastos)"
+            label="Totaalbedrag (honorarium + kosten)"
             type="number"
             size="small"
             required
@@ -114,13 +114,13 @@ export const FinalizeLawyerWorkDialog: React.FC<FinalizeLawyerWorkDialogProps> =
             onChange={set("totalAmount")}
           />
           <TextField
-            label="Número de factura (opcional)"
+            label="Factuurnummer (optioneel)"
             size="small"
             value={form.invoiceNumber}
             onChange={set("invoiceNumber")}
           />
           <TextField
-            label="Fecha de factura (opcional)"
+            label="Factuurdatum (optioneel)"
             type="date"
             size="small"
             slotProps={{ inputLabel: { shrink: true } }}
@@ -128,7 +128,7 @@ export const FinalizeLawyerWorkDialog: React.FC<FinalizeLawyerWorkDialogProps> =
             onChange={set("invoiceDate")}
           />
           <Button component="label" variant="outlined" startIcon={<UploadFileIcon />}>
-            {file ? file.name : "Subir factura de honorarios"}
+            {file ? file.name : "Honorariumfactuur uploaden"}
             <input type="file" hidden onChange={handleFileChange} />
           </Button>
         </Stack>

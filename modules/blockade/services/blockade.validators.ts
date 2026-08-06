@@ -15,9 +15,9 @@ const REASONS_REQUIRING_NOTE = ["EXTERNAL_PROCEDURE_COMPLETED", "OTHER"] as cons
 
 export const BlockadeSchema = z
   .object({
-    debtorId: z.string().min(1, "Debe seleccionar un deudor"),
+    debtorId: z.string().min(1, "U dient een debiteur te selecteren"),
 
-    amount: z.number().positive("El monto debe ser un número positivo"),
+    amount: z.number().positive("Het bedrag moet een positief getal zijn"),
 
     reason: z.enum(["UNPAID_PAYMENT", "EXTERNAL_PROCEDURE_COMPLETED", "OTHER"]),
 
@@ -33,7 +33,7 @@ export const BlockadeSchema = z
 
     documents: z
       .array(BlockadeDocumentSchema)
-      .min(1, "Debe adjuntar al menos un documento"),
+      .min(1, "U dient minstens één document bij te voegen"),
 
     // Confirmación explícita: quien registra declara que la información y
     // los documentos adjuntos son verídicos (ruta directa, sin pasar por

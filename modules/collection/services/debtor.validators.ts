@@ -23,7 +23,7 @@ export const DebtorSchema = z.object({
   tenant_id: z.string(),
   person_id: z.string(),
   user_id: z.string().nullable(),
-  email: z.email({ message: "El correo electrónico no es válido." }),
+  email: z.email({ message: "Het e-mailadres is niet geldig." }),
   total_income: z.number(),
 });
 

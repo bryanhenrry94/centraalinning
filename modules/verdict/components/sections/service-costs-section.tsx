@@ -242,7 +242,7 @@ const ServiceCostsSection: React.FC<ServiceCostsSectionProps> = ({
                 border: "1px solid #e0e0e0",
               },
             }}
-            aria-label="tabla de embargo"
+            aria-label="tabel met deurwaarderskosten"
             size="small"
           >
             <TableHead>

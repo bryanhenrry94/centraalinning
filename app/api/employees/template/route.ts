@@ -35,9 +35,9 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("Error al obtener la plantilla:", error);
+    console.error("Fout bij het ophalen van het sjabloon:", error);
     return NextResponse.json(
-      { error: "Error al generar la plantilla" },
+      { error: "Fout bij het genereren van het sjabloon" },
       { status: 500 }
     );
   }

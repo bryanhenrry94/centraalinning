@@ -42,13 +42,13 @@ export class InvoiceService {
     });
 
     if (!payment) {
-      throw new Error(`Payment ${paymentId} not found`);
+      throw new Error(`Betaling ${paymentId} niet gevonden`);
     }
 
     const parameter = await ParameterService.getParameter();
 
     if (!parameter) {
-      throw new Error("No se encontró la configuración del sistema");
+      throw new Error("Systeemconfiguratie niet gevonden");
     }
 
     const amount = Number(payment.total_amount);
@@ -217,7 +217,7 @@ export class InvoiceService {
     });
 
     if (!tenant) {
-      throw new Error("No contact email found for tenant");
+      throw new Error("Geen contact-e-mailadres gevonden voor deze organisatie");
     }
 
     // Definir valores base
@@ -227,7 +227,7 @@ export class InvoiceService {
     // Obtener parámetro necesario
     const parameter = await ParameterService.getParameter();
     if (!parameter) {
-      throw new Error("No se encontró el parámetro");
+      throw new Error("Parameter niet gevonden");
     }
 
     // Costo base de activación
@@ -246,7 +246,7 @@ export class InvoiceService {
         issue_date,
         due_date,
         description:
-          "Factura por activación de cuenta del sistema CFSB",
+          "Factuur voor activering van CFSB-systeemaccount",
         status: "unpaid",
         payment_id: "",
       },
@@ -276,7 +276,7 @@ export class InvoiceService {
     });
 
     if (!res.success) {
-      throw new Error("Hubo un error al crear el pago en Sentoo");
+      throw new Error("Er is een fout opgetreden bij het aanmaken van de betaling in Sentoo");
     }
 
     console.log("payment created:", res.payment);

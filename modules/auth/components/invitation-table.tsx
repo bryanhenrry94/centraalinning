@@ -67,7 +67,7 @@ export default function InvitationTable({ tenant_id }: Props) {
         <Box>Er zijn geen openstaande uitnodigingen.</Box>
       ) : (
         <TableContainer component={Paper}>
-          <Table size="small" aria-label="tabla de invitaciones pendientes">
+          <Table size="small" aria-label="tabel met openstaande uitnodigingen">
             <TableHead>
               <TableRow>
                 <TableCell>E-mail</TableCell>

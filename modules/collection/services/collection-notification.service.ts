@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getDebtClaimById } from "@/modules/collection/actions/collection-case.actions";
+import { getDebtClaimById } from "@/modules/collection/actions/debt-claim.actions";
 import { registerInvitation } from "@/modules/auth/actions/invitation.actions";
 import { protocol, rootDomain } from "@/lib/config";
 import {
@@ -16,7 +16,7 @@ type AOPStep = "REMINDER" | "FINAL_NOTICE" | "DEFAULT_NOTICE" | "BLK_NOTIFICATIO
 
 export class CollectionNotificationService {
   static sendNotification = async (debtClaimId: string) => {
-    if (!debtClaimId) throw new Error("debtClaimId is required");
+    if (!debtClaimId) throw new Error("debtClaimId is verplicht");
 
     const aop = await prisma.administrativeCollection.findUnique({
       where: { debtClaimId },
@@ -25,7 +25,7 @@ export class CollectionNotificationService {
       },
     });
 
-    if (!aop) throw new Error("AdministrativeCollection not found");
+    if (!aop) throw new Error("AOP-dossier niet gevonden");
 
     const currentStep = aop.steps[0]?.step as AOPStep | undefined;
 
@@ -50,8 +50,8 @@ export class CollectionNotificationService {
         where: { id: claim.debtorId },
         include: { person: true },
       });
-      if (!debtor) throw new Error("Deudor no encontrado");
-      if (!debtor.email) throw new Error("El deudor no tiene email");
+      if (!debtor) throw new Error("Debiteur niet gevonden");
+      if (!debtor.email) throw new Error("De debiteur heeft geen e-mailadres");
 
       const debtorName =
         `${debtor.person?.first_name ?? ""} ${debtor.person?.last_name ?? ""}`.trim() ||
@@ -83,7 +83,7 @@ export class CollectionNotificationService {
       return "Aanmaning sent successfully";
     } catch (error) {
       console.error("Error sending Aanmaning:", error);
-      throw new Error("Failed to send Aanmaning");
+      throw new Error("Verzenden van de Aanmaning is mislukt");
     }
   };
 
@@ -91,12 +91,12 @@ export class CollectionNotificationService {
     try {
       const claim = await getDebtClaimById(debtClaimId);
       const debtor = await prisma.debtor.findUnique({ where: { id: claim.debtorId } });
-      if (!debtor?.email) throw new Error("El deudor no tiene email");
+      if (!debtor?.email) throw new Error("De debiteur heeft geen e-mailadres");
       await sendSommatieEmail(debtor.email, debtClaimId);
       return "Sommatie sent successfully";
     } catch (error) {
       console.error("Error sending Sommatie:", error);
-      throw new Error("Failed to send Sommatie");
+      throw new Error("Verzenden van de Sommatie is mislukt");
     }
   };
 
@@ -104,12 +104,12 @@ export class CollectionNotificationService {
     try {
       const claim = await getDebtClaimById(debtClaimId);
       const debtor = await prisma.debtor.findUnique({ where: { id: claim.debtorId } });
-      if (!debtor?.email) throw new Error("El deudor no tiene email");
+      if (!debtor?.email) throw new Error("De debiteur heeft geen e-mailadres");
       await sendIngebrekestellingMail(debtor.email, debtClaimId);
       return "Ingebrekestelling sent successfully";
     } catch (error) {
       console.error("Error sending Ingebrekestelling:", error);
-      throw new Error("Failed to send Ingebrekestelling");
+      throw new Error("Verzenden van de Ingebrekestelling is mislukt");
     }
   };
 
@@ -117,12 +117,12 @@ export class CollectionNotificationService {
     try {
       const claim = await getDebtClaimById(debtClaimId);
       const debtor = await prisma.debtor.findUnique({ where: { id: claim.debtorId } });
-      if (!debtor?.email) throw new Error("El deudor no tiene email");
+      if (!debtor?.email) throw new Error("De debiteur heeft geen e-mailadres");
       await sendBlokkadeMail(debtor.email, debtClaimId);
       return "Blokkade sent successfully";
     } catch (error) {
       console.error("Error sending Blokkade:", error);
-      throw new Error("Failed to send Blokkade");
+      throw new Error("Verzenden van de Blokkade-melding is mislukt");
     }
   };
 
@@ -144,7 +144,7 @@ export class CollectionNotificationService {
     const param = tenantId
       ? await ParameterService.getParameterForTenant(tenantId)
       : await ParameterService.getParameter();
-    if (!param) throw new Error("Parameter not found");
+    if (!param) throw new Error("Parameter niet gevonden");
 
     if (step === "REMINDER") {
       return person_type === PersonType.INDIVIDUAL

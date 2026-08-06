@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       {
-        message: "Error al consultar deudores",
+        message: "Fout bij het opvragen van debiteuren",
       },
       {
         status: 500,

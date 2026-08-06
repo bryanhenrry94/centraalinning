@@ -81,7 +81,7 @@ export const VerdictResponseSchema = VerdictBaseSchema.extend({
       person_id: z.string().nullable(),
       email: z
         .string()
-        .email({ message: "El correo electrónico no es válido." }),
+        .email({ message: "Het e-mailadres is niet geldig." }),
       fullname: z.string(),
       total_income: z
         .preprocess(

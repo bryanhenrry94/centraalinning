@@ -70,7 +70,7 @@ const AttachmentsSection: React.FC<AttachmentsSectionProps> = ({
       if (res) {
         notifyInfo("Archivo subido exitosamente.");
       } else {
-        notifyError("Error al subir el archivo.");
+        notifyError("Fout bij het uploaden van het bestand.");
       }
     });
 
@@ -155,7 +155,7 @@ const AttachmentsSection: React.FC<AttachmentsSectionProps> = ({
               border: "1px solid #e0e0e0",
             },
           }}
-          aria-label="tabla de embargo"
+          aria-label="tabel met bijlagen"
           size="small"
         >
           <TableHead>

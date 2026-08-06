@@ -15,7 +15,7 @@ export class BailiffService {
       const parsedData = bailiffCreateSchema.parse(data);
 
       if (!parsedData.fullname || !parsedData.email) {
-        throw new Error("Name and email are required");
+        throw new Error("Naam en e-mailadres zijn verplicht");
       }
 
       const bailiff = await prisma.bailiff.create({
@@ -33,11 +33,11 @@ export class BailiffService {
     id: string,
   ): Promise<{ success: boolean; data?: Bailiff; error?: string }> {
     try {
-      if (!id) throw new Error("Bailiff ID is required");
+      if (!id) throw new Error("Deurwaarder-ID is verplicht");
 
       const bailiff = await prisma.bailiff.findUnique({ where: { id } });
 
-      if (!bailiff) throw new Error("Bailiff not found");
+      if (!bailiff) throw new Error("Deurwaarder niet gevonden");
 
       return { success: true, data: bailiff };
     } catch (error) {
@@ -51,7 +51,7 @@ export class BailiffService {
     data: Partial<BailiffUpdate>,
   ): Promise<{ success: boolean; data?: Bailiff; error?: string }> {
     try {
-      if (!id) throw new Error("Bailiff ID is required");
+      if (!id) throw new Error("Deurwaarder-ID is verplicht");
 
       const { fullname, email, phone } = data;
       const updateData: any = {};
@@ -92,13 +92,13 @@ export class BailiffService {
       const bailiff = await prisma.bailiff.findFirst({ where: { user_id } });
 
       if (!bailiff) {
-        throw new Error("Alguacil no encontrado para el ID de usuario proporcionado");
+        throw new Error("Geen deurwaarder gevonden voor de opgegeven gebruikers-ID");
       }
 
       return { success: true, data: bailiff };
     } catch (error) {
       console.error("Error getting bailiff by user ID:", error);
-      return { success: false, error: "Error al obtener el alguacil por ID de usuario" };
+      return { success: false, error: "Fout bij het ophalen van de deurwaarder via gebruikers-ID" };
     }
   }
 }

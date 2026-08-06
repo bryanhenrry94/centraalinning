@@ -30,7 +30,7 @@ export class BillingInvoiceService {
 
   static async createCollectionInvoice(params: ActivationInvoiceInput) {
     const tenant = await prisma.tenant.findUnique({ where: { id: params.tenant_id } });
-    if (!tenant) throw new Error("No contact email found for tenant");
+    if (!tenant) throw new Error("Geen contact-e-mailadres gevonden voor deze organisatie");
 
     const issue_date = new Date();
     const due_date = addDays(issue_date, 7);
@@ -45,7 +45,7 @@ export class BillingInvoiceService {
         currency: "USD",
         issue_date,
         due_date,
-        description: "Factura por activación de cuenta del sistema CFSB",
+        description: "Factuur voor activering van CFSB-systeemaccount",
         status: "unpaid",
         payment_id: "",
       },
@@ -85,7 +85,7 @@ export class BillingInvoiceService {
       reference: invoice.id,
     });
 
-    if (!res.success) throw new Error("Hubo un error al crear el pago en Sentoo");
+    if (!res.success) throw new Error("Er is een fout opgetreden bij het aanmaken van de betaling in Sentoo");
 
     if (tenant.contact_email) {
       await sendInvoiceEmail(tenant.contact_email, invoice.id, false);
@@ -100,10 +100,10 @@ export class BillingInvoiceService {
       include: { tenant: true, details: true },
     });
 
-    if (!invoice) throw new Error("Invoice not found");
+    if (!invoice) throw new Error("Factuur niet gevonden");
 
     const parameter = await ParameterService.getParameter();
-    if (!parameter) throw new Error("No se encontró el parámetro");
+    if (!parameter) throw new Error("Parameter niet gevonden");
 
     const island = getNameCountry(invoice.tenant.country_code);
 
@@ -278,7 +278,7 @@ export class BillingInvoiceService {
 
   static async getNextInvoiceNumber(tenant_id: string): Promise<string> {
     const parameter = await ParameterService.getParameter();
-    if (!parameter) throw new Error("No se encontró el parámetro");
+    if (!parameter) throw new Error("Parameter niet gevonden");
 
     const lastInvoice = await prisma.billingInvoice.findFirst({
       where: { tenant_id },

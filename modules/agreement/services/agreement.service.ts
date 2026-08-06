@@ -67,15 +67,15 @@ export class AgreementService {
     });
 
     if (!debtClaim || debtClaim.tenantId !== tenant_id) {
-      throw new Error("DebtClaim not found for this tenant");
+      throw new Error("Dossier niet gevonden voor deze organisatie");
     }
 
     if (requestingUserId && debtClaim.debtor.user_id !== requestingUserId) {
-      throw new Error("No tiene permiso para solicitar un acuerdo sobre esta deuda");
+      throw new Error("U heeft geen toestemming om een betalingsregeling voor deze schuld aan te vragen");
     }
 
     if (data.debtor_id && data.debtor_id !== debtClaim.debtorId) {
-      throw new Error("El debtor_id no coincide con la deuda indicada");
+      throw new Error("De debiteur komt niet overeen met de opgegeven schuld");
     }
 
     // El deudor sólo puede solicitar un acuerdo mientras el AOP siga dentro
@@ -213,7 +213,7 @@ export class AgreementService {
     // El deudor debe poder saber por qué se rechazó su solicitud y ajustarla
     // en consecuencia; sin motivo obligatorio el rechazo queda sin contexto.
     if (updateData.status === AgreementStatus.REJECTED && !updateData.rejection_reason?.trim()) {
-      throw new Error("Debe indicar un motivo de rechazo.");
+      throw new Error("U dient een reden voor afwijzing op te geven.");
     }
 
     const updated = await prisma.agreement.update({ where: { id }, data: updateData });
@@ -308,7 +308,7 @@ export class AgreementService {
     }
 
     if (decision.status === "REJECTED" && !decision.rejection_reason?.trim()) {
-      throw new Error("Debe indicar un motivo de rechazo.");
+      throw new Error("U dient een reden voor afwijzing op te geven.");
     }
 
     const modified =

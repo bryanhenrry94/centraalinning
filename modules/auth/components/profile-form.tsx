@@ -33,7 +33,7 @@ const ProfileForm: React.FC<Props> = ({ initial, onSave }) => {
     e.preventDefault();
     // Basic validation: email must be present
     if (!formData.email) {
-      alert("El email es obligatorio.");
+      alert("Het e-mailadres is verplicht.");
       return;
     }
     onSave?.(formData);
@@ -56,7 +56,7 @@ const ProfileForm: React.FC<Props> = ({ initial, onSave }) => {
             value={formData.email}
             fullWidth
             variant="outlined"
-            placeholder="Email"
+            placeholder="E-mailadres"
             disabled
             InputProps={{
               readOnly: true,
@@ -64,7 +64,7 @@ const ProfileForm: React.FC<Props> = ({ initial, onSave }) => {
             inputProps={{
               "aria-readonly": "true",
             }}
-            helperText="El email no es editable."
+            helperText="Het e-mailadres kan niet worden gewijzigd."
           />
         </Box>
 
@@ -77,7 +77,7 @@ const ProfileForm: React.FC<Props> = ({ initial, onSave }) => {
             onChange={(e) =>
               setFormData({ ...formData, fullname: e.target.value })
             }
-            placeholder="Nombre completo"
+            placeholder="Volledige naam"
             fullWidth
             variant="outlined"
           />
@@ -92,7 +92,7 @@ const ProfileForm: React.FC<Props> = ({ initial, onSave }) => {
             onChange={(e) =>
               setFormData({ ...formData, phone: e.target.value })
             }
-            placeholder="Teléfono"
+            placeholder="Telefoonnummer"
             fullWidth
             variant="outlined"
           />
@@ -100,7 +100,7 @@ const ProfileForm: React.FC<Props> = ({ initial, onSave }) => {
 
         <Box>
           <Button type="submit" variant="contained" color="primary">
-            Guardar
+            Opslaan
           </Button>
         </Box>
       </Stack>

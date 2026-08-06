@@ -5,7 +5,7 @@ import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import PersonIcon from "@mui/icons-material/Person";
 // action & validations
-import { getDebtClaimViewById } from "@/modules/collection/actions/collection-case.actions";
+import { getDebtClaimViewById } from "@/modules/collection/actions/debt-claim.actions";
 import { DebtClaimView } from "@/modules/collection/services/collection.validators";
 import { Agreement } from "@/modules/agreement/services/agreement.validators";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
@@ -23,15 +23,15 @@ const PendingRequestCard: React.FC<PendingRequestCardProps> = ({
   onApprove,
   onReject,
 }) => {
-  const [collectionCase, setCollectionCase] =
+  const [debtClaim, setDebtClaim] =
     useState<DebtClaimView | null>(null);
 
   useEffect(() => {
-    const fetchCollectionCase = async () => {
+    const fetchDebtClaim = async () => {
       const data = await getDebtClaimViewById(agreement.debtClaim_id || "");
-      setCollectionCase(data);
+      setDebtClaim(data);
     };
-    fetchCollectionCase();
+    fetchDebtClaim();
   }, [agreement.debtClaim_id]);
 
   const handleApprove = () => {
@@ -53,12 +53,12 @@ const PendingRequestCard: React.FC<PendingRequestCardProps> = ({
       >
         <Box>
           <Typography variant="h5">
-            Referencia #{collectionCase?.reference}
+            Referencia #{debtClaim?.reference}
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <PersonIcon />
             <Typography variant="body1">
-              {collectionCase?.debtor.fullname}
+              {debtClaim?.debtor.fullname}
             </Typography>
           </Box>
         </Box>

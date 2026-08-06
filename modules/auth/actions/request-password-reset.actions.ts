@@ -26,6 +26,6 @@ export async function requestPasswordReset(email: string) {
     };
   } catch (error) {
     console.error(error);
-    return { success: false, message: "Ocurrió un error" };
+    return { success: false, message: "Er is een fout opgetreden" };
   }
 }

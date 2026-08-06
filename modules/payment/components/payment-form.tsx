@@ -67,20 +67,20 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({ debtId, onSave }) => {
     try {
       const tenantId = session?.user?.tenant_id;
       if (!tenantId) {
-        notifyError("Tenant ID is missing");
+        notifyError("Geen organisatie-ID gevonden");
         return;
       }
 
       console.log("Payment Data:", data);
       await PaymentService.registerPayment(tenantId, data);
 
-      notifyInfo("Payment registered successfully");
+      notifyInfo("Betaling succesvol geregistreerd");
       await fetchDebts();
       reset(initialState);
       onSave?.();
     } catch (error) {
       console.error("Error registering payment:", error);
-      notifyError("Error registering payment");
+      notifyError("Fout bij het registreren van de betaling");
     }
   };
 
@@ -141,7 +141,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({ debtId, onSave }) => {
         render={({ field }) => (
           <TextField
             {...field}
-            label="Amount"
+            label="Bedrag"
             type="number"
             error={!!errors.total_amount}
             helperText={errors.total_amount?.message}

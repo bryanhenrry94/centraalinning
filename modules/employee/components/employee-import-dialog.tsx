@@ -56,7 +56,7 @@ export const EmployeeImportDialog: React.FC<EmployeeImportDialogProps> = ({
   const handleUpload = async () => {
     if (!file) return notifyInfo("Selecteer eerst een bestand");
     if (!session?.user?.tenant_id)
-      return notifyInfo("❌ Tenant ID niet gevonden");
+      return notifyInfo("❌ Organisatie-ID niet gevonden");
 
     setLoading(true);
     try {

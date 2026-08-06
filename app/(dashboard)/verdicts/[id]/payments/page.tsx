@@ -23,7 +23,7 @@ const sampleData = [
     id: "1",
     referenceType: "verdict",
     referenceId: "VONNIS-001",
-    debtor: "Juan Pérez",
+    debtor: "Jan Janssen",
     installment: 1,
     amount: 300,
     paidAmount: 300,
@@ -34,7 +34,7 @@ const sampleData = [
     id: "2",
     referenceType: "verdict",
     referenceId: "VONNIS-001",
-    debtor: "Juan Pérez",
+    debtor: "Jan Janssen",
     installment: 2,
     amount: 300,
     paidAmount: 0,
@@ -45,7 +45,7 @@ const sampleData = [
     id: "3",
     referenceType: "invoice",
     referenceId: "INV-2025-001",
-    debtor: "Comercial ABC",
+    debtor: "Handel ABC",
     installment: null,
     amount: 1200,
     paidAmount: 600,
@@ -56,7 +56,7 @@ const sampleData = [
     id: "4",
     referenceType: "invoice",
     referenceId: "INV-2025-002",
-    debtor: "Servicios XYZ",
+    debtor: "Diensten XYZ",
     installment: null,
     amount: 800,
     paidAmount: 800,
@@ -75,10 +75,10 @@ const StatusChip = ({ status }: { status: string }) => {
   };
 
   const labels: Record<string, string> = {
-    pending: "Pendiente",
-    partially_paid: "Parcial",
-    paid: "Pagado",
-    late: "Atrasado",
+    pending: "In afwachting",
+    partially_paid: "Gedeeltelijk",
+    paid: "Betaald",
+    late: "Achterstallig",
   };
 
   return (
@@ -108,10 +108,10 @@ export default function AccountsPage() {
         {/* Header */}
         <Box sx={{ mb: 4 }}>
           <Typography variant="h4" fontWeight="bold" gutterBottom>
-            Gestión de Cuentas por Cobrar
+            Beheer van Vorderingen
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Aquí puedes visualizar y dar seguimiento a las cuentas por cobrar.
+            Hier kunt u de openstaande vorderingen bekijken en opvolgen.
           </Typography>
         </Box>
 
@@ -133,9 +133,9 @@ export default function AccountsPage() {
             <Button
               variant="contained"
               size="small"
-              onClick={() => alert("Registrar nuevo pago")}
+              onClick={() => alert("Nieuwe betaling registreren")}
             >
-              Registrar pago
+              Betaling registreren
             </Button>
           </Box>
           <Divider sx={{ mb: 2 }} />
@@ -144,22 +144,22 @@ export default function AccountsPage() {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Tipo</TableCell>
-                <TableCell>Referencia</TableCell>
-                <TableCell>Deudor</TableCell>
-                <TableCell>Cuota</TableCell>
-                <TableCell align="right">Monto</TableCell>
-                <TableCell align="right">Pagado</TableCell>
+                <TableCell>Type</TableCell>
+                <TableCell>Referentie</TableCell>
+                <TableCell>Debiteur</TableCell>
+                <TableCell>Termijn</TableCell>
+                <TableCell align="right">Bedrag</TableCell>
+                <TableCell align="right">Betaald</TableCell>
                 <TableCell align="right">Saldo</TableCell>
-                <TableCell>Vencimiento</TableCell>
-                <TableCell>Estado</TableCell>
+                <TableCell>Vervaldatum</TableCell>
+                <TableCell>Status</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {sampleData.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell>
-                    {row.referenceType === "verdict" ? "Vonnis" : "Factura"}
+                    {row.referenceType === "verdict" ? "Vonnis" : "Factuur"}
                   </TableCell>
                   <TableCell>{row.referenceId}</TableCell>
                   <TableCell>{row.debtor}</TableCell>

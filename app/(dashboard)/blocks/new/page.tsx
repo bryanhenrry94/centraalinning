@@ -153,7 +153,7 @@ export default function BlockCreatePage() {
     );
 
     if (invalidFiles.length > 0) {
-      notifyError("Solo se permiten archivos PDF, Word, Excel e imágenes.");
+      notifyError("Alleen PDF-, Word-, Excel-bestanden en afbeeldingen zijn toegestaan.");
     }
 
     if (validFiles.length === 0) {
@@ -251,7 +251,7 @@ export default function BlockCreatePage() {
         success: false,
         error:
           resBlockade.message ||
-          "Error al registrar la blokkade. Inténtalo de nuevo.",
+          "Fout bij het registreren van de blokkade. Probeer het opnieuw.",
       };
     }
 
@@ -566,7 +566,7 @@ export default function BlockCreatePage() {
                         onChange={(e) => field.onChange(e.target.checked)}
                       />
                     }
-                    label="Confirmo que la información y los documentos adjuntos son verídicos y, si corresponde, que el trayecto externo fue completado correctamente."
+                    label="Ik bevestig dat de informatie en bijgevoegde documenten juist zijn en, indien van toepassing, dat het externe traject correct werd afgerond."
                   />
                 )}
               />

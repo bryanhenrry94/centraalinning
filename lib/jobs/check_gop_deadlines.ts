@@ -58,14 +58,14 @@ export async function checkGopDeadlines() {
     }
 
     const dueDate = verdict.prescription_due_date!.toLocaleDateString();
-    const message = `El plazo de prescripción del expediente ${legalProcess.debtClaim.reference} vence el ${dueDate}. Registra nuevas medidas de ejecución a tiempo.`;
+    const message = `De verjaringstermijn van dossier ${legalProcess.debtClaim.reference} verstrijkt op ${dueDate}. Registreer op tijd nieuwe executiemaatregelen.`;
 
     if (legalProcess.bailiff?.user_id) {
       await NotificationService.create({
         tenant_id: legalProcess.debtClaim.tenantId,
         user_id: legalProcess.bailiff.user_id,
         type: NotificationType.GOP_PRESCRIPTION_REMINDER,
-        title: "Plazo de prescripción próximo a vencer",
+        title: "Verjaringstermijn verstrijkt binnenkort",
         message,
         link: `/legal-processes/${legalProcess.id}`,
         entity_type: "LegalProcess",
@@ -75,7 +75,7 @@ export async function checkGopDeadlines() {
 
     await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
       type: NotificationType.GOP_PRESCRIPTION_REMINDER,
-      title: "Plazo de prescripción próximo a vencer",
+      title: "Verjaringstermijn verstrijkt binnenkort",
       message,
       link: `/legal-processes/${legalProcess.id}`,
       entity_type: "LegalProcess",
@@ -85,7 +85,7 @@ export async function checkGopDeadlines() {
     await ClaimTimelineService.logEvent(
       legalProcess.debtClaimId,
       "NOTIFICATION_SENT",
-      `Recordatorio de prescripción enviado (vence ${dueDate})`,
+      `Verjaringsherinnering verzonden (verstrijkt op ${dueDate})`,
       { verdictId: verdict.id, prescription_due_date: verdict.prescription_due_date },
     );
 
@@ -116,14 +116,14 @@ export async function checkGopDeadlines() {
     }
 
     const reviewDate = legalProcess.reviewDate!.toLocaleDateString();
-    const message = `El expediente ${legalProcess.debtClaim.reference} (GOP Inactivo) tiene fecha de revisión el ${reviewDate}. Evalúa si hay nuevas medidas de ejecución disponibles.`;
+    const message = `Dossier ${legalProcess.debtClaim.reference} (GOP Inactief) heeft als beoordelingsdatum ${reviewDate}. Ga na of er nieuwe executiemaatregelen mogelijk zijn.`;
 
     if (legalProcess.bailiff?.user_id) {
       await NotificationService.create({
         tenant_id: legalProcess.debtClaim.tenantId,
         user_id: legalProcess.bailiff.user_id,
         type: NotificationType.GOP_REVIEW_REMINDER,
-        title: "Revisión de GOP Inactivo pendiente",
+        title: "Beoordeling van Inactief GOP vereist",
         message,
         link: `/legal-processes/${legalProcess.id}`,
         entity_type: "LegalProcess",
@@ -133,7 +133,7 @@ export async function checkGopDeadlines() {
 
     await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
       type: NotificationType.GOP_REVIEW_REMINDER,
-      title: "Revisión de GOP Inactivo pendiente",
+      title: "Beoordeling van Inactief GOP vereist",
       message,
       link: `/legal-processes/${legalProcess.id}`,
       entity_type: "LegalProcess",
@@ -143,7 +143,7 @@ export async function checkGopDeadlines() {
     await ClaimTimelineService.logEvent(
       legalProcess.debtClaimId,
       "NOTIFICATION_SENT",
-      `Recordatorio de revisión de GOP Inactivo enviado (revisión ${reviewDate})`,
+      `Herinnering voor beoordeling van Inactief GOP verzonden (beoordeling ${reviewDate})`,
       { reviewDate: legalProcess.reviewDate },
     );
 
@@ -151,7 +151,7 @@ export async function checkGopDeadlines() {
   }
 
   return {
-    message: "Recordatorios de plazos GOP procesados",
+    message: "GOP-termijnherinneringen verwerkt",
     prescriptionReminders,
     reviewReminders,
   };

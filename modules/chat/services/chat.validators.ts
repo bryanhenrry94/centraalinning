@@ -34,7 +34,7 @@ export const ChatMessageResponseSchema = ChatMessageSchema.extend({
 export const ChatRoomSchema = z.object({
   id: z.string(),
   tenant_id: z.string(),
-  collection_case_id: z.string(),
+  debtClaimId: z.string(),
   name: z.string(),
   created_at: z.coerce.date(),
   updated_at: z.coerce.date(),

@@ -13,10 +13,10 @@ const HomePage = () => {
   console.log("User session:", { isAuthenticated, user });
 
   if (isLoading) {
-    return <>Cargando...</>;
+    return <>Laden...</>;
   }
 
-  if (!isAuthenticated) return <>No autorizado. Por favor, inicie sesión.</>;
+  if (!isAuthenticated) return <>Niet geautoriseerd. Log alstublieft in.</>;
 
   if (user?.roles.includes(UserRole.PLATFORM_OWNER)) {
     return <DashboardSuperAdmin />;
@@ -38,7 +38,7 @@ const HomePage = () => {
     return <DashboardLawyer />;
   }
 
-  return <>Rol de usuario no reconocido.</>;
+  return <>Gebruikersrol niet herkend.</>;
 };
 
 export default HomePage;

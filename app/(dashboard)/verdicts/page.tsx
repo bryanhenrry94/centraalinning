@@ -80,14 +80,14 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
       <IconButton
         onClick={handleFirstPageButtonClick}
         disabled={page === 0}
-        aria-label="first page"
+        aria-label="eerste pagina"
       >
         {theme.direction === "rtl" ? <LastPageIcon /> : <FirstPageIcon />}
       </IconButton>
       <IconButton
         onClick={handleBackButtonClick}
         disabled={page === 0}
-        aria-label="previous page"
+        aria-label="vorige pagina"
       >
         {theme.direction === "rtl" ? (
           <KeyboardArrowRight />
@@ -98,7 +98,7 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
       <IconButton
         onClick={handleNextButtonClick}
         disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-        aria-label="next page"
+        aria-label="volgende pagina"
       >
         {theme.direction === "rtl" ? (
           <KeyboardArrowLeft />
@@ -109,7 +109,7 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
       <IconButton
         onClick={handleLastPageButtonClick}
         disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-        aria-label="last page"
+        aria-label="laatste pagina"
       >
         {theme.direction === "rtl" ? <FirstPageIcon /> : <LastPageIcon />}
       </IconButton>
@@ -179,18 +179,18 @@ const VerdictsPage: React.FC = () => {
 
   const handleDelete = async (verdict: VerdictResponse) => {
     AlertService.showConfirm(
-      "¿Estás seguro?",
-      "Esta acción eliminará el registro de vonnis.",
-      "Sí, eliminar",
-      "Cancelar",
+      "Weet u het zeker?",
+      "Deze actie verwijdert de vonnisregistratie.",
+      "Ja, verwijderen",
+      "Annuleren",
     ).then(async (confirmed) => {
       if (confirmed) {
         const result = await deleteVerdict(verdict.id);
         if (result) {
-          notifyInfo("Vonnis eliminado exitosamente");
+          notifyInfo("Vonnis succesvol verwijderd");
           fetchData();
         } else {
-          notifyError("Error al eliminar el vonnis");
+          notifyError("Fout bij het verwijderen van het vonnis");
         }
       }
     });
@@ -292,7 +292,7 @@ const VerdictsPage: React.FC = () => {
                 border: "1px solid #e0e0e0",
               },
             }}
-            aria-label="tabla de embargo"
+            aria-label="vonnissentabel"
             size="small"
           >
             <TableHead>

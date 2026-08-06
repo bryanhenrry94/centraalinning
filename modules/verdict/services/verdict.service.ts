@@ -394,7 +394,7 @@ export class VerdictService {
       reference: invoiceCreated.id,
     });
 
-    if (!res.success) throw new Error("Hubo un error al crear el pago en Sentoo");
+    if (!res.success) throw new Error("Er is een fout opgetreden bij het aanmaken van de betaling in Sentoo");
 
     if (debtor.tenant?.contact_email) {
       await sendInvoiceEmail(debtor.tenant.contact_email, invoiceCreated.id, false);

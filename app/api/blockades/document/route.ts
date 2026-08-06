@@ -21,7 +21,7 @@ export async function GET() {
 
     return NextResponse.json(
       {
-        error: "No se pudo descargar la plantilla",
+        error: "Het sjabloon kon niet worden gedownload",
       },
       {
         status: 500,

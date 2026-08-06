@@ -131,7 +131,7 @@ export const rejectOverdueCaseTransfer = async (caseTransferId: string) => {
   }
 
   const reason =
-    "El participante decidió transferir el expediente a otro profesional tras vencer el plazo de aceptación.";
+    "De deelnemer heeft besloten het dossier over te dragen aan een andere professional nadat de acceptatietermijn was verstreken.";
   return CaseTransferService.rejectTransfer(caseTransferId, reason, session.user.id);
 };
 

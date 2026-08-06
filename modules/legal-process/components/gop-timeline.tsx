@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Box, Stack, Typography, Divider, Chip } from "@mui/material";
 import { formatDate } from "@/shared/utils/formatters";
-import { getClaimTimelineForDebtClaim } from "@/modules/collection/actions/collection-case.actions";
+import { getClaimTimelineForDebtClaim } from "@/modules/collection/actions/debt-claim.actions";
 import { getTimelineEventLabel } from "@/modules/collection/utils/timeline-event";
 
 interface GopTimelineProps {

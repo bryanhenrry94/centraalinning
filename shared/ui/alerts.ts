@@ -2,23 +2,23 @@ import swal from "sweetalert";
 
 export class AlertService {
   static showSuccess(message: string): void {
-    swal("Éxito", message, "success");
+    swal("Gelukt", message, "success");
   }
 
   static showError(message: string): void {
-    swal("Error", message, "error");
+    swal("Fout", message, "error");
   }
 
   static showInfo(message: string): void {
-    swal("Información", message, "info");
+    swal("Informatie", message, "info");
   }
 
   static showWarning(message: string): void {
-    swal("Advertencia", message, "warning");
+    swal("Waarschuwing", message, "warning");
   }
 
   static showErrorWithCallback(message: string, callback: () => void): void {
-    swal("Error", message, "error").then(() => {
+    swal("Fout", message, "error").then(() => {
       callback();
     });
   }
@@ -26,8 +26,8 @@ export class AlertService {
   static showConfirm(
     title: string,
     message: string,
-    confirmButtonText = "Sí",
-    cancelButtonText = "Cancelar"
+    confirmButtonText = "Ja",
+    cancelButtonText = "Annuleren"
   ): Promise<boolean> {
     return swal({
       title,
@@ -49,8 +49,8 @@ export class AlertService {
   static showConfirmWithInput(
     title: string,
     message: string,
-    confirmButtonText = "Sí",
-    cancelButtonText = "Cancelar"
+    confirmButtonText = "Ja",
+    cancelButtonText = "Annuleren"
   ): Promise<string | null> {
     // Uses a real input element so we can enable/disable the confirm button based on input content
     const input = document.createElement("input");

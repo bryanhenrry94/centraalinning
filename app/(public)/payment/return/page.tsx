@@ -22,33 +22,33 @@ const brandOrange = "#824F04"; // "#F59E0B";
 function ReturnPageContent() {
   const status = useSearchParams().get("status");
 
-  let title = "Procesando pago";
-  let subtitle = "Tu pago está siendo verificado";
+  let title = "Betaling wordt verwerkt";
+  let subtitle = "Uw betaling wordt geverifieerd";
   let color = brandOrange;
   let badgeBg = "#FEF3C7";
   let Icon = HourglassBottomRoundedIcon;
 
   if (status === "success") {
-    title = "Pago exitoso";
-    subtitle = "Gracias. Tu pago fue recibido correctamente.";
+    title = "Betaling geslaagd";
+    subtitle = "Bedankt. Uw betaling werd succesvol ontvangen.";
     color = "#2B660F";
     badgeBg = "#B4F099";
     Icon = CheckCircleRoundedIcon;
   } else if (status === "failed") {
-    title = "Pago fallido";
-    subtitle = "No se pudo completar la transacción.";
+    title = "Betaling mislukt";
+    subtitle = "De transactie kon niet worden voltooid.";
     color = "#EF4444";
     badgeBg = "#FEE2E2";
     Icon = ErrorRoundedIcon;
   } else if (status === "cancelled") {
-    title = "Pago cancelado";
-    subtitle = "El pago fue cancelado por el usuario.";
+    title = "Betaling geannuleerd";
+    subtitle = "De betaling werd door de gebruiker geannuleerd.";
     color = "#EF4444";
     badgeBg = "#FEE2E2";
     Icon = ErrorRoundedIcon;
   } else if (status === "expired") {
-    title = "Pago expirado";
-    subtitle = "El tiempo para completar el pago se agotó.";
+    title = "Betaling verlopen";
+    subtitle = "De tijd om de betaling te voltooien is verstreken.";
     color = "#EF4444";
     badgeBg = "#FEE2E2";
     Icon = ErrorRoundedIcon;
@@ -124,7 +124,7 @@ function ReturnPageContent() {
               variant="body2"
               sx={{ color: "#6B7280", textAlign: "center", fontSize: 14 }}
             >
-              Puedes cerrar esta ventana o volver a CFSB.
+              U kunt dit venster sluiten of terugkeren naar CFSB.
             </Typography>
           </Stack>
         </CardContent>

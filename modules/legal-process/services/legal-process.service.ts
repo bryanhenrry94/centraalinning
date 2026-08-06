@@ -246,8 +246,8 @@ export class LegalProcessService {
 
     await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.tenantId, {
       type: NotificationType.GOP_ACTIVATED,
-      title: "GOP activado",
-      message: `Se registró la sentencia del expediente ${caseTransfer.debtClaim.reference}. El GOP está activo.`,
+      title: "GOP geactiveerd",
+      message: `Het vonnis van dossier ${caseTransfer.debtClaim.reference} werd geregistreerd. Het GOP is actief.`,
       link: `/legal-processes/${legalProcess.id}`,
       entity_type: "LegalProcess",
       entity_id: legalProcess.id,
@@ -273,7 +273,7 @@ export class LegalProcessService {
       where: { id: legalProcessId },
       include: { debtClaim: true },
     });
-    if (!legalProcess) throw new Error("Expediente GOP no encontrado");
+    if (!legalProcess) throw new Error("GOP-dossier niet gevonden");
     if (!VERDICT_REGISTRABLE_STATUSES.includes(legalProcess.status as LegalProcessStatus)) {
       throw new Error(`Er kan geen vonnis worden geregistreerd in de status ${legalProcess.status}.`);
     }
@@ -516,12 +516,12 @@ export class LegalProcessService {
       where: { id: params.legalProcessId },
       include: { debtClaim: true, bailiff: true },
     });
-    if (!legalProcess) throw new Error("Expediente GOP no encontrado");
+    if (!legalProcess) throw new Error("GOP-dossier niet gevonden");
     if (!GOP_OPERABLE_STATUSES.includes(legalProcess.status as LegalProcessStatus)) {
       throw new Error(`Kan geen kostenfactuur registreren in de status ${legalProcess.status}.`);
     }
     if (legalProcess.gopCompletedGateAt) {
-      throw new Error("El trabajo del alguacil ya fue finalizado para este expediente.");
+      throw new Error("Het werk van de deurwaarder is al afgerond voor dit dossier.");
     }
 
     const tenantId = legalProcess.debtClaim.tenantId;
@@ -647,8 +647,8 @@ export class LegalProcessService {
 
     await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
       type: NotificationType.GOP_BAILIFF_WORK_FINALIZED,
-      title: "Trabajo del alguacil finalizado",
-      message: `Se confirmó el pago de la comisión CFSB del expediente ${legalProcess.debtClaim.reference}. Ya puede cerrar el GOP.`,
+      title: "Werk van de deurwaarder afgerond",
+      message: `De betaling van de CFSB-commissie voor dossier ${legalProcess.debtClaim.reference} werd bevestigd. Het GOP kan nu gesloten worden.`,
       link: `/legal-processes/${legalProcess.id}`,
       entity_type: "LegalProcess",
       entity_id: legalProcess.id,
@@ -664,9 +664,9 @@ export class LegalProcessService {
       where: { id: data.legalProcessId },
       include: { debtClaim: true },
     });
-    if (!legalProcess) throw new Error("Expediente GOP no encontrado");
+    if (!legalProcess) throw new Error("GOP-dossier niet gevonden");
     if (legalProcess.status !== LegalProcessStatus.GOP_ACTIVE) {
-      throw new Error("Solo un expediente GOP Activo puede marcarse como Inactivo");
+      throw new Error("Alleen een Actief GOP-dossier kan als Inactief gemarkeerd worden");
     }
 
     const updated = await prisma.legalProcess.update({
@@ -689,8 +689,8 @@ export class LegalProcessService {
 
     await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
       type: NotificationType.GOP_INACTIVE,
-      title: "GOP marcado como inactivo",
-      message: `El expediente ${legalProcess.debtClaim.reference} quedó sin resultados temporales. Próxima revisión: ${data.reviewDate.toLocaleDateString()}.`,
+      title: "GOP als inactief gemarkeerd",
+      message: `Dossier ${legalProcess.debtClaim.reference} heeft tijdelijk geen resultaat opgeleverd. Volgende beoordeling: ${data.reviewDate.toLocaleDateString()}.`,
       link: `/legal-processes/${legalProcess.id}`,
       entity_type: "LegalProcess",
       entity_id: legalProcess.id,
@@ -726,8 +726,8 @@ export class LegalProcessService {
 
     await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
       type: NotificationType.GOP_REACTIVATED,
-      title: "GOP reactivado",
-      message: `El expediente ${legalProcess.debtClaim.reference} volvió a estar Activo.`,
+      title: "GOP heractiveerd",
+      message: `Dossier ${legalProcess.debtClaim.reference} is weer Actief.`,
       link: `/legal-processes/${legalProcess.id}`,
       entity_type: "LegalProcess",
       entity_id: legalProcess.id,
@@ -752,13 +752,13 @@ export class LegalProcessService {
       where: { id: data.legalProcessId },
       include: { debtClaim: true },
     });
-    if (!legalProcess) throw new Error("Expediente GOP no encontrado");
+    if (!legalProcess) throw new Error("GOP-dossier niet gevonden");
     if (legalProcess.status === LegalProcessStatus.CLOSED) {
-      throw new Error("No se puede cambiar de alguacil en un expediente cerrado");
+      throw new Error("De deurwaarder kan niet gewijzigd worden in een gesloten dossier");
     }
 
     const newBailiff = await prisma.bailiff.findUnique({ where: { id: data.newBailiffId } });
-    if (!newBailiff) throw new Error("Alguacil no encontrado");
+    if (!newBailiff) throw new Error("Deurwaarder niet gevonden");
 
     const previousBailiffId = legalProcess.bailiffId;
 
@@ -785,8 +785,8 @@ export class LegalProcessService {
       await NotificationService.createMany(notifyUserIds, {
         tenant_id: legalProcess.debtClaim.tenantId,
         type: NotificationType.GOP_BAILIFF_CHANGED,
-        title: "Cambio de alguacil",
-        message: `El expediente ${legalProcess.debtClaim.reference} cambió de alguacil.`,
+        title: "Deurwaarder gewijzigd",
+        message: `Dossier ${legalProcess.debtClaim.reference} heeft een nieuwe deurwaarder gekregen.`,
         link: `/legal-processes/${legalProcess.id}`,
         entity_type: "LegalProcess",
         entity_id: legalProcess.id,
@@ -795,8 +795,8 @@ export class LegalProcessService {
 
     await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
       type: NotificationType.GOP_BAILIFF_CHANGED,
-      title: "Cambio de alguacil",
-      message: `El expediente ${legalProcess.debtClaim.reference} ahora está a cargo de ${newBailiff.fullname}.`,
+      title: "Deurwaarder gewijzigd",
+      message: `Dossier ${legalProcess.debtClaim.reference} is nu toegewezen aan ${newBailiff.fullname}.`,
       link: `/legal-processes/${legalProcess.id}`,
       entity_type: "LegalProcess",
       entity_id: legalProcess.id,
@@ -823,13 +823,13 @@ export class LegalProcessService {
         verdicts: { include: { bailiff_services: true, verdict_embargo: true } },
       },
     });
-    if (!legalProcess) throw new Error("Expediente GOP no encontrado");
+    if (!legalProcess) throw new Error("GOP-dossier niet gevonden");
     if (
       ![LegalProcessStatus.GOP_ACTIVE, LegalProcessStatus.GOP_INACTIVE].includes(
         legalProcess.status as LegalProcessStatus,
       )
     ) {
-      throw new Error("Solo un expediente GOP Activo o Inactivo puede cerrarse");
+      throw new Error("Alleen een Actief of Inactief GOP-dossier kan gesloten worden");
     }
 
     // 1) Factura del alguacil registrada + 2) factura CFSB pagada — ambos
@@ -837,7 +837,7 @@ export class LegalProcessService {
     // processBailiffFeePaymentConfirmed).
     if (!legalProcess.gopCompletedGateAt) {
       throw new Error(
-        "Debe registrar la factura del alguacil y pagar la comisión CFSB (5%) antes de cerrar el GOP.",
+        "De factuur van de deurwaarder moet geregistreerd en de CFSB-commissie (5%) betaald zijn voordat het GOP gesloten kan worden.",
       );
     }
 
@@ -928,8 +928,8 @@ export class LegalProcessService {
 
     await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
       type: NotificationType.GOP_CLOSED,
-      title: "GOP cerrado",
-      message: `El expediente ${legalProcess.debtClaim.reference} se cerró: la sentencia fue cumplida en su totalidad.`,
+      title: "GOP gesloten",
+      message: `Dossier ${legalProcess.debtClaim.reference} is gesloten: het vonnis werd volledig voldaan.`,
       link: `/legal-processes/${legalProcess.id}`,
       entity_type: "LegalProcess",
       entity_id: legalProcess.id,
@@ -942,8 +942,8 @@ export class LegalProcessService {
       await NotificationService.createMany(notifyUserIds, {
         tenant_id: legalProcess.debtClaim.tenantId,
         type: NotificationType.GOP_CLOSED,
-        title: "GOP cerrado",
-        message: `El expediente ${legalProcess.debtClaim.reference} fue cerrado: sentencia cumplida en su totalidad.`,
+        title: "GOP gesloten",
+        message: `Dossier ${legalProcess.debtClaim.reference} is gesloten: vonnis volledig voldaan.`,
         link: `/legal-processes/${legalProcess.id}`,
         entity_type: "LegalProcess",
         entity_id: legalProcess.id,
@@ -995,7 +995,7 @@ export class LegalProcessService {
       where: { id: verdictId },
       include: { legal_process: { include: { debtClaim: true } } },
     });
-    if (!verdict) throw new Error("Vonnis no encontrado");
+    if (!verdict) throw new Error("Vonnis niet gevonden");
     if (!GOP_OPERABLE_STATUSES.includes(verdict.legal_process.status as LegalProcessStatus)) {
       throw new Error(
         `Deze actie is niet toegestaan in de status ${verdict.legal_process.status}.`,
@@ -1209,7 +1209,7 @@ export class LegalProcessService {
       where: { id: legalProcessId },
       include: { debtClaim: true, bailiff: true },
     });
-    if (!legalProcess) throw new Error("Expediente GOP no encontrado");
+    if (!legalProcess) throw new Error("GOP-dossier niet gevonden");
 
     const obligation = await ObligationService.ensurePrincipalDebtObligation(
       legalProcess.debtClaimId,
@@ -1261,9 +1261,9 @@ export class LegalProcessService {
     const notification = {
       type: NotificationType.GOP_PAYMENT_AWAITING_CONFIRMATION,
       title: "Betaling ter bevestiging",
-      message: `Se registró un pago de ${data.amount} en el expediente ${legalProcess.debtClaim.reference}, recibido por ${
-        data.receivedBy === "BAILIFF" ? "el alguacil" : "el participante"
-      }. Revisá el comprobante y confirmalo o disputalo.`,
+      message: `Er werd een betaling van ${data.amount} geregistreerd in dossier ${legalProcess.debtClaim.reference}, ontvangen door ${
+        data.receivedBy === "BAILIFF" ? "de deurwaarder" : "de deelnemer"
+      }. Controleer het bewijs en bevestig of betwist de betaling.`,
       link: `/legal-processes/${legalProcessId}`,
       entity_type: "GopPaymentConfirmation",
       entity_id: confirmation.id,
@@ -1343,7 +1343,7 @@ export class LegalProcessService {
         user_id: recordedUserId,
         type: NotificationType.GOP_PAYMENT_CONFIRMED,
         title: "Betaling bevestigd",
-        message: `Tu registro de pago del expediente ${legalProcess.debtClaim.reference} fue confirmado.`,
+        message: `Jouw betalingsregistratie voor dossier ${legalProcess.debtClaim.reference} werd bevestigd.`,
         link: `/legal-processes/${legalProcess.id}`,
         entity_type: "GopPaymentConfirmation",
         entity_id: updated.id,
@@ -1393,7 +1393,7 @@ export class LegalProcessService {
         user_id: recordedUserId,
         type: NotificationType.GOP_PAYMENT_DISPUTED,
         title: "Betaling betwist",
-        message: `Tu registro de pago del expediente ${legalProcess.debtClaim.reference} fue disputado: ${reason}. Podés corregirlo.`,
+        message: `Jouw betalingsregistratie voor dossier ${legalProcess.debtClaim.reference} werd betwist: ${reason}. Je kunt dit corrigeren.`,
         link: `/legal-processes/${legalProcess.id}`,
         entity_type: "GopPaymentConfirmation",
         entity_id: updated.id,
@@ -1473,7 +1473,7 @@ export class LegalProcessService {
     const counterpartNotification = {
       type: NotificationType.GOP_PAYMENT_CORRECTED,
       title: "Betaling gecorrigeerd",
-      message: `Se corrigió el registro de pago disputado del expediente ${legalProcess.debtClaim.reference}. Revisalo nuevamente.`,
+      message: `De betwiste betalingsregistratie voor dossier ${legalProcess.debtClaim.reference} werd gecorrigeerd. Controleer deze opnieuw.`,
       link: `/legal-processes/${legalProcess.id}`,
       entity_type: "GopPaymentConfirmation",
       entity_id: updated.id,

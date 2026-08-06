@@ -46,7 +46,7 @@ export default function UserTable({
       setUsers(users);
       onChange?.(users);
     } catch (err: any) {
-      notifyError(err?.message ?? "Error desconocido al cargar usuarios");
+      notifyError(err?.message ?? "Onbekende fout bij het laden van gebruikers");
     } finally {
       setLoading(false);
     }
@@ -73,7 +73,7 @@ export default function UserTable({
 
           if (!updatedUser) {
             throw new Error(
-              "No se pudo actualizar el estado del usuario. Respuesta vacía.",
+              "De status van de gebruiker kon niet worden bijgewerkt. Leeg antwoord.",
             );
           }
           setUsers((prev) => {
@@ -86,7 +86,7 @@ export default function UserTable({
         }
       });
     } catch (err: any) {
-      notifyError(err?.message ?? "Error al actualizar el usuario.");
+      notifyError(err?.message ?? "Fout bij het bijwerken van de gebruiker.");
     } finally {
       setUpdating((s) => ({ ...s, [user.id]: false }));
     }
@@ -99,7 +99,7 @@ export default function UserTable({
           variant="text"
           onClick={fetchUsers}
           disabled={loading}
-          aria-label="Refrescar usuarios"
+          aria-label="Gebruikers vernieuwen"
           startIcon={<RefreshIcon />}
         >
           Vernieuwen
@@ -107,10 +107,10 @@ export default function UserTable({
       </Box>
 
       {users.length === 0 ? (
-        <Box>No hay usuarios en este tenant.</Box>
+        <Box>Er zijn geen gebruikers binnen deze organisatie.</Box>
       ) : (
         <TableContainer component={Paper}>
-          <Table size="small" aria-label="tabla de usuarios">
+          <Table size="small" aria-label="gebruikerstabel">
             <TableHead>
               <TableRow>
                 <TableCell>Naam</TableCell>

@@ -64,7 +64,7 @@ export const ModalFormBailiff: React.FC<ModalFormBailiffProps> = ({
       try {
         const response = await getBailiffById(id);
         if (!response.success || !response.data) {
-          notifyError("Bailiff not found");
+          notifyError("Deurwaarder niet gevonden");
           if (isMounted) reset(defaultValues);
           return;
         }
@@ -76,7 +76,7 @@ export const ModalFormBailiff: React.FC<ModalFormBailiffProps> = ({
           });
       } catch (error) {
         console.error(error);
-        notifyError("Error fetching bailiff");
+        notifyError("Fout bij het ophalen van de deurwaarder");
         if (isMounted) reset(defaultValues);
       } finally {
         if (isMounted) setLoading(false);
@@ -92,7 +92,7 @@ export const ModalFormBailiff: React.FC<ModalFormBailiffProps> = ({
 
   const onSubmit = async (values: BailiffCreate) => {
     if (!tenant) {
-      notifyError("Tenant not found");
+      notifyError("Organisatie niet gevonden");
       return;
     }
 
@@ -102,11 +102,11 @@ export const ModalFormBailiff: React.FC<ModalFormBailiffProps> = ({
         const result = await updateBailiff(id, values);
 
         if (!result.success || !result.data) {
-          notifyError("Failed to update bailiff");
+          notifyError("De deurwaarder kon niet worden bijgewerkt");
           return;
         }
 
-        notifySuccess("Bailiff updated successfully");
+        notifySuccess("Deurwaarder succesvol bijgewerkt");
 
         onSave(result.data);
         reset(defaultValues);
@@ -114,18 +114,18 @@ export const ModalFormBailiff: React.FC<ModalFormBailiffProps> = ({
       } else {
         const result = await createBailiff(values, tenant.id);
         if (!result.success || !result.data) {
-          notifyError("Failed to create bailiff");
+          notifyError("De deurwaarder kon niet worden aangemaakt");
           return;
         }
 
-        notifySuccess("Bailiff created successfully");
+        notifySuccess("Deurwaarder succesvol aangemaakt");
         onSave(result.data);
         reset(defaultValues);
         onClose();
       }
     } catch (error) {
       console.error("Error saving bailiff:", error);
-      notifyError(error instanceof Error ? error.message : "An error occurred");
+      notifyError(error instanceof Error ? error.message : "Er is een fout opgetreden");
     } finally {
       setLoading(false);
     }
@@ -180,12 +180,12 @@ export const ModalFormBailiff: React.FC<ModalFormBailiffProps> = ({
             <form onSubmit={handleSubmit(onSubmit)}>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                 <InputHookForm name="fullname" label="Full Name" required />
-                <InputHookForm name="email" label="Email" required />
-                <InputHookForm name="phone" label="Phone" required />
+                <InputHookForm name="email" label="E-mailadres" required />
+                <InputHookForm name="phone" label="Telefoonnummer" required />
 
                 <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
                   <Button onClick={onClose} color="secondary" fullWidth>
-                    CANCEL
+                    ANNULEREN
                   </Button>
                   <Button
                     type="submit"
@@ -194,7 +194,7 @@ export const ModalFormBailiff: React.FC<ModalFormBailiffProps> = ({
                     disabled={loading}
                     fullWidth
                   >
-                    {id ? "UPDATE" : "SAVE"}
+                    {id ? "BIJWERKEN" : "OPSLAAN"}
                   </Button>
                 </Stack>
               </Box>

@@ -142,7 +142,7 @@ export const ExecutionMeasureDialog: React.FC<ExecutionMeasureDialogProps> = ({
             onChange={set("company_phone")}
           />
           <TextField
-            label="Email"
+            label="E-mailadres"
             size="small"
             value={form.company_email}
             onChange={set("company_email")}

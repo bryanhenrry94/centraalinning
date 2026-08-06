@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { advanceAOPStep, getDebtClaimsAction } from "@/modules/collection/actions/collection-case.actions";
+import { advanceAOPStep, getDebtClaimsAction } from "@/modules/collection/actions/debt-claim.actions";
 import { applyCharge, countChargesForClaim } from "@/modules/collection/actions/debt-fine.actions";
 import { hasAgreement, hasPaymentsUpToDate, cancelAgreementsByCliam } from "@/modules/agreement/actions/agreement.actions";
 import { CollectionNotificationService } from "@/modules/collection/services/collection-notification.service";
@@ -15,7 +15,7 @@ const STEP_SEQUENCE: AOPStep[] = [
   "BLK_NOTIFICATION",
 ];
 
-export async function processCollectionCaseWorkflow() {
+export async function processAopWorkflow() {
   const activeCollections = await prisma.administrativeCollection.findMany({
     where: {
       status: "ACTIVE",

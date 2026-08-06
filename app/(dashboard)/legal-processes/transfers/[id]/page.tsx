@@ -408,7 +408,7 @@ const CaseTransferDetailPage: React.FC = () => {
 
         {(showFinalizeLawyerWorkButton || showTransferToBailiffButton) && (
           <Card>
-            <CardHeader title="Finalización del trabajo del abogado" />
+            <CardHeader title="Afronding van het werk van de advocaat" />
             <Divider />
             <CardContent>
               {showFinalizeLawyerWorkButton && (
@@ -441,20 +441,20 @@ const CaseTransferDetailPage: React.FC = () => {
 
         {showAcceptanceDeadlineDecision && (
           <Card>
-            <CardHeader title="Vencimiento del plazo de aceptación" />
+            <CardHeader title="Acceptatietermijn verstreken" />
             <Divider />
             <CardContent>
               <Typography variant="body2" color="text.secondary" mb={2}>
-                El plazo de 7 días para que acepte o rechace el expediente venció sin respuesta.
-                Decidí si le concedés 7 días más o seleccionás otro profesional. El expediente no se
-                cierra ni se rechaza automáticamente.
+                De termijn van 7 dagen om het dossier te accepteren of af te wijzen is verstreken
+                zonder reactie. Beslis of u 7 dagen extra toekent of een andere professional
+                selecteert. Het dossier wordt niet automatisch gesloten of afgewezen.
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 <Button variant="contained" onClick={handleExtendDeadline}>
-                  Conceder 7 días más
+                  7 dagen extra toekennen
                 </Button>
                 <Button variant="outlined" color="error" onClick={handleRejectOverdue}>
-                  Elegir otro profesional
+                  Andere professional kiezen
                 </Button>
               </Stack>
             </CardContent>

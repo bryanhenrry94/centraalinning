@@ -5,7 +5,7 @@ export const PersonSchema = z.object({
   id: z.string().uuid().optional(),
   person_type: z.enum(PersonType),
   identification_type: z.enum(IdentificationType),
-  identification: z.string().min(1, "La identificación es obligatoria"),
+  identification: z.string().min(1, "Het identificatienummer is verplicht"),
   first_name: z.string().optional().nullable(),
   last_name: z.string().optional().nullable(),
   business_name: z.string().optional().nullable(),

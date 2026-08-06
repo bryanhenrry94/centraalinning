@@ -48,13 +48,13 @@ export function PaymentGate({
     <div className="flex flex-col gap-3">
       <button onClick={handleClick} disabled={loading || processing}>
         {loading
-          ? "Verificando..."
+          ? "Controleren..."
           : hasAccess
-            ? "Continuar"
-            : "Pagar para continuar"}
+            ? "Doorgaan"
+            : "Betalen om door te gaan"}
       </button>
 
-      {!hasAccess && <button onClick={refresh}>Ya pagué, verificar</button>}
+      {!hasAccess && <button onClick={refresh}>Ik heb betaald, controleren</button>}
 
       {children}
     </div>

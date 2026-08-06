@@ -75,7 +75,7 @@ export const sendAanmaningEmail = async (
       amount_original: Number(claim.principalAmount).toFixed(2),
       extraCosts: feeCharge ? Number(feeCharge.amount).toFixed(2) : "0.00",
       calculatedABB: abbCharge ? Number(abbCharge.amount).toFixed(2) : "0.00",
-      tenantName: claim.tenant.name || "Tenant",
+      tenantName: claim.tenant.name || "Organisatie",
     };
 
     const pdfBase64 = await generatePdfBase64(<AanmaningPDF {...params} />);
@@ -149,7 +149,7 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
       total_amount: Number(claim.principalAmount).toFixed(2),
       amount_original: Number(claim.principalAmount).toFixed(2),
       calculatedABB: abbCharge ? Number(abbCharge.amount).toFixed(2) : "0.00",
-      tenantName: claim.tenant.name || "Tenant",
+      tenantName: claim.tenant.name || "Organisatie",
       administrativeCosts: Number(0).toFixed(2),
       additionalCosts: Number(0).toFixed(2),
       additionalABB: Number(0).toFixed(2),
@@ -231,7 +231,7 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
       debtorAddress: debtorAddress || "",
       island: island || "Bonaire",
       referenceNumber: claim.reference || "",
-      tenantName: claim.tenant.name || "Tenant",
+      tenantName: claim.tenant.name || "Organisatie",
     };
 
     const pdfBase64 = await generatePdfBase64(

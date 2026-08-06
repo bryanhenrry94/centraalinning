@@ -74,7 +74,7 @@ export const PaymentCXForm = ({
         <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
-            label="Nombre"
+            label="Voornaam"
             variant="outlined"
             value={fname}
             onChange={(e) => setFname(e.target.value)}
@@ -83,7 +83,7 @@ export const PaymentCXForm = ({
         <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             fullWidth
-            label="Apellido"
+            label="Achternaam"
             variant="outlined"
             value={lname}
             onChange={(e) => setLname(e.target.value)}
@@ -92,7 +92,7 @@ export const PaymentCXForm = ({
         <Grid size={{ xs: 12, sm: 12 }}>
           <TextField
             fullWidth
-            label="Número de tarjeta"
+            label="Kaartnummer"
             variant="outlined"
             inputProps={{ "data-checkout": "card_number" }}
           />
@@ -100,7 +100,7 @@ export const PaymentCXForm = ({
         <Grid size={{ xs: 12, sm: 12 }}>
           <TextField
             fullWidth
-            label="Fecha de expiración (MM/AA)"
+            label="Vervaldatum (MM/JJ)"
             variant="outlined"
             inputProps={{ "data-checkout": "exp_date" }}
           />
@@ -133,7 +133,7 @@ export const PaymentCXForm = ({
         textAlign="center"
         sx={{ mt: 1 }}
       >
-        Pago Seguro con CX Pay
+        Veilig betalen met CX Pay
       </Typography>
     </Box>
   );

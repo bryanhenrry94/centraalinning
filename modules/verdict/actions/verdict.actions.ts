@@ -125,10 +125,10 @@ export const UploadAttachmentToVerdict = async (
 
     const data = await res.json();
 
-    if (!res.ok) throw new Error(data?.error || "Error al subir");
+    if (!res.ok) throw new Error(data?.error || "Fout bij het uploaden");
 
     if (!data.tenant) {
-      notifyError("No se encontraron datos del inquilino");
+      notifyError("Geen organisatiegegevens gevonden");
       return;
     }
 

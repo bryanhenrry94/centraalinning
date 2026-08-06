@@ -76,10 +76,10 @@ export const VerdictProvider: React.FC<VerdictProviderProps> = ({
   const deleteEmbargo = async (id: number): Promise<VerdictEmbargo[]> => {
     try {
       const confirmed = await AlertService.showConfirm(
-        "Confirmar eliminación",
-        "¿Estás seguro de que deseas eliminar este registro de embargo?",
-        "Sí, eliminar",
-        "Cancelar"
+        "Verwijdering bevestigen",
+        "Weet u zeker dat u deze beslagregistratie wilt verwijderen?",
+        "Ja, verwijderen",
+        "Annuleren"
       );
 
       if (confirmed) {
@@ -96,7 +96,7 @@ export const VerdictProvider: React.FC<VerdictProviderProps> = ({
       }
     } catch (error) {
       console.error("Error deleting embargo:", error);
-      AlertService.showError("No se pudo eliminar el registro.");
+      AlertService.showError("De registratie kon niet worden verwijderd.");
       throw new Error("Failed to delete embargo");
     } finally {
       setLoading(false);

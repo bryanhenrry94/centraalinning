@@ -2,11 +2,11 @@ import { z } from "zod";
 import { VerdictInterestDetailCreateSchema } from "@/modules/verdict/services/verdict-interest-details.validators";
 
 export const VerdictInterestBaseSchema = z.object({
-  id: z.string().uuid({ message: "El id debe ser un UUID válido" }),
-  interest_type: z.string("El tipo de interés debe ser un número entero"),
+  id: z.string().uuid({ message: "De id moet een geldige UUID zijn" }),
+  interest_type: z.string("Het rentetype moet een geheel getal zijn"),
   base_amount: z.coerce
     .number()
-    .nonnegative({ message: "El monto base debe ser un número positivo" }),
+    .nonnegative({ message: "Het basisbedrag moet een positief getal zijn" }),
   calculated_interest: z
     .preprocess(
       (val) => (typeof val === "string" ? Number(val) : val),
@@ -14,17 +14,17 @@ export const VerdictInterestBaseSchema = z.object({
     )
     .optional(),
   calculation_start: z.coerce.date({
-    message: "La fecha de inicio de cálculo debe ser una fecha válida",
+    message: "De startdatum van de berekening moet een geldige datum zijn",
   }),
   calculation_end: z.coerce.date({
-    message: "La fecha de fin de cálculo debe ser una fecha válida",
+    message: "De einddatum van de berekening moet een geldige datum zijn",
   }),
   total_interest: z.number(),
   details: z.array(VerdictInterestDetailCreateSchema),
 });
 
 export const VerdictInterestSchema = VerdictInterestBaseSchema.extend({
-  id: z.string().uuid({ message: "El id debe ser un UUID válido" }),
+  id: z.string().uuid({ message: "De id moet een geldige UUID zijn" }),
   created_at: z.date().default(() => new Date()),
   updated_at: z.date().default(() => new Date()),
 });

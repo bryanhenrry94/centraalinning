@@ -40,7 +40,7 @@ export default function AccountInfoCard(props: AccountInfoCardProps) {
       />
       <TextField
         name="email"
-        label="Email"
+        label="E-mailadres"
         value={initial.user?.email || ""}
         type="email"
         required

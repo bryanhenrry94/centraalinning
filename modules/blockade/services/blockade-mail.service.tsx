@@ -43,7 +43,7 @@ export const sendBlokkadeMail = async (to: string, caseId: string) => {
       debtorAddress: debtorAddress || "",
       island: island || "Bonaire",
       referenceNumber: claim.reference || "",
-      tenantName: claim.tenant.name || "Tenant",
+      tenantName: claim.tenant.name || "Organisatie",
     };
 
     const pdfBase64 = await generatePdfBase64(<BlokkadePDF {...params} />);

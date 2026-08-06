@@ -30,7 +30,7 @@ import { useTenant } from "@/modules/auth/hooks/useTenant";
 import { getParameterAction } from "@/modules/settings/actions/parameter.actions";
 import { ParameterInput } from "@/modules/settings/services/parameter/parameter.type";
 import { getDebtorsAction } from "@/modules/collection/actions/debtor.actions";
-import { createPendingDebtClaimAction } from "@/modules/collection/actions/collection-case.actions";
+import { createPendingDebtClaimAction } from "@/modules/collection/actions/debt-claim.actions";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 
@@ -89,7 +89,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
       const result = await getParameterAction();
       setParameter(result);
     } catch (error) {
-      console.error("Error al obtener el parámetro:", error);
+      console.error("Fout bij het ophalen van de parameter:", error);
     }
   };
 

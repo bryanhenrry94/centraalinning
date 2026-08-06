@@ -29,7 +29,7 @@ export type RejectTransferInput = z.infer<typeof RejectTransferSchema>;
 
 export const CancelCaseTransferSchema = z.object({
   caseTransferId: z.string().min(1),
-  reason: z.string().min(1, "El motivo de la cancelación es obligatorio"),
+  reason: z.string().min(1, "De reden voor annulering is verplicht"),
 });
 export type CancelCaseTransferInput = z.infer<typeof CancelCaseTransferSchema>;
 

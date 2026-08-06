@@ -88,14 +88,14 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
       <IconButton
         onClick={handleFirstPageButtonClick}
         disabled={page === 0}
-        aria-label="first page"
+        aria-label="eerste pagina"
       >
         {theme.direction === "rtl" ? <LastPageIcon /> : <FirstPageIcon />}
       </IconButton>
       <IconButton
         onClick={handleBackButtonClick}
         disabled={page === 0}
-        aria-label="previous page"
+        aria-label="vorige pagina"
       >
         {theme.direction === "rtl" ? (
           <KeyboardArrowRight />
@@ -106,7 +106,7 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
       <IconButton
         onClick={handleNextButtonClick}
         disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-        aria-label="next page"
+        aria-label="volgende pagina"
       >
         {theme.direction === "rtl" ? (
           <KeyboardArrowLeft />
@@ -117,7 +117,7 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
       <IconButton
         onClick={handleLastPageButtonClick}
         disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-        aria-label="last page"
+        aria-label="laatste pagina"
       >
         {theme.direction === "rtl" ? <FirstPageIcon /> : <LastPageIcon />}
       </IconButton>
@@ -200,10 +200,10 @@ const InvoicesPage: React.FC = () => {
 
   const handleDelete = async (invoice: BillingInvoiceBase) => {
     AlertService.showConfirm(
-      "¿Estás seguro?",
-      "Esta acción eliminará el registro de factuur.",
-      "Sí, eliminar",
-      "Cancelar"
+      "Weet u het zeker?",
+      "Deze actie verwijdert de factuurregistratie.",
+      "Ja, verwijderen",
+      "Annuleren"
     ).then(async (confirmed) => {
       if (confirmed) {
       }
@@ -283,7 +283,7 @@ const InvoicesPage: React.FC = () => {
                 border: "1px solid #e0e0e0",
               },
             }}
-            aria-label="tabla de embargo"
+            aria-label="factuurtabel"
             size="small"
           >
             <TableHead>

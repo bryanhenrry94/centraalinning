@@ -72,7 +72,7 @@ const NewFinancialAgreementPage: React.FC = () => {
       return { success: false, error: "Controleer de ingevulde gegevens" };
     }
     if (!session?.user?.tenant_id) {
-      return { success: false, error: "Geen tenant gevonden" };
+      return { success: false, error: "Geen organisatie gevonden" };
     }
 
     try {

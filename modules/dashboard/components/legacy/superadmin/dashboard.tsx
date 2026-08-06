@@ -25,7 +25,7 @@ const DashboardSuperAdmin = () => {
     if (!result.success) {
       return (
         <div className="flex h-full items-center justify-center">
-          <p className="text-slate-500">Error al cargar el dashboard</p>
+          <p className="text-slate-500">Fout bij het laden van het dashboard</p>
         </div>
       );
     }
@@ -59,7 +59,7 @@ const DashboardSuperAdmin = () => {
     return <LoadingUI />;
   }
 
-  if (!isAuthenticated) return <>No autorizado. Por favor, inicie sesión.</>;
+  if (!isAuthenticated) return <>Niet geautoriseerd. Log alstublieft in.</>;
 
   return (
     <>

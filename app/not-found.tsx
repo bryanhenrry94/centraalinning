@@ -31,15 +31,15 @@ export default function NotFound() {
         }}
       >
         <h1 style={{ fontSize: "2rem", margin: 0 }}>
-          404 — Página no encontrada
+          404 — Pagina niet gevonden
         </h1>
         <p style={{ marginTop: "0.75rem", color: "#475569" }}>
-          Lo sentimos, la página que buscas no existe o se ha movido.
+          Het spijt ons, de pagina die u zoekt bestaat niet of is verplaatst.
         </p>
         <div style={{ marginTop: "1.5rem" }}>
           <button
             onClick={() => router.push("/dashboard")}
-            aria-label="Ir al dashboard"
+            aria-label="Naar het dashboard"
             style={{
               padding: "6px 16px",
               backgroundColor: "#1976d2",
@@ -51,7 +51,7 @@ export default function NotFound() {
               fontWeight: 500,
             }}
           >
-            Ir al dashboard
+            Naar het dashboard
           </button>
         </div>
       </div>

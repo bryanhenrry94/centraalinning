@@ -23,7 +23,7 @@ export const canUseFeature = (
   if (membership.status === "SUSPENDED" || membership.status === "CANCELED") {
     return {
       allowed: false,
-      reason: "Tu membresía está suspendida",
+      reason: "Je lidmaatschap is opgeschort",
     };
   }
 
@@ -31,7 +31,7 @@ export const canUseFeature = (
   if (membership.expires_at && new Date(membership.expires_at) < new Date()) {
     return {
       allowed: false,
-      reason: "Tu membresía ha expirado",
+      reason: "Je lidmaatschap is verlopen",
     };
   }
 
@@ -48,7 +48,7 @@ export const canUseFeature = (
     if (restrictedActions.includes(action)) {
       return {
         allowed: false,
-        reason: "Debes ponerte al día para usar esta funcionalidad",
+        reason: "Je moet je betaling bijwerken om deze functie te gebruiken",
       };
     }
   }

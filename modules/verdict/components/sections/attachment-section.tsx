@@ -326,7 +326,7 @@ const AttachmentSection: React.FC = () => {
                 border: "1px solid #e0e0e0",
               },
             }}
-            aria-label="tabla de embargo"
+            aria-label="tabel met bijlagen"
             size="small"
           >
             <TableHead>

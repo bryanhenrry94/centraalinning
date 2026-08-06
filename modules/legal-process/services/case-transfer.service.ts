@@ -89,7 +89,7 @@ export class CaseTransferService {
 
   static requestTransfer = async (input: TransferToLawyerInput, actorUserId: string) => {
     const debtClaim = await prisma.debtClaim.findUnique({ where: { id: input.debtClaimId } });
-    if (!debtClaim) throw new Error("Expediente (DebtClaim) no encontrado");
+    if (!debtClaim) throw new Error("Dossier (DebtClaim) niet gevonden");
 
     // El GOP es el último escalón: solo se habilita cuando la fase del AOP
     // de este expediente llegó a BLK_NOTIFICATION ("Blokkade").
@@ -105,10 +105,10 @@ export class CaseTransferService {
 
     if (input.lawyerId) {
       const lawyer = await prisma.lawyer.findUnique({ where: { id: input.lawyerId } });
-      if (!lawyer) throw new Error("Abogado no encontrado");
+      if (!lawyer) throw new Error("Advocaat niet gevonden");
     } else if (input.bailiffId) {
       const bailiff = await prisma.bailiff.findUnique({ where: { id: input.bailiffId } });
-      if (!bailiff) throw new Error("Alguacil no encontrado");
+      if (!bailiff) throw new Error("Deurwaarder niet gevonden");
     } else {
       throw new Error("Selecteer een advocaat of een deurwaarder.");
     }
@@ -209,11 +209,11 @@ export class CaseTransferService {
         user_id: assignedUserId,
         type: NotificationType.LEGAL_PROCESS_TRANSFER_REQUEST,
         title: caseTransfer.isEmergencyTransfer
-          ? "Nuevo expediente urgente para seguimiento judicial"
-          : "Nuevo expediente para seguimiento judicial",
+          ? "Nieuw spoeddossier voor gerechtelijke opvolging"
+          : "Nieuw dossier voor gerechtelijke opvolging",
         message: caseTransfer.isEmergencyTransfer
-          ? `Se te transfirió con carácter urgente (noodoverdracht) el expediente ${caseTransfer.debtClaim.reference}: ${caseTransfer.emergencyReason}`
-          : `Se te transfirió el expediente ${caseTransfer.debtClaim.reference} para su seguimiento judicial.`,
+          ? `Dossier ${caseTransfer.debtClaim.reference} werd met spoed (noodoverdracht) aan je overgedragen: ${caseTransfer.emergencyReason}`
+          : `Dossier ${caseTransfer.debtClaim.reference} werd aan je overgedragen voor gerechtelijke opvolging.`,
         link: `/legal-processes/transfers/${updated.id}`,
         entity_type: "CaseTransfer",
         entity_id: updated.id,
@@ -232,9 +232,9 @@ export class CaseTransferService {
       where: { id: caseTransferId },
       include: { debtClaim: true },
     });
-    if (!caseTransfer) throw new Error("Expediente no encontrado");
+    if (!caseTransfer) throw new Error("Dossier niet gevonden");
     if (caseTransfer.status !== "PENDING_ACCEPTANCE") {
-      throw new Error("El expediente no está pendiente de aceptación");
+      throw new Error("Het dossier is niet in afwachting van acceptatie");
     }
 
     const acceptedByLawyer = !!caseTransfer.lawyerId;
@@ -256,8 +256,8 @@ export class CaseTransferService {
       caseTransfer.debtClaim.tenantId,
       {
         type: NotificationType.LEGAL_PROCESS_ACCEPTED,
-        title: "Expediente aceptado",
-        message: `El ${acceptedByLawyer ? "abogado" : "alguacil"} aceptó el expediente ${caseTransfer.debtClaim.reference}.`,
+        title: "Dossier geaccepteerd",
+        message: `De ${acceptedByLawyer ? "advocaat" : "deurwaarder"} heeft dossier ${caseTransfer.debtClaim.reference} geaccepteerd.`,
         link: `/legal-processes/transfers/${updated.id}`,
         entity_type: "CaseTransfer",
         entity_id: updated.id,
@@ -273,9 +273,9 @@ export class CaseTransferService {
       where: { id: caseTransferId },
       include: { debtClaim: true },
     });
-    if (!caseTransfer) throw new Error("Expediente no encontrado");
+    if (!caseTransfer) throw new Error("Dossier niet gevonden");
     if (caseTransfer.status !== "PENDING_ACCEPTANCE") {
-      throw new Error("El expediente no está pendiente de aceptación");
+      throw new Error("Het dossier is niet in afwachting van acceptatie");
     }
 
     const rejectedByLawyer = !!caseTransfer.lawyerId;
@@ -295,8 +295,8 @@ export class CaseTransferService {
 
     await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.tenantId, {
       type: NotificationType.LEGAL_PROCESS_REJECTED,
-      title: "Expediente rechazado",
-      message: `El ${rejectedByLawyer ? "abogado" : "alguacil"} rechazó el expediente ${caseTransfer.debtClaim.reference}: ${reason}. Selecciona otro abogado o alguacil.`,
+      title: "Dossier afgewezen",
+      message: `De ${rejectedByLawyer ? "advocaat" : "deurwaarder"} heeft dossier ${caseTransfer.debtClaim.reference} afgewezen: ${reason}. Selecteer een andere advocaat of deurwaarder.`,
       link: `/legal-processes/transfers/${updated.id}`,
       entity_type: "CaseTransfer",
       entity_id: updated.id,
@@ -359,8 +359,8 @@ export class CaseTransferService {
           tenant_id: caseTransfer.debtClaim.tenantId,
           user_id: assignedUserId,
           type: NotificationType.CASE_TRANSFER_ACCEPTANCE_REMINDER,
-          title: "Recordatorio: expediente pendiente de aceptación",
-          message: `Tenés hasta el ${deadline.toLocaleDateString()} para aceptar o rechazar el expediente ${caseTransfer.debtClaim.reference}.`,
+          title: "Herinnering: dossier wacht op acceptatie",
+          message: `Je hebt tot ${deadline.toLocaleDateString()} om dossier ${caseTransfer.debtClaim.reference} te accepteren of af te wijzen.`,
           link: `/legal-processes/transfers/${caseTransfer.id}`,
           entity_type: "CaseTransfer",
           entity_id: caseTransfer.id,
@@ -377,8 +377,8 @@ export class CaseTransferService {
       ) {
         await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.tenantId, {
           type: NotificationType.CASE_TRANSFER_ACCEPTANCE_DEADLINE_REACHED,
-          title: "Decisión requerida: plazo de aceptación vencido",
-          message: `El ${assignedLabel} no respondió dentro del plazo para el expediente ${caseTransfer.debtClaim.reference}. Decidí si le concedés 7 días más o seleccionás otro profesional.`,
+          title: "Beslissing vereist: acceptatietermijn verstreken",
+          message: `De ${assignedLabel} heeft niet binnen de termijn gereageerd op dossier ${caseTransfer.debtClaim.reference}. Beslis of je 7 dagen extra toekent of een andere professional selecteert.`,
           link: `/legal-processes/transfers/${caseTransfer.id}`,
           entity_type: "CaseTransfer",
           entity_id: caseTransfer.id,
@@ -396,9 +396,9 @@ export class CaseTransferService {
       where: { id: caseTransferId },
       include: { debtClaim: true, lawyer: true, bailiff: true },
     });
-    if (!caseTransfer) throw new Error("Expediente no encontrado");
+    if (!caseTransfer) throw new Error("Dossier niet gevonden");
     if (caseTransfer.status !== "PENDING_ACCEPTANCE") {
-      throw new Error("El expediente no está pendiente de aceptación");
+      throw new Error("Het dossier is niet in afwachting van acceptatie");
     }
 
     const newDeadline = new Date(Date.now() + ACCEPTANCE_WINDOW_DAYS * 24 * 60 * 60 * 1000);
@@ -425,8 +425,8 @@ export class CaseTransferService {
         tenant_id: caseTransfer.debtClaim.tenantId,
         user_id: assignedUserId,
         type: NotificationType.CASE_TRANSFER_ACCEPTANCE_EXTENDED,
-        title: "Se extendió tu plazo de aceptación",
-        message: `El participante te concedió ${ACCEPTANCE_WINDOW_DAYS} días más para aceptar o rechazar el expediente ${caseTransfer.debtClaim.reference} (nuevo plazo: ${newDeadline.toLocaleDateString()}).`,
+        title: "Je acceptatietermijn is verlengd",
+        message: `De deelnemer heeft je ${ACCEPTANCE_WINDOW_DAYS} extra dagen toegekend om dossier ${caseTransfer.debtClaim.reference} te accepteren of af te wijzen (nieuwe termijn: ${newDeadline.toLocaleDateString()}).`,
         link: `/legal-processes/transfers/${updated.id}`,
         entity_type: "CaseTransfer",
         entity_id: updated.id,
@@ -454,7 +454,7 @@ export class CaseTransferService {
       where: { id: caseTransferId },
       include: { debtClaim: true, lawyer: true, bailiff: true },
     });
-    if (!caseTransfer) throw new Error("Expediente no encontrado");
+    if (!caseTransfer) throw new Error("Dossier niet gevonden");
 
     const updated = await prisma.caseTransfer.update({
       where: { id: caseTransferId },
@@ -489,8 +489,8 @@ export class CaseTransferService {
         type: NotificationType.CASE_TRANSFER_POWER_OF_ATTORNEY_CHANGED,
         title: granted ? "Volmacht verleend" : "Volmacht ingetrokken",
         message: granted
-          ? `El participante te otorgó poder para decidir por tu cuenta los acuerdos de pago del expediente ${caseTransfer.debtClaim.reference}.`
-          : `El participante revocó tu poder para decidir los acuerdos de pago del expediente ${caseTransfer.debtClaim.reference}. Las decisiones vuelven a requerir su aprobación.`,
+          ? `De deelnemer heeft je volmacht gegeven om zelfstandig te beslissen over betalingsregelingen voor dossier ${caseTransfer.debtClaim.reference}.`
+          : `De deelnemer heeft je volmacht ingetrokken voor betalingsregelingen van dossier ${caseTransfer.debtClaim.reference}. Beslissingen vereisen weer zijn goedkeuring.`,
         link: `/legal-processes/transfers/${updated.id}`,
         entity_type: "CaseTransfer",
         entity_id: updated.id,
@@ -535,8 +535,8 @@ export class CaseTransferService {
 
     await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.tenantId, {
       type: NotificationType.GOP_CANCELLED,
-      title: "GOP cancelado",
-      message: `El expediente ${caseTransfer.debtClaim.reference} fue cancelado: ${reason}`,
+      title: "GOP geannuleerd",
+      message: `Dossier ${caseTransfer.debtClaim.reference} werd geannuleerd: ${reason}`,
       link: `/legal-processes/transfers/${updated.id}`,
       entity_type: "CaseTransfer",
       entity_id: updated.id,
@@ -548,8 +548,8 @@ export class CaseTransferService {
         tenant_id: caseTransfer.debtClaim.tenantId,
         user_id: assignedUserId,
         type: NotificationType.GOP_CANCELLED,
-        title: "GOP cancelado",
-        message: `El participante canceló la gestión judicial del expediente ${caseTransfer.debtClaim.reference}.`,
+        title: "GOP geannuleerd",
+        message: `De deelnemer heeft de gerechtelijke opvolging van dossier ${caseTransfer.debtClaim.reference} geannuleerd.`,
         link: `/legal-processes/transfers/${updated.id}`,
         entity_type: "CaseTransfer",
         entity_id: updated.id,
@@ -576,7 +576,7 @@ export class CaseTransferService {
       where: { id: params.caseTransferId },
       include: { debtClaim: true, lawyer: true },
     });
-    if (!caseTransfer) throw new Error("Expediente no encontrado");
+    if (!caseTransfer) throw new Error("Dossier niet gevonden");
     if (!caseTransfer.lawyer) throw new Error("Dit dossier heeft geen toegewezen advocaat.");
     if (caseTransfer.status !== "ACCEPTED") {
       throw new Error(`Kan geen honorariumfactuur registreren in de status ${caseTransfer.status}.`);
@@ -708,8 +708,8 @@ export class CaseTransferService {
         tenant_id: caseTransfer.debtClaim.tenantId,
         user_id: caseTransfer.lawyer.userId,
         type: NotificationType.GOP_LAWYER_WORK_FINALIZED,
-        title: "Trabajo finalizado",
-        message: `Se confirmó el pago de la comisión CFSB del expediente ${caseTransfer.debtClaim.reference}. Ya puede transferir la sentencia al agente judicial.`,
+        title: "Werk afgerond",
+        message: `De betaling van de CFSB-commissie voor dossier ${caseTransfer.debtClaim.reference} werd bevestigd. Het vonnis kan nu overgedragen worden aan de deurwaarder.`,
         link: `/legal-processes/transfers/${caseTransfer.id}`,
         entity_type: "CaseTransfer",
         entity_id: caseTransfer.id,
@@ -728,11 +728,11 @@ export class CaseTransferService {
       where: { id: data.caseTransferId },
       include: { debtClaim: true, lawyer: true },
     });
-    if (!caseTransfer) throw new Error("Expediente no encontrado");
+    if (!caseTransfer) throw new Error("Dossier niet gevonden");
 
     if (!caseTransfer.workCompletedAt) {
       throw new Error(
-        "Debe finalizar su trabajo (factura de honorarios y pago de la comisión CFSB) antes de transferir el expediente.",
+        "U dient eerst uw werk af te ronden (honorariumfactuur en betaling van de CFSB-commissie) voordat u het dossier kunt overdragen.",
       );
     }
 
@@ -741,12 +741,12 @@ export class CaseTransferService {
     });
     if (!vonnisDocument) {
       throw new Error(
-        "Debe adjuntar el documento del Vonnis antes de transferir el expediente al agente judicial.",
+        "U dient het vonnisdocument bij te voegen voordat u het dossier kunt overdragen aan de deurwaarder.",
       );
     }
 
     const bailiff = await prisma.bailiff.findUnique({ where: { id: data.bailiffId } });
-    if (!bailiff) throw new Error("Alguacil no encontrado");
+    if (!bailiff) throw new Error("Deurwaarder niet gevonden");
 
     const updated = await prisma.caseTransfer.update({
       where: { id: caseTransfer.id },
@@ -756,7 +756,7 @@ export class CaseTransferService {
     await ClaimTimelineService.logEvent(
       caseTransfer.debtClaimId,
       "BAILIFF_ASSIGNED",
-      `El abogado transfirió la sentencia al alguacil ${bailiff.fullname} para su ejecución.`,
+      `De advocaat heeft het vonnis overgedragen aan deurwaarder ${bailiff.fullname} voor executie.`,
       { bailiffId: data.bailiffId },
       actorUserId,
     );
@@ -766,8 +766,8 @@ export class CaseTransferService {
         tenant_id: caseTransfer.debtClaim.tenantId,
         user_id: bailiff.user_id,
         type: NotificationType.GOP_TRANSFERRED_TO_BAILIFF,
-        title: "Nuevo expediente para ejecución",
-        message: `Se te transfirió el expediente ${caseTransfer.debtClaim.reference} para iniciar el GOP.`,
+        title: "Nieuw dossier voor executie",
+        message: `Dossier ${caseTransfer.debtClaim.reference} werd aan je overgedragen om het GOP te starten.`,
         link: `/legal-processes/transfers/${updated.id}`,
         entity_type: "CaseTransfer",
         entity_id: updated.id,

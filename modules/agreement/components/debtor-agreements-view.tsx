@@ -45,7 +45,7 @@ export const DebtorAgreementsView = () => {
     try {
       const debtor = await getDebtorByUserId(user.id, user.tenant_id);
       if (!debtor) {
-        notifyError("No se encontró el deudor asociado al usuario");
+        notifyError("Geen debiteur gevonden voor deze gebruiker");
         return;
       }
 
@@ -55,7 +55,7 @@ export const DebtorAgreementsView = () => {
       }
     } catch (error) {
       console.error("Error fetching debts:", error);
-      notifyError("Error al obtener deudas");
+      notifyError("Fout bij het ophalen van schulden");
     }
   }, [user?.id, user?.tenant_id]);
 

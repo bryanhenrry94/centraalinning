@@ -85,7 +85,7 @@ export const ModalFormLawyer: React.FC<ModalFormLawyerProps> = ({
       try {
         const response = await getLawyerById(id);
         if (!response.success || !response.data) {
-          notifyError("Abogado no encontrado");
+          notifyError("Advocaat niet gevonden");
           if (isMounted) reset(defaultValues);
           return;
         }
@@ -108,7 +108,7 @@ export const ModalFormLawyer: React.FC<ModalFormLawyerProps> = ({
           });
       } catch (error) {
         console.error(error);
-        notifyError("Error al obtener el abogado");
+        notifyError("Fout bij het ophalen van de advocaat");
         if (isMounted) reset(defaultValues);
       } finally {
         if (isMounted) setLoading(false);
@@ -124,7 +124,7 @@ export const ModalFormLawyer: React.FC<ModalFormLawyerProps> = ({
 
   const onSubmit = async (values: LawyerCreate) => {
     if (!tenant) {
-      notifyError("Tenant not found");
+      notifyError("Organisatie niet gevonden");
       return;
     }
 
@@ -134,11 +134,11 @@ export const ModalFormLawyer: React.FC<ModalFormLawyerProps> = ({
         const result = await updateLawyer(id, values);
 
         if (!result.success || !result.data) {
-          notifyError("No se pudo actualizar el abogado");
+          notifyError("De advocaat kon niet worden bijgewerkt");
           return;
         }
 
-        notifySuccess("Abogado actualizado correctamente");
+        notifySuccess("Advocaat succesvol bijgewerkt");
 
         onSave(result.data);
         reset(defaultValues);
@@ -146,18 +146,18 @@ export const ModalFormLawyer: React.FC<ModalFormLawyerProps> = ({
       } else {
         const result = await createLawyer(values, tenant.id);
         if (!result.success || !result.data) {
-          notifyError("No se pudo crear el abogado");
+          notifyError("De advocaat kon niet worden aangemaakt");
           return;
         }
 
-        notifySuccess("Abogado creado correctamente");
+        notifySuccess("Advocaat succesvol aangemaakt");
         onSave(result.data);
         reset(defaultValues);
         onClose();
       }
     } catch (error) {
       console.error("Error saving lawyer:", error);
-      notifyError(error instanceof Error ? error.message : "Ocurrió un error");
+      notifyError(error instanceof Error ? error.message : "Er is een fout opgetreden");
     } finally {
       setLoading(false);
     }
@@ -218,7 +218,7 @@ export const ModalFormLawyer: React.FC<ModalFormLawyerProps> = ({
                 <InputHookForm name="companyName" label="Kantoor / bedrijf" />
                 <InputHookForm name="identification" label="Identificatie" />
                 <InputHookForm name="barRegistration" label="Registratienummer (balie)" />
-                <InputHookForm name="email" label="Email" />
+                <InputHookForm name="email" label="E-mailadres" />
                 <InputHookForm name="phone" label="Telefoon" />
                 <InputHookForm name="mobile" label="Mobiel" />
                 <InputHookForm name="address" label="Adres" />
