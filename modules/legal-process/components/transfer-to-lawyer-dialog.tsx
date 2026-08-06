@@ -20,7 +20,6 @@ import { Lawyer } from "@/modules/lawyer/services/lawyer.validators";
 import { getActiveBailiffsDirectory } from "@/modules/bailiff/actions/bailiff.actions";
 import { Bailiff } from "@/modules/bailiff/services/bailiff.validators";
 import { transferToLawyer } from "@/modules/legal-process/actions/case-transfer.actions";
-import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 
 interface TransferToLawyerDialogProps {
   open: boolean;
@@ -44,6 +43,7 @@ export const TransferToLawyerDialog: React.FC<TransferToLawyerDialogProps> = ({
   const [bailiffId, setBailiffId] = useState("");
   const [isEmergencyTransfer, setIsEmergencyTransfer] = useState(false);
   const [emergencyReason, setEmergencyReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -74,53 +74,43 @@ export const TransferToLawyerDialog: React.FC<TransferToLawyerDialogProps> = ({
     setBailiffId("");
   };
 
-  // De overdracht wordt pas definitief (LegalProcess + melding aan de
-  // advocaat/deurwaarder) zodra de betaling van de GOP-transfercommissie
-  // (5% van het openstaande saldo) bevestigd is — zie confirmTransferPayment
-  // (webhook). Hier wordt alleen de betaling aangemaakt.
-  const handleCreateTransaction = async (): Promise<{
-    success: boolean;
-    error?: string;
-    paymentId?: string;
-    paymentUrl?: string;
-  }> => {
+  // De overdracht wordt direct definitief (CaseTransfer + melding aan de
+  // advocaat/deurwaarder) zonder betaling van een GOP-transfercommissie —
+  // die betaling is afgeschaft, de overdracht mag niet meer onderbroken
+  // worden door een betaalstap (wijziging van bedrijfsregel).
+  const handleSubmit = async () => {
     if (assigneeType === "LAWYER" && !lawyerId) {
-      return { success: false, error: "Selecteer een advocaat" };
+      notifyError("Selecteer een advocaat");
+      return;
     }
     if (assigneeType === "BAILIFF" && !bailiffId) {
-      return { success: false, error: "Selecteer een deurwaarder" };
+      notifyError("Selecteer een deurwaarder");
+      return;
     }
     if (isEmergencyTransfer && !emergencyReason.trim()) {
-      return { success: false, error: "Vermeld de reden van de noodoverdracht" };
+      notifyError("Vermeld de reden van de noodoverdracht");
+      return;
     }
 
     try {
-      const result = await transferToLawyer({
+      setSubmitting(true);
+      await transferToLawyer({
         debtClaimId,
         lawyerId: assigneeType === "LAWYER" ? lawyerId : null,
         bailiffId: assigneeType === "BAILIFF" ? bailiffId : null,
         isEmergencyTransfer,
         emergencyReason: isEmergencyTransfer ? emergencyReason.trim() : null,
       });
-      return { success: true, paymentId: result.paymentId, paymentUrl: result.paymentUrl };
+      notifySuccess(
+        "Dossier overgedragen. De advocaat/deurwaarder heeft een melding ontvangen.",
+      );
+      onTransferred();
+      handleClose();
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Overdracht mislukt",
-      };
+      notifyError(error instanceof Error ? error.message : "Overdracht mislukt");
+    } finally {
+      setSubmitting(false);
     }
-  };
-
-  const handlePaymentConfirmed = async () => {
-    notifySuccess(
-      "Betaling bevestigd. De advocaat/deurwaarder ontvangt een melding zodra de overdracht is verwerkt.",
-    );
-    onTransferred();
-    handleClose();
-  };
-
-  const handlePaymentFailed = async () => {
-    notifyError("De betaling is niet gelukt. Probeer het opnieuw.");
   };
 
   return (
@@ -198,11 +188,15 @@ export const TransferToLawyerDialog: React.FC<TransferToLawyerDialogProps> = ({
         </Stack>
       </DialogContent>
       <DialogActions sx={{ flexDirection: "column", alignItems: "stretch", gap: 1, px: 3, pb: 2 }}>
-        <PaymentIntent
-          onCreateTransaction={handleCreateTransaction}
-          onPaymentConfirmed={handlePaymentConfirmed}
-          onPaymentFailed={handlePaymentFailed}
-        />
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSubmit}
+          disabled={submitting}
+          fullWidth
+        >
+          {submitting ? "Bezig..." : "Overdragen"}
+        </Button>
         <Button onClick={handleClose}>Annuleren</Button>
       </DialogActions>
     </Dialog>

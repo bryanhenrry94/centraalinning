@@ -1,12 +1,23 @@
 import { prisma } from "@/lib/prisma";
-import { advanceAOPStep, getDebtClaimsAction } from "@/modules/collection/actions/debt-claim.actions";
+import {
+  advanceAOPStep,
+  applyAopNoResponseFee,
+  getDebtClaimsAction,
+} from "@/modules/collection/actions/debt-claim.actions";
 import { applyCharge, countChargesForClaim } from "@/modules/collection/actions/debt-fine.actions";
 import { hasAgreement, hasPaymentsUpToDate, cancelAgreementsByCliam } from "@/modules/agreement/actions/agreement.actions";
 import { CollectionNotificationService } from "@/modules/collection/services/collection-notification.service";
 import { PersonType } from "@/shared/constants/person-type";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
+import { SettingsService } from "@/modules/settings/services/settings/settings.service";
 
 type AOPStep = "REMINDER" | "FINAL_NOTICE" | "DEFAULT_NOTICE" | "BLK_NOTIFICATION";
+
+// Valores por defecto — el Superadministrador configura el recargo real por
+// isla/tenant editando los Settings aanmaning_no_response_fee /
+// sommatie_no_response_fee (punto 9 del análisis CFSB), sin tocar código.
+const DEFAULT_AANMANING_NO_RESPONSE_FEE = 150;
+const DEFAULT_SOMMATIE_NO_RESPONSE_FEE = 250;
 
 const STEP_SEQUENCE: AOPStep[] = [
   "REMINDER",
@@ -28,6 +39,7 @@ export async function processAopWorkflow() {
       debtClaim: {
         include: {
           debtor: { include: { person: true } },
+          tenant: true,
         },
       },
     },
@@ -106,6 +118,29 @@ export async function processAopWorkflow() {
 
         await cancelAgreementsByCliam(debtClaimId);
       }
+    } else if (currentStepType === "REMINDER" || currentStepType === "FINAL_NOTICE") {
+      // Sin acuerdo de pago vigente: el deudor no reaccionó dentro del plazo
+      // de la aanmaning o la sommatie. CFSB cobra un recargo administrativo
+      // fijo, configurable por isla/tenant — es una obligación del deudor
+      // CON CFSB, separada de la comisión de cobranza que ya paga el
+      // participante (punto 9 del análisis CFSB).
+      const tenant = aop.debtClaim.tenant;
+      const feeKey =
+        currentStepType === "REMINDER"
+          ? "aanmaning_no_response_fee"
+          : "sommatie_no_response_fee";
+      const defaultFee =
+        currentStepType === "REMINDER"
+          ? DEFAULT_AANMANING_NO_RESPONSE_FEE
+          : DEFAULT_SOMMATIE_NO_RESPONSE_FEE;
+
+      const noResponseFee = await SettingsService.resolveNumber(
+        feeKey,
+        { tenantId: tenant.id, jurisdictionId: tenant.jurisdictionId },
+        defaultFee,
+      );
+
+      await applyAopNoResponseFee(debtClaimId, currentStepType, noResponseFee);
     }
 
     await advanceAOPStep(debtClaimId);

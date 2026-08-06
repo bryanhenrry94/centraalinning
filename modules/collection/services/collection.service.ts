@@ -157,8 +157,14 @@ export class CollectionService {
       };
     }
 
-    const feeAmount = Number(((principalAmount * 15) / 100).toFixed(2));
-    const abbAmount = Number(((feeAmount * 6) / 100).toFixed(2));
+    // Tarifa configurable por isla/tenant (punto 9 del análisis CFSB) — antes
+    // hardcodeada en 15/6, lo que la desconectaba silenciosamente de
+    // Setting/Jurisdiction en cuanto el Superadministrador cambiara el valor.
+    const parameter = await ParameterService.getParameterForTenant(tenantId);
+    const feeRate = parameter?.collection_fee_rate ?? 0;
+    const abbRate = parameter?.abb_rate ?? 0;
+    const feeAmount = Number(((principalAmount * feeRate) / 100).toFixed(2));
+    const abbAmount = Number(((feeAmount * abbRate) / 100).toFixed(2));
 
     const { claimId, obligationId } = await prisma.$transaction(async (tx) => {
       // De AOP-referentie wordt altijd door het systeem gegenereerd, nooit
@@ -540,6 +546,48 @@ export class CollectionService {
             : "AOP-proces afgerond",
         },
       });
+    });
+  };
+
+  // Recargo administrativo por falta de respuesta del deudor dentro del
+  // plazo de la aanmaning o la sommatie (punto 9 del análisis CFSB). A
+  // diferencia de la comisión de cobranza (ClaimCharge, a cargo del
+  // deudor pero facturada al participante), este recargo es una
+  // obligación del deudor directamente CON CFSB — mismo patrón que la
+  // obligación CFSB creada en `createPending` (beneficiary: CFSB).
+  // Configurable por isla/tenant vía Setting (aanmaning_no_response_fee /
+  // sommatie_no_response_fee), sin valor por defecto hardcodeado en el job.
+  static applyNoResponseFee = async (
+    debtClaimId: string,
+    step: "REMINDER" | "FINAL_NOTICE",
+    amount: number,
+  ) => {
+    if (amount <= 0) return null;
+
+    const stepLabel = step === "REMINDER" ? "de aanmaning" : "de sommatie";
+
+    return prisma.$transaction(async (tx) => {
+      const obligation = await tx.debtClaimObligation.create({
+        data: {
+          debtClaimId,
+          type: "COLLECTION",
+          beneficiary: "CFSB",
+          originalAmount: amount,
+          paidAmount: 0,
+          balanceAmount: amount,
+          status: "PENDING",
+        },
+      });
+
+      await tx.claimTimeline.create({
+        data: {
+          debtClaimId,
+          event: "AOP_STEP_COMPLETED",
+          description: `Administratieve boete van ${amount} toegevoegd (geen reactie van de debiteur op ${stepLabel}).`,
+        },
+      });
+
+      return obligation;
     });
   };
 

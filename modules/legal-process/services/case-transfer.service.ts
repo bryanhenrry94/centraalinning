@@ -8,8 +8,6 @@ import {
 } from "@/modules/legal-process/services/case-transfer.validators";
 import { GOP_FEE_RATE } from "@/modules/legal-process/constants/legal-process-status";
 import { ClaimTimelineService } from "@/modules/collection/services/claim-timeline.service";
-import { ObligationService } from "@/modules/collection/services/obligation.service";
-import { DebtFineService } from "@/modules/collection/services/debt-fine.service";
 import { NotificationService } from "@/modules/notification/services/notification.service";
 import { NotificationType } from "@/modules/notification/constants/notification-type";
 import { BillingInvoiceService } from "@/modules/payment/services/billing-invoice.service";
@@ -87,6 +85,11 @@ export class CaseTransferService {
   // Solicitud de transferencia y pago de la comisión (5%)
   // ---------------------------------------------------------------------
 
+  // La transferencia ya no cobra la comisión CFSB del 5% en este momento
+  // (cambio de definición de negocio): el dossier pasa directo a
+  // PENDING_ACCEPTANCE y se notifica al abogado/alguacil de inmediato, sin
+  // ningún pago que lo bloquee. Antes existía un paso intermedio
+  // PENDING_PAYMENT + Sentoo (confirmTransferPayment), ahora eliminado.
   static requestTransfer = async (input: TransferToLawyerInput, actorUserId: string) => {
     const debtClaim = await prisma.debtClaim.findUnique({ where: { id: input.debtClaimId } });
     if (!debtClaim) throw new Error("Dossier (DebtClaim) niet gevonden");
@@ -113,80 +116,31 @@ export class CaseTransferService {
       throw new Error("Selecteer een advocaat of een deurwaarder.");
     }
 
-    // Si ya hay un cobro pendiente para este dossier y esta parte, reusar
-    // ese pago en vez de cobrar dos veces.
+    // Si ya existe una transferencia abierta para este dossier y esta parte,
+    // reusarla en vez de crear un duplicado.
     const existing = await prisma.caseTransfer.findFirst({
       where: {
         debtClaimId: input.debtClaimId,
         lawyerId: input.lawyerId ?? null,
         bailiffId: input.bailiffId ?? null,
-        status: "PENDING_PAYMENT",
+        status: "PENDING_ACCEPTANCE",
       },
-      include: { payment: true },
+      include: caseTransferInclude,
     });
-    if (existing?.payment && existing.payment.status === "pending" && existing.payment.payment_url) {
-      return { paymentId: existing.paymentId!, paymentUrl: existing.payment.payment_url };
-    }
+    if (existing) return serializeCaseTransfer(existing);
 
-    const obligation = await ObligationService.ensurePrincipalDebtObligation(
-      input.debtClaimId,
-      Number(debtClaim.principalAmount),
-    );
-    const fee = Math.round(Number(obligation.balanceAmount) * GOP_FEE_RATE * 100) / 100;
-
-    const paymentResult = await PaymentService.create(debtClaim.tenantId, {
-      amount: fee,
-      currency: "USD",
-      description: `GOP-transfercommissie (5%) — dossier ${debtClaim.reference ?? debtClaim.id}`,
-      payment_type: PaymentType.GOP_TRANSFER,
-    });
-    if (!paymentResult.success || !paymentResult.data) {
-      throw new Error(
-        paymentResult.message || "Kon geen betaling aanmaken voor de GOP-overdracht.",
-      );
-    }
-
-    await prisma.caseTransfer.create({
+    const caseTransfer = await prisma.caseTransfer.create({
       data: {
         debtClaimId: input.debtClaimId,
         lawyerId: input.lawyerId ?? null,
         bailiffId: input.bailiffId ?? null,
-        status: "PENDING_PAYMENT",
-        paymentId: paymentResult.data.paymentId,
+        status: "PENDING_ACCEPTANCE",
+        acceptanceDeadline: new Date(Date.now() + ACCEPTANCE_WINDOW_DAYS * 24 * 60 * 60 * 1000),
         isEmergencyTransfer: input.isEmergencyTransfer ?? false,
         emergencyReason: input.isEmergencyTransfer ? input.emergencyReason : null,
       },
+      include: caseTransferInclude,
     });
-
-    return { paymentId: paymentResult.data.paymentId, paymentUrl: paymentResult.data.paymentUrl };
-  };
-
-  // Se llama desde el webhook de Sentoo cuando el Payment GOP_TRANSFER se
-  // confirma como pagado — recién ahí se notifica al abogado/alguacil.
-  static confirmTransferPayment = async (paymentId: string) => {
-    const caseTransfer = await prisma.caseTransfer.findUnique({
-      where: { paymentId },
-      include: { debtClaim: true, lawyer: true, bailiff: true },
-    });
-    if (!caseTransfer || caseTransfer.status !== "PENDING_PAYMENT") return;
-
-    const updated = await prisma.caseTransfer.update({
-      where: { id: caseTransfer.id },
-      data: {
-        status: "PENDING_ACCEPTANCE",
-        acceptanceDeadline: new Date(Date.now() + ACCEPTANCE_WINDOW_DAYS * 24 * 60 * 60 * 1000),
-      },
-    });
-
-    const payment = await prisma.payment.findUnique({ where: { id: paymentId } });
-    if (payment) {
-      await DebtFineService.applyCharge(
-        caseTransfer.debtClaimId,
-        Number(payment.total_amount),
-        "GOP-transfercommissie (5%)",
-        "GOP",
-      );
-    }
 
     const assignedLabel = caseTransfer.lawyer
       ? `advocaat ${caseTransfer.lawyer.firstName} ${caseTransfer.lawyer.lastName}`
@@ -200,6 +154,7 @@ export class CaseTransferService {
         caseTransfer.isEmergencyTransfer ? ` — reden: ${caseTransfer.emergencyReason}` : ""
       }`,
       { lawyerId: caseTransfer.lawyerId, bailiffId: caseTransfer.bailiffId },
+      actorUserId,
     );
 
     const assignedUserId = caseTransfer.lawyer?.userId ?? caseTransfer.bailiff?.user_id;
@@ -214,13 +169,13 @@ export class CaseTransferService {
         message: caseTransfer.isEmergencyTransfer
           ? `Dossier ${caseTransfer.debtClaim.reference} werd met spoed (noodoverdracht) aan je overgedragen: ${caseTransfer.emergencyReason}`
           : `Dossier ${caseTransfer.debtClaim.reference} werd aan je overgedragen voor gerechtelijke opvolging.`,
-        link: `/legal-processes/transfers/${updated.id}`,
+        link: `/legal-processes/transfers/${caseTransfer.id}`,
         entity_type: "CaseTransfer",
-        entity_id: updated.id,
+        entity_id: caseTransfer.id,
       });
     }
 
-    return updated;
+    return serializeCaseTransfer(caseTransfer);
   };
 
   // ---------------------------------------------------------------------

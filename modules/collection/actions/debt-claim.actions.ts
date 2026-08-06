@@ -28,6 +28,14 @@ export const advanceAOPStep = async (debtClaimId: string) => {
   return CollectionService.advanceAOPStep(debtClaimId);
 };
 
+export const applyAopNoResponseFee = async (
+  debtClaimId: string,
+  step: "REMINDER" | "FINAL_NOTICE",
+  amount: number,
+) => {
+  return CollectionService.applyNoResponseFee(debtClaimId, step, amount);
+};
+
 export async function getDebtClaimsAction(params: DebtClaimFilter) {
   return CollectionService.getAll(params);
 }

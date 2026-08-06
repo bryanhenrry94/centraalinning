@@ -261,6 +261,10 @@ async function seedJurisdictionSettings() {
       { key: "natural_sommatie_penalty", name: "Sommatieboete (particulier)", categoryId: "cat-percentages", value: String(jurisdiction.naturalSommatiePenalty) },
       { key: "company_no_reaction_penalty", name: "Boete geen reactie (bedrijf)", categoryId: "cat-percentages", value: String(jurisdiction.companyNoReactionPenalty) },
       { key: "natural_no_reaction_penalty", name: "Boete geen reactie (particulier)", categoryId: "cat-percentages", value: String(jurisdiction.naturalNoReactionPenalty) },
+      // Recargos administrativos por falta de respuesta del deudor (punto 9
+      // del análisis CFSB) — obligación con CFSB, no con el participante.
+      { key: "aanmaning_no_response_fee", name: "Administratieve boete geen reactie (aanmaning)", categoryId: "cat-percentages", value: "150" },
+      { key: "sommatie_no_response_fee", name: "Administratieve boete geen reactie (sommatie)", categoryId: "cat-percentages", value: "250" },
       // Herinneringsfrequentie — nuevas claves, antes constantes hardcodeadas
       // en lib/jobs/check_gop_deadlines.ts y check_case_transfer_deadlines.ts.
       { key: "gop_prescription_reminder_days", name: "GOP verjaringsherinnering (dagen vooraf)", categoryId: "cat-reminder-frequency", value: "30" },
