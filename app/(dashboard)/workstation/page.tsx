@@ -97,7 +97,7 @@ export default function WorkstationPage() {
       icon: GroupIcon,
       buttonText: "Collectieve Opvolging starten →",
       linkText: "📋 Mijn collectieve opvolging",
-      linkList: "/collections",
+      linkList: "/collective-follow-up",
       newLink: "/collections",
     },
     {

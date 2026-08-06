@@ -46,4 +46,22 @@ export class EmployeeService {
       return { success: false, error: error instanceof Error ? error.message : "Error desconocido" };
     }
   }
+
+  // COP: busca si una Person trabaja para algún tenant afiliado. No existe
+  // FK entre Person y Employee — la única forma de vincularlos es comparar
+  // el número de identificación como string, en TODOS los tenants (sin
+  // filtrar por tenant_id), ya que "empleador" puede ser cualquier
+  // participante de la red, no necesariamente el que reclama la deuda.
+  static async findEmployerTenantForPerson(
+    identification: string,
+  ): Promise<{ tenantId: string; employeeId: string } | null> {
+    if (!identification?.trim()) return null;
+
+    const employee = await prisma.employee.findUnique({
+      where: { identification },
+      select: { id: true, tenant_id: true },
+    });
+
+    return employee ? { tenantId: employee.tenant_id, employeeId: employee.id } : null;
+  }
 }

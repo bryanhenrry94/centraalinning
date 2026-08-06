@@ -23,9 +23,13 @@ const TIMELINE_EVENT_LABELS: Record<string, string> = {
 
   // COP
   COL_STARTED: "Collectieve opvolging gestart",
+  COL_DEBTOR_NOTIFIED: "Debiteur geïnformeerd",
+  COL_EMPLOYER_FOUND: "Werkgever gevonden",
   COL_NEGOTIATION_CREATED: "Onderhandeling gestart",
   COL_NEGOTIATION_ACCEPTED: "Onderhandeling geaccepteerd",
   COL_NEGOTIATION_REJECTED: "Onderhandeling afgewezen",
+  COL_TRANSFERRED_TO_GOP: "Overgedragen aan gerechtelijke opvolging",
+  COL_CLOSED: "Collectieve opvolging gesloten",
   COL_COMPLETED: "Collectieve opvolging afgerond",
 
   // PAYMENTS

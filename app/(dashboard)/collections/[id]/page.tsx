@@ -44,6 +44,12 @@ import { CaseFileList } from "@/modules/case-file/components/case-file-list";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import GavelIcon from "@mui/icons-material/Gavel";
+import GroupIcon from "@mui/icons-material/Group";
+import {
+  getCollectiveCollectionByDebtClaimId,
+  checkCanStartCop,
+} from "@/modules/collective-follow-up/actions/collective-collection.actions";
+import { StartCopDialog } from "@/modules/collective-follow-up/components/start-cop-dialog";
 
 const CollectionViewPage: React.FC = () => {
   const router = useRouter();
@@ -59,6 +65,11 @@ const CollectionViewPage: React.FC = () => {
   >(null);
   const [legalProcessId, setLegalProcessId] = useState<string | null>(null);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [collectiveCollectionId, setCollectiveCollectionId] = useState<string | null>(null);
+  const [canStartCop, setCanStartCop] = useState<{ allowed: boolean; reason?: string }>({
+    allowed: false,
+  });
+  const [startCopDialogOpen, setStartCopDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!params.id) {
@@ -74,18 +85,22 @@ const CollectionViewPage: React.FC = () => {
     try {
       setLoading(true);
 
-      const [claim, paymentsData, notificationsData, legalProcess] =
+      const [claim, paymentsData, notificationsData, legalProcess, collectiveCollection, copEligibility] =
         await Promise.all([
           getDebtClaimViewById(debtClaimId),
           getPaymentsByInvoice(debtClaimId),
           getAopStepsForClaim(debtClaimId),
           getLegalProcessByDebtClaimId(debtClaimId),
+          getCollectiveCollectionByDebtClaimId(debtClaimId),
+          checkCanStartCop(debtClaimId),
         ]);
 
       setCollection(claim ?? null);
       setPayments(paymentsData ?? []);
       setNotifications(notificationsData ?? []);
       setLegalProcessId(legalProcess?.id ?? null);
+      setCollectiveCollectionId(collectiveCollection?.id ?? null);
+      setCanStartCop(copEligibility);
     } catch (error) {
       console.error("Error fetching collection detail:", error);
       notifyError("Er is een fout opgetreden bij het laden van het dossier");
@@ -174,6 +189,30 @@ const CollectionViewPage: React.FC = () => {
                       onClick={() => setTransferDialogOpen(true)}
                     >
                       Dossieroverdracht voor mogelijke gerechtelijke opvolging
+                    </Button>
+                  </span>
+                </Tooltip>
+              )}
+              {collectiveCollectionId ? (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<GroupIcon />}
+                  onClick={() => router.push(`/collective-follow-up/${collectiveCollectionId}`)}
+                >
+                  COP-dossier
+                </Button>
+              ) : (
+                <Tooltip title={canStartCop.allowed ? "" : (canStartCop.reason ?? "")}>
+                  <span>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<GroupIcon />}
+                      disabled={!canStartCop.allowed}
+                      onClick={() => setStartCopDialogOpen(true)}
+                    >
+                      Collectieve Opvolging starten
                     </Button>
                   </span>
                 </Tooltip>
@@ -462,6 +501,18 @@ const CollectionViewPage: React.FC = () => {
           onClose={() => setTransferDialogOpen(false)}
           debtClaimId={params.id as string}
           onTransferred={() => loadData(params.id as string)}
+        />
+      )}
+
+      {params.id && (
+        <StartCopDialog
+          open={startCopDialogOpen}
+          onClose={() => setStartCopDialogOpen(false)}
+          debtClaimId={params.id as string}
+          onStarted={(collectionId) => {
+            setCollectiveCollectionId(collectionId);
+            router.push(`/collective-follow-up/${collectionId}`);
+          }}
         />
       )}
     </Container>

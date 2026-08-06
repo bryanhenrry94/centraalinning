@@ -9,6 +9,7 @@ import {
   AssignmentOutlined,
   CreditCardOutlined,
   MoveToInboxOutlined,
+  GroupOutlined,
 } from "@mui/icons-material";
 
 export type HeaderMenuItem = {
@@ -63,6 +64,11 @@ export const menuGroups: HeaderMenuGroup[] = [
         icon: <ShieldOutlined fontSize="small" />,
       },
       {
+        label: "Collectieve opvolging",
+        href: "/collective-follow-up",
+        icon: <GroupOutlined fontSize="small" />,
+      },
+      {
         label: "Gerechtelijke opvolging",
         href: "/verdicts",
         icon: <GavelOutlined fontSize="small" />,
@@ -89,6 +95,11 @@ export const menuGroups: HeaderMenuGroup[] = [
         label: "Betalingsregeling aanvragen",
         href: "/agreements",
         icon: <HandshakeOutlined fontSize="small" />,
+      },
+      {
+        label: "Collectieve opvolging",
+        href: "/collective-follow-up",
+        icon: <GroupOutlined fontSize="small" />,
       },
       {
         label: "Mijn financiële verklaring",

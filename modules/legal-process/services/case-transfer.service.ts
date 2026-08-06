@@ -94,15 +94,25 @@ export class CaseTransferService {
     const debtClaim = await prisma.debtClaim.findUnique({ where: { id: input.debtClaimId } });
     if (!debtClaim) throw new Error("Dossier (DebtClaim) niet gevonden");
 
-    // El GOP es el último escalón: solo se habilita cuando la fase del AOP
-    // de este expediente llegó a BLK_NOTIFICATION ("Blokkade").
+    // El GOP es el último escalón: se habilita cuando la fase del AOP llegó
+    // a BLK_NOTIFICATION ("Blokkade"), O cuando ya existe una Blokkade
+    // ACTIVE para este dossier (p.ej. originada directamente, o vía un COP
+    // que nunca pasó por el flujo AOP).
     const aop = await prisma.administrativeCollection.findUnique({
       where: { debtClaimId: input.debtClaimId },
       include: { steps: { orderBy: { id: "desc" }, take: 1 } },
     });
-    if (aop?.steps[0]?.step !== "BLK_NOTIFICATION") {
+    const aopReachedBlockade = aop?.steps[0]?.step === "BLK_NOTIFICATION";
+
+    const activeBlockade = aopReachedBlockade
+      ? null
+      : await prisma.blockade.findFirst({
+          where: { originDebtClaimId: input.debtClaimId, status: "ACTIVE" },
+        });
+
+    if (!aopReachedBlockade && !activeBlockade) {
       throw new Error(
-        "Het dossier kan alleen worden overgedragen aan gerechtelijke opvolging als de AOP-fase Blokkade is.",
+        "Het dossier kan alleen worden overgedragen aan gerechtelijke opvolging als de AOP-fase Blokkade is bereikt, of als er een actieve economische blokkade bestaat voor dit dossier.",
       );
     }
 

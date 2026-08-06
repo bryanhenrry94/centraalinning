@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { StorageService } from "@/infrastructure/storage/storage.service";
 import { ObligationService } from "@/modules/collection/services/obligation.service";
 import { ClaimTimelineService } from "@/modules/collection/services/claim-timeline.service";
+import { CollectiveCollectionService } from "@/modules/collective-follow-up/services/collective-collection.service";
 import {
   sendTransferPaymentApprovedEmail,
   sendTransferPaymentReceiptToTenant,
@@ -315,6 +316,12 @@ export class PaymentTransferService {
         "Vordering volledig betaald.",
         { newStatus: "SETTLED" },
       );
+
+      try {
+        await CollectiveCollectionService.checkAndCloseIfSettled(debtClaim.id, actingUser.id);
+      } catch (error) {
+        console.error("Error checking/closing COP after settled payment:", error);
+      }
     }
 
     return { success: true };

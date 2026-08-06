@@ -65,6 +65,10 @@ model Tenant {
 
   financial_agreements FinancialAgreement[]
 
+  // COP: expedientes donde este tenant fue detectado como empleador de un
+  // deudor de OTRO tenant (ver CollectiveCollection.employerTenantId).
+  collectiveCollectionsAsEmployer CollectiveCollection[] @relation("CollectiveCollectionEmployerTenant")
+
   @@map("tenant")
 }
 
@@ -284,9 +288,24 @@ model CollectiveCollection {
   startedAt  DateTime
   finishedAt DateTime?
 
+  // Empleador afiliado detectado por coincidencia de string entre
+  // Person.identification y Employee.identification (no existe FK entre
+  // ambos modelos). Nulo hasta que se encuentre coincidencia; una vez
+  // seteado, el job de re-chequeo deja de revisar este caso.
+  employerTenantId  String?
+  employerTenant    Tenant?   @relation("CollectiveCollectionEmployerTenant", fields: [employerTenantId], references: [id])
+  employerMatchedAt DateTime?
+
+  // Escalado a GOP — mismo patrón aditivo que
+  // FinancialAgreement.escalatedToDebtClaimId.
+  transferredToCaseTransferId String?       @unique
+  transferredToCaseTransfer   CaseTransfer? @relation(fields: [transferredToCaseTransferId], references: [id])
+
   negotiations  COLNegotiation[]
   notifications COLNotification[]
 
+  @@index([status])
+  @@index([employerTenantId])
   @@map("collective_collection")
 }
 
@@ -353,11 +372,11 @@ model LegalProcess {
   // Se setea cuando el alguacil paga la comisión CFSB del 5% (BailiffFeeInvoice.status = PAID).
   gopCompletedGateAt DateTime?
 
-  verdicts           Verdict[]
-  documents          LegalProcessDocument[]
-  agreements         Agreement[]
-  lawyerFeeInvoices  LawyerFeeInvoice[]
-  bailiffFeeInvoices BailiffFeeInvoice[]
+  verdicts             Verdict[]
+  documents            LegalProcessDocument[]
+  agreements           Agreement[]
+  lawyerFeeInvoices    LawyerFeeInvoice[]
+  bailiffFeeInvoices   BailiffFeeInvoice[]
   paymentConfirmations GopPaymentConfirmation[]
 
   @@map("legal_process")
@@ -499,6 +518,11 @@ model CaseTransfer {
   documents         CaseTransferDocument[]
 
   legalProcess LegalProcess?
+
+  // COP: cuando un Seguimiento Colectivo se transfiere a GOP, queda
+  // enlazado a la CaseTransfer resultante (ver
+  // CollectiveCollection.transferredToCaseTransferId).
+  collectiveCollection CollectiveCollection?
 
   @@index([debtClaimId])
   @@map("case_transfer")
@@ -721,10 +745,14 @@ enum TimelineEvent {
   // COP
   // =========================
   COL_STARTED
+  COL_DEBTOR_NOTIFIED
+  COL_EMPLOYER_FOUND
   COL_NEGOTIATION_CREATED
   COL_NEGOTIATION_ACCEPTED
   COL_NEGOTIATION_REJECTED
-  COL_COMPLETED
+  COL_TRANSFERRED_TO_GOP
+  COL_CLOSED
+  COL_COMPLETED // se usa específicamente para el desenlace "Pagado en su totalidad"
 
   // =========================
   // PAYMENTS
@@ -828,10 +856,13 @@ enum NotificationStatus {
 }
 
 enum CollectiveCollectionStatus {
-  ACTIVE // El proceso COP está siendo gestionado activamente. Se están realizando contactos, negociaciones o seguimiento.
-  ON_HOLD // El proceso está temporalmente suspendido (esperando documentación, respuesta del deudor, decisión del acreedor, etc.).
-  COMPLETED // El servicio COP finalizó correctamente. El resultado se determina con CollectiveCollectionResult.
-  CANCELLED // El cliente decidió cancelar el servicio antes de finalizar.
+  ACTIVE // COP Activo — recién iniciado, o el participante decidió mantenerlo activo tras un caso sin respuesta.
+  AWAITING_DEBTOR_RESPONSE // En espera de respuesta del deudor.
+  PAYMENT_AGREEMENT_REQUESTED // Acuerdo de pago solicitado — hay una COLNegotiation OPEN pendiente de decisión.
+  PAYMENT_AGREEMENT_ACCEPTED // Acuerdo de pago aceptado (terminal) — el COP finaliza aquí.
+  PAID_IN_FULL // Pagado en su totalidad (terminal).
+  TRANSFERRED // Transferido a GOP (terminal).
+  CLOSED // Cerrado (terminal) — el participante desistió sin acuerdo ni transferencia.
 }
 
 enum AdministrativeCollectionStatus {
@@ -902,6 +933,7 @@ enum NotificationChannel {
   SMS
   LETTER
   WHATSAPP
+  IN_APP // COP: fila de auditoría de una notificación in-app (COLNotification), sin despacho real por este canal.
 }
 
 enum NegotiationStatus {
@@ -1752,6 +1784,15 @@ enum NotificationType {
   GOP_LAWYER_WORK_FINALIZED
   GOP_BAILIFF_WORK_FINALIZED
   GOP_TRANSFERRED_TO_BAILIFF
+  COL_STARTED
+  COL_DEBTOR_NOTIFIED
+  COL_EMPLOYER_MATCH_FOUND
+  COL_NEGOTIATION_REQUESTED
+  COL_NEGOTIATION_ACCEPTED
+  COL_NEGOTIATION_REJECTED
+  COL_PAID_IN_FULL
+  COL_TRANSFERRED_TO_GOP
+  COL_CLOSED
   GENERIC
 }
 

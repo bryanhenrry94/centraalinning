@@ -43,6 +43,8 @@ export const canUseFeature = (
       // Un tenant en mora no puede iniciar un nuevo GOP, pero sí debe poder
       // seguir gestionando y cancelando los expedientes GOP ya en curso.
       AppAction.TRANSFER_TO_LAWYER,
+      // Tampoco puede iniciar un nuevo COP.
+      AppAction.START_COP,
     ];
 
     if (restrictedActions.includes(action)) {
