@@ -13,9 +13,10 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  Stack,
-  Tooltip,
-  Button,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
   Chip,
   Divider,
 } from "@mui/material";
@@ -25,6 +26,7 @@ import PaymentsIcon from "@mui/icons-material/Payments";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import FolderOffOutlinedIcon from "@mui/icons-material/FolderOffOutlined";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
@@ -67,6 +69,9 @@ const DashboardDebtor = () => {
   const [debts, setDebts] = useState<DebtorSummary[]>([]);
   const [debtSelected, setDebtSelected] = useState<DebtorSummary | null>(null);
   const [agreements, setAgreements] = useState<AgreementResponse[]>([]);
+
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [menuDebt, setMenuDebt] = useState<DebtorSummary | null>(null);
 
   const [openModalAgreement, setOpenModalAgreement] = useState(false);
   const [openModalNotifications, setOpenModalNotifications] = useState(false);
@@ -237,6 +242,19 @@ const DashboardDebtor = () => {
     setOpenModalTransferPayment(true);
   };
 
+  const handleMenuOpen = (
+    event: React.MouseEvent<HTMLElement>,
+    debt: DebtorSummary,
+  ) => {
+    setMenuAnchorEl(event.currentTarget);
+    setMenuDebt(debt);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setMenuDebt(null);
+  };
+
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     // Implementar lógica de búsqueda aquí (ej. filtrar deudas por referencia o descripción)
@@ -404,6 +422,7 @@ const DashboardDebtor = () => {
                           color={status.color}
                           size="small"
                           variant="outlined"
+                          sx={{ width: 150 }}
                         />
                       );
                     })()}
@@ -425,6 +444,7 @@ const DashboardDebtor = () => {
                               color={reaction.color}
                               size="small"
                               variant="outlined"
+                              sx={{ width: 150 }}
                             />
                           );
                         })()
@@ -452,60 +472,68 @@ const DashboardDebtor = () => {
                       }
                       size="small"
                       variant="outlined"
+                      sx={{ width: 150 }}
                     />
                   </TableCell>
                   <TableCell align="center">
-                    <Stack direction="row" spacing={1} justifyContent="center">
-                      <Tooltip title="Betalingen">
-                        <IconButton
-                          size="small"
-                          onClick={() => openPaymentModal(debt)}
-                        >
-                          <PaymentsIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-
-                      <Tooltip title="Betalen">
-                        <Button
-                          size="small"
-                          onClick={() => handlePaymentDebtor(debt)}
-                          variant="contained"
-                          color="error"
-                          startIcon={<AttachMoneyIcon fontSize="small" />}
-                          disabled={debt.balance <= 0}
-                        >
-                          Betalen
-                        </Button>
-                      </Tooltip>
-
-                      <Tooltip
-                        title={
-                          hasOpenAgreement(debt.agreement_status)
-                            ? "Betalingsregeling bekijken"
-                            : isReactionTermExpired(debt.due_date)
-                              ? "De reactietermijn is verstreken. Neem contact op met de deelnemer."
-                              : "Betalingsregeling aanvragen"
-                        }
+                    <IconButton
+                      size="small"
+                      aria-label="Acties"
+                      aria-haspopup="true"
+                      onClick={(e) => handleMenuOpen(e, debt)}
+                    >
+                      <MoreVertIcon fontSize="small" />
+                    </IconButton>
+                    <Menu
+                      anchorEl={menuAnchorEl}
+                      open={Boolean(menuAnchorEl) && menuDebt?.id === debt.id}
+                      onClose={handleMenuClose}
+                    >
+                      <MenuItem
+                        onClick={() => {
+                          openPaymentModal(debt);
+                          handleMenuClose();
+                        }}
                       >
-                        <span>
-                          <Button
-                            size="small"
-                            onClick={() => handleBetaalregelingClick(debt)}
-                            variant="outlined"
-                            color="secondary"
-                            startIcon={<HandshakeIcon fontSize="small" />}
-                            disabled={
-                              !hasOpenAgreement(debt.agreement_status) &&
-                              isReactionTermExpired(debt.due_date)
-                            }
-                          >
-                            {hasOpenAgreement(debt.agreement_status)
-                              ? "Regeling"
-                              : "Regeling aanvragen"}
-                          </Button>
-                        </span>
-                      </Tooltip>
-                    </Stack>
+                        <ListItemIcon>
+                          <PaymentsIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Betalingen</ListItemText>
+                      </MenuItem>
+
+                      <MenuItem
+                        disabled={debt.balance <= 0}
+                        onClick={() => {
+                          handlePaymentDebtor(debt);
+                          handleMenuClose();
+                        }}
+                      >
+                        <ListItemIcon>
+                          <AttachMoneyIcon fontSize="small" color="error" />
+                        </ListItemIcon>
+                        <ListItemText>Betalen</ListItemText>
+                      </MenuItem>
+
+                      <MenuItem
+                        disabled={
+                          !hasOpenAgreement(debt.agreement_status) &&
+                          isReactionTermExpired(debt.due_date)
+                        }
+                        onClick={() => {
+                          handleBetaalregelingClick(debt);
+                          handleMenuClose();
+                        }}
+                      >
+                        <ListItemIcon>
+                          <HandshakeIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>
+                          {hasOpenAgreement(debt.agreement_status)
+                            ? "Regeling"
+                            : "Regeling aanvragen"}
+                        </ListItemText>
+                      </MenuItem>
+                    </Menu>
                   </TableCell>
                 </TableRow>
               ))}

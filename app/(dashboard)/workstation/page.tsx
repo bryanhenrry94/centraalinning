@@ -99,7 +99,7 @@ export default function WorkstationPage() {
       buttonText: "Collectieve Opvolging starten →",
       linkText: "📋 Mijn collectieve opvolging",
       linkList: "/collective-follow-up",
-      newLink: "/collections",
+      newLink: "/collective-follow-up",
     },
     {
       id: 6,
@@ -111,7 +111,7 @@ export default function WorkstationPage() {
       buttonText: "Dossier kiezen om over te dragen →",
       linkText: "📋 Mijn gerechtelijke dossiers",
       linkList: "/legal-processes",
-      newLink: "/collections",
+      newLink: "/legal-processes",
     },
   ];
 
