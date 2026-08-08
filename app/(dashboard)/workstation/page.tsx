@@ -8,10 +8,8 @@ import {
   Grid,
   Card,
   CardContent,
-  Button,
   Chip,
   Avatar,
-  Link as MuiLink,
   Stack,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
@@ -30,7 +28,10 @@ export default function WorkstationPage() {
   // El alguacil ni el abogado tienen acceso a las diensten pre-judiciales:
   // si llegan por URL directa, se los redirige en vez de mostrarles el panel.
   useEffect(() => {
-    if (user?.roles.includes(UserRole.BAILIFF) || user?.roles.includes(UserRole.LAWYER)) {
+    if (
+      user?.roles.includes(UserRole.BAILIFF) ||
+      user?.roles.includes(UserRole.LAWYER)
+    ) {
       router.replace("/dashboard");
     }
   }, [user, router]);
@@ -49,7 +50,7 @@ export default function WorkstationPage() {
       icon: SearchIcon,
       buttonText: "Blok-Check uitvoeren →",
       linkText: "📋 Blok-Check overzicht",
-      // linkList: "/block-check",
+      linkList: "/block-check",
       newLink: "/block-check",
     },
     {
@@ -115,14 +116,14 @@ export default function WorkstationPage() {
   ];
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#f5f5f5" }}>
+    <Box>
       <Container
         maxWidth="lg"
         disableGutters
-        sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+        sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
       >
         {/* Header */}
-        <Box sx={{ mb: { xs: 2, sm: 4 } }}>
+        <Box sx={{ mb: { xs: 2, sm: 6 } }}>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
             Diensten
           </Typography>
@@ -130,7 +131,7 @@ export default function WorkstationPage() {
             variant="subtitle1"
             sx={{ color: "#666", fontSize: "16px" }}
           >
-            Alle Diensten op één scherm
+            Selecteer de diensten waarmee u wilt beginnen.
           </Typography>
         </Box>
 
@@ -141,18 +142,27 @@ export default function WorkstationPage() {
             return (
               <Grid size={{ xs: 12, md: 6, lg: 4 }} key={service.id}>
                 <Card
+                  onClick={() => handleServiceClick(service.newLink || "#")}
                   sx={{
                     height: "100%",
                     display: "flex",
                     flexDirection: "column",
                     position: "relative",
+                    cursor: "pointer",
                     borderTop: `4px solid ${service.color}`,
+                    transition: "box-shadow .15s ease",
                     "&:hover": {
                       boxShadow: 6,
                     },
                   }}
                 >
-                  <CardContent sx={{ flexGrow: 1 }}>
+                  <CardContent
+                    sx={{
+                      flexGrow: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
                     <Stack
                       direction="row"
                       spacing={2}
@@ -160,12 +170,12 @@ export default function WorkstationPage() {
                     >
                       <Avatar
                         sx={{
-                          width: 64,
-                          height: 64,
+                          width: 48,
+                          height: 48,
                           bgcolor: service.color,
                         }}
                       >
-                        <IconComponent sx={{ fontSize: 32 }} />
+                        <IconComponent sx={{ fontSize: 24 }} />
                       </Avatar>
                       <Typography
                         variant="h6"
@@ -174,44 +184,9 @@ export default function WorkstationPage() {
                         {service.title}
                       </Typography>
                     </Stack>
-                    <Typography variant="body2" sx={{ color: "#666", mb: 3 }}>
+                    <Typography variant="body2" sx={{ color: "#666" }}>
                       {service.description}
                     </Typography>
-                    <Stack spacing={2}>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        sx={{
-                          bgcolor: service.color,
-                          "&:hover": {
-                            bgcolor: service.color,
-                            opacity: 0.9,
-                          },
-                          // textTransform: "none",
-                        }}
-                        onClick={() => {
-                          handleServiceClick(service.newLink || "#");
-                        }}
-                      >
-                        {service.buttonText}
-                      </Button>
-                      {service.linkList && (
-                        <MuiLink
-                          href={service.linkList}
-                          sx={{
-                            fontSize: "0.875rem",
-                            fontWeight: "bold",
-                            color: service.color,
-                            textDecoration: "none",
-                            "&:hover": {
-                              textDecoration: "underline",
-                            },
-                          }}
-                        >
-                          {service.linkText}
-                        </MuiLink>
-                      )}
-                    </Stack>
                   </CardContent>
                 </Card>
               </Grid>
