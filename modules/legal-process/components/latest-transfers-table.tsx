@@ -30,14 +30,19 @@ import {
 import { getCaseTransferStatusInfo } from "@/modules/legal-process/utils/case-transfer-status";
 import { RejectTransferDialog } from "@/modules/legal-process/components/reject-transfer-dialog";
 
-type CaseTransferListItem = Awaited<ReturnType<typeof getMyCaseTransfersAsLawyer>>[number];
+type CaseTransferListItem = Awaited<
+  ReturnType<typeof getMyCaseTransfersAsLawyer>
+>[number];
 
 interface LatestTransfersTableProps {
   items: CaseTransferListItem[];
   onChanged: () => void;
 }
 
-export const LatestTransfersTable = ({ items, onChanged }: LatestTransfersTableProps) => {
+export const LatestTransfersTable = ({
+  items,
+  onChanged,
+}: LatestTransfersTableProps) => {
   const theme = useTheme();
   const router = useRouter();
   const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
@@ -125,7 +130,9 @@ export const LatestTransfersTable = ({ items, onChanged }: LatestTransfersTableP
           <Tooltip title="Bekijken">
             <IconButton
               size="small"
-              onClick={() => router.push(`/legal-processes/transfers/${params.row.id}`)}
+              onClick={() =>
+                router.push(`/legal-processes/transfers/${params.row.id}`)
+              }
             >
               <VisibilityIcon fontSize="small" />
             </IconButton>
@@ -160,7 +167,11 @@ export const LatestTransfersTable = ({ items, onChanged }: LatestTransfersTableP
         {items.length === 0 && (
           <Paper
             elevation={0}
-            sx={{ border: `1px solid ${theme.palette.divider}`, p: 3, textAlign: "center" }}
+            sx={{
+              border: `1px solid ${theme.palette.divider}`,
+              p: 3,
+              textAlign: "center",
+            }}
           >
             <Typography variant="body2" color="text.secondary">
               Geen nieuwe dossieroverdrachten.
@@ -171,12 +182,30 @@ export const LatestTransfersTable = ({ items, onChanged }: LatestTransfersTableP
         {items.map((item) => {
           const statusInfo = getCaseTransferStatusInfo(item.status);
           return (
-            <Card key={item.id} elevation={0} sx={{ border: `1px solid ${theme.palette.divider}` }}>
-              <CardActionArea onClick={() => router.push(`/legal-processes/transfers/${item.id}`)}>
+            <Card
+              key={item.id}
+              elevation={0}
+              sx={{ border: `1px solid ${theme.palette.divider}` }}
+            >
+              <CardActionArea
+                onClick={() =>
+                  router.push(`/legal-processes/transfers/${item.id}`)
+                }
+              >
                 <Box sx={{ p: 2 }}>
-                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="flex-start"
+                    spacing={1}
+                  >
                     <Box sx={{ minWidth: 0 }}>
-                      <Typography variant="caption" color="text.secondary" noWrap component="div">
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        noWrap
+                        component="div"
+                      >
                         {item.debtClaim.reference}
                       </Typography>
                       <Typography variant="subtitle2" fontWeight={700} noWrap>
@@ -191,13 +220,20 @@ export const LatestTransfersTable = ({ items, onChanged }: LatestTransfersTableP
                     />
                   </Stack>
 
-                  <Stack direction="row" justifyContent="space-between" alignItems="center" mt={1.5}>
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    mt={1.5}
+                  >
                     <Typography variant="caption" color="text.secondary">
                       {formatDate(item.createdAt.toString())}
                     </Typography>
                     <Stack direction="row" alignItems="center" spacing={0.5}>
                       <Typography variant="subtitle2" fontWeight={700}>
-                        {formatCurrency(Number(item.debtClaim.principalAmount) || 0)}
+                        {formatCurrency(
+                          Number(item.debtClaim.principalAmount) || 0,
+                        )}
                       </Typography>
                       <ChevronRightRoundedIcon
                         fontSize="small"
@@ -208,10 +244,18 @@ export const LatestTransfersTable = ({ items, onChanged }: LatestTransfersTableP
                 </Box>
               </CardActionArea>
               <Stack direction="row" spacing={1} sx={{ px: 2, pb: 1.5 }}>
-                <IconButton size="small" color="success" onClick={() => handleAccept(item.id)}>
+                <IconButton
+                  size="small"
+                  color="success"
+                  onClick={() => handleAccept(item.id)}
+                >
                   <CheckIcon fontSize="small" />
                 </IconButton>
-                <IconButton size="small" color="error" onClick={() => setRejectId(item.id)}>
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => setRejectId(item.id)}
+                >
                   <CloseIcon fontSize="small" />
                 </IconButton>
               </Stack>
@@ -221,37 +265,24 @@ export const LatestTransfersTable = ({ items, onChanged }: LatestTransfersTableP
       </Stack>
 
       {isDesktop && (
-        <Paper
-          elevation={0}
+        <DataGrid
+          rows={items}
+          columns={columns}
+          hideFooter
+          autoHeight
+          disableColumnMenu
+          disableRowSelectionOnClick
           sx={{
-            display: "flex",
-            border: `1px solid ${theme.palette.divider}`,
-            height: "100%",
-            padding: 2,
-            flexDirection: "column",
-            justifyContent: "space-between",
+            "& .MuiDataGrid-columnHeaders": {
+              backgroundColor: theme.palette.grey[100],
+              borderBottom: `1px solid ${theme.palette.divider}`,
+            },
+            "& .MuiDataGrid-cell": {
+              borderBottom: `1px solid ${theme.palette.divider}`,
+            },
             bgcolor: "white",
           }}
-        >
-          <DataGrid
-            rows={items}
-            columns={columns}
-            hideFooter
-            autoHeight
-            disableColumnMenu
-            disableRowSelectionOnClick
-            sx={{
-              "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: theme.palette.grey[100],
-                borderBottom: `1px solid ${theme.palette.divider}`,
-              },
-              "& .MuiDataGrid-cell": {
-                borderBottom: `1px solid ${theme.palette.divider}`,
-              },
-              bgcolor: "white",
-            }}
-          />
-        </Paper>
+        />
       )}
 
       <RejectTransferDialog
