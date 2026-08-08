@@ -1,34 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import {
   Bailiff,
-  BailiffCreate,
-  bailiffCreateSchema,
   BailiffUpdate,
 } from "@/modules/bailiff/services/bailiff.validators";
 
 export class BailiffService {
-  static async create(
-    data: BailiffCreate,
-    tenantId: string,
-  ): Promise<{ success: boolean; data?: Bailiff; error?: string }> {
-    try {
-      const parsedData = bailiffCreateSchema.parse(data);
-
-      if (!parsedData.fullname || !parsedData.email) {
-        throw new Error("Naam en e-mailadres zijn verplicht");
-      }
-
-      const bailiff = await prisma.bailiff.create({
-        data: { ...parsedData, tenant_id: tenantId },
-      });
-
-      return { success: true, data: bailiff };
-    } catch (error) {
-      console.error("Error creating bailiff:", error);
-      return { success: false, error: "Failed to create bailiff" };
-    }
-  }
-
   static async getById(
     id: string,
   ): Promise<{ success: boolean; data?: Bailiff; error?: string }> {

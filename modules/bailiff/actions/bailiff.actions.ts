@@ -1,17 +1,9 @@
 "use server";
 import {
   Bailiff,
-  BailiffCreate,
   BailiffUpdate,
 } from "@/modules/bailiff/services/bailiff.validators";
 import { BailiffService } from "@/modules/bailiff/services/bailiff.service";
-
-export async function createBailiff(
-  data: BailiffCreate,
-  tenantId: string,
-): Promise<{ success: boolean; data?: Bailiff; error?: string }> {
-  return BailiffService.create(data, tenantId);
-}
 
 export async function getBailiffById(
   id: string,

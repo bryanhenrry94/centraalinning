@@ -25,7 +25,7 @@ const VerdictPageEdit: React.FC = () => {
 
   return (
     <VerdictProvider>
-      <VerdictFormPage id={id} defaultValues={verdictData} modeEdit={true} />
+      <VerdictFormPage id={id} defaultValues={verdictData} />
     </VerdictProvider>
   );
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   Container,
@@ -36,7 +36,10 @@ import {
   getGopPrincipalObligation,
   decideGopAgreement,
 } from "@/modules/legal-process/actions/legal-process.actions";
-import { getLegalProcessStatusInfo } from "@/modules/legal-process/utils/legal-process-status";
+import {
+  getLegalProcessStatusInfo,
+  getGopInactiveReasonLabel,
+} from "@/modules/legal-process/utils/legal-process-status";
 import { LegalProcessStatus } from "@/modules/legal-process/constants/legal-process-status";
 import { GopTimeline } from "@/modules/legal-process/components/gop-timeline";
 import { LegalProcessDocuments } from "@/modules/legal-process/components/legal-process-documents";
@@ -74,6 +77,7 @@ function InfoField({ label, value }: { label: string; value?: React.ReactNode })
 
 const LegalProcessDetailPage: React.FC = () => {
   const params = useParams();
+  const router = useRouter();
   const { data: session } = useSession();
   const roles = (session?.user?.roles as string[] | undefined) ?? [];
   const isStaff = roles.some((r) =>
@@ -236,11 +240,28 @@ const LegalProcessDetailPage: React.FC = () => {
               {legalProcess.status === LegalProcessStatus.GOP_INACTIVE && (
                 <>
                   <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                    <InfoField label="Reden inactief" value={legalProcess.inactiveReason ?? "-"} />
+                    <InfoField
+                      label="Reden (geen executiemogelijkheid)"
+                      value={
+                        legalProcess.inactiveReason
+                          ? getGopInactiveReasonLabel(legalProcess.inactiveReason)
+                          : "-"
+                      }
+                    />
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                     <InfoField
-                      label="Revisiedatum"
+                      label="Datum van bevinding"
+                      value={
+                        legalProcess.inactiveFoundAt
+                          ? formatDate(legalProcess.inactiveFoundAt.toString())
+                          : "-"
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <InfoField
+                      label="Controledatum"
                       value={
                         legalProcess.reviewDate ? formatDate(legalProcess.reviewDate.toString()) : "-"
                       }
@@ -396,6 +417,12 @@ const LegalProcessDetailPage: React.FC = () => {
             <Divider />
             <CardContent>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                <Button
+                  variant="outlined"
+                  onClick={() => router.push(`/verdicts/new?legalProcessId=${legalProcess.id}`)}
+                >
+                  Aanvullend vonnis registreren
+                </Button>
                 <Button variant="outlined" onClick={() => setDialog("execution-measure")}>
                   Executiemaatregel
                 </Button>
@@ -407,7 +434,7 @@ const LegalProcessDetailPage: React.FC = () => {
                 </Button>
                 {legalProcess.status === LegalProcessStatus.GOP_ACTIVE && (
                   <Button variant="outlined" color="warning" onClick={() => setDialog("mark-inactive")}>
-                    Zonder resultaat
+                    Geen executiemogelijkheid
                   </Button>
                 )}
                 {legalProcess.status === LegalProcessStatus.GOP_INACTIVE && (

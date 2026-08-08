@@ -30,7 +30,6 @@ import FirstPageIcon from "@mui/icons-material/FirstPage";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import LastPageIcon from "@mui/icons-material/LastPage";
-import AddIcon from "@mui/icons-material/Add";
 import { formatCurrency } from "@/shared/utils/formatters";
 import { useTenant } from "@/modules/auth/hooks/useTenant";
 import { useSession } from "next-auth/react";
@@ -167,11 +166,6 @@ const VerdictsPage: React.FC = () => {
     setSelectedVerdict(null);
   };
 
-  const handleCreate = () => {
-    router.push("/verdicts/new");
-    handleClose();
-  };
-
   const handleEdit = (id: string) => {
     router.push(`/verdicts/${id}/edit`);
     handleClose();
@@ -259,15 +253,9 @@ const VerdictsPage: React.FC = () => {
           </Typography>
         </Box>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleCreate}
-            startIcon={<AddIcon />}
-            sx={{ textTransform: "none" }}
-          >
-            NIEUW VONNIS
-          </Button>
+          {/* Een vonnis wordt alleen geregistreerd vanuit een overdracht
+              (eerste vonnis, activeert het GOP) of een actief GOP-dossier
+              (aanvullend vonnis) — zie /legal-processes. */}
           {/* <Button
             variant="contained"
             color="secondary"

@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { VerdictInterestDetailCreateSchema } from "@/modules/verdict/services/verdict-interest-details.validators";
+import { VerdictEmbargoCreateSchema } from "@/modules/verdict/services/verdict-embargo.validators";
+import { VerdictBailiffServicesCreateSchema } from "@/modules/verdict/services/verdict-bailiff-services.validators";
 import { GopInactiveReason } from "@/modules/legal-process/constants/legal-process-status";
 
 export const VerdictInterestInputSchema = z.object({
@@ -31,6 +33,11 @@ export const RegisterVerdictObjectSchema = z.object({
   notes: z.string().nullable().optional(),
   bailiff_id: z.string().min(1),
   verdict_interest: z.array(VerdictInterestInputSchema).default([]),
+  // Punto 1 del análisis CFSB: la pantalla única de registro de sentencia
+  // debe poder cargar embargos y costos del alguacil en el mismo paso que
+  // activa el GOP, no solo después (ver registerFirstVerdict/registerAdditionalVerdict).
+  verdict_embargo: z.array(VerdictEmbargoCreateSchema).default([]),
+  bailiff_services: z.array(VerdictBailiffServicesCreateSchema).default([]),
 });
 
 // Exactamente uno de los dos: caseTransferId para el PRIMER vonnis (crea el
@@ -69,12 +76,21 @@ export const RegisterBailiffCostSchema = z.object({
   service_invoice_number: z.string().min(1),
   service_type: z.string().min(1),
   service_cost: z.coerce.number().positive(),
+  service_date: z.coerce.date().nullable().optional(),
+  description: z.string().nullable().optional(),
+  document_storage_key: z.string().nullable().optional(),
+  document_original_name: z.string().nullable().optional(),
+  document_mime_type: z.string().nullable().optional(),
+  document_size: z.number().nullable().optional(),
 });
 export type RegisterBailiffCostInput = z.infer<typeof RegisterBailiffCostSchema>;
 
 export const MarkInactiveSchema = z.object({
   legalProcessId: z.string().min(1),
   reason: z.nativeEnum(GopInactiveReason),
+  // Datum van bevinding: wanneer de deurwaarder vaststelde dat er geen
+  // executiemogelijkheid is. reviewDate is de eerstvolgende controledatum.
+  foundAt: z.coerce.date(),
   reviewDate: z.coerce.date(),
   notes: z.string().nullable().optional(),
 });

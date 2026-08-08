@@ -35,6 +35,10 @@ export const VerdictEmbargoBaseSchema = z.object({
   total_amount: z
     .number()
     .nonnegative({ message: "Het totaalbedrag mag niet negatief zijn" }),
+  document_storage_key: z.string().nullable().optional(),
+  document_original_name: z.string().nullable().optional(),
+  document_mime_type: z.string().nullable().optional(),
+  document_size: z.number().nullable().optional(),
   created_at: z.coerce.date({
     message: "De aanmaakdatum moet een geldige datum zijn",
   }),

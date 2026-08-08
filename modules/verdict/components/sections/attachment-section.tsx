@@ -24,9 +24,12 @@ import { useEffect, useState } from "react";
 import { VerdictEmbargo } from "@/modules/verdict/services/verdict-embargo.validators";
 import { embargoTipos } from "@/modules/blockade/constants/embargo";
 import DeleteIcon from "@mui/icons-material/Delete";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { UserInput } from "@/modules/auth/services/user.type";
 import { getUsersByRole } from "@/modules/auth/actions/user.actions";
 import { UserRole } from "@/shared/constants/user-role";
+import { notifyError } from "@/shared/ui/notifications";
+import { uploadVerdictSupportingDocument } from "@/modules/legal-process/actions/legal-process.actions";
 
 const TotalCell = ({ control, index }: { control: any; index: number }) => {
   const { setValue } = useFormContext();
@@ -58,11 +61,19 @@ const TotalCell = ({ control, index }: { control: any; index: number }) => {
   );
 };
 
-const AttachmentSection: React.FC = () => {
+interface AttachmentSectionProps {
+  // Solo se puede subir un documento de respaldo por embargo cuando la
+  // sección corre dentro de la pantalla única de registro de sentencia (que
+  // conoce el caseTransferId/legalProcessId). En modo edición no aplica.
+  uploadContext?: { caseTransferId?: string | null; legalProcessId?: string | null };
+}
+
+const AttachmentSection: React.FC<AttachmentSectionProps> = ({ uploadContext }) => {
   const [bailiffs, setBailiffs] = useState<UserInput[]>([]);
 
   const {
     control,
+    setValue,
     formState: { errors },
   } = useFormContext<{
     verdict_embargo: VerdictEmbargo[];
@@ -74,6 +85,25 @@ const AttachmentSection: React.FC = () => {
     control,
     name: "verdict_embargo",
   });
+
+  const handleUploadDocument = async (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !uploadContext) return;
+
+    try {
+      const metadata = await uploadVerdictSupportingDocument(uploadContext, file);
+      setValue(`verdict_embargo.${index}.document_storage_key`, metadata.document_storage_key);
+      setValue(`verdict_embargo.${index}.document_original_name`, metadata.document_original_name);
+      setValue(`verdict_embargo.${index}.document_mime_type`, metadata.document_mime_type);
+      setValue(`verdict_embargo.${index}.document_size`, metadata.document_size);
+    } catch (error) {
+      notifyError(error instanceof Error ? error.message : "Uploaden mislukt");
+    }
+  };
 
   useEffect(() => {
     const fetchBailiffs = async () => {
@@ -263,6 +293,26 @@ const AttachmentSection: React.FC = () => {
         <TableCell sx={{ textAlign: "center" }}>
           <TotalCell control={control} index={index} />
         </TableCell>
+        {/* document */}
+        <TableCell sx={{ textAlign: "center" }}>
+          <Controller
+            name={`verdict_embargo.${index}.document_original_name`}
+            control={control}
+            render={({ field }) => (
+              <Button
+                component="label"
+                size="small"
+                variant="text"
+                startIcon={<UploadFileIcon />}
+                disabled={!uploadContext}
+                sx={{ textTransform: "none" }}
+              >
+                {field.value || "Document"}
+                <input type="file" hidden onChange={(e) => handleUploadDocument(index, e)} />
+              </Button>
+            )}
+          />
+        </TableCell>
         {/* action */}
         <TableCell sx={{ textAlign: "center" }}>
           <Stack direction="row" spacing={1} justifyContent="center">
@@ -421,6 +471,17 @@ const AttachmentSection: React.FC = () => {
                 </TableCell>
                 <TableCell
                   sx={{
+                    minWidth: 140,
+                    backgroundColor: "#f5f5f5",
+
+                    border: "1px solid #bdbdbd",
+                  }}
+                  align="center"
+                >
+                  Document
+                </TableCell>
+                <TableCell
+                  sx={{
                     minWidth: 75,
                     backgroundColor: "#f5f5f5",
 
@@ -458,6 +519,10 @@ const AttachmentSection: React.FC = () => {
                         embargo_date: new Date(),
                         embargo_amount: 0,
                         total_amount: 0,
+                        document_storage_key: null,
+                        document_original_name: null,
+                        document_mime_type: null,
+                        document_size: null,
                         created_at: new Date(),
                         updated_at: new Date(),
                       })

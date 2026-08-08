@@ -18,7 +18,7 @@ const VerdictTotals: React.FC<VerdictTotalsProps> = () => {
   }
 
   interface VerdictEmbargoItem {
-    bailiffAmount?: number;
+    total_amount?: number;
     // add other fields if needed
   }
 
@@ -50,7 +50,7 @@ const VerdictTotals: React.FC<VerdictTotalsProps> = () => {
 
   const totalEmbargoAmount =
     verdictEmbargo?.reduce(
-      (sum, item) => sum + (item?.bailiffAmount ?? 0),
+      (sum, item) => sum + (Number(item?.total_amount) ?? 0),
       0
     ) ?? 0;
 

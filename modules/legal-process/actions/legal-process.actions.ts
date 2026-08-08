@@ -74,6 +74,39 @@ export const registerGopVerdict = async (data: RegisterVerdictInput) => {
   return LegalProcessService.registerVerdict(parsed, legalProcess.debtClaim.tenantId, session.user.id);
 };
 
+// Sube el documento de respaldo de un embargo o costo del alguacil desde la
+// pantalla única de registro de sentencia, antes de que exista la fila en
+// base (ver RegisterVerdictInput.verdict_embargo/bailiff_services).
+export const uploadVerdictSupportingDocument = async (
+  data: { caseTransferId?: string | null; legalProcessId?: string | null },
+  file: File,
+) => {
+  let tenantId: string;
+  let contextId: string;
+
+  if (data.caseTransferId) {
+    const { caseTransfer } = await requireAssignedBailiffForTransfer(data.caseTransferId);
+    tenantId = caseTransfer.debtClaim.tenantId;
+    contextId = data.caseTransferId;
+  } else if (data.legalProcessId) {
+    const { legalProcess } = await requireAssignedBailiff(data.legalProcessId);
+    tenantId = legalProcess.debtClaim.tenantId;
+    contextId = data.legalProcessId;
+  } else {
+    throw new Error("caseTransferId of legalProcessId is verplicht.");
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  return LegalProcessService.uploadSupportingDocument({
+    tenantId,
+    contextId,
+    fileName: file.name,
+    mimeType: file.type,
+    size: file.size,
+    buffer,
+  });
+};
+
 export const registerGopExecutionMeasure = async (data: RegisterExecutionMeasureInput) => {
   const parsed = RegisterExecutionMeasureSchema.parse(data);
   const { session } = await requireStaffOrAssignedBailiffForVerdict(parsed.verdictId);
@@ -124,6 +157,13 @@ export const changeGopBailiff = async (data: ChangeBailiffInput) => {
   const parsed = ChangeBailiffSchema.parse(data);
   const { session } = await requireTenantStaffForLegalProcess(parsed.legalProcessId);
   return LegalProcessService.changeBailiff(parsed, session.user.id);
+};
+
+// Suma de las actuaciones ya facturadas — para advertir si no calza con la
+// factura final que el alguacil declara en submitBailiffFeeInvoice.
+export const getGopBailiffCostsSummary = async (legalProcessId: string) => {
+  await requireStaffOrAssignedBailiff(legalProcessId);
+  return LegalProcessService.getBailiffCostsSummary(legalProcessId);
 };
 
 // El alguacil registra los costos facturados al debiteur y paga la comisión

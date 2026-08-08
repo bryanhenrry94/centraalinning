@@ -10,6 +10,7 @@ import {
   CreditCardOutlined,
   MoveToInboxOutlined,
   GroupOutlined,
+  HelpOutlineOutlined,
 } from "@mui/icons-material";
 
 export type HeaderMenuItem = {
@@ -161,6 +162,20 @@ export const menuGroups: HeaderMenuGroup[] = [
         label: "Facturen",
         href: "/invoices",
         icon: <ReceiptOutlined fontSize="small" />,
+      },
+    ],
+  },
+
+  // Zichtbaar voor iedereen — geen enkele rol wordt uitgesloten.
+  {
+    id: "ondersteuning",
+    label: "Ondersteuning",
+    roles: Object.values(UserRole),
+    items: [
+      {
+        label: "Feedback & Ondersteuning",
+        href: "/support",
+        icon: <HelpOutlineOutlined fontSize="small" />,
       },
     ],
   },

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -12,8 +12,12 @@ import {
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
-import { submitBailiffFeeInvoice } from "@/modules/legal-process/actions/legal-process.actions";
+import {
+  submitBailiffFeeInvoice,
+  getGopBailiffCostsSummary,
+} from "@/modules/legal-process/actions/legal-process.actions";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
+import { formatCurrency } from "@/shared/utils/formatters";
 
 interface FinalizeBailiffWorkDialogProps {
   open: boolean;
@@ -36,9 +40,26 @@ export const FinalizeBailiffWorkDialog: React.FC<FinalizeBailiffWorkDialogProps>
 }) => {
   const [form, setForm] = useState(emptyState);
   const [file, setFile] = useState<File | null>(null);
+  const [registeredCostsTotal, setRegisteredCostsTotal] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    getGopBailiffCostsSummary(legalProcessId)
+      .then(setRegisteredCostsTotal)
+      .catch(() => setRegisteredCostsTotal(null));
+  }, [open, legalProcessId]);
 
   const set = (field: keyof typeof emptyState) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  // No bloqueante: el spec solo pide una advertencia cuando la factura final
+  // no calza con la suma de actuaciones ya registradas.
+  const mismatchWarning =
+    registeredCostsTotal !== null &&
+    Number(form.totalAmount) > 0 &&
+    Math.abs(Number(form.totalAmount) - registeredCostsTotal) > 0.01
+      ? `Let op: het ingevoerde totaalbedrag (${formatCurrency(Number(form.totalAmount))}) komt niet overeen met de som van de geregistreerde actuaties (${formatCurrency(registeredCostsTotal)}).`
+      : null;
 
   const handleClose = () => {
     setForm(emptyState);
@@ -104,6 +125,12 @@ export const FinalizeBailiffWorkDialog: React.FC<FinalizeBailiffWorkDialogProps>
             Bij het registreren van de factuur wordt automatisch de CFSB-commissie (5%) over het
             totaalbedrag berekend. Deze moet betaald worden om het GOP-dossier te kunnen sluiten.
           </Alert>
+          {registeredCostsTotal !== null && (
+            <Alert severity="info" variant="outlined">
+              Som van de geregistreerde deurwaarderskosten: {formatCurrency(registeredCostsTotal)}
+            </Alert>
+          )}
+          {mismatchWarning && <Alert severity="warning">{mismatchWarning}</Alert>}
           <TextField
             label="Totaalbedrag gefactureerd aan de debiteur"
             type="number"

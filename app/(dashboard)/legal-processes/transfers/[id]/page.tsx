@@ -35,7 +35,6 @@ import { getCaseTransferStatusInfo } from "@/modules/legal-process/utils/case-tr
 import { CaseTransferStatus } from "@/modules/legal-process/constants/case-transfer-status";
 import { GopTimeline } from "@/modules/legal-process/components/gop-timeline";
 import { CaseTransferDocuments } from "@/modules/legal-process/components/case-transfer-documents";
-import { RegisterVerdictDialog } from "@/modules/legal-process/components/register-verdict-dialog";
 import { RejectTransferDialog } from "@/modules/legal-process/components/reject-transfer-dialog";
 import { CancelTransferDialog } from "@/modules/legal-process/components/cancel-transfer-dialog";
 import { FinalizeLawyerWorkDialog } from "@/modules/legal-process/components/finalize-lawyer-work-dialog";
@@ -85,7 +84,6 @@ const CaseTransferDetailPage: React.FC = () => {
 
   const [dialog, setDialog] = useState<
     | null
-    | "register-verdict"
     | "reject"
     | "cancel"
     | "finalize-lawyer-work"
@@ -119,10 +117,6 @@ const CaseTransferDetailPage: React.FC = () => {
   const refresh = () => {
     setRefreshKey((k) => k + 1);
     load();
-  };
-
-  const handleVerdictRegistered = (legalProcessId: string) => {
-    router.push(`/legal-processes/${legalProcessId}`);
   };
 
   if (loading) return <LoadingUI />;
@@ -392,7 +386,10 @@ const CaseTransferDetailPage: React.FC = () => {
             <CardContent>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {showVerdictButton && (
-                  <Button variant="contained" onClick={() => setDialog("register-verdict")}>
+                  <Button
+                    variant="contained"
+                    onClick={() => router.push(`/verdicts/new?caseTransferId=${caseTransfer.id}`)}
+                  >
                     Vonnis registreren
                   </Button>
                 )}
@@ -483,13 +480,6 @@ const CaseTransferDetailPage: React.FC = () => {
         )}
       </Stack>
 
-      <RegisterVerdictDialog
-        open={dialog === "register-verdict"}
-        onClose={() => setDialog(null)}
-        caseTransferId={caseTransfer.id}
-        defaultBailiffId={caseTransfer.bailiffId}
-        onRegistered={handleVerdictRegistered}
-      />
       <RejectTransferDialog
         open={dialog === "reject"}
         onClose={() => setDialog(null)}

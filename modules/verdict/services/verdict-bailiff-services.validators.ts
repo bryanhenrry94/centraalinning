@@ -9,6 +9,12 @@ export const VerdictBailiffServicesSchema = z.object({
     (val) => (typeof val === "string" ? Number(val) : val),
     z.number()
   ),
+  service_date: z.coerce.date().nullable().optional(),
+  description: z.string().nullable().optional(),
+  document_storage_key: z.string().nullable().optional(),
+  document_original_name: z.string().nullable().optional(),
+  document_mime_type: z.string().nullable().optional(),
+  document_size: z.number().nullable().optional(),
   created_at: z.date(),
   updated_at: z.date(),
 });

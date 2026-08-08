@@ -12,11 +12,7 @@ import {
 } from "@/modules/verdict/services/verdict.validators";
 import { notifyError, notifyInfo } from "@/shared/ui/notifications";
 // actions
-import {
-  approveVerdict,
-  createVerdict,
-  updateVerdict,
-} from "@/modules/verdict/actions/verdict.actions";
+import { updateVerdict } from "@/modules/verdict/actions/verdict.actions";
 import { DebtorInput } from "@/modules/collection/services/debtor.type";
 // hooks and libs
 import { useTenant } from "@/modules/auth/hooks/useTenant";
@@ -31,36 +27,26 @@ import ServiceCostsSection from "./sections/service-costs-section";
 import AttachmentsSection from "./sections/attachments-section";
 import { ModalFormDebtor } from "@/modules/collection/components/modal-debtor-form";
 import { getAllDebtorsByTenantId } from "@/modules/collection/actions/debtor.actions";
-import { ModalFormBailiff } from "@/modules/bailiff/components/modal-bailiff-form";
-import { getAllBailiffs } from "@/modules/bailiff/actions/bailiff.actions";
+import { getActiveBailiffsDirectory } from "@/modules/bailiff/actions/bailiff.actions";
 import { Bailiff } from "@/modules/bailiff/services/bailiff.validators";
-import { useSession } from "next-auth/react";
+import { BailiffSection } from "./sections/bailiff-section";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Resolver } from "react-hook-form";
-import { BailiffSection } from "./sections/bailiff-section";
-import GavelIcon from "@mui/icons-material/Gavel";
-import { UserRole } from "@/shared/constants/user-role";
 
 interface VerdictFormPageProps {
   defaultValues: VerdictCreate;
-  modeEdit: boolean;
-  id?: string;
+  id: string;
 }
 
-const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
-  id,
-  defaultValues,
-  modeEdit,
-}) => {
-  const { data: session } = useSession();
+// Un vonnis solo se crea a través del registro de sentencia GOP (ver
+// modules/legal-process/components/verdict-registration-form.tsx); este
+// formulario únicamente edita un vonnis ya existente.
+const VerdictFormPage: React.FC<VerdictFormPageProps> = ({ id, defaultValues }) => {
   const { tenant } = useTenant();
   const [debtors, setDebtors] = React.useState<DebtorInput[]>([]);
   const [bailiffs, setBailiffs] = React.useState<Bailiff[]>([]);
   const [openModalDebtor, setOpenModalDebtor] = React.useState(false);
-  const [openModalBailiff, setOpenModalBailiff] = React.useState(false);
-  const [bailiffSelected, setBailiffSelected] =
-    React.useState<Bailiff | null>();
   const [debtorSelected, setDebtorSelected] =
     React.useState<DebtorInput | null>();
   const router = useRouter();
@@ -70,14 +56,6 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
       setDebtorSelected(debtor);
     } else {
       setDebtorSelected(null);
-    }
-  };
-
-  const handleSelectBailiff = (bailiff: Bailiff | null) => {
-    if (bailiff) {
-      setBailiffSelected(bailiff);
-    } else {
-      setBailiffSelected(null);
     }
   };
 
@@ -94,11 +72,6 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
     await fetchDebtors();
   };
 
-  const handleSaveBailiff = async (bailiff: Bailiff) => {
-    handleSelectBailiff(bailiff);
-    await fetchBailiffs();
-  };
-
   const fetchDebtors = async () => {
     const response = await getAllDebtorsByTenantId(tenant?.id || "");
 
@@ -110,22 +83,8 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
   };
 
   const fetchBailiffs = async () => {
-    const data = await getAllBailiffs(tenant?.id || "");
-
-    if (!data) {
-      setBailiffs([]);
-      return;
-    }
-
-    setBailiffs(data);
-  };
-
-  const handleOpenModalBailiff = () => {
-    setOpenModalBailiff(true);
-  };
-
-  const handleCloseModalBailiff = () => {
-    setOpenModalBailiff(false);
+    const data = await getActiveBailiffsDirectory();
+    setBailiffs(data ?? []);
   };
 
   React.useEffect(() => {
@@ -159,80 +118,35 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
 
   const onSubmit = async (data: VerdictCreateForm) => {
     try {
-      // Prevent submission without tenant
-      console.log("Submitting verdict form with data:", data);
       if (!tenant) {
         return notifyError(
           "Onverwerkte fout, neem contact op met uw systeembeheerder",
         );
       }
 
-      const isUpdate = Boolean(id);
-      const actionMessage = isUpdate
-        ? "U staat op het punt de registratie bij te werken. Wilt u doorgaan?"
-        : "U staat op het punt een nieuwe registratie aan te maken. Wilt u doorgaan?";
+      const confirmed = await AlertService.showConfirm(
+        "Waarschuwing",
+        "U staat op het punt de registratie bij te werken. Wilt u doorgaan?",
+        "Ja, registreren",
+        "Annuleren",
+      );
+      if (!confirmed) return;
 
-      // Confirm creation only for new verdicts
-      if (!isUpdate) {
-        const confirmed = await AlertService.showConfirm(
-          "Waarschuwing",
-          actionMessage,
-          "Ja, registreren",
-          "Annuleren",
-        );
-        if (!confirmed) return;
-      }
+      const verdict = await updateVerdict(id, data);
 
-      // Execute create or update
-      const verdict = isUpdate
-        ? await updateVerdict(id!, data)
-        : await createVerdict(data, tenant.id);
-
-      // Handle result
       if (!verdict) {
         return notifyError(
-          `Er is een fout opgetreden bij het ${
-            isUpdate ? "bijwerken" : "aanmaken"
-          } van de registratie.`,
+          "Er is een fout opgetreden bij het bijwerken van de registratie.",
         );
       }
 
-      notifyInfo(
-        `Registratie is succesvol ${isUpdate ? "bijgewerkt" : "aangemaakt"}`,
-      );
-
-      // Redirect after creation
-      if (!isUpdate) {
-        router.push(`/dashboard/verdicts/${verdict.id}/edit`);
-      }
+      notifyInfo("Registratie is succesvol bijgewerkt");
     } catch (error) {
       console.error("Error submitting verdict form:", error);
       notifyError(
         "Er is een fout opgetreden bij het verzenden van het formulier.",
       );
     }
-  };
-
-  const handleApprove = async () => {
-    if (!id) return;
-
-    AlertService.showConfirm(
-      "Weet je het zeker?",
-      "Het vonnis wordt goedgekeurd en de schuldenaar wordt op de hoogte gesteld.",
-      "Ja, goedkeuren",
-      "Annuleren",
-    ).then(async (confirmed) => {
-      if (confirmed) {
-        const response = await approveVerdict(id);
-
-        if (response) {
-          notifyInfo("Vonnis succesvol goedgekeurd");
-          router.push(`/dashboard/verdicts`);
-        } else {
-          notifyError("Fout bij het goedkeuren van het vonnis");
-        }
-      }
-    });
   };
 
   return (
@@ -256,7 +170,7 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
             }}
           >
             <Typography variant="h6" gutterBottom>
-              NIEUW VONNIS TOEVOEGEN
+              VONNIS BEWERKEN
             </Typography>
 
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
@@ -270,16 +184,6 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
               >
                 Bewaar Vonnis
               </Button>
-
-              <Button
-                color="secondary"
-                aria-label="add an alarm"
-                variant="contained"
-                onClick={handleApprove}
-                startIcon={<GavelIcon />}
-              >
-                Vonnis goedkeuren
-              </Button>
             </Stack>
           </Box>
 
@@ -290,27 +194,17 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
             debtors={debtors}
           />
 
-          {/* {session?.user?.roles.includes(UserRole.BAILIFF) && ( */}
-            <BailiffSection
-              handleOpenModalBailiff={handleOpenModalBailiff}
-              onSelectBailiff={handleSelectBailiff}
-              bailiffs={bailiffs}
-            />
-          {/* )} */}
+          <BailiffSection
+            handleOpenModalBailiff={() => {}}
+            onSelectBailiff={() => {}}
+            bailiffs={bailiffs}
+          />
 
-          {/* {session?.user?.roles.includes(UserRole.BAILIFF) && ( */}
-            <>
-              <StatutoryInterestSection />
+          <StatutoryInterestSection />
 
-              <AttachmentSection />
+          <AttachmentSection />
 
-              <ServiceCostsSection
-                handleOpenModalBailiff={handleOpenModalBailiff}
-                onSelectBailiff={handleSelectBailiff}
-                bailiffs={bailiffs}
-              />
-            </>
-          {/* )} */}
+          <ServiceCostsSection />
 
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 8 }}>
@@ -321,7 +215,7 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
                 alignItems="center"
                 sx={{ minHeight: 200, mt: 2, height: "100%" }}
               >
-                {modeEdit && <AttachmentsSection verdictId={id || ""} />}
+                <AttachmentsSection verdictId={id} />
               </Grid>
             </Grid>
 
@@ -336,13 +230,6 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({
         onClose={handleCloseModalDebtor}
         onSave={handleSaveDebtor}
         id={debtorSelected?.id}
-      />
-
-      <ModalFormBailiff
-        open={openModalBailiff}
-        onClose={handleCloseModalBailiff}
-        onSave={handleSaveBailiff}
-        id={bailiffSelected?.id} // Aquí puedes pasar el ID del deudor si estás editando
       />
     </Container>
   );

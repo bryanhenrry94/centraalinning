@@ -193,6 +193,19 @@ export class LegalProcessService {
         }
       }
 
+      // Punto 1: la pantalla única de registro permite cargar embargos y
+      // costos del alguacil en el mismo paso que activa el GOP.
+      for (const item of data.verdict_embargo) {
+        await tx.verdictEmbargo.create({
+          data: { ...item, verdict_id: newVerdict.id },
+        });
+      }
+      for (const item of data.bailiff_services) {
+        await tx.verdictBailiffServices.create({
+          data: { ...item, verdict_id: newVerdict.id, status: "INVOICED" },
+        });
+      }
+
       // Registrar una sentencia activa el bloqueo económico automáticamente,
       // igual que el paso BLK_NOTIFICATION del flujo AOP.
       const existingBlockade = await tx.blockade.findUnique({
@@ -322,6 +335,17 @@ export class LegalProcessService {
             })),
           });
         }
+      }
+
+      for (const item of data.verdict_embargo) {
+        await tx.verdictEmbargo.create({
+          data: { ...item, verdict_id: newVerdict.id },
+        });
+      }
+      for (const item of data.bailiff_services) {
+        await tx.verdictBailiffServices.create({
+          data: { ...item, verdict_id: newVerdict.id, status: "INVOICED" },
+        });
       }
 
       await tx.claimTimeline.create({
@@ -477,6 +501,12 @@ export class LegalProcessService {
         service_invoice_number: data.service_invoice_number,
         service_type: data.service_type,
         service_cost: data.service_cost,
+        service_date: data.service_date,
+        description: data.description,
+        document_storage_key: data.document_storage_key,
+        document_original_name: data.document_original_name,
+        document_mime_type: data.document_mime_type,
+        document_size: data.document_size,
         status: "INVOICED",
       },
     });
@@ -497,6 +527,17 @@ export class LegalProcessService {
     });
 
     return cost;
+  };
+
+  // Suma de las actuaciones/costos ya facturados por el alguacil para este
+  // GOP — se usa para advertir (no bloquear) si no calza con el importe de
+  // la factura final que el alguacil declara en submitBailiffFeeInvoice.
+  static getBailiffCostsSummary = async (legalProcessId: string) => {
+    const costs = await prisma.verdictBailiffServices.findMany({
+      where: { verdict: { legal_process_id: legalProcessId }, status: "INVOICED" },
+      select: { service_cost: true },
+    });
+    return costs.reduce((sum, c) => sum + c.service_cost, 0);
   };
 
   // ---------------------------------------------------------------------
@@ -656,7 +697,11 @@ export class LegalProcessService {
   };
 
   // ---------------------------------------------------------------------
-  // GOP Inactivo, control de plazos y reactivación automática
+  // "In onderzoek naar executiemogelijkheden": een sentencia zonder actuele
+  // beslagmogelijkheid sluit het GOP nooit vanzelf — het dossier blijft
+  // open, de sentencia blijft geregistreerd en de blokkade blijft actief.
+  // Zodra een nieuwe executiemaatregel/rente-update/kost wordt geregistreerd,
+  // reactiveert het dossier automatisch (zie reactivateIfInactive).
   // ---------------------------------------------------------------------
 
   static markInactive = async (data: MarkInactiveInput, actorUserId?: string) => {
@@ -666,7 +711,7 @@ export class LegalProcessService {
     });
     if (!legalProcess) throw new Error("GOP-dossier niet gevonden");
     if (legalProcess.status !== LegalProcessStatus.GOP_ACTIVE) {
-      throw new Error("Alleen een Actief GOP-dossier kan als Inactief gemarkeerd worden");
+      throw new Error("Alleen een Actief GOP-dossier kan op 'geen executiemogelijkheid' gezet worden");
     }
 
     const updated = await prisma.legalProcess.update({
@@ -675,6 +720,7 @@ export class LegalProcessService {
         status: LegalProcessStatus.GOP_INACTIVE,
         inactiveReason: data.reason,
         inactiveNotes: data.notes,
+        inactiveFoundAt: data.foundAt,
         reviewDate: data.reviewDate,
       },
     });
@@ -682,15 +728,15 @@ export class LegalProcessService {
     await ClaimTimelineService.logEvent(
       legalProcess.debtClaimId,
       "STATUS_CHANGED",
-      `GOP gemarkeerd als Inactief (${data.reason}). Revisiedatum: ${data.reviewDate.toISOString()}`,
+      `Geen executiemogelijkheid vastgesteld (${data.reason}) op ${data.foundAt.toISOString()}. Dossier in onderzoek naar executiemogelijkheden. Volgende controle: ${data.reviewDate.toISOString()}.`,
       undefined,
       actorUserId,
     );
 
     await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
       type: NotificationType.GOP_INACTIVE,
-      title: "GOP als inactief gemarkeerd",
-      message: `Dossier ${legalProcess.debtClaim.reference} heeft tijdelijk geen resultaat opgeleverd. Volgende beoordeling: ${data.reviewDate.toLocaleDateString()}.`,
+      title: "In onderzoek naar executiemogelijkheden",
+      message: `Dossier ${legalProcess.debtClaim.reference} heeft momenteel geen executiemogelijkheid. De sentencia blijft geregistreerd en de blokkade actief. Volgende controle: ${data.reviewDate.toLocaleDateString()}.`,
       link: `/legal-processes/${legalProcess.id}`,
       entity_type: "LegalProcess",
       entity_id: legalProcess.id,
@@ -712,6 +758,7 @@ export class LegalProcessService {
         status: LegalProcessStatus.GOP_ACTIVE,
         inactiveReason: null,
         inactiveNotes: null,
+        inactiveFoundAt: null,
         reviewDate: null,
       },
     });
@@ -1098,6 +1145,30 @@ export class LegalProcessService {
       where: { id: invoice.id },
       data: { status: "paid" },
     });
+  };
+
+  // Documento de respaldo de un embargo o costo del alguacil, subido desde
+  // la pantalla única de registro de sentencia (Punto 1/2) antes de que la
+  // fila exista en la base — solo devuelve la metadata de almacenamiento
+  // para que el formulario la incluya en el payload de registro.
+  static uploadSupportingDocument = async (params: {
+    tenantId: string;
+    contextId: string;
+    fileName: string;
+    mimeType: string;
+    size: number;
+    buffer: Buffer;
+  }) => {
+    const sanitizedName = `${crypto.randomUUID()}-${params.fileName}`.replace(/\s+/g, "-");
+    const folder = `${params.tenantId}/legal-processes/${params.contextId}/verdict-supporting-documents`;
+    const storageKey = await StorageService.uploadFile(folder, sanitizedName, params.mimeType, params.buffer);
+
+    return {
+      document_storage_key: storageKey,
+      document_original_name: params.fileName,
+      document_mime_type: params.mimeType,
+      document_size: params.size,
+    };
   };
 
   // ---------------------------------------------------------------------

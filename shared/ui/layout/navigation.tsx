@@ -12,6 +12,7 @@ import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
 import HandshakeOutlinedIcon from "@mui/icons-material/HandshakeOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
 
 import { UserRole } from "@/shared/constants/user-role";
 
@@ -87,6 +88,18 @@ const menus: MenuItem[] = [
     label: "Parameters",
     href: "/admin/settings/parameters",
     icon: <ReceiptOutlinedIcon fontSize="small" />,
+    role: [UserRole.PLATFORM_OWNER],
+  },
+  {
+    label: "Feedback & Ondersteuning",
+    href: "/support",
+    icon: <HelpOutlineOutlinedIcon fontSize="small" />,
+    role: Object.values(UserRole),
+  },
+  {
+    label: "Ondersteuning (CFSB)",
+    href: "/admin/support",
+    icon: <HelpOutlineOutlinedIcon fontSize="small" />,
     role: [UserRole.PLATFORM_OWNER],
   },
 ];

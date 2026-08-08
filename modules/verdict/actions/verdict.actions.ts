@@ -1,6 +1,5 @@
 "use server";
 import {
-  VerdictCreate,
   VerdictResponse,
   VerdictUpdate,
 } from "@/modules/verdict/services/verdict.validators";
@@ -40,18 +39,6 @@ export const getAttachmentsByVerdictId = async (
   } catch (error) {
     console.error("Error fetching attachments by Verdict ID:", error);
     throw new Error("Error fetching attachments by Verdict ID");
-  }
-};
-
-export const createVerdict = async (
-  data: VerdictCreate,
-  tenant_id: string,
-): Promise<VerdictResponse | null> => {
-  try {
-    return VerdictService.create(data, tenant_id);
-  } catch (error) {
-    console.error("Error saving Verdict:", error);
-    throw new Error("Error saving Verdict");
   }
 };
 
@@ -141,23 +128,6 @@ export const UploadAttachmentToVerdict = async (
     return res.ok;
   } catch (error) {
     console.error("Error uploading file:", error);
-    return false;
-  }
-};
-
-export const approveVerdict = async (id: string): Promise<boolean> => {
-  try {
-    return VerdictService.approve(id);
-  } catch (error) {
-    console.error("Error approving verdict:", error);
-    return false;
-  }
-};
-
-export const requestVerdictApproval = async (id: string): Promise<boolean> => {
-  try {
-    return VerdictService.requestApproval(id);
-  } catch {
     return false;
   }
 };

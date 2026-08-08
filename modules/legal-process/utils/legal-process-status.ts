@@ -9,9 +9,12 @@ export const OPEN_LEGAL_PROCESS_STATUSES = [
 
 export const COMPLETED_LEGAL_PROCESS_STATUSES = [LegalProcessStatus.CLOSED] as const;
 
+// GOP_INACTIVE staat voor "In onderzoek naar executiemogelijkheden": geen
+// actuele beslagmogelijkheid sluit het dossier nooit vanzelf — zie
+// LegalProcessService.markInactive.
 const LEGAL_PROCESS_STATUS_CONFIG: Record<string, { label: string; color: StatusColor }> = {
   GOP_ACTIVE: { label: "GOP Actief", color: "info" },
-  GOP_INACTIVE: { label: "GOP Inactief", color: "warning" },
+  GOP_INACTIVE: { label: "In onderzoek naar executiemogelijkheden", color: "warning" },
   CLOSED: { label: "Gesloten", color: "success" },
 };
 

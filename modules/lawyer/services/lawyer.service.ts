@@ -1,34 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import {
   Lawyer,
-  LawyerCreate,
-  lawyerCreateSchema,
   LawyerUpdate,
 } from "@/modules/lawyer/services/lawyer.validators";
 
 export class LawyerService {
-  static async create(
-    data: LawyerCreate,
-    tenantId: string,
-  ): Promise<{ success: boolean; data?: Lawyer; error?: string }> {
-    try {
-      const parsedData = lawyerCreateSchema.parse(data);
-
-      if (!parsedData.firstName || !parsedData.lastName) {
-        throw new Error("Voornaam en achternaam zijn verplicht");
-      }
-
-      const lawyer = await prisma.lawyer.create({
-        data: { ...parsedData, tenantId },
-      });
-
-      return { success: true, data: lawyer as Lawyer };
-    } catch (error) {
-      console.error("Error creating lawyer:", error);
-      return { success: false, error: "Failed to create lawyer" };
-    }
-  }
-
   static async getById(
     id: string,
   ): Promise<{ success: boolean; data?: Lawyer; error?: string }> {

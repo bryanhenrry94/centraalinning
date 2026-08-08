@@ -9,9 +9,14 @@ import {
   Stack,
   TextField,
   MenuItem,
+  Alert,
 } from "@mui/material";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
-import { markGopInactive } from "@/modules/legal-process/actions/legal-process.actions";
+import {
+  markGopInactive,
+  uploadLegalProcessDocument,
+} from "@/modules/legal-process/actions/legal-process.actions";
 import { GopInactiveReason } from "@/modules/legal-process/constants/legal-process-status";
 import { getGopInactiveReasonLabel } from "@/modules/legal-process/utils/legal-process-status";
 
@@ -30,6 +35,12 @@ const REVIEW_PRESETS = [
   { label: "12 maanden", months: 12 },
 ];
 
+const todayISO = () => new Date().toISOString().split("T")[0];
+
+// "Geen executiemogelijkheid" — de sentencia blijft geregistreerd, het
+// dossier blijft open en de blokkade blijft actief. Zodra een nieuwe
+// executiemaatregel/rente-update/kost geregistreerd wordt, reactiveert het
+// dossier automatisch naar GOP Actief.
 export const MarkInactiveDialog: React.FC<MarkInactiveDialogProps> = ({
   open,
   onClose,
@@ -37,14 +48,18 @@ export const MarkInactiveDialog: React.FC<MarkInactiveDialogProps> = ({
   onRegistered,
 }) => {
   const [reason, setReason] = useState<GopInactiveReason | "">("");
+  const [foundAt, setFoundAt] = useState(todayISO());
   const [reviewDate, setReviewDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleClose = () => {
     setReason("");
+    setFoundAt(todayISO());
     setReviewDate("");
     setNotes("");
+    setFile(null);
     onClose();
   };
 
@@ -55,8 +70,8 @@ export const MarkInactiveDialog: React.FC<MarkInactiveDialogProps> = ({
   };
 
   const handleSubmit = async () => {
-    if (!reason || !reviewDate) {
-      notifyError("Selecteer een reden en een revisiedatum");
+    if (!reason || !foundAt || !reviewDate) {
+      notifyError("Selecteer een reden, de datum van bevinding en een controledatum");
       return;
     }
 
@@ -65,10 +80,16 @@ export const MarkInactiveDialog: React.FC<MarkInactiveDialogProps> = ({
       await markGopInactive({
         legalProcessId,
         reason: reason as GopInactiveReason,
+        foundAt: new Date(foundAt),
         reviewDate: new Date(reviewDate),
         notes,
       });
-      notifySuccess("GOP gemarkeerd als Inactief");
+
+      if (file) {
+        await uploadLegalProcessDocument(legalProcessId, file, "Executieonderzoek");
+      }
+
+      notifySuccess("Dossier staat nu in onderzoek naar executiemogelijkheden");
       onRegistered();
       handleClose();
     } catch (error) {
@@ -80,9 +101,14 @@ export const MarkInactiveDialog: React.FC<MarkInactiveDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Zonder resultaat (GOP Inactief)</DialogTitle>
+      <DialogTitle>Geen executiemogelijkheid registreren</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
+          <Alert severity="info">
+            Het dossier blijft open en de blokkade actief. Zodra een nieuwe executiemogelijkheid
+            gevonden wordt, registreert u een executiemaatregel en reactiveert het GOP automatisch.
+          </Alert>
+
           <TextField
             select
             label="Reden"
@@ -98,6 +124,16 @@ export const MarkInactiveDialog: React.FC<MarkInactiveDialogProps> = ({
             ))}
           </TextField>
 
+          <TextField
+            label="Datum van bevinding"
+            type="date"
+            size="small"
+            required
+            slotProps={{ inputLabel: { shrink: true } }}
+            value={foundAt}
+            onChange={(e) => setFoundAt(e.target.value)}
+          />
+
           <Stack direction="row" spacing={1}>
             {REVIEW_PRESETS.map((preset) => (
               <Button key={preset.months} size="small" onClick={() => applyPreset(preset.months)}>
@@ -107,7 +143,7 @@ export const MarkInactiveDialog: React.FC<MarkInactiveDialogProps> = ({
           </Stack>
 
           <TextField
-            label="Revisiedatum"
+            label="Controledatum"
             type="date"
             size="small"
             required
@@ -117,13 +153,18 @@ export const MarkInactiveDialog: React.FC<MarkInactiveDialogProps> = ({
           />
 
           <TextField
-            label="Opmerkingen"
+            label="Toelichting"
             size="small"
             multiline
             minRows={2}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
+
+          <Button component="label" variant="outlined" startIcon={<UploadFileIcon />}>
+            {file ? file.name : "Bewijs/document toevoegen (optioneel)"}
+            <input type="file" hidden onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+          </Button>
         </Stack>
       </DialogContent>
       <DialogActions>

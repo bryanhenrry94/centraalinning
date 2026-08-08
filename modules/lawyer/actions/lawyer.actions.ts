@@ -1,17 +1,9 @@
 "use server";
 import {
   Lawyer,
-  LawyerCreate,
   LawyerUpdate,
 } from "@/modules/lawyer/services/lawyer.validators";
 import { LawyerService } from "@/modules/lawyer/services/lawyer.service";
-
-export async function createLawyer(
-  data: LawyerCreate,
-  tenantId: string,
-): Promise<{ success: boolean; data?: Lawyer; error?: string }> {
-  return LawyerService.create(data, tenantId);
-}
 
 export async function getLawyerById(
   id: string,
