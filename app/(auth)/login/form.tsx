@@ -25,12 +25,14 @@ import { notifyError } from "@/shared/ui/notifications";
 import { LoginFormData } from "@/modules/auth/services/auth.validators";
 import useClientRouter from "@/shared/hooks/useNavigations";
 import { signIn } from "next-auth/react";
+import { UserRole } from "@/shared/constants/user-role";
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
-  const { redirectToSignUp, redirectToDashboard } = useClientRouter();
+  const { redirectToSignUp, redirectToDashboard, redirectToWorkstation } =
+    useClientRouter();
 
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -76,13 +78,20 @@ export default function LoginForm() {
 
         const session = await getSession();
         const subdomain = session?.user?.subdomain;
+        const roles = ((session?.user as any)?.roles as UserRole[]) ?? [];
 
         if (!subdomain) {
           notifyError("Ongeldige werkruimte");
           return;
         }
 
-        redirectToDashboard(subdomain);
+        // El cliente (TENANT_ADMIN) aterriza directo en la pantalla de
+        // Diensten; los demás roles conservan el dashboard como antes.
+        if (roles.includes(UserRole.TENANT_ADMIN)) {
+          redirectToWorkstation(subdomain);
+        } else {
+          redirectToDashboard(subdomain);
+        }
       } else {
         notifyError(result?.error || "Onjuiste inloggegevens");
       }

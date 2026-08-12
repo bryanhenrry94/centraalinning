@@ -11,12 +11,14 @@ import {
   Chip,
   Avatar,
   Stack,
+  Button,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DescriptionIcon from "@mui/icons-material/Description";
 import LockIcon from "@mui/icons-material/Lock";
 import GroupIcon from "@mui/icons-material/Group";
 import GavelIcon from "@mui/icons-material/Gavel";
+import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import { useRouter } from "next/navigation";
 import { useAuthSession } from "@/modules/auth/hooks/useAuthSession";
 import { UserRole } from "@/shared/constants/user-role";
@@ -123,16 +125,36 @@ export default function WorkstationPage() {
         sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
       >
         {/* Header */}
-        <Box sx={{ mb: { xs: 2, sm: 6 } }}>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
-            Diensten
-          </Typography>
-          <Typography
-            variant="subtitle1"
-            sx={{ color: "#666", fontSize: "16px" }}
+        <Box
+          sx={{
+            mb: { xs: 2, sm: 6 },
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: { xs: "flex-start", sm: "center" },
+            justifyContent: "space-between",
+            gap: 2,
+          }}
+        >
+          <Box>
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
+              Diensten
+            </Typography>
+            <Typography
+              variant="subtitle1"
+              sx={{ color: "#666", fontSize: "16px" }}
+            >
+              Selecteer de diensten waarmee u wilt beginnen.
+            </Typography>
+          </Box>
+
+          <Button
+            variant="outlined"
+            startIcon={<DashboardOutlinedIcon />}
+            onClick={() => router.push("/dashboard")}
+            sx={{ textTransform: "none", flexShrink: 0 }}
           >
-            Selecteer de diensten waarmee u wilt beginnen.
-          </Typography>
+            Naar dashboard
+          </Button>
         </Box>
 
         {/* Grid of Services */}

@@ -15,10 +15,9 @@ import { BlokCheckResponse } from "@/modules/block-check/services/block-check.ty
 
 export interface ResultViewProps {
   result: BlokCheckResponse | null;
-  onClose: () => void;
 }
 
-export const ResultView: React.FC<ResultViewProps> = ({ result, onClose }) => {
+export const ResultView: React.FC<ResultViewProps> = ({ result }) => {
   if (!result) return null;
 
   const hasBlockade = result.has_blockade;
@@ -117,23 +116,6 @@ export const ResultView: React.FC<ResultViewProps> = ({ result, onClose }) => {
             ? "Verzoek de debiteur een financiële verklaring bij CFSB aan te vragen voor een volledig financieel overzicht."
             : "Er is geen actieve economische blokkade geregistreerd"}
         </Alert>
-
-        {/* Footer */}
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "flex-end",
-            mt: 4,
-          }}
-        >
-          <Button
-            variant="contained"
-            onClick={onClose}
-            sx={{ textTransform: "none", fontWeight: 600 }}
-          >
-            Sluiten
-          </Button>
-        </Box>
       </CardContent>
     </Card>
   );

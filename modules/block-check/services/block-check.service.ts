@@ -11,8 +11,10 @@ export class BlockCheckService {
       price: number;
     },
   ): Promise<{ success: boolean; data?: BlokCheckResponse }> => {
+    const term = search.trim();
+
     const where: Prisma.PersonWhereInput = {
-      identification: search.trim(),
+      OR: [{ identification: term }, { personal_number: term }],
     };
 
     const person = await prisma.person.findFirst({ where });

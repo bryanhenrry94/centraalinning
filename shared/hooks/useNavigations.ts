@@ -17,6 +17,10 @@ const useClientRouter = () => {
     router.push(`${protocol}://${slug}.${rootDomain}/dashboard`);
   };
 
+  const redirectToWorkstation = (slug: string) => {
+    router.push(`${protocol}://${slug}.${rootDomain}/workstation`);
+  };
+
   const redirectToLoginCompany = () => {
     router.push(`${protocol}://auth.${rootDomain}/login`);
   };
@@ -66,6 +70,7 @@ const useClientRouter = () => {
     redirectToSignUp,
     redirectToDashboardByRole,
     redirectToDashboard,
+    redirectToWorkstation,
   };
 };
 

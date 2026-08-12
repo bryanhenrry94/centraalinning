@@ -84,8 +84,14 @@ export async function middleware(req: NextRequest) {
   // ========================================
 
   if (token && isAuthDomain && (pathname === "/login" || pathname === "/")) {
+    // El cliente (TENANT_ADMIN) aterriza directo en Diensten (/workstation);
+    // los demás roles conservan el dashboard como antes.
+    const landingPath = (token.roles || []).includes(UserRole.TENANT_ADMIN)
+      ? "/workstation"
+      : "/dashboard";
+
     return NextResponse.redirect(
-      new URL(`${PROTOCOL}://${token.subdomain}.${ROOT_DOMAIN}/dashboard`),
+      new URL(`${PROTOCOL}://${token.subdomain}.${ROOT_DOMAIN}${landingPath}`),
     );
   }
 

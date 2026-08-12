@@ -21,6 +21,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import { Close as CloseIcon } from "@mui/icons-material";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 import { formatCurrency } from "@/shared/utils/formatters";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
@@ -33,13 +34,15 @@ import { AppAction } from "@/shared/constants/AppAction";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { notifyError } from "@/shared/ui/notifications";
 
+const RESULT_REDIRECT_DELAY_MS = 15_000;
+
 const BlokCheckPage = () => {
   const { data: session } = useSession();
+  const router = useRouter();
 
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [showCostDialog, setShowCostDialog] = useState(false);
   const [blokCheck, setBlokCheck] = useState<BlokCheckResponse | null>(null);
@@ -61,6 +64,18 @@ const BlokCheckPage = () => {
     fetchParameter();
   }, [session?.user?.tenant_id]);
 
+  // Tras mostrar el resultado del pago, se redirige automáticamente a
+  // Diensten al cabo de 15 segundos, sin aviso previo.
+  useEffect(() => {
+    if (!showResult) return;
+
+    const timer = setTimeout(() => {
+      router.push("/workstation");
+    }, RESULT_REDIRECT_DELAY_MS);
+
+    return () => clearTimeout(timer);
+  }, [showResult, router]);
+
   // Membership gate
   const currentMembership =
     session?.user?.memberships?.find(
@@ -76,11 +91,6 @@ const BlokCheckPage = () => {
 
       if (!search.trim()) {
         setError("Ingrese un valor para buscar");
-        return;
-      }
-
-      if (paymentUrl) {
-        window.open(paymentUrl, "_blank");
         return;
       }
 
@@ -114,14 +124,6 @@ const BlokCheckPage = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleReset = () => {
-    setSearch("");
-    setError("");
-    setBlokCheck(null);
-    setPaymentUrl(null);
-    setShowResult(false);
   };
 
   if (!permission.allowed) {
@@ -182,7 +184,7 @@ const BlokCheckPage = () => {
       maxWidth="md"
       disableGutters
       sx={{
-        py: { xs: 1.5, sm: 4 },
+        py: { xs: 3, sm: 4 },
         px: { xs: 1, sm: 3 },
       }}
     >
@@ -220,7 +222,7 @@ const BlokCheckPage = () => {
               >
                 <TextField
                   fullWidth
-                  placeholder="ID-nummer / KVK-nummer"
+                  placeholder="ID-nummer / KVK-nummer of CFSB-nummer"
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);
@@ -268,12 +270,13 @@ const BlokCheckPage = () => {
             <Typography variant="body2" sx={{ textAlign: "justify" }}>
               Voer een ID- of KVK-nummer in om te controleren of een persoon of
               onderneming voorkomt op de lijst met economisch geblokkeerde
-              partijen.
+              partijen. U kunt ook zoeken op het CFSB-nummer (persoonlijk
+              identificatienummer).
             </Typography>
           </Alert>
         </>
       ) : (
-        <ResultView result={blokCheck} onClose={handleReset} />
+        <ResultView result={blokCheck} />
       )}
 
       {/* Dialog ter bevestiging van kosten */}
