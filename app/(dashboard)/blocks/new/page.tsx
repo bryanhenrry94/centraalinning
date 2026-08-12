@@ -223,6 +223,12 @@ export default function BlockCreatePage() {
   const handlePaymentConfirmed = async (paymentId: string) => {
     setShowCostDialog(false);
     notifyInfo("Betaling bevestigd. Blokkade wordt geregistreerd...");
+
+    // espera 3 segundos antes de redirigir a Diensten para que el usuario
+    // pueda ver la notificación.
+    setTimeout(() => {
+      router.push("/workstation");
+    }, 3000);
   };
 
   const handleCreateTransaction = async (): Promise<{

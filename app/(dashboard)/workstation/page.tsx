@@ -65,7 +65,7 @@ export default function WorkstationPage() {
       buttonText: "Nieuwe financiële afspraak →",
       linkText: "📋 Mijn financiële afspraken",
       linkList: "/contracts",
-      newLink: "/contracts/new",
+      newLink: "/contracts",
     },
     {
       id: 3,
@@ -89,7 +89,7 @@ export default function WorkstationPage() {
       buttonText: "Blokkade registreren →",
       linkText: "📋 Mijn blokkades",
       linkList: "/blocks",
-      newLink: "/blocks/new",
+      newLink: "/blocks",
     },
     {
       id: 5,

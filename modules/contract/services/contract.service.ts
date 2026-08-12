@@ -5,10 +5,12 @@ import { DebtorService } from "@/modules/collection/services/debtor.service";
 import { CollectionService } from "@/modules/collection/services/collection.service";
 
 export class ContractService {
-  static generateContractReference = async () => {
+  static generateContractReference = async (
+    client: Prisma.TransactionClient | typeof prisma = prisma,
+  ) => {
     const year = new Date().getFullYear();
 
-    const total = await prisma.contract.count();
+    const total = await client.contract.count();
 
     return `FAR-${year}-${String(total + 1).padStart(3, "0")}`;
   };
@@ -64,55 +66,86 @@ export class ContractService {
     });
   };
 
+  // La referencia se genera contando filas existentes, así que dos
+  // registros de FAR simultáneos (p.ej. una empresa registrando varios
+  // expedientes seguidos) pueden calcular el mismo número antes de que
+  // ninguno haga commit. Se genera dentro de la transacción (como
+  // CollectionService.generateClaimReference) y, si aun así choca con la
+  // unique constraint, se reintenta con una referencia nueva.
   static create = async (tenantId: string, contract: CreateContractInput) => {
-    const reference_number = await this.generateContractReference();
+    const MAX_ATTEMPTS = 3;
 
-    return prisma.$transaction(async (tx) => {
-      const createdContract = await tx.contract.create({
-        data: {
-          tenant_id: tenantId,
-          reference_number: reference_number,
-          amount: Prisma.Decimal(contract.amount),
-          contract_type: contract.contract_type,
-          contract_date: new Date(contract.contract_date),
-          start_date: new Date(contract.start_date),
-          description: contract.description,
-          end_date: contract.end_date ? new Date(contract.end_date) : null,
-          installment_count: contract.installment_count,
-          installment_amount: contract.installment_amount
-            ? Prisma.Decimal(contract.installment_amount)
-            : null,
-        },
-      });
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        return await prisma.$transaction(async (tx) => {
+          const reference_number = await this.generateContractReference(tx);
 
-      await tx.contractParty.createMany({
-        data: contract.parties.map((party) => ({
-          contract_id: createdContract.id,
-          role: party.role,
-          person_type: party.person_type,
-          identification_type: party.identification_type,
-          identification: party.identification,
-          fullname: party.fullname,
-          email: party.email,
-          phone: party.phone,
-          address: party.address,
-          birth_date: party.birth_date,
-          birth_place: party.birth_place,
-        })),
-      });
+          const createdContract = await tx.contract.create({
+            data: {
+              tenant_id: tenantId,
+              reference_number: reference_number,
+              amount: Prisma.Decimal(contract.amount),
+              contract_type: contract.contract_type,
+              contract_date: new Date(contract.contract_date),
+              start_date: new Date(contract.start_date),
+              description: contract.description,
+              end_date: contract.end_date ? new Date(contract.end_date) : null,
+              installment_count: contract.installment_count,
+              installment_amount: contract.installment_amount
+                ? Prisma.Decimal(contract.installment_amount)
+                : null,
+            },
+          });
 
-      await tx.contractDocument.createMany({
-        data: contract.documents.map((document) => ({
-          contract_id: createdContract.id,
-          file_name: document.file_name,
-          file_path: document.file_path,
-          mime_type: document.mime_type,
-          file_size: document.file_size,
-        })),
-      });
+          await tx.contractParty.createMany({
+            data: contract.parties.map((party) => ({
+              contract_id: createdContract.id,
+              role: party.role,
+              person_type: party.person_type,
+              identification_type: party.identification_type,
+              identification: party.identification,
+              fullname: party.fullname,
+              email: party.email,
+              phone: party.phone,
+              address: party.address,
+              birth_date: party.birth_date,
+              birth_place: party.birth_place,
+            })),
+          });
 
-      return createdContract;
-    });
+          await tx.contractDocument.createMany({
+            data: contract.documents.map((document) => ({
+              contract_id: createdContract.id,
+              file_name: document.file_name,
+              file_path: document.file_path,
+              mime_type: document.mime_type,
+              file_size: document.file_size,
+            })),
+          });
+
+          return createdContract;
+        });
+      } catch (error) {
+        const target =
+          error instanceof Prisma.PrismaClientKnownRequestError
+            ? error.meta?.target
+            : undefined;
+
+        const isDuplicateReference =
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2002" &&
+          (Array.isArray(target)
+            ? target.includes("reference_number")
+            : typeof target === "string" &&
+              target.includes("reference_number"));
+
+        if (!isDuplicateReference || attempt === MAX_ATTEMPTS) {
+          throw error;
+        }
+      }
+    }
+
+    throw new Error("Kon overeenkomst niet registreren");
   };
 
   static getById = async (id: string) => {
