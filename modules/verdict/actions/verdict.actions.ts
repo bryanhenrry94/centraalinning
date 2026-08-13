@@ -15,19 +15,19 @@ export const getAllVerdicts = async (
   debtor_id?: string,
 ): Promise<VerdictResponse[]> => {
   try {
-    return VerdictService.getAll(tenant_id, status, debtor_id);
+    return await VerdictService.getAll(tenant_id, status, debtor_id);
   } catch (error) {
     console.error("Error fetching all Verdicts:", error);
-    throw new Error("Error fetching all Verdicts");
+    throw new Error("Fout bij het ophalen van de vonnissen");
   }
 };
 
 export const getVerdictById = async (id: string): Promise<VerdictResponse | null> => {
   try {
-    return VerdictService.getById(id);
+    return await VerdictService.getById(id);
   } catch (error) {
     console.error("Error fetching Verdict:", error);
-    throw new Error("Error fetching Verdict");
+    throw new Error("Fout bij het ophalen van het vonnis");
   }
 };
 
@@ -35,10 +35,10 @@ export const getAttachmentsByVerdictId = async (
   verdict_id: string,
 ): Promise<VerdictAttachment[]> => {
   try {
-    return VerdictService.getAttachmentsByVerdictId(verdict_id);
+    return await VerdictService.getAttachmentsByVerdictId(verdict_id);
   } catch (error) {
     console.error("Error fetching attachments by Verdict ID:", error);
-    throw new Error("Error fetching attachments by Verdict ID");
+    throw new Error("Fout bij het ophalen van de bijlagen van het vonnis");
   }
 };
 
@@ -47,10 +47,10 @@ export const updateVerdict = async (
   data: VerdictUpdate,
 ): Promise<VerdictResponse | null> => {
   try {
-    return VerdictService.update(verdict_id, data);
+    return await VerdictService.update(verdict_id, data);
   } catch (error) {
     console.error("Error updating Verdict:", error);
-    throw new Error("Error updating Verdict");
+    throw new Error("Fout bij het bijwerken van het vonnis");
   }
 };
 
@@ -62,7 +62,7 @@ export const calculateInterestDetail = async (
   calculation_end: Date,
 ): Promise<VerdictInterestDetailCreate[]> => {
   try {
-    return VerdictService.calculateInterestDetail(
+    return await VerdictService.calculateInterestDetail(
       interest_type,
       base_amount,
       calculated_interest,
@@ -76,16 +76,16 @@ export const calculateInterestDetail = async (
 
 export const deleteVerdict = async (id: string): Promise<boolean> => {
   try {
-    return VerdictService.delete(id);
+    return await VerdictService.delete(id);
   } catch (error) {
     console.error("Error deleting Verdict:", error);
-    throw new Error("Error deleting Verdict");
+    throw new Error("Fout bij het verwijderen van het vonnis");
   }
 };
 
 export const handleSendMailNotificationBailiff = async (id: string): Promise<boolean> => {
   try {
-    return VerdictService.sendMailNotificationBailiff(id);
+    return await VerdictService.sendMailNotificationBailiff(id);
   } catch (error) {
     console.error("Error sending mail notification:", error);
     return false;
@@ -134,7 +134,7 @@ export const UploadAttachmentToVerdict = async (
 
 export const DeleteVerdictAttachment = async (id: string): Promise<boolean> => {
   try {
-    return VerdictService.deleteAttachment(id);
+    return await VerdictService.deleteAttachment(id);
   } catch (error) {
     console.error("Error deleting verdict attachment:", error);
     return false;
@@ -145,7 +145,7 @@ export const DownloadVerdictAttachment = async (
   id: string,
 ): Promise<{ success: boolean; file?: string; file_name?: string }> => {
   try {
-    return VerdictService.downloadAttachment(id);
+    return await VerdictService.downloadAttachment(id);
   } catch (error) {
     console.error("Error downloading verdict attachment:", error);
     return { success: false };

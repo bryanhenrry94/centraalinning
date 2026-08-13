@@ -23,7 +23,7 @@ export type TransferToLawyerInput = z.infer<typeof TransferToLawyerSchema>;
 
 export const RejectTransferSchema = z.object({
   caseTransferId: z.string().min(1),
-  reason: z.string().min(1, "El motivo del rechazo es obligatorio"),
+  reason: z.string().min(1, "De reden voor afwijzing is verplicht"),
 });
 export type RejectTransferInput = z.infer<typeof RejectTransferSchema>;
 

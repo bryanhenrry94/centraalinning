@@ -27,10 +27,10 @@ export class CollectionService {
     contract: Awaited<ReturnType<typeof ContractService.getById>>,
     debtorId: string,
   ) => {
-    if (!contract) throw new Error("Contract not found");
+    if (!contract) throw new Error("Overeenkomst niet gevonden");
 
     const principalAmount = Number(contract.amount);
-    if (principalAmount <= 0) throw new Error("Invalid contract amount");
+    if (principalAmount <= 0) throw new Error("Ongeldig overeenkomstbedrag");
 
     const claimData: DebtClaimCreate = {
       debtorId,

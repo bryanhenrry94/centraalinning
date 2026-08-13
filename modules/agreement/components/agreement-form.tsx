@@ -94,7 +94,7 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
       }
 
       if (new Date(data.start_date) < new Date()) {
-        return notifyError("La fecha de inicio debe ser mayor a la actual");
+        return notifyError("De startdatum moet na vandaag liggen");
       }
 
       const installmentsCount = Number(data.installments_count);
@@ -131,7 +131,7 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
         };
 
         await updatePaymentAgreement(id, payload);
-        notifyInfo("Acuerdo de pago actualizado correctamente");
+        notifyInfo("Betalingsregeling succesvol bijgewerkt");
         return onSave?.();
       }
 
@@ -156,7 +156,7 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
       };
 
       await createPaymentAgreement(session.user.tenant_id, payload);
-      notifyInfo("Acuerdo de pago creado correctamente");
+      notifyInfo("Betalingsregeling succesvol aangemaakt");
 
       onSave?.();
     } catch (err) {

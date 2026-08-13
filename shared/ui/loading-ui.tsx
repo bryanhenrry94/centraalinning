@@ -12,7 +12,7 @@ const LoadingUI: React.FC = (props) => {
     >
       <CircularProgress />
       <Typography variant="h6" mt={2}>
-        Loading...
+        Laden...
       </Typography>
     </Box>
   );

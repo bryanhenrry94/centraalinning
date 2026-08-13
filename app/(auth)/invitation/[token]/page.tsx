@@ -91,7 +91,7 @@ export default function InvitationPage() {
       // Check if email already exists
       const emailExists = await userExistsByEmail(formData.email);
       if (emailExists) {
-        notifyWarning("Email already exists.");
+        notifyWarning("Dit e-mailadres bestaat al.");
         return;
       }
 

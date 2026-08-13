@@ -80,7 +80,7 @@ const ActionToolbar: FC<ActionToolbarProps> = ({
       </Box>
       <div className="flex gap-2 items-center">
         {onRefresh && (
-          <Tooltip title="Refrescar">
+          <Tooltip title="Vernieuwen">
             <span>
               <IconButton
                 color="primary"
@@ -93,7 +93,7 @@ const ActionToolbar: FC<ActionToolbarProps> = ({
           </Tooltip>
         )}
         {onImport && (
-          <Tooltip title="Importar">
+          <Tooltip title="Importeren">
             <span>
               <IconButton
                 color="primary"
@@ -106,7 +106,7 @@ const ActionToolbar: FC<ActionToolbarProps> = ({
           </Tooltip>
         )}
         {onCreate && (
-          <Tooltip title="Nuevo">
+          <Tooltip title="Nieuw">
             <span>
               <Button
                 color="primary"
@@ -117,14 +117,14 @@ const ActionToolbar: FC<ActionToolbarProps> = ({
                 size="small"
                 sx={{ textTransform: "none" }}
               >
-                Nuevo
+                Nieuw
               </Button>
             </span>
           </Tooltip>
         )}
 
         {onDelete && (
-          <Tooltip title="Eliminar">
+          <Tooltip title="Verwijderen">
             <span>
               <IconButton
                 color="primary"
@@ -138,7 +138,7 @@ const ActionToolbar: FC<ActionToolbarProps> = ({
         )}
 
         {onExportExcel && (
-          <Tooltip title="Exportar Excel">
+          <Tooltip title="Exporteren naar Excel">
             <span>
               <IconButton
                 color="primary"
@@ -152,7 +152,7 @@ const ActionToolbar: FC<ActionToolbarProps> = ({
         )}
 
         {onExportPDF && (
-          <Tooltip title="Exportar PDF">
+          <Tooltip title="Exporteren naar PDF">
             <span>
               <IconButton
                 color="primary"

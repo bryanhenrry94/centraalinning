@@ -52,7 +52,7 @@ export const TransferToBailiffDialog: React.FC<TransferToBailiffDialogProps> = (
     setLoading(true);
     try {
       await assignBailiffForExecution({ caseTransferId, bailiffId });
-      notifySuccess("Sentencia transferida al agente judicial");
+      notifySuccess("Vonnis overgedragen aan de deurwaarder");
       onTransferred();
       handleClose();
     } catch (error) {

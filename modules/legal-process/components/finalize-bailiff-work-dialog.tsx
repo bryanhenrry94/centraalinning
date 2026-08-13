@@ -107,7 +107,7 @@ export const FinalizeBailiffWorkDialog: React.FC<FinalizeBailiffWorkDialogProps>
   };
 
   const handlePaymentConfirmed = async () => {
-    notifySuccess("Betaling bevestigd. Trabajo finalizado.");
+    notifySuccess("Betaling bevestigd. Werk afgerond.");
     onFinalized();
     handleClose();
   };

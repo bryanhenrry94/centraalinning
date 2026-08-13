@@ -265,10 +265,10 @@ export default function PaymentList() {
       >
         <Box>
           <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-            LISTADO DE COBROS
+            OVERZICHT VAN INNINGEN
           </Typography>
           <Typography variant="subtitle2">
-            Listado de todos los cobros realizados en el sistema
+            Overzicht van alle inningen in het systeem
           </Typography>
         </Box>
         <Box>
@@ -278,7 +278,7 @@ export default function PaymentList() {
             size="small"
             sx={{ fontWeight: "bold" }}
           >
-            Buscar documento
+            Document zoeken
           </Button>
         </Box>
       </Box>

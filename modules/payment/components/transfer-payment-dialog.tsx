@@ -112,7 +112,7 @@ export const TransferPaymentDialog = ({
     }
 
     if (!referenceNumber.trim()) {
-      notifyWarning("Voer het comprobante-nummer in.");
+      notifyWarning("Voer het referentienummer van de betaling in.");
       return;
     }
 

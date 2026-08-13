@@ -25,9 +25,9 @@ export const getDataInvoicePDF = async (id: string): Promise<InvoicePDFProps> =>
 
 export const getAllInvoices = async (): Promise<BillingInvoiceResponse[]> => {
   try {
-    return BillingInvoiceService.getAll();
+    return await BillingInvoiceService.getAll();
   } catch {
-    throw new Error("Error fetching invoices");
+    throw new Error("Fout bij het ophalen van facturen");
   }
 };
 
@@ -45,9 +45,9 @@ export const getMyGopInvoicesAsBailiff = async (): Promise<BillingInvoiceRespons
 
 export const getInvoiceById = async (id: string): Promise<BillingInvoiceBase | null> => {
   try {
-    return BillingInvoiceService.getById(id);
+    return await BillingInvoiceService.getById(id);
   } catch {
-    throw new Error("Error fetching invoice");
+    throw new Error("Fout bij het ophalen van de factuur");
   }
 };
 
@@ -56,10 +56,10 @@ export const createInvoice = async (
   tenant_id: string,
 ): Promise<BillingInvoiceBase> => {
   try {
-    return BillingInvoiceService.create(invoice, tenant_id);
+    return await BillingInvoiceService.create(invoice, tenant_id);
   } catch (error) {
     console.error("Error creating invoice:", error);
-    throw new Error("Error creating invoice");
+    throw new Error("Fout bij het aanmaken van de factuur");
   }
 };
 
@@ -68,24 +68,24 @@ export const updateInvoice = async (
   invoice: Partial<BillingInvoiceCreate>,
 ): Promise<boolean> => {
   try {
-    return BillingInvoiceService.update(id, invoice);
+    return await BillingInvoiceService.update(id, invoice);
   } catch {
-    throw new Error("Error updating invoice");
+    throw new Error("Fout bij het bijwerken van de factuur");
   }
 };
 
 export const deleteInvoice = async (id: string): Promise<boolean> => {
   try {
-    return BillingInvoiceService.delete(id);
+    return await BillingInvoiceService.delete(id);
   } catch {
-    throw new Error("Error deleting invoice");
+    throw new Error("Fout bij het verwijderen van de factuur");
   }
 };
 
 export const getNextInvoiceNumber = async (tenant_id: string): Promise<string> => {
   try {
-    return BillingInvoiceService.getNextInvoiceNumber(tenant_id);
+    return await BillingInvoiceService.getNextInvoiceNumber(tenant_id);
   } catch {
-    throw new Error("Error generating next invoice number");
+    throw new Error("Fout bij het genereren van het volgende factuurnummer");
   }
 };

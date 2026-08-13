@@ -11,7 +11,7 @@ export const getAllDebtorsByTenantId = async (
   tenant_id: string,
 ): Promise<DebtorResponse[]> => {
   try {
-    return DebtorService.getAllByTenantId(tenant_id);
+    return await DebtorService.getAllByTenantId(tenant_id);
   } catch {
     throw new Error("Error fetching debtors");
   }
@@ -19,7 +19,7 @@ export const getAllDebtorsByTenantId = async (
 
 export const getAllDebtors = async (): Promise<DebtorInput[]> => {
   try {
-    return DebtorService.getAllDebtors();
+    return await DebtorService.getAllDebtors();
   } catch {
     throw new Error("Error fetching debtors");
   }
@@ -27,7 +27,7 @@ export const getAllDebtors = async (): Promise<DebtorInput[]> => {
 
 export const getDebtorById = async (id: string): Promise<DebtorInput | null> => {
   try {
-    return DebtorService.getById(id);
+    return await DebtorService.getById(id);
   } catch {
     throw new Error("Error fetching debtor");
   }
@@ -38,7 +38,7 @@ export const getDebtorByUserId = async (
   tenant_id: string,
 ): Promise<DebtorInput | null> => {
   try {
-    return DebtorService.getByUserId(user_id, tenant_id);
+    return await DebtorService.getByUserId(user_id, tenant_id);
   } catch {
     throw new Error("Error fetching debtor by user ID");
   }

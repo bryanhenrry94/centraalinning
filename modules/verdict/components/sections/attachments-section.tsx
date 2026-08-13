@@ -56,7 +56,7 @@ const AttachmentsSection: React.FC<AttachmentsSectionProps> = ({
     handleClose();
 
     if (!verdictId) {
-      notifyError("El vonnis debe ser creado antes de subir un archivo.");
+      notifyError("Het vonnis moet eerst worden aangemaakt voordat u een bestand kunt uploaden.");
       return;
     }
 
@@ -68,7 +68,7 @@ const AttachmentsSection: React.FC<AttachmentsSectionProps> = ({
       );
 
       if (res) {
-        notifyInfo("Archivo subido exitosamente.");
+        notifyInfo("Bestand succesvol geüpload.");
       } else {
         notifyError("Fout bij het uploaden van het bestand.");
       }

@@ -107,7 +107,7 @@ const InvoiceFormPage: React.FC<InvoiceFormPageProps> = ({ id }) => {
         } else {
           const newInvoice = await createInvoice(data, tenant?.id);
           if (newInvoice) {
-            notifyInfo("Registro creado exitosamente");
+            notifyInfo("Registratie aangemaakt");
             router.push(`/admin/invoices/${newInvoice.id}/edit`); // Redirect to the newly created invoice page
             reset();
           }

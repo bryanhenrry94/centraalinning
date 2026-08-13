@@ -59,7 +59,7 @@ const SettingPageContent = () => {
       phone: profile.phone,
     });
 
-    notifyInfo("Perfil actualizado correctamente.");
+    notifyInfo("Profiel succesvol bijgewerkt.");
   };
 
   if (isPureDebtor) {

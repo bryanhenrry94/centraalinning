@@ -54,14 +54,14 @@ const ChatForm = ({ onSendMessage, onSendFile, fullname, room }: ChatFormProps) 
                         setMessage(e.target.value);
                         handleTyping();
                     }}
-                    placeholder="Escribe un mensaje..."
+                    placeholder="Typ een bericht..."
                 />
                 <IconButton component="label" sx={{ flexShrink: 0 }}>
                     <AttachFileIcon />
                     <input type="file" hidden onChange={handleFileChange} />
                 </IconButton>
                 <Button type="submit" variant="contained" sx={{ flexShrink: 0 }}>
-                    Enviar
+                    Verzenden
                 </Button>
             </Box>
         </form>

@@ -87,7 +87,7 @@ export function DebtorPicker({
         <div className="relative flex-1">
           <TextField
             value={query}
-            placeholder="Selecciona un deudor..."
+            placeholder="Selecteer een debiteur..."
             disabled={disabled}
             autoComplete="off"
             size="small"
@@ -112,7 +112,7 @@ export function DebtorPicker({
               {loading && (
                 <div className="flex items-center justify-center p-4">
                   <span className="text-xs text-muted-foreground">
-                    Buscando...
+                    Zoeken...
                   </span>
                 </div>
               )}
@@ -121,8 +121,8 @@ export function DebtorPicker({
                 <>
                   <div className="border-b bg-muted/30 px-3 py-2">
                     <span className="text-xs text-muted-foreground">
-                      {results.length} resultado
-                      {results.length !== 1 ? "s" : ""}
+                      {results.length}{" "}
+                      {results.length === 1 ? "resultaat" : "resultaten"}
                     </span>
                   </div>
 
@@ -146,11 +146,11 @@ export function DebtorPicker({
               {!loading && results.length === 0 && (
                 <div className="flex flex-col items-center justify-center p-6">
                   <p className="text-sm font-medium">
-                    No se encontraron resultados
+                    Geen resultaten gevonden
                   </p>
 
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Intenta con otro término de búsqueda
+                    Probeer een andere zoekterm
                   </p>
                 </div>
               )}

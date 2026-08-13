@@ -90,13 +90,13 @@ const BlokCheckPage = () => {
       setError("");
 
       if (!search.trim()) {
-        setError("Ingrese un valor para buscar");
+        setError("Voer een waarde in om te zoeken");
         return;
       }
 
       setShowCostDialog(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : "Er is een fout opgetreden");
     } finally {
       setLoading(false);
     }
@@ -120,7 +120,7 @@ const BlokCheckPage = () => {
       setBlokCheck(result.data);
       setShowResult(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : "Er is een fout opgetreden");
     } finally {
       setLoading(false);
     }

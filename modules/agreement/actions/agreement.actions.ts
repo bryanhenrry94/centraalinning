@@ -121,8 +121,8 @@ export const getAgreementByDebtClaimId = async (
 
 export const notifyApprovalAgreement = async (agreement_id: string) => {
   const agreement = await AgreementService.getById(agreement_id);
-  if (!agreement) throw new Error("Agreement not found");
-  if (!agreement.debtor_id) throw new Error("Agreement has no debtor associated");
+  if (!agreement) throw new Error("Betalingsregeling niet gevonden");
+  if (!agreement.debtor_id) throw new Error("Aan deze betalingsregeling is geen debiteur gekoppeld");
 
   const tenant = agreement.tenant_id ? await TenantService.getById(agreement.tenant_id) : null;
 

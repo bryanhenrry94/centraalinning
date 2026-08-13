@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const bailiffBaseSchema = z.object({
   id: z.string().uuid(),
-  fullname: z.string().min(1, "Full name is required"),
-  email: z.string().email("Invalid email format"),
+  fullname: z.string().min(1, "Volledige naam is verplicht"),
+  email: z.string().email("Ongeldig e-mailadres"),
   phone: z.string().nullable().optional(),
   tenant_id: z.string().uuid(),
   user_id: z.string().uuid().nullable().optional(),

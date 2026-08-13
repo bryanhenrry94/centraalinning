@@ -73,7 +73,7 @@ const CollectionViewPage: React.FC = () => {
 
   useEffect(() => {
     if (!params.id) {
-      notifyError("ID de collection no proporcionado");
+      notifyError("Geen dossier-ID opgegeven");
       router.back();
       return;
     }

@@ -5,8 +5,8 @@ export const lawyerBaseSchema = z.object({
   id: z.string(),
   tenantId: z.string().nullable().optional(),
 
-  firstName: z.string().min(1, "El nombre es obligatorio"),
-  lastName: z.string().min(1, "El apellido es obligatorio"),
+  firstName: z.string().min(1, "De voornaam is verplicht"),
+  lastName: z.string().min(1, "De achternaam is verplicht"),
   companyName: z.string().nullable().optional(),
 
   identification: z.string().nullable().optional(),

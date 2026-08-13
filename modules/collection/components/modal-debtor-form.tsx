@@ -85,13 +85,13 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
 
   const fetchDebtor = async () => {
     if (!id) {
-      notifyError("ID is required");
+      notifyError("ID is verplicht");
       return;
     }
 
     const debtor = await getDebtorById(id);
     if (!debtor) {
-      notifyError("Debtor not found");
+      notifyError("Debiteur niet gevonden");
       return;
     }
 
@@ -150,12 +150,12 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
         onSave(newDebtor.data);
       }
 
-      notifySuccess(`Debtor ${id ? "updated" : "created"} successfully`);
+      notifySuccess(`Debiteur succesvol ${id ? "bijgewerkt" : "aangemaakt"}`);
       reset();
       onClose();
     } catch (error) {
       console.error("Error creating debtor:", error);
-      notifyError(error instanceof Error ? error.message : "An error occurred");
+      notifyError(error instanceof Error ? error.message : "Er is een fout opgetreden");
     }
   };
 

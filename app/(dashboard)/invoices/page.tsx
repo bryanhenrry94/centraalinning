@@ -485,7 +485,7 @@ const InvoicesPage: React.FC = () => {
                         }}
                         disabled={invoice.status !== "unpaid"}
                       >
-                        Pagos
+                        Betalingen
                       </MenuItem>
                       <MenuItem
                         onClick={() => {
@@ -494,7 +494,7 @@ const InvoicesPage: React.FC = () => {
                         }}
                         disabled={invoice.status !== "overdue"}
                       >
-                        Eliminar
+                        Verwijderen
                       </MenuItem>
                     </Menu>
                       </>

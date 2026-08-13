@@ -86,7 +86,7 @@ export const FinalizeLawyerWorkDialog: React.FC<FinalizeLawyerWorkDialogProps> =
   };
 
   const handlePaymentConfirmed = async () => {
-    notifySuccess("Betaling bevestigd. Trabajo finalizado.");
+    notifySuccess("Betaling bevestigd. Werk afgerond.");
     onFinalized();
     handleClose();
   };

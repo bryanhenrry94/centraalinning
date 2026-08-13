@@ -193,13 +193,13 @@ export class ContractService {
     status: "DRAFT" | "REGISTERED",
   ) => {
     const existing = await prisma.contract.findFirst({ where: { id, tenant_id: tenantId } });
-    if (!existing) throw new Error("Contract not found");
+    if (!existing) throw new Error("Overeenkomst niet gevonden");
     return prisma.contract.update({ where: { id }, data: { status } });
   };
 
   static deleteById = async (id: string, tenantId: string) => {
     const existing = await prisma.contract.findFirst({ where: { id, tenant_id: tenantId } });
-    if (!existing) throw new Error("Contract not found");
+    if (!existing) throw new Error("Overeenkomst niet gevonden");
 
     if (existing.status !== "DRAFT") {
       throw new Error(
@@ -230,7 +230,7 @@ export class ContractService {
     const contract = await this.getById(contractId);
 
     if (!contract) {
-      throw new Error("Contract not found");
+      throw new Error("Overeenkomst niet gevonden");
     }
 
     if (contract.status !== "REGISTERED") {

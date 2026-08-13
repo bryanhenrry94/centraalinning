@@ -97,11 +97,11 @@ const ModalSearchDebtor: React.FC<ModalSearchDebtorProps> = ({
           <Table stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell>Nombre</TableCell>
-                <TableCell>Identificacion</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell align="center">Editar</TableCell>
-                <TableCell align="center">Seleccionar</TableCell>
+                <TableCell>Naam</TableCell>
+                <TableCell>Identificatie</TableCell>
+                <TableCell>E-mail</TableCell>
+                <TableCell align="center">Bewerken</TableCell>
+                <TableCell align="center">Selecteren</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -139,7 +139,7 @@ const ModalSearchDebtor: React.FC<ModalSearchDebtorProps> = ({
               {filteredDebtors.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={3} align="center">
-                    No se encontraron deudores.
+                    Geen debiteuren gevonden.
                   </TableCell>
                 </TableRow>
               )}
@@ -147,7 +147,7 @@ const ModalSearchDebtor: React.FC<ModalSearchDebtorProps> = ({
           </Table>
         </TableContainer>
         <Box mt={2} display="flex" justifyContent="flex-end">
-          <Button onClick={onClose}>Cerrar</Button>
+          <Button onClick={onClose}>Sluiten</Button>
         </Box>
       </Box>
     </Modal>

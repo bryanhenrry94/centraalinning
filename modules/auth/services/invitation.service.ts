@@ -171,7 +171,7 @@ export class InvitationService {
       });
 
       if (!invitation) {
-        throw new Error("Invalid or expired invitation token");
+        throw new Error("Ongeldige of verlopen uitnodigingslink");
       }
 
       const tenant = await prisma.tenant.findUnique({
@@ -179,7 +179,7 @@ export class InvitationService {
       });
 
       if (!tenant) {
-        throw new Error("Tenant not found or inactive");
+        throw new Error("Organisatie niet gevonden of inactief");
       }
 
       const password_hash = await bcrypt.hash(validatedData.password, 10);

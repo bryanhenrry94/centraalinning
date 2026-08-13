@@ -28,11 +28,11 @@ export const UnauthorizedPage = () => {
       height="100vh"
     >
       <Typography variant="h4" color="error">
-        Unauthorized Access
+        Geen toegang
       </Typography>
       <Typography variant="body1" mt={2}>
-        You do not have permission to view this page. Please log in with the
-        appropriate credentials.
+        U heeft geen toestemming om deze pagina te bekijken. Log in met de
+        juiste gegevens.
       </Typography>
     </Box>
   );

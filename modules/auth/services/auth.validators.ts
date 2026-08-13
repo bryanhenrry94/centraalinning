@@ -4,19 +4,19 @@ import { z } from "zod";
 export const companyInfoSchema = z.object({
   name: z
     .string()
-    .min(2, "Company name must be at least 2 characters long")
+    .min(2, "Bedrijfsnaam moet minimaal 2 tekens lang zijn")
     .regex(
       /^[a-zA-Z0-9]+([a-zA-Z0-9- ]*[a-zA-Z0-9])?$/,
-      "Company name can only contain letters, numbers, hyphens, and spaces, and cannot start or end with a space",
+      "Bedrijfsnaam mag alleen letters, cijfers, koppeltekens en spaties bevatten, en mag niet beginnen of eindigen met een spatie",
     ),
   contact_email: z
     .string()
-    .nonempty("Contact email is required")
-    .email("Invalid email format"),
-  kvk: z.string().nonempty("Kvk code is required"), // No additional validation specified for kvk
-  country: z.string().nonempty("Country is required"),
-  address: z.string().nonempty("Address is required"),
-  number_of_employees: z.number().min(1, "Number of employees is required"),
+    .nonempty("E-mailadres is verplicht")
+    .email("Ongeldig e-mailadres"),
+  kvk: z.string().nonempty("KVK-nummer is verplicht"), // No additional validation specified for kvk
+  country: z.string().nonempty("Land is verplicht"),
+  address: z.string().nonempty("Adres is verplicht"),
+  number_of_employees: z.number().min(1, "Aantal werknemers is verplicht"),
 });
 
 const SubdomainSchema = z.object({

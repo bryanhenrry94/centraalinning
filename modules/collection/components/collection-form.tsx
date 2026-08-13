@@ -313,7 +313,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
                 onClick={() => onClose?.()}
                 sx={{ textTransform: "none" }}
               >
-                Cancelar
+                Annuleren
               </Button>
 
               <PaymentIntent

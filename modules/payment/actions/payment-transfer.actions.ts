@@ -71,7 +71,7 @@ export async function initiateTransferPayment(
     const arrayBuffer = await file.arrayBuffer();
     const fileBuffer = Buffer.from(arrayBuffer);
 
-    return PaymentTransferService.initiate({
+    return await PaymentTransferService.initiate({
       ...parsed.data,
       fileName: file.name,
       contentType: file.type,

@@ -96,7 +96,7 @@ export const AgreementDecisionDialog: React.FC<AgreementDecisionDialogProps> = (
     setProcessing(true);
     try {
       await onDecide(agreement.id, { status: "REJECTED", rejection_reason: rejectReason.trim() });
-      notifySuccess("Acuerdo rechazado.");
+      notifySuccess("Betalingsregeling afgewezen.");
       onDecided();
       onClose();
     } catch (error) {

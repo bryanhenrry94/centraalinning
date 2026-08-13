@@ -521,7 +521,7 @@ const VerdictsPage: React.FC = () => {
                         }}
                         // disabled={verdict.status !== "DRAFT"}
                       >
-                        Editar
+                        Bewerken
                       </MenuItem>
                       <MenuItem
                         onClick={() => {
@@ -530,7 +530,7 @@ const VerdictsPage: React.FC = () => {
                         }}
                         disabled={verdict.status !== "DRAFT"}
                       >
-                        Eliminar
+                        Verwijderen
                       </MenuItem>
                     </Menu>
                   </TableCell>

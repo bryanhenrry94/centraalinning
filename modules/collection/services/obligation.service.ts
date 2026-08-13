@@ -12,15 +12,15 @@ export class ObligationService {
     });
 
     if (!payment) {
-      throw new Error("Payment not found");
+      throw new Error("Betaling niet gevonden");
     }
 
     if (payment.status !== "paid") {
-      throw new Error("Payment is not paid");
+      throw new Error("Betaling is niet betaald");
     }
 
     if (!payment.obligation) {
-      throw new Error("Obligation not found");
+      throw new Error("Verplichting niet gevonden");
     }
 
     const newPaidAmount =

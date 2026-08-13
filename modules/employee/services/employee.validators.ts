@@ -4,8 +4,8 @@ import { z } from "zod";
 export const employeeSchema = z.object({
   id: z.string().uuid(),
   identification: z.string().min(1, "Het identificatienummer is verplicht"),
-  first_name: z.string().min(1, "El nombre es obligatorio"),
-  last_name: z.string().min(1, "El apellido es obligatorio"),
+  first_name: z.string().min(1, "De voornaam is verplicht"),
+  last_name: z.string().min(1, "De achternaam is verplicht"),
   email: z.string().email("Ongeldig e-mailadresformaat"),
   address: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),
