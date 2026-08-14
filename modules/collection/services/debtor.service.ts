@@ -35,11 +35,20 @@ export class DebtorService {
     tenant_id: string,
   ) => {
     return prisma.$transaction(async (tx) => {
-      // 1. Buscar persona existente
+      // 1. Buscar persona existente. `Person.email` es único en el schema,
+      // así que además de la identificación hay que buscar por email: si no
+      // se hace, dos registros con la misma identificación mal tipeada pero
+      // el mismo correo terminan chocando contra `person_email_key` al
+      // intentar crear una persona "nueva" que en realidad ya existe.
       let person = await tx.person.findFirst({
         where: {
-          identification_type: debtorData.identification_type as any,
-          identification: debtorData.identification,
+          OR: [
+            {
+              identification_type: debtorData.identification_type as any,
+              identification: debtorData.identification,
+            },
+            ...(debtorData.email ? [{ email: debtorData.email }] : []),
+          ],
         },
       });
 
