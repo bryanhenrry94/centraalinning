@@ -40,7 +40,7 @@ export class BlockCheckService {
       where: { person_id: person.id, tenant_id: context.tenantId },
     });
 
-    await prisma.blockCheck.create({
+    const blockCheck = await prisma.blockCheck.create({
       data: {
         tenantId: context.tenantId,
         personId: person.id,
@@ -61,6 +61,8 @@ export class BlockCheckService {
           (`${person.first_name ?? ""} ${person.last_name ?? ""}`.trim() ||
             person.business_name) ?? undefined,
         has_blockade,
+        reference: blockCheck.id,
+        checked_at: blockCheck.checkedAt,
       },
     };
   };

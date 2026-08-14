@@ -4,4 +4,6 @@ export type BlokCheckResponse = {
   person_id: string;
   fullname?: string;
   has_blockade: boolean;
+  reference: string;
+  checked_at: Date;
 };

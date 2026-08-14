@@ -8,6 +8,7 @@ import {
   Text,
   Hr,
 } from "@react-email/components";
+import { formatDateTime } from "@/shared/utils/formatters";
 
 export interface BlockCheckResultEmailProps {
   logoUrl: string;
@@ -16,6 +17,8 @@ export interface BlockCheckResultEmailProps {
   documentNumber: string;
   identificationType: string;
   hasBlockade: boolean;
+  reference: string;
+  checkedAt: Date;
 }
 
 export default function BlockCheckResultEmail({
@@ -25,6 +28,8 @@ export default function BlockCheckResultEmail({
   documentNumber,
   identificationType,
   hasBlockade,
+  reference,
+  checkedAt,
 }: BlockCheckResultEmailProps) {
   return (
     <Html>
@@ -66,6 +71,14 @@ export default function BlockCheckResultEmail({
                   ? "Er is een actieve economische blokkade geregistreerd."
                   : "Er is geen actieve economische blokkade geregistreerd."}
               </Text>
+              <Hr style={divider} />
+              <Text style={resultRow}>
+                <strong>Datum/tijd aanvraag:</strong>{" "}
+                {formatDateTime(checkedAt.toISOString())}
+              </Text>
+              <Text style={resultRow}>
+                <strong>Referentie:</strong> {reference}
+              </Text>
             </Section>
           </Section>
 
@@ -91,6 +104,8 @@ BlockCheckResultEmail.PreviewProps = {
   documentNumber: "123456789",
   identificationType: "ID",
   hasBlockade: false,
+  reference: "cmck1a2b30001example",
+  checkedAt: new Date(),
 } satisfies BlockCheckResultEmailProps;
 
 const main = {
