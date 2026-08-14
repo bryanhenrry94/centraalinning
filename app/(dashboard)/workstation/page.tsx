@@ -8,17 +8,14 @@ import {
   Grid,
   Card,
   CardContent,
-  Chip,
   Avatar,
   Stack,
-  Button,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DescriptionIcon from "@mui/icons-material/Description";
 import LockIcon from "@mui/icons-material/Lock";
 import GroupIcon from "@mui/icons-material/Group";
 import GavelIcon from "@mui/icons-material/Gavel";
-import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import { useRouter } from "next/navigation";
 import { useAuthSession } from "@/modules/auth/hooks/useAuthSession";
 import { UserRole } from "@/shared/constants/user-role";
@@ -45,19 +42,7 @@ export default function WorkstationPage() {
   const services = [
     {
       id: 1,
-      title: "1. Blok-Check (BLC)",
-      description:
-        "Controleer vooraf of een persoon of onderneming geregistreerd staat met een economische blokkade.",
-      color: "#1976d2",
-      icon: SearchIcon,
-      buttonText: "Blok-Check uitvoeren →",
-      linkText: "📋 Blok-Check overzicht",
-      linkList: "/block-check",
-      newLink: "/block-check",
-    },
-    {
-      id: 2,
-      title: "2. Financiële Afspraken Registreren (FAR)",
+      title: "Financiële Afspraken Registreren (FAR)",
       description:
         "Registreer financiële afspraken centraal en creëer duidelijkheid tussen betrokken partijen.",
       color: "#388e3c",
@@ -68,10 +53,21 @@ export default function WorkstationPage() {
       newLink: "/contracts",
     },
     {
-      id: 3,
-      title: "3. Administratieve Opvolging (AOP)",
+      id: 2,
+      title: "Blok-Check (BLC)",
       description:
-        "Start administratieve opvolging wanneer een financiële afspraak niet wordt nagekomen.",
+        "Controleer vooraf of een persoon of onderneming geregistreerd staat met een economische blokkade.",
+      color: "#1976d2",
+      icon: SearchIcon,
+      buttonText: "Blok-Check uitvoeren →",
+      linkText: "📋 Blok-Check overzicht",
+      linkList: "/block-check",
+      newLink: "/block-check",
+    },
+    {
+      id: 3,
+      title: "Administratieve Opvolging (AOP)",
+      description: "Start administratieve opvolging.",
       color: "#f57c00",
       icon: DescriptionIcon,
       buttonText: "Nieuwe opvolging starten →",
@@ -81,21 +77,9 @@ export default function WorkstationPage() {
     },
     {
       id: 4,
-      title: "4. Blokkade (BLK)",
+      title: "Collectieve Opvolging (COP)",
       description:
-        "Registreer een economische blokkade volgens de geldende voorwaarden.",
-      color: "#d32f2f",
-      icon: LockIcon,
-      buttonText: "Blokkade registreren →",
-      linkText: "📋 Mijn blokkades",
-      linkList: "/blocks",
-      newLink: "/blocks",
-    },
-    {
-      id: 5,
-      title: "5. Collectieve Opvolging (COP)",
-      description:
-        "Start een collectieve opvolging om een betaling of betalingsregeling te realiseren en gerechtelijke opvolging zoveel mogelijk te voorkomen.",
+        "Start een collectieve opvolging met behulp van de CFSB-samenwerking om gerechtelijke opvolging zoveel mogelijk te voorkomen.",
       color: "#7b1fa2",
       icon: GroupIcon,
       buttonText: "Collectieve Opvolging starten →",
@@ -104,10 +88,21 @@ export default function WorkstationPage() {
       newLink: "/collective-follow-up",
     },
     {
+      id: 5,
+      title: "Blokkade (BLK)",
+      description: "Start per direct een economische blokkade.",
+      color: "#d32f2f",
+      icon: LockIcon,
+      buttonText: "Blokkade registreren →",
+      linkText: "📋 Mijn blokkades",
+      linkList: "/blocks",
+      newLink: "/blocks",
+    },
+    {
       id: 6,
-      title: "6. Gerechtelijke Opvolging (GOP)",
+      title: "Overdracht dossier",
       description:
-        "Draag het dossier over aan een aangesloten advocaat of deurwaarder voor verdere gerechtelijke opvolging.",
+        "Draag het dossier over aan een advocaat of deurwaarder voor mogelijke gerechtelijke opvolging",
       color: "#00897b",
       icon: GavelIcon,
       buttonText: "Dossier kiezen om over te dragen →",
@@ -146,15 +141,6 @@ export default function WorkstationPage() {
               Selecteer de diensten waarmee u wilt beginnen.
             </Typography>
           </Box>
-
-          <Button
-            variant="outlined"
-            startIcon={<DashboardOutlinedIcon />}
-            onClick={() => router.push("/dashboard")}
-            sx={{ textTransform: "none", flexShrink: 0 }}
-          >
-            Naar dashboard
-          </Button>
         </Box>
 
         {/* Grid of Services */}
