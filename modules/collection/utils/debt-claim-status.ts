@@ -63,3 +63,63 @@ export function getWorkflowStatusInfo(status: string) {
     WORKFLOW_STATUS_CONFIG[status] ?? { label: status, color: "default" as ChipColor }
   );
 }
+
+// Status van een ClaimCharge.
+export const CHARGE_STATUS_CONFIG: Record<
+  string,
+  { label: string; color: ChipColor }
+> = {
+  PENDING: { label: "In afwachting", color: "default" },
+  INVOICED: { label: "Gefactureerd", color: "info" },
+  PAID: { label: "Betaald", color: "success" },
+  WAIVED: { label: "Kwijtgescholden", color: "default" },
+  CANCELLED: { label: "Geannuleerd", color: "error" },
+};
+
+export function getChargeStatusInfo(status: string) {
+  return (
+    CHARGE_STATUS_CONFIG[status] ?? { label: status, color: "default" as ChipColor }
+  );
+}
+
+// Status van een DebtClaimObligation.
+export const OBLIGATION_STATUS_CONFIG: Record<
+  string,
+  { label: string; color: ChipColor }
+> = {
+  PENDING: { label: "In afwachting", color: "default" },
+  PARTIALLY_PAID: { label: "Gedeeltelijk betaald", color: "warning" },
+  PAID: { label: "Betaald", color: "success" },
+  CANCELLED: { label: "Geannuleerd", color: "error" },
+};
+
+export function getObligationStatusInfo(status: string) {
+  return (
+    OBLIGATION_STATUS_CONFIG[status] ?? {
+      label: status,
+      color: "default" as ChipColor,
+    }
+  );
+}
+
+// Type van een DebtClaimObligation.
+export const OBLIGATION_TYPE_LABELS: Record<string, string> = {
+  PRINCIPAL_DEBT: "Hoofdsom",
+  COLLECTION: "Incassokosten",
+  INTEREST: "Rente",
+  LEGAL_COST: "Gerechtelijke kosten",
+};
+
+export function getObligationTypeLabel(type: string) {
+  return OBLIGATION_TYPE_LABELS[type] ?? type;
+}
+
+// Begunstigde van een DebtClaimObligation.
+export const OBLIGATION_BENEFICIARY_LABELS: Record<string, string> = {
+  PARTICIPANT: "Deelnemer",
+  CFSB: "CFSB",
+};
+
+export function getObligationBeneficiaryLabel(beneficiary: string) {
+  return OBLIGATION_BENEFICIARY_LABELS[beneficiary] ?? beneficiary;
+}

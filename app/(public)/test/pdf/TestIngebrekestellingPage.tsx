@@ -24,6 +24,12 @@ const TestIngebrekestellingPage = () => {
     referenceNumber: "CFSB-12052026",
 
     tenantName: "DAZZSOFT",
+
+    aanmaningDate: "10-05-2026",
+
+    sommatieDate: "25-05-2026",
+
+    totalAmount: "1,621.16",
   };
 
   return (

@@ -420,7 +420,11 @@ export class CollectionService {
   static getViewById = async (id: string): Promise<DebtClaimView> => {
     const claim = await prisma.debtClaim.findUnique({
       where: { id },
-      include: { debtor: { include: { person: true } } },
+      include: {
+        debtor: { include: { person: true } },
+        charges: { orderBy: { id: "desc" } },
+        obligations: { orderBy: { createdAt: "desc" } },
+      },
     });
     if (!claim) throw new Error("DebtClaim not found");
     return {
@@ -445,6 +449,24 @@ export class CollectionService {
           "",
         email: claim.debtor.email ?? "",
       },
+      charges: claim.charges.map((c) => ({
+        id: c.id,
+        service: c.service,
+        concept: c.concept,
+        amount: Number(c.amount),
+        percentage: c.percentage ? Number(c.percentage) : null,
+        status: c.status,
+      })),
+      obligations: claim.obligations.map((o) => ({
+        id: o.id,
+        type: o.type,
+        beneficiary: o.beneficiary,
+        originalAmount: Number(o.originalAmount),
+        paidAmount: Number(o.paidAmount),
+        balanceAmount: Number(o.balanceAmount),
+        status: o.status,
+        createdAt: o.createdAt,
+      })),
     };
   };
 

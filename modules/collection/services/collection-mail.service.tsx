@@ -84,14 +84,21 @@ export const sendAanmaningEmail = async (
 
     const recipient = await getEmailByEnv(to);
 
+    // Regla CFSB: la comunicación al deudor sale en nombre del participante
+    // (deelnemer), no de CFSB — CFSB solo facilita la generación/registro/
+    // envío dentro de su infraestructura (dominio verificado). El nombre
+    // visible del remitente es el del tenant, y las respuestas del deudor
+    // van directo al contacto del participante vía replyTo.
     const { data, error } = await resend.emails.send({
-      from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
+      from: `${claim.tenant.name} <${process.env.EMAIL_FROM}>`,
+      replyTo: claim.tenant.contact_email,
       to: recipient,
       subject: "Aanmaning",
       react: (
         <AanmanningEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
           fullname={debtorName || "Debtor"}
+          tenantName={claim.tenant.name}
           invitationLink={
             invitationLink ? invitationLink : "https://centraalinning.com/"
           }
@@ -120,6 +127,8 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
         tenant: true,
         debtor: { include: { person: true } },
         charges: true,
+        obligations: { orderBy: { createdAt: "asc" } },
+        administrativeCollection: { include: { steps: true } },
       },
     });
 
@@ -135,24 +144,61 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
 
     const debtorAddress = claim.debtor.person?.address || "";
 
+    const feeCharge = claim.charges.find(
+      (c) => c.concept === "Honorarios de cobranza",
+    );
     const abbCharge = claim.charges.find(
       (c) => c.concept === "ABB (belasting)",
     );
 
+    // Recargo por no responder la aanmaning dentro del plazo (ver
+    // CollectionService.applyNoResponseFee). Se modela como
+    // DebtClaimObligation (COLLECTION/CFSB), no como ClaimCharge, porque es
+    // una obligación del deudor directamente con CFSB. La primera
+    // obligación COLLECTION/CFSB de un expediente es siempre la comisión
+    // base de cobranza (creada en createPending, antes de que exista AOP);
+    // cualquier obligación posterior del mismo tipo es un recargo por
+    // incumplimiento aplicado por el job del AOP.
+    const collectionObligations = claim.obligations.filter(
+      (o) => o.type === "COLLECTION" && o.beneficiary === "CFSB",
+    );
+    const noResponseFeeAmount = collectionObligations
+      .slice(1)
+      .reduce((sum, o) => sum + Number(o.originalAmount), 0);
+
+    const aanmaningSentAt = claim.administrativeCollection?.steps.find(
+      (s) => s.step === "REMINDER",
+    )?.sentAt;
+
+    const administrativeCosts = feeCharge ? Number(feeCharge.amount) : 0;
+    const calculatedABBAmount = abbCharge ? Number(abbCharge.amount) : 0;
+    const additionalCosts = noResponseFeeAmount;
+    const additionalABBAmount = 0;
+
+    const totalAmount =
+      Number(claim.principalAmount) +
+      administrativeCosts +
+      calculatedABBAmount +
+      additionalCosts +
+      additionalABBAmount;
+
     const params: SommatiePDFProps = {
       logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
       date: formatDate(claim.createdAt.toString()),
+      aanmaningDate: aanmaningSentAt
+        ? formatDate(aanmaningSentAt.toString())
+        : formatDate(claim.createdAt.toString()),
       debtorName: debtorName || "Debtor",
       debtorAddress: debtorAddress,
       island: island || "Bonaire",
       reference_number: claim.reference || "",
-      total_amount: Number(claim.principalAmount).toFixed(2),
+      total_amount: totalAmount.toFixed(2),
       amount_original: Number(claim.principalAmount).toFixed(2),
-      calculatedABB: abbCharge ? Number(abbCharge.amount).toFixed(2) : "0.00",
+      calculatedABB: calculatedABBAmount.toFixed(2),
       tenantName: claim.tenant.name || "Organisatie",
-      administrativeCosts: Number(0).toFixed(2),
-      additionalCosts: Number(0).toFixed(2),
-      additionalABB: Number(0).toFixed(2),
+      administrativeCosts: administrativeCosts.toFixed(2),
+      additionalCosts: additionalCosts.toFixed(2),
+      additionalABB: additionalABBAmount.toFixed(2),
     };
 
     const pdfBase64 = await generatePdfBase64(<SommatiePDF {...params} />);
@@ -162,13 +208,15 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
     const recipient = await getEmailByEnv(to);
 
     const { data, error } = await resend.emails.send({
-      from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
+      from: `${claim.tenant.name} <${process.env.EMAIL_FROM}>`,
+      replyTo: claim.tenant.contact_email,
       to: recipient,
       subject: "Sommatie",
       react: (
         <SommatieMail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
           fullname={debtorName || "Debtor"}
+          tenantName={claim.tenant.name}
         />
       ),
       attachments,
@@ -193,17 +241,13 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
         tenant: true,
         debtor: { include: { person: true } },
         administrativeCollection: { include: { steps: true } },
+        charges: true,
+        obligations: { orderBy: { createdAt: "asc" } },
       },
     });
 
     if (!claim) {
       throw new Error("Debt claim not found");
-    }
-
-    const parameter = await ParameterService.getParameter();
-
-    if (!parameter) {
-      throw new Error("Parameters not found");
     }
 
     const island = getNameCountry(claim.tenant.country_code);
@@ -224,6 +268,29 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
       throw new Error("Final notice step not found");
     }
 
+    const feeCharge = claim.charges.find(
+      (c) => c.concept === "Honorarios de cobranza",
+    );
+    const abbCharge = claim.charges.find(
+      (c) => c.concept === "ABB (belasting)",
+    );
+
+    // Suma de los recargos por incumplimiento (aanmaning + sommatie sin
+    // respuesta). Igual que en sendSommatieEmail: la primera obligación
+    // COLLECTION/CFSB es la comisión base de cobranza, no un recargo.
+    const collectionObligations = claim.obligations.filter(
+      (o) => o.type === "COLLECTION" && o.beneficiary === "CFSB",
+    );
+    const noResponseFeesTotal = collectionObligations
+      .slice(1)
+      .reduce((sum, o) => sum + Number(o.originalAmount), 0);
+
+    const totalAmount =
+      Number(claim.principalAmount) +
+      (feeCharge ? Number(feeCharge.amount) : 0) +
+      (abbCharge ? Number(abbCharge.amount) : 0) +
+      noResponseFeesTotal;
+
     const params: IngebrekestellingProps = {
       logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
       date: formatDate(claim.createdAt.toString()),
@@ -232,6 +299,13 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
       island: island || "Bonaire",
       referenceNumber: claim.reference || "",
       tenantName: claim.tenant.name || "Organisatie",
+      aanmaningDate: firstReminderStep.sentAt
+        ? formatDate(firstReminderStep.sentAt.toString())
+        : formatDate(claim.createdAt.toString()),
+      sommatieDate: secondStep.sentAt
+        ? formatDate(secondStep.sentAt.toString())
+        : formatDate(claim.createdAt.toString()),
+      totalAmount: totalAmount.toFixed(2),
     };
 
     const pdfBase64 = await generatePdfBase64(
@@ -245,13 +319,15 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
     const recipient = await getEmailByEnv(to);
 
     const { data, error } = await resend.emails.send({
-      from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
+      from: `${claim.tenant.name} <${process.env.EMAIL_FROM}>`,
+      replyTo: claim.tenant.contact_email,
       to: recipient,
       subject: "Ingebrekestelling",
       react: (
         <IngebrekestellingEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
           fullname={debtorName || "Debtor"}
+          tenantName={claim.tenant.name}
         />
       ),
       attachments,

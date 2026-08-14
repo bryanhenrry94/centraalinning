@@ -43,6 +43,30 @@ export const AopStepEnum = z.enum([
 ]);
 export type AopStep = z.infer<typeof AopStepEnum>;
 
+export const ClaimChargeViewSchema = z.object({
+  id: z.string(),
+  service: z.string(),
+  concept: z.string(),
+  amount: z.number(),
+  percentage: z.number().nullable().optional(),
+  status: z.string(),
+});
+export type ClaimChargeView = z.infer<typeof ClaimChargeViewSchema>;
+
+export const DebtClaimObligationViewSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  beneficiary: z.string(),
+  originalAmount: z.number(),
+  paidAmount: z.number(),
+  balanceAmount: z.number(),
+  status: z.string(),
+  createdAt: z.date(),
+});
+export type DebtClaimObligationView = z.infer<
+  typeof DebtClaimObligationViewSchema
+>;
+
 export const DebtClaimResponseSchema = DebtClaimSchema.extend({
   debtor: z.object({
     id: z.string(),
@@ -52,6 +76,8 @@ export const DebtClaimResponseSchema = DebtClaimSchema.extend({
   }),
   aopStep: AopStepEnum.nullable().optional(),
   paymentLink: z.string().nullable().optional(),
+  charges: z.array(ClaimChargeViewSchema).optional(),
+  obligations: z.array(DebtClaimObligationViewSchema).optional(),
   agreementStatus: z.string().nullable().optional(),
   legalProcessId: z.string().nullable().optional(),
 });

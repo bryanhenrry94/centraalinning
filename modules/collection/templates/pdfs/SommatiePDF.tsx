@@ -233,6 +233,7 @@ const styles = StyleSheet.create({
 export interface SommatiePDFProps {
   logoUrl: string;
   date: string;
+  aanmaningDate: string;
   debtorName: string;
   debtorAddress: string;
   island: string;
@@ -249,6 +250,7 @@ export interface SommatiePDFProps {
 const SommatiePDF: React.FC<SommatiePDFProps> = ({
   logoUrl,
   date,
+  aanmaningDate,
   debtorName,
   debtorAddress,
   island,
@@ -306,7 +308,7 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
           </Text>
 
           <Text style={styles.paragraph}>
-            Op 10 mei 2026 hebben wij u reeds verzocht om uw openstaande
+            Op {aanmaningDate} hebben wij u reeds verzocht om uw openstaande
             verplichting te voldoen.
           </Text>
 

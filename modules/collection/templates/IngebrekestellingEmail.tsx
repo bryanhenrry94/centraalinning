@@ -11,11 +11,13 @@ import { Link } from "@react-email/components";
 interface IngebrekestellingEmailProps {
   logoUrl: string;
   fullname: string;
+  tenantName: string;
 }
 
 export const IngebrekestellingEmail = ({
   logoUrl,
   fullname,
+  tenantName,
 }: IngebrekestellingEmailProps) => (
   <Html>
     <Head />
@@ -27,8 +29,8 @@ export const IngebrekestellingEmail = ({
         </Text>
         <br />
         <Text style={paragraph}>
-          Er is een ingebrekestelling op uw naam geregistreerd binnen de
-          CFSB-samenwerking.
+          Er is een ingebrekestelling op uw naam geregistreerd namens{" "}
+          <strong>{tenantName}</strong>, via de CFSB-samenwerking.
         </Text>
 
         <Text style={{ ...paragraph, marginTop: "10px" }}>
@@ -49,6 +51,7 @@ IngebrekestellingEmail.PreviewProps = {
   logoUrl:
     "https://www.centraalinning.com/wp-content/uploads/2020/06/CI-Logo-Orange.png",
   fullname: "Alan",
+  tenantName: "Deelnemer B.V.",
 } as IngebrekestellingEmailProps;
 
 export default IngebrekestellingEmail;

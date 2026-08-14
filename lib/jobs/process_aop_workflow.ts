@@ -45,12 +45,34 @@ export async function processAopWorkflow() {
     },
   });
 
-  const parameter = await ParameterService.getParameter();
+  // Cache por tenant: dentro de una misma corrida del job suele haber varios
+  // AOP del mismo tenant, y cada uno resuelve la jerarquía
+  // Setting(tenant) -> Setting(isla) -> Jurisdiction -> Parameter global.
+  const parameterCache = new Map<
+    string,
+    Awaited<ReturnType<typeof ParameterService.getParameterForTenant>>
+  >();
+
+  const getParameterForTenantCached = async (tenantId: string) => {
+    if (!parameterCache.has(tenantId)) {
+      parameterCache.set(
+        tenantId,
+        await ParameterService.getParameterForTenant(tenantId),
+      );
+    }
+    return parameterCache.get(tenantId)!;
+  };
+
   let sent = 0;
 
   for (const aop of activeCollections) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+
+    // Plazos/multas por tenant (isla), no el Parameter global — así los
+    // cambios que el Superadministrador hace en Settings por isla sí
+    // afectan al AOP en curso.
+    const parameter = await getParameterForTenantCached(aop.debtClaim.tenant.id);
 
     const currentStep = aop.steps[0] as (typeof aop.steps)[0] | undefined;
     const currentStepType = (currentStep?.step ?? null) as AOPStep | null;

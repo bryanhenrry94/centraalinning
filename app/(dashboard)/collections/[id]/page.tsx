@@ -37,6 +37,10 @@ import {
   getDebtClaimStatusInfo,
   getAopStepInfo,
   getWorkflowStatusInfo,
+  getChargeStatusInfo,
+  getObligationStatusInfo,
+  getObligationTypeLabel,
+  getObligationBeneficiaryLabel,
 } from "@/modules/collection/utils/debt-claim-status";
 import { getLegalProcessByDebtClaimId } from "@/modules/legal-process/actions/legal-process.actions";
 import { TransferToLawyerDialog } from "@/modules/legal-process/components/transfer-to-lawyer-dialog";
@@ -472,6 +476,185 @@ const CollectionViewPage: React.FC = () => {
                                 size="small"
                                 label={workflowStatusInfo.label}
                                 color={workflowStatusInfo.color}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent>
+              <Typography gutterBottom sx={{ color: "text.secondary", fontSize: 14 }}>
+                Kosten & boetes
+              </Typography>
+
+              {!collection?.charges || collection.charges.length === 0 ? (
+                <Typography variant="body2" color="text.secondary" py={2}>
+                  Nog geen kosten of boetes geregistreerd
+                </Typography>
+              ) : isMobile ? (
+                <Stack divider={<Divider />} spacing={1.5} sx={{ mt: 1 }}>
+                  {collection.charges.map((charge) => {
+                    const chargeStatusInfo = getChargeStatusInfo(charge.status);
+                    return (
+                      <Box key={charge.id} sx={{ py: 0.5 }}>
+                        <InfoField label="Omschrijving" value={charge.concept} />
+                        <Stack
+                          direction="row"
+                          justifyContent="space-between"
+                          alignItems="flex-start"
+                          sx={{ mt: 1.5 }}
+                        >
+                          <InfoField
+                            label="Bedrag"
+                            value={formatCurrency(charge.amount)}
+                          />
+                          <InfoField
+                            label="Status"
+                            value={
+                              <Chip
+                                size="small"
+                                label={chargeStatusInfo.label}
+                                color={chargeStatusInfo.color}
+                              />
+                            }
+                          />
+                        </Stack>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              ) : (
+                <TableContainer>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Omschrijving</TableCell>
+                        <TableCell>Dienst</TableCell>
+                        <TableCell align="right">Bedrag</TableCell>
+                        <TableCell align="right">Status</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {collection.charges.map((charge) => {
+                        const chargeStatusInfo = getChargeStatusInfo(charge.status);
+                        return (
+                          <TableRow key={charge.id}>
+                            <TableCell>{charge.concept}</TableCell>
+                            <TableCell>{charge.service}</TableCell>
+                            <TableCell align="right">
+                              {formatCurrency(charge.amount)}
+                            </TableCell>
+                            <TableCell align="right">
+                              <Chip
+                                size="small"
+                                label={chargeStatusInfo.label}
+                                color={chargeStatusInfo.color}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent>
+              <Typography gutterBottom sx={{ color: "text.secondary", fontSize: 14 }}>
+                Openstaande verplichtingen
+              </Typography>
+
+              {!collection?.obligations || collection.obligations.length === 0 ? (
+                <Typography variant="body2" color="text.secondary" py={2}>
+                  Nog geen verplichtingen geregistreerd
+                </Typography>
+              ) : isMobile ? (
+                <Stack divider={<Divider />} spacing={1.5} sx={{ mt: 1 }}>
+                  {collection.obligations.map((obligation) => {
+                    const obligationStatusInfo = getObligationStatusInfo(
+                      obligation.status,
+                    );
+                    return (
+                      <Box key={obligation.id} sx={{ py: 0.5 }}>
+                        <InfoField
+                          label="Type"
+                          value={`${getObligationTypeLabel(obligation.type)} (${getObligationBeneficiaryLabel(obligation.beneficiary)})`}
+                        />
+                        <Stack
+                          direction="row"
+                          justifyContent="space-between"
+                          alignItems="flex-start"
+                          sx={{ mt: 1.5 }}
+                        >
+                          <InfoField
+                            label="Saldo"
+                            value={formatCurrency(obligation.balanceAmount)}
+                          />
+                          <InfoField
+                            label="Status"
+                            value={
+                              <Chip
+                                size="small"
+                                label={obligationStatusInfo.label}
+                                color={obligationStatusInfo.color}
+                              />
+                            }
+                          />
+                        </Stack>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              ) : (
+                <TableContainer>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Type</TableCell>
+                        <TableCell>Begunstigde</TableCell>
+                        <TableCell align="right">Oorspronkelijk</TableCell>
+                        <TableCell align="right">Betaald</TableCell>
+                        <TableCell align="right">Saldo</TableCell>
+                        <TableCell align="right">Status</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {collection.obligations.map((obligation) => {
+                        const obligationStatusInfo = getObligationStatusInfo(
+                          obligation.status,
+                        );
+                        return (
+                          <TableRow key={obligation.id}>
+                            <TableCell>
+                              {getObligationTypeLabel(obligation.type)}
+                            </TableCell>
+                            <TableCell>
+                              {getObligationBeneficiaryLabel(obligation.beneficiary)}
+                            </TableCell>
+                            <TableCell align="right">
+                              {formatCurrency(obligation.originalAmount)}
+                            </TableCell>
+                            <TableCell align="right">
+                              {formatCurrency(obligation.paidAmount)}
+                            </TableCell>
+                            <TableCell align="right">
+                              {formatCurrency(obligation.balanceAmount)}
+                            </TableCell>
+                            <TableCell align="right">
+                              <Chip
+                                size="small"
+                                label={obligationStatusInfo.label}
+                                color={obligationStatusInfo.color}
                               />
                             </TableCell>
                           </TableRow>

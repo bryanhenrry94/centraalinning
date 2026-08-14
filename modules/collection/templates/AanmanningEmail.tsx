@@ -11,6 +11,7 @@ import {
 interface AanmanningEmailProps {
   logoUrl: string;
   fullname: string;
+  tenantName: string;
   invitationLink?: string;
   requiresRegistration?: boolean;
 }
@@ -18,6 +19,7 @@ interface AanmanningEmailProps {
 export const AanmanningEmail = ({
   logoUrl,
   fullname,
+  tenantName,
   invitationLink,
   requiresRegistration,
 }: AanmanningEmailProps) => (
@@ -31,8 +33,8 @@ export const AanmanningEmail = ({
         </Text>
         <br />
         <Text style={paragraph}>
-          Er is een aanmaning op uw naam geregistreerd binnen de
-          CFSB-samenwerking.
+          Er is een aanmaning op uw naam geregistreerd namens{" "}
+          <strong>{tenantName}</strong>, via de CFSB-samenwerking.
         </Text>
 
         <Text style={{ ...paragraph, marginTop: "10px" }}>
@@ -62,6 +64,7 @@ export const AanmanningEmail = ({
 AanmanningEmail.PreviewProps = {
   logoUrl: "/static/logo.png",
   fullname: "Customer Name",
+  tenantName: "Deelnemer B.V.",
 } as AanmanningEmailProps;
 
 export default AanmanningEmail;

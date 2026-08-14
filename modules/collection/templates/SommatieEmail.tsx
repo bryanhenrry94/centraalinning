@@ -11,9 +11,14 @@ import { Link } from "@react-email/components";
 interface SommatieEmailProps {
   logoUrl: string;
   fullname: string;
+  tenantName: string;
 }
 
-export const SommatieEmail = ({ logoUrl, fullname }: SommatieEmailProps) => (
+export const SommatieEmail = ({
+  logoUrl,
+  fullname,
+  tenantName,
+}: SommatieEmailProps) => (
   <Html>
     <Head />
     <Body style={main}>
@@ -24,8 +29,8 @@ export const SommatieEmail = ({ logoUrl, fullname }: SommatieEmailProps) => (
         </Text>
         <br />
         <Text style={paragraph}>
-          Er is een sommatie op uw naam geregistreerd binnen de
-          CFSB-samenwerking.
+          Er is een sommatie op uw naam geregistreerd namens{" "}
+          <strong>{tenantName}</strong>, via de CFSB-samenwerking.
         </Text>
 
         <Text style={{ ...paragraph, marginTop: "10px" }}>
@@ -46,6 +51,7 @@ SommatieEmail.PreviewProps = {
   logoUrl:
     "https://www.centraalinning.com/wp-content/uploads/2020/06/CI-Logo-Orange.png",
   fullname: "Alan",
+  tenantName: "Deelnemer B.V.",
 } as SommatieEmailProps;
 
 export default SommatieEmail;

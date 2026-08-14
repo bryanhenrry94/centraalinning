@@ -158,6 +158,9 @@ export interface IngebrekestellingProps {
   island: string;
   referenceNumber: string;
   tenantName: string;
+  aanmaningDate: string;
+  sommatieDate: string;
+  totalAmount: string;
 }
 
 const IngebrekestellingPDF: React.FC<IngebrekestellingProps> = ({
@@ -168,6 +171,9 @@ const IngebrekestellingPDF: React.FC<IngebrekestellingProps> = ({
   island,
   referenceNumber,
   tenantName,
+  aanmaningDate,
+  sommatieDate,
+  totalAmount,
 }) => {
   return (
     <Document>
@@ -211,11 +217,11 @@ const IngebrekestellingPDF: React.FC<IngebrekestellingProps> = ({
           </Text>
 
           <Text style={styles.paragraph}>
-            Op 10 mei 2026 hebben wij u aangemaand en op 25 mei 2026 gesommeerd
-            om uw openstaande verplichting te voldoen. Tot op heden hebben wij
-            geen volledige betaling of betalingsregeling van u ontvangen. Het
-            totale openstaande bedrag bedraagt USD{" "}
-            <Text style={styles.bold}>1.621,16</Text>.
+            Op {aanmaningDate} hebben wij u aangemaand en op {sommatieDate}{" "}
+            gesommeerd om uw openstaande verplichting te voldoen. Tot op heden
+            hebben wij geen volledige betaling of betalingsregeling van u
+            ontvangen. Het totale openstaande bedrag bedraagt USD{" "}
+            <Text style={styles.bold}>{totalAmount}</Text>.
           </Text>
 
           <Text style={styles.paragraph}>
