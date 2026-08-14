@@ -1155,7 +1155,7 @@ model Jurisdiction {
   naturalNoReactionPenalty   Float                     @default(0)
   companyPaymentAgreementFee Float                     @default(0)
   naturalPaymentAgreementFee Float                     @default(0)
-  blokCheckPricing           Float                     @default(30)
+  blokCheckPricing           Float                     @default(35)
   digitalFileCosts           Float                     @default(0)
   extraAdministrativeCosts   Float                     @default(0)
   reportFinancialPricing     Float                     @default(0)
@@ -1266,7 +1266,7 @@ model Parameter {
   digital_file_costs             Float     @default(0)
   extra_administrative_costs     Float     @default(0)
   report_financial_pricing       Float     @default(0)
-  blok_check_pricing             Float     @default(30)
+  blok_check_pricing             Float     @default(35)
 
   //                             =========================================
   //                             SYSTEM

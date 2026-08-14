@@ -28,7 +28,7 @@ import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 import { ResultView } from "../../../modules/block-check/components/block-check-result";
 import { BlokCheckResponse } from "@/modules/block-check/services/block-check.types";
 import { existsBlockCheck } from "@/modules/block-check/actions/block-check.actions";
-import { getParameterAction } from "@/modules/settings/actions/parameter.actions";
+import { getParameterForTenantAction } from "@/modules/settings/actions/parameter.actions";
 import { canUseFeature } from "@/shared/utils/permission";
 import { AppAction } from "@/shared/constants/AppAction";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
@@ -53,9 +53,8 @@ const BlokCheckPage = () => {
 
     const fetchParameter = async () => {
       try {
-        const parameter = await getParameterAction();
-        console.log("Fetched parameter:", parameter);
-        setAmountService(parameter?.blok_check_pricing ?? 30);
+        const parameter = await getParameterForTenantAction();
+        setAmountService(parameter?.blok_check_pricing ?? 35);
       } catch (err) {
         console.error("Error fetching parameter:", err);
       }
