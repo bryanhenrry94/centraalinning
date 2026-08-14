@@ -30,6 +30,7 @@ Each tenant gets its own subdomain (e.g., `dazzsoft-sas.cio.test`). Authenticati
 - Unauthenticated users → redirect to `auth.<ROOT_DOMAIN>/login`
 - Authenticated user on auth domain → redirect to `<subdomain>.<ROOT_DOMAIN>/dashboard`
 - Wrong subdomain → redirect to tenant's correct subdomain
+- Users whose only role is `DEBTOR` are further restricted to a fixed set of path prefixes (`/dashboard`, `/payments`, `/agreements`, `/financial-report`, `/block-status`, `/settings`, `/logout`) — this list must stay in sync with the "verplichtingen" menu group in `shared/ui/layout/menus.tsx`
 
 The auth cookie is shared across subdomains using `COOKIE_DOMAIN`. The JWT token carries `subdomain`, `tenant_id`, `roles`, and `memberships`.
 
@@ -39,29 +40,64 @@ The auth cookie is shared across subdomains using `COOKIE_DOMAIN`. The JWT token
 - `app/(dashboard)/` — tenant-scoped app: all business features behind auth
 - `app/(admin)/` — platform admin (settings/parameters)
 - `app/(public)/` — unauthenticated pages: payment return, test pages
-- `app/api/` — API routes (NextAuth, Sentoo webhook, jobs, file upload, etc.)
+- `app/api/` — API routes (NextAuth, Sentoo webhook, cron jobs, file upload, etc.)
+
+### Modular architecture
+
+The codebase is organized by business module, not by technical layer. This is a hard constraint, not just a convention:
+
+- Organize the project by modules — one folder per business capability under `modules/`.
+- Never create global/top-level folders for code that belongs to a single module.
+- All business logic stays inside its module.
+- `shared/` holds only code reused across modules (`ui/`, `hooks/`, `utils/`, `constants/`, `theme/`, `providers/`).
+- `infrastructure/` holds external integrations only (`mail/`, `storage/`, `sentoo/`, `pdf/`, `realtime/`).
+- `app/` contains only routes and layouts — no business logic.
+- React components never touch Prisma directly.
+- Every query goes through a Service; every business rule goes through a Service.
+- Server Actions only orchestrate Services — they don't contain business logic themselves.
+- Don't duplicate types or validations across modules.
+- A module never imports another module's internal components — cross-module reuse goes through `shared/`.
+
+Each module under `modules/` (e.g. `modules/collection/`, `modules/contract/`) follows the same internal shape:
+
+- `actions/` — `"use server"` Server Actions, the only thing pages/components call
+- `services/` — business logic + Zod validators (`*.validators.ts`); this is the only layer that touches `lib/prisma.ts`
+- `components/` — module-scoped React components
+- `types/` — module-scoped types
+- `constants/`, `utils/` — module-scoped constants/helpers
+- `templates/` — PDF (`@react-pdf/renderer`, under `templates/pdfs/`) and email (`@react-email/components`) templates for that module
+
+Current modules: `agreement`, `auth`, `bailiff`, `blockade`, `block-check`, `case-file`, `chat`, `collection`, `collective-follow-up`, `contract`, `dashboard`, `employee`, `financial-agreement`, `jurisdiction`, `lawyer`, `legal-process`, `notification`, `payment`, `settings`, `support`, `tenant`, `verdict`.
+
+A few things remain outside `modules/` as known, temporary migration debt: `actions/email.tsx` and `actions/sentoo.actions.ts` at the repo root still mix multiple domains and haven't been distributed into their owning modules yet.
 
 ### Data layer
 
-- **ORM**: Prisma with MySQL/MariaDB (`lib/prisma.ts` singleton)
-- **Schema**: `prisma/schema.prisma` — core models: `Tenant`, `User`, `Membership`, `CollectionCase`, `Debtor`, `Verdict`, `Agreement`, `Contract`, `Blockade`, `Payment`, `BillingInvoice`
-- **Server Actions**: `actions/` — all data mutations go through Next.js Server Actions (`"use server"`)
-- **Services**: `services/` — business logic layer called by actions; each domain has its own folder (`collection/`, `contract/`, `payments/`, etc.)
+- **ORM**: Prisma with MySQL/MariaDB (`lib/prisma.ts` singleton, `@prisma/adapter-mariadb`)
+- **Schema**: `prisma/schema.prisma` (68 models) — key models: `Tenant`, `User`, `Membership`, `Person`, `Debtor`, `DebtClaim`, `FinancialAgreement`, `AdministrativeCollection`, `Blockade`, `BlockCheck`, `CollectiveCollection`, `CaseTransfer`, `LegalProcess`, `Verdict`, `Agreement`, `Contract`, `Payment`, `BillingInvoice`, `Plan`/`Subscription`
+- `Person` is the durable cross-tenant identity record; `Debtor` is only the per-tenant/per-case link to a `Person` — don't treat `Debtor` as the identity record
+- Server Actions orchestrate; Services (`modules/*/services/`) are the only layer allowed to import `lib/prisma.ts`
 
 ### Business domain
 
-The collection workflow follows Dutch legal stages tracked by `CollectionCaseStatus`:
+The collection domain models a chain of independent services around a `DebtClaim` (a claim registered against a `Debtor`), identified by their Dutch acronyms:
 
-1. `AANMANING` (payment reminder)
-2. `SOMMATIE` (formal demand)
-3. `INGEBREKESTELLING` (notice of default)
-4. `BLOKKADE` (credit block / registry filing)
+1. **FAR** (`FinancialAgreement`) — a lightweight, preventive payment agreement registered from a contract; not itself a claim. On breach it escalates to a new `DebtClaim` via `FinancialAgreement.escalatedToDebtClaimId`.
+2. **AOP** (administrative collection, `AdministrativeCollection`/`AdministrativeCollectionStep`, step enum `AOPStep`) — the automated reminder chain: `REMINDER` → `FINAL_NOTICE` → `DEFAULT_NOTICE` → `BLK_NOTIFICATION`. These map to the Dutch legal terms still used in UI text, PDFs and emails: **AANMANING** (payment reminder), **SOMMATIE** (formal demand), **INGEBREKESTELLING** (notice of default), **BLOKKADE** (credit block notice).
+3. **BLC** (`BlockCheck`, module `block-check`) — a paid, standalone credit-block lookup.
+4. **BLK** (`Blockade`, module `blockade`) — the actual credit-registry block, with automatic reactivation handling.
+5. **COP** (`CollectiveCollection`, module `collective-follow-up`) — collective/employer-based follow-up collection.
+6. **GOP** (`LegalProcess`, module `legal-process`) — the judicial track: case transfer to a lawyer/bailiff (`CaseTransfer`, `PENDING_ACCEPTANCE → ACCEPTED/REJECTED`), verdict registration (`Verdict`), embargo, and execution via a bailiff.
 
-Automated workflow progression runs via `lib/jobs/process_collection_case_workflow.ts`, triggered by `app/api/jobs/` routes.
+Automated workflow progression runs via `lib/jobs/process_aop_workflow.ts` (advances AOP steps), plus `check_gop_deadlines.ts`, `check_blockade_reactivation.ts`, `check_case_transfer_deadlines.ts`, and `check_cop_employer_matches.ts`. Each is exposed as its own route under `app/api/jobs/*` and also run together via `app/api/jobs/run-all`, both authenticated with a `?token=` query param checked against `CRON_SECRET_TOKEN` (meant to be hit by an external cron scheduler).
+
+`docs/` contains living design/analysis notes (`analisis-sistema-centraal-inning.md`, `plan-alineacion-cfsb.md`, `schema-design-far-overdracht.md`, `estado-funcionalidades-*.md`) tracking the migration from the legacy "Centraal Inning" collection-case model to the current CFSB service model — check there for the reasoning behind non-obvious schema/domain decisions before assuming something is accidental.
 
 ### Membership / payment gating
 
-`utils/permission.ts` → `canUseFeature(membership, action)` gates features. Actions are defined in `constants/AppAction.ts`. Tenants with `PAST_DUE` memberships lose access to `CREATE_COLLECTION` and `BLOK_CHECK`. Payment processing uses **Sentoo** (Caribbean payment gateway via `lib/sentoo.ts` / `services/providers/sentoo.service.ts`).
+`shared/utils/permission.ts` → `canUseFeature(membership, action)` gates features. Actions are defined in `shared/constants/AppAction.ts`. Tenants with `PAST_DUE` memberships lose access to `CREATE_COLLECTION` and `BLOK_CHECK`.
+
+Payment processing uses **Sentoo** (Caribbean payment gateway; client/service in `infrastructure/sentoo/`, dispatch logic in `modules/payment/services/payment-processor.ts`). Sentoo is only used for CFSB's own fees (subscriptions, registration, AOP/BLK/GOP/BLOK_CHECK fees, contract activation) — the underlying debt payment between debtor and tenant is never routed through Sentoo; it's recorded directly by the tenant.
 
 ### Key libraries
 
@@ -73,17 +109,17 @@ Automated workflow progression runs via `lib/jobs/process_collection_case_workfl
 | Auth           | `next-auth` v4 (Credentials provider, JWT strategy) |
 | Email          | Resend + `@react-email/components`                  |
 | PDF generation | `@react-pdf/renderer`                               |
-| File storage   | AWS S3 / Cloudflare R2 (`lib/r2-client.ts`)         |
+| File storage   | Cloudflare R2 (`infrastructure/storage/r2-client.ts`, S3-compatible SDK) |
 | Charts         | ApexCharts (`react-apexcharts`)                     |
-| Real-time chat | Socket.IO client (`lib/socketClient.ts`)            |
+| Real-time chat | Socket.IO client (`infrastructure/realtime/socket-client.ts`) |
 
 ### Validations
 
-Zod schemas live in `lib/validations/` and mirror Prisma models. Server actions import from here; the same schemas are reused on the client via `react-hook-form` + `@hookform/resolvers/zod`.
+Zod schemas live next to the service that owns them, as `modules/*/services/*.validators.ts` — there is no shared `lib/validations/` directory. Server actions import validators from their own module's services; the same schemas are reused on the client via `react-hook-form` + `@hookform/resolvers/zod`. Don't create cross-module validation files — extend or reuse the owning module's validators instead.
 
 ### PDF documents
 
-Dutch collection documents are generated as React components in `components/pdf/`: `AanmaningPDF`, `SommatiePDF`, `IngebrekestellingPDF`, `BlokkadePDF`, `FinancialSummaryPDF`. Test pages are in `app/(public)/test/pdf/`.
+Dutch legal documents are React components under each owning module's `templates/pdfs/`, e.g. `modules/collection/templates/pdfs/{AanmaningPDF,SommatiePDF,IngebrekestellingPDF}.tsx`, `modules/blockade/templates/pdfs/BlokkadePDF.tsx`, `modules/verdict/templates/pdfs/Verdict{Company,Approval,Creditor,Debtor}PDF.tsx`, `modules/payment/templates/pdfs/{InvoicePDF,FinancialSummaryPDF}.tsx`. Test pages are in `app/(public)/test/pdf/`.
 
 ### Environment variables
 
@@ -91,27 +127,12 @@ See `.env.example`. Key variables:
 
 - `DATABASE_URL` / `DIRECT_URL` — MySQL connection strings
 - `NEXTAUTH_SECRET` / `COOKIE_DOMAIN` — session security
-- `NEXT_PUBLIC_ROOT_DOMAIN` — base domain for subdomain routing
+- `NEXT_PUBLIC_ROOT_DOMAIN` — base domain for subdomain routing (middleware and mail links read the domain from here — never hardcode it)
 - `ADMIN_TENANT_ID` — platform owner tenant
-- `RESEND_API_KEY` — transactional email
-- `SENTOO_API` / `SENTOO_SECRET` — payment gateway
-- AWS/R2 credentials for file storage
-
-# Arquitectura
-
-- Organizar el proyecto por módulos.
-- No crear carpetas globales si pertenecen a un módulo.
-- Toda la lógica de negocio debe permanecer dentro del módulo.
-- shared contiene únicamente código reutilizable entre módulos.
-- infrastructure contiene integraciones externas.
-- app solo contiene rutas y layouts.
-- Nunca acceder a Prisma desde componentes React.
-- Toda consulta debe pasar por Service.
-- Toda regla de negocio debe pasar por Service.
-- Los Server Actions únicamente orquestan Services.
-- No duplicar tipos.
-- No duplicar validaciones.
-- Un módulo nunca importa componentes internos de otro módulo.
+- `RESEND_API_KEY` / `EMAIL_FROM` / `EMAIL_SENDER_NAME` — transactional email
+- `SENTOO_API` / `SENTOO_SECRET` / `SENTOO_MERCHANT` — payment gateway
+- `R2_ACCOUNT_ID` / `R2_BUCKET` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` — Cloudflare R2 file storage
+- `CRON_SECRET_TOKEN` — required `?token=` query param for the `app/api/jobs/*` routes
 
 ### Local dev setup
 
