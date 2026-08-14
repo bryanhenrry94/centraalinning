@@ -122,20 +122,13 @@ export default function ContractsPage() {
     router.push(`/contracts/${contractId}`);
   };
 
+  // Geen aparte bevestigingsdialoog meer: het betaaldialoog hieronder toont
+  // al duidelijk dat de betaling het vervolgingsproces automatisch start, en
+  // heeft zelf een "Annuleren"-knop — dat is de enige bevestiging die nodig
+  // is (voorheen moest de gebruiker twee keer achter elkaar bevestigen).
   const handleClicStartFollowUp = (contract: any) => {
     handleClose();
-
-    AlertService.showConfirm(
-      "Weet je het zeker?",
-      "Deze actie start het administratieve vervolgingsproces voor deze overeenkomst. Wil je doorgaan?",
-      "Ja, vervolgingsproces starten",
-      "Annuleren",
-    ).then(async (confirmed) => {
-      if (confirmed) {
-        beginFollowUpProcess(contract);
-      }
-    });
-    return;
+    beginFollowUpProcess(contract);
   };
 
   /**
@@ -631,12 +624,13 @@ export default function ContractsPage() {
           <Stack spacing={3} alignItems="center">
             <Stack spacing={1} textAlign="center">
               <Typography variant="h5" fontWeight={700}>
-                Betaling bevestigen
+                Administratieve opvolging starten
               </Typography>
 
               <Typography variant="body2" color="text.secondary">
-                Deze service vereist betaling voordat het administratieve
-                vervolgingsproces start.
+                Zodra de betaling is bevestigd, wordt de administratieve
+                opvolging (AOP) voor deze overeenkomst automatisch gestart.
+                Klik op "Annuleren" als u dit nu nog niet wilt doen.
               </Typography>
             </Stack>
 
