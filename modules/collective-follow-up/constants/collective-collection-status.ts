@@ -2,6 +2,10 @@ import { CollectiveCollectionStatus } from "@prisma/client";
 
 export { CollectiveCollectionStatus };
 
+// Comisión CFSB por iniciar un COP, a cargo del participante que lo inicia
+// (mismo patrón de tasa fija que GOP_FEE_RATE en legal-process-status.ts).
+export const COP_START_FEE_RATE = 0.05;
+
 // Estados en los que el COP todavía puede avanzar (no está cerrado, pagado,
 // aceptado o transferido).
 export const OPEN_COLLECTIVE_COLLECTION_STATUSES: CollectiveCollectionStatus[] = [

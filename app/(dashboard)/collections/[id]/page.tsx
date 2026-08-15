@@ -54,6 +54,7 @@ import {
   checkCanStartCop,
 } from "@/modules/collective-follow-up/actions/collective-collection.actions";
 import { StartCopDialog } from "@/modules/collective-follow-up/components/start-cop-dialog";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 
 const CollectionViewPage: React.FC = () => {
   const router = useRouter();
@@ -69,8 +70,13 @@ const CollectionViewPage: React.FC = () => {
   >(null);
   const [legalProcessId, setLegalProcessId] = useState<string | null>(null);
   const [transferDialogOpen, setTransferDialogOpen] = useState(false);
-  const [collectiveCollectionId, setCollectiveCollectionId] = useState<string | null>(null);
-  const [canStartCop, setCanStartCop] = useState<{ allowed: boolean; reason?: string }>({
+  const [collectiveCollectionId, setCollectiveCollectionId] = useState<
+    string | null
+  >(null);
+  const [canStartCop, setCanStartCop] = useState<{
+    allowed: boolean;
+    reason?: string;
+  }>({
     allowed: false,
   });
   const [startCopDialogOpen, setStartCopDialogOpen] = useState(false);
@@ -89,15 +95,21 @@ const CollectionViewPage: React.FC = () => {
     try {
       setLoading(true);
 
-      const [claim, paymentsData, notificationsData, legalProcess, collectiveCollection, copEligibility] =
-        await Promise.all([
-          getDebtClaimViewById(debtClaimId),
-          getPaymentsByInvoice(debtClaimId),
-          getAopStepsForClaim(debtClaimId),
-          getLegalProcessByDebtClaimId(debtClaimId),
-          getCollectiveCollectionByDebtClaimId(debtClaimId),
-          checkCanStartCop(debtClaimId),
-        ]);
+      const [
+        claim,
+        paymentsData,
+        notificationsData,
+        legalProcess,
+        collectiveCollection,
+        copEligibility,
+      ] = await Promise.all([
+        getDebtClaimViewById(debtClaimId),
+        getPaymentsByInvoice(debtClaimId),
+        getAopStepsForClaim(debtClaimId),
+        getLegalProcessByDebtClaimId(debtClaimId),
+        getCollectiveCollectionByDebtClaimId(debtClaimId),
+        checkCanStartCop(debtClaimId),
+      ]);
 
       setCollection(claim ?? null);
       setPayments(paymentsData ?? []);
@@ -188,11 +200,11 @@ const CollectionViewPage: React.FC = () => {
                     <Button
                       size="small"
                       variant="contained"
-                      startIcon={<GavelIcon />}
+                      startIcon={<SwapHorizIcon />}
                       disabled={collection?.aopStep !== "BLK_NOTIFICATION"}
                       onClick={() => setTransferDialogOpen(true)}
                     >
-                      Dossieroverdracht voor mogelijke gerechtelijke opvolging
+                      Dossieroverdracht
                     </Button>
                   </span>
                 </Tooltip>
@@ -202,12 +214,18 @@ const CollectionViewPage: React.FC = () => {
                   size="small"
                   variant="outlined"
                   startIcon={<GroupIcon />}
-                  onClick={() => router.push(`/collective-follow-up/${collectiveCollectionId}`)}
+                  onClick={() =>
+                    router.push(
+                      `/collective-follow-up/${collectiveCollectionId}`,
+                    )
+                  }
                 >
                   COP-dossier
                 </Button>
               ) : (
-                <Tooltip title={canStartCop.allowed ? "" : (canStartCop.reason ?? "")}>
+                <Tooltip
+                  title={canStartCop.allowed ? "" : (canStartCop.reason ?? "")}
+                >
                   <span>
                     <Button
                       size="small"
@@ -490,7 +508,10 @@ const CollectionViewPage: React.FC = () => {
 
           <Card>
             <CardContent>
-              <Typography gutterBottom sx={{ color: "text.secondary", fontSize: 14 }}>
+              <Typography
+                gutterBottom
+                sx={{ color: "text.secondary", fontSize: 14 }}
+              >
                 Kosten & boetes
               </Typography>
 
@@ -504,7 +525,10 @@ const CollectionViewPage: React.FC = () => {
                     const chargeStatusInfo = getChargeStatusInfo(charge.status);
                     return (
                       <Box key={charge.id} sx={{ py: 0.5 }}>
-                        <InfoField label="Omschrijving" value={charge.concept} />
+                        <InfoField
+                          label="Omschrijving"
+                          value={charge.concept}
+                        />
                         <Stack
                           direction="row"
                           justifyContent="space-between"
@@ -543,7 +567,9 @@ const CollectionViewPage: React.FC = () => {
                     </TableHead>
                     <TableBody>
                       {collection.charges.map((charge) => {
-                        const chargeStatusInfo = getChargeStatusInfo(charge.status);
+                        const chargeStatusInfo = getChargeStatusInfo(
+                          charge.status,
+                        );
                         return (
                           <TableRow key={charge.id}>
                             <TableCell>{charge.concept}</TableCell>
@@ -570,11 +596,15 @@ const CollectionViewPage: React.FC = () => {
 
           <Card>
             <CardContent>
-              <Typography gutterBottom sx={{ color: "text.secondary", fontSize: 14 }}>
+              <Typography
+                gutterBottom
+                sx={{ color: "text.secondary", fontSize: 14 }}
+              >
                 Openstaande verplichtingen
               </Typography>
 
-              {!collection?.obligations || collection.obligations.length === 0 ? (
+              {!collection?.obligations ||
+              collection.obligations.length === 0 ? (
                 <Typography variant="body2" color="text.secondary" py={2}>
                   Nog geen verplichtingen geregistreerd
                 </Typography>
@@ -639,7 +669,9 @@ const CollectionViewPage: React.FC = () => {
                               {getObligationTypeLabel(obligation.type)}
                             </TableCell>
                             <TableCell>
-                              {getObligationBeneficiaryLabel(obligation.beneficiary)}
+                              {getObligationBeneficiaryLabel(
+                                obligation.beneficiary,
+                              )}
                             </TableCell>
                             <TableCell align="right">
                               {formatCurrency(obligation.originalAmount)}
@@ -669,7 +701,10 @@ const CollectionViewPage: React.FC = () => {
 
           <Card>
             <CardContent>
-              <Typography gutterBottom sx={{ color: "text.secondary", fontSize: 14 }}>
+              <Typography
+                gutterBottom
+                sx={{ color: "text.secondary", fontSize: 14 }}
+              >
                 Digitaal dossier
               </Typography>
               {params.id && <CaseFileList debtClaimId={params.id as string} />}
@@ -692,6 +727,7 @@ const CollectionViewPage: React.FC = () => {
           open={startCopDialogOpen}
           onClose={() => setStartCopDialogOpen(false)}
           debtClaimId={params.id as string}
+          principalAmount={Number(collection?.principalAmount) || 0}
           onStarted={(collectionId) => {
             setCollectiveCollectionId(collectionId);
             router.push(`/collective-follow-up/${collectionId}`);

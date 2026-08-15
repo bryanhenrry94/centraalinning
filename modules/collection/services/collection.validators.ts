@@ -80,6 +80,7 @@ export const DebtClaimResponseSchema = DebtClaimSchema.extend({
   obligations: z.array(DebtClaimObligationViewSchema).optional(),
   agreementStatus: z.string().nullable().optional(),
   legalProcessId: z.string().nullable().optional(),
+  collectiveCollectionId: z.string().nullable().optional(),
 });
 
 export type DebtClaim = z.infer<typeof DebtClaimSchema>;

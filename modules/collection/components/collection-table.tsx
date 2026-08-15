@@ -6,6 +6,10 @@ import {
   Box,
   Chip,
   IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
   Table,
   TableBody,
   TableCell,
@@ -17,12 +21,15 @@ import {
   useTheme,
 } from "@mui/material";
 import TablePagination from "@mui/material/TablePagination";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import PaidIcon from "@mui/icons-material/Paid";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import GavelIcon from "@mui/icons-material/Gavel";
+import GroupIcon from "@mui/icons-material/Group";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { DebtClaimResponse } from "@/modules/collection/services/collection.type";
 import {
@@ -32,6 +39,7 @@ import {
 } from "@/modules/collection/utils/debt-claim-status";
 import { isAgreementPending } from "@/modules/agreement/constants/agreement-status";
 import { TransferToLawyerDialog } from "@/modules/legal-process/components/transfer-to-lawyer-dialog";
+import { StartCopDialog } from "@/modules/collective-follow-up/components/start-cop-dialog";
 
 const HEAD_SX = {
   backgroundColor: "secondary.main",
@@ -63,6 +71,27 @@ const CollectionTable = ({
   const [transferDebtClaimId, setTransferDebtClaimId] = React.useState<
     string | null
   >(null);
+  const [startCopRow, setStartCopRow] = React.useState<DebtClaimResponse | null>(
+    null,
+  );
+  const [menuAnchorEl, setMenuAnchorEl] = React.useState<HTMLElement | null>(
+    null,
+  );
+  const [menuRow, setMenuRow] = React.useState<DebtClaimResponse | null>(null);
+
+  const handleMenuOpen = useCallback(
+    (e: React.MouseEvent<HTMLElement>, row: DebtClaimResponse) => {
+      e.stopPropagation();
+      setMenuAnchorEl(e.currentTarget);
+      setMenuRow(row);
+    },
+    [],
+  );
+
+  const handleMenuClose = useCallback(() => {
+    setMenuAnchorEl(null);
+    setMenuRow(null);
+  }, []);
 
   const paginatedData = useMemo(
     () => invoices.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
@@ -188,78 +217,12 @@ const CollectionTable = ({
                         </Tooltip>
                       )
                     ) : (
-                      <>
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleView(row.id);
-                          }}
-                        >
-                          <VisibilityIcon fontSize="small" />
-                        </IconButton>
-                        {row.agreementStatus && (
-                          <Tooltip
-                            title={
-                              isAgreementPending(row.agreementStatus)
-                                ? "Betalingsregeling te beoordelen"
-                                : "Betalingsregeling bekijken"
-                            }
-                          >
-                            <IconButton
-                              size="small"
-                              color={
-                                isAgreementPending(row.agreementStatus)
-                                  ? "warning"
-                                  : "default"
-                              }
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onReviewAgreement?.(row.id);
-                              }}
-                            >
-                              <HandshakeIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                        {row.legalProcessId ? (
-                          <Tooltip title="GOP-dossier bekijken">
-                            <IconButton
-                              size="small"
-                              color="secondary"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                router.push(
-                                  `/legal-processes/${row.legalProcessId}`,
-                                );
-                              }}
-                            >
-                              <GavelIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        ) : (
-                          <Tooltip
-                            title={
-                              row.aopStep === "BLK_NOTIFICATION"
-                                ? "Dossieroverdracht voor mogelijke gerechtelijke opvolging"
-                                : "Dossieroverdracht voor mogelijke gerechtelijke opvolging (vereist AOP-fase Blokkade)"
-                            }
-                          >
-                            <span>
-                              <IconButton
-                                size="small"
-                                disabled={row.aopStep !== "BLK_NOTIFICATION"}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setTransferDebtClaimId(row.id);
-                                }}
-                              >
-                                <GavelIcon fontSize="small" />
-                              </IconButton>
-                            </span>
-                          </Tooltip>
-                        )}
-                      </>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleMenuOpen(e, row)}
+                      >
+                        <MoreVertIcon fontSize="small" />
+                      </IconButton>
                     )}
                   </TableCell>
                 </TableRow>
@@ -290,6 +253,135 @@ const CollectionTable = ({
           onTransferred={() => onRefresh?.()}
         />
       )}
+
+      {startCopRow && (
+        <StartCopDialog
+          open={!!startCopRow}
+          onClose={() => setStartCopRow(null)}
+          debtClaimId={startCopRow.id}
+          principalAmount={Number(startCopRow.principalAmount) || 0}
+          onStarted={(collectionId) => {
+            setStartCopRow(null);
+            router.push(`/collective-follow-up/${collectionId}`);
+          }}
+        />
+      )}
+
+      <Menu
+        anchorEl={menuAnchorEl}
+        open={!!menuAnchorEl}
+        onClose={handleMenuClose}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {menuRow && [
+          <MenuItem
+            key="view"
+            onClick={() => {
+              handleView(menuRow.id);
+              handleMenuClose();
+            }}
+          >
+            <ListItemIcon>
+              <VisibilityIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Bekijken</ListItemText>
+          </MenuItem>,
+
+          menuRow.agreementStatus && (
+            <MenuItem
+              key="agreement"
+              onClick={() => {
+                onReviewAgreement?.(menuRow.id);
+                handleMenuClose();
+              }}
+            >
+              <ListItemIcon>
+                <HandshakeIcon
+                  fontSize="small"
+                  color={
+                    isAgreementPending(menuRow.agreementStatus)
+                      ? "warning"
+                      : "inherit"
+                  }
+                />
+              </ListItemIcon>
+              <ListItemText>
+                {isAgreementPending(menuRow.agreementStatus)
+                  ? "Betalingsregeling te beoordelen"
+                  : "Betalingsregeling bekijken"}
+              </ListItemText>
+            </MenuItem>
+          ),
+
+          menuRow.legalProcessId ? (
+            <MenuItem
+              key="gop"
+              onClick={() => {
+                router.push(`/legal-processes/${menuRow.legalProcessId}`);
+                handleMenuClose();
+              }}
+            >
+              <ListItemIcon>
+                <GavelIcon fontSize="small" color="secondary" />
+              </ListItemIcon>
+              <ListItemText>GOP-dossier bekijken</ListItemText>
+            </MenuItem>
+          ) : (
+            <MenuItem
+              key="gop-transfer"
+              disabled={menuRow.aopStep !== "BLK_NOTIFICATION"}
+              onClick={() => {
+                setTransferDebtClaimId(menuRow.id);
+                handleMenuClose();
+              }}
+            >
+              <ListItemIcon>
+                <SwapHorizIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>
+                Dossieroverdracht
+                {menuRow.aopStep !== "BLK_NOTIFICATION" &&
+                  " (vereist AOP-fase Blokkade)"}
+              </ListItemText>
+            </MenuItem>
+          ),
+
+          menuRow.collectiveCollectionId ? (
+            <MenuItem
+              key="cop"
+              onClick={() => {
+                router.push(
+                  `/collective-follow-up/${menuRow.collectiveCollectionId}`,
+                );
+                handleMenuClose();
+              }}
+            >
+              <ListItemIcon>
+                <GroupIcon fontSize="small" color="secondary" />
+              </ListItemIcon>
+              <ListItemText>COP-dossier bekijken</ListItemText>
+            </MenuItem>
+          ) : (
+            <MenuItem
+              key="cop-start"
+              disabled={menuRow.aopStep !== "BLK_NOTIFICATION"}
+              onClick={() => {
+                setStartCopRow(menuRow);
+                handleMenuClose();
+              }}
+            >
+              <ListItemIcon>
+                <GroupIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>
+                Collectieve Opvolging starten
+                {menuRow.aopStep !== "BLK_NOTIFICATION" &&
+                  " (vereist AOP-fase Blokkade)"}
+              </ListItemText>
+            </MenuItem>
+          ),
+        ]}
+      </Menu>
     </Box>
   );
 };

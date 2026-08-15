@@ -107,7 +107,9 @@ export const TransferToLawyerDialog: React.FC<TransferToLawyerDialogProps> = ({
       onTransferred();
       handleClose();
     } catch (error) {
-      notifyError(error instanceof Error ? error.message : "Overdracht mislukt");
+      notifyError(
+        error instanceof Error ? error.message : "Overdracht mislukt",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -115,9 +117,7 @@ export const TransferToLawyerDialog: React.FC<TransferToLawyerDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>
-        Dossieroverdracht voor mogelijke gerechtelijke opvolging
-      </DialogTitle>
+      <DialogTitle>Dossieroverdracht</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <ToggleButtonGroup
@@ -187,7 +187,15 @@ export const TransferToLawyerDialog: React.FC<TransferToLawyerDialogProps> = ({
           )}
         </Stack>
       </DialogContent>
-      <DialogActions sx={{ flexDirection: "column", alignItems: "stretch", gap: 1, px: 3, pb: 2 }}>
+      <DialogActions
+        sx={{
+          flexDirection: "column",
+          alignItems: "stretch",
+          gap: 1,
+          px: 3,
+          pb: 2,
+        }}
+      >
         <Button
           variant="contained"
           color="primary"

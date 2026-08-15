@@ -7,8 +7,11 @@ import { BlockadeService } from "@/modules/blockade/services/blockade.service";
 import { EmployeeService } from "@/modules/employee/services/employee.service";
 import { CaseTransferService } from "@/modules/legal-process/services/case-transfer.service";
 import { TransferToLawyerInput } from "@/modules/legal-process/services/case-transfer.validators";
+import { PaymentService } from "@/modules/payment/services/payment.service";
+import { PaymentType } from "@/modules/payment/services/payment.validators";
 import {
   CollectiveCollectionStatus,
+  COP_START_FEE_RATE,
   OPEN_COLLECTIVE_COLLECTION_STATUSES,
 } from "@/modules/collective-follow-up/constants/collective-collection-status";
 
@@ -111,7 +114,11 @@ export class CollectiveCollectionService {
   // Ciclo de vida
   // ---------------------------------------------------------------------
 
-  static start = async (debtClaimId: string, actorUserId: string) => {
+  // Paso 1: registra la solicitud de COP y genera el cobro Sentoo de la
+  // comisión CFSB del 5% (a cargo del participante que inicia la acción).
+  // El COP queda en PENDING_PAYMENT — todavía no es un COP real para el
+  // resto del sistema (no dispara employer check ni aviso al deudor).
+  static requestStart = async (debtClaimId: string, actorUserId: string) => {
     const canStartResult = await this.canStart(debtClaimId);
     if (!canStartResult.allowed) {
       throw new Error(canStartResult.reason ?? "Kan geen collectieve opvolging starten.");
@@ -123,47 +130,102 @@ export class CollectiveCollectionService {
     });
     if (!debtClaim) throw new Error("Dossier niet gevonden.");
 
-    const collection = await prisma.$transaction(async (tx) => {
-      const created = await tx.collectiveCollection.create({
-        data: { debtClaimId, status: CollectiveCollectionStatus.ACTIVE, startedAt: new Date() },
+    const feeAmount =
+      Math.round(Number(debtClaim.principalAmount) * COP_START_FEE_RATE * 100) / 100;
+
+    const paymentResult = await PaymentService.create(debtClaim.tenantId, {
+      amount: feeAmount,
+      currency: debtClaim.currency,
+      description: `CFSB-startvergoeding (5%) voor start Collectieve Opvolging — dossier ${
+        debtClaim.reference ?? debtClaimId
+      }`,
+      reference: `cop_start_${debtClaimId}_${Date.now()}`,
+      payment_type: PaymentType.COP_START,
+    });
+    if (!paymentResult.success || !paymentResult.data) {
+      throw new Error(paymentResult.message || "Kon geen Sentoo-betaling aanmaken.");
+    }
+
+    const collection = await prisma.collectiveCollection.create({
+      data: {
+        debtClaimId,
+        status: CollectiveCollectionStatus.PENDING_PAYMENT,
+        startedAt: new Date(),
+        startFeePaymentId: paymentResult.data.paymentId,
+      },
+    });
+
+    await ClaimTimelineService.logEvent(
+      debtClaimId,
+      "COL_STARTED",
+      `Collectieve Opvolging aangevraagd voor dossier ${
+        debtClaim.reference ?? debtClaimId
+      } — in afwachting van de betaling van de startvergoeding (5%).`,
+      undefined,
+      actorUserId,
+    );
+
+    return {
+      collectionId: collection.id,
+      paymentId: paymentResult.data.paymentId,
+      paymentUrl: paymentResult.data.paymentUrl,
+    };
+  };
+
+  // Paso 2: se llama desde el webhook de Sentoo cuando el Payment
+  // COP_START se confirma como pagado. Recién acá el COP pasa a ACTIVE y
+  // se dispara el resto del flujo (chequeo de empleador, aviso al deudor)
+  // — mismo patrón que FinancialAgreementService.processRegistrationPaymentConfirmed.
+  static processStartPaymentConfirmed = async (paymentId: string) => {
+    const collection = await prisma.collectiveCollection.findUnique({
+      where: { startFeePaymentId: paymentId },
+      include: { debtClaim: { include: { tenant: true } } },
+    });
+    if (!collection || collection.status !== CollectiveCollectionStatus.PENDING_PAYMENT) {
+      return;
+    }
+
+    const { debtClaim } = collection;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.collectiveCollection.update({
+        where: { id: collection.id },
+        data: { status: CollectiveCollectionStatus.ACTIVE },
       });
 
       await tx.claimService.create({
         data: {
-          debtClaimId,
+          debtClaimId: collection.debtClaimId,
           service: "COP",
           status: "IN_PROGRESS",
           startedAt: new Date(),
-          startedById: actorUserId,
         },
       });
 
       await tx.claimTimeline.create({
         data: {
-          debtClaimId,
+          debtClaimId: collection.debtClaimId,
           event: "COL_STARTED",
-          description: `Collectieve Opvolging gestart voor dossier ${debtClaim.reference ?? debtClaimId}.`,
+          description: `Betaling van de COP-startvergoeding bevestigd. Collectieve Opvolging actief voor dossier ${
+            debtClaim.reference ?? collection.debtClaimId
+          }.`,
         },
       });
-
-      return created;
     });
 
-    // Best-effort: la creación del COP ya está confirmada, estos pasos no
-    // deben poder revertirla si fallan.
+    // Best-effort: el COP ya está confirmado y activo, estos pasos no
+    // deben poder revertirlo si fallan.
     try {
-      await NotificationService.notifyTenantStaff(
-        debtClaim.tenantId,
-        {
-          type: NotificationType.COL_STARTED,
-          title: "Collectieve Opvolging gestart",
-          message: `Er is een collectieve opvolging gestart voor dossier ${debtClaim.reference ?? debtClaimId}.`,
-          link: `/collective-follow-up/${collection.id}`,
-          entity_type: "CollectiveCollection",
-          entity_id: collection.id,
-        },
-        { excludeUserId: actorUserId },
-      );
+      await NotificationService.notifyTenantStaff(debtClaim.tenantId, {
+        type: NotificationType.COL_STARTED,
+        title: "Collectieve Opvolging actief",
+        message: `De betaling werd bevestigd. Er is een collectieve opvolging actief voor dossier ${
+          debtClaim.reference ?? collection.debtClaimId
+        }.`,
+        link: `/collective-follow-up/${collection.id}`,
+        entity_type: "CollectiveCollection",
+        entity_id: collection.id,
+      });
     } catch (error) {
       console.error("Error notifying tenant staff of COP start:", error);
     }

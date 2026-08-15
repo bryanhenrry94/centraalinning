@@ -45,7 +45,7 @@ export const checkCanStartCop = async (debtClaimId: string) => {
   return CollectiveCollectionService.canStart(debtClaimId);
 };
 
-export const startCollectiveCollection = async (input: { debtClaimId: string }) => {
+export const requestStartCollectiveCollection = async (input: { debtClaimId: string }) => {
   const parsed = StartCollectiveCollectionSchema.parse(input);
   const { session } = await requireTenantStaffForDebtClaim(parsed.debtClaimId);
 
@@ -57,7 +57,7 @@ export const startCollectiveCollection = async (input: { debtClaimId: string }) 
     throw new Error(permission.reason ?? "Deze actie is niet toegestaan.");
   }
 
-  return CollectiveCollectionService.start(parsed.debtClaimId, session.user.id);
+  return CollectiveCollectionService.requestStart(parsed.debtClaimId, session.user.id);
 };
 
 export const requestCopPaymentAgreement = async (input: {

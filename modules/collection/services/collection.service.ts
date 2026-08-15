@@ -651,6 +651,7 @@ export class CollectionService {
           select: { status: true },
         },
         legalProcess: { select: { id: true } },
+        collectiveCollection: { select: { id: true } },
       },
     });
 
@@ -690,6 +691,7 @@ export class CollectionService {
         paymentLink: c.obligations[0]?.payments[0]?.payment_url ?? null,
         agreementStatus,
         legalProcessId: c.legalProcess?.id ?? null,
+        collectiveCollectionId: c.collectiveCollection?.id ?? null,
       };
     });
   };
