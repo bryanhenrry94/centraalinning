@@ -6,12 +6,21 @@ import { UserRole } from "@/shared/constants/user-role";
 import { useTenant } from "@/modules/auth/hooks/useTenant";
 import LoadingUI from "@/shared/ui/loading-ui";
 import TabPanel from "@/shared/ui/tab-panel";
-import { getAllCollectiveCollectionsForTenant } from "@/modules/collective-follow-up/actions/collective-collection.actions";
+import {
+  getAllCollectiveCollectionsForTenant,
+  getCollectiveCollectionsForEmployerTenant,
+} from "@/modules/collective-follow-up/actions/collective-collection.actions";
 import { CollectiveCollectionsTable } from "@/modules/collective-follow-up/components/collective-collections-table";
 import { DebtorCollectiveCollectionsView } from "@/modules/collective-follow-up/components/debtor-collective-collections-view";
+import { AutoContinueCopToggle } from "@/modules/collective-follow-up/components/auto-continue-cop-toggle";
+import { NetworkQueryInbox } from "@/modules/collective-follow-up/components/network-query-inbox";
+import { EmployerCollectiveCollectionsTable } from "@/modules/collective-follow-up/components/employer-collective-collections-table";
 
 type CollectiveCollectionRow = Awaited<
   ReturnType<typeof getAllCollectiveCollectionsForTenant>
+>[number];
+type EmployerCollectiveCollectionRow = Awaited<
+  ReturnType<typeof getCollectiveCollectionsForEmployerTenant>
 >[number];
 
 const CollectiveFollowUpPageContent = () => {
@@ -38,11 +47,18 @@ const StaffCollectiveFollowUpView = () => {
   const { tenant } = useTenant();
   const [tab, setTab] = useState(0);
   const [collections, setCollections] = useState<CollectiveCollectionRow[]>([]);
+  const [employerCollections, setEmployerCollections] = useState<
+    EmployerCollectiveCollectionRow[]
+  >([]);
 
   const fetchCollections = useCallback(async () => {
     if (!tenant?.id) return;
-    const data = await getAllCollectiveCollectionsForTenant(tenant.id);
+    const [data, employerData] = await Promise.all([
+      getAllCollectiveCollectionsForTenant(tenant.id),
+      getCollectiveCollectionsForEmployerTenant(tenant.id),
+    ]);
     setCollections(data);
+    setEmployerCollections(employerData);
   }, [tenant?.id]);
 
   useEffect(() => {
@@ -87,7 +103,13 @@ const StaffCollectiveFollowUpView = () => {
           <Tab label={`Betalingsregeling (${agreements.length})`} />
           <Tab label={`Betaald (${paid.length})`} />
           <Tab label={`Overgedragen (${transferred.length})`} />
+          <Tab label={`Namens medewerkers (${employerCollections.length})`} />
         </Tabs>
+      </Box>
+
+      <Box sx={{ mt: 2 }}>
+        <NetworkQueryInbox />
+        <AutoContinueCopToggle />
       </Box>
 
       {buckets.map((bucket, index) => (
@@ -95,6 +117,12 @@ const StaffCollectiveFollowUpView = () => {
           <CollectiveCollectionsTable collections={bucket} />
         </TabPanel>
       ))}
+      <TabPanel value={tab} index={buckets.length}>
+        <EmployerCollectiveCollectionsTable
+          collections={employerCollections}
+          onRequested={fetchCollections}
+        />
+      </TabPanel>
     </Box>
   );
 };

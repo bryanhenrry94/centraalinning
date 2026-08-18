@@ -1,11 +1,16 @@
 "use server";
 
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { UserRole } from "@/shared/constants/user-role";
+import { SettingsService } from "@/modules/settings/services/settings/settings.service";
 import { CollectiveCollectionService } from "@/modules/collective-follow-up/services/collective-collection.service";
 import {
   requireTenantStaffForDebtClaim,
   requireTenantStaffForCollection,
-  requireDebtorForCollection,
+  requireDebtorOrEmployerForNegotiation,
   requireTenantStaffForNegotiation,
+  requireTenantStaffForNetworkQuery,
 } from "@/modules/collective-follow-up/services/collective-collection-guards";
 import { canUseFeature } from "@/shared/utils/permission";
 import { AppAction } from "@/shared/constants/AppAction";
@@ -15,8 +20,43 @@ import {
   RequestPaymentAgreementSchema,
   DecideNegotiationSchema,
   CloseCollectiveCollectionSchema,
+  SetAutoContinueSchema,
+  SubmitNetworkResponseSchema,
 } from "@/modules/collective-follow-up/services/collective-collection.validators";
 import { TransferToLawyerSchema, TransferToLawyerInput } from "@/modules/legal-process/services/case-transfer.validators";
+
+const COL_AUTO_CONTINUE_SETTING_KEY = "col_auto_continue_from_aop";
+const COL_AUTO_CONTINUE_CATEGORY_ID = "cat-cop";
+
+async function requireTenantAdmin() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id || !session.user.tenant_id) {
+    throw new Error("U bent niet ingelogd.");
+  }
+  if (!session.user.roles?.includes(UserRole.TENANT_ADMIN)) {
+    throw new Error("Alleen een organisatiebeheerder kan deze instelling wijzigen.");
+  }
+  return session;
+}
+
+export const getAutoContinueSetting = async (tenantId: string) => {
+  return SettingsService.resolveBoolean(COL_AUTO_CONTINUE_SETTING_KEY, { tenantId }, false);
+};
+
+export const setAutoContinueSetting = async (input: { enabled: boolean }) => {
+  const parsed = SetAutoContinueSchema.parse(input);
+  const session = await requireTenantAdmin();
+
+  await SettingsService.upsertTenantBooleanSetting(
+    session.user.tenant_id!,
+    COL_AUTO_CONTINUE_CATEGORY_ID,
+    COL_AUTO_CONTINUE_SETTING_KEY,
+    "Automatisch doorgaan van AOP naar COP",
+    parsed.enabled,
+  );
+
+  return { enabled: parsed.enabled };
+};
 
 export const getCollectiveCollectionById = async (id: string) => {
   return CollectiveCollectionService.getById(id);
@@ -37,8 +77,58 @@ export const getCollectiveCollectionsForDebtor = async (debtorId: string) => {
   return CollectiveCollectionService.getForDebtor(debtorId);
 };
 
+// Para el staff del tenant confirmado como empleador — expedientes de OTROS
+// tenants donde puede actuar en nombre del deudor (ver
+// requireDebtorOrEmployerForNegotiation).
+export const getCollectiveCollectionsForEmployerTenant = async (tenantId: string) => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id || session.user.tenant_id !== tenantId) {
+    throw new Error("U bent niet ingelogd of niet bevoegd.");
+  }
+  return CollectiveCollectionService.getForEmployerTenant(tenantId);
+};
+
 export const getCollectiveCollectionNegotiations = async (collectionId: string) => {
   return CollectiveCollectionService.getNegotiationsForCollection(collectionId);
+};
+
+export const getCollectiveCollectionNotifications = async (collectionId: string) => {
+  await requireTenantStaffForCollection(collectionId);
+  return CollectiveCollectionService.getNotificationsForCollection(collectionId);
+};
+
+export const getCollectiveCollectionNetworkQuery = async (collectionId: string) => {
+  await requireTenantStaffForCollection(collectionId);
+  return CollectiveCollectionService.getNetworkQueryForCollection(collectionId);
+};
+
+// Inbox de preguntas de red pendientes para el staff del tenant logueado
+// (no requiere collectionId — el tenant no conoce el expediente, solo la
+// pregunta que le llegó).
+export const getPendingNetworkQueriesForTenant = async (tenantId: string) => {
+  return CollectiveCollectionService.getPendingNetworkQueriesForTenant(tenantId);
+};
+
+export const submitNetworkQueryResponse = async (input: {
+  queryId: string;
+  answer: "YES" | "NO";
+}) => {
+  const parsed = SubmitNetworkResponseSchema.parse(input);
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id || !session.user.tenant_id) {
+    throw new Error("U bent niet ingelogd.");
+  }
+  const { session: verifiedSession } = await requireTenantStaffForNetworkQuery(
+    parsed.queryId,
+    session.user.tenant_id,
+  );
+
+  return CollectiveCollectionService.submitNetworkResponse(
+    parsed.queryId,
+    session.user.tenant_id,
+    parsed.answer,
+    verifiedSession.user.id,
+  );
 };
 
 export const checkCanStartCop = async (debtClaimId: string) => {
@@ -66,12 +156,18 @@ export const requestCopPaymentAgreement = async (input: {
   notes?: string | null;
 }) => {
   const parsed = RequestPaymentAgreementSchema.parse(input);
-  const { session } = await requireDebtorForCollection(parsed.collectionId);
+  const { session, collection, submittedByRole } = await requireDebtorOrEmployerForNegotiation(
+    parsed.collectionId,
+  );
 
   return CollectiveCollectionService.requestPaymentAgreement(
     parsed.collectionId,
     { proposalAmount: parsed.proposalAmount, notes: parsed.notes },
     session.user.id,
+    {
+      submittedByRole,
+      onBehalfOfEmployerTenantId: submittedByRole === "EMPLOYER" ? collection.employerTenantId : null,
+    },
   );
 };
 

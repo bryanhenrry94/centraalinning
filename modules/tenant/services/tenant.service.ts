@@ -58,6 +58,12 @@ export class TenantService {
     return prisma.tenant.findMany();
   };
 
+  // Tenants activos de la red — usado por el broadcast de red de COP
+  // ("presión de red": preguntar a todos los participantes activos).
+  static getActiveParticipants = async () => {
+    return prisma.tenant.findMany({ where: { is_active: true } });
+  };
+
   static subdomainExists = async (subdomain: string): Promise<boolean> => {
     const tenant = await prisma.tenant.findFirst({ where: { subdomain } });
     return !!tenant;

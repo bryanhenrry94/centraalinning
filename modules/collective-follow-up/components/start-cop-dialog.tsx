@@ -6,8 +6,8 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  IconButton,
   Typography,
-  Alert,
   Box,
   Paper,
   Stack,
@@ -71,34 +71,55 @@ export const StartCopDialog: React.FC<StartCopDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Collectieve Opvolging starten</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700, pr: 6 }}>
+        Collectieve Opvolging starten
+        <IconButton
+          onClick={onClose}
+          sx={{ position: "absolute", right: 12, top: 12 }}
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Start Collectieve Opvolging om via de CFSB-samenwerking tot betaling of een
-          betalingsregeling te komen en mogelijke gerechtelijke opvolging zoveel mogelijk te
-          voorkomen.
-        </Typography>
-
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Na activatie ontvangen CFSB-deelnemers een verzoek tot medewerking.
-        </Alert>
-
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          De Collectieve Opvolging wordt actief nadat de startvergoeding is betaald.
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, mb: 3 }}>
+          <Stack spacing={2}>
+            <Typography
+              variant="body2"
+              color="text.primary"
+              sx={{ textAlign: "justify" }}
+            >
+              Start Collectieve Opvolging om via de samenwerking tot betaling of
+              een betalingsregeling te komen en mogelijke gerechtelijke
+              opvolging zoveel mogelijk te voorkomen.
+            </Typography>
+            <Typography
+              variant="body2"
+              color="text.primary"
+              sx={{ textAlign: "justify" }}
+            >
+              De Collectieve Opvolging wordt actief nadat de startvergoeding is
+              betaald.
+            </Typography>
+          </Stack>
+        </Box>
 
         <Paper
           variant="outlined"
-          sx={{ width: "100%", p: 2, borderRadius: 2, textAlign: "center" }}
+          sx={{
+            width: "100%",
+            p: 2,
+            borderRadius: 2,
+            textAlign: "center",
+            bgcolor: "#FFF7ED",
+            borderColor: "#FBD9B4",
+          }}
         >
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "baseline", gap: 1 }}>
-            <Typography variant="h4" fontWeight={700} color="primary.main">
-              {formatCurrency(feeAmount)}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              CFSB-startvergoeding (5%)
-            </Typography>
-          </Box>
+          <Typography variant="h4" fontWeight={700} sx={{ color: "#F97316" }}>
+            {formatCurrency(feeAmount)}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Startvergoeding (5%)
+          </Typography>
         </Paper>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>

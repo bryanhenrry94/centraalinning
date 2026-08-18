@@ -29,8 +29,9 @@ export async function GET(req: NextRequest) {
         gopReviewReminders: gopDeadlinesResult.reviewReminders,
         caseTransferAcceptanceReminders: caseTransferDeadlinesResult.reminders,
         caseTransferDeadlineNotices: caseTransferDeadlinesResult.deadlineNotices,
-        copEmployersChecked: copEmployerMatchesResult.checked,
-        copEmployersMatched: copEmployerMatchesResult.matched,
+        copNetworkQueriesChecked: copEmployerMatchesResult.checked,
+        copNetworkQueriesClosed: copEmployerMatchesResult.closed,
+        copAutoContinued: notifResult.copAutoContinued,
       },
     });
   } catch (error) {

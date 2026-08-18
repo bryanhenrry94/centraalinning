@@ -38,3 +38,14 @@ export const CloseCollectiveCollectionSchema = z.object({
   reason: z.string().min(1, "De reden voor sluiting is verplicht"),
 });
 export type CloseCollectiveCollectionInput = z.infer<typeof CloseCollectiveCollectionSchema>;
+
+export const SetAutoContinueSchema = z.object({
+  enabled: z.boolean(),
+});
+export type SetAutoContinueInput = z.infer<typeof SetAutoContinueSchema>;
+
+export const SubmitNetworkResponseSchema = z.object({
+  queryId: z.string().min(1),
+  answer: z.enum(["YES", "NO"]),
+});
+export type SubmitNetworkResponseInput = z.infer<typeof SubmitNetworkResponseSchema>;

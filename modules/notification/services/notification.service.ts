@@ -71,6 +71,17 @@ export class NotificationService {
     await this.createMany(userIds, { ...data, tenant_id });
   }
 
+  // Difunde a todo el personal activo de varios tenants a la vez — usado
+  // por el broadcast de red de COP (una pregunta a toda la red, no a un
+  // solo tenant). Reusa notifyTenantStaff en vez de reinventar el fan-out
+  // a staff por tenant.
+  static async notifyManyTenants(
+    tenantIds: string[],
+    data: Omit<CreateNotification, "user_id" | "tenant_id">,
+  ): Promise<void> {
+    await Promise.all(tenantIds.map((tenant_id) => this.notifyTenantStaff(tenant_id, data)));
+  }
+
   static async getForUser(
     user_id: string,
     tenant_id: string,

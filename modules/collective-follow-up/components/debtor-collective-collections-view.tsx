@@ -90,6 +90,17 @@ export const DebtorCollectiveCollectionsView = () => {
 
   const selectedDebt = selected ? debts.find((d) => d.id === selected.debtClaimId) ?? null : null;
 
+  // Consecuencia concreta del plazo de gracia: una vez vencido, si ya hay
+  // un empleador confirmado, el deudor deja de poder solicitar el acuerdo
+  // directamente — pasa a gestionarse vía el empleador (ver
+  // requireDebtorOrEmployerForNegotiation).
+  const canDebtorRequestAgreement = (row: CollectiveCollectionRow) => {
+    if (!CAN_REQUEST_AGREEMENT_STATUSES.includes(row.status)) return false;
+    const gracePeriodPassed =
+      !!row.debtorGracePeriodDeadline && new Date(row.debtorGracePeriodDeadline) <= new Date();
+    return !(gracePeriodPassed && row.employerTenantId);
+  };
+
   return (
     <Container maxWidth="xl">
       <Box sx={{ mt: { xs: 1.5, sm: 4 }, mb: 2 }}>
@@ -158,7 +169,7 @@ export const DebtorCollectiveCollectionsView = () => {
                         size="small"
                         variant="outlined"
                         startIcon={<HandshakeIcon fontSize="small" />}
-                        disabled={!CAN_REQUEST_AGREEMENT_STATUSES.includes(row.status)}
+                        disabled={!canDebtorRequestAgreement(row)}
                         onClick={(e) => {
                           e.stopPropagation();
                           openRequestDialog(row);

@@ -1,11 +1,13 @@
 import { CollectiveCollectionService } from "@/modules/collective-follow-up/services/collective-collection.service";
 
-// Recurrente (no event-driven): Employee no tiene FK a Person, así que un
-// nuevo Employee o un cambio de identification no puede disparar un chequeo
-// puntual — este job barre periódicamente todos los COP sin empleador
-// encontrado todavía (Paso 3 del proceso COP). Mismo patrón que
+// Recurrente: cierra sin match los broadcasts de red de COP
+// (COLNetworkQuery) cuyo plazo de respuesta venció sin que ningún tenant
+// haya confirmado ser el empleador. El match en sí ya no es un chequeo
+// periódico — ocurre en tiempo real cuando un tenant responde "Sí" (ver
+// CollectiveCollectionService.submitNetworkResponse); este job solo
+// resuelve el caso "nadie respondió a tiempo". Mismo patrón que
 // check_blockade_reactivation.ts.
 export async function checkCopEmployerMatches() {
-  const result = await CollectiveCollectionService.recheckAllPendingEmployerMatches();
-  return { message: "COP-werkgeverscontrole verwerkt", ...result };
+  const result = await CollectiveCollectionService.closeExpiredNetworkQueries();
+  return { message: "COP-netwerkvraag deadlines verwerkt", ...result };
 }

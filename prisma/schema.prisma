@@ -69,6 +69,10 @@ model Tenant {
   // deudor de OTRO tenant (ver CollectiveCollection.employerTenantId).
   collectiveCollectionsAsEmployer CollectiveCollection[] @relation("CollectiveCollectionEmployerTenant")
 
+  // COP: respuestas de este tenant a preguntas de broadcast de red de OTROS
+  // tenants (ver COLNetworkResponse.tenantId).
+  colNetworkResponses COLNetworkResponse[] @relation("COLNetworkResponseTenant")
+
   supportMessages SupportMessage[]
 
   @@map("tenant")
@@ -297,13 +301,21 @@ model CollectiveCollection {
   startFeePaymentId String?  @unique
   startFeePayment   Payment? @relation(fields: [startFeePaymentId], references: [id])
 
-  // Empleador afiliado detectado por coincidencia de string entre
-  // Person.identification y Employee.identification (no existe FK entre
-  // ambos modelos). Nulo hasta que se encuentre coincidencia; una vez
-  // seteado, el job de re-chequeo deja de revisar este caso.
+  // Empleador confirmado mediante la respuesta "Sí" de un tenant al
+  // broadcast de red (ver COLNetworkQuery/COLNetworkResponse). Nulo hasta
+  // que se encuentre coincidencia; una vez seteado, el job de deadlines
+  // deja de revisar este caso.
   employerTenantId  String?
   employerTenant    Tenant?   @relation("CollectiveCollectionEmployerTenant", fields: [employerTenantId], references: [id])
   employerMatchedAt DateTime?
+
+  // Plazo corto (default 2 días, configurable vía Setting
+  // col_debtor_grace_period_days) durante el cual solo el deudor puede
+  // pagar o solicitar un acuerdo de pago directamente. Pasado este plazo,
+  // si employerTenantId está seteado, solo ese tenant puede solicitar un
+  // acuerdo en nombre del deudor — ver requireDebtorOrEmployerForNegotiation.
+  // Misma ventana que usa COLNetworkQuery.responseDeadline.
+  debtorGracePeriodDeadline DateTime?
 
   // Escalado a GOP — mismo patrón aditivo que
   //                          FinancialAgreement.escalatedToDebtClaimId.
@@ -312,6 +324,7 @@ model CollectiveCollection {
 
   negotiations  COLNegotiation[]
   notifications COLNotification[]
+  networkQuery  COLNetworkQuery?
 
   @@index([status])
   @@index([employerTenantId])
@@ -330,6 +343,21 @@ model COLNegotiation {
   status NegotiationStatus
 
   notes String?
+
+  // Quién presentó la propuesta: el deudor mismo, o el tenant empleador
+  // confirmado actuando en su nombre tras vencer debtorGracePeriodDeadline
+  // (ver CollectiveCollectionService.requestPaymentAgreement). Nunca
+  // provisto por el cliente — lo determina el guard según el momento y el
+  // match de empleador.
+  submittedByRole COLNegotiationSubmitter
+
+  submittedByUserId String?
+  submittedBy       User?   @relation(fields: [submittedByUserId], references: [id])
+
+  // Snapshot inmutable del tenant empleador al momento de enviar — no se
+  // recalcula si employerTenantId cambia después (no debería, pero evita
+  // depender de un join en vivo para la auditoría).
+  submittedOnBehalfOfEmployerTenantId String?
 
   @@map("col_negotiation")
 }
@@ -351,6 +379,54 @@ model COLNotification {
   status NotificationStatus
 
   @@map("col_notification")
+}
+
+// "Presión de red": una pregunta Sí/No difundida a todos los tenants
+// activos de la red (excepto el dueño del expediente) para ubicar al
+// empleador del deudor, sin revelar monto ni acreedor — reemplaza el match
+// silencioso por identification exacta que existía antes de esta versión.
+model COLNetworkQuery {
+  id String @id @default(cuid())
+
+  collectionId String               @unique
+  collection   CollectiveCollection @relation(fields: [collectionId], references: [id])
+
+  // Person.personal_number (CFSBP-xxx) + nombre — nunca el monto ni el
+  // acreedor original, por requisito de negocio.
+  personalNumber String
+  displayName    String
+
+  broadcastAt      DateTime
+  responseDeadline DateTime
+
+  status COLNetworkQueryStatus @default(OPEN)
+
+  responses COLNetworkResponse[]
+
+  @@map("col_network_query")
+}
+
+// Una fila por tenant preguntado. Las respuestas son privadas entre
+// participantes — solo el tenant dueño del expediente ve el progreso
+// agregado y el match final (ver CollectiveCollectionService).
+model COLNetworkResponse {
+  id String @id @default(cuid())
+
+  queryId String
+  query   COLNetworkQuery @relation(fields: [queryId], references: [id])
+
+  tenantId String
+  tenant   Tenant @relation("COLNetworkResponseTenant", fields: [tenantId], references: [id])
+
+  answer      COLNetworkAnswer?
+  respondedAt DateTime?
+
+  respondedById String?
+  respondedBy   User?   @relation(fields: [respondedById], references: [id])
+
+  @@unique([queryId, tenantId])
+  @@index([tenantId, answer])
+  @@map("col_network_response")
 }
 
 model LegalProcess {
@@ -761,6 +837,7 @@ enum TimelineEvent {
   // =========================
   COL_STARTED
   COL_DEBTOR_NOTIFIED
+  COL_NETWORK_BROADCAST_SENT
   COL_EMPLOYER_FOUND
   COL_NEGOTIATION_CREATED
   COL_NEGOTIATION_ACCEPTED
@@ -959,6 +1036,22 @@ enum NegotiationStatus {
   EXPIRED
 }
 
+enum COLNegotiationSubmitter {
+  DEBTOR
+  EMPLOYER
+}
+
+enum COLNetworkQueryStatus {
+  OPEN
+  MATCHED
+  CLOSED_NO_MATCH
+}
+
+enum COLNetworkAnswer {
+  YES
+  NO
+}
+
 model User {
   id            String  @id @default(uuid())
   email         String  @unique @db.VarChar(80)
@@ -985,6 +1078,9 @@ model User {
 
   supportMessagesCreated  SupportMessage[] @relation("SupportMessageCreatedBy")
   supportMessagesAnswered SupportMessage[] @relation("SupportMessageRespondedBy")
+
+  colNegotiationsSubmitted COLNegotiation[]
+  colNetworkResponses      COLNetworkResponse[]
 
   @@map("user")
 }
@@ -1823,7 +1919,10 @@ enum NotificationType {
   COL_STARTED
   COL_DEBTOR_NOTIFIED
   COL_EMPLOYER_MATCH_FOUND
+  COL_NETWORK_QUERY_RECEIVED
   COL_NEGOTIATION_REQUESTED
+  COL_NEGOTIATION_REQUESTED_BY_EMPLOYER
+  COL_GRACE_PERIOD_ENDED
   COL_NEGOTIATION_ACCEPTED
   COL_NEGOTIATION_REJECTED
   COL_PAID_IN_FULL

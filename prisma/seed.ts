@@ -544,6 +544,14 @@ async function seedSettingCategories() {
       icon: "security",
       sortOrder: 4,
     },
+    {
+      id: "cat-cop",
+      key: "cop",
+      name: "Collectieve Opvolging",
+      description: "Instellingen voor de collectieve opvolging (COP)",
+      icon: "groups",
+      sortOrder: 5,
+    },
   ];
 
   for (const cat of categories) {
@@ -615,6 +623,22 @@ async function seedSettingCategories() {
       name: "Max. inlogpogingen",
       key: "max_login_attempts",
       value: "5",
+    },
+    // Collectieve Opvolging (COP) — waarde globaal, per tenant/isla
+    // overschrijfbaar via SettingsService.resolveNumber/resolveBoolean.
+    {
+      id: "setting-col-debtor-grace-period-days",
+      categoryId: "cat-cop",
+      name: "Bedenktermijn debiteur (dagen)",
+      key: "col_debtor_grace_period_days",
+      value: "2",
+    },
+    {
+      id: "setting-col-auto-continue-from-aop",
+      categoryId: "cat-cop",
+      name: "Automatisch doorgaan van AOP naar COP",
+      key: "col_auto_continue_from_aop",
+      value: "false",
     },
   ];
 

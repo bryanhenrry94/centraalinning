@@ -578,6 +578,8 @@ export class CollectionService {
         },
       });
     });
+
+    return { nextStep };
   };
 
   // Recargo administrativo por falta de respuesta del deudor dentro del

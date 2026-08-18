@@ -24,6 +24,7 @@ const TIMELINE_EVENT_LABELS: Record<string, string> = {
   // COP
   COL_STARTED: "Collectieve opvolging gestart",
   COL_DEBTOR_NOTIFIED: "Debiteur geïnformeerd",
+  COL_NETWORK_BROADCAST_SENT: "Netwerkvraag verzonden",
   COL_EMPLOYER_FOUND: "Werkgever gevonden",
   COL_NEGOTIATION_CREATED: "Onderhandeling gestart",
   COL_NEGOTIATION_ACCEPTED: "Onderhandeling geaccepteerd",

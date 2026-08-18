@@ -10,6 +10,7 @@ import { CollectionNotificationService } from "@/modules/collection/services/col
 import { PersonType } from "@/shared/constants/person-type";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 import { SettingsService } from "@/modules/settings/services/settings/settings.service";
+import { CollectiveCollectionService } from "@/modules/collective-follow-up/services/collective-collection.service";
 
 type AOPStep = "REMINDER" | "FINAL_NOTICE" | "DEFAULT_NOTICE" | "BLK_NOTIFICATION";
 
@@ -64,6 +65,7 @@ export async function processAopWorkflow() {
   };
 
   let sent = 0;
+  let copAutoContinued = 0;
 
   for (const aop of activeCollections) {
     const today = new Date();
@@ -165,10 +167,23 @@ export async function processAopWorkflow() {
       await applyAopNoResponseFee(debtClaimId, currentStepType, noResponseFee);
     }
 
-    await advanceAOPStep(debtClaimId);
+    const { nextStep } = await advanceAOPStep(debtClaimId);
     await CollectionNotificationService.sendNotification(debtClaimId);
     sent++;
+
+    if (nextStep === "BLK_NOTIFICATION") {
+      try {
+        const collectionId = await CollectiveCollectionService.tryAutoContinueFromAop(
+          debtClaimId,
+          aop.debtClaim.tenant.id,
+          aop.debtClaim.tenant.jurisdictionId,
+        );
+        if (collectionId) copAutoContinued++;
+      } catch (error) {
+        console.error("Error auto-continuing COP from AOP:", error);
+      }
+    }
   }
 
-  return { message: "Notificaties succesvol verzonden", sent };
+  return { message: "Notificaties succesvol verzonden", sent, copAutoContinued };
 }

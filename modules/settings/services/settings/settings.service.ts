@@ -78,6 +78,46 @@ export class SettingsService {
     return Number.isNaN(parsed) ? fallback : parsed;
   }
 
+  static async resolveBoolean(
+    key: string,
+    scope: { tenantId?: string | null; jurisdictionId?: string | null },
+    fallback = false,
+  ): Promise<boolean> {
+    const value = await this.resolveValue(key, scope);
+    if (value === null) return fallback;
+    return value === "true" || value === "1";
+  }
+
+  // Upsert de un override booleano a nivel de un tenant puntual — a
+  // diferencia de updateSettings (solo Superadministrador, edita filas ya
+  // sembradas por id), esta fila puede no existir todavía para el tenant.
+  // Prisma no acepta `null` dentro de la where compuesta única
+  // (tenantId_jurisdictionId_key) en esta versión — mismo patrón
+  // findFirst + create/update que usa prisma/seed.ts, no upsert directo.
+  static async upsertTenantBooleanSetting(
+    tenantId: string,
+    categoryId: string,
+    key: string,
+    name: string,
+    value: boolean,
+  ) {
+    const stringValue = value ? "true" : "false";
+    const existing = await prisma.setting.findFirst({
+      where: { tenantId, jurisdictionId: null, key },
+    });
+
+    if (existing) {
+      return prisma.setting.update({
+        where: { id: existing.id },
+        data: { value: stringValue },
+      });
+    }
+
+    return prisma.setting.create({
+      data: { tenantId, jurisdictionId: null, categoryId, key, name, value: stringValue },
+    });
+  }
+
   // Resuelve TODAS las keys visibles para un scope en 3 consultas (en vez
   // de una por key): global → isla → tenant, cada nivel pisa al anterior.
   static async getResolvedSettings(scope: {

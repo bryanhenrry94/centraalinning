@@ -4,11 +4,13 @@ import { ClaimTimelineService } from "@/modules/collection/services/claim-timeli
 import { NotificationService } from "@/modules/notification/services/notification.service";
 import { NotificationType } from "@/modules/notification/constants/notification-type";
 import { BlockadeService } from "@/modules/blockade/services/blockade.service";
-import { EmployeeService } from "@/modules/employee/services/employee.service";
+import { PersonService } from "@/modules/collection/services/person.service";
 import { CaseTransferService } from "@/modules/legal-process/services/case-transfer.service";
 import { TransferToLawyerInput } from "@/modules/legal-process/services/case-transfer.validators";
 import { PaymentService } from "@/modules/payment/services/payment.service";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
+import { SettingsService } from "@/modules/settings/services/settings/settings.service";
+import { TenantService } from "@/modules/tenant/services/tenant.service";
 import {
   CollectiveCollectionStatus,
   COP_START_FEE_RATE,
@@ -17,6 +19,7 @@ import {
 
 const collectiveCollectionInclude = {
   debtClaim: { include: { debtor: { include: { person: true } }, tenant: true } },
+  employerTenant: { select: { id: true, name: true } },
 } satisfies Prisma.CollectiveCollectionInclude;
 
 type CollectiveCollectionWithInclude = Prisma.CollectiveCollectionGetPayload<{
@@ -68,6 +71,20 @@ export class CollectiveCollectionService {
     return items.map(serializeCollection);
   };
 
+  // Expedientes donde este tenant fue confirmado como empleador de un
+  // deudor de OTRO tenant — permite al staff del empleador ver/gestionar
+  // los COP en los que puede actuar en nombre del deudor tras el plazo de
+  // gracia (ver requireDebtorOrEmployerForNegotiation). Distinto de
+  // getAllForTenant, que filtra por debtClaim.tenantId (el dueño).
+  static getForEmployerTenant = async (tenantId: string) => {
+    const items = await prisma.collectiveCollection.findMany({
+      where: { employerTenantId: tenantId },
+      include: collectiveCollectionInclude,
+      orderBy: { startedAt: "desc" },
+    });
+    return items.map(serializeCollection);
+  };
+
   static getForDebtor = async (debtorId: string) => {
     const items = await prisma.collectiveCollection.findMany({
       where: { debtClaim: { debtorId } },
@@ -75,6 +92,52 @@ export class CollectiveCollectionService {
       orderBy: { startedAt: "desc" },
     });
     return items.map(serializeCollection);
+  };
+
+  // Notificaciones reales de colaboración (empleador/deudor) — para la
+  // pantalla de detalle del COP ("Bekijk collectieve reacties"). El
+  // progreso del broadcast de red en sí (cuántos respondieron, match final)
+  // se lee vía getNetworkQueryForCollection, no acá.
+  static getNotificationsForCollection = async (collectionId: string) => {
+    return prisma.cOLNotification.findMany({
+      where: { collectionId },
+      orderBy: { sentAt: "desc" },
+    });
+  };
+
+  // Progreso agregado del broadcast de red para el tenant dueño del
+  // expediente — nunca expone qué tenant respondió qué, solo el conteo y
+  // el resultado final (ver submitNetworkResponse / applyEmployerMatch).
+  static getNetworkQueryForCollection = async (collectionId: string) => {
+    const query = await prisma.cOLNetworkQuery.findUnique({
+      where: { collectionId },
+      include: { responses: true },
+    });
+    if (!query) return null;
+
+    const answered = query.responses.filter((r) => r.answer !== null).length;
+    return {
+      status: query.status,
+      responseDeadline: query.responseDeadline,
+      totalAsked: query.responses.length,
+      answered,
+    };
+  };
+
+  // Inbox de preguntas de red pendientes de respuesta para el staff de un
+  // tenant participante (no el dueño del expediente).
+  static getPendingNetworkQueriesForTenant = async (tenantId: string) => {
+    const responses = await prisma.cOLNetworkResponse.findMany({
+      where: { tenantId, answer: null, query: { status: "OPEN" } },
+      include: { query: true },
+      orderBy: { id: "desc" },
+    });
+    return responses.map((r) => ({
+      queryId: r.query.id,
+      personalNumber: r.query.personalNumber,
+      displayName: r.query.displayName,
+      responseDeadline: r.query.responseDeadline,
+    }));
   };
 
   static getNegotiationsForCollection = async (collectionId: string) => {
@@ -118,7 +181,7 @@ export class CollectiveCollectionService {
   // comisión CFSB del 5% (a cargo del participante que inicia la acción).
   // El COP queda en PENDING_PAYMENT — todavía no es un COP real para el
   // resto del sistema (no dispara employer check ni aviso al deudor).
-  static requestStart = async (debtClaimId: string, actorUserId: string) => {
+  static requestStart = async (debtClaimId: string, actorUserId?: string) => {
     const canStartResult = await this.canStart(debtClaimId);
     if (!canStartResult.allowed) {
       throw new Error(canStartResult.reason ?? "Kan geen collectieve opvolging starten.");
@@ -170,6 +233,31 @@ export class CollectiveCollectionService {
       paymentId: paymentResult.data.paymentId,
       paymentUrl: paymentResult.data.paymentUrl,
     };
+  };
+
+  // Llamado desde process_aop_workflow.ts cuando un caso llega al punto de
+  // decisión de AOP (BLK_NOTIFICATION). Si el tenant preconfiguró la
+  // continuación automática (Setting col_auto_continue_from_aop), dispara
+  // requestStart sin actor humano. No salta el pago del 5%: el COP igual
+  // queda en PENDING_PAYMENT hasta que se confirme el Payment vía Sentoo —
+  // esto solo automatiza la solicitud, no el pago.
+  static tryAutoContinueFromAop = async (
+    debtClaimId: string,
+    tenantId: string,
+    jurisdictionId: string | null,
+  ) => {
+    const enabled = await SettingsService.resolveBoolean(
+      "col_auto_continue_from_aop",
+      { tenantId, jurisdictionId },
+      false,
+    );
+    if (!enabled) return null;
+
+    const canStartResult = await this.canStart(debtClaimId);
+    if (!canStartResult.allowed) return null;
+
+    const result = await this.requestStart(debtClaimId, undefined);
+    return result.collectionId;
   };
 
   // Paso 2: se llama desde el webhook de Sentoo cuando el Payment
@@ -231,9 +319,9 @@ export class CollectiveCollectionService {
     }
 
     try {
-      await this.runEmployerCheck(collection.id);
+      await this.broadcastNetworkQuery(collection.id);
     } catch (error) {
-      console.error("Error running employer check for COP:", error);
+      console.error("Error broadcasting COP network query:", error);
     }
 
     try {
@@ -242,33 +330,37 @@ export class CollectiveCollectionService {
       console.error("Error notifying debtor of COP start:", error);
     }
 
+    const gracePeriodDays = await SettingsService.resolveNumber(
+      "col_debtor_grace_period_days",
+      { tenantId: debtClaim.tenantId },
+      2,
+    );
+    const debtorGracePeriodDeadline = new Date();
+    debtorGracePeriodDeadline.setDate(debtorGracePeriodDeadline.getDate() + gracePeriodDays);
+
     const updated = await prisma.collectiveCollection.update({
       where: { id: collection.id },
-      data: { status: CollectiveCollectionStatus.AWAITING_DEBTOR_RESPONSE },
+      data: { status: CollectiveCollectionStatus.AWAITING_DEBTOR_RESPONSE, debtorGracePeriodDeadline },
       include: collectiveCollectionInclude,
     });
 
     return serializeCollection(updated);
   };
 
-  // Verifica si el deudor trabaja para un tenant afiliado (Paso 2/3 del
-  // proceso COP). No-op si ya se encontró un empleador antes.
-  static runEmployerCheck = async (collectionId: string) => {
+  // Aplica el match de empleador ya confirmado (por un "Sí" al broadcast de
+  // red) — este bloque es intencionalmente el mismo que antes hacía el
+  // lookup silencioso por identification exacta, solo cambia quién lo
+  // dispara (submitNetworkResponse en vez de un match automático de BD).
+  private static applyEmployerMatch = async (collectionId: string, employerTenantId: string) => {
     const collection = await prisma.collectiveCollection.findUnique({
       where: { id: collectionId },
-      include: { debtClaim: { include: { debtor: { include: { person: true } } } } },
+      include: { debtClaim: true },
     });
-    if (!collection || collection.employerTenantId) return { matched: false };
-
-    const identification = collection.debtClaim.debtor.person?.identification;
-    const match = identification
-      ? await EmployeeService.findEmployerTenantForPerson(identification)
-      : null;
-    if (!match) return { matched: false };
+    if (!collection || collection.employerTenantId) return;
 
     await prisma.collectiveCollection.update({
       where: { id: collectionId },
-      data: { employerTenantId: match.tenantId, employerMatchedAt: new Date() },
+      data: { employerTenantId, employerMatchedAt: new Date() },
     });
 
     await ClaimTimelineService.logEvent(
@@ -279,7 +371,7 @@ export class CollectiveCollectionService {
 
     // No se comparte información financiera ni el contenido del expediente
     // con el empleador — solo la solicitud genérica de informar al deudor.
-    await NotificationService.notifyTenantStaff(match.tenantId, {
+    await NotificationService.notifyTenantStaff(employerTenantId, {
       type: NotificationType.COL_EMPLOYER_MATCH_FOUND,
       title: "Verzoek: informeer uw medewerker",
       message:
@@ -297,27 +389,146 @@ export class CollectiveCollectionService {
         sentAt: new Date(),
       },
     });
-
-    return { matched: true, employerTenantId: match.tenantId };
   };
 
-  // Llamado únicamente por el job periódico — vuelve a intentar el chequeo
-  // de empleador para todos los COP abiertos que todavía no encontraron uno
-  // (Paso 3: "cuando existan cambios futuros, CFSB volverá a verificar
-  // automáticamente").
-  static recheckAllPendingEmployerMatches = async () => {
-    const pending = await prisma.collectiveCollection.findMany({
-      where: { employerTenantId: null, status: { in: OPEN_COLLECTIVE_COLLECTION_STATUSES } },
-      select: { id: true },
+  // "Presión de red": difunde una pregunta Sí/No a todos los tenants activos
+  // de la red (excepto el dueño del expediente) — sin monto ni acreedor,
+  // solo el nombre y el número CFSBP del deudor. Reemplaza el match
+  // silencioso por identification exacta que existía antes.
+  static broadcastNetworkQuery = async (collectionId: string) => {
+    const collection = await prisma.collectiveCollection.findUnique({
+      where: { id: collectionId },
+      include: {
+        debtClaim: { include: { debtor: { include: { person: true } }, tenant: true } },
+      },
+    });
+    if (!collection || collection.employerTenantId) return null;
+
+    const person = collection.debtClaim.debtor.person;
+    if (!person) return null;
+
+    const personalNumber = await PersonService.ensurePersonalNumber(
+      person.id,
+      person.country_code,
+    );
+    const displayName =
+      `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim() ||
+      person.business_name ||
+      personalNumber;
+
+    const responseWindowDays = await SettingsService.resolveNumber(
+      "col_debtor_grace_period_days",
+      { tenantId: collection.debtClaim.tenantId },
+      2,
+    );
+    const responseDeadline = new Date();
+    responseDeadline.setDate(responseDeadline.getDate() + responseWindowDays);
+
+    const participants = await TenantService.getActiveParticipants();
+    const targetTenantIds = participants
+      .map((t) => t.id)
+      .filter((id) => id !== collection.debtClaim.tenantId);
+    if (targetTenantIds.length === 0) return null;
+
+    const query = await prisma.cOLNetworkQuery.create({
+      data: {
+        collectionId,
+        personalNumber,
+        displayName,
+        broadcastAt: new Date(),
+        responseDeadline,
+        status: "OPEN",
+        responses: {
+          create: targetTenantIds.map((tenantId) => ({ tenantId })),
+        },
+      },
     });
 
-    let matched = 0;
-    for (const item of pending) {
-      const result = await this.runEmployerCheck(item.id);
-      if (result.matched) matched++;
+    await ClaimTimelineService.logEvent(
+      collection.debtClaimId,
+      "COL_NETWORK_BROADCAST_SENT",
+      `Vraag verzonden naar ${targetTenantIds.length} deelnemer(s) in het netwerk voor dossier ${
+        collection.debtClaim.reference ?? collection.debtClaimId
+      }.`,
+    );
+
+    await NotificationService.notifyManyTenants(targetTenantIds, {
+      type: NotificationType.COL_NETWORK_QUERY_RECEIVED,
+      title: "Netwerkvraag: kent u deze persoon?",
+      message: `Heeft u ${displayName} (${personalNumber}) binnen uw organisatie? Beantwoord met Ja of Nee.`,
+      entity_type: "CollectiveCollection",
+      entity_id: collectionId,
+    });
+
+    return query;
+  };
+
+  // Guardado de la respuesta Sí/No de un tenant a una pregunta de broadcast.
+  // "Sí" confirma el empleador (vía applyEmployerMatch, sin más pasos). "No"
+  // solo se registra; si ya no quedan respuestas pendientes, se cierra sin
+  // match. Las respuestas de otros tenants nunca se exponen entre sí.
+  static submitNetworkResponse = async (
+    queryId: string,
+    tenantId: string,
+    answer: "YES" | "NO",
+    responderId: string,
+  ) => {
+    const response = await prisma.cOLNetworkResponse.findUnique({
+      where: { queryId_tenantId: { queryId, tenantId } },
+      include: { query: true },
+    });
+    if (!response) throw new Error("Netwerkvraag niet gevonden voor deze organisatie.");
+    if (response.answer) throw new Error("Deze vraag is al beantwoord.");
+
+    await prisma.cOLNetworkResponse.update({
+      where: { id: response.id },
+      data: { answer, respondedAt: new Date(), respondedById: responderId },
+    });
+
+    if (answer === "YES") {
+      await prisma.cOLNetworkQuery.update({
+        where: { id: queryId },
+        data: { status: "MATCHED" },
+      });
+      await this.applyEmployerMatch(response.query.collectionId, tenantId);
+      return { matched: true };
     }
 
-    return { checked: pending.length, matched };
+    const remainingPending = await prisma.cOLNetworkResponse.count({
+      where: { queryId, answer: null },
+    });
+    if (remainingPending === 0) {
+      await prisma.cOLNetworkQuery.update({
+        where: { id: queryId },
+        data: { status: "CLOSED_NO_MATCH" },
+      });
+    }
+
+    return { matched: false };
+  };
+
+  // Llamado únicamente por el job periódico — cierra sin match los
+  // broadcasts de red cuyo plazo de respuesta venció sin que ningún tenant
+  // haya confirmado ser el empleador.
+  static closeExpiredNetworkQueries = async () => {
+    const expired = await prisma.cOLNetworkQuery.findMany({
+      where: { status: "OPEN", responseDeadline: { lte: new Date() } },
+      include: { collection: true },
+    });
+
+    for (const query of expired) {
+      await prisma.cOLNetworkQuery.update({
+        where: { id: query.id },
+        data: { status: "CLOSED_NO_MATCH" },
+      });
+      await ClaimTimelineService.logEvent(
+        query.collection.debtClaimId,
+        "STATUS_CHANGED",
+        `Netwerkvraag verlopen zonder match voor dossier ${query.collection.debtClaimId}.`,
+      );
+    }
+
+    return { checked: expired.length, closed: expired.length };
   };
 
   static notifyDebtorStarted = async (collectionId: string) => {
@@ -365,10 +576,11 @@ export class CollectiveCollectionService {
     collectionId: string,
     input: { proposalAmount: number; notes?: string | null },
     requestingUserId: string,
+    submitterInfo: { submittedByRole: "DEBTOR" | "EMPLOYER"; onBehalfOfEmployerTenantId?: string | null },
   ) => {
     const collection = await prisma.collectiveCollection.findUnique({
       where: { id: collectionId },
-      include: { debtClaim: true },
+      include: { debtClaim: { include: { debtor: true } } },
     });
     if (!collection) throw new Error("Dossier niet gevonden.");
 
@@ -393,6 +605,9 @@ export class CollectiveCollectionService {
           proposalAmount: input.proposalAmount,
           notes: input.notes ?? null,
           status: "OPEN",
+          submittedByRole: submitterInfo.submittedByRole,
+          submittedByUserId: requestingUserId,
+          submittedOnBehalfOfEmployerTenantId: submitterInfo.onBehalfOfEmployerTenantId ?? null,
         },
       });
 
@@ -424,6 +639,21 @@ export class CollectiveCollectionService {
       },
       { excludeUserId: requestingUserId },
     );
+
+    // El deudor no ve el pedido en la app del empleador — se le avisa
+    // explícitamente que su empleador actuó en su nombre.
+    if (submitterInfo.submittedByRole === "EMPLOYER" && collection.debtClaim.debtor.user_id) {
+      await NotificationService.create({
+        tenant_id: collection.debtClaim.tenantId,
+        user_id: collection.debtClaim.debtor.user_id,
+        type: NotificationType.COL_NEGOTIATION_REQUESTED_BY_EMPLOYER,
+        title: "Uw werkgever heeft namens u een betalingsregeling aangevraagd",
+        message: `Voor dossier ${collection.debtClaim.reference ?? collection.debtClaimId} werd een betalingsregeling van ${input.proposalAmount} aangevraagd door uw werkgever, namens u.`,
+        link: `/collective-follow-up/${collectionId}`,
+        entity_type: "CollectiveCollection",
+        entity_id: collectionId,
+      });
+    }
 
     return negotiation;
   };
