@@ -104,6 +104,7 @@ export class ObligationService {
         type: "PRINCIPAL_DEBT",
         beneficiary: "PARTICIPANT",
         payer: "DEBTOR",
+        description: "Hoofdsom",
         originalAmount: fallbackAmount,
         paidAmount: 0,
         balanceAmount: fallbackAmount,

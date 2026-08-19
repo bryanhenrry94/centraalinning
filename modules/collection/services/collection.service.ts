@@ -212,6 +212,7 @@ export class CollectionService {
           type: "PRINCIPAL_DEBT",
           beneficiary: "PARTICIPANT",
           payer: "DEBTOR",
+          description: "Hoofdsom",
           originalAmount: parsedData.principalAmount,
           paidAmount: 0,
           balanceAmount: parsedData.principalAmount,
@@ -227,6 +228,7 @@ export class CollectionService {
           type: "COLLECTION",
           beneficiary: "CFSB",
           payer: "PARTICIPANT",
+          description: "AOP-activeringskosten",
           originalAmount: cfsbFeeTotal,
           paidAmount: 0,
           balanceAmount: cfsbFeeTotal,
@@ -242,6 +244,7 @@ export class CollectionService {
           type: "COLLECTION",
           beneficiary: "CFSB",
           payer: "DEBTOR",
+          description: "AOP-kosten",
           originalAmount: cfsbFeeTotal,
           paidAmount: 0,
           balanceAmount: cfsbFeeTotal,
@@ -655,6 +658,12 @@ export class CollectionService {
     if (amount <= 0) return null;
 
     const stepLabel = step === "REMINDER" ? "de aanmaning" : "de sommatie";
+    // Etiqueta que ve el deudor en el diálogo de pago CFSB — debe explicar
+    // POR QUÉ surgió el costo, no solo decir "extra kosten N".
+    const description =
+      step === "REMINDER"
+        ? "Aanvullende kosten na aanmaning"
+        : "Aanvullende kosten na sommatie";
 
     return prisma.$transaction(async (tx) => {
       const obligation = await tx.debtClaimObligation.create({
@@ -666,6 +675,7 @@ export class CollectionService {
           // participante en ningún momento, a diferencia de la comisión del
           // AOP).
           payer: "DEBTOR",
+          description,
           originalAmount: amount,
           paidAmount: 0,
           balanceAmount: amount,
@@ -832,6 +842,7 @@ export class CollectionService {
 
     return obligations.map((obligation) => ({
       obligationId: obligation.id,
+      description: obligation.description ?? "CFSB-kosten",
       balanceAmount: Number(obligation.balanceAmount),
       status: obligation.status,
       paymentUrl: obligation.payments[0]?.payment_url ?? null,

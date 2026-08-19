@@ -140,14 +140,14 @@ export const PayCollectionFeeDialog: React.FC<PayCollectionFeeDialogProps> = ({
               <>
                 <Divider sx={{ mb: 1.5 }} />
                 <Stack spacing={1} sx={{ mb: 1 }}>
-                  {obligations.map((obligation, index) => (
+                  {obligations.map((obligation) => (
                     <Stack
                       key={obligation.obligationId}
                       direction="row"
                       justifyContent="space-between"
                     >
                       <Typography variant="body2" color="text.secondary">
-                        {index === 0 ? "Kosten AOP-activering" : `Extra kosten ${index}`}
+                        {obligation.description}
                       </Typography>
                       <Typography variant="body2">
                         {formatCurrency(obligation.balanceAmount)}

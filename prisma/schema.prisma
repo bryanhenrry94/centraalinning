@@ -184,6 +184,13 @@ model DebtClaimObligation {
   // entre ellos. Ver CollectionService.createPending.
   payer ObligationPayer @default(DEBTOR)
 
+  // Etiqueta legible para el deudor/cliente (p.ej. "AOP-kosten",
+  // "Aanvullende kosten na aanmaning") — se fija en el momento de crear la
+  // obligación, nunca se infiere por posición/orden ni por monto (eso es
+  // frágil: dos recargos pueden coincidir en monto). Ver
+  // CollectionService.createPending / applyNoResponseFee.
+  description String?
+
   originalAmount Decimal
   paidAmount     Decimal @default(0)
   balanceAmount  Decimal
