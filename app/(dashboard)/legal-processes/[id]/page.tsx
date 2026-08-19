@@ -58,13 +58,23 @@ import { AgreementResponse } from "@/modules/agreement/services/agreement.valida
 
 type LegalProcessDetail = Awaited<ReturnType<typeof getLegalProcessById>>;
 
-function InfoField({ label, value }: { label: string; value?: React.ReactNode }) {
+function InfoField({
+  label,
+  value,
+}: {
+  label: string;
+  value?: React.ReactNode;
+}) {
   return (
     <Box>
       <Typography
         variant="caption"
         color="text.secondary"
-        sx={{ textTransform: "uppercase", letterSpacing: 0.4, display: "block" }}
+        sx={{
+          textTransform: "uppercase",
+          letterSpacing: 0.4,
+          display: "block",
+        }}
       >
         {label}
       </Typography>
@@ -81,19 +91,27 @@ const LegalProcessDetailPage: React.FC = () => {
   const { data: session } = useSession();
   const roles = (session?.user?.roles as string[] | undefined) ?? [];
   const isStaff = roles.some((r) =>
-    [UserRole.TENANT_ADMIN, UserRole.AGENT, UserRole.EMPLOYEE, UserRole.PLATFORM_OWNER].includes(
-      r as UserRole,
-    ),
+    [
+      UserRole.TENANT_ADMIN,
+      UserRole.AGENT,
+      UserRole.EMPLOYEE,
+      UserRole.PLATFORM_OWNER,
+    ].includes(r as UserRole),
   );
   const isBailiffRole = roles.includes(UserRole.BAILIFF);
 
   const [loading, setLoading] = useState(true);
-  const [legalProcess, setLegalProcess] = useState<LegalProcessDetail | null>(null);
-  const [agreements, setAgreements] = useState<Awaited<ReturnType<typeof getGopAgreements>>>([]);
+  const [legalProcess, setLegalProcess] = useState<LegalProcessDetail | null>(
+    null,
+  );
+  const [agreements, setAgreements] = useState<
+    Awaited<ReturnType<typeof getGopAgreements>>
+  >([]);
   const [obligation, setObligation] = useState<Awaited<
     ReturnType<typeof getGopPrincipalObligation>
   > | null>(null);
-  const [selectedAgreement, setSelectedAgreement] = useState<AgreementResponse | null>(null);
+  const [selectedAgreement, setSelectedAgreement] =
+    useState<AgreementResponse | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [dialog, setDialog] = useState<
@@ -192,17 +210,34 @@ const LegalProcessDetailPage: React.FC = () => {
   const canDecideAgreements = isStaff || (isBailiffRole && hasPowerOfAttorney);
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+    >
       <AppBreadcrumbs
-        items={[{ label: "Gerechtelijke opvolging", href: "/legal-processes" }, { label: "Details" }]}
+        items={[
+          { label: "Gerechtelijke opvolging", href: "/legal-processes" },
+          { label: "Details" },
+        ]}
       />
 
       <Stack spacing={3}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          flexWrap="wrap"
+          gap={1}
+        >
           <Typography variant="h4" fontWeight={700}>
             {legalProcess.referenceNumber || legalProcess.debtClaim.reference}
           </Typography>
-          <Chip label={statusInfo.label} color={statusInfo.color} sx={{ fontWeight: 700 }} />
+          <Chip
+            label={statusInfo.label}
+            color={statusInfo.color}
+            sx={{ fontWeight: 700 }}
+          />
         </Stack>
 
         <Card>
@@ -213,12 +248,17 @@ const LegalProcessDetailPage: React.FC = () => {
                 <InfoField label="Debiteur" value={debtorName} />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField label="Vordering" value={legalProcess.debtClaim.reference} />
+                <InfoField
+                  label="Vordering"
+                  value={legalProcess.debtClaim.reference}
+                />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <InfoField
                   label="Bedrag"
-                  value={formatCurrency(Number(legalProcess.debtClaim.principalAmount) || 0)}
+                  value={formatCurrency(
+                    Number(legalProcess.debtClaim.principalAmount) || 0,
+                  )}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
@@ -232,10 +272,16 @@ const LegalProcessDetailPage: React.FC = () => {
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField label="Deurwaarder" value={legalProcess.bailiff?.fullname ?? "-"} />
+                <InfoField
+                  label="Deurwaarder"
+                  value={legalProcess.bailiff?.fullname ?? "-"}
+                />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField label="Gestart op" value={formatDate(legalProcess.startedAt.toString())} />
+                <InfoField
+                  label="Gestart op"
+                  value={formatDate(legalProcess.startedAt.toString())}
+                />
               </Grid>
               {legalProcess.status === LegalProcessStatus.GOP_INACTIVE && (
                 <>
@@ -244,7 +290,9 @@ const LegalProcessDetailPage: React.FC = () => {
                       label="Reden (geen executiemogelijkheid)"
                       value={
                         legalProcess.inactiveReason
-                          ? getGopInactiveReasonLabel(legalProcess.inactiveReason)
+                          ? getGopInactiveReasonLabel(
+                              legalProcess.inactiveReason,
+                            )
                           : "-"
                       }
                     />
@@ -263,7 +311,9 @@ const LegalProcessDetailPage: React.FC = () => {
                     <InfoField
                       label="Controledatum"
                       value={
-                        legalProcess.reviewDate ? formatDate(legalProcess.reviewDate.toString()) : "-"
+                        legalProcess.reviewDate
+                          ? formatDate(legalProcess.reviewDate.toString())
+                          : "-"
                       }
                     />
                   </Grid>
@@ -292,8 +342,12 @@ const LegalProcessDetailPage: React.FC = () => {
                     <TableRow key={verdict.id}>
                       <TableCell>{verdict.registration_number}</TableCell>
                       <TableCell>{verdict.court || "-"}</TableCell>
-                      <TableCell>{formatDate(verdict.sentence_date.toString())}</TableCell>
-                      <TableCell align="right">{formatCurrency(verdict.sentence_amount)}</TableCell>
+                      <TableCell>
+                        {formatDate(verdict.sentence_date.toString())}
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatCurrency(verdict.sentence_amount)}
+                      </TableCell>
                       <TableCell>
                         {verdict.prescription_due_date
                           ? formatDate(verdict.prescription_due_date.toString())
@@ -308,7 +362,7 @@ const LegalProcessDetailPage: React.FC = () => {
         )}
 
         <Card>
-          <CardHeader title="Saldo & betalingsregeling" />
+          <CardHeader title="Open & betalingsregeling" />
           <Divider />
           <CardContent>
             <Grid container spacing={2.5} mb={2}>
@@ -316,7 +370,9 @@ const LegalProcessDetailPage: React.FC = () => {
                 <InfoField
                   label="Openstaand saldo"
                   value={
-                    obligation ? formatCurrency(Number(obligation.balanceAmount)) : "Nog geen betalingen"
+                    obligation
+                      ? formatCurrency(Number(obligation.balanceAmount))
+                      : "Nog geen betalingen"
                   }
                 />
               </Grid>
@@ -354,7 +410,9 @@ const LegalProcessDetailPage: React.FC = () => {
                         setDialog("decide-agreement");
                       }}
                     >
-                      <TableCell>{formatCurrency(agreement.total_amount)}</TableCell>
+                      <TableCell>
+                        {formatCurrency(agreement.total_amount)}
+                      </TableCell>
                       <TableCell>{agreement.installments_count}</TableCell>
                       <TableCell>{agreement.status}</TableCell>
                       <TableCell>{agreement.rejection_reason ?? "-"}</TableCell>
@@ -407,7 +465,10 @@ const LegalProcessDetailPage: React.FC = () => {
           <CardHeader title="Audit trail" />
           <Divider />
           <CardContent>
-            <GopTimeline debtClaimId={legalProcess.debtClaimId} refreshKey={refreshKey} />
+            <GopTimeline
+              debtClaimId={legalProcess.debtClaimId}
+              refreshKey={refreshKey}
+            />
           </CardContent>
         </Card>
 
@@ -419,40 +480,74 @@ const LegalProcessDetailPage: React.FC = () => {
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 <Button
                   variant="outlined"
-                  onClick={() => router.push(`/verdicts/new?legalProcessId=${legalProcess.id}`)}
+                  onClick={() =>
+                    router.push(
+                      `/verdicts/new?legalProcessId=${legalProcess.id}`,
+                    )
+                  }
                 >
                   Aanvullend vonnis registreren
                 </Button>
-                <Button variant="outlined" onClick={() => setDialog("execution-measure")}>
+                <Button
+                  variant="outlined"
+                  onClick={() => setDialog("execution-measure")}
+                >
                   Executiemaatregel
                 </Button>
-                <Button variant="outlined" onClick={() => setDialog("interest-update")}>
+                <Button
+                  variant="outlined"
+                  onClick={() => setDialog("interest-update")}
+                >
                   Rente-update
                 </Button>
-                <Button variant="outlined" onClick={() => setDialog("bailiff-cost")}>
+                <Button
+                  variant="outlined"
+                  onClick={() => setDialog("bailiff-cost")}
+                >
                   Deurwaarderskosten
                 </Button>
                 {legalProcess.status === LegalProcessStatus.GOP_ACTIVE && (
-                  <Button variant="outlined" color="warning" onClick={() => setDialog("mark-inactive")}>
+                  <Button
+                    variant="outlined"
+                    color="warning"
+                    onClick={() => setDialog("mark-inactive")}
+                  >
                     Geen executiemogelijkheid
                   </Button>
                 )}
                 {legalProcess.status === LegalProcessStatus.GOP_INACTIVE && (
-                  <Button variant="outlined" color="success" onClick={handleReactivate}>
+                  <Button
+                    variant="outlined"
+                    color="success"
+                    onClick={handleReactivate}
+                  >
                     Reactiveren
                   </Button>
                 )}
-                <Button variant="outlined" onClick={() => setDialog("change-bailiff")}>
+                <Button
+                  variant="outlined"
+                  onClick={() => setDialog("change-bailiff")}
+                >
                   Deurwaarder wijzigen
                 </Button>
-                <Button variant="outlined" onClick={() => setDialog("create-agreement")}>
+                <Button
+                  variant="outlined"
+                  onClick={() => setDialog("create-agreement")}
+                >
                   Betalingsregeling registreren
                 </Button>
-                <Button variant="outlined" onClick={() => setDialog("register-payment")}>
+                <Button
+                  variant="outlined"
+                  onClick={() => setDialog("register-payment")}
+                >
                   Betaling registreren
                 </Button>
                 {isBailiffWorkFinalized ? (
-                  <Button variant="contained" color="success" onClick={handleClose}>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    onClick={handleClose}
+                  >
                     Sluiten (vonnis volledig voldaan)
                   </Button>
                 ) : (
@@ -466,8 +561,9 @@ const LegalProcessDetailPage: React.FC = () => {
               </Stack>
               {!isBailiffWorkFinalized && (
                 <Typography variant="body2" color="text.secondary" mt={1.5}>
-                  Antes de poder cerrar el expediente, registre los costos facturados al debiteur y
-                  pague la comisión del CFSB (5%) sobre ese monto.
+                  Antes de poder cerrar el expediente, registre los costos
+                  facturados al debiteur y pague la comisión del CFSB (5%) sobre
+                  ese monto.
                 </Typography>
               )}
             </CardContent>
@@ -520,7 +616,9 @@ const LegalProcessDetailPage: React.FC = () => {
         open={dialog === "register-payment"}
         onClose={() => setDialog(null)}
         legalProcessId={legalProcess.id}
-        balanceAmount={obligation ? Number(obligation.balanceAmount) : undefined}
+        balanceAmount={
+          obligation ? Number(obligation.balanceAmount) : undefined
+        }
         onRegistered={refresh}
       />
       <FinalizeBailiffWorkDialog

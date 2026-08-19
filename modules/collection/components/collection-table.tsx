@@ -167,7 +167,7 @@ const CollectionTable = ({
                     <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
                       {isPending
                         ? "—"
-                        : formatCurrency(Number(row.principalAmount))}
+                        : formatCurrency(row.receivableBalance ?? Number(row.principalAmount))}
                     </TableCell>
                   )}
                   <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>

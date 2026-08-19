@@ -57,6 +57,7 @@ export const DebtClaimObligationViewSchema = z.object({
   id: z.string(),
   type: z.string(),
   beneficiary: z.string(),
+  payer: z.string(),
   originalAmount: z.number(),
   paidAmount: z.number(),
   balanceAmount: z.number(),
@@ -78,6 +79,11 @@ export const DebtClaimResponseSchema = DebtClaimSchema.extend({
   paymentLink: z.string().nullable().optional(),
   charges: z.array(ClaimChargeViewSchema).optional(),
   obligations: z.array(DebtClaimObligationViewSchema).optional(),
+  // Saldo neto que el cliente/tenant va a cobrar (principal menos la
+  // comisión CFSB) — ver CollectionService.getAll y
+  // modules/collection/utils/debt-claim-balance.ts. Opcional porque no
+  // todos los mappers del servicio lo calculan (p.ej. getById/update).
+  receivableBalance: z.number().optional(),
   agreementStatus: z.string().nullable().optional(),
   legalProcessId: z.string().nullable().optional(),
   collectiveCollectionId: z.string().nullable().optional(),

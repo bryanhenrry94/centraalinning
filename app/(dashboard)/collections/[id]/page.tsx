@@ -24,6 +24,7 @@ import {
 } from "@mui/material";
 
 import { DebtClaimView } from "@/modules/collection/services/collection.validators";
+import { computeDebtClaimBalances } from "@/modules/collection/utils/debt-claim-balance";
 import { Payment } from "@/modules/payment/services/payment.validators";
 import { getDebtClaimViewById } from "@/modules/collection/actions/debt-claim.actions";
 import { notifyError } from "@/shared/ui/notifications";
@@ -133,6 +134,9 @@ const CollectionViewPage: React.FC = () => {
   const aopInfo = collection?.aopStep
     ? getAopStepInfo(collection.aopStep)
     : null;
+  const { receivableBalance, participantCfsbCost } = computeDebtClaimBalances(
+    collection?.obligations ?? [],
+  );
 
   return (
     <Container
@@ -286,6 +290,22 @@ const CollectionViewPage: React.FC = () => {
                     )}
                   />
                 </Grid>
+
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <InfoField
+                    label="Hoofdsom te ontvangen"
+                    value={formatCurrency(receivableBalance)}
+                  />
+                </Grid>
+
+                {participantCfsbCost > 0 && (
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <InfoField
+                      label="AOP-activatie aan CFSB betaald"
+                      value={formatCurrency(participantCfsbCost)}
+                    />
+                  </Grid>
+                )}
 
                 <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                   <InfoField label="Status" value={statusInfo.label} />

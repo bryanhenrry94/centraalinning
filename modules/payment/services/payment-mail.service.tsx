@@ -126,10 +126,7 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
     // por DebtClaim.status, ya que una deuda en AANMANING/SOMMATIE sigue
     // pendiente aunque su status ya no sea "OPEN").
     const openDebtsCount = openDebts.length;
-    const balanceTotal = openDebts.reduce(
-      (total, debt) => total + debt.balance + (debt.total_fined || 0),
-      0,
-    );
+    const balanceTotal = openDebts.reduce((total, debt) => total + debt.balance, 0);
 
     const activePaymentPlansCount = await prisma.agreement.count({
       where: { debtor_id: debtor.id, status: "ACCEPTED" },
@@ -193,7 +190,7 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
         reference: debt.reference || debt.id,
         dueDate: debt.due_date ? formatDate(debt.due_date.toString()) : "-",
         status: getSourceStatusInfo(debt.source_status).label,
-        balance: formatCurrency(debt.balance + (debt.total_fined || 0)),
+        balance: formatCurrency(debt.balance),
       })),
       qrCode,
     };

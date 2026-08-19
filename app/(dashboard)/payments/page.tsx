@@ -7,6 +7,7 @@ import {
   Chip,
   Container,
   Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -18,6 +19,7 @@ import {
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import HistoryIcon from "@mui/icons-material/History";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 
@@ -29,6 +31,7 @@ import {
 } from "@/modules/collection/actions/debtor.actions";
 import { DebtorSummary } from "@/modules/collection/types/DebtorSummary";
 import { TransferPaymentDialog } from "@/modules/payment/components/transfer-payment-dialog";
+import { PayCollectionFeeDialog } from "@/modules/payment/components/pay-collection-fee-dialog";
 import { getSourceStatusInfo } from "@/modules/collection/utils/debt-claim-status";
 import { PaymentsDialog } from "@/modules/payment/components/payments-dialog";
 import { getAgreementsByDebtClaimId } from "@/modules/agreement/actions/agreement.actions";
@@ -47,6 +50,7 @@ const PaymentsPage = () => {
   const [debts, setDebts] = useState<DebtorSummary[]>([]);
   const [historyDebtId, setHistoryDebtId] = useState<string | null>(null);
   const [transferDebt, setTransferDebt] = useState<DebtorSummary | null>(null);
+  const [collectionFeeDebtId, setCollectionFeeDebtId] = useState<string | null>(null);
   const [agreementDebt, setAgreementDebt] = useState<DebtorSummary | null>(
     null,
   );
@@ -152,7 +156,40 @@ const PaymentsPage = () => {
                     size="small"
                   />
                 </TableCell>
-                <TableCell align="right">{formatCurrency(debt.balance)}</TableCell>
+                <TableCell align="right">
+                  <Stack spacing={1} alignItems="flex-end">
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Aan deelnemer
+                      </Typography>
+                      <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
+                        <Typography variant="body2" fontWeight={600}>
+                          {formatCurrency(debt.debtor_to_participant_balance)}
+                        </Typography>
+                        <Chip
+                          size="small"
+                          label={debt.debtor_to_participant_balance > 0 ? "Openstaand" : "Betaald"}
+                          color={debt.debtor_to_participant_balance > 0 ? "warning" : "success"}
+                        />
+                      </Stack>
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">
+                        CFSB-kosten
+                      </Typography>
+                      <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
+                        <Typography variant="body2" fontWeight={600}>
+                          {formatCurrency(debt.debtor_to_cfsb_balance)}
+                        </Typography>
+                        <Chip
+                          size="small"
+                          label={debt.debtor_to_cfsb_balance > 0 ? "Openstaand" : "Betaald"}
+                          color={debt.debtor_to_cfsb_balance > 0 ? "warning" : "success"}
+                        />
+                      </Stack>
+                    </Box>
+                  </Stack>
+                </TableCell>
                 <TableCell align="center">
                   <Tooltip title="Betalingsoverzicht">
                     <IconButton
@@ -162,28 +199,41 @@ const PaymentsPage = () => {
                       <HistoryIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
-                  <Button
-                    size="small"
-                    variant="contained"
-                    color="error"
-                    startIcon={<AttachMoneyIcon fontSize="small" />}
-                    onClick={() => handlePay(debt)}
-                    sx={{ ml: 1 }}
-                  >
-                    Betalen
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="secondary"
-                    startIcon={<HandshakeIcon fontSize="small" />}
-                    onClick={() => handleBetaalregelingClick(debt)}
-                    sx={{ ml: 1 }}
-                  >
-                    {hasOpenAgreement(debt.agreement_status)
-                      ? "Regeling"
-                      : "Regeling aanvragen"}
-                  </Button>
+                  <Stack spacing={1} alignItems="center" sx={{ mt: 1 }}>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="error"
+                      startIcon={<AttachMoneyIcon fontSize="small" />}
+                      onClick={() => handlePay(debt)}
+                      disabled={debt.debtor_to_participant_balance <= 0}
+                      fullWidth
+                    >
+                      Aan deelnemer betalen
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<AccountBalanceIcon fontSize="small" />}
+                      onClick={() => setCollectionFeeDebtId(debt.id)}
+                      disabled={debt.debtor_to_cfsb_balance <= 0}
+                      fullWidth
+                    >
+                      CFSB-kosten betalen
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="secondary"
+                      startIcon={<HandshakeIcon fontSize="small" />}
+                      onClick={() => handleBetaalregelingClick(debt)}
+                      fullWidth
+                    >
+                      {hasOpenAgreement(debt.agreement_status)
+                        ? "Regeling"
+                        : "Regeling aanvragen"}
+                    </Button>
+                  </Stack>
                 </TableCell>
               </TableRow>
             ))}
@@ -205,6 +255,13 @@ const PaymentsPage = () => {
         onSuccess={fetchDebts}
       />
 
+      <PayCollectionFeeDialog
+        open={!!collectionFeeDebtId}
+        onClose={() => setCollectionFeeDebtId(null)}
+        debtClaimId={collectionFeeDebtId || ""}
+        onPaid={fetchDebts}
+      />
+
       <AgreementFormDialog
         open={openModalAgreement}
         onClose={() => setOpenModalAgreement(false)}
@@ -216,7 +273,7 @@ const PaymentsPage = () => {
             ? `${agreementDebt.reference || agreementDebt.id} – ${agreementDebt.tenant_name}`
             : undefined
         }
-        outstandingAmount={agreementDebt?.balance}
+        outstandingAmount={agreementDebt?.debtor_to_participant_balance}
         initialData={{
           debtClaim_id: agreementDebt?.id || "",
           total_amount: agreementDebt?.amount || 0,

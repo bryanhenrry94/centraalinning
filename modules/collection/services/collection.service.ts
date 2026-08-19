@@ -16,6 +16,13 @@ import {
 import { InvoiceService } from "@/modules/payment/services/invoice-service";
 import { sendInvoiceEmail } from "@/actions/email";
 import { AOP_STEP_CONFIG } from "@/modules/collection/utils/debt-claim-status";
+import { computeDebtClaimBalances } from "@/modules/collection/utils/debt-claim-balance";
+import { ObligationService } from "@/modules/collection/services/obligation.service";
+import { ClaimTimelineService } from "@/modules/collection/services/claim-timeline.service";
+import { PaymentService } from "@/modules/payment/services/payment.service";
+import { PaymentType } from "@/modules/payment/services/payment.validators";
+import { NotificationService } from "@/modules/notification/services/notification.service";
+import { NotificationType } from "@/modules/notification/constants/notification-type";
 
 export class CollectionService {
   /**
@@ -160,11 +167,23 @@ export class CollectionService {
     // Tarifa configurable por isla/tenant (punto 9 del análisis CFSB) — antes
     // hardcodeada en 15/6, lo que la desconectaba silenciosamente de
     // Setting/Jurisdiction en cuanto el Superadministrador cambiara el valor.
+    // Reusa calculateAmounts (la misma cuenta que activate() usa para los
+    // ClaimCharge) para que la obligación CFSB no quede desincronizada del
+    // monto realmente facturado — antes esta cuenta se repetía acá sin el
+    // costo de dossier digital ni el piso mínimo de comisión.
     const parameter = await ParameterService.getParameterForTenant(tenantId);
-    const feeRate = parameter?.collection_fee_rate ?? 0;
-    const abbRate = parameter?.abb_rate ?? 0;
-    const feeAmount = Number(((principalAmount * feeRate) / 100).toFixed(2));
-    const abbAmount = Number(((feeAmount * abbRate) / 100).toFixed(2));
+    if (!parameter) {
+      return { success: false, error: "Parameter not found" };
+    }
+    const { feeAmount, abbAmount, digitalFileCosts } = this.calculateAmounts(
+      principalAmount,
+      parameter,
+    );
+    // El participante paga esta comisión a CFSB al registrar el AOP (incluye
+    // el ABB, un impuesto de CFSB al participante). El deudor paga el MISMO
+    // monto completo a CFSB, por separado — dos obligaciones/pagos
+    // independientes, sin reembolso entre ellos (pedido del sponsor).
+    const cfsbFeeTotal = Number((feeAmount + abbAmount + digitalFileCosts).toFixed(2));
 
     const { claimId, obligationId } = await prisma.$transaction(async (tx) => {
       // De AOP-referentie wordt altijd door het systeem gegenereerd, nooit
@@ -186,11 +205,13 @@ export class CollectionService {
         },
       });
 
+      // Deuda original: el deudor le paga al participante.
       await tx.debtClaimObligation.create({
         data: {
           debtClaimId: claim.id,
           type: "PRINCIPAL_DEBT",
           beneficiary: "PARTICIPANT",
+          payer: "DEBTOR",
           originalAmount: parsedData.principalAmount,
           paidAmount: 0,
           balanceAmount: parsedData.principalAmount,
@@ -198,14 +219,32 @@ export class CollectionService {
         },
       });
 
+      // Comisión CFSB del participante — se paga vía Sentoo al registrar el
+      // AOP (ver PaymentService.create más abajo, payment_type: COLLECTION).
       const cfsbObligation = await tx.debtClaimObligation.create({
         data: {
           debtClaimId: claim.id,
           type: "COLLECTION",
           beneficiary: "CFSB",
-          originalAmount: feeAmount + abbAmount,
+          payer: "PARTICIPANT",
+          originalAmount: cfsbFeeTotal,
           paidAmount: 0,
-          balanceAmount: feeAmount + abbAmount,
+          balanceAmount: cfsbFeeTotal,
+          status: "PENDING",
+        },
+      });
+
+      // Comisión CFSB del deudor — mismo monto, pago separado (ver
+      // CollectionService.requestDebtorCollectionFeePayment).
+      await tx.debtClaimObligation.create({
+        data: {
+          debtClaimId: claim.id,
+          type: "COLLECTION",
+          beneficiary: "CFSB",
+          payer: "DEBTOR",
+          originalAmount: cfsbFeeTotal,
+          paidAmount: 0,
+          balanceAmount: cfsbFeeTotal,
           status: "PENDING",
         },
       });
@@ -213,7 +252,7 @@ export class CollectionService {
       return { claimId: claim.id, obligationId: cfsbObligation.id };
     });
 
-    return { success: true, claimId, obligationId, amount: feeAmount + abbAmount };
+    return { success: true, claimId, obligationId, amount: cfsbFeeTotal };
   }
 
   /**
@@ -461,6 +500,7 @@ export class CollectionService {
         id: o.id,
         type: o.type,
         beneficiary: o.beneficiary,
+        payer: o.payer,
         originalAmount: Number(o.originalAmount),
         paidAmount: Number(o.paidAmount),
         balanceAmount: Number(o.balanceAmount),
@@ -582,6 +622,23 @@ export class CollectionService {
     return { nextStep };
   };
 
+  // ¿El deudor ya pagó algo de su deuda directamente (transferencia
+  // verificada por el tenant), sin necesidad de un Agreement formal? Usado
+  // para NO aplicar el recargo administrativo por falta de respuesta
+  // (process_aop_workflow.ts) cuando el deudor sí reaccionó pagando, aunque
+  // nunca haya registrado un acuerdo de pago — antes solo se chequeaba
+  // `hasAgreement`, dejando pasar este caso.
+  static hasPrincipalPayment = async (debtClaimId: string): Promise<boolean> => {
+    const obligation = await prisma.debtClaimObligation.findFirst({
+      where: {
+        debtClaimId,
+        type: "PRINCIPAL_DEBT",
+        beneficiary: "PARTICIPANT",
+      },
+    });
+    return !!obligation && Number(obligation.paidAmount) > 0;
+  };
+
   // Recargo administrativo por falta de respuesta del deudor dentro del
   // plazo de la aanmaning o la sommatie (punto 9 del análisis CFSB). A
   // diferencia de la comisión de cobranza (ClaimCharge, a cargo del
@@ -605,6 +662,10 @@ export class CollectionService {
           debtClaimId,
           type: "COLLECTION",
           beneficiary: "CFSB",
+          // Obligación del deudor directamente con CFSB (no la paga el
+          // participante en ningún momento, a diferencia de la comisión del
+          // AOP).
+          payer: "DEBTOR",
           originalAmount: amount,
           paidAmount: 0,
           balanceAmount: amount,
@@ -638,15 +699,18 @@ export class CollectionService {
           },
         },
         obligations: {
-          where: { beneficiary: "CFSB", status: "PENDING" },
-          include: {
+          select: {
+            beneficiary: true,
+            payer: true,
+            originalAmount: true,
+            balanceAmount: true,
+            status: true,
             payments: {
               where: { status: { in: ["pending", "failed"] } },
               select: { payment_url: true },
               take: 1,
             },
           },
-          take: 1,
         },
         agreements: {
           orderBy: { created_at: "desc" },
@@ -665,6 +729,22 @@ export class CollectionService {
         c.agreements?.find((a: any) => a.status === "ACCEPTED")?.status ??
         c.agreements?.[0]?.status ??
         null;
+
+      // El link de pago que se muestra en /collections es el del
+      // participante (su propia comisión CFSB) — la comisión CFSB del
+      // deudor es una obligación aparte (payer: DEBTOR) que el deudor
+      // gestiona desde /payments.
+      const cfsbPendingObligation = c.obligations.find(
+        (o: any) => o.beneficiary === "CFSB" && o.payer === "PARTICIPANT" && o.status === "PENDING",
+      );
+      const { receivableBalance } = computeDebtClaimBalances(
+        c.obligations.map((o: any) => ({
+          beneficiary: o.beneficiary,
+          payer: o.payer,
+          originalAmount: Number(o.originalAmount),
+          balanceAmount: Number(o.balanceAmount),
+        })),
+      );
 
       return {
         id: c.id,
@@ -690,7 +770,8 @@ export class CollectionService {
           total_income: c.debtor.total_income ?? 0,
         },
         aopStep: c.administrativeCollection?.steps[0]?.step ?? null,
-        paymentLink: c.obligations[0]?.payments[0]?.payment_url ?? null,
+        paymentLink: cfsbPendingObligation?.payments[0]?.payment_url ?? null,
+        receivableBalance,
         agreementStatus,
         legalProcessId: c.legalProcess?.id ?? null,
         collectiveCollectionId: c.collectiveCollection?.id ?? null,
@@ -705,6 +786,7 @@ export class CollectionService {
       where: {
         debtClaimId,
         beneficiary: "CFSB",
+        payer: "PARTICIPANT",
         status: "PENDING",
       },
       include: {
@@ -718,7 +800,144 @@ export class CollectionService {
 
     return obligation?.payments[0]?.payment_url ?? null;
   };
+
+  // ---------------------------------------------------------------------
+  // Comisión CFSB del deudor — pago separado del que hace el participante
+  // (mismo monto, canal Sentoo independiente, pedido del sponsor).
+  // ---------------------------------------------------------------------
+
+  // Un expediente puede tener MÁS DE UNA obligación CFSB a cargo del
+  // deudor: la del registro del AOP, y eventuales recargos posteriores por
+  // falta de respuesta a la aanmaning/sommatie (ver applyNoResponseFee,
+  // que crea una obligación nueva por cada recargo — nunca modifica la
+  // original). Por eso esto devuelve todas las pendientes, no solo una.
+  static getDebtorCollectionFeeObligations = async (debtClaimId: string) => {
+    const obligations = await prisma.debtClaimObligation.findMany({
+      where: {
+        debtClaimId,
+        type: "COLLECTION",
+        beneficiary: "CFSB",
+        payer: "DEBTOR",
+      },
+      orderBy: { createdAt: "asc" },
+      include: {
+        payments: {
+          where: { status: { in: ["pending", "failed"] } },
+          select: { payment_url: true },
+          orderBy: { created_at: "desc" },
+          take: 1,
+        },
+      },
+    });
+
+    return obligations.map((obligation) => ({
+      obligationId: obligation.id,
+      balanceAmount: Number(obligation.balanceAmount),
+      status: obligation.status,
+      paymentUrl: obligation.payments[0]?.payment_url ?? null,
+    }));
+  };
+
+  // Un solo pago que cubre TODAS las obligaciones CFSB pendientes del
+  // deudor a la vez (registro del AOP + eventuales recargos) — el deudor ve
+  // un único botón "Nu betalen" por el total combinado; administrativamente
+  // cada obligación se sigue rastreando por separado vía PaymentAllocation
+  // (ver ObligationService.applyAllocatedPayment).
+  static requestDebtorCollectionFeePayment = async (
+    debtClaimId: string,
+    actorUserId: string,
+  ) => {
+    const debtClaim = await prisma.debtClaim.findUnique({
+      where: { id: debtClaimId },
+      include: { debtor: true, tenant: true },
+    });
+    if (!debtClaim) throw new Error("Dossier niet gevonden.");
+    if (debtClaim.debtor.user_id !== actorUserId) {
+      throw new Error("Alleen de debiteur zelf kan deze actie uitvoeren.");
+    }
+
+    const obligations = await prisma.debtClaimObligation.findMany({
+      where: {
+        debtClaimId,
+        type: "COLLECTION",
+        beneficiary: "CFSB",
+        payer: "DEBTOR",
+        balanceAmount: { gt: 0 },
+      },
+    });
+    if (obligations.length === 0) {
+      throw new Error("Geen openstaande CFSB-kosten voor dit dossier.");
+    }
+
+    const totalAmount = Number(
+      obligations.reduce((sum, o) => sum + Number(o.balanceAmount), 0).toFixed(2),
+    );
+
+    const paymentResult = await PaymentService.create(debtClaim.tenantId, {
+      amount: totalAmount,
+      currency: debtClaim.currency,
+      description: `CFSB-kosten — dossier ${debtClaim.reference ?? debtClaimId}`,
+      reference: `debtor_collection_fee_${debtClaimId}_${Date.now()}`,
+      payment_type: PaymentType.DEBTOR_COLLECTION_FEE,
+    });
+    if (!paymentResult.success || !paymentResult.data) {
+      throw new Error(paymentResult.message || "Kon geen Sentoo-betaling aanmaken.");
+    }
+
+    await prisma.paymentAllocation.createMany({
+      data: obligations.map((o) => ({
+        payment_id: paymentResult.data!.paymentId,
+        obligation_id: o.id,
+        component: "OTHER",
+        amount: o.balanceAmount,
+      })),
+    });
+
+    return {
+      paymentId: paymentResult.data.paymentId,
+      paymentUrl: paymentResult.data.paymentUrl,
+    };
+  };
 }
+
+// Confirmación del pago (consolidado) de la(s) comisión(es) CFSB del
+// DEUDOR — a diferencia de processCollectionPayment (comisión del
+// participante), esto NO activa el AOP (ya está activo) ni genera factura
+// al tenant (la factura de CFSB es del participante, no del deudor). Aplica
+// el pago a cada obligación cubierta vía PaymentAllocation, no a una sola.
+export const processDebtorCollectionFeePayment = async (paymentId: string) => {
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId },
+    include: { allocations: { include: { obligation: { include: { debtClaim: true } } } } },
+  });
+  if (!payment) throw new Error("Payment not found");
+  if (payment.allocations.length === 0) {
+    throw new Error("Geen toewijzingen gevonden voor deze betaling");
+  }
+  if (payment.status !== "paid") return;
+
+  await ObligationService.applyAllocatedPayment(paymentId);
+
+  const debtClaim = payment.allocations[0].obligation.debtClaim;
+  await ClaimTimelineService.logEvent(
+    debtClaim.id,
+    "PAYMENT_REGISTERED",
+    `Debiteur heeft de CFSB-kosten betaald voor dossier ${debtClaim.reference ?? debtClaim.id}.`,
+  );
+
+  try {
+    await NotificationService.notifyTenantStaff(debtClaim.tenantId, {
+      type: NotificationType.DEBTOR_COLLECTION_FEE_PAID,
+      title: "Debiteur betaalde CFSB-kosten",
+      message: `De debiteur van dossier ${debtClaim.reference ?? debtClaim.id} heeft de CFSB-kosten rechtstreeks betaald.`,
+      link: `/collections/${debtClaim.id}`,
+      entity_type: "DebtClaim",
+      entity_id: debtClaim.id,
+    });
+  } catch (error) {
+    console.error("Error notifying tenant staff of debtor collection fee payment:", error);
+  }
+};
 
 export const processCollectionPayment = async (paymentId: string) => {
   const payment = await prisma.payment.findUnique({
@@ -742,9 +961,12 @@ export const processCollectionPayment = async (paymentId: string) => {
     throw new Error("Obligation or DebtClaim not found for the payment");
   }
 
-  // await ObligationService.applyPayment(paymentId);
-
   if (payment.obligation.type === "COLLECTION" && payment.status === "paid") {
+    // Marca la obligación CFSB como pagada (paidAmount/balanceAmount/status)
+    // — sin esto la obligación queda PENDING para siempre aunque el pago ya
+    // se haya confirmado, y el saldo del deudor/cliente nunca refleja el pago.
+    await ObligationService.applyPayment(paymentId);
+
     // Activa el claim: IN_PROGRESS + cargos + AOP + chat + aanmaning
     await CollectionService.activate(payment.obligation.debtClaim.id);
 

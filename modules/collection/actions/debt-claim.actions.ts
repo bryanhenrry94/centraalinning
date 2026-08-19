@@ -36,6 +36,10 @@ export const applyAopNoResponseFee = async (
   return CollectionService.applyNoResponseFee(debtClaimId, step, amount);
 };
 
+export const hasPrincipalPayment = async (debtClaimId: string): Promise<boolean> => {
+  return CollectionService.hasPrincipalPayment(debtClaimId);
+};
+
 export async function getDebtClaimsAction(params: DebtClaimFilter) {
   return CollectionService.getAll(params);
 }

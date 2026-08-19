@@ -3,7 +3,10 @@ import { processSubscriptionPayment } from "./subscription-processor";
 import { processContractPayment } from "./contract-processor";
 import { processFinancialReportPayment } from "./financial-report-processor";
 import { PaymentType } from "./payment.validators";
-import { processCollectionPayment } from "@/modules/collection/services/collection.service";
+import {
+  processCollectionPayment,
+  processDebtorCollectionFeePayment,
+} from "@/modules/collection/services/collection.service";
 import { BlockadeService } from "@/modules/blockade/services/blockade.service";
 import { LegalProcessService } from "@/modules/legal-process/services/legal-process.service";
 import { CaseTransferService } from "@/modules/legal-process/services/case-transfer.service";
@@ -49,6 +52,9 @@ export async function processSuccessfulPayment(paymentId: string) {
 
     case PaymentType.COP_START:
       return CollectiveCollectionService.processStartPaymentConfirmed(payment.id);
+
+    case PaymentType.DEBTOR_COLLECTION_FEE:
+      return processDebtorCollectionFeePayment(payment.id);
 
     default:
       console.warn(`No processor found for ${payment.payment_type}`);

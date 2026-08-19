@@ -82,7 +82,7 @@ export const TransferPaymentDialog = ({
           String(
             isAgreementApproved(agreement?.status)
               ? agreement!.installment_amount
-              : (debt.balance ?? ""),
+              : (debt.debtor_to_participant_balance ?? ""),
           ),
         );
         setReferenceNumber("");
@@ -228,7 +228,7 @@ export const TransferPaymentDialog = ({
 
             {debt && (
               <Typography variant="caption" color="text.secondary">
-                Openstaand saldo: {formatCurrency(debt.balance)}
+                Openstaand saldo aan deelnemer: {formatCurrency(debt.debtor_to_participant_balance)}
               </Typography>
             )}
           </Stack>

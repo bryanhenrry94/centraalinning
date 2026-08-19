@@ -1,7 +1,10 @@
 "use server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { DebtorInput, DebtorCreate, DebtorResponse } from "@/modules/collection/services/debtor.type";
 import { DebtorSummary } from "@/modules/collection/types/DebtorSummary";
 import { DebtorService } from "@/modules/collection/services/debtor.service";
+import { CollectionService } from "@/modules/collection/services/collection.service";
 
 export async function getDebtorsAction(tenantId: string) {
   return DebtorService.getAll(tenantId);
@@ -102,4 +105,16 @@ export const getDebts = async (
   filters: DebtFilters,
 ): Promise<{ success: boolean; data?: DebtorSummary[]; message?: string }> => {
   return DebtorService.getDebts(filters);
+};
+
+export const getDebtorCollectionFeeObligations = async (debtClaimId: string) => {
+  return CollectionService.getDebtorCollectionFeeObligations(debtClaimId);
+};
+
+export const requestDebtorCollectionFeePayment = async (debtClaimId: string) => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    throw new Error("U bent niet ingelogd.");
+  }
+  return CollectionService.requestDebtorCollectionFeePayment(debtClaimId, session.user.id);
 };

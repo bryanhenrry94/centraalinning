@@ -24,6 +24,7 @@ import {
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import FolderOffOutlinedIcon from "@mui/icons-material/FolderOffOutlined";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -49,6 +50,7 @@ import { PaymentsDialog } from "@/modules/payment/components/payments-dialog";
 import { AgreementFormDialog } from "@/modules/agreement/components/agreement-form-dialog";
 import { PaymentFormDialog } from "@/modules/payment/components/payment-form-dialog";
 import { TransferPaymentDialog } from "@/modules/payment/components/transfer-payment-dialog";
+import { PayCollectionFeeDialog } from "@/modules/payment/components/pay-collection-fee-dialog";
 import DashboardHeader from "./DashboardHeader";
 import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
 import {
@@ -77,6 +79,7 @@ const DashboardDebtor = () => {
   const [openModalNotifications, setOpenModalNotifications] = useState(false);
   const [openModalPayment, setOpenModalPayment] = useState(false);
   const [openModalPaymentForm, setOpenModalPaymentForm] = useState(false);
+  const [openModalCollectionFee, setOpenModalCollectionFee] = useState(false);
   const [openModalTransferPayment, setOpenModalTransferPayment] =
     useState(false);
 
@@ -313,16 +316,23 @@ const DashboardDebtor = () => {
       <DashboardHeader
         key={filtersKey}
         total={parseFloat(
-          (
-            filteredDebts.reduce((t, d) => t + (d.amount || 0), 0) +
-            filteredDebts.reduce((t, d) => t + (d.total_fined || 0), 0) -
-            filteredDebts.reduce((t, d) => t + (d.total_paid || 0), 0)
-          ).toFixed(2),
+          filteredDebts.reduce((t, d) => t + (d.balance || 0), 0).toFixed(2),
+        )}
+        openToParticipant={parseFloat(
+          filteredDebts
+            .reduce((t, d) => t + (d.debtor_to_participant_balance || 0), 0)
+            .toFixed(2),
+        )}
+        openToCfsb={parseFloat(
+          filteredDebts.reduce((t, d) => t + (d.debtor_to_cfsb_balance || 0), 0).toFixed(2),
         )}
         count={filteredDebts.length}
         activeCount={activeCount}
         totalPaid={parseFloat(
-          filteredDebts.reduce((t, d) => t + (d.total_paid || 0), 0).toFixed(2),
+          filteredDebts.reduce((t, d) => t + (d.paid_to_cfsb || 0), 0).toFixed(2),
+        )}
+        paidToParticipant={parseFloat(
+          filteredDebts.reduce((t, d) => t + (d.paid_to_participant || 0), 0).toFixed(2),
         )}
         paidCount={paidCount}
         blockadeActiveCount={blockadeActiveCount}
@@ -451,7 +461,7 @@ const DashboardDebtor = () => {
                       : "-"}
                   </TableCell>
                   <TableCell align="right">
-                    {formatCurrency(debt.balance + (debt.total_fined || 0))}
+                    {formatCurrency(debt.balance)}
                   </TableCell>
                   <TableCell align="center">
                     <Chip
@@ -502,7 +512,7 @@ const DashboardDebtor = () => {
                       </MenuItem>
 
                       <MenuItem
-                        disabled={debt.balance <= 0}
+                        disabled={debt.debtor_to_participant_balance <= 0}
                         onClick={() => {
                           handlePaymentDebtor(debt);
                           handleMenuClose();
@@ -511,7 +521,21 @@ const DashboardDebtor = () => {
                         <ListItemIcon>
                           <AttachMoneyIcon fontSize="small" color="error" />
                         </ListItemIcon>
-                        <ListItemText>Betalen</ListItemText>
+                        <ListItemText>Aan deelnemer betalen</ListItemText>
+                      </MenuItem>
+
+                      <MenuItem
+                        disabled={debt.debtor_to_cfsb_balance <= 0}
+                        onClick={() => {
+                          setDebtSelected(debt);
+                          setOpenModalCollectionFee(true);
+                          handleMenuClose();
+                        }}
+                      >
+                        <ListItemIcon>
+                          <AccountBalanceIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>CFSB-kosten betalen</ListItemText>
                       </MenuItem>
 
                       <MenuItem
@@ -586,6 +610,13 @@ const DashboardDebtor = () => {
         debt={debtSelected}
         debtorEmail={user?.email || ""}
         onSuccess={fetchDebts}
+      />
+
+      <PayCollectionFeeDialog
+        open={openModalCollectionFee}
+        onClose={() => setOpenModalCollectionFee(false)}
+        debtClaimId={debtSelected?.id || ""}
+        onPaid={fetchDebts}
       />
     </Container>
   );

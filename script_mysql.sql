@@ -20,20 +20,64 @@ WITH last_agreement AS (
     ) a
     WHERE rn = 1
 ),
+-- Combina dos formas de pago: directo (Payment.obligation_id, 1 pago = 1
+-- obligación) y consolidado (PaymentAllocation, 1 pago cubre varias
+-- obligaciones — ver CollectionService.requestDebtorCollectionFeePayment,
+-- el botón único de "CFSB-kosten" del deudor). Sin esto, un pago
+-- consolidado no aparecería acá porque su Payment.obligation_id es NULL.
+--
+-- vw_debtor_summary es la vista del DEUDOR: solo cuenta lo que el propio
+-- deudor pagó (payer = 'DEBTOR'), nunca el pago de activación del AOP que
+-- hace el participante (payer = 'PARTICIPANT' sobre la misma obligación
+-- beneficiary CFSB) — de lo contrario "Totaal betaald aan CFSB" mostraría
+-- plata que el deudor nunca pagó.
 payments_summary AS (
     SELECT
-        dco.`debtClaimId` AS debtClaim_id,
-        SUM(p.total_amount) AS paid_amount
-    FROM payment p
-    JOIN debt_claim_obligation dco ON dco.id = p.obligation_id
-    WHERE p.status = 'paid'
-    GROUP BY dco.`debtClaimId`
+        debtClaim_id,
+        SUM(amount) AS paid_amount,
+        SUM(CASE WHEN beneficiary = 'PARTICIPANT' THEN amount ELSE 0 END) AS paid_to_participant,
+        SUM(CASE WHEN beneficiary = 'CFSB' THEN amount ELSE 0 END) AS paid_to_cfsb
+    FROM (
+        SELECT dco.`debtClaimId` AS debtClaim_id, dco.beneficiary, p.total_amount AS amount
+        FROM payment p
+        JOIN debt_claim_obligation dco ON dco.id = p.obligation_id
+        WHERE p.status = 'paid' AND dco.payer = 'DEBTOR'
+
+        UNION ALL
+
+        SELECT dco.`debtClaimId` AS debtClaim_id, dco.beneficiary, pa.amount
+        FROM payment_allocation pa
+        JOIN payment p ON p.id = pa.payment_id
+        JOIN debt_claim_obligation dco ON dco.id = pa.obligation_id
+        WHERE p.status = 'paid' AND dco.payer = 'DEBTOR'
+    ) combined
+    GROUP BY debtClaim_id
 ),
 charges_summary AS (
     SELECT
         `debtClaimId`,
         SUM(amount) AS charged_amount
     FROM claim_charge
+    GROUP BY `debtClaimId`
+),
+-- El saldo del deudor es la suma de balanceAmount de TODO lo que paga el
+-- deudor (payer = 'DEBTOR'), sin importar el beneficiario: su deuda
+-- original al participante (PRINCIPAL_DEBT) Y su propia comisión CFSB
+-- (COLLECTION/CFSB/payer:DEBTOR, un pago separado del que hace el
+-- participante — ver CollectionService.createPending). balanceAmount por
+-- obligación ya está mantenido correctamente por pago (ver
+-- ObligationService.applyPayment), tanto para el pago directo del deudor al
+-- participante (payment-transfer.service) como para su pago a CFSB vía
+-- Sentoo (processDebtorCollectionFeePayment).
+obligations_summary AS (
+    SELECT
+        `debtClaimId` AS debtClaim_id,
+        SUM(CASE WHEN payer = 'DEBTOR' THEN `balanceAmount` ELSE 0 END) AS debtor_balance,
+        -- Desglose para la pantalla del deudor (Aan deelnemer / CFSB-kosten):
+        -- misma suma que arriba, partida por beneficiario.
+        SUM(CASE WHEN payer = 'DEBTOR' AND beneficiary = 'PARTICIPANT' THEN `balanceAmount` ELSE 0 END) AS debtor_to_participant_balance,
+        SUM(CASE WHEN payer = 'DEBTOR' AND beneficiary = 'CFSB' THEN `balanceAmount` ELSE 0 END) AS debtor_to_cfsb_balance
+    FROM debt_claim_obligation
     GROUP BY `debtClaimId`
 ),
 aop_summary AS (
@@ -107,9 +151,17 @@ SELECT
 
     COALESCE(pay.paid_amount, 0)     AS total_paid,
     COALESCE(pay.paid_amount, 0)     AS paid_amount,
+    COALESCE(pay.paid_to_participant, 0) AS paid_to_participant,
+    COALESCE(pay.paid_to_cfsb, 0)        AS paid_to_cfsb,
     COALESCE(ch.charged_amount, 0)   AS total_fined,
     COALESCE(ch.charged_amount, 0)   AS charged_amount,
-    (dc.`principalAmount` - COALESCE(pay.paid_amount, 0)) AS balance,
+    -- Saldo a pagar del deudor = principal (a favor del participante) MÁS
+    -- la comisión CFSB pendiente — ver comentario en obligations_summary.
+    -- COALESCE a principalAmount solo cubre claims legacy sin filas de
+    -- obligación todavía.
+    COALESCE(obl.debtor_balance, dc.`principalAmount`) AS balance,
+    COALESCE(obl.debtor_to_participant_balance, dc.`principalAmount`) AS debtor_to_participant_balance,
+    COALESCE(obl.debtor_to_cfsb_balance, 0) AS debtor_to_cfsb_balance,
 
     aop.aop_status,
     aop.aop_started_at,
@@ -132,6 +184,7 @@ JOIN tenant t  ON t.id = dc.`tenantId`
 JOIN debtor deb ON deb.id = dc.`debtorId`
 LEFT JOIN payments_summary pay  ON pay.debtClaim_id    = dc.id
 LEFT JOIN charges_summary ch    ON ch.`debtClaimId`    = dc.id
+LEFT JOIN obligations_summary obl ON obl.debtClaim_id  = dc.id
 LEFT JOIN aop_summary aop       ON aop.`debtClaimId`   = dc.id
 LEFT JOIN verdict_summary verd  ON verd.`debtClaimId`  = dc.id
 LEFT JOIN last_agreement agre   ON agre.`debtClaim_id` = dc.id;

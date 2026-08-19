@@ -3,6 +3,7 @@ import {
   advanceAOPStep,
   applyAopNoResponseFee,
   getDebtClaimsAction,
+  hasPrincipalPayment,
 } from "@/modules/collection/actions/debt-claim.actions";
 import { applyCharge, countChargesForClaim } from "@/modules/collection/actions/debt-fine.actions";
 import { hasAgreement, hasPaymentsUpToDate, cancelAgreementsByCliam } from "@/modules/agreement/actions/agreement.actions";
@@ -142,11 +143,17 @@ export async function processAopWorkflow() {
 
         await cancelAgreementsByCliam(debtClaimId);
       }
-    } else if (currentStepType === "REMINDER" || currentStepType === "FINAL_NOTICE") {
-      // Sin acuerdo de pago vigente: el deudor no reaccionó dentro del plazo
-      // de la aanmaning o la sommatie. CFSB cobra un recargo administrativo
-      // fijo, configurable por isla/tenant — es una obligación del deudor
-      // CON CFSB, separada de la comisión de cobranza que ya paga el
+    } else if (
+      (currentStepType === "REMINDER" || currentStepType === "FINAL_NOTICE") &&
+      !(await hasPrincipalPayment(debtClaimId))
+    ) {
+      // Sin acuerdo de pago vigente NI pago directo registrado (transferencia
+      // verificada sin Agreement formal — antes solo se chequeaba
+      // hasAgreement, así que un deudor que pagó directo sin acuerdo igual
+      // recibía el recargo): el deudor no reaccionó dentro del plazo de la
+      // aanmaning o la sommatie. CFSB cobra un recargo administrativo fijo,
+      // configurable por isla/tenant — es una obligación del deudor CON
+      // CFSB, separada de la comisión de cobranza que ya paga el
       // participante (punto 9 del análisis CFSB).
       const tenant = aop.debtClaim.tenant;
       const feeKey =

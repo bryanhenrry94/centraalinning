@@ -75,9 +75,12 @@ type TenantTypes = {
 
 const DashboardHeader = ({
   total,
+  openToParticipant,
+  openToCfsb,
   count,
   activeCount,
   totalPaid,
+  paidToParticipant,
   paidCount,
   blockadeActiveCount,
   blockadeInactiveCount,
@@ -88,9 +91,12 @@ const DashboardHeader = ({
   onReset,
 }: {
   total: number;
+  openToParticipant: number;
+  openToCfsb: number;
   count: number;
   activeCount: number;
   totalPaid: number;
+  paidToParticipant: number;
   paidCount: number;
   blockadeActiveCount: number;
   blockadeInactiveCount: number;
@@ -109,7 +115,7 @@ const DashboardHeader = ({
             title="Totaal openstaand"
             value={total}
             type="currency"
-            subtitle={`${count} dossiers`}
+            subtitle={`Aan deelnemer: ${formatCurrency(openToParticipant)} · CFSB: ${formatCurrency(openToCfsb)}`}
             icon={
               <DescriptionIcon
                 fontSize="small"
@@ -135,10 +141,10 @@ const DashboardHeader = ({
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
-            title="Totaal betaald"
+            title="Totaal betaald aan CFSB"
             value={totalPaid}
             type="currency"
-            subtitle={`${paidCount} dossiers`}
+            subtitle={`Aan deelnemer betaald: ${formatCurrency(paidToParticipant)}`}
             icon={
               <AttachMoneyIcon
                 fontSize="small"

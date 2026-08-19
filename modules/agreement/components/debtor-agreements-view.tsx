@@ -117,7 +117,7 @@ export const DebtorAgreementsView = () => {
               <TableRow key={debt.id}>
                 <TableCell>{debt.tenant_name}</TableCell>
                 <TableCell align="center">{debt.reference}</TableCell>
-                <TableCell align="right">{formatCurrency(debt.balance)}</TableCell>
+                <TableCell align="right">{formatCurrency(debt.debtor_to_participant_balance)}</TableCell>
                 <TableCell align="center">
                   {isAgreementApproved(debt.agreement_status) ? (
                     <Chip label="Actief" color="info" size="small" />
@@ -132,7 +132,7 @@ export const DebtorAgreementsView = () => {
                     size="small"
                     variant="outlined"
                     startIcon={<HandshakeIcon fontSize="small" />}
-                    disabled={debt.balance <= 0}
+                    disabled={debt.debtor_to_participant_balance <= 0}
                     onClick={() => openAgreementModal(debt)}
                   >
                     Aanvragen
@@ -155,7 +155,7 @@ export const DebtorAgreementsView = () => {
             ? `${debtSelected.reference || debtSelected.id} – ${debtSelected.tenant_name}`
             : undefined
         }
-        outstandingAmount={debtSelected?.balance}
+        outstandingAmount={debtSelected?.debtor_to_participant_balance}
         initialData={{
           debtClaim_id: debtSelected?.id || "",
           total_amount: debtSelected?.amount || 0,
