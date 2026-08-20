@@ -217,9 +217,21 @@ const DashboardDebtor = () => {
   const handleBetaalregelingClick = (debt: DebtorSummary) => {
     if (hasOpenAgreement(debt.agreement_status)) {
       openNotificationsModal(debt);
-    } else {
-      openAgreementModal(debt);
+      return;
     }
+
+    // Een betalingsregeling is alleen voor de hoofdsom aan de deelnemer —
+    // pas toegankelijk zodra de CFSB-kosten volledig betaald zijn (anders
+    // zou de debiteur een regeling kunnen aanvragen terwijl er nog een
+    // openstaande betaling aan CFSB zelf is).
+    if (debt.debtor_to_cfsb_balance > 0) {
+      notifyError(
+        "U moet eerst de CFSB-kosten volledig betalen voordat u een betalingsregeling kunt aanvragen.",
+      );
+      return;
+    }
+
+    openAgreementModal(debt);
   };
 
   const onSaveAgreement = async () => {
@@ -477,12 +489,20 @@ const DashboardDebtor = () => {
                         isAgreementApproved(debt.agreement_status)
                           ? "info"
                           : hasOpenAgreement(debt.agreement_status)
-                            ? "warning"
+                            ? undefined
                             : "default"
                       }
                       size="small"
                       variant="outlined"
-                      sx={{ width: 150 }}
+                      sx={{
+                        width: 150,
+                        ...(hasOpenAgreement(debt.agreement_status) &&
+                          !isAgreementApproved(debt.agreement_status) && {
+                            color: "#F97316",
+                            borderColor: "#F97316",
+                            "& .MuiChip-icon": { color: "#F97316" },
+                          }),
+                      }}
                     />
                   </TableCell>
                   <TableCell align="center">

@@ -87,15 +87,27 @@ const PaymentsPage = () => {
   };
 
   const handleBetaalregelingClick = async (debt: DebtorSummary) => {
-    setAgreementDebt(debt);
-
     if (hasOpenAgreement(debt.agreement_status)) {
+      setAgreementDebt(debt);
       const response = await getAgreementsByDebtClaimId(debt.id);
       setAgreements(response || []);
       setOpenModalAgreementView(true);
-    } else {
-      setOpenModalAgreement(true);
+      return;
     }
+
+    // Een betalingsregeling is alleen voor de hoofdsom aan de deelnemer —
+    // pas toegankelijk zodra de CFSB-kosten volledig betaald zijn (anders
+    // zou de debiteur een regeling kunnen aanvragen terwijl er nog een
+    // openstaande betaling aan CFSB zelf is).
+    if (debt.debtor_to_cfsb_balance > 0) {
+      notifyError(
+        "U moet eerst de CFSB-kosten volledig betalen voordat u een betalingsregeling kunt aanvragen.",
+      );
+      return;
+    }
+
+    setAgreementDebt(debt);
+    setOpenModalAgreement(true);
   };
 
   const onSaveAgreement = async () => {

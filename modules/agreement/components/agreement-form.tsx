@@ -13,7 +13,10 @@ import {
 import SendIcon from "@mui/icons-material/Send";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { useForm, Controller } from "react-hook-form";
-import { CreateAgreement, UpdateAgreement } from "@/modules/agreement/services/agreement.validators";
+import {
+  CreateAgreement,
+  UpdateAgreement,
+} from "@/modules/agreement/services/agreement.validators";
 import { formatCurrency } from "@/shared/utils/formatters";
 import { notifyError, notifyInfo } from "@/shared/ui/notifications";
 import { useSession } from "next-auth/react";
@@ -161,7 +164,11 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
       onSave?.();
     } catch (err) {
       console.error(err);
-      notifyError(err instanceof Error ? err.message : "Fout bij het verwerken van de betalingsregeling");
+      notifyError(
+        err instanceof Error
+          ? err.message
+          : "Fout bij het verwerken van de betalingsregeling",
+      );
     } finally {
       setLoading(false);
     }
@@ -177,13 +184,13 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
           </Typography>
         )}
 
-        <TextField
+        {/* <TextField
           label="Dossier / Referentie"
           value={referenceLabel || debtClaim_id}
           disabled
           fullWidth
           size="small"
-        />
+        /> */}
 
         <TextField
           label="Openstaand bedrag"
@@ -281,11 +288,16 @@ export const AgreementForm: React.FC<AgreementFormProps> = ({
         <Alert icon={<InfoOutlinedIcon fontSize="small" />} severity="info">
           <strong>Belangrijk</strong>
           <br />
-          Uw aanvraag is een voorstel. De deelnemer kan uw aanvraag
-          accepteren, wijzigen of afwijzen.
+          Uw aanvraag is een voorstel. De deelnemer kan uw aanvraag accepteren,
+          wijzigen of afwijzen.
         </Alert>
 
-        <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ pt: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          justifyContent="flex-end"
+          sx={{ pt: 1 }}
+        >
           <Button onClick={onClose} disabled={loading || isSubmitting}>
             Annuleren
           </Button>

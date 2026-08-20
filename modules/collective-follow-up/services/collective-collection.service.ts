@@ -11,6 +11,8 @@ import { PaymentService } from "@/modules/payment/services/payment.service";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { SettingsService } from "@/modules/settings/services/settings/settings.service";
 import { TenantService } from "@/modules/tenant/services/tenant.service";
+import { sendEmployerMatchNoticeEmail } from "@/modules/collective-follow-up/services/collective-collection-mail.service";
+import { formatDate } from "@/shared/utils/formatters";
 import {
   CollectiveCollectionStatus,
   COP_START_FEE_RATE,
@@ -164,6 +166,22 @@ export class CollectiveCollectionService {
       where: { originDebtClaimId: debtClaimId, status: "ACTIVE" },
     });
     if (!activeBlockade) {
+      // La blokkade puede estar SUSPENDED en vez de simplemente ausente —
+      // el caso más común es que el deudor ya tiene un acuerdo de pago
+      // aceptado (BlockadeService.suspendActiveForDebtor la suspende al
+      // aceptarlo). Ese mensaje es mucho más útil para el participante que
+      // el genérico "requiere blokkade activa".
+      const acceptedAgreement = await prisma.agreement.findFirst({
+        where: { debtClaim_id: debtClaimId, status: "ACCEPTED" },
+      });
+      if (acceptedAgreement) {
+        return {
+          allowed: false,
+          reason:
+            "Er is al een actieve betalingsregeling voor dit dossier — de collectieve opvolging kan niet starten zolang deze regeling loopt.",
+        };
+      }
+
       return {
         allowed: false,
         reason: "Vereist een actieve economische blokkade om een collectieve opvolging te starten.",
@@ -354,7 +372,7 @@ export class CollectiveCollectionService {
   private static applyEmployerMatch = async (collectionId: string, employerTenantId: string) => {
     const collection = await prisma.collectiveCollection.findUnique({
       where: { id: collectionId },
-      include: { debtClaim: true },
+      include: { debtClaim: { include: { debtor: { include: { person: true } } } } },
     });
     if (!collection || collection.employerTenantId) return;
 
@@ -376,6 +394,11 @@ export class CollectiveCollectionService {
       title: "Verzoek: informeer uw medewerker",
       message:
         "Een van uw medewerkers heeft een openstaande verplichting binnen het CFSB-samenwerkingsnetwerk. Gelieve deze persoon hierover te informeren.",
+      // No linkear al detalle del expediente (`/collective-follow-up/{id}`):
+      // ese tenant NO es el dueño del expediente, requireTenantStaffForCollection
+      // le daría un error de autorización. Su vista relevante es la pestaña
+      // "Namens medewerkers" de la página general.
+      link: "/collective-follow-up",
       entity_type: "CollectiveCollection",
       entity_id: collectionId,
     });
@@ -389,6 +412,39 @@ export class CollectiveCollectionService {
         sentAt: new Date(),
       },
     });
+
+    // A diferencia de la notificación al empleador, acá sí se comparte con
+    // el propio deudor dónde trabaja según nuestros registros — es su
+    // información, y necesita saber qué pasa si no reacciona a tiempo.
+    const person = collection.debtClaim.debtor.person;
+    if (person?.email) {
+      const employerTenant = await TenantService.getById(employerTenantId);
+      const fullname =
+        `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim() ||
+        person.business_name ||
+        person.email;
+      const deadlineDate = collection.debtorGracePeriodDeadline
+        ? formatDate(collection.debtorGracePeriodDeadline.toISOString())
+        : formatDate(new Date().toISOString());
+
+      try {
+        await sendEmployerMatchNoticeEmail(
+          person.email,
+          fullname,
+          employerTenant?.name || "uw werkgever",
+          deadlineDate,
+        );
+        await ClaimTimelineService.logEvent(
+          collection.debtClaimId,
+          "NOTIFICATION_SENT",
+          `Debiteur per e-mail geïnformeerd dat de werkgever (${
+            employerTenant?.name || "onbekend"
+          }) geïdentificeerd is en zal worden ingelicht bij het uitblijven van betaling vóór ${deadlineDate}.`,
+        );
+      } catch (error) {
+        console.error("Error sending employer match notice email to debtor:", error);
+      }
+    }
   };
 
   // "Presión de red": difunde una pregunta Sí/No a todos los tenants activos
@@ -456,6 +512,12 @@ export class CollectiveCollectionService {
       type: NotificationType.COL_NETWORK_QUERY_RECEIVED,
       title: "Netwerkvraag: kent u deze persoon?",
       message: `Heeft u ${displayName} (${personalNumber}) binnen uw organisatie? Beantwoord met Ja of Nee.`,
+      // Sin link, la campana de notificaciones no navega a ningún lado al
+      // hacer clic (notification-bell.tsx solo hace router.push si existe).
+      // El inbox de preguntas pendientes (NetworkQueryInbox) vive en la
+      // vista principal de COP, no hay una pantalla de detalle propia por
+      // pregunta.
+      link: "/collective-follow-up",
       entity_type: "CollectiveCollection",
       entity_id: collectionId,
     });
