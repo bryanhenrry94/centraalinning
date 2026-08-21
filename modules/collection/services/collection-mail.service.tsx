@@ -84,13 +84,12 @@ export const sendAanmaningEmail = async (
 
     const recipient = await getEmailByEnv(to);
 
-    // Regla CFSB: la comunicación al deudor sale en nombre del participante
-    // (deelnemer), no de CFSB — CFSB solo facilita la generación/registro/
-    // envío dentro de su infraestructura (dominio verificado). El nombre
-    // visible del remitente es el del tenant, y las respuestas del deudor
-    // van directo al contacto del participante vía replyTo.
+    // Regla CFSB: el remitente visible es siempre CFSB (mismo dominio
+    // verificado que usa Blokkade), no el nombre del tenant — las
+    // respuestas del deudor van directo al contacto del participante vía
+    // replyTo.
     const { data, error } = await resend.emails.send({
-      from: `${claim.tenant.name} <${process.env.EMAIL_FROM}>`,
+      from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       replyTo: claim.tenant.contact_email,
       to: recipient,
       subject: "Aanmaning",
@@ -208,7 +207,7 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
     const recipient = await getEmailByEnv(to);
 
     const { data, error } = await resend.emails.send({
-      from: `${claim.tenant.name} <${process.env.EMAIL_FROM}>`,
+      from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       replyTo: claim.tenant.contact_email,
       to: recipient,
       subject: "Sommatie",
@@ -319,7 +318,7 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
     const recipient = await getEmailByEnv(to);
 
     const { data, error } = await resend.emails.send({
-      from: `${claim.tenant.name} <${process.env.EMAIL_FROM}>`,
+      from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       replyTo: claim.tenant.contact_email,
       to: recipient,
       subject: "Ingebrekestelling",

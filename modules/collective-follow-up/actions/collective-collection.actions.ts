@@ -150,9 +150,15 @@ export const requestStartCollectiveCollection = async (input: { debtClaimId: str
   return CollectiveCollectionService.requestStart(parsed.debtClaimId, session.user.id);
 };
 
+export const resumeCollectiveCollectionStartPayment = async (collectionId: string) => {
+  await requireTenantStaffForCollection(collectionId);
+  return CollectiveCollectionService.resumeStartPayment(collectionId);
+};
+
 export const requestCopPaymentAgreement = async (input: {
   collectionId: string;
-  proposalAmount: number;
+  installmentsCount: number;
+  startDate: Date;
   notes?: string | null;
 }) => {
   const parsed = RequestPaymentAgreementSchema.parse(input);
@@ -162,7 +168,7 @@ export const requestCopPaymentAgreement = async (input: {
 
   return CollectiveCollectionService.requestPaymentAgreement(
     parsed.collectionId,
-    { proposalAmount: parsed.proposalAmount, notes: parsed.notes },
+    { installmentsCount: parsed.installmentsCount, startDate: parsed.startDate, notes: parsed.notes },
     session.user.id,
     {
       submittedByRole,

@@ -101,6 +101,18 @@ export const DebtorCollectiveCollectionsView = () => {
     return !(gracePeriodPassed && row.employerTenantId);
   };
 
+  // Zelfde consequentie als hierboven, maar dan voor het rechtstreeks
+  // betalen — vanaf het verstrijken van de bedenktermijn met bevestigde
+  // werkgever verloopt ook betalen exclusief via de werkgever (zie
+  // CollectiveCollectionService.assertDebtorPaymentAllowed, de
+  // gezaghebbende controle zit server-side).
+  const canDebtorPay = (row: CollectiveCollectionRow) => {
+    if (!CAN_PAY_STATUSES.includes(row.status)) return false;
+    const gracePeriodPassed =
+      !!row.debtorGracePeriodDeadline && new Date(row.debtorGracePeriodDeadline) <= new Date();
+    return !(gracePeriodPassed && row.employerTenantId);
+  };
+
   return (
     <Container maxWidth="xl">
       <Box sx={{ mt: { xs: 1.5, sm: 4 }, mb: 2 }}>
@@ -157,7 +169,7 @@ export const DebtorCollectiveCollectionsView = () => {
                         size="small"
                         variant="outlined"
                         startIcon={<AccountBalanceIcon fontSize="small" />}
-                        disabled={!CAN_PAY_STATUSES.includes(row.status)}
+                        disabled={!canDebtorPay(row)}
                         onClick={(e) => {
                           e.stopPropagation();
                           openPayDialog(row);
@@ -191,6 +203,7 @@ export const DebtorCollectiveCollectionsView = () => {
           open={requestDialogOpen}
           onClose={() => setRequestDialogOpen(false)}
           collectionId={selected.id}
+          outstandingAmount={selectedDebt?.debtor_to_participant_balance ?? 0}
           onRequested={fetchCollections}
         />
       )}

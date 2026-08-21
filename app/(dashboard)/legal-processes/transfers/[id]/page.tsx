@@ -224,7 +224,7 @@ const CaseTransferDetailPage: React.FC = () => {
   return (
     <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
       <AppBreadcrumbs
-        items={[{ label: "Gerechtelijke opvolging", href: "/legal-processes" }, { label: "Overdracht" }]}
+        items={[{ label: "Dossieroverdracht", href: "/legal-processes" }, { label: "Overdracht" }]}
       />
 
       <Stack spacing={3}>
@@ -395,7 +395,7 @@ const CaseTransferDetailPage: React.FC = () => {
                 )}
                 {showCancelButton && (
                   <Button variant="outlined" color="error" onClick={() => setDialog("cancel")}>
-                    GOP annuleren
+                    Overdracht annuleren
                   </Button>
                 )}
               </Stack>

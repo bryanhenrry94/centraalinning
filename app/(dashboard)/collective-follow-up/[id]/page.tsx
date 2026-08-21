@@ -50,6 +50,8 @@ import { NegotiationDecisionDialog } from "@/modules/collective-follow-up/compon
 import { TransferToGopDialog } from "@/modules/collective-follow-up/components/transfer-to-gop-dialog";
 import { CloseCopDialog } from "@/modules/collective-follow-up/components/close-cop-dialog";
 import { CollectiveCollaborationDialog } from "@/modules/collective-follow-up/components/collective-collaboration-dialog";
+import { resumeCollectiveCollectionStartPayment } from "@/modules/collective-follow-up/actions/collective-collection.actions";
+import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 
 type Collection = Awaited<ReturnType<typeof getCollectiveCollectionById>>;
 type Negotiation = Awaited<ReturnType<typeof getCollectiveCollectionNegotiations>>[number];
@@ -73,6 +75,7 @@ const STATUS_HEADER_CONFIG: Record<string, { bg: string; border: string; text: s
   PAID_IN_FULL: { bg: "#E7F7EE", border: "#BBF0D2", text: "#16A34A", icon: <CheckCircleIcon fontSize="small" /> },
   TRANSFERRED: { bg: "#EFF6FF", border: "#BFDBFE", text: "#3B82F6", icon: <GavelIcon fontSize="small" /> },
   CLOSED: { bg: "#FDECEC", border: "#FCA5A5", text: "#DC2626", icon: <CancelIcon fontSize="small" /> },
+  PENDING_PAYMENT: { bg: "#FEF0E4", border: "#FBD9B4", text: "#F97316", icon: <AttachMoneyIcon fontSize="small" /> },
 };
 const DEFAULT_STATUS_HEADER = { bg: "#F1F1F1", border: "#E0E0E0", text: "#6B7280", icon: <InfoIcon fontSize="small" /> };
 
@@ -84,6 +87,7 @@ const STATUS_SUBTITLE: Record<string, string> = {
   PAID_IN_FULL: "Vordering volledig betaald",
   TRANSFERRED: "Overgedragen aan gerechtelijke opvolging",
   CLOSED: "Gesloten zonder resultaat",
+  PENDING_PAYMENT: "Wacht op betaling van de startvergoeding",
 };
 
 // Item de la fila "Dossierinformatie" — icono en círculo de color + label + valor.
@@ -214,6 +218,22 @@ const CollectiveCollectionDetailPage: React.FC = () => {
     ? `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim() || person.business_name || "-"
     : "-";
 
+  const handleCreateResumePayment = async () => {
+    try {
+      const result = await resumeCollectiveCollectionStartPayment(collectionId);
+      return { success: true, paymentId: result.paymentId, paymentUrl: result.paymentUrl };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Kon de betaling niet ophalen";
+      notifyError(message);
+      return { success: false, error: message };
+    }
+  };
+
+  const handleResumePaymentConfirmed = async () => {
+    notifySuccess("Betaling bevestigd. De Collectieve Opvolging wordt geactiveerd.");
+    refresh();
+  };
+
   const handleKeepActive = async () => {
     try {
       await keepCopActive(collectionId);
@@ -310,6 +330,30 @@ const CollectiveCollectionDetailPage: React.FC = () => {
             </Grid>
           </CardContent>
         </Card>
+
+        {isStaff && collection.status === "PENDING_PAYMENT" && (
+          <Card sx={{ borderColor: "#FBD9B4", bgcolor: "#FFF7ED" }} variant="outlined">
+            <CardContent>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
+                <Box>
+                  <Typography variant="body1" fontWeight={700}>
+                    Startvergoeding nog niet betaald
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    De Collectieve Opvolging wordt pas actief zodra de startvergoeding (5%) via Sentoo is
+                    bevestigd. Rond de betaling af om verder te gaan.
+                  </Typography>
+                </Box>
+                <Box sx={{ minWidth: { sm: 200 } }}>
+                  <PaymentIntent
+                    onCreateTransaction={handleCreateResumePayment}
+                    onPaymentConfirmed={handleResumePaymentConfirmed}
+                  />
+                </Box>
+              </Stack>
+            </CardContent>
+          </Card>
+        )}
 
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 8 }}>
@@ -427,6 +471,16 @@ const CollectiveCollectionDetailPage: React.FC = () => {
                     Aangevraagde betalingsregeling — voorgesteld bedrag:{" "}
                     {formatCurrency(Number(openNegotiation.proposalAmount))}
                   </Typography>
+                  {!!openNegotiation.installmentsCount && (
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                      {openNegotiation.installmentsCount} termijnen van{" "}
+                      {formatCurrency(Number(openNegotiation.installmentAmount ?? 0))}
+                      {openNegotiation.startDate &&
+                        ` — vanaf ${formatDate(openNegotiation.startDate.toString())}`}
+                      {openNegotiation.endDate &&
+                        ` tot ${formatDate(openNegotiation.endDate.toString())}`}
+                    </Typography>
+                  )}
                   <Typography variant="caption" color="text.secondary">
                     {openNegotiation.submittedByRole === "EMPLOYER"
                       ? "Ingediend door de werkgever, namens de debiteur."
@@ -497,6 +551,7 @@ const CollectiveCollectionDetailPage: React.FC = () => {
         open={dialog === "request-agreement"}
         onClose={() => setDialog(null)}
         collectionId={collectionId}
+        outstandingAmount={balance ?? collection.debtClaim.principalAmount}
         onRequested={refresh}
       />
 
@@ -506,6 +561,12 @@ const CollectiveCollectionDetailPage: React.FC = () => {
           onClose={() => setDialog(null)}
           negotiationId={openNegotiation.id}
           proposalAmount={Number(openNegotiation.proposalAmount)}
+          installmentsCount={openNegotiation.installmentsCount}
+          installmentAmount={
+            openNegotiation.installmentAmount != null ? Number(openNegotiation.installmentAmount) : null
+          }
+          startDate={openNegotiation.startDate}
+          endDate={openNegotiation.endDate}
           onDecided={refresh}
         />
       )}

@@ -73,6 +73,11 @@ model Tenant {
   // tenants (ver COLNetworkResponse.tenantId).
   colNetworkResponses COLNetworkResponse[] @relation("COLNetworkResponseTenant")
 
+  // COP: personas que confirmaron a este tenant como su empleador (ver
+  // Person.confirmedEmployerTenantId) — permite saltar el broadcast de red
+  // en un COP futuro para la misma persona.
+  personsAsConfirmedEmployer Person[] @relation("PersonConfirmedEmployerTenant")
+
   supportMessages SupportMessage[]
 
   @@map("tenant")
@@ -356,6 +361,14 @@ model COLNegotiation {
 
   proposalAmount Decimal  @db.Decimal(18, 2)
   acceptedAmount Decimal? @db.Decimal(18, 2)
+
+  // Plan de cuotas propuesto — installmentAmount/endDate se calculan
+  // server-side a partir del saldo real (proposalAmount), installmentsCount
+  // y startDate (ver CollectiveCollectionService.requestPaymentAgreement).
+  installmentsCount Int?
+  installmentAmount Decimal?  @db.Decimal(18, 2)
+  startDate         DateTime?
+  endDate           DateTime?
 
   status NegotiationStatus
 
@@ -1205,6 +1218,14 @@ model Person {
   // código fuente (punto 13 del análisis CFSB).
   jurisdictionId String?
   jurisdiction   Jurisdiction? @relation(fields: [jurisdictionId], references: [id])
+
+  // COP: empleador ya confirmado en un COP anterior para esta persona (ver
+  // CollectiveCollectionService.applyEmployerMatch) — si está seteado, un
+  // COP nuevo salta el broadcast de red y usa este dato directamente
+  // (punto 3 del proceso COP del sponsor: "empleador conocido").
+  confirmedEmployerTenantId    String?
+  confirmedEmployerTenant      Tenant?   @relation("PersonConfirmedEmployerTenant", fields: [confirmedEmployerTenantId], references: [id])
+  confirmedEmployerConfirmedAt DateTime?
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

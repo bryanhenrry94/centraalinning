@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -11,11 +11,13 @@ import {
 } from "@mui/material";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { requestCopPaymentAgreement } from "@/modules/collective-follow-up/actions/collective-collection.actions";
+import { formatCurrency } from "@/shared/utils/formatters";
 
 interface DebtorRequestAgreementDialogProps {
   open: boolean;
   onClose: () => void;
   collectionId: string;
+  outstandingAmount: number;
   onRequested: () => void;
 }
 
@@ -23,22 +25,51 @@ export const DebtorRequestAgreementDialog: React.FC<DebtorRequestAgreementDialog
   open,
   onClose,
   collectionId,
+  outstandingAmount,
   onRequested,
 }) => {
-  const [proposalAmount, setProposalAmount] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [installmentsCount, setInstallmentsCount] = useState("1");
+  const [installmentAmount, setInstallmentAmount] = useState(0);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Termijnbedrag en einddatum worden altijd afgeleid van het openstaande
+  // bedrag en de gebruikersinvoer — nooit rechtstreeks door de gebruiker
+  // in te vullen (zelfde patroon als agreement-form.tsx:81-88).
+  useEffect(() => {
+    const count = Number(installmentsCount);
+    if (outstandingAmount > 0 && count > 0) {
+      setInstallmentAmount(Math.round((outstandingAmount / count) * 100) / 100);
+    } else {
+      setInstallmentAmount(0);
+    }
+
+    if (startDate && count > 0) {
+      const end = new Date(startDate);
+      end.setMonth(end.getMonth() + count);
+      setEndDate(end);
+    } else {
+      setEndDate(null);
+    }
+  }, [outstandingAmount, installmentsCount, startDate]);
+
   const handleClose = () => {
-    setProposalAmount("");
+    setStartDate("");
+    setInstallmentsCount("1");
     setNotes("");
     onClose();
   };
 
   const handleSubmit = async () => {
-    const amount = Number(proposalAmount);
-    if (!amount || amount <= 0) {
-      notifyError("Vul een geldig bedrag in");
+    if (!startDate) {
+      notifyError("Vul de gewenste startdatum in");
+      return;
+    }
+    const count = Number(installmentsCount);
+    if (!count || count <= 0) {
+      notifyError("Het aantal termijnen moet groter zijn dan 0");
       return;
     }
 
@@ -46,7 +77,8 @@ export const DebtorRequestAgreementDialog: React.FC<DebtorRequestAgreementDialog
       setSubmitting(true);
       await requestCopPaymentAgreement({
         collectionId,
-        proposalAmount: amount,
+        installmentsCount: count,
+        startDate: new Date(startDate),
         notes: notes.trim() || null,
       });
       notifySuccess("Uw voorstel voor een betalingsregeling is verzonden.");
@@ -65,18 +97,60 @@ export const DebtorRequestAgreementDialog: React.FC<DebtorRequestAgreementDialog
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
-            label="Voorgesteld bedrag"
+            label="Openstaand bedrag"
+            value={formatCurrency(outstandingAmount)}
+            disabled
+            fullWidth
+            size="small"
+          />
+
+          <TextField
+            label="Gewenste startdatum"
+            type="date"
+            required
+            size="small"
+            fullWidth
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            helperText="Vanaf welke datum wilt u starten?"
+            slotProps={{ inputLabel: { shrink: true } }}
+          />
+
+          <TextField
+            label="Aantal termijnen"
             type="number"
             required
             size="small"
-            value={proposalAmount}
-            onChange={(e) => setProposalAmount(e.target.value)}
+            fullWidth
+            value={installmentsCount}
+            onChange={(e) => setInstallmentsCount(e.target.value)}
+            helperText="In hoeveel maandelijkse termijnen wilt u betalen?"
           />
+
+          <TextField
+            label="Termijnbedrag (maandelijks)"
+            value={formatCurrency(installmentAmount)}
+            disabled
+            fullWidth
+            size="small"
+            helperText="Automatisch berekend: openstaand bedrag ÷ aantal termijnen."
+          />
+
+          <TextField
+            label="Verwachte einddatum"
+            value={endDate ? endDate.toISOString().slice(0, 10) : ""}
+            disabled
+            fullWidth
+            size="small"
+            helperText="Automatisch berekend op basis van startdatum en aantal termijnen."
+          />
+
           <TextField
             label="Toelichting (optioneel)"
             multiline
             minRows={2}
             size="small"
+            fullWidth
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />

@@ -7,7 +7,8 @@ export type StartCollectiveCollectionInput = z.infer<typeof StartCollectiveColle
 
 export const RequestPaymentAgreementSchema = z.object({
   collectionId: z.string().min(1),
-  proposalAmount: z.coerce.number().positive("Het voorgestelde bedrag moet groter zijn dan 0"),
+  installmentsCount: z.coerce.number().int().positive("Het aantal termijnen moet groter zijn dan 0"),
+  startDate: z.coerce.date(),
   notes: z.string().nullable().optional(),
 });
 export type RequestPaymentAgreementInput = z.infer<typeof RequestPaymentAgreementSchema>;

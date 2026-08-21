@@ -42,7 +42,7 @@ export const CancelTransferDialog: React.FC<CancelTransferDialogProps> = ({
     setLoading(true);
     try {
       await cancelCaseTransfer({ caseTransferId, reason });
-      notifySuccess("GOP geannuleerd");
+      notifySuccess("Overdracht geannuleerd");
       onRegistered();
       handleClose();
     } catch (error) {
@@ -54,7 +54,7 @@ export const CancelTransferDialog: React.FC<CancelTransferDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Gerechtelijke opvolging annuleren</DialogTitle>
+      <DialogTitle>Dossieroverdracht annuleren</DialogTitle>
       <DialogContent>
         <Alert severity="warning" sx={{ mb: 2 }}>
           Deze actie stopt de opvolging van het dossier definitief.

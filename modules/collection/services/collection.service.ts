@@ -18,6 +18,7 @@ import { sendInvoiceEmail } from "@/actions/email";
 import { AOP_STEP_CONFIG } from "@/modules/collection/utils/debt-claim-status";
 import { computeDebtClaimBalances } from "@/modules/collection/utils/debt-claim-balance";
 import { ObligationService } from "@/modules/collection/services/obligation.service";
+import { CollectiveCollectionService } from "@/modules/collective-follow-up/services/collective-collection.service";
 import { ClaimTimelineService } from "@/modules/collection/services/claim-timeline.service";
 import { PaymentService } from "@/modules/payment/services/payment.service";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
@@ -866,6 +867,7 @@ export class CollectionService {
     if (debtClaim.debtor.user_id !== actorUserId) {
       throw new Error("Alleen de debiteur zelf kan deze actie uitvoeren.");
     }
+    await CollectiveCollectionService.assertDebtorPaymentAllowed(debtClaimId);
 
     const obligations = await prisma.debtClaimObligation.findMany({
       where: {

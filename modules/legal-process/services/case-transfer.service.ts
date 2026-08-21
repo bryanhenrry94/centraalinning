@@ -174,11 +174,11 @@ export class CaseTransferService {
         user_id: assignedUserId,
         type: NotificationType.LEGAL_PROCESS_TRANSFER_REQUEST,
         title: caseTransfer.isEmergencyTransfer
-          ? "Nieuw spoeddossier voor gerechtelijke opvolging"
-          : "Nieuw dossier voor gerechtelijke opvolging",
+          ? "Nieuw spoeddossier overgedragen"
+          : "Nieuw dossier overgedragen",
         message: caseTransfer.isEmergencyTransfer
           ? `Dossier ${caseTransfer.debtClaim.reference} werd met spoed (noodoverdracht) aan je overgedragen: ${caseTransfer.emergencyReason}`
-          : `Dossier ${caseTransfer.debtClaim.reference} werd aan je overgedragen voor gerechtelijke opvolging.`,
+          : `Dossier ${caseTransfer.debtClaim.reference} werd aan je overgedragen.`,
         link: `/legal-processes/transfers/${caseTransfer.id}`,
         entity_type: "CaseTransfer",
         entity_id: caseTransfer.id,
@@ -493,14 +493,14 @@ export class CaseTransferService {
     await ClaimTimelineService.logEvent(
       caseTransfer.debtClaimId,
       "STATUS_CHANGED",
-      `GOP geannuleerd door de deelnemer: ${reason}`,
+      `Dossieroverdracht geannuleerd door de deelnemer: ${reason}`,
       undefined,
       actorUserId,
     );
 
     await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.tenantId, {
       type: NotificationType.GOP_CANCELLED,
-      title: "GOP geannuleerd",
+      title: "Overdracht geannuleerd",
       message: `Dossier ${caseTransfer.debtClaim.reference} werd geannuleerd: ${reason}`,
       link: `/legal-processes/transfers/${updated.id}`,
       entity_type: "CaseTransfer",
@@ -513,8 +513,8 @@ export class CaseTransferService {
         tenant_id: caseTransfer.debtClaim.tenantId,
         user_id: assignedUserId,
         type: NotificationType.GOP_CANCELLED,
-        title: "GOP geannuleerd",
-        message: `De deelnemer heeft de gerechtelijke opvolging van dossier ${caseTransfer.debtClaim.reference} geannuleerd.`,
+        title: "Overdracht geannuleerd",
+        message: `De deelnemer heeft de dossieroverdracht van dossier ${caseTransfer.debtClaim.reference} geannuleerd.`,
         link: `/legal-processes/transfers/${updated.id}`,
         entity_type: "CaseTransfer",
         entity_id: updated.id,
@@ -732,7 +732,7 @@ export class CaseTransferService {
         user_id: bailiff.user_id,
         type: NotificationType.GOP_TRANSFERRED_TO_BAILIFF,
         title: "Nieuw dossier voor executie",
-        message: `Dossier ${caseTransfer.debtClaim.reference} werd aan je overgedragen om het GOP te starten.`,
+        message: `Dossier ${caseTransfer.debtClaim.reference} werd aan je overgedragen voor executie.`,
         link: `/legal-processes/transfers/${updated.id}`,
         entity_type: "CaseTransfer",
         entity_id: updated.id,

@@ -118,6 +118,7 @@ export const EmployerCollectiveCollectionsTable: React.FC<
           open={requestDialogOpen}
           onClose={() => setRequestDialogOpen(false)}
           collectionId={selected.id}
+          outstandingAmount={Number(selected.debtClaim.principalAmount)}
           onRequested={onRequested}
         />
       )}

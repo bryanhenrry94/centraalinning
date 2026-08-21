@@ -26,7 +26,10 @@ import { notifyError } from "@/shared/ui/notifications";
 import { useTenant } from "@/modules/auth/hooks/useTenant";
 import { UserRole } from "@/shared/constants/user-role";
 
-import { getAllLegalProcessesForTenant, getMyLegalProcessesAsBailiff } from "@/modules/legal-process/actions/legal-process.actions";
+import {
+  getAllLegalProcessesForTenant,
+  getMyLegalProcessesAsBailiff,
+} from "@/modules/legal-process/actions/legal-process.actions";
 import {
   getAllCaseTransfersForTenant,
   getMyCaseTransfersAsLawyer,
@@ -36,8 +39,12 @@ import { getLegalProcessStatusInfo } from "@/modules/legal-process/utils/legal-p
 import { getCaseTransferStatusInfo } from "@/modules/legal-process/utils/case-transfer-status";
 import { CaseTransferStatus } from "@/modules/legal-process/constants/case-transfer-status";
 
-type CaseTransferListItem = Awaited<ReturnType<typeof getAllCaseTransfersForTenant>>[number];
-type LegalProcessListItem = Awaited<ReturnType<typeof getAllLegalProcessesForTenant>>[number];
+type CaseTransferListItem = Awaited<
+  ReturnType<typeof getAllCaseTransfersForTenant>
+>[number];
+type LegalProcessListItem = Awaited<
+  ReturnType<typeof getAllLegalProcessesForTenant>
+>[number];
 
 // Fila unificada para la tabla: un CaseTransfer (todavía sin vonnis) o un
 // LegalProcess (GOP real, ya con vonnis) normalizados a la misma forma.
@@ -55,9 +62,17 @@ type Row = {
   date: Date;
 };
 
-function debtorNameOf(item: { debtClaim: { debtor?: { person?: { first_name?: string | null; last_name?: string | null } | null } | null } }) {
+function debtorNameOf(item: {
+  debtClaim: {
+    debtor?: {
+      person?: { first_name?: string | null; last_name?: string | null } | null;
+    } | null;
+  };
+}) {
   const person = item.debtClaim.debtor?.person;
-  return person ? `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim() : "-";
+  return person
+    ? `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim()
+    : "-";
 }
 
 function toTransferRow(item: CaseTransferListItem): Row {
@@ -68,7 +83,9 @@ function toTransferRow(item: CaseTransferListItem): Row {
     href: `/legal-processes/transfers/${item.id}`,
     reference: item.debtClaim.reference || "-",
     debtorName: debtorNameOf(item),
-    lawyerName: item.lawyer ? `${item.lawyer.firstName} ${item.lawyer.lastName}` : "-",
+    lawyerName: item.lawyer
+      ? `${item.lawyer.firstName} ${item.lawyer.lastName}`
+      : "-",
     bailiffName: item.bailiff?.fullname ?? "-",
     amount: Number(item.debtClaim.principalAmount) || 0,
     statusLabel: statusInfo.label,
@@ -137,7 +154,7 @@ const LegalProcessesListPageContent: React.FC = () => {
         setTransferRows(transfers.map(toTransferRow));
         setLegalProcessRows(legalProcesses.map(toLegalProcessRow));
       } catch (error) {
-        notifyError("Kon GOP-dossiers niet laden");
+        notifyError("Kon dossiers niet laden");
       } finally {
         setLoading(false);
       }
@@ -148,7 +165,9 @@ const LegalProcessesListPageContent: React.FC = () => {
 
   const filteredRows = useMemo(() => {
     const pendingTransfers = transferRows.filter(
-      (row) => row.statusLabel === getCaseTransferStatusInfo(CaseTransferStatus.PENDING_ACCEPTANCE).label,
+      (row) =>
+        row.statusLabel ===
+        getCaseTransferStatusInfo(CaseTransferStatus.PENDING_ACCEPTANCE).label,
     );
 
     if (!showPendingTabs) {
@@ -159,7 +178,9 @@ const LegalProcessesListPageContent: React.FC = () => {
 
     if (tab === "pending") return pendingTransfers;
 
-    const nonPendingTransfers = transferRows.filter((row) => !pendingTransfers.includes(row));
+    const nonPendingTransfers = transferRows.filter(
+      (row) => !pendingTransfers.includes(row),
+    );
     return [...nonPendingTransfers, ...legalProcessRows].sort(
       (a, b) => b.date.valueOf() - a.date.valueOf(),
     );
@@ -168,20 +189,17 @@ const LegalProcessesListPageContent: React.FC = () => {
   if (loading) return <LoadingUI />;
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
-      <AppBreadcrumbs items={[{ label: "Gerechtelijke opvolging (GOP)" }]} />
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+    >
+      <AppBreadcrumbs items={[{ label: "Mijn dossiers" }]} />
 
       <Stack spacing={3}>
         <Typography variant="h4" fontWeight={700}>
-          Gerechtelijke opvolging
+          Mijn dossiers
         </Typography>
-
-        {showPendingTabs && (
-          <Tabs value={tab} onChange={(_, value) => setTab(value)}>
-            <Tab label="Nieuwe overdrachten" value="pending" />
-            <Tab label="Mijn dossiers" value="all" />
-          </Tabs>
-        )}
 
         <TableContainer component={Paper}>
           <Table>
@@ -201,7 +219,7 @@ const LegalProcessesListPageContent: React.FC = () => {
                 <TableRow>
                   <TableCell colSpan={7}>
                     <Typography variant="body2" color="text.secondary" py={2}>
-                      Nog geen GOP-dossiers.
+                      Nog geen dossiers.
                     </Typography>
                   </TableCell>
                 </TableRow>
@@ -217,9 +235,15 @@ const LegalProcessesListPageContent: React.FC = () => {
                   <TableCell>{row.debtorName}</TableCell>
                   <TableCell>{row.lawyerName}</TableCell>
                   <TableCell>{row.bailiffName}</TableCell>
-                  <TableCell align="right">{formatCurrency(row.amount)}</TableCell>
+                  <TableCell align="right">
+                    {formatCurrency(row.amount)}
+                  </TableCell>
                   <TableCell>
-                    <Chip size="small" label={row.statusLabel} color={row.statusColor} />
+                    <Chip
+                      size="small"
+                      label={row.statusLabel}
+                      color={row.statusColor}
+                    />
                   </TableCell>
                   <TableCell>{formatDate(row.date.toString())}</TableCell>
                 </TableRow>

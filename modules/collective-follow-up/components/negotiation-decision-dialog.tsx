@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { decideCopNegotiation } from "@/modules/collective-follow-up/actions/collective-collection.actions";
-import { formatCurrency } from "@/shared/utils/formatters";
+import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 
 type Decision = "ACCEPT" | "ACCEPT_MODIFIED" | "REJECT";
 
@@ -23,6 +23,10 @@ interface NegotiationDecisionDialogProps {
   onClose: () => void;
   negotiationId: string;
   proposalAmount: number;
+  installmentsCount?: number | null;
+  installmentAmount?: number | null;
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
   onDecided: () => void;
 }
 
@@ -31,6 +35,10 @@ export const NegotiationDecisionDialog: React.FC<NegotiationDecisionDialogProps>
   onClose,
   negotiationId,
   proposalAmount,
+  installmentsCount,
+  installmentAmount,
+  startDate,
+  endDate,
   onDecided,
 }) => {
   const [decision, setDecision] = useState<Decision>("ACCEPT");
@@ -91,6 +99,13 @@ export const NegotiationDecisionDialog: React.FC<NegotiationDecisionDialogProps>
           <Typography variant="body2" color="text.secondary">
             Voorgesteld bedrag: {formatCurrency(proposalAmount)}
           </Typography>
+          {!!installmentsCount && (
+            <Typography variant="body2" color="text.secondary">
+              Plan: {installmentsCount} termijnen van {formatCurrency(installmentAmount ?? 0)}
+              {startDate && ` — vanaf ${formatDate(startDate.toString())}`}
+              {endDate && ` tot ${formatDate(endDate.toString())}`}
+            </Typography>
+          )}
           <ToggleButtonGroup
             color="primary"
             exclusive

@@ -37,6 +37,8 @@ export class PaymentTransferService {
     error?: string;
   }> {
     try {
+      await CollectiveCollectionService.assertDebtorPaymentAllowed(input.debtClaimId);
+
       const pendingVerification =
         await prisma.paymentTransferVerification.findFirst({
           where: {

@@ -45,7 +45,7 @@ const TIMELINE_EVENT_LABELS: Record<string, string> = {
   AGREEMENT_COMPLETED: "Betalingsregeling afgerond",
 
   // GOP
-  GOP_STARTED: "GOP gestart",
+  GOP_STARTED: "Dossier overgedragen",
   LAWYER_ASSIGNED: "Advocaat toegewezen",
   BAILIFF_ASSIGNED: "Deurwaarder toegewezen",
   VERDICT_REGISTERED: "Vonnis geregistreerd",

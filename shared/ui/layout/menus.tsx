@@ -70,7 +70,7 @@ export const menuGroups: HeaderMenuGroup[] = [
         icon: <GroupOutlined fontSize="small" />,
       },
       {
-        label: "Gerechtelijke opvolging",
+        label: "Dossieroverdracht",
         href: "/verdicts",
         icon: <GavelOutlined fontSize="small" />,
       },
@@ -144,12 +144,7 @@ export const menuGroups: HeaderMenuGroup[] = [
     roles: [UserRole.BAILIFF],
     items: [
       {
-        label: "Nieuwe overdrachten",
-        href: "/legal-processes?tab=pending",
-        icon: <MoveToInboxOutlined fontSize="small" />,
-      },
-      {
-        label: "Expedienten GOP",
+        label: "Mijn dossiers",
         href: "/legal-processes",
         icon: <GavelOutlined fontSize="small" />,
       },

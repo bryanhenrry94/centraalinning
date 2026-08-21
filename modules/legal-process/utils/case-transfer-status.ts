@@ -5,7 +5,7 @@ type StatusColor = "default" | "info" | "warning" | "success" | "error";
 const CASE_TRANSFER_STATUS_CONFIG: Record<string, { label: string; color: StatusColor }> = {
   PENDING_PAYMENT: { label: "Wacht op betaling", color: "default" },
   PENDING_ACCEPTANCE: { label: "Wacht op advocaat/deurwaarder", color: "default" },
-  ACCEPTED: { label: "In gerechtelijke procedure", color: "info" },
+  ACCEPTED: { label: "Geaccepteerd — in behandeling", color: "info" },
   REJECTED: { label: "Afgewezen", color: "error" },
   WORK_COMPLETED: { label: "Trabajo finalizado", color: "success" },
   CANCELLED: { label: "Geannuleerd", color: "error" },

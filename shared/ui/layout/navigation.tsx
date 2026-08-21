@@ -61,7 +61,7 @@ const menus: MenuItem[] = [
     role: [UserRole.TENANT_ADMIN],
   },
   {
-    label: "Gerechtelijke opvolging",
+    label: "Dossieroverdracht",
     href: "/legal-processes",
     icon: <GavelOutlinedIcon fontSize="small" />,
     role: [UserRole.TENANT_ADMIN, UserRole.BAILIFF, UserRole.LAWYER],

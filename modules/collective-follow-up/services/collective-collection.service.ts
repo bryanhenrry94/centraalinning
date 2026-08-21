@@ -152,6 +152,7 @@ export class CollectiveCollectionService {
       ...n,
       proposalAmount: Number(n.proposalAmount),
       acceptedAmount: n.acceptedAmount != null ? Number(n.acceptedAmount) : null,
+      installmentAmount: n.installmentAmount != null ? Number(n.installmentAmount) : null,
     }));
   };
 
@@ -254,6 +255,54 @@ export class CollectiveCollectionService {
     };
   };
 
+  // Un COP en PENDING_PAYMENT ya tiene un Payment/link de Sentoo generado
+  // (ver requestStart) — `canStart` bloquea volver a llamar requestStart
+  // para el mismo dossier (violaría el unique en debtClaimId), así que la
+  // única forma de retomar un pago que quedó a medias es reabrir el mismo
+  // link existente, no crear uno nuevo.
+  static resumeStartPayment = async (collectionId: string) => {
+    const collection = await prisma.collectiveCollection.findUnique({
+      where: { id: collectionId },
+      include: { startFeePayment: true },
+    });
+    if (!collection) throw new Error("Dossier niet gevonden.");
+    if (collection.status !== CollectiveCollectionStatus.PENDING_PAYMENT || !collection.startFeePayment) {
+      throw new Error("Er is geen openstaande startbetaling voor dit dossier.");
+    }
+    if (!collection.startFeePayment.payment_url) {
+      throw new Error("Geen betaallink beschikbaar voor deze betaling.");
+    }
+
+    return {
+      paymentId: collection.startFeePayment.id,
+      paymentUrl: collection.startFeePayment.payment_url,
+    };
+  };
+
+  // Punto 9 del proceso COP: una vez vencido el plazo de gracia con
+  // empleador confirmado, las funciones de pago independientes del deudor
+  // quedan sin efecto — el pago pasa a gestionarse exclusivamente vía el
+  // empleador (mismo criterio que requireDebtorOrEmployerForNegotiation,
+  // aplicado al pago en vez de a la negociación). No hace nada si el
+  // debtClaim no tiene COP, o si el COP ya no está en un estado abierto.
+  static assertDebtorPaymentAllowed = async (debtClaimId: string) => {
+    const collection = await prisma.collectiveCollection.findUnique({ where: { debtClaimId } });
+    if (!collection) return;
+
+    const gracePeriodPassed =
+      !!collection.debtorGracePeriodDeadline && collection.debtorGracePeriodDeadline <= new Date();
+
+    if (
+      gracePeriodPassed &&
+      collection.employerTenantId &&
+      OPEN_COLLECTIVE_COLLECTION_STATUSES.includes(collection.status)
+    ) {
+      throw new Error(
+        "De bedenktermijn is verstreken. Deze betaling kan niet meer rechtstreeks door u worden geregistreerd — dit verloopt vanaf nu via uw werkgever.",
+      );
+    }
+  };
+
   // Llamado desde process_aop_workflow.ts cuando un caso llega al punto de
   // decisión de AOP (BLK_NOTIFICATION). Si el tenant preconfiguró la
   // continuación automática (Setting col_auto_continue_from_aop), dispara
@@ -286,7 +335,7 @@ export class CollectiveCollectionService {
   static processStartPaymentConfirmed = async (paymentId: string) => {
     const collection = await prisma.collectiveCollection.findUnique({
       where: { startFeePaymentId: paymentId },
-      include: { debtClaim: { include: { tenant: true } } },
+      include: { debtClaim: { include: { tenant: true, debtor: { include: { person: true } } } } },
     });
     if (!collection || collection.status !== CollectiveCollectionStatus.PENDING_PAYMENT) {
       return;
@@ -338,9 +387,17 @@ export class CollectiveCollectionService {
     }
 
     try {
-      await this.broadcastNetworkQuery(collection.id);
+      // Punto 3 del proceso COP: si ya se conoce el empleador de este
+      // deudor (confirmado en un COP anterior), se usa directamente en vez
+      // de volver a preguntarle a toda la red.
+      const knownEmployerTenantId = debtClaim.debtor.person?.confirmedEmployerTenantId;
+      if (knownEmployerTenantId) {
+        await this.applyEmployerMatch(collection.id, knownEmployerTenantId);
+      } else {
+        await this.broadcastNetworkQuery(collection.id);
+      }
     } catch (error) {
-      console.error("Error broadcasting COP network query:", error);
+      console.error("Error resolving employer for COP:", error);
     }
 
     try {
@@ -385,6 +442,16 @@ export class CollectiveCollectionService {
       where: { id: collectionId },
       data: { employerTenantId, employerMatchedAt: new Date() },
     });
+
+    // Cachea el empleador confirmado a nivel de Person (no de este COP en
+    // particular) — así un COP futuro para el mismo deudor puede saltarse
+    // el broadcast de red (ver processStartPaymentConfirmed).
+    if (collection.debtClaim.debtor.person) {
+      await prisma.person.update({
+        where: { id: collection.debtClaim.debtor.person.id },
+        data: { confirmedEmployerTenantId: employerTenantId, confirmedEmployerConfirmedAt: new Date() },
+      });
+    }
 
     await ClaimTimelineService.logEvent(
       collection.debtClaimId,
@@ -656,13 +723,13 @@ export class CollectiveCollectionService {
 
   static requestPaymentAgreement = async (
     collectionId: string,
-    input: { proposalAmount: number; notes?: string | null },
+    input: { installmentsCount: number; startDate: Date; notes?: string | null },
     requestingUserId: string,
     submitterInfo: { submittedByRole: "DEBTOR" | "EMPLOYER"; onBehalfOfEmployerTenantId?: string | null },
   ) => {
     const collection = await prisma.collectiveCollection.findUnique({
       where: { id: collectionId },
-      include: { debtClaim: { include: { debtor: true } } },
+      include: { debtClaim: { include: { debtor: true, obligations: true } } },
     });
     if (!collection) throw new Error("Dossier niet gevonden.");
 
@@ -680,11 +747,34 @@ export class CollectiveCollectionService {
       throw new Error("Er is al een betalingsregeling in behandeling voor dit dossier.");
     }
 
+    // El monto se resuelve del saldo real, no del cliente — mismo criterio
+    // que "Openstaand bedrag" en AgreementForm (no editable por el
+    // gebruiker).
+    const { receivableBalance } = computeDebtClaimBalances(
+      collection.debtClaim.obligations.map((o) => ({
+        beneficiary: o.beneficiary,
+        payer: o.payer,
+        originalAmount: Number(o.originalAmount),
+        balanceAmount: Number(o.balanceAmount),
+      })),
+    );
+    if (receivableBalance <= 0) {
+      throw new Error("Er is geen openstaand bedrag om een betalingsregeling voor aan te vragen.");
+    }
+    const proposalAmount = receivableBalance;
+    const installmentAmount = Math.round((proposalAmount / input.installmentsCount) * 100) / 100;
+    const endDate = new Date(input.startDate);
+    endDate.setMonth(endDate.getMonth() + input.installmentsCount);
+
     const negotiation = await prisma.$transaction(async (tx) => {
       const created = await tx.cOLNegotiation.create({
         data: {
           collectionId,
-          proposalAmount: input.proposalAmount,
+          proposalAmount,
+          installmentsCount: input.installmentsCount,
+          installmentAmount,
+          startDate: input.startDate,
+          endDate,
           notes: input.notes ?? null,
           status: "OPEN",
           submittedByRole: submitterInfo.submittedByRole,
@@ -702,7 +792,7 @@ export class CollectiveCollectionService {
         data: {
           debtClaimId: collection.debtClaimId,
           event: "COL_NEGOTIATION_CREATED",
-          description: `Betalingsregeling aangevraagd: ${input.proposalAmount}.`,
+          description: `Betalingsregeling aangevraagd: ${input.installmentsCount} termijnen van ${installmentAmount} vanaf ${input.startDate.toISOString().slice(0, 10)} (totaal ${proposalAmount}).`,
         },
       });
 
@@ -730,7 +820,7 @@ export class CollectiveCollectionService {
         user_id: collection.debtClaim.debtor.user_id,
         type: NotificationType.COL_NEGOTIATION_REQUESTED_BY_EMPLOYER,
         title: "Uw werkgever heeft namens u een betalingsregeling aangevraagd",
-        message: `Voor dossier ${collection.debtClaim.reference ?? collection.debtClaimId} werd een betalingsregeling van ${input.proposalAmount} aangevraagd door uw werkgever, namens u.`,
+        message: `Voor dossier ${collection.debtClaim.reference ?? collection.debtClaimId} werd een betalingsregeling van ${proposalAmount} aangevraagd door uw werkgever, namens u.`,
         link: `/collective-follow-up/${collectionId}`,
         entity_type: "CollectiveCollection",
         entity_id: collectionId,
@@ -980,7 +1070,7 @@ export class CollectiveCollectionService {
         data: {
           debtClaimId: collection.debtClaimId,
           event: "COL_TRANSFERRED_TO_GOP",
-          description: `Collectieve Opvolging overgedragen aan gerechtelijke opvolging (dossier ${collection.debtClaim.reference ?? collection.debtClaimId}).`,
+          description: `Collectieve Opvolging overgedragen aan advocaat/deurwaarder (dossier ${collection.debtClaim.reference ?? collection.debtClaimId}).`,
         },
       });
     });
@@ -990,8 +1080,8 @@ export class CollectiveCollectionService {
         tenant_id: collection.debtClaim.tenantId,
         user_id: collection.debtClaim.debtor.user_id,
         type: NotificationType.COL_TRANSFERRED_TO_GOP,
-        title: "Dossier overgedragen voor gerechtelijke opvolging",
-        message: `Dossier ${collection.debtClaim.reference ?? collection.debtClaimId} werd overgedragen voor gerechtelijke opvolging.`,
+        title: "Dossier overgedragen aan advocaat/deurwaarder",
+        message: `Dossier ${collection.debtClaim.reference ?? collection.debtClaimId} werd overgedragen aan een advocaat/deurwaarder voor verdere behandeling.`,
         link: `/legal-processes/transfers/${caseTransfer.id}`,
         entity_type: "CollectiveCollection",
         entity_id: collection.id,

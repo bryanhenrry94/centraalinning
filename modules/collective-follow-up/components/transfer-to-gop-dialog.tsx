@@ -87,7 +87,7 @@ export const TransferToGopDialog: React.FC<TransferToGopDialogProps> = ({
         isEmergencyTransfer: false,
         emergencyReason: null,
       });
-      notifySuccess("Dossier overgedragen voor gerechtelijke opvolging.");
+      notifySuccess("Dossier overgedragen aan advocaat/deurwaarder.");
       onTransferred();
       handleClose();
     } catch (error) {
@@ -99,7 +99,7 @@ export const TransferToGopDialog: React.FC<TransferToGopDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Overdragen voor gerechtelijke opvolging</DialogTitle>
+      <DialogTitle>Overdragen aan advocaat/deurwaarder</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <ToggleButtonGroup
