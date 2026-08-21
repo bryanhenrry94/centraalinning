@@ -12,7 +12,8 @@ import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { SettingsService } from "@/modules/settings/services/settings/settings.service";
 import { TenantService } from "@/modules/tenant/services/tenant.service";
 import { sendEmployerMatchNoticeEmail } from "@/modules/collective-follow-up/services/collective-collection-mail.service";
-import { formatDate } from "@/shared/utils/formatters";
+import { computeDebtClaimBalances } from "@/modules/collection/utils/debt-claim-balance";
+import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import {
   CollectiveCollectionStatus,
   COP_START_FEE_RATE,
@@ -372,7 +373,11 @@ export class CollectiveCollectionService {
   private static applyEmployerMatch = async (collectionId: string, employerTenantId: string) => {
     const collection = await prisma.collectiveCollection.findUnique({
       where: { id: collectionId },
-      include: { debtClaim: { include: { debtor: { include: { person: true } } } } },
+      include: {
+        debtClaim: {
+          include: { debtor: { include: { person: true } }, tenant: true, obligations: true },
+        },
+      },
     });
     if (!collection || collection.employerTenantId) return;
 
@@ -423,23 +428,38 @@ export class CollectiveCollectionService {
         `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim() ||
         person.business_name ||
         person.email;
-      const deadlineDate = collection.debtorGracePeriodDeadline
-        ? formatDate(collection.debtorGracePeriodDeadline.toISOString())
-        : formatDate(new Date().toISOString());
+      const now = new Date();
+      const deadline = collection.debtorGracePeriodDeadline ?? now;
+      const deadlineDate = formatDate(deadline.toISOString());
+      const gracePeriodDays = Math.max(
+        1,
+        Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
+      );
+      const { payableBalance } = computeDebtClaimBalances(
+        collection.debtClaim.obligations.map((o) => ({
+          beneficiary: o.beneficiary,
+          payer: o.payer,
+          originalAmount: Number(o.originalAmount),
+          balanceAmount: Number(o.balanceAmount),
+        })),
+      );
+      const employerName = employerTenant?.name || "uw werkgever";
 
       try {
-        await sendEmployerMatchNoticeEmail(
-          person.email,
+        await sendEmployerMatchNoticeEmail(person.email, {
           fullname,
-          employerTenant?.name || "uw werkgever",
+          letterDate: formatDate(now.toISOString()),
+          debtClaimReference: collection.debtClaim.reference ?? collection.debtClaimId,
+          creditorName: collection.debtClaim.tenant.name,
+          employerName,
+          gracePeriodDays,
+          outstandingAmount: formatCurrency(payableBalance),
           deadlineDate,
-        );
+        });
         await ClaimTimelineService.logEvent(
           collection.debtClaimId,
           "NOTIFICATION_SENT",
-          `Debiteur per e-mail geïnformeerd dat de werkgever (${
-            employerTenant?.name || "onbekend"
-          }) geïdentificeerd is en zal worden ingelicht bij het uitblijven van betaling vóór ${deadlineDate}.`,
+          `Debiteur per e-mail geïnformeerd dat de werkgever (${employerName}) geïdentificeerd is en zal worden ingelicht bij het uitblijven van betaling vóór ${deadlineDate}.`,
         );
       } catch (error) {
         console.error("Error sending employer match notice email to debtor:", error);

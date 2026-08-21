@@ -1,81 +1,39 @@
-import {
-  Body,
-  Container,
-  Head,
-  Html,
-  Img,
-  Link,
-  Section,
-  Text,
-  Hr,
-} from "@react-email/components";
+import { Body, Container, Head, Html, Img, Text } from "@react-email/components";
 
 export interface EmployerMatchEmailProps {
   logoUrl: string;
   fullname: string;
   employerName: string;
-  deadlineDate: string;
-  portalUrl?: string;
 }
 
 export default function EmployerMatchEmail({
   logoUrl,
   fullname,
   employerName,
-  deadlineDate,
-  portalUrl = "https://www.cfsbgroup.com",
 }: EmployerMatchEmailProps) {
   return (
     <Html>
       <Head />
-
       <Body style={main}>
         <Container style={container}>
-          <Section style={header}>
-            <Img
-              src={logoUrl}
-              width="100"
-              height="50"
-              alt="CFSB"
-              style={logo}
-            />
-          </Section>
+          <Img src={logoUrl} width="120" height="50" alt="CFSB" style={logo} />
 
-          <Section>
-            <Text style={paragraph}>
-              Geachte <strong>{fullname}</strong>,
-            </Text>
+          <Text style={paragraph}>
+            Geachte <strong>{fullname}</strong>,
+          </Text>
 
-            <Text style={paragraph}>
-              Wij hebben vastgesteld dat u werkzaam bent bij{" "}
-              <strong>{employerName}</strong>. Dit gegeven is bevestigd
-              binnen het CFSB-samenwerkingsnetwerk in het kader van uw
-              openstaande verplichting.
-            </Text>
+          <Text style={paragraph}>
+            Uw openstaande financiële verplichting is opgenomen in de
+            Collectieve Opvolging en er is bevestigd dat u werkzaam bent bij{" "}
+            <strong>{employerName}</strong>. De volledige details, het
+            openstaande bedrag en de uiterste reactiedatum vindt u in de
+            bijgevoegde brief.
+          </Text>
 
-            <Text style={paragraph}>
-              Indien u vóór <strong>{deadlineDate}</strong> geen betaling
-              verricht of geen betalingsregeling treft, zal CFSB uw
-              werkgever, <strong>{employerName}</strong>, hierover informeren.
-            </Text>
-
-            <Text style={paragraph}>
-              Om dit te voorkomen kunt u inloggen via{" "}
-              <Link href={portalUrl} style={link}>
-                www.cfsbgroup.com
-              </Link>{" "}
-              om te betalen of een betalingsregeling aan te vragen.
-            </Text>
-          </Section>
-
-          <Hr style={divider} />
-
-          <Section>
-            <Text style={footer}>
-              Dit is een automatisch gegenereerd bericht van CFSB. Reageren op
-              deze e-mail is niet mogelijk.
-            </Text>
-          </Section>
+          <Text style={footer}>
+            Dit bericht is automatisch gegenereerd binnen de
+            CFSB-samenwerking. Reageren op deze e-mail is niet mogelijk.
+          </Text>
         </Container>
       </Body>
     </Html>
@@ -85,59 +43,51 @@ export default function EmployerMatchEmail({
 EmployerMatchEmail.PreviewProps = {
   logoUrl:
     "https://www.centraalinning.com/wp-content/uploads/2020/06/CI-Logo-Orange.png",
-  fullname: "Alan Turing",
-  employerName: "Dazzsoft S.A.S.",
-  deadlineDate: "21-08-2026",
+  fullname: "Juan Pérez",
+  employerName: "Zenith Services B.V.",
 } satisfies EmployerMatchEmailProps;
 
 const main = {
-  backgroundColor: "#f5f7fa",
-  padding: "40px 20px",
-  fontFamily: "Arial, Helvetica, sans-serif",
+  backgroundColor: "#ffffff",
+  fontFamily: "HelveticaNeue,Helvetica,Arial,sans-serif",
+  display: "flex",
+  flexDirection: "column" as const,
+  alignItems: "center" as const,
+  justifyContent: "center" as const,
+  padding: "20px 0",
 };
 
 const container = {
   backgroundColor: "#ffffff",
-  borderRadius: "8px",
-  border: "1px solid #e5e7eb",
-  maxWidth: "650px",
-  margin: "0 auto",
-  overflow: "hidden",
-};
-
-const header = {
-  textAlign: "center" as const,
-  padding: "30px 40px 10px",
+  border: "1px solid #eee",
+  borderRadius: "5px",
+  boxShadow: "0 5px 10px rgba(20,50,70,.2)",
+  maxWidth: "600px",
 };
 
 const logo = {
+  padding: "0 40px",
   marginTop: "20px",
   marginBottom: "20px",
 };
 
 const paragraph = {
-  color: "#374151",
+  color: "#444",
   fontSize: "15px",
-  lineHeight: "24px",
+  fontFamily: "HelveticaNeue,Helvetica,Arial,sans-serif",
+  letterSpacing: "0",
+  lineHeight: "23px",
   padding: "0 40px",
   margin: "0 0 16px",
   textAlign: "justify" as const,
 };
 
-const link = {
-  color: "#f97316",
-  textDecoration: "none",
-};
-
-const divider = {
-  borderColor: "#e5e7eb",
-  margin: "24px 40px",
-};
-
 const footer = {
-  color: "#6b7280",
+  color: "#8898aa",
   fontSize: "12px",
   textAlign: "center" as const,
-  padding: "0 40px 30px",
-  lineHeight: "18px",
+  marginTop: "30px",
+  paddingTop: "15px",
+  borderTop: "1px solid #e5e7eb",
+  padding: "15px 40px 20px",
 };
