@@ -92,7 +92,7 @@ export const DashboardBailiff = () => {
       <Grid container spacing={3} mb={3}>
         <Grid size={{ xs: 12, sm: 4 }}>
           <MetricCard
-            title="Nieuwe overdrachten"
+            title="Mijn dossiers"
             value={loading ? 0 : pendingCount}
           />
         </Grid>
@@ -121,7 +121,7 @@ export const DashboardBailiff = () => {
           sx={{ mb: 1.5 }}
         >
           <Typography variant="subtitle1" fontWeight={700}>
-            Nieuwe overdrachten
+            Mijn dossiers
           </Typography>
           <Button
             component={Link}
@@ -141,7 +141,7 @@ export const DashboardBailiff = () => {
           variant="contained"
           size="large"
         >
-          Dossieroverdracht
+          Mijn dossiers
         </Button>
         <Button
           component={Link}

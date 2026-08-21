@@ -17,6 +17,7 @@ import {
   Stack,
   Tabs,
   Tab,
+  Button,
 } from "@mui/material";
 
 import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
@@ -39,6 +40,14 @@ import { getLegalProcessStatusInfo } from "@/modules/legal-process/utils/legal-p
 import { getCaseTransferStatusInfo } from "@/modules/legal-process/utils/case-transfer-status";
 import { CaseTransferStatus } from "@/modules/legal-process/constants/case-transfer-status";
 
+// Mismas condiciones que showVerdictButton en transfers/[id]/page.tsx: solo
+// el alguacil asignado registra el vonnis, y solo mientras el expediente
+// esté aceptado (directo) o el abogado ya haya finalizado su trabajo.
+const VERDICT_ELIGIBLE_STATUSES: CaseTransferStatus[] = [
+  CaseTransferStatus.ACCEPTED,
+  CaseTransferStatus.WORK_COMPLETED,
+];
+
 type CaseTransferListItem = Awaited<
   ReturnType<typeof getAllCaseTransfersForTenant>
 >[number];
@@ -60,6 +69,10 @@ type Row = {
   statusLabel: string;
   statusColor: ReturnType<typeof getCaseTransferStatusInfo>["color"];
   date: Date;
+  // Solo relevante para kind: "transfer" — permite mostrar "Vonnis
+  // registreren" directo en la tabla sin pasar por el detalle.
+  bailiffId: string | null;
+  status: string;
 };
 
 function debtorNameOf(item: {
@@ -91,6 +104,8 @@ function toTransferRow(item: CaseTransferListItem): Row {
     statusLabel: statusInfo.label,
     statusColor: statusInfo.color,
     date: item.createdAt,
+    bailiffId: item.bailiffId,
+    status: item.status,
   };
 }
 
@@ -110,6 +125,8 @@ function toLegalProcessRow(item: LegalProcessListItem): Row {
     statusLabel: statusInfo.label,
     statusColor: statusInfo.color,
     date: item.startedAt,
+    bailiffId: null,
+    status: item.status,
   };
 }
 
@@ -212,12 +229,13 @@ const LegalProcessesListPageContent: React.FC = () => {
                 <TableCell align="right">Bedrag</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Gestart op</TableCell>
+                {isBailiffRole && <TableCell>Acties</TableCell>}
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredRows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7}>
+                  <TableCell colSpan={isBailiffRole ? 8 : 7}>
                     <Typography variant="body2" color="text.secondary" py={2}>
                       Nog geen dossiers.
                     </Typography>
@@ -246,6 +264,24 @@ const LegalProcessesListPageContent: React.FC = () => {
                     />
                   </TableCell>
                   <TableCell>{formatDate(row.date.toString())}</TableCell>
+                  {isBailiffRole && (
+                    <TableCell>
+                      {row.kind === "transfer" &&
+                        !!row.bailiffId &&
+                        VERDICT_ELIGIBLE_STATUSES.includes(row.status as CaseTransferStatus) && (
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/verdicts/new?caseTransferId=${row.id}`);
+                            }}
+                          >
+                            Vonnis registreren
+                          </Button>
+                        )}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

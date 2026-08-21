@@ -107,7 +107,7 @@ export const DashboardLawyer = () => {
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <StatCard
-            title="Nieuwe overdrachten te accepteren"
+            title="Mijn dossiers"
             value={loading ? 0 : pendingItems.length}
             subtitle="wachten op actie"
             color="#E67E22"
@@ -150,7 +150,7 @@ export const DashboardLawyer = () => {
               sx={{ mb: 1.5 }}
             >
               <Typography variant="subtitle1" fontWeight={700}>
-                Nieuwe overdrachten
+                Mijn dossiers
               </Typography>
               <Button
                 component={Link}
