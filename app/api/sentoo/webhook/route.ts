@@ -41,9 +41,11 @@ export async function POST(req: NextRequest) {
       `🔎 Sentoo verification for ${transactionId}: ${providerStatus}`,
     );
 
-    // Sentoo devuelve "paid"/"pending"/"rejected" (ver comentario en
-    // SentooService.verifySentooPayment) — nunca "success".
-    if (providerStatus === "paid") {
+    // Verificado contra una respuesta real del sandbox de Sentoo: el campo
+    // devuelve literalmente "success" (no "paid" como sugería el comentario
+    // de SentooService.verifySentooPayment, que no coincide con la API real).
+    // Se acepta "paid" también, por si el valor varía entre entornos/endpoints.
+    if (providerStatus === "success" || providerStatus === "paid") {
       /**
        * updateMany evita race conditions:
        * solo un webhook podrá cambiar el estado.

@@ -151,7 +151,9 @@ export class SentooService {
       };
     }
 
-    // status puede ser "paid", "pending", "rejected", etc. según la respuesta de Sentoo
+    // Verificado contra el sandbox real: para un pago exitoso este campo
+    // devuelve literalmente "success" (no "paid" — ver comparación en
+    // app/api/sentoo/webhook/route.ts).
     const sentooStatus = data?.success?.message;
 
     return {

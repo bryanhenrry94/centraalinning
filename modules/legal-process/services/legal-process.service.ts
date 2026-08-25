@@ -144,6 +144,12 @@ export class LegalProcessService {
           paymentUrl: draftPayment.payment_url,
         };
       }
+      if (caseTransfer.legalProcess.status === LegalProcessStatus.GOP_DRAFT) {
+        // El intento de pago anterior no llegó a "pending con link" (falló,
+        // fue cancelado, o ya expiró) — generar un nuevo pago para el mismo
+        // borrador en vez de dejar al alguacil sin forma de reintentar.
+        return this.retryGopActivationPayment(caseTransfer.legalProcess.id, tenantId);
+      }
       throw new Error("Dit dossier heeft al een GOP-vonnis geregistreerd.");
     }
     if (!CASE_TRANSFER_VERDICT_REGISTRABLE_STATUSES.includes(caseTransfer.status)) {
@@ -197,8 +203,10 @@ export class LegalProcessService {
       throw new Error(paymentResult.message || "Kon geen Sentoo-betaling aanmaken");
     }
 
+    // La factura se envía al alguacil recién cuando el pago se confirma (es
+    // él quien paga a CFSB) — ver processGopActivationPaymentConfirmed.
     const invoice_number = await BillingInvoiceService.generateInvoiceNumber();
-    const invoice = await BillingInvoiceService.create(
+    await BillingInvoiceService.create(
       {
         invoice_number,
         issue_date: new Date(),
@@ -223,9 +231,6 @@ export class LegalProcessService {
       tenantId,
       paymentResult.data.paymentId,
     );
-    if (tenant.contact_email) {
-      await sendInvoiceEmail(tenant.contact_email, invoice.id, false);
-    }
 
     const { legalProcess, verdict } = await prisma.$transaction(async (tx) => {
       const newLegalProcess = await tx.legalProcess.create({
@@ -326,6 +331,94 @@ export class LegalProcessService {
     };
   };
 
+  // El borrador (LegalProcess/Verdict) ya existe pero su pago de activación
+  // anterior no llegó a buen puerto (mislukt/geannuleerd/verlopen) — genera
+  // un Payment/BillingInvoice nuevo para el mismo borrador, calculado sobre
+  // las facturas del alguacil ya registradas, sin duplicar LegalProcess/Verdict.
+  private static retryGopActivationPayment = async (legalProcessId: string, tenantId: string) => {
+    const legalProcess = await prisma.legalProcess.findUnique({
+      where: { id: legalProcessId },
+      include: { verdicts: { include: { bailiff_services: true } } },
+    });
+    if (!legalProcess) throw new Error("GOP-dossier niet gevonden");
+    const verdict = legalProcess.verdicts[0];
+    if (!verdict) throw new Error("Vonnis niet gevonden");
+
+    const bailiffServicesTotal = verdict.bailiff_services.reduce((sum, s) => sum + s.service_cost, 0);
+    if (bailiffServicesTotal <= 0) {
+      throw new Error(
+        "Geen deurwaarderskosten gevonden om de GOP-activeringscommissie op te berekenen.",
+      );
+    }
+
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+    if (!tenant) throw new Error("Tenant not found");
+
+    const parameter = await ParameterService.getParameterForTenant(tenantId);
+    const gopFeePercent = await SettingsService.resolveNumber(
+      "gop_fee_rate",
+      { tenantId, jurisdictionId: tenant.jurisdictionId },
+      DEFAULT_GOP_FEE_RATE_PERCENT,
+    );
+    const fee = Math.round(bailiffServicesTotal * (gopFeePercent / 100) * 100) / 100;
+    const tax_rate = parameter?.abb_rate ?? 0;
+    const tax_amount = Math.round(((fee * tax_rate) / 100) * 100) / 100;
+    const total_with_tax = fee + tax_amount;
+    const concept = `GOP-activeringscommissie (5%) over deurwaarderskosten — vonnis ${verdict.registration_number}`;
+
+    const paymentResult = await PaymentService.create(tenantId, {
+      amount: total_with_tax,
+      currency: "USD",
+      description: concept,
+      reference: `gop_activation_retry_${legalProcess.debtClaimId}_${Date.now()}`,
+      payment_type: PaymentType.GOP_ACTIVATION,
+    });
+    if (!paymentResult.success || !paymentResult.data) {
+      throw new Error(paymentResult.message || "Kon geen Sentoo-betaling aanmaken");
+    }
+
+    // La factura se envía al alguacil recién cuando el pago se confirma —
+    // ver processGopActivationPaymentConfirmed.
+    const invoice_number = await BillingInvoiceService.generateInvoiceNumber();
+    await BillingInvoiceService.create(
+      {
+        invoice_number,
+        issue_date: new Date(),
+        due_date: new Date(),
+        description: concept,
+        status: "unpaid",
+        tenant_id: tenantId,
+        currency: "USD",
+        amount: total_with_tax,
+        invoice_details: [
+          {
+            item_description: concept,
+            item_quantity: 1,
+            item_unit_price: fee,
+            item_total_price: fee,
+            item_tax_rate: tax_rate,
+            item_tax_amount: tax_amount,
+            item_total_with_tax: total_with_tax,
+          },
+        ],
+      },
+      tenantId,
+      paymentResult.data.paymentId,
+    );
+
+    await prisma.legalProcess.update({
+      where: { id: legalProcess.id },
+      data: { gopActivationPaymentId: paymentResult.data.paymentId },
+    });
+
+    return {
+      legalProcessId: legalProcess.id,
+      verdictId: verdict.id,
+      paymentId: paymentResult.data.paymentId,
+      paymentUrl: paymentResult.data.paymentUrl,
+    };
+  };
+
   // Se llama desde el webhook de Sentoo (vía payment-processor) cuando un
   // Payment de tipo GOP_ACTIVATION se confirma como pagado: recién ahí el
   // borrador (GOP_DRAFT) pasa a GOP_ACTIVE, el vonnis a APPROVED, se activa
@@ -335,7 +428,7 @@ export class LegalProcessService {
   static processGopActivationPaymentConfirmed = async (paymentId: string) => {
     const legalProcess = await prisma.legalProcess.findUnique({
       where: { gopActivationPaymentId: paymentId },
-      include: { debtClaim: true, verdicts: true },
+      include: { debtClaim: true, verdicts: true, bailiff: true },
     });
     if (!legalProcess || legalProcess.status !== LegalProcessStatus.GOP_DRAFT) return;
 
@@ -408,6 +501,13 @@ export class LegalProcessService {
         data: { status: "paid" },
       });
     }, { timeout: 20000, maxWait: 10000 });
+
+    // El alguacil es quien pagó la comisión CFSB — recién con el pago
+    // confirmado se le envía la factura correspondiente.
+    const invoice = await prisma.billingInvoice.findFirst({ where: { payment_id: paymentId } });
+    if (invoice && legalProcess.bailiff.email) {
+      await sendInvoiceEmail(legalProcess.bailiff.email, invoice.id, false);
+    }
 
     await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
       type: NotificationType.GOP_ACTIVATED,
