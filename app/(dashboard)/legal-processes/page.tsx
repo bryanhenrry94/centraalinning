@@ -89,7 +89,10 @@ function debtorNameOf(item: {
 }
 
 function toTransferRow(item: CaseTransferListItem): Row {
-  const statusInfo = getCaseTransferStatusInfo(item.status);
+  const statusInfo = getCaseTransferStatusInfo(item.status, {
+    lawyerId: item.lawyerId,
+    bailiffId: item.bailiffId,
+  });
   return {
     id: item.id,
     kind: "transfer",

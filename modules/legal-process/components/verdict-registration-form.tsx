@@ -6,7 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Box,
   Button,
+  CircularProgress,
   Container,
+  Dialog,
+  DialogContent,
   Grid,
   Paper,
   Stack,
@@ -62,9 +65,12 @@ const buildDefaultValues = (
 });
 
 // Pantalla única de registro de vonnis: intereses (por tramos), embargos y
-// costos del alguacil se cargan en el mismo paso que activa el GOP —
-// LegalProcessService.registerVerdict crea LegalProcess + Verdict +
-// Blockade + factura del 5% en una sola transacción.
+// costos del alguacil se cargan en el mismo paso. Si es el PRIMER vonnis
+// (caseTransferId), LegalProcessService.registerFirstVerdict lo registra
+// como borrador (GOP_DRAFT) y genera el pago de la comisión CFSB; el GOP
+// solo queda oficialmente activo cuando ese pago se confirma. Si es una
+// sentencia ADICIONAL sobre un GOP ya activo (legalProcessId), sigue sin
+// gate de pago.
 export const VerdictRegistrationForm: React.FC<VerdictRegistrationFormProps> = ({
   caseTransferId,
   legalProcessId,
@@ -73,12 +79,41 @@ export const VerdictRegistrationForm: React.FC<VerdictRegistrationFormProps> = (
 }) => {
   const router = useRouter();
   const [bailiffs, setBailiffs] = useState<Bailiff[]>([]);
+  const [pendingPayment, setPendingPayment] = useState<{
+    legalProcessId: string;
+    paymentId: string;
+  } | null>(null);
 
   useEffect(() => {
     getActiveBailiffsDirectory()
       .then(setBailiffs)
       .catch(() => notifyError("Kon deurwaarders niet laden"));
   }, []);
+
+  useEffect(() => {
+    if (!pendingPayment) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/payments/${pendingPayment.paymentId}/status`);
+        const data = await res.json();
+
+        if (data.status === "paid") {
+          clearInterval(interval);
+          notifySuccess("Betaling bevestigd. GOP is actief.");
+          router.push(`/legal-processes/${pendingPayment.legalProcessId}`);
+        } else if (data.status === "failed") {
+          clearInterval(interval);
+          notifyError("Betaling van de GOP-activeringscommissie mislukt.");
+          setPendingPayment(null);
+        }
+      } catch (err) {
+        console.error("Error en polling de GOP-activeringsbetaling", err);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [pendingPayment, router]);
 
   const defaultValues = useMemo(
     () => buildDefaultValues(caseTransferId, legalProcessId, defaultBailiffId),
@@ -108,9 +143,21 @@ export const VerdictRegistrationForm: React.FC<VerdictRegistrationFormProps> = (
     if (!confirmed) return;
 
     try {
-      const verdict = await registerGopVerdict(data);
-      notifySuccess("Vonnis geregistreerd. GOP is actief.");
-      router.push(`/legal-processes/${verdict.legal_process_id}`);
+      const result = await registerGopVerdict(data);
+
+      if (data.caseTransferId) {
+        // Primer vonnis: queda como borrador hasta que se pague la comisión
+        // CFSB de activación (ver LegalProcessService.registerFirstVerdict /
+        // processGopActivationPaymentConfirmed).
+        const draft = result as { legalProcessId: string; paymentId: string; paymentUrl: string };
+        notifySuccess("Vonnis geregistreerd als borrador. Betaal de GOP-activeringscommissie om te activeren.");
+        window.open(draft.paymentUrl, "_blank");
+        setPendingPayment({ legalProcessId: draft.legalProcessId, paymentId: draft.paymentId });
+      } else {
+        const verdict = result as { legal_process_id: string };
+        notifySuccess("Vonnis geregistreerd.");
+        router.push(`/legal-processes/${verdict.legal_process_id}`);
+      }
     } catch (error) {
       notifyError(error instanceof Error ? error.message : "Registratie mislukt");
     }
@@ -136,7 +183,7 @@ export const VerdictRegistrationForm: React.FC<VerdictRegistrationFormProps> = (
             }}
           >
             <Typography variant="h6" gutterBottom>
-              VONNIS REGISTREREN — GOP ACTIVEREN
+              {caseTransferId ? "VONNIS REGISTREREN — GOP ACTIVEREN" : "AANVULLEND VONNIS REGISTREREN"}
             </Typography>
 
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
@@ -147,7 +194,7 @@ export const VerdictRegistrationForm: React.FC<VerdictRegistrationFormProps> = (
                 startIcon={<SaveIcon />}
                 loading={isSubmitting}
               >
-                Vonnis registreren
+                {caseTransferId ? "Registreren en betalen" : "Vonnis registreren"}
               </Button>
             </Stack>
           </Box>
@@ -401,6 +448,15 @@ export const VerdictRegistrationForm: React.FC<VerdictRegistrationFormProps> = (
           </Grid>
         </form>
       </FormProvider>
+
+      <Dialog open={!!pendingPayment} disableEscapeKeyDown>
+        <DialogContent sx={{ textAlign: "center", p: 4 }}>
+          <CircularProgress size={48} sx={{ mt: 2 }} />
+          <Typography variant="body2" sx={{ mt: 2 }}>
+            ⏳ Wachten op bevestiging van de GOP-activeringscommissie...
+          </Typography>
+        </DialogContent>
+      </Dialog>
     </Container>
   );
 };

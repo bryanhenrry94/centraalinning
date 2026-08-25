@@ -261,6 +261,11 @@ async function seedJurisdictionSettings() {
       { key: "natural_sommatie_penalty", name: "Sommatieboete (particulier)", categoryId: "cat-percentages", value: String(jurisdiction.naturalSommatiePenalty) },
       { key: "company_no_reaction_penalty", name: "Boete geen reactie (bedrijf)", categoryId: "cat-percentages", value: String(jurisdiction.companyNoReactionPenalty) },
       { key: "natural_no_reaction_penalty", name: "Boete geen reactie (particulier)", categoryId: "cat-percentages", value: String(jurisdiction.naturalNoReactionPenalty) },
+      // GOP-commissie (5%): tarifa CFSB aplicada tanto a la transferencia del
+      // expediente (CaseTransferService.requestTransfer) como a la
+      // activación del GOP (LegalProcessService.registerFirstVerdict) — antes
+      // era la constante hardcodeada GOP_FEE_RATE.
+      { key: "gop_fee_rate", name: "GOP-commissie (%)", categoryId: "cat-percentages", value: "5" },
       // Recargos administrativos por falta de respuesta del deudor (punto 9
       // del análisis CFSB) — obligación con CFSB, no con el participante.
       { key: "aanmaning_no_response_fee", name: "Administratieve boete geen reactie (aanmaning)", categoryId: "cat-percentages", value: "150" },

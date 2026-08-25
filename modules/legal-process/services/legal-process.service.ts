@@ -10,7 +10,7 @@ import {
   SubmitBailiffFeeInvoiceInput,
 } from "@/modules/legal-process/services/legal-process.validators";
 import {
-  GOP_FEE_RATE,
+  DEFAULT_GOP_FEE_RATE_PERCENT,
   LegalProcessStatus,
   VERDICT_REGISTRABLE_STATUSES,
   GOP_OPERABLE_STATUSES,
@@ -27,6 +27,7 @@ import { sendInvoiceEmail } from "@/modules/payment/services/payment-mail.servic
 import { PaymentService } from "@/modules/payment/services/payment.service";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
+import { SettingsService } from "@/modules/settings/services/settings/settings.service";
 import { StorageService } from "@/infrastructure/storage/storage.service";
 
 const legalProcessInclude = {
@@ -97,9 +98,11 @@ export class LegalProcessService {
   // ---------------------------------------------------------------------
 
   // Si data.caseTransferId viene informado, este es el PRIMER vonnis: el
-  // LegalProcess todavía no existe y se crea en esta misma transacción
-  // (nace directamente GOP_ACTIVE). Si viene data.legalProcessId, es una
-  // sentencia ADICIONAL sobre un GOP ya activo (litigio en curso).
+  // LegalProcess todavía no existe y se crea en esta misma transacción, pero
+  // como BORRADOR (GOP_DRAFT) — el GOP solo pasa a GOP_ACTIVE cuando se
+  // confirma el pago de la comisión CFSB (ver processGopActivationPaymentConfirmed).
+  // Si viene data.legalProcessId, es una sentencia ADICIONAL sobre un GOP ya
+  // activo (litigio en curso) — eso no cambia, sigue sin gate de pago.
   static registerVerdict = async (
     data: RegisterVerdictInput,
     tenantId: string,
@@ -122,10 +125,25 @@ export class LegalProcessService {
   ) => {
     const caseTransfer = await prisma.caseTransfer.findUnique({
       where: { id: caseTransferId },
-      include: { debtClaim: true, legalProcess: true },
+      include: { debtClaim: true, legalProcess: { include: { gopActivationPayment: true } } },
     });
     if (!caseTransfer) throw new Error("Overdracht niet gevonden");
     if (caseTransfer.legalProcess) {
+      // Ya existe un borrador de vonnis esperando el pago de la comisión de
+      // activación: reusar ese link de pago en vez de fallar/duplicar.
+      const draftPayment = caseTransfer.legalProcess.gopActivationPayment;
+      if (
+        caseTransfer.legalProcess.status === LegalProcessStatus.GOP_DRAFT &&
+        draftPayment?.status === "pending" &&
+        draftPayment.payment_url
+      ) {
+        return {
+          legalProcessId: caseTransfer.legalProcess.id,
+          verdictId: null,
+          paymentId: draftPayment.id,
+          paymentUrl: draftPayment.payment_url,
+        };
+      }
       throw new Error("Dit dossier heeft al een GOP-vonnis geregistreerd.");
     }
     if (!CASE_TRANSFER_VERDICT_REGISTRABLE_STATUSES.includes(caseTransfer.status)) {
@@ -138,13 +156,76 @@ export class LegalProcessService {
     const referenceNumber = await this.generateReferenceNumber();
     const totalInterest = data.verdict_interest.reduce((sum, i) => sum + i.total_interest, 0);
 
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+    if (!tenant) throw new Error("Tenant not found");
+
+    // ABB por isla/jurisdicción del tenant (punto 13 del análisis CFSB), y
+    // comisión GOP configurable vía Settings/Tarieven (gop_fee_rate).
+    const parameter = await ParameterService.getParameterForTenant(tenantId);
+    const gopFeePercent = await SettingsService.resolveNumber(
+      "gop_fee_rate",
+      { tenantId, jurisdictionId: tenant.jurisdictionId },
+      DEFAULT_GOP_FEE_RATE_PERCENT,
+    );
+    const amountBase = data.sentence_amount + totalInterest;
+    const fee = Math.round(amountBase * (gopFeePercent / 100) * 100) / 100;
+    const tax_rate = parameter?.abb_rate ?? 0;
+    const tax_amount = Math.round(((fee * tax_rate) / 100) * 100) / 100;
+    const total_with_tax = fee + tax_amount;
+    const concept = `Registratiekosten vonnis ${data.registration_number} (5% incl. rente)`;
+
+    // El pago se crea ANTES del borrador (mismo orden que
+    // CollectiveCollectionService.requestStart): si Sentoo falla, no queda
+    // ningún LegalProcess/Verdict huérfano.
+    const paymentResult = await PaymentService.create(tenantId, {
+      amount: total_with_tax,
+      currency: "USD",
+      description: concept,
+      reference: `gop_activation_${caseTransfer.debtClaimId}_${Date.now()}`,
+      payment_type: PaymentType.GOP_ACTIVATION,
+    });
+    if (!paymentResult.success || !paymentResult.data) {
+      throw new Error(paymentResult.message || "Kon geen Sentoo-betaling aanmaken");
+    }
+
+    const invoice_number = await BillingInvoiceService.generateInvoiceNumber();
+    const invoice = await BillingInvoiceService.create(
+      {
+        invoice_number,
+        issue_date: new Date(),
+        due_date: new Date(),
+        description: concept,
+        status: "unpaid",
+        tenant_id: tenantId,
+        currency: "USD",
+        amount: total_with_tax,
+        invoice_details: [
+          {
+            item_description: concept,
+            item_quantity: 1,
+            item_unit_price: fee,
+            item_total_price: fee,
+            item_tax_rate: tax_rate,
+            item_tax_amount: tax_amount,
+            item_total_with_tax: total_with_tax,
+          },
+        ],
+      },
+      tenantId,
+      paymentResult.data.paymentId,
+    );
+    if (tenant.contact_email) {
+      await sendInvoiceEmail(tenant.contact_email, invoice.id, false);
+    }
+
     const { legalProcess, verdict } = await prisma.$transaction(async (tx) => {
       const newLegalProcess = await tx.legalProcess.create({
         data: {
           debtClaimId: caseTransfer.debtClaimId,
           caseTransferId: caseTransfer.id,
           bailiffId: caseTransfer.bailiffId!,
-          status: LegalProcessStatus.GOP_ACTIVE,
+          status: LegalProcessStatus.GOP_DRAFT,
+          gopActivationPaymentId: paymentResult.data!.paymentId,
           referenceNumber,
           startedAt: new Date(),
         },
@@ -167,7 +248,7 @@ export class LegalProcessService {
           procesal_cost: data.procesal_cost ?? 0,
           notes: data.notes,
           bailiff_id: data.bailiff_id,
-          status: "APPROVED",
+          status: "DRAFT",
         },
       });
 
@@ -194,7 +275,8 @@ export class LegalProcessService {
       }
 
       // Punto 1: la pantalla única de registro permite cargar embargos y
-      // costos del alguacil en el mismo paso que activa el GOP.
+      // costos del alguacil en el mismo paso (aunque el GOP siga en borrador
+      // hasta que se pague la comisión de activación).
       for (const item of data.verdict_embargo) {
         await tx.verdictEmbargo.create({
           data: { ...item, verdict_id: newVerdict.id },
@@ -206,26 +288,77 @@ export class LegalProcessService {
         });
       }
 
+      await tx.claimTimeline.create({
+        data: {
+          debtClaimId: caseTransfer.debtClaimId,
+          event: "STATUS_CHANGED",
+          description: `Vonnis ${data.registration_number} geregistreerd als borrador (${referenceNumber}). In afwachting van de betaling van de GOP-activeringscommissie.`,
+          metadata: { verdictId: newVerdict.id, sentence_amount: data.sentence_amount, totalInterest },
+          createdById: actorUserId,
+        },
+      });
+
+      return { legalProcess: newLegalProcess, verdict: newVerdict };
+    });
+
+    return {
+      legalProcessId: legalProcess.id,
+      verdictId: verdict.id,
+      paymentId: paymentResult.data.paymentId,
+      paymentUrl: paymentResult.data.paymentUrl,
+    };
+  };
+
+  // Se llama desde el webhook de Sentoo (vía payment-processor) cuando un
+  // Payment de tipo GOP_ACTIVATION se confirma como pagado: recién ahí el
+  // borrador (GOP_DRAFT) pasa a GOP_ACTIVE, el vonnis a APPROVED, se activa
+  // el bloqueo económico (o se reutiliza el existente) y arranca el
+  // ClaimService GOP — exactamente lo que antes hacía registerFirstVerdict
+  // de forma inmediata y sin gate de pago.
+  static processGopActivationPaymentConfirmed = async (paymentId: string) => {
+    const legalProcess = await prisma.legalProcess.findUnique({
+      where: { gopActivationPaymentId: paymentId },
+      include: { debtClaim: true, verdicts: true },
+    });
+    if (!legalProcess || legalProcess.status !== LegalProcessStatus.GOP_DRAFT) return;
+
+    const verdict = legalProcess.verdicts[0];
+
+    await prisma.$transaction(async (tx) => {
+      await tx.legalProcess.update({
+        where: { id: legalProcess.id },
+        data: { status: LegalProcessStatus.GOP_ACTIVE },
+      });
+
+      if (verdict) {
+        await tx.verdict.update({
+          where: { id: verdict.id },
+          data: { status: "APPROVED" },
+        });
+      }
+
       // Registrar una sentencia activa el bloqueo económico automáticamente,
-      // igual que el paso BLK_NOTIFICATION del flujo AOP.
+      // igual que el paso BLK_NOTIFICATION del flujo AOP. Si ya existe un
+      // BLK del expediente anterior, no se crea uno nuevo — se conserva su
+      // estado/historial/origen tal cual.
       const existingBlockade = await tx.blockade.findUnique({
-        where: { originDebtClaimId: caseTransfer.debtClaimId },
+        where: { originDebtClaimId: legalProcess.debtClaimId },
       });
       if (!existingBlockade) {
         await tx.blockade.create({
           data: {
-            tenantId: caseTransfer.debtClaim.tenantId,
-            debtorId: caseTransfer.debtClaim.debtorId,
+            tenantId: legalProcess.debtClaim.tenantId,
+            debtorId: legalProcess.debtClaim.debtorId,
             reason: "UNPAID_PAYMENT",
             registeredAt: new Date(),
             status: "ACTIVE",
-            originDebtClaimId: caseTransfer.debtClaimId,
+            originDebtClaimId: legalProcess.debtClaimId,
           },
         });
       }
 
       const existingGopService = await tx.claimService.findFirst({
-        where: { debtClaimId: caseTransfer.debtClaimId, service: "GOP" },
+        where: { debtClaimId: legalProcess.debtClaimId, service: "GOP" },
       });
       if (existingGopService) {
         await tx.claimService.update({
@@ -235,45 +368,38 @@ export class LegalProcessService {
       } else {
         await tx.claimService.create({
           data: {
-            debtClaimId: caseTransfer.debtClaimId,
+            debtClaimId: legalProcess.debtClaimId,
             service: "GOP",
             status: "IN_PROGRESS",
             startedAt: new Date(),
-            startedById: actorUserId,
           },
         });
       }
 
       await tx.claimTimeline.create({
         data: {
-          debtClaimId: caseTransfer.debtClaimId,
+          debtClaimId: legalProcess.debtClaimId,
           event: "VERDICT_REGISTERED",
-          description: `Vonnis ${data.registration_number} geregistreerd. GOP geactiveerd (${referenceNumber}).`,
-          metadata: { verdictId: newVerdict.id, sentence_amount: data.sentence_amount, totalInterest },
-          createdById: actorUserId,
+          description: `Betaling van de GOP-activeringscommissie bevestigd. Vonnis ${
+            verdict?.registration_number ?? ""
+          } definitief geregistreerd. GOP geactiveerd (${legalProcess.referenceNumber}).`,
         },
       });
 
-      return { legalProcess: newLegalProcess, verdict: newVerdict };
+      await tx.billingInvoice.updateMany({
+        where: { payment_id: paymentId },
+        data: { status: "paid" },
+      });
     });
 
-    await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.tenantId, {
+    await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
       type: NotificationType.GOP_ACTIVATED,
       title: "GOP geactiveerd",
-      message: `Het vonnis van dossier ${caseTransfer.debtClaim.reference} werd geregistreerd. Het GOP is actief.`,
+      message: `Het vonnis van dossier ${legalProcess.debtClaim.reference} werd geregistreerd. Het GOP is actief.`,
       link: `/legal-processes/${legalProcess.id}`,
       entity_type: "LegalProcess",
       entity_id: legalProcess.id,
     });
-
-    await this.generateGopFeeInvoice({
-      tenantId,
-      debtClaimId: legalProcess.debtClaimId,
-      amountBase: data.sentence_amount + totalInterest,
-      concept: `Registratiekosten vonnis ${data.registration_number} (5% incl. rente)`,
-    });
-
-    return verdict;
   };
 
   private static registerAdditionalVerdict = async (
@@ -578,7 +704,16 @@ export class LegalProcessService {
     // ABB por isla/jurisdicción del tenant (punto 13 del análisis CFSB) —
     // cae al Parameter global si el tenant no tiene jurisdiction asignada.
     const parameter = await ParameterService.getParameterForTenant(tenantId);
-    const fee = Math.round(params.totalAmount * GOP_FEE_RATE * 100) / 100;
+    const tenantForFeeRate = await prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { jurisdictionId: true },
+    });
+    const gopFeePercent = await SettingsService.resolveNumber(
+      "gop_fee_rate",
+      { tenantId, jurisdictionId: tenantForFeeRate?.jurisdictionId },
+      DEFAULT_GOP_FEE_RATE_PERCENT,
+    );
+    const fee = Math.round(params.totalAmount * (gopFeePercent / 100) * 100) / 100;
     const tax_rate = parameter?.abb_rate ?? 0;
     const tax_amount = Math.round(((fee * tax_rate) / 100) * 100) / 100;
     const total_with_tax = fee + tax_amount;
@@ -1066,7 +1201,12 @@ export class LegalProcessService {
 
       // ABB por isla/jurisdicción del tenant (punto 13 del análisis CFSB).
       const parameter = await ParameterService.getParameterForTenant(params.tenantId);
-      const fee = Math.round(params.amountBase * GOP_FEE_RATE * 100) / 100;
+      const gopFeePercent = await SettingsService.resolveNumber(
+        "gop_fee_rate",
+        { tenantId: params.tenantId, jurisdictionId: tenant.jurisdictionId },
+        DEFAULT_GOP_FEE_RATE_PERCENT,
+      );
+      const fee = Math.round(params.amountBase * (gopFeePercent / 100) * 100) / 100;
       const tax_rate = parameter?.abb_rate ?? 0;
       const tax_amount = Math.round(((fee * tax_rate) / 100) * 100) / 100;
       const total_with_tax = fee + tax_amount;

@@ -2,6 +2,7 @@
 // vonnis. Los estados previos (transferencia, aceptación, procedimiento con
 // el abogado) viven en CaseTransferStatus — ver case-transfer-status.ts.
 export enum LegalProcessStatus {
+  GOP_DRAFT = "GOP_DRAFT",
   GOP_ACTIVE = "GOP_ACTIVE",
   GOP_INACTIVE = "GOP_INACTIVE",
   CLOSED = "CLOSED",
@@ -36,4 +37,8 @@ export const GOP_OPERABLE_STATUSES = [
   LegalProcessStatus.GOP_INACTIVE,
 ];
 
-export const GOP_FEE_RATE = 0.05;
+// Fallback si el Superadministrador todavía no configuró el Setting
+// "gop_fee_rate" para la isla/tenant — ver SettingsService.resolveNumber.
+// Igual que collection_fee_rate, se guarda/resuelve como porcentaje entero
+// (5 = 5%), no como fracción — dividir entre 100 al calcular el monto.
+export const DEFAULT_GOP_FEE_RATE_PERCENT = 5;

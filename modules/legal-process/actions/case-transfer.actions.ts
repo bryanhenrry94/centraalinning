@@ -58,6 +58,13 @@ export const getAllCaseTransfersForTenant = async (tenantId: string) => {
   return CaseTransferService.getAllForTenant(tenantId);
 };
 
+// Usado por TransferToLawyerDialog para decidir si mostrar la opción de
+// noodoverdracht (solo aplica cuando ya hubo un intento de transferencia
+// previo, es decir, ya existía un advocaat/deurwaarder asignado a reemplazar).
+export const hasExistingCaseTransfer = async (debtClaimId: string) => {
+  return CaseTransferService.existsForDebtClaim(debtClaimId);
+};
+
 export const getMyCaseTransfersAsLawyer = async () => {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) throw new Error("U bent niet ingelogd.");

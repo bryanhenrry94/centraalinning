@@ -13,6 +13,7 @@ export const COMPLETED_LEGAL_PROCESS_STATUSES = [LegalProcessStatus.CLOSED] as c
 // actuele beslagmogelijkheid sluit het dossier nooit vanzelf — zie
 // LegalProcessService.markInactive.
 const LEGAL_PROCESS_STATUS_CONFIG: Record<string, { label: string; color: StatusColor }> = {
+  GOP_DRAFT: { label: "Wacht op betaling activeringscommissie", color: "default" },
   GOP_ACTIVE: { label: "GOP Actief", color: "info" },
   GOP_INACTIVE: { label: "In onderzoek naar executiemogelijkheden", color: "warning" },
   CLOSED: { label: "Gesloten", color: "success" },

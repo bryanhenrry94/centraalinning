@@ -104,7 +104,10 @@ export const LatestTransfersTable = ({
       align: "center" as const,
       headerAlign: "center" as const,
       renderCell: (params) => {
-        const statusInfo = getCaseTransferStatusInfo(params.row.status);
+        const statusInfo = getCaseTransferStatusInfo(params.row.status, {
+          lawyerId: params.row.lawyerId,
+          bailiffId: params.row.bailiffId,
+        });
         return (
           <Chip
             label={statusInfo.label}
@@ -180,7 +183,10 @@ export const LatestTransfersTable = ({
         )}
 
         {items.map((item) => {
-          const statusInfo = getCaseTransferStatusInfo(item.status);
+          const statusInfo = getCaseTransferStatusInfo(item.status, {
+            lawyerId: item.lawyerId,
+            bailiffId: item.bailiffId,
+          });
           return (
             <Card
               key={item.id}

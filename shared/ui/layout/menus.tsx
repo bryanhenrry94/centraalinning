@@ -71,7 +71,7 @@ export const menuGroups: HeaderMenuGroup[] = [
       },
       {
         label: "Dossieroverdracht",
-        href: "/verdicts",
+        href: "/legal-processes",
         icon: <GavelOutlined fontSize="small" />,
       },
     ],

@@ -493,6 +493,12 @@ model LegalProcess {
   // Se setea cuando el alguacil paga la comisión CFSB del 5% (BailiffFeeInvoice.status = PAID).
   gopCompletedGateAt DateTime?
 
+  // Pago de la comisión CFSB (5%) que gatea la activación del GOP (paso
+  // GOP_DRAFT -> GOP_ACTIVE del primer vonnis). Ver
+  // LegalProcessService.registerFirstVerdict / processGopActivationPaymentConfirmed.
+  gopActivationPaymentId String?  @unique
+  gopActivationPayment   Payment? @relation(fields: [gopActivationPaymentId], references: [id])
+
   verdicts             Verdict[]
   documents            LegalProcessDocument[]
   agreements           Agreement[]
@@ -931,6 +937,7 @@ enum TimelineEvent {
 // (transferencia, aceptación, procedimiento con el abogado, cancelación
 // antes de sentencia) viven en CaseTransferStatus.
 enum LegalProcessStatus {
+  GOP_DRAFT // Vonnis geregistreerd als borrador; wacht op betaling van de GOP-activeringscommissie (5%).
   GOP_ACTIVE // Sentencia registrada; el alguacil administra la ejecución judicial.
   GOP_INACTIVE // Sin resultados temporales; en espera de la fecha de revisión.
   CLOSED // La sentencia fue cumplida en su totalidad.
@@ -2173,6 +2180,7 @@ enum PaymentType {
   FINANCIAL_REPORT
   COLLECTION
   GOP
+  GOP_ACTIVATION
   GOP_TRANSFER
   GOP_LAWYER_FEE
   GOP_BAILIFF_FEE
@@ -2232,6 +2240,7 @@ model Payment {
   financial_agreement_registration FinancialAgreement?
   gop_payment_confirmation         GopPaymentConfirmation?
   collective_collection_start      CollectiveCollection?
+  legal_process_activation         LegalProcess?
 
   @@map("payment")
 }

@@ -128,7 +128,10 @@ const CaseTransferDetailPage: React.FC = () => {
     );
   }
 
-  const statusInfo = getCaseTransferStatusInfo(caseTransfer.status);
+  const statusInfo = getCaseTransferStatusInfo(caseTransfer.status, {
+    lawyerId: caseTransfer.lawyerId,
+    bailiffId: caseTransfer.bailiffId,
+  });
   const debtorName = caseTransfer.debtClaim.debtor?.person
     ? `${caseTransfer.debtClaim.debtor.person.first_name ?? ""} ${caseTransfer.debtClaim.debtor.person.last_name ?? ""}`.trim()
     : "-";
