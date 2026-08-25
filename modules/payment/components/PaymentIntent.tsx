@@ -100,6 +100,7 @@ export const PaymentIntent: React.FC<PaymentIntentProps> = ({
   return (
     <>
       <Button
+        type="button"
         variant="contained"
         color="primary"
         onClick={handlePayNow}

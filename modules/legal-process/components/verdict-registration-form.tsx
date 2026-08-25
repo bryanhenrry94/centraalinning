@@ -6,10 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Box,
   Button,
-  CircularProgress,
   Container,
-  Dialog,
-  DialogContent,
   Grid,
   Paper,
   Stack,
@@ -32,6 +29,7 @@ import StatutoryInterestSection from "@/modules/verdict/components/sections/stat
 import AttachmentSection from "@/modules/verdict/components/sections/attachment-section";
 import ServiceCostsSection from "@/modules/verdict/components/sections/service-costs-section";
 import VerdictTotals from "@/modules/verdict/components/verdict-totals";
+import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 
 interface VerdictRegistrationFormProps {
   caseTransferId?: string | null;
@@ -67,22 +65,19 @@ const buildDefaultValues = (
 // Pantalla única de registro de vonnis: intereses (por tramos), embargos y
 // costos del alguacil se cargan en el mismo paso. Si es el PRIMER vonnis
 // (caseTransferId), LegalProcessService.registerFirstVerdict lo registra
-// como borrador (GOP_DRAFT) y genera el pago de la comisión CFSB; el GOP
-// solo queda oficialmente activo cuando ese pago se confirma. Si es una
-// sentencia ADICIONAL sobre un GOP ya activo (legalProcessId), sigue sin
-// gate de pago.
-export const VerdictRegistrationForm: React.FC<VerdictRegistrationFormProps> = ({
-  caseTransferId,
-  legalProcessId,
-  debtorName,
-  defaultBailiffId,
-}) => {
+// como borrador (GOP_DRAFT) y genera el pago de la comisión CFSB (5% sobre
+// las facturas del alguacil ingresadas arriba — es el alguacil quien paga a
+// CFSB); el usuario paga en el momento vía PaymentIntent y el GOP recién
+// queda oficialmente activo cuando ese pago se confirma. Si es una sentencia
+// ADICIONAL sobre un GOP ya activo (legalProcessId), sigue sin gate de pago.
+export const VerdictRegistrationForm: React.FC<
+  VerdictRegistrationFormProps
+> = ({ caseTransferId, legalProcessId, debtorName, defaultBailiffId }) => {
   const router = useRouter();
   const [bailiffs, setBailiffs] = useState<Bailiff[]>([]);
-  const [pendingPayment, setPendingPayment] = useState<{
-    legalProcessId: string;
-    paymentId: string;
-  } | null>(null);
+  // Se setea al registrar el borrador (primer vonnis), para poder navegar
+  // al detalle del GOP una vez PaymentIntent confirma el pago.
+  const [registeredLegalProcessId, setRegisteredLegalProcessId] = useState<string | null>(null);
 
   useEffect(() => {
     getActiveBailiffsDirectory()
@@ -90,74 +85,89 @@ export const VerdictRegistrationForm: React.FC<VerdictRegistrationFormProps> = (
       .catch(() => notifyError("Kon deurwaarders niet laden"));
   }, []);
 
-  useEffect(() => {
-    if (!pendingPayment) return;
-
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/payments/${pendingPayment.paymentId}/status`);
-        const data = await res.json();
-
-        if (data.status === "paid") {
-          clearInterval(interval);
-          notifySuccess("Betaling bevestigd. GOP is actief.");
-          router.push(`/legal-processes/${pendingPayment.legalProcessId}`);
-        } else if (data.status === "failed") {
-          clearInterval(interval);
-          notifyError("Betaling van de GOP-activeringscommissie mislukt.");
-          setPendingPayment(null);
-        }
-      } catch (err) {
-        console.error("Error en polling de GOP-activeringsbetaling", err);
-      }
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [pendingPayment, router]);
-
   const defaultValues = useMemo(
     () => buildDefaultValues(caseTransferId, legalProcessId, defaultBailiffId),
     [caseTransferId, legalProcessId, defaultBailiffId],
   );
 
   const methods = useForm<RegisterVerdictInput>({
-    resolver: zodResolver(RegisterVerdictSchema) as unknown as Resolver<RegisterVerdictInput>,
+    resolver: zodResolver(
+      RegisterVerdictSchema,
+    ) as unknown as Resolver<RegisterVerdictInput>,
     defaultValues,
   });
 
   const {
     handleSubmit,
+    trigger,
+    getValues,
     control,
     formState: { errors, isSubmitting },
   } = methods;
 
   const uploadContext = { caseTransferId, legalProcessId };
 
-  const onSubmit = async (data: RegisterVerdictInput) => {
+  // Primer vonnis: se registra como borrador y el pago se hace en el momento
+  // vía PaymentIntent (botón "Nu betalen" con polling propio) — el GOP recién
+  // queda activo cuando ese pago se confirma (ver
+  // LegalProcessService.registerFirstVerdict / processGopActivationPaymentConfirmed).
+  const registerDraftAndPay = async (): Promise<{
+    success: boolean;
+    error?: string;
+    paymentId?: string;
+    paymentUrl?: string;
+  }> => {
+    const valid = await trigger();
+    if (!valid) {
+      notifyError("Controleer de invoer voordat u doorgaat.");
+      return { success: false };
+    }
+
     const confirmed = await AlertService.showConfirm(
       "Weet je het zeker?",
-      "U staat op het punt een vonnis te registreren. Hierdoor wordt het GOP-dossier geactiveerd. Wilt u doorgaan?",
+      "U staat op het punt een vonnis te registreren als borrador. De GOP-activeringscommissie (5%) wordt berekend over de hierboven ingevoerde deurwaarderskosten. Wilt u doorgaan?",
+      "Ja, registreren en betalen",
+      "Annuleren",
+    );
+    if (!confirmed) return { success: false };
+
+    try {
+      const draft = (await registerGopVerdict(getValues())) as {
+        legalProcessId: string;
+        paymentId: string;
+        paymentUrl: string;
+      };
+      setRegisteredLegalProcessId(draft.legalProcessId);
+      return { success: true, paymentId: draft.paymentId, paymentUrl: draft.paymentUrl };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Registratie mislukt";
+      notifyError(message);
+      return { success: false, error: message };
+    }
+  };
+
+  const handlePaymentConfirmed = async () => {
+    notifySuccess("Betaling bevestigd. GOP is actief.");
+    if (registeredLegalProcessId) {
+      router.push(`/legal-processes/${registeredLegalProcessId}`);
+    }
+  };
+
+  // Sentencia ADICIONAL sobre un GOP ya activo: sin gate de pago, igual que
+  // antes.
+  const onSubmitAdditional = async (data: RegisterVerdictInput) => {
+    const confirmed = await AlertService.showConfirm(
+      "Weet je het zeker?",
+      "U staat op het punt een aanvullend vonnis te registreren. Wilt u doorgaan?",
       "Ja, vonnis registreren",
       "Annuleren",
     );
     if (!confirmed) return;
 
     try {
-      const result = await registerGopVerdict(data);
-
-      if (data.caseTransferId) {
-        // Primer vonnis: queda como borrador hasta que se pague la comisión
-        // CFSB de activación (ver LegalProcessService.registerFirstVerdict /
-        // processGopActivationPaymentConfirmed).
-        const draft = result as { legalProcessId: string; paymentId: string; paymentUrl: string };
-        notifySuccess("Vonnis geregistreerd als borrador. Betaal de GOP-activeringscommissie om te activeren.");
-        window.open(draft.paymentUrl, "_blank");
-        setPendingPayment({ legalProcessId: draft.legalProcessId, paymentId: draft.paymentId });
-      } else {
-        const verdict = result as { legal_process_id: string };
-        notifySuccess("Vonnis geregistreerd.");
-        router.push(`/legal-processes/${verdict.legal_process_id}`);
-      }
+      const verdict = (await registerGopVerdict(data)) as { legal_process_id: string };
+      notifySuccess("Vonnis geregistreerd.");
+      router.push(`/legal-processes/${verdict.legal_process_id}`);
     } catch (error) {
       notifyError(error instanceof Error ? error.message : "Registratie mislukt");
     }
@@ -170,7 +180,18 @@ export const VerdictRegistrationForm: React.FC<VerdictRegistrationFormProps> = (
       sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
     >
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form
+          onSubmit={(e) => {
+            // El registro del primer vonnis se dispara únicamente con el
+            // botón de PaymentIntent (registra + paga), nunca con
+            // Enter/submit nativo del formulario.
+            if (caseTransferId) {
+              e.preventDefault();
+              return;
+            }
+            handleSubmit(onSubmitAdditional)(e);
+          }}
+        >
           <Box
             sx={{
               mb: 2,
@@ -183,23 +204,35 @@ export const VerdictRegistrationForm: React.FC<VerdictRegistrationFormProps> = (
             }}
           >
             <Typography variant="h6" gutterBottom>
-              {caseTransferId ? "VONNIS REGISTREREN — GOP ACTIVEREN" : "AANVULLEND VONNIS REGISTREREN"}
+              {caseTransferId
+                ? "VONNIS REGISTREREN — GOP ACTIVEREN"
+                : "AANVULLEND VONNIS REGISTREREN"}
             </Typography>
 
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-              <Button
-                color="primary"
-                type="submit"
-                variant="contained"
-                startIcon={<SaveIcon />}
-                loading={isSubmitting}
-              >
-                {caseTransferId ? "Registreren en betalen" : "Vonnis registreren"}
-              </Button>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ minWidth: { sm: 220 } }}>
+              {caseTransferId ? (
+                <PaymentIntent
+                  onCreateTransaction={registerDraftAndPay}
+                  onPaymentConfirmed={handlePaymentConfirmed}
+                />
+              ) : (
+                <Button
+                  color="primary"
+                  type="submit"
+                  variant="contained"
+                  startIcon={<SaveIcon />}
+                  loading={isSubmitting}
+                >
+                  Vonnis registreren
+                </Button>
+              )}
             </Stack>
           </Box>
 
-          <Paper component="section" sx={{ borderRadius: 1, overflow: "hidden", mb: 2 }}>
+          <Paper
+            component="section"
+            sx={{ borderRadius: 1, overflow: "hidden", mb: 2 }}
+          >
             <Box
               sx={{
                 bgcolor: "secondary.main",
@@ -294,7 +327,7 @@ export const VerdictRegistrationForm: React.FC<VerdictRegistrationFormProps> = (
                     render={({ field }) => (
                       <TextField
                         {...field}
-                        label="Toegewezen bedrag"
+                        label="Beslissing bedrag"
                         type="number"
                         size="small"
                         fullWidth
@@ -333,10 +366,14 @@ export const VerdictRegistrationForm: React.FC<VerdictRegistrationFormProps> = (
                         fullWidth
                         slotProps={{ inputLabel: { shrink: true } }}
                         value={
-                          field.value ? new Date(field.value).toISOString().slice(0, 10) : ""
+                          field.value
+                            ? new Date(field.value).toISOString().slice(0, 10)
+                            : ""
                         }
                         onChange={(e) =>
-                          field.onChange(e.target.value ? new Date(e.target.value) : null)
+                          field.onChange(
+                            e.target.value ? new Date(e.target.value) : null,
+                          )
                         }
                         error={!!errors.sentence_date}
                         helperText={errors.sentence_date?.message}
@@ -352,15 +389,19 @@ export const VerdictRegistrationForm: React.FC<VerdictRegistrationFormProps> = (
                       <TextField
                         {...field}
                         type="date"
-                        label="Datum betekening"
+                        label="Beslissing datum"
                         size="small"
                         fullWidth
                         slotProps={{ inputLabel: { shrink: true } }}
                         value={
-                          field.value ? new Date(field.value).toISOString().slice(0, 10) : ""
+                          field.value
+                            ? new Date(field.value).toISOString().slice(0, 10)
+                            : ""
                         }
                         onChange={(e) =>
-                          field.onChange(e.target.value ? new Date(e.target.value) : null)
+                          field.onChange(
+                            e.target.value ? new Date(e.target.value) : null,
+                          )
                         }
                       />
                     )}
@@ -375,7 +416,9 @@ export const VerdictRegistrationForm: React.FC<VerdictRegistrationFormProps> = (
                         {...field}
                         value={field.value ?? ""}
                         onChange={(e) =>
-                          field.onChange(e.target.value ? Number(e.target.value) : null)
+                          field.onChange(
+                            e.target.value ? Number(e.target.value) : null,
+                          )
                         }
                         type="number"
                         label="Verjaringstermijn (maanden)"
@@ -398,10 +441,14 @@ export const VerdictRegistrationForm: React.FC<VerdictRegistrationFormProps> = (
                         fullWidth
                         slotProps={{ inputLabel: { shrink: true } }}
                         value={
-                          field.value ? new Date(field.value).toISOString().slice(0, 10) : ""
+                          field.value
+                            ? new Date(field.value).toISOString().slice(0, 10)
+                            : ""
                         }
                         onChange={(e) =>
-                          field.onChange(e.target.value ? new Date(e.target.value) : null)
+                          field.onChange(
+                            e.target.value ? new Date(e.target.value) : null,
+                          )
                         }
                       />
                     )}
@@ -448,15 +495,6 @@ export const VerdictRegistrationForm: React.FC<VerdictRegistrationFormProps> = (
           </Grid>
         </form>
       </FormProvider>
-
-      <Dialog open={!!pendingPayment} disableEscapeKeyDown>
-        <DialogContent sx={{ textAlign: "center", p: 4 }}>
-          <CircularProgress size={48} sx={{ mt: 2 }} />
-          <Typography variant="body2" sx={{ mt: 2 }}>
-            ⏳ Wachten op bevestiging van de GOP-activeringscommissie...
-          </Typography>
-        </DialogContent>
-      </Dialog>
     </Container>
   );
 };

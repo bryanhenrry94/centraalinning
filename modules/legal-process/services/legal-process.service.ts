@@ -156,6 +156,16 @@ export class LegalProcessService {
     const referenceNumber = await this.generateReferenceNumber();
     const totalInterest = data.verdict_interest.reduce((sum, i) => sum + i.total_interest, 0);
 
+    // El alguacil es quien paga la comisión CFSB, así que la base del 5% es
+    // el total de SUS facturas (deurwaarderskosten) registradas en esta misma
+    // pantalla — no la sentencia/intereses, que son del acreedor.
+    const bailiffServicesTotal = data.bailiff_services.reduce((sum, s) => sum + s.service_cost, 0);
+    if (bailiffServicesTotal <= 0) {
+      throw new Error(
+        "Voeg minstens één deurwaarderskosten (factuur) toe voordat u het vonnis registreert — de GOP-activeringscommissie wordt berekend over dat bedrag.",
+      );
+    }
+
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
     if (!tenant) throw new Error("Tenant not found");
 
@@ -167,12 +177,11 @@ export class LegalProcessService {
       { tenantId, jurisdictionId: tenant.jurisdictionId },
       DEFAULT_GOP_FEE_RATE_PERCENT,
     );
-    const amountBase = data.sentence_amount + totalInterest;
-    const fee = Math.round(amountBase * (gopFeePercent / 100) * 100) / 100;
+    const fee = Math.round(bailiffServicesTotal * (gopFeePercent / 100) * 100) / 100;
     const tax_rate = parameter?.abb_rate ?? 0;
     const tax_amount = Math.round(((fee * tax_rate) / 100) * 100) / 100;
     const total_with_tax = fee + tax_amount;
-    const concept = `Registratiekosten vonnis ${data.registration_number} (5% incl. rente)`;
+    const concept = `GOP-activeringscommissie (5%) over deurwaarderskosten — vonnis ${data.registration_number}`;
 
     // El pago se crea ANTES del borrador (mismo orden que
     // CollectiveCollectionService.requestStart): si Sentoo falla, no queda
@@ -276,15 +285,23 @@ export class LegalProcessService {
 
       // Punto 1: la pantalla única de registro permite cargar embargos y
       // costos del alguacil en el mismo paso (aunque el GOP siga en borrador
-      // hasta que se pague la comisión de activación).
-      for (const item of data.verdict_embargo) {
-        await tx.verdictEmbargo.create({
-          data: { ...item, verdict_id: newVerdict.id },
+      // hasta que se pague la comisión de activación). createMany en vez de
+      // create-en-loop: ninguno de los dos necesita el id generado después
+      // (a diferencia de verdict_interest -> verdictInterestDetails), así
+      // que un solo round-trip por lista evita agotar el timeout de la
+      // transacción contra la DB remota.
+      if (data.verdict_embargo.length) {
+        await tx.verdictEmbargo.createMany({
+          data: data.verdict_embargo.map((item) => ({ ...item, verdict_id: newVerdict.id })),
         });
       }
-      for (const item of data.bailiff_services) {
-        await tx.verdictBailiffServices.create({
-          data: { ...item, verdict_id: newVerdict.id, status: "INVOICED" },
+      if (data.bailiff_services.length) {
+        await tx.verdictBailiffServices.createMany({
+          data: data.bailiff_services.map((item) => ({
+            ...item,
+            verdict_id: newVerdict.id,
+            status: "INVOICED",
+          })),
         });
       }
 
@@ -299,7 +316,7 @@ export class LegalProcessService {
       });
 
       return { legalProcess: newLegalProcess, verdict: newVerdict };
-    });
+    }, { timeout: 20000, maxWait: 10000 });
 
     return {
       legalProcessId: legalProcess.id,
@@ -390,7 +407,7 @@ export class LegalProcessService {
         where: { payment_id: paymentId },
         data: { status: "paid" },
       });
-    });
+    }, { timeout: 20000, maxWait: 10000 });
 
     await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
       type: NotificationType.GOP_ACTIVATED,
@@ -463,14 +480,18 @@ export class LegalProcessService {
         }
       }
 
-      for (const item of data.verdict_embargo) {
-        await tx.verdictEmbargo.create({
-          data: { ...item, verdict_id: newVerdict.id },
+      if (data.verdict_embargo.length) {
+        await tx.verdictEmbargo.createMany({
+          data: data.verdict_embargo.map((item) => ({ ...item, verdict_id: newVerdict.id })),
         });
       }
-      for (const item of data.bailiff_services) {
-        await tx.verdictBailiffServices.create({
-          data: { ...item, verdict_id: newVerdict.id, status: "INVOICED" },
+      if (data.bailiff_services.length) {
+        await tx.verdictBailiffServices.createMany({
+          data: data.bailiff_services.map((item) => ({
+            ...item,
+            verdict_id: newVerdict.id,
+            status: "INVOICED",
+          })),
         });
       }
 
@@ -485,7 +506,7 @@ export class LegalProcessService {
       });
 
       return { verdict: newVerdict };
-    });
+    }, { timeout: 20000, maxWait: 10000 });
 
     await this.generateGopFeeInvoice({
       tenantId,
