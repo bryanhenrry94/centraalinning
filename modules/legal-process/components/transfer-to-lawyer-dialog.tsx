@@ -20,7 +20,6 @@ import { Lawyer } from "@/modules/lawyer/services/lawyer.validators";
 import { getActiveBailiffsDirectory } from "@/modules/bailiff/actions/bailiff.actions";
 import { Bailiff } from "@/modules/bailiff/services/bailiff.validators";
 import { transferToLawyer, hasExistingCaseTransfer } from "@/modules/legal-process/actions/case-transfer.actions";
-import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 
 interface TransferToLawyerDialogProps {
   open: boolean;
@@ -83,29 +82,26 @@ export const TransferToLawyerDialog: React.FC<TransferToLawyerDialogProps> = ({
     setBailiffId("");
   };
 
-  // De overdracht wordt pas definitief (melding aan de advocaat/deurwaarder)
-  // nadat de CFSB-overdrachtscommissie (5%) betaald is — ver
-  // CaseTransferService.requestTransfer / confirmTransferPayment.
-  const handleCreateTransaction = async () => {
+  // De overdracht is gratis (geen CFSB-commissie meer) en wordt onmiddellijk
+  // genotificeerd aan de geselecteerde advocaat/deurwaarder — ver
+  // CaseTransferService.requestTransfer.
+  const handleTransfer = async () => {
     if (assigneeType === "LAWYER" && !lawyerId) {
-      const message = "Selecteer een advocaat";
-      notifyError(message);
-      return { success: false, error: message };
+      notifyError("Selecteer een advocaat");
+      return;
     }
     if (assigneeType === "BAILIFF" && !bailiffId) {
-      const message = "Selecteer een deurwaarder";
-      notifyError(message);
-      return { success: false, error: message };
+      notifyError("Selecteer een deurwaarder");
+      return;
     }
     if (isEmergencyTransfer && !emergencyReason.trim()) {
-      const message = "Vermeld de reden van de noodoverdracht";
-      notifyError(message);
-      return { success: false, error: message };
+      notifyError("Vermeld de reden van de noodoverdracht");
+      return;
     }
 
     try {
       setSubmitting(true);
-      const result = await transferToLawyer({
+      await transferToLawyer({
         debtClaimId,
         lawyerId: assigneeType === "LAWYER" ? lawyerId : null,
         bailiffId: assigneeType === "BAILIFF" ? bailiffId : null,
@@ -113,28 +109,15 @@ export const TransferToLawyerDialog: React.FC<TransferToLawyerDialogProps> = ({
         emergencyReason: isEmergencyTransfer ? emergencyReason.trim() : null,
       });
 
-      if (!result.paymentUrl || !result.paymentId) {
-        // Ya existía una transferencia aceptada/en curso — nada que pagar.
-        notifySuccess("Dossier overgedragen.");
-        onTransferred();
-        handleClose();
-        return { success: false };
-      }
-
-      return { success: true, paymentId: result.paymentId, paymentUrl: result.paymentUrl };
+      notifySuccess("Dossier overgedragen. De advocaat/deurwaarder heeft een melding ontvangen.");
+      onTransferred();
+      handleClose();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Overdracht mislukt";
       notifyError(message);
-      return { success: false, error: message };
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handlePaymentConfirmed = async () => {
-    notifySuccess("Betaling bevestigd. De advocaat/deurwaarder heeft een melding ontvangen.");
-    onTransferred();
-    handleClose();
   };
 
   return (
@@ -222,10 +205,9 @@ export const TransferToLawyerDialog: React.FC<TransferToLawyerDialogProps> = ({
           pb: 2,
         }}
       >
-        <PaymentIntent
-          onCreateTransaction={handleCreateTransaction}
-          onPaymentConfirmed={handlePaymentConfirmed}
-        />
+        <Button variant="contained" onClick={handleTransfer} loading={submitting}>
+          Dossier overdragen
+        </Button>
         <Button onClick={handleClose} disabled={submitting}>
           Annuleren
         </Button>

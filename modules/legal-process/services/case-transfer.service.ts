@@ -8,7 +8,6 @@ import {
 } from "@/modules/legal-process/services/case-transfer.validators";
 import { DEFAULT_GOP_FEE_RATE_PERCENT } from "@/modules/legal-process/constants/legal-process-status";
 import { ClaimTimelineService } from "@/modules/collection/services/claim-timeline.service";
-import { ObligationService } from "@/modules/collection/services/obligation.service";
 import { NotificationService } from "@/modules/notification/services/notification.service";
 import { NotificationType } from "@/modules/notification/constants/notification-type";
 import { BillingInvoiceService } from "@/modules/payment/services/billing-invoice.service";
@@ -92,14 +91,16 @@ export class CaseTransferService {
   };
 
   // ---------------------------------------------------------------------
-  // Solicitud de transferencia y pago de la comisión (5%)
+  // Solicitud de transferencia (sin costo)
   // ---------------------------------------------------------------------
 
-  // La transferencia solo queda notificada al abogado/alguacil después de
-  // que el participante paga la comisión CFSB (5% del saldo pendiente): el
-  // dossier se crea en PENDING_PAYMENT, genera Payment+BillingInvoice, y
-  // recién al confirmarse el pago (confirmTransferPayment, vía webhook de
-  // Sentoo) pasa a PENDING_ACCEPTANCE y se notifica.
+  // La transferencia a un abogado/alguacil ya no genera ningún costo CFSB
+  // (pedido del sponsor, ver docs): no se genera Payment/BillingInvoice ni
+  // se valida ningún pago previo. El dossier se crea directamente en
+  // PENDING_ACCEPTANCE, se notifica de inmediato al profesional
+  // seleccionado, y queda a la espera de su aceptación o rechazo. La
+  // transferencia en sí NO activa el GOP — el GOP solo nace al registrar la
+  // sentencia (ver LegalProcessService.registerFirstVerdict).
   static requestTransfer = async (input: TransferToLawyerInput, actorUserId: string) => {
     const debtClaim = await prisma.debtClaim.findUnique({ where: { id: input.debtClaimId } });
     if (!debtClaim) throw new Error("Dossier (DebtClaim) niet gevonden");
@@ -107,7 +108,8 @@ export class CaseTransferService {
     // El GOP es el último escalón: se habilita cuando la fase del AOP llegó
     // a BLK_NOTIFICATION ("Blokkade"), O cuando ya existe una Blokkade
     // ACTIVE para este dossier (p.ej. originada directamente, o vía un COP
-    // que nunca pasó por el flujo AOP).
+    // que nunca pasó por el flujo AOP). Esta es una precondición de flujo,
+    // no un pago — se mantiene.
     const aop = await prisma.administrativeCollection.findUnique({
       where: { debtClaimId: input.debtClaimId },
       include: { steps: { orderBy: { id: "desc" }, take: 1 } },
@@ -126,19 +128,21 @@ export class CaseTransferService {
       );
     }
 
+    let lawyer: { userId: string | null; firstName: string; lastName: string } | null = null;
+    let bailiff: { user_id: string | null; fullname: string } | null = null;
     if (input.lawyerId) {
-      const lawyer = await prisma.lawyer.findUnique({ where: { id: input.lawyerId } });
+      lawyer = await prisma.lawyer.findUnique({ where: { id: input.lawyerId } });
       if (!lawyer) throw new Error("Advocaat niet gevonden");
     } else if (input.bailiffId) {
-      const bailiff = await prisma.bailiff.findUnique({ where: { id: input.bailiffId } });
+      bailiff = await prisma.bailiff.findUnique({ where: { id: input.bailiffId } });
       if (!bailiff) throw new Error("Deurwaarder niet gevonden");
     } else {
       throw new Error("Selecteer een advocaat of een deurwaarder.");
     }
 
-    // Si ya existe una transferencia aceptada/en curso para este dossier y
-    // esta parte, no hay nada más que pagar — devolver tal cual.
-    const existingAccepted = await prisma.caseTransfer.findFirst({
+    // Si ya existe una transferencia notificada/en curso para este dossier y
+    // esta parte, no hay nada más que hacer — devolver tal cual.
+    const existing = await prisma.caseTransfer.findFirst({
       where: {
         debtClaimId: input.debtClaimId,
         lawyerId: input.lawyerId ?? null,
@@ -146,120 +150,57 @@ export class CaseTransferService {
         status: { in: ["PENDING_ACCEPTANCE", "ACCEPTED", "WORK_COMPLETED"] },
       },
     });
-    if (existingAccepted) return { caseTransferId: existingAccepted.id };
-
-    // Si ya existe una transferencia esperando pago para este dossier y esta
-    // parte, reusar ese link de pago en vez de generar uno nuevo.
-    const existingPending = await prisma.caseTransfer.findFirst({
-      where: {
-        debtClaimId: input.debtClaimId,
-        lawyerId: input.lawyerId ?? null,
-        bailiffId: input.bailiffId ?? null,
-        status: "PENDING_PAYMENT",
-      },
-      include: { payment: true },
-    });
-    if (existingPending?.payment && existingPending.payment.status === "pending" && existingPending.payment.payment_url) {
-      return {
-        caseTransferId: existingPending.id,
-        paymentId: existingPending.paymentId!,
-        paymentUrl: existingPending.payment.payment_url,
-      };
-    }
-
-    const tenant = await prisma.tenant.findUnique({ where: { id: debtClaim.tenantId } });
-    if (!tenant) throw new Error("Tenant not found");
-
-    const obligation = await ObligationService.ensurePrincipalDebtObligation(
-      input.debtClaimId,
-      Number(debtClaim.principalAmount),
-    );
-
-    const parameter = await ParameterService.getParameterForTenant(debtClaim.tenantId);
-    const gopFeePercent = await SettingsService.resolveNumber(
-      "gop_fee_rate",
-      { tenantId: debtClaim.tenantId, jurisdictionId: tenant.jurisdictionId },
-      DEFAULT_GOP_FEE_RATE_PERCENT,
-    );
-    const fee = Math.round(Number(obligation.balanceAmount) * (gopFeePercent / 100) * 100) / 100;
-    const tax_rate = parameter?.abb_rate ?? 0;
-    const tax_amount = Math.round(((fee * tax_rate) / 100) * 100) / 100;
-    const total_with_tax = fee + tax_amount;
-
-    const concept = `CFSB-overdrachtscommissie (5%) — dossier ${debtClaim.reference ?? debtClaim.id}`;
-
-    const paymentResult = await PaymentService.create(debtClaim.tenantId, {
-      amount: total_with_tax,
-      currency: "USD",
-      description: concept,
-      reference: `gop_transfer_${input.debtClaimId}_${Date.now()}`,
-      payment_type: PaymentType.GOP_TRANSFER,
-    });
-    if (!paymentResult.success || !paymentResult.data) {
-      throw new Error(paymentResult.message || "Kon geen Sentoo-betaling aanmaken");
-    }
-
-    const invoice_number = await BillingInvoiceService.generateInvoiceNumber();
-    const invoice = await BillingInvoiceService.create(
-      {
-        invoice_number,
-        issue_date: new Date(),
-        due_date: new Date(),
-        description: concept,
-        status: "unpaid",
-        tenant_id: debtClaim.tenantId,
-        currency: "USD",
-        amount: total_with_tax,
-        invoice_details: [
-          {
-            item_description: concept,
-            item_quantity: 1,
-            item_unit_price: fee,
-            item_total_price: fee,
-            item_tax_rate: tax_rate,
-            item_tax_amount: tax_amount,
-            item_total_with_tax: total_with_tax,
-          },
-        ],
-      },
-      debtClaim.tenantId,
-      paymentResult.data.paymentId,
-    );
-    if (tenant.contact_email) {
-      await sendInvoiceEmail(tenant.contact_email, invoice.id, false);
-    }
+    if (existing) return { caseTransferId: existing.id };
 
     const caseTransfer = await prisma.caseTransfer.create({
       data: {
         debtClaimId: input.debtClaimId,
         lawyerId: input.lawyerId ?? null,
         bailiffId: input.bailiffId ?? null,
-        status: "PENDING_PAYMENT",
-        paymentId: paymentResult.data.paymentId,
+        status: "PENDING_ACCEPTANCE",
+        acceptanceDeadline: new Date(Date.now() + ACCEPTANCE_WINDOW_DAYS * 24 * 60 * 60 * 1000),
         isEmergencyTransfer: input.isEmergencyTransfer ?? false,
         emergencyReason: input.isEmergencyTransfer ? input.emergencyReason : null,
       },
     });
 
+    const assignedLabel = lawyer
+      ? `advocaat ${lawyer.firstName} ${lawyer.lastName}`
+      : `deurwaarder ${bailiff!.fullname}`;
+    const emergencyPrefix = input.isEmergencyTransfer ? "[NOODOVERDRACHT] " : "";
+
     await ClaimTimelineService.logEvent(
       caseTransfer.debtClaimId,
-      "STATUS_CHANGED",
-      `Overdracht van het dossier aangevraagd. In afwachting van de betaling van de CFSB-commissie (${total_with_tax}).`,
+      "GOP_STARTED",
+      `${emergencyPrefix}Dossier overgedragen aan ${assignedLabel}${
+        input.isEmergencyTransfer ? ` — reden: ${input.emergencyReason}` : ""
+      }`,
       { lawyerId: caseTransfer.lawyerId, bailiffId: caseTransfer.bailiffId },
       actorUserId,
     );
 
-    return {
-      caseTransferId: caseTransfer.id,
-      paymentId: paymentResult.data.paymentId,
-      paymentUrl: paymentResult.data.paymentUrl,
-    };
+    const assignedUserId = lawyer?.userId ?? bailiff?.user_id;
+    if (assignedUserId) {
+      await NotificationService.create({
+        tenant_id: debtClaim.tenantId,
+        user_id: assignedUserId,
+        type: NotificationType.LEGAL_PROCESS_TRANSFER_REQUEST,
+        title: input.isEmergencyTransfer ? "Nieuw spoeddossier overgedragen" : "Nieuw dossier overgedragen",
+        message: input.isEmergencyTransfer
+          ? `Dossier ${debtClaim.reference} werd met spoed (noodoverdracht) aan je overgedragen: ${input.emergencyReason}`
+          : `Dossier ${debtClaim.reference} werd aan je overgedragen.`,
+        link: `/legal-processes/transfers/${caseTransfer.id}`,
+        entity_type: "CaseTransfer",
+        entity_id: caseTransfer.id,
+      });
+    }
+
+    return { caseTransferId: caseTransfer.id };
   };
 
-  // Se llama desde el webhook de Sentoo (vía payment-processor) cuando un
-  // Payment de tipo GOP_TRANSFER se confirma como pagado: recién ahí la
-  // transferencia queda notificada al abogado/alguacil, sin GOP alguno
-  // (GOP solo nace al registrar la sentencia, ver LegalProcessService).
+  // Ruta legada: solo relevante para un CaseTransfer que haya quedado en
+  // PENDING_PAYMENT antes de que la transferencia se volviera gratuita (ver
+  // requestTransfer). Nuevas transferencias nunca pasan por este estado.
   static confirmTransferPayment = async (paymentId: string) => {
     const caseTransfer = await prisma.caseTransfer.findUnique({
       where: { paymentId },

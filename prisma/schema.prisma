@@ -773,6 +773,30 @@ model ClaimTimeline {
   @@map("claim_timeline")
 }
 
+// Registro genérico de auditoría (valor anterior -> nuevo, usuario,
+// fecha/hora) para cambios sensibles fuera del TimelineEvent fijo de
+// ClaimTimeline (p.ej. ajustes financieros de un Verdict por el alguacil,
+// punto 7 del análisis CFSB). entityType/entityId apuntan a cualquier
+// modelo sin requerir una relación Prisma dedicada por entidad.
+model AuditLog {
+  id String @id @default(cuid())
+
+  entityType String
+  entityId   String
+
+  field    String
+  oldValue String?
+  newValue String?
+
+  actorUserId String?
+  actorUser   User?   @relation(fields: [actorUserId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@map("audit_log")
+}
+
 model ClaimCharge {
   id String @id @default(cuid())
 
@@ -1117,6 +1141,7 @@ model User {
   payment_transfer_verifications PaymentTransferVerification[]
   notifications                  Notification[]
   claim_timeline_entries         ClaimTimeline[]
+  audit_logs                     AuditLog[]
 
   supportMessagesCreated  SupportMessage[] @relation("SupportMessageCreatedBy")
   supportMessagesAnswered SupportMessage[] @relation("SupportMessageRespondedBy")

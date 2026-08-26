@@ -95,6 +95,16 @@ export const VerdictResponseSchema = VerdictBaseSchema.extend({
   verdict_embargo: z.array(VerdictEmbargoBaseSchema),
 });
 
+// Punto 7 del análisis CFSB: el alguacil ajusta los importes financieros del
+// vonnis para que el expediente CFSB coincida con su saldo/facturación
+// confirmada. Cada cambio queda en AuditLog (VerdictService.adjustAmounts).
+export const VerdictAdjustAmountsSchema = z.object({
+  verdictId: z.string().min(1),
+  sentence_amount: z.coerce.number().positive().optional(),
+  procesal_cost: z.coerce.number().nonnegative().optional(),
+});
+export type VerdictAdjustAmountsInput = z.infer<typeof VerdictAdjustAmountsSchema>;
+
 export const VerdictJudgmentSchema = VerdictBaseSchema.pick({
   id: true,
   invoice_number: true,

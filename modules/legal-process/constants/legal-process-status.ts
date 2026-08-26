@@ -41,4 +41,11 @@ export const GOP_OPERABLE_STATUSES = [
 // "gop_fee_rate" para la isla/tenant — ver SettingsService.resolveNumber.
 // Igual que collection_fee_rate, se guarda/resuelve como porcentaje entero
 // (5 = 5%), no como fracción — dividir entre 100 al calcular el monto.
+// Esta es la tarifa del PARTICIPANTE (activación del GOP).
 export const DEFAULT_GOP_FEE_RATE_PERCENT = 5;
+
+// Fallback para el Setting "gop_bailiff_fee_rate" — la comisión CFSB
+// independiente del ALGUACIL sobre sus propios costos/facturas (ver
+// LegalProcessService.submitBailiffFeeInvoice). Nunca se mezcla con
+// DEFAULT_GOP_FEE_RATE_PERCENT.
+export const DEFAULT_GOP_BAILIFF_FEE_RATE_PERCENT = 5;

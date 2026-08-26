@@ -11,6 +11,7 @@ import {
 } from "@/modules/legal-process/services/legal-process.validators";
 import {
   DEFAULT_GOP_FEE_RATE_PERCENT,
+  DEFAULT_GOP_BAILIFF_FEE_RATE_PERCENT,
   LegalProcessStatus,
   VERDICT_REGISTRABLE_STATUSES,
   GOP_OPERABLE_STATUSES,
@@ -93,6 +94,19 @@ export class LegalProcessService {
     return legalProcesses.map(serializeLegalProcess);
   };
 
+  // Tarifa CFSB del participante (activación del GOP) resuelta para la
+  // pantalla de registro de sentencia (punto 5 del análisis CFSB) — misma
+  // resolución tenant/jurisdicción que usa registerFirstVerdict.
+  static getGopFeeRatePercent = async (tenantId: string) => {
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+    if (!tenant) throw new Error("Tenant not found");
+    return SettingsService.resolveNumber(
+      "gop_fee_rate",
+      { tenantId, jurisdictionId: tenant.jurisdictionId },
+      DEFAULT_GOP_FEE_RATE_PERCENT,
+    );
+  };
+
   // ---------------------------------------------------------------------
   // Registro de sentencia -> inicio automático del GOP
   // ---------------------------------------------------------------------
@@ -162,32 +176,24 @@ export class LegalProcessService {
     const referenceNumber = await this.generateReferenceNumber();
     const totalInterest = data.verdict_interest.reduce((sum, i) => sum + i.total_interest, 0);
 
-    // El alguacil es quien paga la comisión CFSB, así que la base del 5% es
-    // el total de SUS facturas (deurwaarderskosten) registradas en esta misma
-    // pantalla — no la sentencia/intereses, que son del acreedor.
-    const bailiffServicesTotal = data.bailiff_services.reduce((sum, s) => sum + s.service_cost, 0);
-    if (bailiffServicesTotal <= 0) {
-      throw new Error(
-        "Voeg minstens één deurwaarderskosten (factuur) toe voordat u het vonnis registreert — de GOP-activeringscommissie wordt berekend over dat bedrag.",
-      );
-    }
-
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
     if (!tenant) throw new Error("Tenant not found");
 
-    // ABB por isla/jurisdicción del tenant (punto 13 del análisis CFSB), y
-    // comisión GOP configurable vía Settings/Tarieven (gop_fee_rate).
+    // El participante es quien paga la comisión CFSB de activación, sobre el
+    // monto decidido por la corte más los intereses legales hasta la fecha
+    // de registro — no las facturas del alguacil, que se cobran por separado
+    // (ver submitBailiffFeeInvoice, comisión independiente del alguacil).
     const parameter = await ParameterService.getParameterForTenant(tenantId);
     const gopFeePercent = await SettingsService.resolveNumber(
       "gop_fee_rate",
       { tenantId, jurisdictionId: tenant.jurisdictionId },
       DEFAULT_GOP_FEE_RATE_PERCENT,
     );
-    const fee = Math.round(bailiffServicesTotal * (gopFeePercent / 100) * 100) / 100;
+    const fee = Math.round((data.sentence_amount + totalInterest) * (gopFeePercent / 100) * 100) / 100;
     const tax_rate = parameter?.abb_rate ?? 0;
     const tax_amount = Math.round(((fee * tax_rate) / 100) * 100) / 100;
     const total_with_tax = fee + tax_amount;
-    const concept = `GOP-activeringscommissie (5%) over deurwaarderskosten — vonnis ${data.registration_number}`;
+    const concept = `GOP-activeringscommissie (5%) over vonnisbedrag + rente — vonnis ${data.registration_number}`;
 
     // El pago se crea ANTES del borrador (mismo orden que
     // CollectiveCollectionService.requestStart): si Sentoo falla, no queda
@@ -203,8 +209,8 @@ export class LegalProcessService {
       throw new Error(paymentResult.message || "Kon geen Sentoo-betaling aanmaken");
     }
 
-    // La factura se envía al alguacil recién cuando el pago se confirma (es
-    // él quien paga a CFSB) — ver processGopActivationPaymentConfirmed.
+    // La factura se envía al participante recién cuando el pago se confirma
+    // — ver processGopActivationPaymentConfirmed.
     const invoice_number = await BillingInvoiceService.generateInvoiceNumber();
     await BillingInvoiceService.create(
       {
@@ -338,18 +344,13 @@ export class LegalProcessService {
   private static retryGopActivationPayment = async (legalProcessId: string, tenantId: string) => {
     const legalProcess = await prisma.legalProcess.findUnique({
       where: { id: legalProcessId },
-      include: { verdicts: { include: { bailiff_services: true } } },
+      include: { verdicts: { include: { verdict_interest: true } } },
     });
     if (!legalProcess) throw new Error("GOP-dossier niet gevonden");
     const verdict = legalProcess.verdicts[0];
     if (!verdict) throw new Error("Vonnis niet gevonden");
 
-    const bailiffServicesTotal = verdict.bailiff_services.reduce((sum, s) => sum + s.service_cost, 0);
-    if (bailiffServicesTotal <= 0) {
-      throw new Error(
-        "Geen deurwaarderskosten gevonden om de GOP-activeringscommissie op te berekenen.",
-      );
-    }
+    const totalInterest = verdict.verdict_interest.reduce((sum, i) => sum + i.total_interest, 0);
 
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
     if (!tenant) throw new Error("Tenant not found");
@@ -360,11 +361,11 @@ export class LegalProcessService {
       { tenantId, jurisdictionId: tenant.jurisdictionId },
       DEFAULT_GOP_FEE_RATE_PERCENT,
     );
-    const fee = Math.round(bailiffServicesTotal * (gopFeePercent / 100) * 100) / 100;
+    const fee = Math.round((verdict.sentence_amount + totalInterest) * (gopFeePercent / 100) * 100) / 100;
     const tax_rate = parameter?.abb_rate ?? 0;
     const tax_amount = Math.round(((fee * tax_rate) / 100) * 100) / 100;
     const total_with_tax = fee + tax_amount;
-    const concept = `GOP-activeringscommissie (5%) over deurwaarderskosten — vonnis ${verdict.registration_number}`;
+    const concept = `GOP-activeringscommissie (5%) over vonnisbedrag + rente — vonnis ${verdict.registration_number}`;
 
     const paymentResult = await PaymentService.create(tenantId, {
       amount: total_with_tax,
@@ -377,8 +378,8 @@ export class LegalProcessService {
       throw new Error(paymentResult.message || "Kon geen Sentoo-betaling aanmaken");
     }
 
-    // La factura se envía al alguacil recién cuando el pago se confirma —
-    // ver processGopActivationPaymentConfirmed.
+    // La factura se envía al participante recién cuando el pago se confirma
+    // — ver processGopActivationPaymentConfirmed.
     const invoice_number = await BillingInvoiceService.generateInvoiceNumber();
     await BillingInvoiceService.create(
       {
@@ -428,13 +429,19 @@ export class LegalProcessService {
   static processGopActivationPaymentConfirmed = async (paymentId: string) => {
     const legalProcess = await prisma.legalProcess.findUnique({
       where: { gopActivationPaymentId: paymentId },
-      include: { debtClaim: true, verdicts: true, bailiff: true },
+      include: { debtClaim: { include: { tenant: true } }, verdicts: true, bailiff: true },
     });
     if (!legalProcess || legalProcess.status !== LegalProcessStatus.GOP_DRAFT) return;
 
     const verdict = legalProcess.verdicts[0];
 
     await prisma.$transaction(async (tx) => {
+      // Monto CFSB que el participante acaba de pagar para activar el GOP —
+      // se lee de la factura ya generada (no se recalcula) para que no haya
+      // drift si la tarifa cambió entre el borrador y la confirmación.
+      const activationInvoice = await tx.billingInvoice.findFirst({ where: { payment_id: paymentId } });
+      const activationCost = Number(activationInvoice?.amount ?? 0);
+
       await tx.legalProcess.update({
         where: { id: legalProcess.id },
         data: { status: LegalProcessStatus.GOP_ACTIVE },
@@ -486,6 +493,29 @@ export class LegalProcessService {
         });
       }
 
+      // Punto 4 del análisis CFSB: lo que el participante pagó a CFSB para
+      // activar el GOP se registra por separado, como obligación
+      // administrativa CFSB atribuida al deudor, para que el participante
+      // pueda recuperarlo — mismo patrón que CollectionService.createPending
+      // (obligación CFSB del deudor, espejo de la del participante, sin
+      // reembolso entre ellos). No toca la obligación principal (sentencia +
+      // intereses).
+      if (activationCost > 0) {
+        await tx.debtClaimObligation.create({
+          data: {
+            debtClaimId: legalProcess.debtClaimId,
+            type: "LEGAL_COST",
+            beneficiary: "CFSB",
+            payer: "DEBTOR",
+            description: "GOP-activeringskosten (verhaalbaar op schuldenaar)",
+            originalAmount: activationCost,
+            paidAmount: 0,
+            balanceAmount: activationCost,
+            status: "PENDING",
+          },
+        });
+      }
+
       await tx.claimTimeline.create({
         data: {
           debtClaimId: legalProcess.debtClaimId,
@@ -502,11 +532,11 @@ export class LegalProcessService {
       });
     }, { timeout: 20000, maxWait: 10000 });
 
-    // El alguacil es quien pagó la comisión CFSB — recién con el pago
+    // El participante es quien pagó la comisión CFSB — recién con el pago
     // confirmado se le envía la factura correspondiente.
     const invoice = await prisma.billingInvoice.findFirst({ where: { payment_id: paymentId } });
-    if (invoice && legalProcess.bailiff.email) {
-      await sendInvoiceEmail(legalProcess.bailiff.email, invoice.id, false);
+    if (invoice && legalProcess.debtClaim.tenant.contact_email) {
+      await sendInvoiceEmail(legalProcess.debtClaim.tenant.contact_email, invoice.id, false);
     }
 
     await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
@@ -766,13 +796,11 @@ export class LegalProcessService {
       actorUserId,
     );
 
-    await this.generateGopFeeInvoice({
-      tenantId,
-      debtClaimId: verdict.debtClaimId,
-      amountBase: data.service_cost,
-      concept: `Deurwaarderskosten ${data.service_type} (5%)`,
-    });
-
+    // Este costo suma en getBailiffCostsSummary, contra la factura final del
+    // alguacil (submitBailiffFeeInvoice) — ahí se calcula la comisión CFSB
+    // independiente del alguacil. Acá NO se factura ninguna comisión al
+    // participante (punto 3 del análisis CFSB: mezclaría las obligaciones
+    // del participante y del alguacil).
     return cost;
   };
 
@@ -829,10 +857,12 @@ export class LegalProcessService {
       where: { id: tenantId },
       select: { jurisdictionId: true },
     });
+    // Comisión CFSB independiente del alguacil (punto 3 del análisis CFSB) —
+    // tarifa propia (gop_bailiff_fee_rate), nunca la del participante.
     const gopFeePercent = await SettingsService.resolveNumber(
-      "gop_fee_rate",
+      "gop_bailiff_fee_rate",
       { tenantId, jurisdictionId: tenantForFeeRate?.jurisdictionId },
-      DEFAULT_GOP_FEE_RATE_PERCENT,
+      DEFAULT_GOP_BAILIFF_FEE_RATE_PERCENT,
     );
     const fee = Math.round(params.totalAmount * (gopFeePercent / 100) * 100) / 100;
     const tax_rate = parameter?.abb_rate ?? 0;

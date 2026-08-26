@@ -4,12 +4,16 @@ import fs from "fs/promises";
 import {
   VerdictResponse,
   VerdictUpdate,
+  VerdictAdjustAmountsInput,
 } from "@/modules/verdict/services/verdict.validators";
 import { VerdictInterestDetailCreate } from "@/modules/verdict/services/verdict-interest-details.validators";
 import { VerdictAttachment } from "@/modules/verdict/services/verdict-attachments.validators";
 import { InterestDetail } from "@/modules/settings/services/interest-type.validators";
 import { InterestTypeService } from "@/modules/settings/services/interest-type.service";
 import { sendVerdictApprovalEmail } from "@/modules/verdict/services/verdict-mail.service";
+import { AuditLogService } from "@/modules/verdict/services/audit-log.service";
+import { SettingsService } from "@/modules/settings/services/settings/settings.service";
+import { DEFAULT_GOP_FEE_RATE_PERCENT } from "@/modules/legal-process/constants/legal-process-status";
 
 const mapVerdictResponse = (verdict: any): VerdictResponse => ({
   ...verdict,
@@ -171,6 +175,109 @@ export class VerdictService {
     });
 
     return this.getById(updatedVerdict.id);
+  }
+
+  // Punto 7 del análisis CFSB: el alguacil ajusta los importes financieros
+  // del vonnis (monto decidido por la corte, costos procesales) para que el
+  // expediente CFSB coincida con su saldo/facturación confirmada. Cada
+  // cambio queda en AuditLog (valor anterior -> nuevo -> usuario -> fecha),
+  // y la obligación administrativa CFSB recuperable del deudor (originada
+  // al activar el GOP) se recalcula acorde — sin tocar la obligación
+  // principal ni los pagos CFSB ya confirmados (esos son liquidaciones
+  // Sentoo cerradas, no se revierten retroactivamente).
+  static async adjustAmounts(
+    input: VerdictAdjustAmountsInput,
+    actorUserId?: string,
+  ): Promise<VerdictResponse | null> {
+    const verdict = await prisma.verdict.findUnique({
+      where: { id: input.verdictId },
+      include: {
+        legal_process: { include: { debtClaim: { include: { tenant: true } } } },
+        verdict_interest: true,
+      },
+    });
+    if (!verdict) throw new Error("Vonnis niet gevonden");
+
+    const changes: { field: "sentence_amount" | "procesal_cost"; oldValue: number; newValue: number }[] = [];
+    if (input.sentence_amount !== undefined && input.sentence_amount !== verdict.sentence_amount) {
+      changes.push({
+        field: "sentence_amount",
+        oldValue: verdict.sentence_amount,
+        newValue: input.sentence_amount,
+      });
+    }
+    if (input.procesal_cost !== undefined && input.procesal_cost !== (verdict.procesal_cost ?? 0)) {
+      changes.push({
+        field: "procesal_cost",
+        oldValue: verdict.procesal_cost ?? 0,
+        newValue: input.procesal_cost,
+      });
+    }
+    if (changes.length === 0) return this.getById(input.verdictId);
+
+    await prisma.verdict.update({
+      where: { id: input.verdictId },
+      data: {
+        sentence_amount: input.sentence_amount,
+        procesal_cost: input.procesal_cost,
+      },
+    });
+
+    for (const change of changes) {
+      await AuditLogService.record({
+        entityType: "Verdict",
+        entityId: input.verdictId,
+        field: change.field,
+        oldValue: change.oldValue,
+        newValue: change.newValue,
+        actorUserId,
+      });
+    }
+
+    if (changes.some((c) => c.field === "sentence_amount")) {
+      const debtClaimId = verdict.legal_process.debtClaimId;
+      const tenant = verdict.legal_process.debtClaim.tenant;
+      const totalInterest = verdict.verdict_interest.reduce((sum, i) => sum + i.total_interest, 0);
+      const newSentenceAmount = input.sentence_amount ?? verdict.sentence_amount;
+      const gopFeePercent = await SettingsService.resolveNumber(
+        "gop_fee_rate",
+        { tenantId: tenant.id, jurisdictionId: tenant.jurisdictionId },
+        DEFAULT_GOP_FEE_RATE_PERCENT,
+      );
+      const newRecoverableCost =
+        Math.round((newSentenceAmount + totalInterest) * (gopFeePercent / 100) * 100) / 100;
+
+      const recoverableObligation = await prisma.debtClaimObligation.findFirst({
+        where: { debtClaimId, type: "LEGAL_COST", beneficiary: "CFSB", payer: "DEBTOR" },
+        orderBy: { createdAt: "desc" },
+      });
+      if (recoverableObligation) {
+        const paidAmount = Number(recoverableObligation.paidAmount);
+        // Nunca por debajo de lo ya pagado — no se puede "deshacer" un pago.
+        const safeNewAmount = Math.max(newRecoverableCost, paidAmount);
+        const newBalance = safeNewAmount - paidAmount;
+
+        await prisma.debtClaimObligation.update({
+          where: { id: recoverableObligation.id },
+          data: {
+            originalAmount: safeNewAmount,
+            balanceAmount: newBalance,
+            status: newBalance <= 0 ? "PAID" : paidAmount > 0 ? "PARTIALLY_PAID" : "PENDING",
+          },
+        });
+
+        await AuditLogService.record({
+          entityType: "DebtClaimObligation",
+          entityId: recoverableObligation.id,
+          field: "originalAmount",
+          oldValue: Number(recoverableObligation.originalAmount),
+          newValue: safeNewAmount,
+          actorUserId,
+        });
+      }
+    }
+
+    return this.getById(input.verdictId);
   }
 
   static async delete(id: string): Promise<boolean> {

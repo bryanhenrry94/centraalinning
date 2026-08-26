@@ -2,9 +2,15 @@ import { formatCurrency } from "@/shared/utils/formatters";
 import { Box, Paper, Typography } from "@mui/material";
 import { useFormContext, useWatch } from "react-hook-form";
 
-interface VerdictTotalsProps {}
+interface VerdictTotalsProps {
+  // Tarifa CFSB del participante (gop_fee_rate) — base de la línea "Costo
+  // administrativo CFSB recuperable" (punto 5 del análisis CFSB). Opcional
+  // para no romper otros usos de este componente (p.ej. la vista de un
+  // vonnis ya registrado, sin ese contexto); sin ella no se muestra la línea.
+  gopFeeRatePercent?: number;
+}
 
-const VerdictTotals: React.FC<VerdictTotalsProps> = () => {
+const VerdictTotals: React.FC<VerdictTotalsProps> = ({ gopFeeRatePercent }) => {
   const { control } = useFormContext();
 
   // const verdictInterest = useWatch({ control, name: "verdictInterest" });
@@ -59,6 +65,16 @@ const VerdictTotals: React.FC<VerdictTotalsProps> = () => {
       (sum, item) => sum + (Number(item?.service_cost) ?? 0),
       0
     ) ?? 0;
+
+  // Costo administrativo CFSB recuperable (punto 4/5 del análisis CFSB): 5%
+  // (gop_fee_rate) sobre el monto decidido por la corte + intereses legales
+  // — lo que el participante paga a CFSB para activar el GOP, y que luego se
+  // registra como obligación separada, recuperable, contra el deudor. No se
+  // oculta dentro del monto principal — línea independiente.
+  const recoverableCfsbCost =
+    gopFeeRatePercent !== undefined
+      ? ((Number(sentence_amount) || 0) + total_interest) * (gopFeeRatePercent / 100)
+      : 0;
 
   return (
     <Box
@@ -152,6 +168,22 @@ const VerdictTotals: React.FC<VerdictTotalsProps> = () => {
                   : "$0.00"}
               </Typography>
             </Box>
+            {gopFeeRatePercent !== undefined && (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gridColumn: "span 2",
+                }}
+              >
+                <Typography>
+                  Terugvorderbare CFSB-administratiekosten ({gopFeeRatePercent}%):
+                </Typography>
+                <Typography fontWeight="600">
+                  {formatCurrency(recoverableCfsbCost)}
+                </Typography>
+              </Box>
+            )}
             <Box
               sx={{
                 display: "flex",
@@ -189,7 +221,8 @@ const VerdictTotals: React.FC<VerdictTotalsProps> = () => {
                       Number(total_interest ?? 0) +
                       Number(totalBailiffAmount ?? 0) +
                       Number(totalEmbargoAmount ?? 0) +
-                      Number(procesal_cost ?? 0)
+                      Number(procesal_cost ?? 0) +
+                      recoverableCfsbCost
                   )}
                 </Typography>
               </Box>

@@ -36,6 +36,7 @@ interface VerdictRegistrationFormProps {
   legalProcessId?: string | null;
   debtorName: string;
   defaultBailiffId?: string | null;
+  gopFeeRatePercent: number;
 }
 
 const buildDefaultValues = (
@@ -66,13 +67,16 @@ const buildDefaultValues = (
 // costos del alguacil se cargan en el mismo paso. Si es el PRIMER vonnis
 // (caseTransferId), LegalProcessService.registerFirstVerdict lo registra
 // como borrador (GOP_DRAFT) y genera el pago de la comisión CFSB (5% sobre
-// las facturas del alguacil ingresadas arriba — es el alguacil quien paga a
+// el vonnisbedrag + wettelijke rente — es el participante quien paga a
 // CFSB); el usuario paga en el momento vía PaymentIntent y el GOP recién
-// queda oficialmente activo cuando ese pago se confirma. Si es una sentencia
-// ADICIONAL sobre un GOP ya activo (legalProcessId), sigue sin gate de pago.
+// queda oficialmente activo cuando ese pago se confirma. Los eventuales
+// deurwaarderskosten cargados arriba tienen su propia comisión CFSB
+// independiente (ver submitBailiffFeeInvoice), no ligada a esta activación.
+// Si es una sentencia ADICIONAL sobre un GOP ya activo (legalProcessId),
+// sigue sin gate de pago.
 export const VerdictRegistrationForm: React.FC<
   VerdictRegistrationFormProps
-> = ({ caseTransferId, legalProcessId, debtorName, defaultBailiffId }) => {
+> = ({ caseTransferId, legalProcessId, debtorName, defaultBailiffId, gopFeeRatePercent }) => {
   const router = useRouter();
   const [bailiffs, setBailiffs] = useState<Bailiff[]>([]);
   // Se setea al registrar el borrador (primer vonnis), para poder navegar
@@ -125,7 +129,7 @@ export const VerdictRegistrationForm: React.FC<
 
     const confirmed = await AlertService.showConfirm(
       "Weet je het zeker?",
-      "U staat op het punt een vonnis te registreren als borrador. De GOP-activeringscommissie (5%) wordt berekend over de hierboven ingevoerde deurwaarderskosten. Wilt u doorgaan?",
+      "U staat op het punt een vonnis te registreren als borrador. De GOP-activeringscommissie (5%) wordt berekend over het vonnisbedrag plus de wettelijke rente. Wilt u doorgaan?",
       "Ja, registreren en betalen",
       "Annuleren",
     );
@@ -490,7 +494,7 @@ export const VerdictRegistrationForm: React.FC<
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 8 }} />
             <Grid size={{ xs: 12, md: 4 }}>
-              <VerdictTotals />
+              <VerdictTotals gopFeeRatePercent={gopFeeRatePercent} />
             </Grid>
           </Grid>
         </form>

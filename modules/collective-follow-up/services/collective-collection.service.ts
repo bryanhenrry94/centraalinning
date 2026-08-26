@@ -1053,16 +1053,17 @@ export class CollectiveCollectionService {
 
     const transferResult = await CaseTransferService.requestTransfer(transferInput, actorUserId);
 
-    // El COP solo pasa a TRANSFERRED (terminal) cuando la comisión CFSB de
-    // la transferencia se confirma pagada — ver
-    // CaseTransferService.confirmTransferPayment. Acá solo se deja el link
-    // para que "ver dossier transferido" funcione aunque el pago siga
-    // pendiente; el estado/finishedAt y la notificación al deudor se
-    // difieren hasta la confirmación.
+    // De overdracht is gratis en onmiddellijk (geen CFSB-commissie meer te
+    // betalen — ver CaseTransferService.requestTransfer), dus het COP kan nu
+    // meteen naar TRANSFERRED (terminal), zonder te wachten op een pago.
     await prisma.$transaction(async (tx) => {
       await tx.collectiveCollection.update({
         where: { id: collectionId },
-        data: { transferredToCaseTransferId: transferResult.caseTransferId },
+        data: {
+          transferredToCaseTransferId: transferResult.caseTransferId,
+          status: "TRANSFERRED",
+          finishedAt: new Date(),
+        },
       });
       await tx.claimService.updateMany({
         where: { debtClaimId: collection.debtClaimId, service: "COP" },
@@ -1072,10 +1073,23 @@ export class CollectiveCollectionService {
         data: {
           debtClaimId: collection.debtClaimId,
           event: "COL_TRANSFERRED_TO_GOP",
-          description: `Collectieve Opvolging overgedragen aan advocaat/deurwaarder (dossier ${collection.debtClaim.reference ?? collection.debtClaimId}). In afwachting van de betaling van de overdrachtscommissie.`,
+          description: `Collectieve Opvolging overgedragen aan advocaat/deurwaarder (dossier ${collection.debtClaim.reference ?? collection.debtClaimId}).`,
         },
       });
     });
+
+    if (collection.debtClaim.debtor.user_id) {
+      await NotificationService.create({
+        tenant_id: collection.debtClaim.tenantId,
+        user_id: collection.debtClaim.debtor.user_id,
+        type: NotificationType.COL_TRANSFERRED_TO_GOP,
+        title: "Dossier overgedragen aan advocaat/deurwaarder",
+        message: `Dossier ${collection.debtClaim.reference ?? collection.debtClaimId} werd overgedragen aan een advocaat/deurwaarder voor verdere behandeling.`,
+        link: `/legal-processes/transfers/${transferResult.caseTransferId}`,
+        entity_type: "CollectiveCollection",
+        entity_id: collectionId,
+      });
+    }
 
     return transferResult;
   };

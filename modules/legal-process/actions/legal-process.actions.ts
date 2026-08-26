@@ -3,6 +3,12 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { LegalProcessService } from "@/modules/legal-process/services/legal-process.service";
+import { VerdictService } from "@/modules/verdict/services/verdict.service";
+import { AuditLogService } from "@/modules/verdict/services/audit-log.service";
+import {
+  VerdictAdjustAmountsInput,
+  VerdictAdjustAmountsSchema,
+} from "@/modules/verdict/services/verdict.validators";
 import {
   requireTenantStaffForLegalProcess,
   requireAssignedBailiff,
@@ -57,6 +63,24 @@ export const getMyLegalProcessDocumentsAsBailiff = async () => {
   if (!session?.user?.id) throw new Error("U bent niet ingelogd.");
   const items = await LegalProcessService.getForBailiffUser(session.user.id);
   return items.map(toDocumentRow);
+};
+
+// Tarifa CFSB del participante para la pantalla de registro de sentencia
+// (línea "Terugvorderbare CFSB-administratiekosten", punto 5 del análisis
+// CFSB) — mismo doble path que registerGopVerdict según de dónde venga.
+export const getGopFeeRatePercent = async (params: {
+  caseTransferId?: string | null;
+  legalProcessId?: string | null;
+}) => {
+  if (params.caseTransferId) {
+    const { caseTransfer } = await requireAssignedBailiffForTransfer(params.caseTransferId);
+    return LegalProcessService.getGopFeeRatePercent(caseTransfer.debtClaim.tenantId);
+  }
+  if (params.legalProcessId) {
+    const { legalProcess } = await requireAssignedBailiff(params.legalProcessId);
+    return LegalProcessService.getGopFeeRatePercent(legalProcess.debtClaim.tenantId);
+  }
+  throw new Error("caseTransferId of legalProcessId is verplicht.");
 };
 
 // El PRIMER vonnis se registra desde una CaseTransfer (crea el LegalProcess
@@ -362,4 +386,23 @@ export const correctGopPayment = async (
     { amount: data.amount, note: data.note, ...fileData },
     session.user.id,
   );
+};
+
+// Punto 7 del análisis CFSB: el alguacil asignado (o el back-office del
+// participante) ajusta los importes financieros del vonnis para que
+// coincidan con el saldo/facturación confirmada — cada cambio queda en
+// AuditLog y las obligaciones CFSB correspondientes se recalculan (ver
+// VerdictService.adjustAmounts).
+export const adjustVerdictAmounts = async (data: VerdictAdjustAmountsInput) => {
+  const parsed = VerdictAdjustAmountsSchema.parse(data);
+
+  const { session } = await requireStaffOrAssignedBailiffForVerdict(parsed.verdictId);
+
+  return VerdictService.adjustAmounts(parsed, session.user.id);
+};
+
+export const getVerdictAuditLog = async (verdictId: string) => {
+  await requireStaffOrAssignedBailiffForVerdict(verdictId);
+
+  return AuditLogService.getForEntity("Verdict", verdictId);
 };

@@ -18,7 +18,6 @@ import { Lawyer } from "@/modules/lawyer/services/lawyer.validators";
 import { getActiveBailiffsDirectory } from "@/modules/bailiff/actions/bailiff.actions";
 import { Bailiff } from "@/modules/bailiff/services/bailiff.validators";
 import { transferCopToGop } from "@/modules/collective-follow-up/actions/collective-collection.actions";
-import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 
 interface TransferToGopDialogProps {
   open: boolean;
@@ -69,24 +68,22 @@ export const TransferToGopDialog: React.FC<TransferToGopDialogProps> = ({
     setBailiffId("");
   };
 
-  // De overdracht wordt pas definitief nadat de CFSB-overdrachtscommissie
-  // (5%) betaald is — ver CaseTransferService.confirmTransferPayment, dat
-  // ook de CollectiveCollection naar TRANSFERRED zet.
-  const handleCreateTransaction = async () => {
+  // De overdracht is gratis en onmiddellijk (geen CFSB-commissie meer) — ver
+  // CaseTransferService.requestTransfer / CollectiveCollectionService.
+  // transferToGop, dat ook de CollectiveCollection meteen naar TRANSFERRED zet.
+  const handleTransfer = async () => {
     if (assigneeType === "LAWYER" && !lawyerId) {
-      const message = "Selecteer een advocaat";
-      notifyError(message);
-      return { success: false, error: message };
+      notifyError("Selecteer een advocaat");
+      return;
     }
     if (assigneeType === "BAILIFF" && !bailiffId) {
-      const message = "Selecteer een deurwaarder";
-      notifyError(message);
-      return { success: false, error: message };
+      notifyError("Selecteer een deurwaarder");
+      return;
     }
 
     try {
       setSubmitting(true);
-      const result = await transferCopToGop(collectionId, {
+      await transferCopToGop(collectionId, {
         debtClaimId,
         lawyerId: assigneeType === "LAWYER" ? lawyerId : null,
         bailiffId: assigneeType === "BAILIFF" ? bailiffId : null,
@@ -94,27 +91,15 @@ export const TransferToGopDialog: React.FC<TransferToGopDialogProps> = ({
         emergencyReason: null,
       });
 
-      if (!result.paymentUrl || !result.paymentId) {
-        notifySuccess("Dossier overgedragen.");
-        onTransferred();
-        handleClose();
-        return { success: false };
-      }
-
-      return { success: true, paymentId: result.paymentId, paymentUrl: result.paymentUrl };
+      notifySuccess("Dossier overgedragen aan advocaat/deurwaarder.");
+      onTransferred();
+      handleClose();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Overdracht mislukt";
       notifyError(message);
-      return { success: false, error: message };
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handlePaymentConfirmed = async () => {
-    notifySuccess("Betaling bevestigd. Dossier overgedragen aan advocaat/deurwaarder.");
-    onTransferred();
-    handleClose();
   };
 
   return (
@@ -169,10 +154,9 @@ export const TransferToGopDialog: React.FC<TransferToGopDialogProps> = ({
         </Stack>
       </DialogContent>
       <DialogActions sx={{ flexDirection: "column", alignItems: "stretch", gap: 1, px: 3, pb: 2 }}>
-        <PaymentIntent
-          onCreateTransaction={handleCreateTransaction}
-          onPaymentConfirmed={handlePaymentConfirmed}
-        />
+        <Button variant="contained" onClick={handleTransfer} loading={submitting}>
+          Dossier overdragen
+        </Button>
         <Button onClick={handleClose} disabled={submitting}>
           Annuleren
         </Button>

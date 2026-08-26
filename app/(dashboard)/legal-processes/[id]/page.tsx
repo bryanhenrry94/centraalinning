@@ -51,6 +51,7 @@ import { ChangeBailiffDialog } from "@/modules/legal-process/components/change-b
 import { CreateAgreementDialog } from "@/modules/legal-process/components/create-agreement-dialog";
 import { RegisterPaymentDialog } from "@/modules/legal-process/components/register-payment-dialog";
 import { FinalizeBailiffWorkDialog } from "@/modules/legal-process/components/finalize-bailiff-work-dialog";
+import { AdjustVerdictAmountsDialog } from "@/modules/legal-process/components/adjust-verdict-amounts-dialog";
 import { GopPaymentConfirmations } from "@/modules/legal-process/components/gop-payment-confirmations";
 import { GopExecutionMeasures } from "@/modules/legal-process/components/gop-execution-measures";
 import { AgreementDecisionDialog } from "@/modules/agreement/components/agreement-decision-dialog";
@@ -125,6 +126,7 @@ const LegalProcessDetailPage: React.FC = () => {
     | "register-payment"
     | "finalize-bailiff-work"
     | "decide-agreement"
+    | "adjust-verdict"
   >(null);
 
   const load = useCallback(async () => {
@@ -506,6 +508,12 @@ const LegalProcessDetailPage: React.FC = () => {
                 >
                   Deurwaarderskosten
                 </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => setDialog("adjust-verdict")}
+                >
+                  Vonnisbedragen aanpassen
+                </Button>
                 {legalProcess.status === LegalProcessStatus.GOP_ACTIVE && (
                   <Button
                     variant="outlined"
@@ -590,6 +598,14 @@ const LegalProcessDetailPage: React.FC = () => {
             onClose={() => setDialog(null)}
             verdictId={latestVerdict.id}
             onRegistered={refresh}
+          />
+          <AdjustVerdictAmountsDialog
+            open={dialog === "adjust-verdict"}
+            onClose={() => setDialog(null)}
+            verdictId={latestVerdict.id}
+            currentSentenceAmount={latestVerdict.sentence_amount}
+            currentProcesalCost={latestVerdict.procesal_cost ?? 0}
+            onAdjusted={refresh}
           />
         </>
       )}

@@ -5,7 +5,7 @@ import { Alert, Container } from "@mui/material";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { VerdictRegistrationForm } from "@/modules/legal-process/components/verdict-registration-form";
 import { getCaseTransferById } from "@/modules/legal-process/actions/case-transfer.actions";
-import { getLegalProcessById } from "@/modules/legal-process/actions/legal-process.actions";
+import { getLegalProcessById, getGopFeeRatePercent } from "@/modules/legal-process/actions/legal-process.actions";
 
 const formatDebtorName = (person?: { first_name?: string | null; last_name?: string | null } | null) =>
   person ? `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim() : "";
@@ -22,6 +22,7 @@ const VerdictNewPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [debtorName, setDebtorName] = useState("");
   const [defaultBailiffId, setDefaultBailiffId] = useState<string | null>(null);
+  const [gopFeeRatePercent, setGopFeeRatePercent] = useState(5);
 
   useEffect(() => {
     const load = async () => {
@@ -43,6 +44,7 @@ const VerdictNewPage: React.FC = () => {
           setDebtorName(formatDebtorName(legalProcess.debtClaim?.debtor?.person));
           setDefaultBailiffId(legalProcess.bailiffId ?? null);
         }
+        setGopFeeRatePercent(await getGopFeeRatePercent({ caseTransferId, legalProcessId }));
       } catch (err) {
         setError(err instanceof Error ? err.message : "Kon dossier niet laden");
       } finally {
@@ -69,6 +71,7 @@ const VerdictNewPage: React.FC = () => {
       legalProcessId={legalProcessId}
       debtorName={debtorName}
       defaultBailiffId={defaultBailiffId}
+      gopFeeRatePercent={gopFeeRatePercent}
     />
   );
 };
