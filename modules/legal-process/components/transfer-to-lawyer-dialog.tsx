@@ -13,7 +13,9 @@ import {
   ToggleButtonGroup,
   FormControlLabel,
   Checkbox,
+  IconButton,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { getActiveLawyersDirectory } from "@/modules/lawyer/actions/lawyer.actions";
 import { Lawyer } from "@/modules/lawyer/services/lawyer.validators";
@@ -122,7 +124,21 @@ export const TransferToLawyerDialog: React.FC<TransferToLawyerDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Dossieroverdracht</DialogTitle>
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
+        DOSSIEROVERDRACHT
+        <IconButton onClick={handleClose} disabled={submitting} sx={{ color: "white" }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <ToggleButtonGroup

@@ -3,13 +3,13 @@ import { CollectiveCollectionStatus } from "@/modules/collective-follow-up/const
 type StatusColor = "default" | "info" | "warning" | "success" | "error";
 
 const COLLECTIVE_COLLECTION_STATUS_CONFIG: Record<string, { label: string; color: StatusColor }> = {
-  ACTIVE: { label: "COP Actief", color: "info" },
+  ACTIVE: { label: "COP actief", color: "info" },
   AWAITING_DEBTOR_RESPONSE: { label: "Wacht op reactie debiteur", color: "default" },
   PAYMENT_AGREEMENT_REQUESTED: { label: "Betalingsregeling aangevraagd", color: "warning" },
   PAYMENT_AGREEMENT_ACCEPTED: { label: "Betalingsregeling geaccepteerd", color: "success" },
   PAID_IN_FULL: { label: "Volledig betaald", color: "success" },
   TRANSFERRED: { label: "Overgedragen aan GOP", color: "info" },
-  CLOSED: { label: "Gesloten", color: "error" },
+  CLOSED: { label: "Afgesloten", color: "error" },
 };
 
 export function getCollectiveCollectionStatusInfo(status: string) {

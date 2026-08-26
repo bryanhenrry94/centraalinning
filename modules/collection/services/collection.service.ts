@@ -621,7 +621,12 @@ export class CollectionService {
             : "AOP-proces afgerond",
         },
       });
-    });
+      // Timeout explícito: el paso DEFAULT_NOTICE -> BLK_NOTIFICATION suma
+      // pasos extra (Blockade + ClaimService) a esta misma transacción, y
+      // contra la DB remota el default de Prisma (5000ms) a veces no alcanza
+      // ("Transaction already closed" / "expired transaction") — mismo
+      // ajuste que ya usan otras transacciones largas (ver legal-process.service.ts).
+    }, { timeout: 20000, maxWait: 10000 });
 
     return { nextStep };
   };

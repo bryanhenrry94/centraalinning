@@ -11,7 +11,7 @@ export const BLOCKADE_STATUS_CONFIG: Record<
   { label: string; color: ChipColor }
 > = {
   DRAFT: { label: "Concept", color: "default" },
-  ACTIVE: { label: "Actief", color: "error" },
+  ACTIVE: { label: "BLK actief", color: "error" },
   SUSPENDED: { label: "Opgeschort", color: "warning" },
 };
 

@@ -51,19 +51,19 @@ const VerdictTotals: React.FC<VerdictTotalsProps> = ({ gopFeeRatePercent }) => {
     verdictInterest?.reduce(
       (sum: number, item: VerdictInterestItem) =>
         sum + (item?.total_interest ?? 0),
-      0
+      0,
     ) ?? 0;
 
   const totalEmbargoAmount =
     verdictEmbargo?.reduce(
       (sum, item) => sum + (Number(item?.total_amount) ?? 0),
-      0
+      0,
     ) ?? 0;
 
   const totalBailiffAmount =
     bailiff_services?.reduce(
       (sum, item) => sum + (Number(item?.service_cost) ?? 0),
-      0
+      0,
     ) ?? 0;
 
   // Costo administrativo CFSB recuperable (punto 4/5 del análisis CFSB): 5%
@@ -73,7 +73,8 @@ const VerdictTotals: React.FC<VerdictTotalsProps> = ({ gopFeeRatePercent }) => {
   // oculta dentro del monto principal — línea independiente.
   const recoverableCfsbCost =
     gopFeeRatePercent !== undefined
-      ? ((Number(sentence_amount) || 0) + total_interest) * (gopFeeRatePercent / 100)
+      ? ((Number(sentence_amount) || 0) + total_interest) *
+        (gopFeeRatePercent / 100)
       : 0;
 
   return (
@@ -176,9 +177,7 @@ const VerdictTotals: React.FC<VerdictTotalsProps> = ({ gopFeeRatePercent }) => {
                   gridColumn: "span 2",
                 }}
               >
-                <Typography>
-                  Terugvorderbare CFSB-administratiekosten ({gopFeeRatePercent}%):
-                </Typography>
+                <Typography>CFSB-administratiekosten:</Typography>
                 <Typography fontWeight="600">
                   {formatCurrency(recoverableCfsbCost)}
                 </Typography>
@@ -222,7 +221,7 @@ const VerdictTotals: React.FC<VerdictTotalsProps> = ({ gopFeeRatePercent }) => {
                       Number(totalBailiffAmount ?? 0) +
                       Number(totalEmbargoAmount ?? 0) +
                       Number(procesal_cost ?? 0) +
-                      recoverableCfsbCost
+                      recoverableCfsbCost,
                   )}
                 </Typography>
               </Box>

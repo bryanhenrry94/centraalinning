@@ -48,6 +48,15 @@ const VERDICT_ELIGIBLE_STATUSES: CaseTransferStatus[] = [
   CaseTransferStatus.WORK_COMPLETED,
 ];
 
+// Mismo estilo que HEAD_SX en collection-table.tsx / latest-transfers-table.tsx
+// (tabla de consulta AOP): header secondary.main + letra blanca.
+const HEAD_SX = {
+  backgroundColor: "secondary.main",
+  color: "#fff",
+  fontWeight: "bold",
+  whiteSpace: "nowrap" as const,
+};
+
 type CaseTransferListItem = Awaited<
   ReturnType<typeof getAllCaseTransfersForTenant>
 >[number];
@@ -89,10 +98,7 @@ function debtorNameOf(item: {
 }
 
 function toTransferRow(item: CaseTransferListItem): Row {
-  const statusInfo = getCaseTransferStatusInfo(item.status, {
-    lawyerId: item.lawyerId,
-    bailiffId: item.bailiffId,
-  });
+  const statusInfo = getCaseTransferStatusInfo(item.status);
   return {
     id: item.id,
     kind: "transfer",
@@ -222,17 +228,19 @@ const LegalProcessesListPageContent: React.FC = () => {
         </Typography>
 
         <TableContainer component={Paper}>
-          <Table>
+          <Table size="small" stickyHeader aria-label="legal processes table">
             <TableHead>
               <TableRow>
-                <TableCell>Referentie</TableCell>
-                <TableCell>Debiteur</TableCell>
-                <TableCell>Advocaat</TableCell>
-                <TableCell>Deurwaarder</TableCell>
-                <TableCell align="right">Bedrag</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Gestart op</TableCell>
-                {isBailiffRole && <TableCell>Acties</TableCell>}
+                <TableCell sx={HEAD_SX}>Referentie</TableCell>
+                <TableCell sx={HEAD_SX}>Debiteur</TableCell>
+                <TableCell sx={HEAD_SX}>Advocaat</TableCell>
+                <TableCell sx={HEAD_SX}>Deurwaarder</TableCell>
+                <TableCell sx={{ ...HEAD_SX, textAlign: "right" }}>
+                  Bedrag
+                </TableCell>
+                <TableCell sx={HEAD_SX}>Status</TableCell>
+                <TableCell sx={HEAD_SX}>Gestart op</TableCell>
+                {isBailiffRole && <TableCell sx={HEAD_SX}>Acties</TableCell>}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -264,20 +272,30 @@ const LegalProcessesListPageContent: React.FC = () => {
                       size="small"
                       label={row.statusLabel}
                       color={row.statusColor}
+                      sx={{ minWidth: 150 }}
                     />
                   </TableCell>
                   <TableCell>{formatDate(row.date.toString())}</TableCell>
                   {isBailiffRole && (
-                    <TableCell>
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
                       {row.kind === "transfer" &&
                         !!row.bailiffId &&
-                        VERDICT_ELIGIBLE_STATUSES.includes(row.status as CaseTransferStatus) && (
+                        VERDICT_ELIGIBLE_STATUSES.includes(
+                          row.status as CaseTransferStatus,
+                        ) && (
                           <Button
                             size="small"
                             variant="contained"
+                            sx={{
+                              textTransform: "none",
+                              lineHeight: 1.2,
+                              minWidth: "auto",
+                            }}
                             onClick={(e) => {
                               e.stopPropagation();
-                              router.push(`/verdicts/new?caseTransferId=${row.id}`);
+                              router.push(
+                                `/verdicts/new?caseTransferId=${row.id}`,
+                              );
                             }}
                           >
                             Vonnis registreren

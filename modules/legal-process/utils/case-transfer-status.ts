@@ -2,28 +2,19 @@ import { CaseTransferStatus } from "@/modules/legal-process/constants/case-trans
 
 type StatusColor = "default" | "info" | "warning" | "success" | "error";
 
+// Labels kort houden (feedback sponsor): "aan advocaat/deurwaarder" is
+// overbodig op het scherm van de toegewezen deurwaarder/advocaat zelf — die
+// weet al dat het dossier aan hem overgedragen is.
 const CASE_TRANSFER_STATUS_CONFIG: Record<string, { label: string; color: StatusColor }> = {
-  PENDING_PAYMENT: { label: "Wacht op betaling overdrachtscommissie", color: "default" },
-  PENDING_ACCEPTANCE: { label: "Wacht op advocaat/deurwaarder", color: "default" },
-  ACCEPTED: { label: "Geaccepteerd — in behandeling", color: "info" },
+  PENDING_PAYMENT: { label: "Wacht op betaling", color: "default" },
+  PENDING_ACCEPTANCE: { label: "Wacht op acceptatie", color: "default" },
+  ACCEPTED: { label: "Overgedragen", color: "info" },
   REJECTED: { label: "Afgewezen", color: "error" },
   WORK_COMPLETED: { label: "Werk afgerond", color: "success" },
   CANCELLED: { label: "Geannuleerd", color: "error" },
 };
 
-// Para ACCEPTED, el label distingue si el dossier quedó "Overgedragen aan
-// advocaat" o "Overgedragen aan deurwaarder" (spec: el estado debe reflejar
-// a quién fue transferido). Pasar assignee cuando esté disponible.
-export function getCaseTransferStatusInfo(
-  status: string,
-  assignee?: { lawyerId?: string | null; bailiffId?: string | null },
-) {
-  if (status === "ACCEPTED" && assignee) {
-    return assignee.lawyerId
-      ? { label: "Overgedragen aan advocaat", color: "info" as StatusColor }
-      : { label: "Overgedragen aan deurwaarder", color: "info" as StatusColor };
-  }
-
+export function getCaseTransferStatusInfo(status: string) {
   return (
     CASE_TRANSFER_STATUS_CONFIG[status] ?? {
       label: status,

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import {
   Box,
   Card,
@@ -11,6 +10,12 @@ import {
   IconButton,
   Paper,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Tooltip,
   Typography,
   useMediaQuery,
@@ -29,6 +34,15 @@ import {
 } from "@/modules/legal-process/actions/case-transfer.actions";
 import { getCaseTransferStatusInfo } from "@/modules/legal-process/utils/case-transfer-status";
 import { RejectTransferDialog } from "@/modules/legal-process/components/reject-transfer-dialog";
+
+// Mismo estilo que HEAD_SX en collection-table.tsx (tabla de consulta AOP):
+// una <Table> nativa, no DataGrid, con header secondary.main + letra blanca.
+const HEAD_SX = {
+  backgroundColor: "secondary.main",
+  color: "#fff",
+  fontWeight: "bold",
+  whiteSpace: "nowrap" as const,
+};
 
 type CaseTransferListItem = Awaited<
   ReturnType<typeof getMyCaseTransfersAsLawyer>
@@ -63,106 +77,6 @@ export const LatestTransfersTable = ({
       ? `${item.debtClaim.debtor.person.first_name ?? ""} ${item.debtClaim.debtor.person.last_name ?? ""}`.trim()
       : "-";
 
-  const columns: GridColDef<CaseTransferListItem>[] = [
-    {
-      field: "startedAt",
-      headerName: "Datum",
-      width: 100,
-      flex: 1,
-      valueGetter: (_, row) => row.createdAt,
-      renderCell: (params) => formatDate(params.value.toString()),
-    },
-    {
-      field: "referenceNumber",
-      headerName: "Referentie",
-      width: 130,
-      flex: 1,
-      valueGetter: (_, row) => row.debtClaim.reference,
-    },
-    {
-      field: "debtor",
-      headerName: "Debiteur",
-      width: 180,
-      flex: 1,
-      valueGetter: (_, row) => debtorName(row),
-    },
-    {
-      field: "amount",
-      headerName: "Bedrag",
-      width: 110,
-      flex: 1,
-      align: "right" as const,
-      headerAlign: "right" as const,
-      valueGetter: (_, row) => Number(row.debtClaim.principalAmount) || 0,
-      renderCell: (params) => formatCurrency(params.value),
-    },
-    {
-      field: "status",
-      headerName: "Status",
-      width: 150,
-      flex: 1,
-      align: "center" as const,
-      headerAlign: "center" as const,
-      renderCell: (params) => {
-        const statusInfo = getCaseTransferStatusInfo(params.row.status, {
-          lawyerId: params.row.lawyerId,
-          bailiffId: params.row.bailiffId,
-        });
-        return (
-          <Chip
-            label={statusInfo.label}
-            color={statusInfo.color}
-            variant="filled"
-            size="small"
-            sx={{ fontWeight: 600, width: "100%" }}
-          />
-        );
-      },
-    },
-    {
-      field: "actions",
-      headerName: "Acties",
-      width: 130,
-      flex: 0.8,
-      align: "center" as const,
-      headerAlign: "center" as const,
-      sortable: false,
-      filterable: false,
-      renderCell: (params) => (
-        <Stack direction="row" spacing={0.5}>
-          <Tooltip title="Bekijken">
-            <IconButton
-              size="small"
-              onClick={() =>
-                router.push(`/legal-processes/transfers/${params.row.id}`)
-              }
-            >
-              <VisibilityIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Accepteren">
-            <IconButton
-              size="small"
-              color="success"
-              onClick={() => handleAccept(params.row.id)}
-            >
-              <CheckIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Afwijzen">
-            <IconButton
-              size="small"
-              color="error"
-              onClick={() => setRejectId(params.row.id)}
-            >
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Stack>
-      ),
-    },
-  ];
-
   return (
     <>
       {/* Mobiel: kaartenlijst, zelfde patroon als LatestDocumentsTable. */}
@@ -183,10 +97,7 @@ export const LatestTransfersTable = ({
         )}
 
         {items.map((item) => {
-          const statusInfo = getCaseTransferStatusInfo(item.status, {
-            lawyerId: item.lawyerId,
-            bailiffId: item.bailiffId,
-          });
+          const statusInfo = getCaseTransferStatusInfo(item.status);
           return (
             <Card
               key={item.id}
@@ -271,24 +182,87 @@ export const LatestTransfersTable = ({
       </Stack>
 
       {isDesktop && (
-        <DataGrid
-          rows={items}
-          columns={columns}
-          hideFooter
-          autoHeight
-          disableColumnMenu
-          disableRowSelectionOnClick
-          sx={{
-            "& .MuiDataGrid-columnHeaders": {
-              backgroundColor: theme.palette.grey[100],
-              borderBottom: `1px solid ${theme.palette.divider}`,
-            },
-            "& .MuiDataGrid-cell": {
-              borderBottom: `1px solid ${theme.palette.divider}`,
-            },
-            bgcolor: "white",
-          }}
-        />
+        <TableContainer>
+          <Table size="small" stickyHeader aria-label="latest transfers table">
+            <TableHead>
+              <TableRow>
+                <TableCell sx={HEAD_SX}>Datum</TableCell>
+                <TableCell sx={HEAD_SX}>Referentie</TableCell>
+                <TableCell sx={{ ...HEAD_SX, minWidth: 150 }}>Debiteur</TableCell>
+                <TableCell sx={{ ...HEAD_SX, textAlign: "right" }}>Bedrag</TableCell>
+                <TableCell sx={{ ...HEAD_SX, textAlign: "center" }}>Status</TableCell>
+                <TableCell sx={{ ...HEAD_SX, textAlign: "center" }}>Acties</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {items.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Geen nieuwe dossieroverdrachten.
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              )}
+              {items.map((item) => {
+                const statusInfo = getCaseTransferStatusInfo(item.status);
+                return (
+                  <TableRow key={item.id} hover>
+                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                      {formatDate(item.createdAt.toString())}
+                    </TableCell>
+                    <TableCell>{item.debtClaim.reference}</TableCell>
+                    <TableCell>{debtorName(item)}</TableCell>
+                    <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                      {formatCurrency(Number(item.debtClaim.principalAmount) || 0)}
+                    </TableCell>
+                    <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
+                      <Chip
+                        label={statusInfo.label}
+                        color={statusInfo.color}
+                        variant="filled"
+                        size="small"
+                        sx={{ fontWeight: 600, minWidth: 150 }}
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      <Stack direction="row" spacing={0.5} justifyContent="center">
+                        <Tooltip title="Bekijken">
+                          <IconButton
+                            size="small"
+                            onClick={() =>
+                              router.push(`/legal-processes/transfers/${item.id}`)
+                            }
+                          >
+                            <VisibilityIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Accepteren">
+                          <IconButton
+                            size="small"
+                            color="success"
+                            onClick={() => handleAccept(item.id)}
+                          >
+                            <CheckIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Afwijzen">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => setRejectId(item.id)}
+                          >
+                            <CloseIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
 
       <RejectTransferDialog
