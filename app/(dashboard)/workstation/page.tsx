@@ -14,8 +14,6 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import DescriptionIcon from "@mui/icons-material/Description";
 import LockIcon from "@mui/icons-material/Lock";
-import GroupIcon from "@mui/icons-material/Group";
-import GavelIcon from "@mui/icons-material/Gavel";
 import { useRouter } from "next/navigation";
 import { useAuthSession } from "@/modules/auth/hooks/useAuthSession";
 import { UserRole } from "@/shared/constants/user-role";
@@ -39,6 +37,15 @@ export default function WorkstationPage() {
     router.push(link);
   };
 
+  // Solo estos 4 son servicios que el participante inicia por su cuenta.
+  // COP y la transferencia de expediente ya no son "servicios" de esta
+  // pantalla: son acciones de seguimiento sobre un expediente existente que
+  // CFSB ofrece automáticamente cuando AOP/BLK no dio solución (ver el botón
+  // "Collectieve Opvolging starten"/"Dossieroverdracht" en
+  // app/(dashboard)/collections/[id]/page.tsx, ya gateado server-side por
+  // CollectiveCollectionService.canStart / CaseTransferService.requestTransfer).
+  // GOP tampoco pertenece acá: solo se activa cuando un deurwaarder registra
+  // un vonnis, nunca por elección directa del participante.
   const services = [
     {
       id: 1,
@@ -77,18 +84,6 @@ export default function WorkstationPage() {
     },
     {
       id: 4,
-      title: "Collectieve Opvolging (COP)",
-      description:
-        "Start een collectieve opvolging met behulp van de CFSB-samenwerking om gerechtelijke opvolging zoveel mogelijk te voorkomen.",
-      color: "#7b1fa2",
-      icon: GroupIcon,
-      buttonText: "Collectieve Opvolging starten →",
-      linkText: "📋 Mijn collectieve opvolging",
-      linkList: "/collective-follow-up",
-      newLink: "/collective-follow-up",
-    },
-    {
-      id: 5,
       title: "Blokkade (BLK)",
       description: "Start per direct een economische blokkade.",
       color: "#d32f2f",
@@ -97,18 +92,6 @@ export default function WorkstationPage() {
       linkText: "📋 Mijn blokkades",
       linkList: "/blocks",
       newLink: "/blocks",
-    },
-    {
-      id: 6,
-      title: "Overdracht dossier",
-      description:
-        "Draag het dossier over aan een advocaat of deurwaarder voor mogelijke gerechtelijke opvolging",
-      color: "#00897b",
-      icon: GavelIcon,
-      buttonText: "Dossier kiezen om over te dragen →",
-      linkText: "📋 Mijn gerechtelijke dossiers",
-      linkList: "/legal-processes",
-      newLink: "/legal-processes",
     },
   ];
 
@@ -148,7 +131,7 @@ export default function WorkstationPage() {
           {services.map((service) => {
             const IconComponent = service.icon;
             return (
-              <Grid size={{ xs: 12, md: 6, lg: 4 }} key={service.id}>
+              <Grid size={{ xs: 12, md: 6, lg: 3 }} key={service.id}>
                 <Card
                   onClick={() => handleServiceClick(service.newLink || "#")}
                   sx={{
