@@ -76,12 +76,20 @@ const buildDefaultValues = (
 // sigue sin gate de pago.
 export const VerdictRegistrationForm: React.FC<
   VerdictRegistrationFormProps
-> = ({ caseTransferId, legalProcessId, debtorName, defaultBailiffId, gopFeeRatePercent }) => {
+> = ({
+  caseTransferId,
+  legalProcessId,
+  debtorName,
+  defaultBailiffId,
+  gopFeeRatePercent,
+}) => {
   const router = useRouter();
   const [bailiffs, setBailiffs] = useState<Bailiff[]>([]);
   // Se setea al registrar el borrador (primer vonnis), para poder navegar
   // al detalle del GOP una vez PaymentIntent confirma el pago.
-  const [registeredLegalProcessId, setRegisteredLegalProcessId] = useState<string | null>(null);
+  const [registeredLegalProcessId, setRegisteredLegalProcessId] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     getActiveBailiffsDirectory()
@@ -142,9 +150,14 @@ export const VerdictRegistrationForm: React.FC<
         paymentUrl: string;
       };
       setRegisteredLegalProcessId(draft.legalProcessId);
-      return { success: true, paymentId: draft.paymentId, paymentUrl: draft.paymentUrl };
+      return {
+        success: true,
+        paymentId: draft.paymentId,
+        paymentUrl: draft.paymentUrl,
+      };
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Registratie mislukt";
+      const message =
+        error instanceof Error ? error.message : "Registratie mislukt";
       notifyError(message);
       return { success: false, error: message };
     }
@@ -169,11 +182,15 @@ export const VerdictRegistrationForm: React.FC<
     if (!confirmed) return;
 
     try {
-      const verdict = (await registerGopVerdict(data)) as { legal_process_id: string };
+      const verdict = (await registerGopVerdict(data)) as {
+        legal_process_id: string;
+      };
       notifySuccess("Vonnis geregistreerd.");
       router.push(`/legal-processes/${verdict.legal_process_id}`);
     } catch (error) {
-      notifyError(error instanceof Error ? error.message : "Registratie mislukt");
+      notifyError(
+        error instanceof Error ? error.message : "Registratie mislukt",
+      );
     }
   };
 
@@ -196,43 +213,6 @@ export const VerdictRegistrationForm: React.FC<
             handleSubmit(onSubmitAdditional)(e);
           }}
         >
-          <Box
-            sx={{
-              mb: 2,
-              mt: 2,
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              justifyContent: "space-between",
-              alignItems: { xs: "stretch", sm: "center" },
-              gap: 1,
-            }}
-          >
-            <Typography variant="h6" gutterBottom>
-              {caseTransferId
-                ? "VONNIS REGISTREREN — GOP ACTIVEREN"
-                : "AANVULLEND VONNIS REGISTREREN"}
-            </Typography>
-
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ minWidth: { sm: 220 } }}>
-              {caseTransferId ? (
-                <PaymentIntent
-                  onCreateTransaction={registerDraftAndPay}
-                  onPaymentConfirmed={handlePaymentConfirmed}
-                />
-              ) : (
-                <Button
-                  color="primary"
-                  type="submit"
-                  variant="contained"
-                  startIcon={<SaveIcon />}
-                  loading={isSubmitting}
-                >
-                  Vonnis registreren
-                </Button>
-              )}
-            </Stack>
-          </Box>
-
           <Paper
             component="section"
             sx={{ borderRadius: 1, overflow: "hidden", mb: 2 }}
@@ -497,6 +477,41 @@ export const VerdictRegistrationForm: React.FC<
               <VerdictTotals gopFeeRatePercent={gopFeeRatePercent} />
             </Grid>
           </Grid>
+
+          <Box
+            sx={{
+              mb: 2,
+              mt: 2,
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              justifyContent: "right",
+              alignItems: { xs: "stretch", sm: "center" },
+              gap: 1,
+            }}
+          >
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1}
+              sx={{ minWidth: { sm: 220 } }}
+            >
+              {caseTransferId ? (
+                <PaymentIntent
+                  onCreateTransaction={registerDraftAndPay}
+                  onPaymentConfirmed={handlePaymentConfirmed}
+                />
+              ) : (
+                <Button
+                  color="primary"
+                  type="submit"
+                  variant="contained"
+                  startIcon={<SaveIcon />}
+                  loading={isSubmitting}
+                >
+                  Vonnis registreren
+                </Button>
+              )}
+            </Stack>
+          </Box>
         </form>
       </FormProvider>
     </Container>

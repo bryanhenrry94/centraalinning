@@ -192,17 +192,19 @@ export default function Header() {
             />
             <Link href="/dashboard" style={{ textDecoration: "none" }}>
               <Typography
-                variant="h6"
-                fontWeight={700}
+                // fontWeight={700}
                 sx={{
                   color: "white",
+                  fontSize: "0.95rem",
+                  lineHeight: 1.3,
+                  maxWidth: 200,
                   display: {
                     xs: "none",
                     md: "block",
                   },
                 }}
               >
-                CFSB
+                Centrale Financiële Samenwerking &amp; Bescherming
               </Typography>
             </Link>
           </Box>

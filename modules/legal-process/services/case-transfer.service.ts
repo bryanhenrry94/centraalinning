@@ -29,6 +29,7 @@ const caseTransferInclude = {
   debtClaim: { include: { debtor: { include: { person: true } }, tenant: true } },
   lawyer: true,
   bailiff: true,
+  legalProcess: { select: { id: true } },
 } satisfies Prisma.CaseTransferInclude;
 
 type CaseTransferWithInclude = Prisma.CaseTransferGetPayload<{ include: typeof caseTransferInclude }>;
@@ -54,9 +55,13 @@ export class CaseTransferService {
     return caseTransfer ? serializeCaseTransfer(caseTransfer) : null;
   };
 
+  // Una vez que un CaseTransfer tiene un LegalProcess (vonnis registrado), el
+  // GOP real ya existe — se excluye de estos listados para que la tabla no
+  // siga mostrando la fila de "transferencia" como si aún faltara registrar
+  // el vonnis (ver LegalProcessService.getAllForTenant, que sí lo muestra).
   static getForLawyerUser = async (userId: string) => {
     const items = await prisma.caseTransfer.findMany({
-      where: { lawyer: { userId } },
+      where: { lawyer: { userId }, legalProcess: null },
       include: caseTransferInclude,
       orderBy: { createdAt: "desc" },
     });
@@ -65,7 +70,7 @@ export class CaseTransferService {
 
   static getForBailiffUser = async (userId: string) => {
     const items = await prisma.caseTransfer.findMany({
-      where: { bailiff: { user_id: userId } },
+      where: { bailiff: { user_id: userId }, legalProcess: null },
       include: caseTransferInclude,
       orderBy: { createdAt: "desc" },
     });
@@ -74,7 +79,7 @@ export class CaseTransferService {
 
   static getAllForTenant = async (tenantId: string) => {
     const items = await prisma.caseTransfer.findMany({
-      where: { debtClaim: { tenantId } },
+      where: { debtClaim: { tenantId }, legalProcess: null },
       include: caseTransferInclude,
       orderBy: { createdAt: "desc" },
     });

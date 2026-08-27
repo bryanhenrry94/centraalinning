@@ -25,7 +25,6 @@ import { UserRole } from "@/shared/constants/user-role";
 
 import {
   getCaseTransferById,
-  acceptCaseTransfer,
   extendCaseTransferAcceptanceDeadline,
   rejectOverdueCaseTransfer,
   getCaseTransferAgreements,
@@ -36,6 +35,7 @@ import { CaseTransferStatus } from "@/modules/legal-process/constants/case-trans
 import { GopTimeline } from "@/modules/legal-process/components/gop-timeline";
 import { CaseTransferDocuments } from "@/modules/legal-process/components/case-transfer-documents";
 import { RejectTransferDialog } from "@/modules/legal-process/components/reject-transfer-dialog";
+import { AcceptTransferDialog } from "@/modules/legal-process/components/accept-transfer-dialog";
 import { CancelTransferDialog } from "@/modules/legal-process/components/cancel-transfer-dialog";
 import { FinalizeLawyerWorkDialog } from "@/modules/legal-process/components/finalize-lawyer-work-dialog";
 import { TransferToBailiffDialog } from "@/modules/legal-process/components/transfer-to-bailiff-dialog";
@@ -84,6 +84,7 @@ const CaseTransferDetailPage: React.FC = () => {
 
   const [dialog, setDialog] = useState<
     | null
+    | "accept"
     | "reject"
     | "cancel"
     | "finalize-lawyer-work"
@@ -132,16 +133,6 @@ const CaseTransferDetailPage: React.FC = () => {
   const debtorName = caseTransfer.debtClaim.debtor?.person
     ? `${caseTransfer.debtClaim.debtor.person.first_name ?? ""} ${caseTransfer.debtClaim.debtor.person.last_name ?? ""}`.trim()
     : "-";
-
-  const handleAccept = async () => {
-    try {
-      await acceptCaseTransfer(caseTransfer.id);
-      notifySuccess("Dossier geaccepteerd");
-      refresh();
-    } catch (error) {
-      notifyError(error instanceof Error ? error.message : "Actie mislukt");
-    }
-  };
 
   const handleExtendDeadline = async () => {
     try {
@@ -468,7 +459,7 @@ const CaseTransferDetailPage: React.FC = () => {
                 afwijst.
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                <Button variant="contained" onClick={handleAccept}>
+                <Button variant="contained" onClick={() => setDialog("accept")}>
                   Dossier accepteren
                 </Button>
                 <Button variant="outlined" color="error" onClick={() => setDialog("reject")}>
@@ -480,6 +471,12 @@ const CaseTransferDetailPage: React.FC = () => {
         )}
       </Stack>
 
+      <AcceptTransferDialog
+        open={dialog === "accept"}
+        onClose={() => setDialog(null)}
+        caseTransferId={caseTransfer.id}
+        onRegistered={refresh}
+      />
       <RejectTransferDialog
         open={dialog === "reject"}
         onClose={() => setDialog(null)}

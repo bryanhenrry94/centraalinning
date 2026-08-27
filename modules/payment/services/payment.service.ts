@@ -148,6 +148,26 @@ export class PaymentService {
     });
   };
 
+  // El pago vive bajo el tenant del debtClaim (acreedor), pero quien lo paga
+  // y hace polling del status es a menudo el abogado/alguacil externo,
+  // autenticado bajo su PROPIO tenant (bufete/despacho) — no el del
+  // acreedor. Por eso el status endpoint no puede filtrar solo por
+  // session.user.tenant_id: además del staff del tenant dueño del pago, se
+  // permite al abogado/alguacil asignado al CaseTransfer/LegalProcess que
+  // originó ese pago (GOP_LAWYER_FEE / GOP_BAILIFF_FEE / GOP_ACTIVATION —
+  // esta última la paga el alguacil al registrar el primer vonnis, ver
+  // LegalProcessService.registerFirstVerdict).
+  static getByIdWithAssignedParty = async (id: string) => {
+    return await prisma.payment.findUnique({
+      where: { id },
+      include: {
+        lawyer_fee_invoice: { include: { caseTransfer: { include: { lawyer: true } } } },
+        bailiff_fee_invoice: { include: { legalProcess: { include: { bailiff: true } } } },
+        legal_process_activation: { include: { bailiff: true } },
+      },
+    });
+  };
+
   static updateStatus = async (id: string, status: PaymentStatus) => {
     return await prisma.payment.update({
       where: { id },

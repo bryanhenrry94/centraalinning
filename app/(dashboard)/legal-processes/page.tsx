@@ -55,6 +55,7 @@ const HEAD_SX = {
   color: "#fff",
   fontWeight: "bold",
   whiteSpace: "nowrap" as const,
+  textAlign: "center" as const,
 };
 
 type CaseTransferListItem = Awaited<
@@ -235,9 +236,7 @@ const LegalProcessesListPageContent: React.FC = () => {
                 <TableCell sx={HEAD_SX}>Debiteur</TableCell>
                 <TableCell sx={HEAD_SX}>Advocaat</TableCell>
                 <TableCell sx={HEAD_SX}>Deurwaarder</TableCell>
-                <TableCell sx={{ ...HEAD_SX, textAlign: "right" }}>
-                  Bedrag
-                </TableCell>
+                <TableCell sx={HEAD_SX}>Bedrag</TableCell>
                 <TableCell sx={HEAD_SX}>Status</TableCell>
                 <TableCell sx={HEAD_SX}>Gestart op</TableCell>
                 {isBailiffRole && <TableCell sx={HEAD_SX}>Acties</TableCell>}
@@ -260,14 +259,14 @@ const LegalProcessesListPageContent: React.FC = () => {
                   sx={{ cursor: "pointer" }}
                   onClick={() => router.push(row.href)}
                 >
-                  <TableCell>{row.reference}</TableCell>
-                  <TableCell>{row.debtorName}</TableCell>
-                  <TableCell>{row.lawyerName}</TableCell>
-                  <TableCell>{row.bailiffName}</TableCell>
+                  <TableCell align="center">{row.reference}</TableCell>
+                  <TableCell align="center">{row.debtorName}</TableCell>
+                  <TableCell align="center">{row.lawyerName}</TableCell>
+                  <TableCell align="center">{row.bailiffName}</TableCell>
                   <TableCell align="right">
                     {formatCurrency(row.amount)}
                   </TableCell>
-                  <TableCell>
+                  <TableCell align="center">
                     <Chip
                       size="small"
                       label={row.statusLabel}
@@ -275,9 +274,9 @@ const LegalProcessesListPageContent: React.FC = () => {
                       sx={{ minWidth: 150 }}
                     />
                   </TableCell>
-                  <TableCell>{formatDate(row.date.toString())}</TableCell>
+                  <TableCell align="center">{formatDate(row.date.toString())}</TableCell>
                   {isBailiffRole && (
-                    <TableCell sx={{ whiteSpace: "nowrap" }}>
+                    <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
                       {row.kind === "transfer" &&
                         !!row.bailiffId &&
                         VERDICT_ELIGIBLE_STATUSES.includes(

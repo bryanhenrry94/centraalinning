@@ -27,13 +27,10 @@ import CloseIcon from "@mui/icons-material/Close";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
-import { notifyError, notifySuccess } from "@/shared/ui/notifications";
-import {
-  acceptCaseTransfer,
-  getMyCaseTransfersAsLawyer,
-} from "@/modules/legal-process/actions/case-transfer.actions";
+import { getMyCaseTransfersAsLawyer } from "@/modules/legal-process/actions/case-transfer.actions";
 import { getCaseTransferStatusInfo } from "@/modules/legal-process/utils/case-transfer-status";
 import { RejectTransferDialog } from "@/modules/legal-process/components/reject-transfer-dialog";
+import { AcceptTransferDialog } from "@/modules/legal-process/components/accept-transfer-dialog";
 
 // Mismo estilo que HEAD_SX en collection-table.tsx (tabla de consulta AOP):
 // una <Table> nativa, no DataGrid, con header secondary.main + letra blanca.
@@ -61,16 +58,7 @@ export const LatestTransfersTable = ({
   const router = useRouter();
   const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
   const [rejectId, setRejectId] = useState<string | null>(null);
-
-  const handleAccept = async (id: string) => {
-    try {
-      await acceptCaseTransfer(id);
-      notifySuccess("Dossier geaccepteerd");
-      onChanged();
-    } catch (error) {
-      notifyError(error instanceof Error ? error.message : "Actie mislukt");
-    }
-  };
+  const [acceptId, setAcceptId] = useState<string | null>(null);
 
   const debtorName = (item: CaseTransferListItem) =>
     item.debtClaim.debtor?.person
@@ -164,7 +152,7 @@ export const LatestTransfersTable = ({
                 <IconButton
                   size="small"
                   color="success"
-                  onClick={() => handleAccept(item.id)}
+                  onClick={() => setAcceptId(item.id)}
                 >
                   <CheckIcon fontSize="small" />
                 </IconButton>
@@ -241,7 +229,7 @@ export const LatestTransfersTable = ({
                           <IconButton
                             size="small"
                             color="success"
-                            onClick={() => handleAccept(item.id)}
+                            onClick={() => setAcceptId(item.id)}
                           >
                             <CheckIcon fontSize="small" />
                           </IconButton>
@@ -269,6 +257,12 @@ export const LatestTransfersTable = ({
         open={!!rejectId}
         onClose={() => setRejectId(null)}
         caseTransferId={rejectId ?? ""}
+        onRegistered={onChanged}
+      />
+      <AcceptTransferDialog
+        open={!!acceptId}
+        onClose={() => setAcceptId(null)}
+        caseTransferId={acceptId ?? ""}
         onRegistered={onChanged}
       />
     </>

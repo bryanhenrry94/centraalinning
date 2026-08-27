@@ -6,46 +6,35 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  TextField,
+  DialogContentText,
   IconButton,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
-import { rejectCaseTransfer } from "@/modules/legal-process/actions/case-transfer.actions";
+import { acceptCaseTransfer } from "@/modules/legal-process/actions/case-transfer.actions";
 
-interface RejectTransferDialogProps {
+interface AcceptTransferDialogProps {
   open: boolean;
   onClose: () => void;
   caseTransferId: string;
   onRegistered: () => void;
 }
 
-export const RejectTransferDialog: React.FC<RejectTransferDialogProps> = ({
+export const AcceptTransferDialog: React.FC<AcceptTransferDialogProps> = ({
   open,
   onClose,
   caseTransferId,
   onRegistered,
 }) => {
-  const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleClose = () => {
-    setReason("");
-    onClose();
-  };
-
   const handleSubmit = async () => {
-    if (!reason.trim()) {
-      notifyError("Vul een reden in");
-      return;
-    }
-
     setLoading(true);
     try {
-      await rejectCaseTransfer({ caseTransferId, reason });
-      notifySuccess("Dossier afgewezen");
+      await acceptCaseTransfer(caseTransferId);
+      notifySuccess("Dossier geaccepteerd");
       onRegistered();
-      handleClose();
+      onClose();
     } catch (error) {
       notifyError(error instanceof Error ? error.message : "Actie mislukt");
     } finally {
@@ -54,7 +43,7 @@ export const RejectTransferDialog: React.FC<RejectTransferDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle
         sx={{
           bgcolor: "secondary.main",
@@ -65,28 +54,20 @@ export const RejectTransferDialog: React.FC<RejectTransferDialogProps> = ({
           fontWeight: 600,
         }}
       >
-        Dossier afwijzen
-        <IconButton onClick={handleClose} disabled={loading} sx={{ color: "white" }}>
+        Dossier accepteren
+        <IconButton onClick={onClose} disabled={loading} sx={{ color: "white" }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
       <DialogContent sx={{ mt: 2 }}>
-        <TextField
-          label="Reden van afwijzing"
-          required
-          fullWidth
-          size="small"
-          multiline
-          minRows={2}
-          sx={{ mt: 1 }}
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-        />
+        <DialogContentText>
+          Weet u zeker dat u dit dossier wilt accepteren?
+        </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Terug</Button>
-        <Button variant="contained" color="error" onClick={handleSubmit} disabled={loading}>
-          Afwijzen bevestigen
+        <Button onClick={onClose}>Terug</Button>
+        <Button variant="contained" onClick={handleSubmit} disabled={loading}>
+          Accepteren bevestigen
         </Button>
       </DialogActions>
     </Dialog>
