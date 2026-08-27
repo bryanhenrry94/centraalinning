@@ -21,6 +21,7 @@ import {
   Divider,
   useMediaQuery,
   useTheme,
+  Alert,
 } from "@mui/material";
 
 import { DebtClaimView } from "@/modules/collection/services/collection.validators";
@@ -56,6 +57,11 @@ import {
 } from "@/modules/collective-follow-up/actions/collective-collection.actions";
 import { StartCopDialog } from "@/modules/collective-follow-up/components/start-cop-dialog";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import { AopGuidanceBanner } from "@/modules/collection/components/aop-guidance-banner";
+import { getAgreementsByDebtClaimId } from "@/modules/agreement/actions/agreement.actions";
+import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
+import { isAgreementPending } from "@/modules/agreement/constants/agreement-status";
+import { AgreementRequestDialog } from "@/modules/agreement/components/agreement-request-dialog";
 
 const CollectionViewPage: React.FC = () => {
   const router = useRouter();
@@ -81,6 +87,8 @@ const CollectionViewPage: React.FC = () => {
     allowed: false,
   });
   const [startCopDialogOpen, setStartCopDialogOpen] = useState(false);
+  const [pendingAgreements, setPendingAgreements] = useState<AgreementResponse[]>([]);
+  const [decideAgreementId, setDecideAgreementId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!params.id) {
@@ -103,6 +111,7 @@ const CollectionViewPage: React.FC = () => {
         legalProcess,
         collectiveCollection,
         copEligibility,
+        agreements,
       ] = await Promise.all([
         getDebtClaimViewById(debtClaimId),
         getPaymentsByInvoice(debtClaimId),
@@ -110,6 +119,7 @@ const CollectionViewPage: React.FC = () => {
         getLegalProcessByDebtClaimId(debtClaimId),
         getCollectiveCollectionByDebtClaimId(debtClaimId),
         checkCanStartCop(debtClaimId),
+        getAgreementsByDebtClaimId(debtClaimId),
       ]);
 
       setCollection(claim ?? null);
@@ -118,6 +128,7 @@ const CollectionViewPage: React.FC = () => {
       setLegalProcessId(legalProcess?.id ?? null);
       setCollectiveCollectionId(collectiveCollection?.id ?? null);
       setCanStartCop(copEligibility);
+      setPendingAgreements(agreements.filter((a) => isAgreementPending(a.status)));
     } catch (error) {
       console.error("Error fetching collection detail:", error);
       notifyError("Er is een fout opgetreden bij het laden van het dossier");
@@ -134,6 +145,9 @@ const CollectionViewPage: React.FC = () => {
   const aopInfo = collection?.aopStep
     ? getAopStepInfo(collection.aopStep)
     : null;
+  const currentStepNotification = notifications?.find(
+    (n) => n.step === collection?.aopStep,
+  );
   const { receivableBalance, participantCfsbCost } = computeDebtClaimBalances(
     collection?.obligations ?? [],
   );
@@ -246,6 +260,33 @@ const CollectionViewPage: React.FC = () => {
             </Stack>
           </Stack>
         </Box>
+
+        {pendingAgreements.map((agreement) => (
+          <Alert
+            key={agreement.id}
+            severity="warning"
+            action={
+              <Button
+                color="inherit"
+                size="small"
+                variant="outlined"
+                onClick={() => setDecideAgreementId(agreement.id)}
+              >
+                Bekijken
+              </Button>
+            }
+          >
+            <strong>Actie vereist</strong> — {collection?.debtor?.fullname || "De debiteur"} heeft
+            een betalingsregeling aangevraagd voor dossier {collection?.reference}.
+          </Alert>
+        ))}
+
+        <AopGuidanceBanner
+          aopStep={collection?.aopStep ?? null}
+          stepDeadline={currentStepNotification?.deadline}
+          hasLegalProcess={!!legalProcessId}
+          hasCollectiveCollection={!!collectiveCollectionId}
+        />
 
         {/* AOP information */}
         <Stack spacing={3}>
@@ -732,6 +773,13 @@ const CollectionViewPage: React.FC = () => {
           </Card>
         </Stack>
       </Stack>
+
+      <AgreementRequestDialog
+        open={!!decideAgreementId}
+        agreementId={decideAgreementId}
+        onClose={() => setDecideAgreementId(null)}
+        onResolved={() => params.id && loadData(params.id as string)}
+      />
 
       {params.id && (
         <TransferToLawyerDialog

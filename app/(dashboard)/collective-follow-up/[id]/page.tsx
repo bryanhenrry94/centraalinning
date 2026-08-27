@@ -212,6 +212,9 @@ const CollectiveCollectionDetailPage: React.FC = () => {
   const canRequestAgreement = isDebtor && isOpen && !openNegotiation;
   const canDecideNegotiation = isStaff && !!openNegotiation;
   const canChooseFollowUpOptions = isStaff && isOpen && !openNegotiation;
+  // Gesloten zonder oplossing: geen scherm met meerdere opties meer, alleen
+  // nog de ene beschikbare vervolgstap (feedback sponsor, sectie 9).
+  const isClosedWithoutResult = isStaff && collection.status === "CLOSED";
 
   const person = collection.debtClaim.debtor.person;
   const debtorName = person
@@ -462,7 +465,27 @@ const CollectiveCollectionDetailPage: React.FC = () => {
           </Card>
         )}
 
-        {(isStaff || canRequestAgreement) && (
+        {isClosedWithoutResult && (
+          <Card variant="outlined" sx={{ borderColor: "#FCA5A5", bgcolor: "#FEF2F2" }}>
+            <CardContent>
+              <Typography variant="body1" fontWeight={700}>
+                Collectieve Opvolging beëindigd zonder oplossing.
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
+                Beschikbare vervolgstap
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<SwapHorizIcon />}
+                onClick={() => setDialog("transfer")}
+              >
+                Dossier overdragen
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {(isStaff || canRequestAgreement) && !isClosedWithoutResult && (
           <Card>
             <CardContent>
               {openNegotiation && (

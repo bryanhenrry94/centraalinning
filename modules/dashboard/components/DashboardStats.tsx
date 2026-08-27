@@ -9,6 +9,8 @@ import { Grid } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 
 import StatCard from "./StatCard";
+import ActionRequiredCard from "./ActionRequiredCard";
+import { PendingAction } from "../types/dashboard.types";
 
 export interface DashboardStatsData {
   total: number;
@@ -19,14 +21,15 @@ export interface DashboardStatsData {
 
 interface DashboardStatsProps {
   stats: DashboardStatsData;
+  pendingActions: PendingAction[];
 }
 
-export default function DashboardStats({ stats }: DashboardStatsProps) {
+export default function DashboardStats({ stats, pendingActions }: DashboardStatsProps) {
   const theme = useTheme();
 
   return (
     <Grid container spacing={3}>
-      <Grid size={{ xs: 12, sm: 3, xl: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, xl: 2.4 }}>
         <StatCard
           title="Openstaande dossiers"
           value={stats.total}
@@ -37,7 +40,11 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 3, xl: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, xl: 2.4 }}>
+        <ActionRequiredCard actions={pendingActions} />
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 6, md: 4, xl: 2.4 }}>
         <StatCard
           title="Openstaand bedrag"
           value={stats.active}
@@ -49,7 +56,7 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 3, xl: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, xl: 2.4 }}>
         <StatCard
           title="Afgeronde dossiers"
           value={stats.completed}
@@ -60,7 +67,7 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 3, xl: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, md: 4, xl: 2.4 }}>
         <StatCard
           title="Actieve blokkades"
           value={stats.blocked}

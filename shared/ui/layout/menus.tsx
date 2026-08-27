@@ -139,24 +139,16 @@ export const menuGroups: HeaderMenuGroup[] = [
   },
 
   {
+    // Sin submenú desplegable: un solo botón fijo hacia /legal-processes —
+    // ver canAccessBailiffDossiers en header.tsx.
     id: "deurwaarder",
-    label: "Deurwaarder",
+    label: "Mijn dossiers",
     roles: [UserRole.BAILIFF],
     items: [
       {
         label: "Mijn dossiers",
         href: "/legal-processes",
         icon: <GavelOutlined fontSize="small" />,
-      },
-      {
-        label: "Documenten",
-        href: "/documents",
-        icon: <DescriptionOutlined fontSize="small" />,
-      },
-      {
-        label: "Facturen",
-        href: "/invoices",
-        icon: <ReceiptOutlined fontSize="small" />,
       },
     ],
   },

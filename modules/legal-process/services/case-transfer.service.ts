@@ -307,10 +307,14 @@ export class CaseTransferService {
       data: { status: "ACCEPTED", respondedAt: new Date() },
     });
 
+    // Geen "Gerechtelijke procedure gestart" hier — het GOP bestaat pas
+    // zodra de deurwaarder een vonnis registreert (registerFirstVerdict),
+    // niet bij het enkel accepteren van de overdracht (feedback sponsor,
+    // punt 10: "Dossieroverdracht → GOP" klopt niet).
     await ClaimTimelineService.logEvent(
       caseTransfer.debtClaimId,
       acceptedByLawyer ? "LAWYER_ASSIGNED" : "BAILIFF_ASSIGNED",
-      `De ${acceptedByLawyer ? "advocaat" : "deurwaarder"} heeft het dossier geaccepteerd. Gerechtelijke procedure gestart.`,
+      `De ${acceptedByLawyer ? "advocaat" : "deurwaarder"} heeft het dossier geaccepteerd.`,
       undefined,
       actorUserId,
     );

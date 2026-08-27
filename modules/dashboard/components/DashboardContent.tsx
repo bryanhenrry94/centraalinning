@@ -49,7 +49,7 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
       />
 
       <Box sx={{ mt: 6 }}>
-        <DashboardStats stats={dashboard.stats} />
+        <DashboardStats stats={dashboard.stats} pendingActions={dashboard.pendingActions} />
       </Box>
 
       <Grid container spacing={3} mt={3}>

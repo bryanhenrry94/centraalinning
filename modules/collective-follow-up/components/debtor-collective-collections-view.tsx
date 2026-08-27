@@ -19,7 +19,7 @@ import HandshakeIcon from "@mui/icons-material/Handshake";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import { useRouter } from "next/navigation";
 
-import { formatCurrency } from "@/shared/utils/formatters";
+import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { notifyError } from "@/shared/ui/notifications";
 import { getDebtorByUserId, getDebts } from "@/modules/collection/actions/debtor.actions";
 import { DebtorSummary } from "@/modules/collection/types/DebtorSummary";
@@ -113,6 +113,28 @@ export const DebtorCollectiveCollectionsView = () => {
     return !(gracePeriodPassed && row.employerTenantId);
   };
 
+  // Begeleide tekst per dossier (feedback sponsor, sectie 8): de deudor moet
+  // de vervaldatum en zijn opties direct zien, niet zelf de tabelkolommen
+  // hoeven interpreteren.
+  const getDebtorGuidanceText = (row: CollectiveCollectionRow): string | null => {
+    if (!row.debtorGracePeriodDeadline) return null;
+    const gracePeriodPassed = new Date(row.debtorGracePeriodDeadline) <= new Date();
+
+    if (!gracePeriodPassed) {
+      return `U heeft tot ${formatDate(
+        row.debtorGracePeriodDeadline.toString(),
+      )} om het volledige bedrag te betalen of een betalingsregeling aan te vragen.`;
+    }
+
+    if (row.employerTenantId) {
+      return `De bedenktermijn is verstreken. ${
+        row.employerTenant?.name ?? "Uw werkgever"
+      } behartigt deze regeling nu namens u.`;
+    }
+
+    return null;
+  };
+
   return (
     <Container maxWidth="xl">
       <Box sx={{ mt: { xs: 1.5, sm: 4 }, mb: 2 }}>
@@ -150,6 +172,7 @@ export const DebtorCollectiveCollectionsView = () => {
             )}
             {collections.map((row) => {
               const statusInfo = getCollectiveCollectionStatusInfo(row.status);
+              const guidanceText = getDebtorGuidanceText(row);
               return (
                 <TableRow
                   key={row.id}
@@ -190,6 +213,15 @@ export const DebtorCollectiveCollectionsView = () => {
                         Aanvragen
                       </Button>
                     </Box>
+                    {guidanceText && (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: "block", mt: 0.75, textAlign: "left" }}
+                      >
+                        {guidanceText}
+                      </Typography>
+                    )}
                   </TableCell>
                 </TableRow>
               );

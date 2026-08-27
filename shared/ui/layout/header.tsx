@@ -101,14 +101,17 @@ export default function Header() {
     !userRoles.includes(UserRole.BAILIFF) &&
     !userRoles.includes(UserRole.LAWYER);
 
+  const isBailiffRole = userRoles.includes(UserRole.BAILIFF);
+
   const availableGroups = menuGroups.filter((group) =>
     group.roles.some((role) => userRoles.includes(role)),
   );
 
-  // "dossiers" (Diensten) ya tiene su propio botón fijo hacia /workstation;
-  // acá sólo mostramos los demás grupos (p.ej. el del deudor) como dropdown.
+  // "dossiers" (Diensten) ya tiene su propio botón fijo hacia /workstation, y
+  // "deurwaarder" (Mijn dossiers) el suyo hacia /legal-processes — acá sólo
+  // mostramos los demás grupos (p.ej. el del deudor) como dropdown.
   const dropdownGroups = availableGroups.filter(
-    (group) => group.id !== "dossiers",
+    (group) => group.id !== "dossiers" && group.id !== "deurwaarder",
   );
 
   const handleSignOut = () => {
@@ -242,6 +245,19 @@ export default function Header() {
                   }}
                 >
                   Diensten
+                </Button>
+              )}
+
+              {isBailiffRole && (
+                <Button
+                  color="inherit"
+                  onClick={() => router.push("/legal-processes")}
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 500,
+                  }}
+                >
+                  Mijn dossiers
                 </Button>
               )}
 
@@ -457,6 +473,19 @@ export default function Header() {
                 <AppsIcon sx={{ mr: 2 }} />
 
                 <ListItemText primary="Diensten" />
+              </ListItemButton>
+            )}
+
+            {isBailiffRole && (
+              <ListItemButton
+                onClick={() => {
+                  router.push("/legal-processes");
+                  setMobileOpen(false);
+                }}
+              >
+                <AppsIcon sx={{ mr: 2 }} />
+
+                <ListItemText primary="Mijn dossiers" />
               </ListItemButton>
             )}
 

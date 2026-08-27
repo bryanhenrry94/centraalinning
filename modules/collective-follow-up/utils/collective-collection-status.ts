@@ -8,7 +8,10 @@ const COLLECTIVE_COLLECTION_STATUS_CONFIG: Record<string, { label: string; color
   PAYMENT_AGREEMENT_REQUESTED: { label: "Betalingsregeling aangevraagd", color: "warning" },
   PAYMENT_AGREEMENT_ACCEPTED: { label: "Betalingsregeling geaccepteerd", color: "success" },
   PAID_IN_FULL: { label: "Volledig betaald", color: "success" },
-  TRANSFERRED: { label: "Overgedragen aan GOP", color: "info" },
+  // Geen "GOP" hier — een GOP bestaat pas zodra een vonnis geregistreerd
+  // wordt (zie CaseTransferService); vlak na de overdracht is er alleen een
+  // CaseTransfer, nog geen LegalProcess (feedback sponsor, punt 10).
+  TRANSFERRED: { label: "Overgedragen aan advocaat/deurwaarder", color: "info" },
   CLOSED: { label: "Afgesloten", color: "error" },
 };
 

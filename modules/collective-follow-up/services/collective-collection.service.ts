@@ -18,6 +18,7 @@ import {
   CollectiveCollectionStatus,
   COP_START_FEE_RATE,
   OPEN_COLLECTIVE_COLLECTION_STATUSES,
+  TRANSFERABLE_COLLECTIVE_COLLECTION_STATUSES,
 } from "@/modules/collective-follow-up/constants/collective-collection-status";
 
 const collectiveCollectionInclude = {
@@ -1047,7 +1048,10 @@ export class CollectiveCollectionService {
       include: { debtClaim: { include: { debtor: true, tenant: true } } },
     });
     if (!collection) throw new Error("Dossier niet gevonden.");
-    if (!OPEN_COLLECTIVE_COLLECTION_STATUSES.includes(collection.status)) {
+    // CLOSED (zonder oplossing gesloten) mag ook overgedragen worden — dat is
+    // juist de gebruikelijke weg (feedback sponsor, sectie 9: eerst sluiten
+    // zonder oplossing, dan overdragen als enige beschikbare vervolgstap).
+    if (!TRANSFERABLE_COLLECTIVE_COLLECTION_STATUSES.includes(collection.status)) {
       throw new Error("Dit dossier kan in deze status niet worden overgedragen.");
     }
 
