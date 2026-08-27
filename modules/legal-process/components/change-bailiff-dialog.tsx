@@ -6,9 +6,11 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  IconButton,
   TextField,
   MenuItem,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { getActiveBailiffsDirectory } from "@/modules/bailiff/actions/bailiff.actions";
 import { Bailiff } from "@/modules/bailiff/services/bailiff.validators";
@@ -66,7 +68,21 @@ export const ChangeBailiffDialog: React.FC<ChangeBailiffDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Deurwaarder wijzigen</DialogTitle>
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
+        Deurwaarder wijzigen
+        <IconButton onClick={handleClose} disabled={loading} sx={{ color: "white" }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <TextField
           select

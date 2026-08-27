@@ -10,9 +10,11 @@ import {
   Chip,
   Divider,
   CircularProgress,
+  IconButton,
 } from "@mui/material";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import PersonIcon from "@mui/icons-material/Person";
+import CloseIcon from "@mui/icons-material/Close";
 import { formatDate, formatTime } from "@/shared/utils/formatters";
 import {
   getCollectiveCollectionNotifications,
@@ -81,7 +83,21 @@ export const CollectiveCollaborationDialog: React.FC<CollectiveCollaborationDial
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Collectieve medewerking</DialogTitle>
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
+        Collectieve medewerking
+        <IconButton onClick={onClose} sx={{ color: "white" }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <Stack spacing={1.5} sx={{ mb: 3 }}>
           <Stack direction="row" alignItems="center" spacing={1.5}>

@@ -10,11 +10,13 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import CloseIcon from "@mui/icons-material/Close";
 
 import { DebtorSummary } from "@/modules/collection/types/DebtorSummary";
 import { getAgreementByDebtClaimId } from "@/modules/agreement/actions/agreement.actions";
@@ -153,7 +155,21 @@ export const TransferPaymentDialog = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Betaling per overschrijving</DialogTitle>
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
+        Betaling per overschrijving
+        <IconButton onClick={onClose} disabled={submitting} sx={{ color: "white" }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         {loadingContext ? (
           <Box display="flex" justifyContent="center" py={4}>

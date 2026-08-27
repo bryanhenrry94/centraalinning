@@ -6,10 +6,12 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  IconButton,
   Stack,
   TextField,
   Alert,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { registerGopBailiffCost } from "@/modules/legal-process/actions/legal-process.actions";
 
@@ -69,7 +71,21 @@ export const BailiffCostDialog: React.FC<BailiffCostDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Definitieve deurwaarderskosten registreren</DialogTitle>
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
+        Definitieve deurwaarderskosten registreren
+        <IconButton onClick={handleClose} disabled={loading} sx={{ color: "white" }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Alert severity="info">

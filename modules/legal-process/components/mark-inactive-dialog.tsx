@@ -6,12 +6,14 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  IconButton,
   Stack,
   TextField,
   MenuItem,
   Alert,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import CloseIcon from "@mui/icons-material/Close";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import {
   markGopInactive,
@@ -101,7 +103,21 @@ export const MarkInactiveDialog: React.FC<MarkInactiveDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Geen executiemogelijkheid registreren</DialogTitle>
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
+        Geen executiemogelijkheid registreren
+        <IconButton onClick={handleClose} disabled={loading} sx={{ color: "white" }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Alert severity="info">

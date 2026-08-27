@@ -6,12 +6,14 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  IconButton,
   Stack,
   TextField,
   Alert,
   FormControlLabel,
   Switch,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { setCaseTransferPowerOfAttorney } from "@/modules/legal-process/actions/case-transfer.actions";
 
@@ -58,7 +60,21 @@ export const PowerOfAttorneyDialog: React.FC<PowerOfAttorneyDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Volmacht (power of attorney)</DialogTitle>
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
+        Volmacht (power of attorney)
+        <IconButton onClick={handleClose} disabled={loading} sx={{ color: "white" }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Alert severity="info">

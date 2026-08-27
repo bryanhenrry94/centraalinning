@@ -10,9 +10,11 @@ import {
   Typography,
   Stack,
   CircularProgress,
+  IconButton,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DownloadIcon from "@mui/icons-material/Download";
+import CloseIcon from "@mui/icons-material/Close";
 import { useSession } from "next-auth/react";
 import { notifyInfo } from "@/shared/ui/notifications";
 
@@ -86,7 +88,21 @@ export const EmployeeImportDialog: React.FC<EmployeeImportDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Medewerkers importeren</DialogTitle>
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
+        Medewerkers importeren
+        <IconButton onClick={onClose} disabled={loading} sx={{ color: "white" }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <Typography variant="body2" mb={2}>
           Download de Excel-sjabloon, vul de gegevens in en upload het bestand

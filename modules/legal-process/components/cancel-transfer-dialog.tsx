@@ -6,9 +6,11 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  IconButton,
   TextField,
   Alert,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { cancelCaseTransfer } from "@/modules/legal-process/actions/case-transfer.actions";
 
@@ -54,7 +56,21 @@ export const CancelTransferDialog: React.FC<CancelTransferDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Dossieroverdracht annuleren</DialogTitle>
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
+        Dossieroverdracht annuleren
+        <IconButton onClick={handleClose} disabled={loading} sx={{ color: "white" }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <Alert severity="warning" sx={{ mb: 2 }}>
           Deze actie stopt de opvolging van het dossier definitief.

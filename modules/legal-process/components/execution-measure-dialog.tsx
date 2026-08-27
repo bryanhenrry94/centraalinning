@@ -6,10 +6,12 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  IconButton,
   Stack,
   TextField,
   MenuItem,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { registerGopExecutionMeasure } from "@/modules/legal-process/actions/legal-process.actions";
 
@@ -89,7 +91,21 @@ export const ExecutionMeasureDialog: React.FC<ExecutionMeasureDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Executiemaatregel registreren</DialogTitle>
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
+        Executiemaatregel registreren
+        <IconButton onClick={handleClose} disabled={loading} sx={{ color: "white" }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField

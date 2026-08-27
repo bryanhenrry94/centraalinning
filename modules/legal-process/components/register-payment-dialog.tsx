@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  IconButton,
   Stack,
   TextField,
   MenuItem,
@@ -13,6 +14,7 @@ import {
   Alert,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import CloseIcon from "@mui/icons-material/Close";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { registerGopPayment } from "@/modules/legal-process/actions/legal-process.actions";
 import { formatCurrency } from "@/shared/utils/formatters";
@@ -74,7 +76,21 @@ export const RegisterPaymentDialog: React.FC<RegisterPaymentDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Betaling registreren</DialogTitle>
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
+        Betaling registreren
+        <IconButton onClick={handleClose} disabled={loading} sx={{ color: "white" }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Alert severity="info">

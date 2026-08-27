@@ -19,6 +19,7 @@ import {
   IconButton,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import CloseIcon from "@mui/icons-material/Close";
 import { DebtorResponse } from "@/modules/collection/services/debtor.validators";
 import TouchAppIcon from "@mui/icons-material/TouchApp";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -81,9 +82,22 @@ export function DebtorSearchDialog({
       maxWidth="lg"
       fullWidth
     >
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
+        Schuldenaar zoeken
+        <IconButton onClick={() => onOpenChange(false)} sx={{ color: "white" }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <Box sx={{ p: 2 }}>
-        <DialogTitle sx={{ fontWeight: 600 }}>Schuldenaar zoeken</DialogTitle>
-
         <Stack spacing={3}>
           {/* Zoekvak */}
           <Stack direction="row" spacing={2}>

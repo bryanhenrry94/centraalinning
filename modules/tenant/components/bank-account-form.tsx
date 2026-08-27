@@ -5,6 +5,7 @@ import {
   Box,
   Button,
   Dialog,
+  DialogTitle,
   IconButton,
   MenuItem,
   Stack,
@@ -20,6 +21,7 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import CloseIcon from "@mui/icons-material/Close";
 import { useSession } from "next-auth/react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -230,13 +232,22 @@ export const BankAccountForm = () => {
       )}
 
       <Dialog open={open} onClose={handleClose}>
+        <DialogTitle
+          sx={{
+            bgcolor: "secondary.main",
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            fontWeight: 600,
+          }}
+        >
+          {selectedBankAccount ? "Bankrekening Bewerken" : "Nieuwe Bankrekening"}
+          <IconButton onClick={handleClose} disabled={isSubmitting} sx={{ color: "white" }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
         <Box sx={{ p: { xs: 2, sm: 3 }, minWidth: { xs: "auto", sm: 400 } }}>
-          <Typography variant="h6" gutterBottom>
-            {selectedBankAccount
-              ? "Bankrekening Bewerken"
-              : "Nieuwe Bankrekening"}
-          </Typography>
-
           <Box
             component="form"
             noValidate

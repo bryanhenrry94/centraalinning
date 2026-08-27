@@ -9,12 +9,14 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import CloseIcon from "@mui/icons-material/Close";
 
 import {
   getGopPaymentConfirmations,
@@ -218,7 +220,21 @@ export const GopPaymentConfirmations: React.FC<GopPaymentConfirmationsProps> = (
       })}
 
       <Dialog open={!!disputeTarget} onClose={() => setDisputeTarget(null)} maxWidth="sm" fullWidth>
-        <DialogTitle>Betaling betwisten</DialogTitle>
+        <DialogTitle
+          sx={{
+            bgcolor: "secondary.main",
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            fontWeight: 600,
+          }}
+        >
+          Betaling betwisten
+          <IconButton onClick={() => setDisputeTarget(null)} disabled={processing} sx={{ color: "white" }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -248,7 +264,21 @@ export const GopPaymentConfirmations: React.FC<GopPaymentConfirmationsProps> = (
       </Dialog>
 
       <Dialog open={!!correctTarget} onClose={() => setCorrectTarget(null)} maxWidth="sm" fullWidth>
-        <DialogTitle>Betaling corrigeren</DialogTitle>
+        <DialogTitle
+          sx={{
+            bgcolor: "secondary.main",
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            fontWeight: 600,
+          }}
+        >
+          Betaling corrigeren
+          <IconButton onClick={() => setCorrectTarget(null)} disabled={processing} sx={{ color: "white" }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField

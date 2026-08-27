@@ -6,9 +6,11 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  IconButton,
   Stack,
   TextField,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { requestCopPaymentAgreement } from "@/modules/collective-follow-up/actions/collective-collection.actions";
 import { formatCurrency } from "@/shared/utils/formatters";
@@ -93,7 +95,21 @@ export const DebtorRequestAgreementDialog: React.FC<DebtorRequestAgreementDialog
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Betalingsregeling aanvragen</DialogTitle>
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
+        Betalingsregeling aanvragen
+        <IconButton onClick={handleClose} disabled={submitting} sx={{ color: "white" }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField

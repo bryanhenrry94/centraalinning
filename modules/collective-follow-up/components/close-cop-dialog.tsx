@@ -6,8 +6,10 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  IconButton,
   TextField,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { closeCollectiveCollection } from "@/modules/collective-follow-up/actions/collective-collection.actions";
 
@@ -53,7 +55,21 @@ export const CloseCopDialog: React.FC<CloseCopDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Collectieve Opvolging sluiten</DialogTitle>
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
+        Collectieve Opvolging sluiten
+        <IconButton onClick={handleClose} disabled={submitting} sx={{ color: "white" }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <TextField
           label="Reden van sluiting"

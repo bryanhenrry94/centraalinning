@@ -9,9 +9,11 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
   Stack,
   TextField,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 
 import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
 import { isAgreementPending } from "@/modules/agreement/constants/agreement-status";
@@ -108,7 +110,21 @@ export const AgreementDecisionDialog: React.FC<AgreementDecisionDialogProps> = (
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Betalingsregeling — {pending ? "beoordelen" : "details"}</DialogTitle>
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
+        Betalingsregeling — {pending ? "beoordelen" : "details"}
+        <IconButton onClick={onClose} disabled={processing} sx={{ color: "white" }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           {!canDecide && pending && (

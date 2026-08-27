@@ -6,8 +6,10 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  IconButton,
   TextField,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { answerSupportMessage } from "@/modules/support/actions/support.actions";
 
@@ -53,7 +55,21 @@ export const AnswerSupportDialog: React.FC<AnswerSupportDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Bericht beantwoorden</DialogTitle>
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
+        Bericht beantwoorden
+        <IconButton onClick={handleClose} disabled={loading} sx={{ color: "white" }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <TextField
           label="Antwoord"

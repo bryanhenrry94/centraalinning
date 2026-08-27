@@ -71,12 +71,18 @@ export const StartCopDialog: React.FC<StartCopDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ fontWeight: 700, pr: 6 }}>
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
         Collectieve Opvolging starten
-        <IconButton
-          onClick={onClose}
-          sx={{ position: "absolute", right: 12, top: 12 }}
-        >
+        <IconButton onClick={onClose} sx={{ color: "white" }}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>

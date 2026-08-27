@@ -6,12 +6,14 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  IconButton,
   Stack,
   TextField,
   Typography,
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { decideCopNegotiation } from "@/modules/collective-follow-up/actions/collective-collection.actions";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
@@ -93,7 +95,21 @@ export const NegotiationDecisionDialog: React.FC<NegotiationDecisionDialogProps>
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Betalingsregeling beoordelen</DialogTitle>
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
+        Betalingsregeling beoordelen
+        <IconButton onClick={handleClose} disabled={submitting} sx={{ color: "white" }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Typography variant="body2" color="text.secondary">

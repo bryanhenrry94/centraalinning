@@ -6,11 +6,13 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  IconButton,
   Stack,
   TextField,
   Alert,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import CloseIcon from "@mui/icons-material/Close";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { submitLawyerFeeInvoice } from "@/modules/legal-process/actions/case-transfer.actions";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
@@ -97,7 +99,21 @@ export const FinalizeLawyerWorkDialog: React.FC<FinalizeLawyerWorkDialogProps> =
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Werk afgerond: honorarium en CFSB-commissie</DialogTitle>
+      <DialogTitle
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontWeight: 600,
+        }}
+      >
+        Werk afgerond: honorarium en CFSB-commissie
+        <IconButton onClick={handleClose} sx={{ color: "white" }}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Alert severity="info">

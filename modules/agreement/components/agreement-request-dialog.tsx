@@ -256,7 +256,25 @@ export const AgreementRequestDialog: React.FC<AgreementRequestDialogProps> = ({
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Motivo van afwijzing</DialogTitle>
+        <DialogTitle
+          sx={{
+            bgcolor: "secondary.main",
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            fontWeight: 600,
+          }}
+        >
+          Motivo van afwijzing
+          <IconButton
+            onClick={() => setRejectDialogOpen(false)}
+            disabled={processing}
+            sx={{ color: "white" }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Leg uit waarom dit verzoek wordt afgewezen. De deelnemer ziet dit en

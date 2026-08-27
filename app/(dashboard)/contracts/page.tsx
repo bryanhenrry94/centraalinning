@@ -620,13 +620,32 @@ export default function ContractsPage() {
         maxWidth="xs"
         fullWidth
       >
+        <Box
+          sx={{
+            bgcolor: "secondary.main",
+            color: "white",
+            px: 2,
+            py: 1.5,
+            borderTopLeftRadius: 8,
+            borderTopRightRadius: 8,
+            borderBottom: "1px solid #e0e0e0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Box flexGrow={1} textAlign="center">
+            <Typography variant="h5" fontWeight={700} color="white">
+              Administratieve opvolging starten
+            </Typography>
+          </Box>
+          <IconButton onClick={closeAopPaymentDialog} sx={{ color: "white" }}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
         <DialogContent sx={{ p: { xs: 2, sm: 4 } }}>
           <Stack spacing={3} alignItems="center">
             <Stack spacing={1} textAlign="center">
-              <Typography variant="h5" fontWeight={700}>
-                Administratieve opvolging starten
-              </Typography>
-
               <Typography variant="body2" color="text.secondary">
                 Zodra de betaling is bevestigd, wordt de administratieve
                 opvolging (AOP) voor deze overeenkomst automatisch gestart.

@@ -160,7 +160,21 @@ export const CollectionHeader = ({ onRefresh }: CollectionHeaderProps) => {
         open={bankAccountDialogOpen}
         onClose={handleCloseBankAccountDialog}
       >
-        <DialogTitle>Geen bankrekening geregistreerd</DialogTitle>
+        <DialogTitle
+          sx={{
+            bgcolor: "secondary.main",
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            fontWeight: 600,
+          }}
+        >
+          Geen bankrekening geregistreerd
+          <IconButton onClick={handleCloseBankAccountDialog} sx={{ color: "white" }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
         <DialogContent>
           <DialogContentText>
             U moet eerst een bankrekening registreren voordat u een nieuwe

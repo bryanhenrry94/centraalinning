@@ -1307,7 +1307,21 @@ const OvereenkomstenRegistrerenPage = () => {
 
         {/* Confirmation Dialog */}
         <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-          <DialogTitle>Financiële afspraak registreren</DialogTitle>
+          <DialogTitle
+            sx={{
+              bgcolor: "secondary.main",
+              color: "white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              fontWeight: 600,
+            }}
+          >
+            Financiële afspraak registreren
+            <IconButton onClick={() => setOpenDialog(false)} disabled={loading} sx={{ color: "white" }}>
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
           <DialogContent>
             <Typography variant="body2" sx={{ mt: 2 }}>
               Weet u zeker dat u deze financiële afspraak wilt registreren? Deze
@@ -1335,14 +1349,33 @@ const OvereenkomstenRegistrerenPage = () => {
         maxWidth="xs"
         fullWidth
       >
+        <Box
+          sx={{
+            bgcolor: "secondary.main",
+            color: "white",
+            px: 2,
+            py: 1.5,
+            borderTopLeftRadius: 8,
+            borderTopRightRadius: 8,
+            borderBottom: "1px solid #e0e0e0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Box flexGrow={1} textAlign="center">
+            <Typography variant="h5" fontWeight={700} color="white">
+              Betaling bevestigen
+            </Typography>
+          </Box>
+          <IconButton onClick={() => setShowCostDialog(false)} sx={{ color: "white" }}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
         <DialogContent sx={{ p: { xs: 2, sm: 4 } }}>
           <Stack spacing={3} alignItems="center">
-            {/* Titel */}
+            {/* Bericht */}
             <Stack spacing={1} textAlign="center">
-              <Typography variant="h5" fontWeight={700}>
-                Betaling bevestigen
-              </Typography>
-
               <Typography variant="body2" color="text.secondary">
                 Deze service vereist betaling voordat u de overeenkomst
                 registreert.
