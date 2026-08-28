@@ -13,12 +13,6 @@ import {
   Grid,
   Typography,
   Alert,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   Dialog,
   DialogTitle,
@@ -43,6 +37,7 @@ import {
 
 import GroupIcon from "@mui/icons-material/Group";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import {
   ContractPartyInput,
@@ -1142,41 +1137,28 @@ const OvereenkomstenRegistrerenPage = () => {
                   </Typography>
                 </Box>
 
-                <TableContainer component={Card}>
-                  <Table>
-                    <TableHead sx={{ bgcolor: "#f5f5f5" }}>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: 600 }}>
-                          Bestandsnaam
-                        </TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Grootte</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }} align="center">
-                          Acties
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {documents.map((doc) => (
-                        <TableRow key={doc.id}>
-                          <TableCell>{doc.name}</TableCell>
-                          <TableCell>{doc.size}</TableCell>
-                          <TableCell align="center">
-                            <IconButton size="small" color="primary">
-                              <DownloadIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleDeleteDocument(doc.id)}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                {(() => {
+                  const columns: ListColumn<(typeof documents)[number]>[] = [
+                    { key: "name", label: "Bestandsnaam", render: (doc) => doc.name },
+                    { key: "size", label: "Grootte", render: (doc) => doc.size, hideOnMobile: true },
+                    {
+                      key: "actions",
+                      label: "Acties",
+                      render: (doc) => (
+                        <>
+                          <IconButton size="small" color="primary">
+                            <DownloadIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton size="small" color="error" onClick={() => handleDeleteDocument(doc.id)}>
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </>
+                      ),
+                    },
+                  ];
+
+                  return <ResponsiveListTable columns={columns} rows={documents} getRowKey={(doc) => doc.id} />;
+                })()}
               </Box>
             )}
 

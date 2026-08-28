@@ -4,12 +4,6 @@ import {
   IconButton,
   Paper,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Typography,
 } from "@mui/material";
@@ -22,6 +16,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { notifyError } from "@/shared/ui/notifications";
 import { uploadVerdictSupportingDocument } from "@/modules/legal-process/actions/legal-process.actions";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 interface ServiceCostsSectionProps {
   // Solo se puede subir un documento de respaldo por actuación cuando la
@@ -76,152 +71,170 @@ const ServiceCostsSection: React.FC<ServiceCostsSectionProps> = ({ uploadContext
     }
   };
 
-  const CreateCustomRow: React.FC<{
-    item: VerdictBailiffServices;
-    index: number;
-  }> = ({ item, index }) => {
-    return (
-      <TableRow key={item.id}>
-        {/* service_invoice_number */}
-        <TableCell sx={{ textAlign: "center" }}>
-          <Controller
-            name={`bailiff_services.${index}.service_invoice_number`}
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                size="small"
-                fullWidth
-                type="text"
-                placeholder="Voorbeeld: INV-12345"
-                error={
-                  !!errors.bailiff_services?.[index]?.service_invoice_number
-                }
-                helperText={
-                  errors.bailiff_services?.[index]?.service_invoice_number
-                    ?.message
-                }
-              />
-            )}
-          />
-        </TableCell>
-        {/* service_type */}
-        <TableCell sx={{ textAlign: "center" }}>
-          <Controller
-            name={`bailiff_services.${index}.service_type`}
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                size="small"
-                fullWidth
-                type="text"
-                placeholder="Voorbeeld: Betekening Vonnis"
-                error={!!errors.bailiff_services?.[index]?.service_type}
-                helperText={
-                  errors.bailiff_services?.[index]?.service_type?.message
-                }
-              />
-            )}
-          />
-        </TableCell>
-        {/* description */}
-        <TableCell sx={{ textAlign: "center" }}>
-          <Controller
-            name={`bailiff_services.${index}.description`}
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                value={field.value ?? ""}
-                size="small"
-                fullWidth
-                type="text"
-                placeholder="Omschrijving"
-              />
-            )}
-          />
-        </TableCell>
-        {/* service_date */}
-        <TableCell sx={{ textAlign: "center" }}>
-          <Controller
-            name={`bailiff_services.${index}.service_date`}
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                type="date"
-                size="small"
-                fullWidth
-                slotProps={{ inputLabel: { shrink: true } }}
-                value={
-                  field.value ? new Date(field.value).toISOString().slice(0, 10) : ""
-                }
-                onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
-              />
-            )}
-          />
-        </TableCell>
-        {/* service_cost */}
-        <TableCell sx={{ textAlign: "center" }}>
-          <Controller
-            name={`bailiff_services.${index}.service_cost`}
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                type="number"
-                fullWidth
-                size="small"
-                placeholder="Ej: $45.00"
-                error={!!errors.bailiff_services?.[index]?.service_cost}
-                helperText={
-                  errors.bailiff_services?.[index]?.service_cost?.message
-                }
-              />
-            )}
-          />
-        </TableCell>
-        {/* document */}
-        <TableCell sx={{ textAlign: "center" }}>
-          <Controller
-            name={`bailiff_services.${index}.document_original_name`}
-            control={control}
-            render={({ field }) => (
-              <Button
-                component="label"
-                size="small"
-                variant="text"
-                startIcon={<UploadFileIcon />}
-                disabled={!uploadContext}
-                sx={{ textTransform: "none" }}
-              >
-                {field.value || "Document"}
-                <input
-                  type="file"
-                  hidden
-                  onChange={(e) => handleUploadDocument(index, e)}
-                />
-              </Button>
-            )}
-          />
-        </TableCell>
-        {/* action */}
-        <TableCell sx={{ textAlign: "center" }}>
-          <Stack direction="row" spacing={1} justifyContent="center">
-            <IconButton
-              aria-label="delete"
-              color="error"
+  const columns: ListColumn<{ id: string; index: number }>[] = [
+    {
+      key: "service_invoice_number",
+      label: "Factuur nr.",
+      render: ({ index }) => (
+        <Controller
+          name={`bailiff_services.${index}.service_invoice_number`}
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
               size="small"
-              onClick={() => handleDelete(index)}
+              fullWidth
+              type="text"
+              placeholder="Voorbeeld: INV-12345"
+              error={
+                !!errors.bailiff_services?.[index]?.service_invoice_number
+              }
+              helperText={
+                errors.bailiff_services?.[index]?.service_invoice_number
+                  ?.message
+              }
+            />
+          )}
+        />
+      ),
+    },
+    {
+      key: "service_type",
+      label: "Type actuatie",
+      render: ({ index }) => (
+        <Controller
+          name={`bailiff_services.${index}.service_type`}
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              size="small"
+              fullWidth
+              type="text"
+              placeholder="Voorbeeld: Betekening Vonnis"
+              error={!!errors.bailiff_services?.[index]?.service_type}
+              helperText={
+                errors.bailiff_services?.[index]?.service_type?.message
+              }
+            />
+          )}
+        />
+      ),
+    },
+    {
+      key: "description",
+      label: "Omschrijving",
+      render: ({ index }) => (
+        <Controller
+          name={`bailiff_services.${index}.description`}
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              value={field.value ?? ""}
+              size="small"
+              fullWidth
+              type="text"
+              placeholder="Omschrijving"
+            />
+          )}
+        />
+      ),
+    },
+    {
+      key: "service_date",
+      label: "Datum",
+      align: "center",
+      render: ({ index }) => (
+        <Controller
+          name={`bailiff_services.${index}.service_date`}
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              type="date"
+              size="small"
+              fullWidth
+              slotProps={{ inputLabel: { shrink: true } }}
+              value={
+                field.value ? new Date(field.value).toISOString().slice(0, 10) : ""
+              }
+              onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+            />
+          )}
+        />
+      ),
+    },
+    {
+      key: "service_cost",
+      label: "Kosten",
+      align: "center",
+      render: ({ index }) => (
+        <Controller
+          name={`bailiff_services.${index}.service_cost`}
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              type="number"
+              fullWidth
+              size="small"
+              placeholder="Ej: $45.00"
+              error={!!errors.bailiff_services?.[index]?.service_cost}
+              helperText={
+                errors.bailiff_services?.[index]?.service_cost?.message
+              }
+            />
+          )}
+        />
+      ),
+    },
+    {
+      key: "document",
+      label: "Document",
+      align: "center",
+      render: ({ index }) => (
+        <Controller
+          name={`bailiff_services.${index}.document_original_name`}
+          control={control}
+          render={({ field }) => (
+            <Button
+              component="label"
+              size="small"
+              variant="text"
+              startIcon={<UploadFileIcon />}
+              disabled={!uploadContext}
+              sx={{ textTransform: "none" }}
             >
-              <DeleteIcon />
-            </IconButton>
-          </Stack>
-        </TableCell>
-      </TableRow>
-    );
-  };
+              {field.value || "Document"}
+              <input
+                type="file"
+                hidden
+                onChange={(e) => handleUploadDocument(index, e)}
+              />
+            </Button>
+          )}
+        />
+      ),
+    },
+    {
+      key: "actions",
+      label: "Acties",
+      align: "center",
+      render: ({ index }) => (
+        <Stack direction="row" spacing={1} justifyContent="center">
+          <IconButton
+            aria-label="delete"
+            color="error"
+            size="small"
+            onClick={() => handleDelete(index)}
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Stack>
+      ),
+    },
+  ];
 
   return (
     <Paper
@@ -264,133 +277,39 @@ const ServiceCostsSection: React.FC<ServiceCostsSectionProps> = ({ uploadContext
         </Box>
       </Box>
       <Box sx={{ p: 2 }}>
-        <TableContainer component={Paper}>
-          <Table
-            stickyHeader
-            sx={{
-              width: { xs: "100%", md: "100%" },
-              "& .MuiTableCell-root": {
-                border: "1px solid #e0e0e0",
-              },
-            }}
-            aria-label="tabel met deurwaarderskosten"
+        <ResponsiveListTable
+          columns={columns}
+          rows={fields.map((field, index) => ({ id: field.id, index }))}
+          getRowKey={(row) => row.id}
+          emptyMessage="Geen kosten toegevoegd."
+        />
+        <Box sx={{ mt: 2 }}>
+          <Button
+            variant="outlined"
+            color="primary"
             size="small"
+            onClick={() =>
+              append({
+                id: Date.now().toString(),
+                service_invoice_number: "",
+                verdict_id: "",
+                service_type: "",
+                service_cost: 0,
+                service_date: null,
+                description: "",
+                document_storage_key: null,
+                document_original_name: null,
+                document_mime_type: null,
+                document_size: null,
+                created_at: new Date(),
+                updated_at: new Date(),
+              })
+            }
+            sx={{ textTransform: "none" }}
           >
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  sx={{
-                    width: { xs: 200, md: 500 },
-                    backgroundColor: "#f5f5f5",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="left"
-                >
-                  Factuur nr.
-                </TableCell>
-                <TableCell
-                  sx={{
-                    width: { xs: 200, md: 300 },
-                    backgroundColor: "#f5f5f5",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="left"
-                >
-                  Type actuatie
-                </TableCell>
-                <TableCell
-                  sx={{
-                    width: { xs: 200, md: 300 },
-                    backgroundColor: "#f5f5f5",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="left"
-                >
-                  Omschrijving
-                </TableCell>
-                <TableCell
-                  sx={{
-                    width: 140,
-                    backgroundColor: "#f5f5f5",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Datum
-                </TableCell>
-                <TableCell
-                  sx={{
-                    width: { xs: 200, md: 200 },
-                    backgroundColor: "#f5f5f5",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Kosten
-                </TableCell>
-                <TableCell
-                  sx={{
-                    width: 160,
-                    backgroundColor: "#f5f5f5",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Document
-                </TableCell>
-                <TableCell
-                  sx={{
-                    width: 75,
-                    backgroundColor: "#f5f5f5",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Acties
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {fields.map((item, index) => (
-                <CreateCustomRow
-                  key={item.id}
-                  item={item as VerdictBailiffServices}
-                  index={index}
-                />
-              ))}
-
-              <TableRow>
-                <TableCell colSpan={11} align="left">
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    size="small"
-                    onClick={() =>
-                      append({
-                        id: Date.now().toString(),
-                        service_invoice_number: "",
-                        verdict_id: "",
-                        service_type: "",
-                        service_cost: 0,
-                        service_date: null,
-                        description: "",
-                        document_storage_key: null,
-                        document_original_name: null,
-                        document_mime_type: null,
-                        document_size: null,
-                        created_at: new Date(),
-                        updated_at: new Date(),
-                      })
-                    }
-                    sx={{ textTransform: "none" }}
-                  >
-                    Nieuwe dienst toevoegen
-                  </Button>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
+            Nieuwe dienst toevoegen
+          </Button>
+        </Box>
       </Box>
     </Paper>
   );

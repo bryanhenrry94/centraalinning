@@ -8,12 +8,6 @@ import {
   DialogTitle,
   IconButton,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Typography,
   CircularProgress,
@@ -21,6 +15,7 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import { useSession } from "next-auth/react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -183,80 +178,39 @@ export const EmployeeForm = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <TableContainer>
-          <Table
-            stickyHeader
-            size="small"
-            sx={{
-              "& .MuiTableCell-root": { border: "1px solid #e0e0e0" },
-            }}
-          >
-            <TableHead>
-              <TableRow>
-                {[
-                  "Identiteitskaart",
-                  "Naam",
-                  "Achternaam",
-                  "Email",
-                  "Adres",
-                  "Telefoon",
-                  "Acties",
-                ].map((header) => (
-                  <TableCell
-                    key={header}
-                    align="center"
-                    sx={{
-                      backgroundColor: "secondary.main",
-                      color: "#fff",
-                      fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                    }}
-                  >
-                    {header}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {employees.length > 0 ? (
-                employees.map((employee) => (
-                  <TableRow key={employee.id}>
-                    <TableCell align="center">
-                      {employee.identification}
-                    </TableCell>
-                    <TableCell align="center">{employee.first_name}</TableCell>
-                    <TableCell align="center">{employee.last_name}</TableCell>
-                    <TableCell align="center">{employee.email}</TableCell>
-                    <TableCell align="center">{employee.address}</TableCell>
-                    <TableCell align="center">{employee.phone}</TableCell>
-                    <TableCell align="center">
-                      <IconButton
-                        color="secondary"
-                        size="small"
-                        onClick={() => handleOpen(employee)}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        size="small"
-                        onClick={() => handleDelete(employee.id)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={7} align="center">
-                    Geen medewerkers gevonden.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        (() => {
+          const columns: ListColumn<(typeof employees)[number]>[] = [
+            { key: "identification", label: "Identiteitskaart", render: (e) => e.identification },
+            { key: "first_name", label: "Naam", render: (e) => e.first_name },
+            { key: "last_name", label: "Achternaam", render: (e) => e.last_name },
+            { key: "email", label: "Email", render: (e) => e.email },
+            { key: "address", label: "Adres", render: (e) => e.address, hideOnMobile: true },
+            { key: "phone", label: "Telefoon", render: (e) => e.phone, hideOnMobile: true },
+            {
+              key: "actions",
+              label: "Acties",
+              render: (employee) => (
+                <>
+                  <IconButton color="secondary" size="small" onClick={() => handleOpen(employee)}>
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton color="error" size="small" onClick={() => handleDelete(employee.id)}>
+                    <DeleteIcon />
+                  </IconButton>
+                </>
+              ),
+            },
+          ];
+
+          return (
+            <ResponsiveListTable
+              columns={columns}
+              rows={employees}
+              getRowKey={(e) => e.id}
+              emptyMessage="Geen medewerkers gevonden."
+            />
+          );
+        })()
       )}
 
       {/* Dialog for Create/Edit */}

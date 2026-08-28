@@ -1,23 +1,11 @@
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import {
-  Box,
-  Button,
-  Chip,
-  Container,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Chip, Container, Typography } from "@mui/material";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 
 import { formatCurrency } from "@/shared/utils/formatters";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import { notifyError } from "@/shared/ui/notifications";
 import {
   getDebtorByUserId,
@@ -84,65 +72,54 @@ export const DebtorAgreementsView = () => {
         </Typography>
       </Box>
 
-      <TableContainer component={Paper} sx={{ mt: 2 }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              {["Deelnemer", "Referentie", "Openstaand", "Regeling", "Actie"].map(
-                (col) => (
-                  <TableCell
-                    key={col}
-                    align="center"
-                    sx={{
-                      backgroundColor: "secondary.main",
-                      color: "#fff",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {col}
-                  </TableCell>
-                ),
-              )}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {debts.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ fontStyle: "italic" }}>
-                  Geen dossiers gevonden.
-                </TableCell>
-              </TableRow>
-            )}
-            {debts.map((debt) => (
-              <TableRow key={debt.id}>
-                <TableCell>{debt.tenant_name}</TableCell>
-                <TableCell align="center">{debt.reference}</TableCell>
-                <TableCell align="right">{formatCurrency(debt.debtor_to_participant_balance)}</TableCell>
-                <TableCell align="center">
-                  {isAgreementApproved(debt.agreement_status) ? (
-                    <Chip label="Actief" color="info" size="small" />
-                  ) : isAgreementPending(debt.agreement_status) ? (
-                    <Chip label="In behandeling" color="warning" size="small" />
-                  ) : (
-                    <Chip label="Geen" size="small" />
-                  )}
-                </TableCell>
-                <TableCell align="center">
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<HandshakeIcon fontSize="small" />}
-                    disabled={debt.debtor_to_participant_balance <= 0}
-                    onClick={() => openAgreementModal(debt)}
-                  >
-                    Aanvragen
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {(() => {
+        const columns: ListColumn<DebtorSummary>[] = [
+          { key: "tenant_name", label: "Deelnemer", render: (debt) => debt.tenant_name },
+          { key: "reference", label: "Referentie", render: (debt) => debt.reference, hideOnMobile: true },
+          {
+            key: "outstanding",
+            label: "Openstaand",
+            align: "right",
+            render: (debt) => formatCurrency(debt.debtor_to_participant_balance),
+          },
+          {
+            key: "status",
+            label: "Regeling",
+            render: (debt) =>
+              isAgreementApproved(debt.agreement_status) ? (
+                <Chip label="Actief" color="info" size="small" />
+              ) : isAgreementPending(debt.agreement_status) ? (
+                <Chip label="In behandeling" color="warning" size="small" />
+              ) : (
+                <Chip label="Geen" size="small" />
+              ),
+          },
+          {
+            key: "actions",
+            label: "Actie",
+            render: (debt) => (
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<HandshakeIcon fontSize="small" />}
+                disabled={debt.debtor_to_participant_balance <= 0}
+                onClick={() => openAgreementModal(debt)}
+              >
+                Aanvragen
+              </Button>
+            ),
+          },
+        ];
+
+        return (
+          <ResponsiveListTable
+            columns={columns}
+            rows={debts}
+            getRowKey={(debt) => debt.id}
+            emptyMessage="Geen dossiers gevonden."
+          />
+        );
+      })()}
 
       <AgreementFormDialog
         open={openModalAgreement}

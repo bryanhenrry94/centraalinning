@@ -9,12 +9,6 @@ import {
   MenuItem,
   Select,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Typography,
   Button,
@@ -26,6 +20,7 @@ import {
   DialogContent,
   Paper,
 } from "@mui/material";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 import SearchIcon from "@mui/icons-material/Search";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
@@ -393,131 +388,57 @@ export default function ContractsPage() {
           </Select>
         </Stack>
 
-        <TableContainer>
-          <Table size="small" stickyHeader aria-label="sticky table">
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
+        {(() => {
+          const columns: ListColumn<(typeof contracts)[number]>[] = [
+            { key: "reference_number", label: "Registratienummer", render: (c) => c.reference_number },
+            {
+              key: "parties",
+              label: "Partij",
+              render: (c) => (
+                <Typography variant="body2">{c.parties.map((party: any) => party.fullname).join(" / ")}</Typography>
+              ),
+            },
+            {
+              key: "contract_date",
+              label: "Registratiedatum",
+              render: (c) => formatDate(c.contract_date),
+              hideOnMobile: true,
+            },
+            { key: "amount", label: "Bedrag", align: "right", render: (c) => formatCurrency(c.amount) },
+            {
+              key: "status",
+              label: "Status",
+              render: (c) => <StatusContractChip status={c.status} width={175} />,
+            },
+            {
+              key: "actions",
+              label: "Acties",
+              render: (contract) => (
+                <IconButton
+                  id={buttonId}
+                  aria-controls={open ? menuId : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={open}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleClick(event, contract);
                   }}
-                  align="center"
                 >
-                  Registratienummer
-                </TableCell>
+                  <MoreVertIcon />
+                </IconButton>
+              ),
+            },
+          ];
 
-                <TableCell
-                  sx={{
-                    minWidth: 300,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Partij
-                </TableCell>
-
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Registratiedatum
-                </TableCell>
-
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Bedrag
-                </TableCell>
-
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Status
-                </TableCell>
-
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Acties
-                </TableCell>
-              </TableRow>
-            </TableHead>
-
-            <TableBody>
-              {contracts.map((contract) => (
-                <TableRow key={contract.id}>
-                  <TableCell>{contract.reference_number}</TableCell>
-
-                  <TableCell>
-                    <Typography variant="body2">
-                      {contract.parties
-                        .map((party: any) => party.fullname)
-                        .join(" / ")}
-                    </Typography>
-                  </TableCell>
-
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {formatDate(contract.contract_date)}
-                  </TableCell>
-
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {formatCurrency(contract.amount)}
-                  </TableCell>
-
-                  <TableCell sx={{ textAlign: "center" }}>
-                    <StatusContractChip status={contract.status} width={175} />
-                  </TableCell>
-
-                  <TableCell align="center">
-                    <IconButton
-                      id={buttonId}
-                      aria-controls={open ? menuId : undefined}
-                      aria-haspopup="true"
-                      aria-expanded={open}
-                      onClick={(event) => handleClick(event, contract)}
-                    >
-                      <MoreVertIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+          return (
+            <ResponsiveListTable
+              columns={columns}
+              rows={contracts}
+              getRowKey={(c) => c.id}
+              emptyMessage="Nog geen overeenkomsten geregistreerd."
+            />
+          );
+        })()}
 
         <Menu
           id={menuId}

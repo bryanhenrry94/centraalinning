@@ -3,22 +3,7 @@
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import {
-  Container,
-  Typography,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  TableContainer,
-  Paper,
-  Chip,
-  Stack,
-  Tabs,
-  Tab,
-  Button,
-} from "@mui/material";
+import { Container, Typography, Chip, Stack, Tabs, Tab, Button } from "@mui/material";
 
 import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
@@ -26,6 +11,7 @@ import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { notifyError } from "@/shared/ui/notifications";
 import { useTenant } from "@/modules/auth/hooks/useTenant";
 import { UserRole } from "@/shared/constants/user-role";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 import {
   getAllLegalProcessesForTenant,
@@ -48,15 +34,6 @@ const VERDICT_ELIGIBLE_STATUSES: CaseTransferStatus[] = [
   CaseTransferStatus.WORK_COMPLETED,
 ];
 
-// Mismo estilo que HEAD_SX en collection-table.tsx / latest-transfers-table.tsx
-// (tabla de consulta AOP): header secondary.main + letra blanca.
-const HEAD_SX = {
-  backgroundColor: "secondary.main",
-  color: "#fff",
-  fontWeight: "bold",
-  whiteSpace: "nowrap" as const,
-  textAlign: "center" as const,
-};
 
 type CaseTransferListItem = Awaited<
   ReturnType<typeof getAllCaseTransfersForTenant>
@@ -228,85 +205,62 @@ const LegalProcessesListPageContent: React.FC = () => {
           Mijn dossiers
         </Typography>
 
-        <TableContainer component={Paper}>
-          <Table size="small" stickyHeader aria-label="legal processes table">
-            <TableHead>
-              <TableRow>
-                <TableCell sx={HEAD_SX}>Referentie</TableCell>
-                <TableCell sx={HEAD_SX}>Debiteur</TableCell>
-                <TableCell sx={HEAD_SX}>Advocaat</TableCell>
-                <TableCell sx={HEAD_SX}>Deurwaarder</TableCell>
-                <TableCell sx={HEAD_SX}>Bedrag</TableCell>
-                <TableCell sx={HEAD_SX}>Status</TableCell>
-                <TableCell sx={HEAD_SX}>Gestart op</TableCell>
-                {isBailiffRole && <TableCell sx={HEAD_SX}>Acties</TableCell>}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredRows.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={isBailiffRole ? 8 : 7}>
-                    <Typography variant="body2" color="text.secondary" py={2}>
-                      Nog geen dossiers.
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-              {filteredRows.map((row) => (
-                <TableRow
-                  key={`${row.kind}-${row.id}`}
-                  hover
-                  sx={{ cursor: "pointer" }}
-                  onClick={() => router.push(row.href)}
-                >
-                  <TableCell align="center">{row.reference}</TableCell>
-                  <TableCell align="center">{row.debtorName}</TableCell>
-                  <TableCell align="center">{row.lawyerName}</TableCell>
-                  <TableCell align="center">{row.bailiffName}</TableCell>
-                  <TableCell align="right">
-                    {formatCurrency(row.amount)}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Chip
-                      size="small"
-                      label={row.statusLabel}
-                      color={row.statusColor}
-                      sx={{ minWidth: 150 }}
-                    />
-                  </TableCell>
-                  <TableCell align="center">{formatDate(row.date.toString())}</TableCell>
-                  {isBailiffRole && (
-                    <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
-                      {row.kind === "transfer" &&
-                        !!row.bailiffId &&
-                        VERDICT_ELIGIBLE_STATUSES.includes(
-                          row.status as CaseTransferStatus,
-                        ) && (
-                          <Button
-                            size="small"
-                            variant="contained"
-                            sx={{
-                              textTransform: "none",
-                              lineHeight: 1.2,
-                              minWidth: "auto",
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push(
-                                `/verdicts/new?caseTransferId=${row.id}`,
-                              );
-                            }}
-                          >
-                            Vonnis registreren
-                          </Button>
-                        )}
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        {(() => {
+          const columns: ListColumn<Row>[] = [
+            { key: "reference", label: "Referentie", render: (row) => row.reference },
+            { key: "debtorName", label: "Debiteur", render: (row) => row.debtorName },
+            { key: "lawyerName", label: "Advocaat", render: (row) => row.lawyerName, hideOnMobile: true },
+            { key: "bailiffName", label: "Deurwaarder", render: (row) => row.bailiffName, hideOnMobile: true },
+            { key: "amount", label: "Bedrag", align: "right", render: (row) => formatCurrency(row.amount) },
+            {
+              key: "status",
+              label: "Status",
+              render: (row) => (
+                <Chip size="small" label={row.statusLabel} color={row.statusColor} sx={{ minWidth: 150 }} />
+              ),
+            },
+            {
+              key: "date",
+              label: "Gestart op",
+              render: (row) => formatDate(row.date.toString()),
+              hideOnMobile: true,
+            },
+            ...(isBailiffRole
+              ? [
+                  {
+                    key: "actions",
+                    label: "Acties",
+                    render: (row: Row) =>
+                      row.kind === "transfer" &&
+                      !!row.bailiffId &&
+                      VERDICT_ELIGIBLE_STATUSES.includes(row.status as CaseTransferStatus) ? (
+                        <Button
+                          size="small"
+                          variant="contained"
+                          sx={{ textTransform: "none", lineHeight: 1.2, minWidth: "auto" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/verdicts/new?caseTransferId=${row.id}`);
+                          }}
+                        >
+                          Vonnis registreren
+                        </Button>
+                      ) : null,
+                  } satisfies ListColumn<Row>,
+                ]
+              : []),
+          ];
+
+          return (
+            <ResponsiveListTable
+              columns={columns}
+              rows={filteredRows}
+              getRowKey={(row) => `${row.kind}-${row.id}`}
+              getRowHref={(row) => row.href}
+              emptyMessage="Nog geen dossiers."
+            />
+          );
+        })()}
       </Stack>
     </Container>
   );

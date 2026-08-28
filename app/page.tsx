@@ -1,6 +1,6 @@
 "use client";
 import { useAuthSession } from "@/modules/auth/hooks/useAuthSession";
-import DashboardSuperAdmin from "@/modules/dashboard/components/legacy/superadmin/dashboard";
+import { AdminDashboard } from "@/modules/admin/components/admin-dashboard";
 import { DashboardAdmin } from "@/modules/dashboard/components/legacy/admin/dashboard";
 import DashboardDebtor from "@/modules/dashboard/components/legacy/debtor/dashboard";
 import { DashboardBailiff } from "@/modules/dashboard/components/legacy/bailiff/dashboard";
@@ -19,7 +19,7 @@ const HomePage = () => {
   if (!isAuthenticated) return <>Niet geautoriseerd. Log alstublieft in.</>;
 
   if (user?.roles.includes(UserRole.PLATFORM_OWNER)) {
-    return <DashboardSuperAdmin />;
+    return <AdminDashboard />;
   }
 
   if (user?.roles.includes(UserRole.TENANT_ADMIN)) {

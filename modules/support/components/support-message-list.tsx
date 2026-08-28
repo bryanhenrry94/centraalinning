@@ -1,22 +1,12 @@
 "use client";
 import React from "react";
-import { useRouter } from "next/navigation";
-import {
-  Chip,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-} from "@mui/material";
+import { Chip } from "@mui/material";
 import { formatDate } from "@/shared/utils/formatters";
 import {
   getSupportMessageStatusInfo,
   getSupportMessageTypeLabel,
 } from "@/modules/support/utils/support-status";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 export interface SupportMessageRow {
   id: string;
@@ -39,51 +29,31 @@ export const SupportMessageList: React.FC<SupportMessageListProps> = ({
   showTenant,
   basePath,
 }) => {
-  const router = useRouter();
-
-  if (rows.length === 0) {
-    return (
-      <Paper sx={{ p: 4, textAlign: "center" }}>
-        <Typography color="text.secondary">Geen berichten gevonden.</Typography>
-      </Paper>
-    );
-  }
+  const columns: ListColumn<SupportMessageRow>[] = [
+    { key: "subject", label: "Onderwerp", render: (row) => row.subject },
+    { key: "type", label: "Type", render: (row) => getSupportMessageTypeLabel(row.type), hideOnMobile: true },
+    ...(showTenant
+      ? [{ key: "tenant", label: "Organisatie", render: (row: SupportMessageRow) => row.tenantName ?? "-" }]
+      : []),
+    {
+      key: "status",
+      label: "Status",
+      render: (row) => {
+        const statusInfo = getSupportMessageStatusInfo(row.status);
+        return <Chip size="small" label={statusInfo.label} color={statusInfo.color} />;
+      },
+    },
+    { key: "date", label: "Datum", render: (row) => formatDate(new Date(row.createdAt).toISOString()) },
+  ];
 
   return (
-    <TableContainer component={Paper}>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Onderwerp</TableCell>
-            <TableCell>Type</TableCell>
-            {showTenant && <TableCell>Organisatie</TableCell>}
-            <TableCell>Status</TableCell>
-            <TableCell>Datum</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((row) => {
-            const statusInfo = getSupportMessageStatusInfo(row.status);
-            return (
-              <TableRow
-                key={row.id}
-                hover
-                sx={{ cursor: "pointer" }}
-                onClick={() => router.push(`${basePath}/${row.id}`)}
-              >
-                <TableCell>{row.subject}</TableCell>
-                <TableCell>{getSupportMessageTypeLabel(row.type)}</TableCell>
-                {showTenant && <TableCell>{row.tenantName ?? "-"}</TableCell>}
-                <TableCell>
-                  <Chip size="small" label={statusInfo.label} color={statusInfo.color} />
-                </TableCell>
-                <TableCell>{formatDate(new Date(row.createdAt).toISOString())}</TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <ResponsiveListTable
+      columns={columns}
+      rows={rows}
+      getRowKey={(row) => row.id}
+      getRowHref={(row) => `${basePath}/${row.id}`}
+      emptyMessage="Geen berichten gevonden."
+    />
   );
 };
 

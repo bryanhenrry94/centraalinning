@@ -1,26 +1,14 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Box,
-  Button,
-  Chip,
-  MenuItem,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Chip, MenuItem, Stack, TextField, Typography } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 
 import { getCaseFileForDebtClaim } from "@/modules/case-file/actions/case-file.actions";
 import { CASE_FILE_CATEGORY_LABEL } from "@/modules/case-file/constants/case-file-category";
 import { formatDateTime } from "@/shared/utils/formatters";
 import { notifyError } from "@/shared/ui/notifications";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 type CaseFileItem = Awaited<ReturnType<typeof getCaseFileForDebtClaim>>[number];
 
@@ -98,42 +86,41 @@ export const CaseFileList: React.FC<CaseFileListProps> = ({ debtClaimId }) => {
         ))}
       </TextField>
 
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Categorie</TableCell>
-            <TableCell>Naam</TableCell>
-            <TableCell>Bron</TableCell>
-            <TableCell>Datum</TableCell>
-            <TableCell align="right">Grootte</TableCell>
-            <TableCell align="right">Actie</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {filteredItems.map((item) => (
-            <TableRow key={`${item.category}-${item.id}`} hover>
-              <TableCell>
-                <Chip size="small" label={item.categoryLabel} />
-              </TableCell>
-              <TableCell>{item.title}</TableCell>
-              <TableCell>{item.sourceLabel ?? "-"}</TableCell>
-              <TableCell>{formatDateTime(item.createdAt.toString())}</TableCell>
-              <TableCell align="right">{formatSize(item.size)}</TableCell>
-              <TableCell align="right">
-                {item.downloadUrl ? (
-                  <Button size="small" startIcon={<DownloadIcon />} href={item.downloadUrl}>
-                    Downloaden
-                  </Button>
-                ) : (
-                  <Box component="span" sx={{ color: "text.secondary", fontSize: 12 }}>
-                    Geen bestand
-                  </Box>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      {(() => {
+        const columns: ListColumn<CaseFileItem>[] = [
+          {
+            key: "category",
+            label: "Categorie",
+            render: (item) => <Chip size="small" label={item.categoryLabel} />,
+          },
+          { key: "title", label: "Naam", render: (item) => item.title },
+          { key: "source", label: "Bron", render: (item) => item.sourceLabel ?? "-", hideOnMobile: true },
+          { key: "date", label: "Datum", render: (item) => formatDateTime(item.createdAt.toString()) },
+          { key: "size", label: "Grootte", align: "right", render: (item) => formatSize(item.size), hideOnMobile: true },
+          {
+            key: "actions",
+            label: "Actie",
+            render: (item) =>
+              item.downloadUrl ? (
+                <Button size="small" startIcon={<DownloadIcon />} href={item.downloadUrl}>
+                  Downloaden
+                </Button>
+              ) : (
+                <Box component="span" sx={{ color: "text.secondary", fontSize: 12 }}>
+                  Geen bestand
+                </Box>
+              ),
+          },
+        ];
+
+        return (
+          <ResponsiveListTable
+            columns={columns}
+            rows={filteredItems}
+            getRowKey={(item) => `${item.category}-${item.id}`}
+          />
+        );
+      })()}
     </Stack>
   );
 };

@@ -87,7 +87,7 @@ const JURISDICTIONS = [
     islandCode: "BON",
     islandName: "Bonaire",
     jurisdictionName: "Openbaar Lichaam Bonaire",
-    countryCode: "BQ",
+    countryCode: "BON",
     timezone: "America/Kralendijk",
     numberingPrefix: "BON",
     isActive: true,
@@ -204,14 +204,18 @@ async function seedJurisdictions() {
 
     for (const service of services) {
       await prisma.jurisdictionService.upsert({
-        where: { jurisdictionId_service: { jurisdictionId: jurisdiction.id, service } },
+        where: {
+          jurisdictionId_service: { jurisdictionId: jurisdiction.id, service },
+        },
         update: {},
         create: { jurisdictionId: jurisdiction.id, service, isActive: true },
       });
     }
   }
 
-  console.log("✓ Jurisdictions seeded (Bonaire activa; Curaçao/Aruba preparadas)");
+  console.log(
+    "✓ Jurisdictions seeded (Bonaire activa; Curaçao/Aruba preparadas)",
+  );
 }
 
 // Categorías nuevas para la configuración por isla (punto 14 del análisis
@@ -219,11 +223,46 @@ async function seedJurisdictions() {
 // categoría general ya sembrada; acá solo se agregan las filas
 // específicas por jurisdicción bajo esa categoría existente.
 const JURISDICTION_SETTING_CATEGORIES = [
-  { id: "cat-rates", key: "rates", name: "Tarieven", description: "Tarieven per eiland", icon: "payments", sortOrder: 10 },
-  { id: "cat-deadlines", key: "deadlines", name: "Termijnen", description: "Termijnen per eiland", icon: "schedule", sortOrder: 11 },
-  { id: "cat-abb", key: "abb", name: "ABB", description: "ABB-tarief per eiland", icon: "percent", sortOrder: 12 },
-  { id: "cat-percentages", key: "percentages", name: "Percentages", description: "Percentages en boetes per eiland", icon: "percent", sortOrder: 13 },
-  { id: "cat-reminder-frequency", key: "reminder_frequency", name: "Herinneringsfrequentie", description: "Wanneer automatische herinneringen verzonden worden", icon: "alarm", sortOrder: 14 },
+  {
+    id: "cat-rates",
+    key: "rates",
+    name: "Tarieven",
+    description: "Tarieven per eiland",
+    icon: "payments",
+    sortOrder: 10,
+  },
+  {
+    id: "cat-deadlines",
+    key: "deadlines",
+    name: "Termijnen",
+    description: "Termijnen per eiland",
+    icon: "schedule",
+    sortOrder: 11,
+  },
+  {
+    id: "cat-abb",
+    key: "abb",
+    name: "ABB",
+    description: "ABB-tarief per eiland",
+    icon: "percent",
+    sortOrder: 12,
+  },
+  {
+    id: "cat-percentages",
+    key: "percentages",
+    name: "Percentages",
+    description: "Percentages en boetes per eiland",
+    icon: "percent",
+    sortOrder: 13,
+  },
+  {
+    id: "cat-reminder-frequency",
+    key: "reminder_frequency",
+    name: "Herinneringsfrequentie",
+    description: "Wanneer automatische herinneringen verzonden worden",
+    icon: "alarm",
+    sortOrder: 14,
+  },
 ];
 
 async function seedJurisdictionSettings() {
@@ -236,54 +275,209 @@ async function seedJurisdictionSettings() {
   }
 
   for (const jurisdiction of JURISDICTIONS) {
-    const rows: { key: string; name: string; categoryId: string; value: string }[] = [
+    const rows: {
+      key: string;
+      name: string;
+      categoryId: string;
+      value: string;
+    }[] = [
       // Tarieven
-      { key: "collection_fee_minimum_amount", name: "Minimum incassokosten", categoryId: "cat-rates", value: String(jurisdiction.collectionFeeMinimumAmount) },
-      { key: "blok_check_pricing", name: "Blok-Check prijs", categoryId: "cat-rates", value: String(jurisdiction.blokCheckPricing) },
-      { key: "report_financial_pricing", name: "Financieel verslag prijs", categoryId: "cat-rates", value: String(jurisdiction.reportFinancialPricing) },
-      { key: "digital_file_costs", name: "Digitaal dossierkosten", categoryId: "cat-rates", value: String(jurisdiction.digitalFileCosts) },
-      { key: "extra_administrative_costs", name: "Extra administratiekosten", categoryId: "cat-rates", value: String(jurisdiction.extraAdministrativeCosts) },
-      { key: "company_payment_agreement_fee", name: "Betalingsregeling fee (bedrijf)", categoryId: "cat-rates", value: String(jurisdiction.companyPaymentAgreementFee) },
-      { key: "natural_payment_agreement_fee", name: "Betalingsregeling fee (particulier)", categoryId: "cat-rates", value: String(jurisdiction.naturalPaymentAgreementFee) },
+      {
+        key: "collection_fee_minimum_amount",
+        name: "Minimum incassokosten",
+        categoryId: "cat-rates",
+        value: String(jurisdiction.collectionFeeMinimumAmount),
+      },
+      {
+        key: "blok_check_pricing",
+        name: "Blok-Check prijs",
+        categoryId: "cat-rates",
+        value: String(jurisdiction.blokCheckPricing),
+      },
+      {
+        key: "report_financial_pricing",
+        name: "Financieel verslag prijs",
+        categoryId: "cat-rates",
+        value: String(jurisdiction.reportFinancialPricing),
+      },
+      {
+        key: "digital_file_costs",
+        name: "Digitaal dossierkosten",
+        categoryId: "cat-rates",
+        value: String(jurisdiction.digitalFileCosts),
+      },
+      {
+        key: "extra_administrative_costs",
+        name: "Extra administratiekosten",
+        categoryId: "cat-rates",
+        value: String(jurisdiction.extraAdministrativeCosts),
+      },
+      {
+        key: "company_payment_agreement_fee",
+        name: "Betalingsregeling fee (bedrijf)",
+        categoryId: "cat-rates",
+        value: String(jurisdiction.companyPaymentAgreementFee),
+      },
+      {
+        key: "natural_payment_agreement_fee",
+        name: "Betalingsregeling fee (particulier)",
+        categoryId: "cat-rates",
+        value: String(jurisdiction.naturalPaymentAgreementFee),
+      },
       // Termijnen
-      { key: "company_aanmaning_term_days", name: "Aanmaningstermijn (bedrijf)", categoryId: "cat-deadlines", value: String(jurisdiction.companyAanmaningTermDays) },
-      { key: "consumer_aanmaning_term_days", name: "Aanmaningstermijn (particulier)", categoryId: "cat-deadlines", value: String(jurisdiction.consumerAanmaningTermDays) },
-      { key: "company_sommatie_term_days", name: "Sommatietermijn (bedrijf)", categoryId: "cat-deadlines", value: String(jurisdiction.companySommatieTermDays) },
-      { key: "consumer_sommatie_term_days", name: "Sommatietermijn (particulier)", categoryId: "cat-deadlines", value: String(jurisdiction.consumerSommatieTermDays) },
-      { key: "company_reaction_limit_days", name: "Reactietermijn (bedrijf)", categoryId: "cat-deadlines", value: String(jurisdiction.companyReactionLimitDays) },
+      {
+        key: "company_aanmaning_term_days",
+        name: "Aanmaningstermijn (bedrijf)",
+        categoryId: "cat-deadlines",
+        value: String(jurisdiction.companyAanmaningTermDays),
+      },
+      {
+        key: "consumer_aanmaning_term_days",
+        name: "Aanmaningstermijn (particulier)",
+        categoryId: "cat-deadlines",
+        value: String(jurisdiction.consumerAanmaningTermDays),
+      },
+      {
+        key: "company_sommatie_term_days",
+        name: "Sommatietermijn (bedrijf)",
+        categoryId: "cat-deadlines",
+        value: String(jurisdiction.companySommatieTermDays),
+      },
+      {
+        key: "consumer_sommatie_term_days",
+        name: "Sommatietermijn (particulier)",
+        categoryId: "cat-deadlines",
+        value: String(jurisdiction.consumerSommatieTermDays),
+      },
+      {
+        key: "company_reaction_limit_days",
+        name: "Reactietermijn (bedrijf)",
+        categoryId: "cat-deadlines",
+        value: String(jurisdiction.companyReactionLimitDays),
+      },
       // ABB
-      { key: "abb_rate", name: "ABB-tarief", categoryId: "cat-abb", value: String(jurisdiction.abbRate) },
+      {
+        key: "abb_rate",
+        name: "ABB-tarief",
+        categoryId: "cat-abb",
+        value: String(jurisdiction.abbRate),
+      },
       // Percentages
-      { key: "collection_fee_rate", name: "Incassotarief (%)", categoryId: "cat-percentages", value: String(jurisdiction.collectionFeeRate) },
-      { key: "company_aanmaning_penalty", name: "Aanmaningsboete (bedrijf)", categoryId: "cat-percentages", value: String(jurisdiction.companyAanmaningPenalty) },
-      { key: "natural_aanmaning_penalty", name: "Aanmaningsboete (particulier)", categoryId: "cat-percentages", value: String(jurisdiction.naturalAanmaningPenalty) },
-      { key: "company_sommatie_penalty", name: "Sommatieboete (bedrijf)", categoryId: "cat-percentages", value: String(jurisdiction.companySommatiePenalty) },
-      { key: "natural_sommatie_penalty", name: "Sommatieboete (particulier)", categoryId: "cat-percentages", value: String(jurisdiction.naturalSommatiePenalty) },
-      { key: "company_no_reaction_penalty", name: "Boete geen reactie (bedrijf)", categoryId: "cat-percentages", value: String(jurisdiction.companyNoReactionPenalty) },
-      { key: "natural_no_reaction_penalty", name: "Boete geen reactie (particulier)", categoryId: "cat-percentages", value: String(jurisdiction.naturalNoReactionPenalty) },
+      {
+        key: "collection_fee_rate",
+        name: "Incassotarief (%)",
+        categoryId: "cat-percentages",
+        value: String(jurisdiction.collectionFeeRate),
+      },
+      {
+        key: "company_aanmaning_penalty",
+        name: "Aanmaningsboete (bedrijf)",
+        categoryId: "cat-percentages",
+        value: String(jurisdiction.companyAanmaningPenalty),
+      },
+      {
+        key: "natural_aanmaning_penalty",
+        name: "Aanmaningsboete (particulier)",
+        categoryId: "cat-percentages",
+        value: String(jurisdiction.naturalAanmaningPenalty),
+      },
+      {
+        key: "company_sommatie_penalty",
+        name: "Sommatieboete (bedrijf)",
+        categoryId: "cat-percentages",
+        value: String(jurisdiction.companySommatiePenalty),
+      },
+      {
+        key: "natural_sommatie_penalty",
+        name: "Sommatieboete (particulier)",
+        categoryId: "cat-percentages",
+        value: String(jurisdiction.naturalSommatiePenalty),
+      },
+      {
+        key: "company_no_reaction_penalty",
+        name: "Boete geen reactie (bedrijf)",
+        categoryId: "cat-percentages",
+        value: String(jurisdiction.companyNoReactionPenalty),
+      },
+      {
+        key: "natural_no_reaction_penalty",
+        name: "Boete geen reactie (particulier)",
+        categoryId: "cat-percentages",
+        value: String(jurisdiction.naturalNoReactionPenalty),
+      },
       // GOP-commissie participant (5%): tarifa CFSB que paga el participante
       // para activar el GOP (LegalProcessService.registerFirstVerdict /
       // registerAdditionalVerdict) — antes era la constante hardcodeada
       // GOP_FEE_RATE.
-      { key: "gop_fee_rate", name: "GOP-commissie participant (%)", categoryId: "cat-percentages", value: "5" },
+      {
+        key: "gop_fee_rate",
+        name: "GOP-commissie participant (%)",
+        categoryId: "cat-percentages",
+        value: "5",
+      },
       // GOP-commissie deurwaarder (5%): tarifa CFSB independiente que paga el
       // alguacil sobre sus propias facturas/costos (LegalProcessService.
       // submitBailiffFeeInvoice) — nunca se mezcla con la del participante.
-      { key: "gop_bailiff_fee_rate", name: "GOP-commissie deurwaarder (%)", categoryId: "cat-percentages", value: "5" },
+      {
+        key: "gop_bailiff_fee_rate",
+        name: "GOP-commissie deurwaarder (%)",
+        categoryId: "cat-percentages",
+        value: "5",
+      },
       // Recargos administrativos por falta de respuesta del deudor (punto 9
       // del análisis CFSB) — obligación con CFSB, no con el participante.
-      { key: "aanmaning_no_response_fee", name: "Administratieve boete geen reactie (aanmaning)", categoryId: "cat-percentages", value: "150" },
-      { key: "sommatie_no_response_fee", name: "Administratieve boete geen reactie (sommatie)", categoryId: "cat-percentages", value: "250" },
+      {
+        key: "aanmaning_no_response_fee",
+        name: "Administratieve boete geen reactie (aanmaning)",
+        categoryId: "cat-percentages",
+        value: "150",
+      },
+      {
+        key: "sommatie_no_response_fee",
+        name: "Administratieve boete geen reactie (sommatie)",
+        categoryId: "cat-percentages",
+        value: "250",
+      },
       // Herinneringsfrequentie — nuevas claves, antes constantes hardcodeadas
       // en lib/jobs/check_gop_deadlines.ts y check_case_transfer_deadlines.ts.
-      { key: "gop_prescription_reminder_days", name: "GOP verjaringsherinnering (dagen vooraf)", categoryId: "cat-reminder-frequency", value: "30" },
-      { key: "gop_review_reminder_days", name: "GOP revisieherinnering (dagen vooraf)", categoryId: "cat-reminder-frequency", value: "7" },
-      { key: "case_transfer_acceptance_reminder_days_before", name: "Overdracht acceptatieherinnering (dagen vooraf)", categoryId: "cat-reminder-frequency", value: "2" },
+      {
+        key: "gop_prescription_reminder_days",
+        name: "GOP verjaringsherinnering (dagen vooraf)",
+        categoryId: "cat-reminder-frequency",
+        value: "30",
+      },
+      {
+        key: "gop_review_reminder_days",
+        name: "GOP revisieherinnering (dagen vooraf)",
+        categoryId: "cat-reminder-frequency",
+        value: "7",
+      },
+      {
+        key: "case_transfer_acceptance_reminder_days_before",
+        name: "Overdracht acceptatieherinnering (dagen vooraf)",
+        categoryId: "cat-reminder-frequency",
+        value: "2",
+      },
       // Notificaties — reusa la categoría general ya sembrada, con filas
       // propias por isla.
-      { key: "notifications_email_enabled", name: "E-mail meldingen actief", categoryId: "cat-notifications", value: "true" },
-      { key: "notifications_sms_enabled", name: "SMS meldingen actief", categoryId: "cat-notifications", value: "false" },
-      { key: "notifications_whatsapp_enabled", name: "WhatsApp meldingen actief", categoryId: "cat-notifications", value: "false" },
+      {
+        key: "notifications_email_enabled",
+        name: "E-mail meldingen actief",
+        categoryId: "cat-notifications",
+        value: "true",
+      },
+      {
+        key: "notifications_sms_enabled",
+        name: "SMS meldingen actief",
+        categoryId: "cat-notifications",
+        value: "false",
+      },
+      {
+        key: "notifications_whatsapp_enabled",
+        name: "WhatsApp meldingen actief",
+        categoryId: "cat-notifications",
+        value: "false",
+      },
     ];
 
     for (const row of rows) {
@@ -291,7 +485,11 @@ async function seedJurisdictionSettings() {
       // (tenantId_jurisdictionId_key) en esta versión — se resuelve con
       // findFirst + create/update en vez de upsert.
       const existing = await prisma.setting.findFirst({
-        where: { tenantId: null, jurisdictionId: jurisdiction.id, key: row.key },
+        where: {
+          tenantId: null,
+          jurisdictionId: jurisdiction.id,
+          key: row.key,
+        },
       });
       if (existing) continue;
 
@@ -307,7 +505,9 @@ async function seedJurisdictionSettings() {
     }
   }
 
-  console.log("✓ Jurisdiction settings seeded (tarieven/termijnen/ABB/percentages/herinneringen per eiland)");
+  console.log(
+    "✓ Jurisdiction settings seeded (tarieven/termijnen/ABB/percentages/herinneringen per eiland)",
+  );
 }
 
 const FEATURE_FAR_REGISTER = "Financiële afspraken registreren";

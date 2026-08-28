@@ -9,12 +9,6 @@ import {
   IconButton,
   MenuItem,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Typography,
   CircularProgress,
@@ -22,6 +16,7 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import { useSession } from "next-auth/react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -163,72 +158,40 @@ export const BankAccountForm = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <TableContainer>
-          <Table
-            stickyHeader
-            size="small"
-            sx={{
-              "& .MuiTableCell-root": { border: "1px solid #e0e0e0" },
-            }}
-          >
-            <TableHead>
-              <TableRow>
-                {["Bank", "Rekeningnummer", "Type", "Acties"].map((header) => (
-                  <TableCell
-                    key={header}
-                    align="center"
-                    sx={{
-                      backgroundColor: "secondary.main",
-                      color: "#fff",
-                      fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                    }}
-                  >
-                    {header}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {bankAccounts.length > 0 ? (
-                bankAccounts.map((bankAccount) => (
-                  <TableRow key={bankAccount.id}>
-                    <TableCell align="center">{bankAccount.bank_name}</TableCell>
-                    <TableCell align="center">
-                      {bankAccount.account_number}
-                    </TableCell>
-                    <TableCell align="center">
-                      {ACCOUNT_TYPE_LABELS[bankAccount.account_type] ||
-                        bankAccount.account_type}
-                    </TableCell>
-                    <TableCell align="center">
-                      <IconButton
-                        color="secondary"
-                        size="small"
-                        onClick={() => handleOpen(bankAccount)}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        size="small"
-                        onClick={() => handleDelete(bankAccount.id)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={4} align="center">
-                    Geen bankrekeningen gevonden.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        (() => {
+          const columns: ListColumn<(typeof bankAccounts)[number]>[] = [
+            { key: "bank_name", label: "Bank", render: (b) => b.bank_name },
+            { key: "account_number", label: "Rekeningnummer", render: (b) => b.account_number },
+            {
+              key: "account_type",
+              label: "Type",
+              render: (b) => ACCOUNT_TYPE_LABELS[b.account_type] || b.account_type,
+            },
+            {
+              key: "actions",
+              label: "Acties",
+              render: (bankAccount) => (
+                <>
+                  <IconButton color="secondary" size="small" onClick={() => handleOpen(bankAccount)}>
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton color="error" size="small" onClick={() => handleDelete(bankAccount.id)}>
+                    <DeleteIcon />
+                  </IconButton>
+                </>
+              ),
+            },
+          ];
+
+          return (
+            <ResponsiveListTable
+              columns={columns}
+              rows={bankAccounts}
+              getRowKey={(b) => b.id}
+              emptyMessage="Geen bankrekeningen gevonden."
+            />
+          );
+        })()
       )}
 
       <Dialog open={open} onClose={handleClose}>

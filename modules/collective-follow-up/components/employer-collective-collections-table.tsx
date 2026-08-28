@@ -1,24 +1,13 @@
 "use client";
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import {
-  Box,
-  Button,
-  Chip,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-} from "@mui/material";
+import { Box, Button, Chip } from "@mui/material";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 
 import { formatCurrency } from "@/shared/utils/formatters";
 import { getCollectiveCollectionsForEmployerTenant } from "@/modules/collective-follow-up/actions/collective-collection.actions";
 import { getCollectiveCollectionStatusInfo } from "@/modules/collective-follow-up/utils/collective-collection-status";
 import { DebtorRequestAgreementDialog } from "@/modules/collective-follow-up/components/debtor-request-agreement-dialog";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 type CollectiveCollectionRow = Awaited<
   ReturnType<typeof getCollectiveCollectionsForEmployerTenant>
@@ -39,79 +28,56 @@ interface EmployerCollectiveCollectionsTableProps {
 export const EmployerCollectiveCollectionsTable: React.FC<
   EmployerCollectiveCollectionsTableProps
 > = ({ collections, onRequested }) => {
-  const router = useRouter();
   const [selected, setSelected] = useState<CollectiveCollectionRow | null>(null);
   const [requestDialogOpen, setRequestDialogOpen] = useState(false);
 
   const gracePeriodPassed = (row: CollectiveCollectionRow) =>
     !!row.debtorGracePeriodDeadline && new Date(row.debtorGracePeriodDeadline) <= new Date();
 
+  const columns: ListColumn<CollectiveCollectionRow>[] = [
+    { key: "tenant", label: "Deelnemer (schuldeiser)", render: (row) => row.debtClaim.tenant.name },
+    { key: "reference", label: "Referentie", render: (row) => row.debtClaim.reference || "-" },
+    { key: "amount", label: "Bedrag", align: "right", render: (row) => formatCurrency(row.debtClaim.principalAmount) },
+    {
+      key: "status",
+      label: "Status",
+      render: (row) => {
+        const statusInfo = getCollectiveCollectionStatusInfo(row.status);
+        return <Chip label={statusInfo.label} color={statusInfo.color} size="small" />;
+      },
+    },
+    {
+      key: "actions",
+      label: "Actie",
+      render: (row) => (
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<HandshakeIcon fontSize="small" />}
+            disabled={!CAN_REQUEST_AGREEMENT_STATUSES.includes(row.status) || !gracePeriodPassed(row)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelected(row);
+              setRequestDialogOpen(true);
+            }}
+          >
+            Namens medewerker aanvragen
+          </Button>
+        </Box>
+      ),
+    },
+  ];
+
   return (
     <>
-      <TableContainer component={Paper} sx={{ mt: 2 }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              {["Deelnemer (schuldeiser)", "Referentie", "Bedrag", "Status", "Actie"].map((col) => (
-                <TableCell
-                  key={col}
-                  align="center"
-                  sx={{ backgroundColor: "secondary.main", color: "#fff", fontWeight: "bold" }}
-                >
-                  {col}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {collections.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ fontStyle: "italic" }}>
-                  Geen dossiers gevonden.
-                </TableCell>
-              </TableRow>
-            )}
-            {collections.map((row) => {
-              const statusInfo = getCollectiveCollectionStatusInfo(row.status);
-              return (
-                <TableRow
-                  key={row.id}
-                  hover
-                  sx={{ cursor: "pointer" }}
-                  onClick={() => router.push(`/collective-follow-up/${row.id}`)}
-                >
-                  <TableCell>{row.debtClaim.tenant.name}</TableCell>
-                  <TableCell align="center">{row.debtClaim.reference || "-"}</TableCell>
-                  <TableCell align="right">{formatCurrency(row.debtClaim.principalAmount)}</TableCell>
-                  <TableCell align="center">
-                    <Chip label={statusInfo.label} color={statusInfo.color} size="small" />
-                  </TableCell>
-                  <TableCell align="center">
-                    <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<HandshakeIcon fontSize="small" />}
-                        disabled={
-                          !CAN_REQUEST_AGREEMENT_STATUSES.includes(row.status) ||
-                          !gracePeriodPassed(row)
-                        }
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelected(row);
-                          setRequestDialogOpen(true);
-                        }}
-                      >
-                        Namens medewerker aanvragen
-                      </Button>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <ResponsiveListTable
+        columns={columns}
+        rows={collections}
+        getRowKey={(row) => row.id}
+        getRowHref={(row) => `/collective-follow-up/${row.id}`}
+        emptyMessage="Geen dossiers gevonden."
+      />
 
       {selected && (
         <DebtorRequestAgreementDialog

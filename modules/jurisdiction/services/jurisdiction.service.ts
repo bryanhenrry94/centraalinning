@@ -26,4 +26,11 @@ export class JurisdictionService {
   static getById = async (id: string) => {
     return prisma.jurisdiction.findUnique({ where: { id } });
   };
+
+  // Toggle mínimo para CFSB Admin (Eilanden/landen) — activar/desactivar
+  // una isla no cambia rolloutOrder ni numberingPrefix, así que no afecta
+  // la generación de números de expediente/persona ya emitidos.
+  static setActive = async (id: string, isActive: boolean) => {
+    return prisma.jurisdiction.update({ where: { id }, data: { isActive } });
+  };
 }

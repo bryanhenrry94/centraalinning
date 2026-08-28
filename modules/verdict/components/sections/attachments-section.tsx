@@ -13,14 +13,7 @@ import {
   Button,
   IconButton,
   Modal,
-  Paper,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Typography,
 } from "@mui/material";
 import React, { useEffect } from "react";
@@ -28,6 +21,7 @@ import Dropzone from "react-dropzone";
 import UploadIcon from "@mui/icons-material/Upload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ArticleIcon from "@mui/icons-material/Article";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 interface AttachmentsSectionProps {
   verdictId: string;
@@ -146,128 +140,71 @@ const AttachmentsSection: React.FC<AttachmentsSectionProps> = ({
         Document Uploaden
       </Button>
 
-      <TableContainer component={Paper}>
-        <Table
-          stickyHeader
-          sx={{
-            minWidth: 500,
-            "& .MuiTableCell-root": {
-              border: "1px solid #e0e0e0",
-            },
-          }}
-          aria-label="tabel met bijlagen"
-          size="small"
-        >
-          <TableHead>
-            <TableRow>
-              <TableCell
-                sx={{
-                  minWidth: 100,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                  border: "1px solid #bdbdbd",
-                }}
-                align="left"
-              >
-                Overzicht Documenten
-              </TableCell>
-              {/* <TableCell
-                            sx={{
-                              minWidth: 50,
-                              backgroundColor: "secondary.main",
-                              color: "#fff",
-                              fontWeight: "bold",
-                              border: "1px solid #bdbdbd",
-                            }}
-                            align="center"
-                          >
-                            Maat
-                          </TableCell> */}
-              <TableCell
-                sx={{
-                  minWidth: 50,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                  border: "1px solid #bdbdbd",
-                }}
-                align="center"
-              >
-                Datum
-              </TableCell>
-              <TableCell
-                sx={{
-                  minWidth: 50,
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                  border: "1px solid #bdbdbd",
-                }}
-                align="center"
-              >
-                Acties
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {attachments &&
-              attachments.length > 0 &&
-              attachments?.map((attachment) => (
-                <TableRow key={attachment.id}>
-                  <TableCell component="th" scope="row" align="left">
-                    {attachment.file_name ? (
-                      <Typography
-                        variant="body2"
-                        sx={{ fontWeight: 500 }}
-                        onClick={() => handleDownloadAttachment(attachment.id)}
-                        style={{
-                          cursor: "pointer",
-                          textDecoration: "underline",
-                          color: "#1976d2",
-                        }}
-                      >
-                        {attachment.file_name}
-                      </Typography>
-                    ) : (
-                      "No hay archivo cargado"
-                    )}
-                  </TableCell>
-                  <TableCell align="center">
-                    {attachment.created_at
-                      ? new Date(attachment.created_at).toLocaleDateString(
-                          "es-ES",
-                          {
-                            year: "numeric",
-                            month: "2-digit",
-                            day: "2-digit",
-                          }
-                        )
-                      : "-"}
-                  </TableCell>
-                  <TableCell align="center">
-                    {file ? (
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        justifyContent="center"
-                      >
-                        <IconButton
-                          color="error"
-                          onClick={() => handleDeleteAttachment(attachment.id)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Stack>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {(() => {
+        const columns: ListColumn<VerdictAttachment>[] = [
+          {
+            key: "file_name",
+            label: "Overzicht Documenten",
+            render: (attachment) =>
+              attachment.file_name ? (
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: 500 }}
+                  onClick={() => handleDownloadAttachment(attachment.id)}
+                  style={{
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                    color: "#1976d2",
+                  }}
+                >
+                  {attachment.file_name}
+                </Typography>
+              ) : (
+                "No hay archivo cargado"
+              ),
+          },
+          {
+            key: "created_at",
+            label: "Datum",
+            align: "center",
+            render: (attachment) =>
+              attachment.created_at
+                ? new Date(attachment.created_at).toLocaleDateString("es-ES", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                  })
+                : "-",
+          },
+          {
+            key: "actions",
+            label: "Acties",
+            align: "center",
+            render: (attachment) =>
+              file ? (
+                <Stack direction="row" spacing={1} justifyContent="center">
+                  <IconButton
+                    color="error"
+                    onClick={() => handleDeleteAttachment(attachment.id)}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Stack>
+              ) : (
+                "-"
+              ),
+          },
+        ];
+
+        return (
+          <ResponsiveListTable
+            columns={columns}
+            rows={attachments ?? []}
+            getRowKey={(attachment) => attachment.id}
+            emptyMessage="Geen documenten gevonden."
+          />
+        );
+      })()}
 
       <Modal
         open={open}

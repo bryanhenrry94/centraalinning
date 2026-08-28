@@ -1,21 +1,7 @@
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import {
-  Box,
-  Button,
-  Chip,
-  Container,
-  Paper,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Chip, Container, Stack, Typography } from "@mui/material";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import HistoryIcon from "@mui/icons-material/History";
@@ -24,6 +10,7 @@ import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 
 import { formatCurrency } from "@/shared/utils/formatters";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import { notifyError } from "@/shared/ui/notifications";
 import {
   getDebtorByUserId,
@@ -128,130 +115,114 @@ const PaymentsPage = () => {
         </Typography>
       </Box>
 
-      <TableContainer component={Paper} sx={{ mt: 2 }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              {["Deelnemer", "Referentie", "Status", "Openstaand", "Actie"].map(
-                (col) => (
-                  <TableCell
-                    key={col}
-                    align="center"
-                    sx={{
-                      backgroundColor: "secondary.main",
-                      color: "#fff",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {col}
-                  </TableCell>
-                ),
-              )}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {outstandingDebts.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ fontStyle: "italic" }}>
-                  Geen openstaande bedragen.
-                </TableCell>
-              </TableRow>
-            )}
-            {outstandingDebts.map((debt) => (
-              <TableRow key={debt.id}>
-                <TableCell>{debt.tenant_name}</TableCell>
-                <TableCell align="center">{debt.reference}</TableCell>
-                <TableCell align="center">
-                  <Chip
-                    label={getSourceStatusInfo(debt.source_status).label}
-                    color={getSourceStatusInfo(debt.source_status).color}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell align="right">
-                  <Stack spacing={1} alignItems="flex-end">
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Aan deelnemer
-                      </Typography>
-                      <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
-                        <Typography variant="body2" fontWeight={600}>
-                          {formatCurrency(debt.debtor_to_participant_balance)}
-                        </Typography>
-                        <Chip
-                          size="small"
-                          label={debt.debtor_to_participant_balance > 0 ? "Openstaand" : "Betaald"}
-                          color={debt.debtor_to_participant_balance > 0 ? "warning" : "success"}
-                        />
-                      </Stack>
-                    </Box>
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        CFSB-kosten
-                      </Typography>
-                      <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
-                        <Typography variant="body2" fontWeight={600}>
-                          {formatCurrency(debt.debtor_to_cfsb_balance)}
-                        </Typography>
-                        <Chip
-                          size="small"
-                          label={debt.debtor_to_cfsb_balance > 0 ? "Openstaand" : "Betaald"}
-                          color={debt.debtor_to_cfsb_balance > 0 ? "warning" : "success"}
-                        />
-                      </Stack>
-                    </Box>
+      {(() => {
+        const columns: ListColumn<DebtorSummary>[] = [
+          { key: "tenant_name", label: "Deelnemer", render: (debt) => debt.tenant_name },
+          { key: "reference", label: "Referentie", render: (debt) => debt.reference, hideOnMobile: true },
+          {
+            key: "status",
+            label: "Status",
+            render: (debt) => (
+              <Chip
+                label={getSourceStatusInfo(debt.source_status).label}
+                color={getSourceStatusInfo(debt.source_status).color}
+                size="small"
+              />
+            ),
+          },
+          {
+            key: "outstanding",
+            label: "Openstaand",
+            render: (debt) => (
+              <Stack spacing={1} alignItems="flex-end">
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Aan deelnemer
+                  </Typography>
+                  <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
+                    <Typography variant="body2" fontWeight={600}>
+                      {formatCurrency(debt.debtor_to_participant_balance)}
+                    </Typography>
+                    <Chip
+                      size="small"
+                      label={debt.debtor_to_participant_balance > 0 ? "Openstaand" : "Betaald"}
+                      color={debt.debtor_to_participant_balance > 0 ? "warning" : "success"}
+                    />
                   </Stack>
-                </TableCell>
-                <TableCell align="center">
-                  <Tooltip title="Betalingsoverzicht">
-                    <IconButton
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    CFSB-kosten
+                  </Typography>
+                  <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
+                    <Typography variant="body2" fontWeight={600}>
+                      {formatCurrency(debt.debtor_to_cfsb_balance)}
+                    </Typography>
+                    <Chip
                       size="small"
-                      onClick={() => setHistoryDebtId(debt.id)}
-                    >
-                      <HistoryIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Stack spacing={1} alignItems="center" sx={{ mt: 1 }}>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      color="error"
-                      startIcon={<AttachMoneyIcon fontSize="small" />}
-                      onClick={() => handlePay(debt)}
-                      disabled={debt.debtor_to_participant_balance <= 0}
-                      fullWidth
-                    >
-                      Aan deelnemer betalen
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<AccountBalanceIcon fontSize="small" />}
-                      onClick={() => setCollectionFeeDebtId(debt.id)}
-                      disabled={debt.debtor_to_cfsb_balance <= 0}
-                      fullWidth
-                    >
-                      CFSB-kosten betalen
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="secondary"
-                      startIcon={<HandshakeIcon fontSize="small" />}
-                      onClick={() => handleBetaalregelingClick(debt)}
-                      fullWidth
-                    >
-                      {hasOpenAgreement(debt.agreement_status)
-                        ? "Regeling"
-                        : "Regeling aanvragen"}
-                    </Button>
+                      label={debt.debtor_to_cfsb_balance > 0 ? "Openstaand" : "Betaald"}
+                      color={debt.debtor_to_cfsb_balance > 0 ? "warning" : "success"}
+                    />
                   </Stack>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                </Box>
+              </Stack>
+            ),
+          },
+          {
+            key: "actions",
+            label: "Actie",
+            render: (debt) => (
+              <Stack spacing={1} alignItems="center">
+                <Tooltip title="Betalingsoverzicht">
+                  <IconButton size="small" onClick={() => setHistoryDebtId(debt.id)}>
+                    <HistoryIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="error"
+                  startIcon={<AttachMoneyIcon fontSize="small" />}
+                  onClick={() => handlePay(debt)}
+                  disabled={debt.debtor_to_participant_balance <= 0}
+                  fullWidth
+                >
+                  Aan deelnemer betalen
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<AccountBalanceIcon fontSize="small" />}
+                  onClick={() => setCollectionFeeDebtId(debt.id)}
+                  disabled={debt.debtor_to_cfsb_balance <= 0}
+                  fullWidth
+                >
+                  CFSB-kosten betalen
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="secondary"
+                  startIcon={<HandshakeIcon fontSize="small" />}
+                  onClick={() => handleBetaalregelingClick(debt)}
+                  fullWidth
+                >
+                  {hasOpenAgreement(debt.agreement_status) ? "Regeling" : "Regeling aanvragen"}
+                </Button>
+              </Stack>
+            ),
+          },
+        ];
+
+        return (
+          <ResponsiveListTable
+            columns={columns}
+            rows={outstandingDebts}
+            getRowKey={(debt) => debt.id}
+            emptyMessage="Geen openstaande bedragen."
+          />
+        );
+      })()}
 
       <PaymentsDialog
         open={!!historyDebtId}

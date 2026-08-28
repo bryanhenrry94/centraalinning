@@ -11,6 +11,21 @@ import {
   MoveToInboxOutlined,
   GroupOutlined,
   HelpOutlineOutlined,
+  DashboardOutlined,
+  BusinessOutlined,
+  BadgeOutlined,
+  BalanceOutlined,
+  FolderOutlined,
+  PaymentsOutlined,
+  AccountBalanceWalletOutlined,
+  TuneOutlined,
+  MapOutlined,
+  ArticleOutlined,
+  NotificationsOutlined,
+  ManageAccountsOutlined,
+  HistoryOutlined,
+  ReportProblemOutlined,
+  MonitorHeartOutlined,
 } from "@mui/icons-material";
 
 export type HeaderMenuItem = {
@@ -150,6 +165,45 @@ export const menuGroups: HeaderMenuGroup[] = [
         href: "/legal-processes",
         icon: <GavelOutlined fontSize="small" />,
       },
+    ],
+  },
+
+  {
+    // CFSB Admin — cross-tenant, alleen voor PLATFORM_OWNER. Lijst plat
+    // (geen sub-headers ondersteund door HeaderMenuGroup), zelfde patroon
+    // als "dossiers" hierboven maar met de 5 groepen van de sponsor-Screen
+    // Map achter elkaar.
+    id: "admin-cfsb",
+    label: "CFSB Admin",
+    roles: [UserRole.PLATFORM_OWNER],
+    items: [
+      { label: "Dashboard", href: "/admin", icon: <DashboardOutlined fontSize="small" /> },
+      { label: "Deelnemers", href: "/admin/tenants", icon: <BusinessOutlined fontSize="small" /> },
+      { label: "Personenregister", href: "/admin/persons", icon: <BadgeOutlined fontSize="small" /> },
+      { label: "Advocaten", href: "/admin/lawyers", icon: <BalanceOutlined fontSize="small" /> },
+      { label: "Deurwaarders", href: "/admin/bailiffs", icon: <GavelOutlined fontSize="small" /> },
+      { label: "Alle dossiers", href: "/admin/case-files", icon: <FolderOutlined fontSize="small" /> },
+      { label: "FAR-register", href: "/admin/far-register", icon: <DescriptionOutlined fontSize="small" /> },
+      { label: "BLC-register", href: "/admin/blc-register", icon: <ShieldOutlined fontSize="small" /> },
+      { label: "AOP-register", href: "/admin/aop-register", icon: <ReceiptOutlined fontSize="small" /> },
+      { label: "BLK-register", href: "/admin/blk-register", icon: <ShieldOutlined fontSize="small" /> },
+      { label: "COP-register", href: "/admin/cop-register", icon: <GroupOutlined fontSize="small" /> },
+      { label: "Dossieroverdrachten", href: "/admin/transfers-register", icon: <MoveToInboxOutlined fontSize="small" /> },
+      { label: "GOP-register", href: "/admin/gop-register", icon: <GavelOutlined fontSize="small" /> },
+      { label: "CFSB-facturen", href: "/invoices", icon: <ReceiptOutlined fontSize="small" /> },
+      { label: "Betalingen", href: "/admin/payments", icon: <PaymentsOutlined fontSize="small" /> },
+      { label: "Financiële verplichtingen", href: "/admin/obligations", icon: <AccountBalanceWalletOutlined fontSize="small" /> },
+      { label: "Tariefinstellingen", href: "/admin/settings/parameters", icon: <TuneOutlined fontSize="small" /> },
+      { label: "Plannen", href: "/admin/plans", icon: <AssignmentOutlined fontSize="small" /> },
+      { label: "Eilanden/landen", href: "/admin/jurisdictions", icon: <MapOutlined fontSize="small" /> },
+      { label: "Systeemparameters", href: "/admin/settings/parameters", icon: <TuneOutlined fontSize="small" /> },
+      { label: "Document-/briefinstellingen", href: "/admin/document-settings", icon: <ArticleOutlined fontSize="small" /> },
+      { label: "Notificatiebeheer", href: "/admin/settings/parameters", icon: <NotificationsOutlined fontSize="small" /> },
+      { label: "Gebruikers & rollen", href: "/admin/users", icon: <ManageAccountsOutlined fontSize="small" /> },
+      { label: "Auditlog", href: "/admin/audit-log", icon: <HistoryOutlined fontSize="small" /> },
+      { label: "Overtredingen/vergoedingen", href: "/admin/administrative-fees", icon: <ReportProblemOutlined fontSize="small" /> },
+      { label: "Werkgeverbevestigingen", href: "/admin/employer-confirmations", icon: <HandshakeOutlined fontSize="small" /> },
+      { label: "Systeem-/procescontrole", href: "/admin/system-control", icon: <MonitorHeartOutlined fontSize="small" /> },
     ],
   },
 

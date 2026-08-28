@@ -1,21 +1,11 @@
 import { useEffect, useState } from "react";
 import { getUsersByTenantId, updateUserActiveStatus } from "@/modules/auth/actions/user.actions";
 import { UserInput } from "@/modules/auth/services/user.type";
-import {
-  Box,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  CircularProgress,
-} from "@mui/material";
+import { Box, Button, CircularProgress } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { AlertService } from "@/shared/ui/alerts";
 import { notifyError } from "@/shared/ui/notifications";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 type Props = {
   tenant_id: string;
@@ -109,49 +99,37 @@ export default function UserTable({
       {users.length === 0 ? (
         <Box>Er zijn geen gebruikers binnen deze organisatie.</Box>
       ) : (
-        <TableContainer component={Paper}>
-          <Table size="small" aria-label="gebruikerstabel">
-            <TableHead>
-              <TableRow>
-                <TableCell>Naam</TableCell>
-                <TableCell>E-mail</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Acties</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.fullname ?? "—"}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    {user.is_active ? "Actief" : "Inactief"}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => toggleActive(user)}
-                      disabled={!!updating[user.id]}
-                      aria-pressed={user.is_active}
-                      aria-label={`${
-                        user.is_active ? "Deactiveren" : "Activeren"
-                      } gebruiker ${user.email}`}
-                    >
-                      {updating[user.id] ? (
-                        <CircularProgress size={16} />
-                      ) : user.is_active ? (
-                        "Deactiveren"
-                      ) : (
-                        "Activeren"
-                      )}
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        (() => {
+          const columns: ListColumn<UserInput>[] = [
+            { key: "fullname", label: "Naam", render: (user) => user.fullname ?? "—" },
+            { key: "email", label: "E-mail", render: (user) => user.email },
+            { key: "status", label: "Status", render: (user) => (user.is_active ? "Actief" : "Inactief") },
+            {
+              key: "actions",
+              label: "Acties",
+              render: (user) => (
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => toggleActive(user)}
+                  disabled={!!updating[user.id]}
+                  aria-pressed={user.is_active}
+                  aria-label={`${user.is_active ? "Deactiveren" : "Activeren"} gebruiker ${user.email}`}
+                >
+                  {updating[user.id] ? (
+                    <CircularProgress size={16} />
+                  ) : user.is_active ? (
+                    "Deactiveren"
+                  ) : (
+                    "Activeren"
+                  )}
+                </Button>
+              ),
+            },
+          ];
+
+          return <ResponsiveListTable columns={columns} rows={users} getRowKey={(user) => user.id} />;
+        })()
       )}
     </Box>
   );

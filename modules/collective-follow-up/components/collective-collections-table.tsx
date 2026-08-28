@@ -1,19 +1,9 @@
 "use client";
 import React from "react";
-import {
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
-  Typography,
-} from "@mui/material";
-import { useRouter } from "next/navigation";
+import { Chip } from "@mui/material";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { getCollectiveCollectionStatusInfo } from "@/modules/collective-follow-up/utils/collective-collection-status";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 type CollectiveCollectionRow = {
   id: string;
@@ -43,54 +33,28 @@ const debtorName = (row: CollectiveCollectionRow) => {
 export const CollectiveCollectionsTable: React.FC<CollectiveCollectionsTableProps> = ({
   collections,
 }) => {
-  const router = useRouter();
+  const columns: ListColumn<CollectiveCollectionRow>[] = [
+    { key: "reference", label: "Referentie", render: (c) => c.debtClaim.reference || "-" },
+    { key: "debtor", label: "Debiteur", render: (c) => debtorName(c) },
+    { key: "amount", label: "Bedrag", align: "right", render: (c) => formatCurrency(c.debtClaim.principalAmount) },
+    {
+      key: "status",
+      label: "Status",
+      render: (c) => {
+        const statusInfo = getCollectiveCollectionStatusInfo(c.status);
+        return <Chip size="small" label={statusInfo.label} color={statusInfo.color} />;
+      },
+    },
+    { key: "startedAt", label: "Gestart op", render: (c) => formatDate(c.startedAt.toString()), hideOnMobile: true },
+  ];
 
   return (
-    <TableContainer component={Paper} sx={{ mt: 2 }}>
-      <Table size="small" aria-label="tabel met collectieve opvolgingen">
-        <TableHead>
-          <TableRow>
-            {["Referentie", "Debiteur", "Bedrag", "Status", "Gestart op"].map((col) => (
-              <TableCell
-                key={col}
-                sx={{ backgroundColor: "secondary.main", color: "#fff", fontWeight: "bold" }}
-              >
-                {col}
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {collections.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={5} align="center" sx={{ fontStyle: "italic" }}>
-                <Typography variant="body2" color="text.secondary">
-                  Geen dossiers gevonden.
-                </Typography>
-              </TableCell>
-            </TableRow>
-          )}
-          {collections.map((collection) => {
-            const statusInfo = getCollectiveCollectionStatusInfo(collection.status);
-            return (
-              <TableRow
-                key={collection.id}
-                hover
-                sx={{ cursor: "pointer" }}
-                onClick={() => router.push(`/collective-follow-up/${collection.id}`)}
-              >
-                <TableCell>{collection.debtClaim.reference || "-"}</TableCell>
-                <TableCell>{debtorName(collection)}</TableCell>
-                <TableCell align="right">{formatCurrency(collection.debtClaim.principalAmount)}</TableCell>
-                <TableCell>
-                  <Chip size="small" label={statusInfo.label} color={statusInfo.color} />
-                </TableCell>
-                <TableCell>{formatDate(collection.startedAt.toString())}</TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <ResponsiveListTable
+      columns={columns}
+      rows={collections}
+      getRowKey={(c) => c.id}
+      getRowHref={(c) => `/collective-follow-up/${c.id}`}
+      emptyMessage="Geen dossiers gevonden."
+    />
   );
 };

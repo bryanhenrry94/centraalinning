@@ -1,22 +1,9 @@
 "use client";
 
-import {
-  Box,
-  Typography,
-  Table,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Chip,
-  Paper,
-  Divider,
-  Button,
-  Container,
-} from "@mui/material";
+import { Box, Typography, Chip, Paper, Divider, Button, Container } from "@mui/material";
 import ActionToolbar from "@/shared/ui/breadcrums";
 import PaymentList from "./payment-lists";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 // Datos de prueba
 const sampleData = [
   {
@@ -140,48 +127,36 @@ export default function AccountsPage() {
           </Box>
           <Divider sx={{ mb: 2 }} />
 
-          <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Type</TableCell>
-                <TableCell>Referentie</TableCell>
-                <TableCell>Debiteur</TableCell>
-                <TableCell>Termijn</TableCell>
-                <TableCell align="right">Bedrag</TableCell>
-                <TableCell align="right">Betaald</TableCell>
-                <TableCell align="right">Saldo</TableCell>
-                <TableCell>Vervaldatum</TableCell>
-                <TableCell>Status</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {sampleData.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell>
-                    {row.referenceType === "verdict" ? "Vonnis" : "Factuur"}
-                  </TableCell>
-                  <TableCell>{row.referenceId}</TableCell>
-                  <TableCell>{row.debtor}</TableCell>
-                  <TableCell>
-                    {row.installment ? `#${row.installment}` : "-"}
-                  </TableCell>
-                  <TableCell align="right">${row.amount.toFixed(2)}</TableCell>
-                  <TableCell align="right">
-                    ${row.paidAmount.toFixed(2)}
-                  </TableCell>
-                  <TableCell align="right">
-                    ${(row.amount - row.paidAmount).toFixed(2)}
-                  </TableCell>
-                  <TableCell>{row.due_date}</TableCell>
-                  <TableCell>
-                    <StatusChip status={row.status} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          </TableContainer>
+          {(() => {
+            const columns: ListColumn<(typeof sampleData)[number]>[] = [
+              { key: "type", label: "Type", render: (row) => (row.referenceType === "verdict" ? "Vonnis" : "Factuur") },
+              { key: "referenceId", label: "Referentie", render: (row) => row.referenceId },
+              { key: "debtor", label: "Debiteur", render: (row) => row.debtor },
+              {
+                key: "installment",
+                label: "Termijn",
+                render: (row) => (row.installment ? `#${row.installment}` : "-"),
+                hideOnMobile: true,
+              },
+              { key: "amount", label: "Bedrag", align: "right", render: (row) => `$${row.amount.toFixed(2)}` },
+              {
+                key: "paidAmount",
+                label: "Betaald",
+                align: "right",
+                render: (row) => `$${row.paidAmount.toFixed(2)}`,
+                hideOnMobile: true,
+              },
+              {
+                key: "balance",
+                label: "Saldo",
+                align: "right",
+                render: (row) => `$${(row.amount - row.paidAmount).toFixed(2)}`,
+              },
+              { key: "due_date", label: "Vervaldatum", render: (row) => row.due_date, hideOnMobile: true },
+              { key: "status", label: "Status", render: (row) => <StatusChip status={row.status} /> },
+            ];
+            return <ResponsiveListTable columns={columns} rows={sampleData} getRowKey={(row) => row.id} />;
+          })()}
         </Paper>
       </Box>
     </Container>

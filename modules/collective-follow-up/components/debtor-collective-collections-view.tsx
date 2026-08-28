@@ -1,25 +1,12 @@
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import {
-  Box,
-  Button,
-  Chip,
-  Container,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Chip, Container, Typography } from "@mui/material";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import { useRouter } from "next/navigation";
 
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import { notifyError } from "@/shared/ui/notifications";
 import { getDebtorByUserId, getDebts } from "@/modules/collection/actions/debtor.actions";
 import { DebtorSummary } from "@/modules/collection/types/DebtorSummary";
@@ -41,7 +28,6 @@ const CAN_PAY_STATUSES = ["ACTIVE", "AWAITING_DEBTOR_RESPONSE", "PAYMENT_AGREEME
 
 export const DebtorCollectiveCollectionsView = () => {
   const { data: session } = useSession();
-  const router = useRouter();
   const user = session?.user;
 
   const [collections, setCollections] = useState<CollectiveCollectionRow[]>([]);
@@ -147,88 +133,82 @@ export const DebtorCollectiveCollectionsView = () => {
         </Typography>
       </Box>
 
-      <TableContainer component={Paper} sx={{ mt: 2 }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              {["Deelnemer", "Referentie", "Bedrag", "Status", "Actie"].map((col) => (
-                <TableCell
-                  key={col}
-                  align="center"
-                  sx={{ backgroundColor: "secondary.main", color: "#fff", fontWeight: "bold" }}
-                >
-                  {col}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {collections.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ fontStyle: "italic" }}>
-                  Geen dossiers gevonden.
-                </TableCell>
-              </TableRow>
-            )}
-            {collections.map((row) => {
+      {(() => {
+        const columns: ListColumn<CollectiveCollectionRow>[] = [
+          { key: "tenant", label: "Deelnemer", render: (row) => row.debtClaim.tenant.name },
+          { key: "reference", label: "Referentie", render: (row) => row.debtClaim.reference || "-" },
+          {
+            key: "amount",
+            label: "Bedrag",
+            align: "right",
+            render: (row) => formatCurrency(row.debtClaim.principalAmount),
+          },
+          {
+            key: "status",
+            label: "Status",
+            render: (row) => {
               const statusInfo = getCollectiveCollectionStatusInfo(row.status);
+              return <Chip label={statusInfo.label} color={statusInfo.color} size="small" />;
+            },
+          },
+          {
+            key: "actions",
+            label: "Actie",
+            render: (row) => {
               const guidanceText = getDebtorGuidanceText(row);
               return (
-                <TableRow
-                  key={row.id}
-                  hover
-                  sx={{ cursor: "pointer" }}
-                  onClick={() => router.push(`/collective-follow-up/${row.id}`)}
-                >
-                  <TableCell>{row.debtClaim.tenant.name}</TableCell>
-                  <TableCell align="center">{row.debtClaim.reference || "-"}</TableCell>
-                  <TableCell align="right">{formatCurrency(row.debtClaim.principalAmount)}</TableCell>
-                  <TableCell align="center">
-                    <Chip label={statusInfo.label} color={statusInfo.color} size="small" />
-                  </TableCell>
-                  <TableCell align="center">
-                    <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<AccountBalanceIcon fontSize="small" />}
-                        disabled={!canDebtorPay(row)}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openPayDialog(row);
-                        }}
-                      >
-                        Betalen
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<HandshakeIcon fontSize="small" />}
-                        disabled={!canDebtorRequestAgreement(row)}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openRequestDialog(row);
-                        }}
-                      >
-                        Aanvragen
-                      </Button>
-                    </Box>
-                    {guidanceText && (
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ display: "block", mt: 0.75, textAlign: "left" }}
-                      >
-                        {guidanceText}
-                      </Typography>
-                    )}
-                  </TableCell>
-                </TableRow>
+                <Box>
+                  <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<AccountBalanceIcon fontSize="small" />}
+                      disabled={!canDebtorPay(row)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openPayDialog(row);
+                      }}
+                    >
+                      Betalen
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<HandshakeIcon fontSize="small" />}
+                      disabled={!canDebtorRequestAgreement(row)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openRequestDialog(row);
+                      }}
+                    >
+                      Aanvragen
+                    </Button>
+                  </Box>
+                  {guidanceText && (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: "block", mt: 0.75, textAlign: "left" }}
+                    >
+                      {guidanceText}
+                    </Typography>
+                  )}
+                </Box>
               );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            },
+          },
+        ];
+
+        return (
+          <ResponsiveListTable
+            columns={columns}
+            rows={collections}
+            getRowKey={(row) => row.id}
+            getRowHref={(row) => `/collective-follow-up/${row.id}`}
+            emptyMessage="Geen dossiers gevonden."
+          />
+        );
+      })()}
 
       {selected && (
         <DebtorRequestAgreementDialog

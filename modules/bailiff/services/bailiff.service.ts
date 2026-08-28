@@ -61,6 +61,14 @@ export class BailiffService {
     }) as Promise<Bailiff[]>;
   }
 
+  // Registro completo para CFSB Admin — a diferencia de getAllActive (solo
+  // ACTIVE con user_id), acá se listan todos los alguaciles sin filtrar.
+  static async getAllForAdmin(): Promise<Bailiff[]> {
+    return prisma.bailiff.findMany({
+      orderBy: { created_at: "desc" },
+    }) as Promise<Bailiff[]>;
+  }
+
   static async getByUserId(
     user_id: string,
   ): Promise<{ success: boolean; data?: Bailiff; error?: string }> {

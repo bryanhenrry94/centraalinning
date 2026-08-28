@@ -33,4 +33,22 @@ export class AuditLogService {
       include: { actorUser: { select: { fullname: true, email: true } } },
     });
   };
+
+  // Visor cross-entity para CFSB Admin (Auditlog) — getForEntity ya
+  // filtraba por una entidad puntual; acá se pagina sobre todo el log.
+  static getAllPaginated = async (params: { page: number; pageSize: number; entityType?: string }) => {
+    const { page, pageSize, entityType } = params;
+    const where = entityType ? { entityType } : undefined;
+    const [items, total] = await Promise.all([
+      prisma.auditLog.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        include: { actorUser: { select: { fullname: true, email: true } } },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.auditLog.count({ where }),
+    ]);
+    return { items, total, page, pageSize };
+  };
 }

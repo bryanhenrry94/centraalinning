@@ -5,21 +5,13 @@ import { deleteVerdict, getAllVerdicts } from "@/modules/verdict/actions/verdict
 import { VerdictResponse } from "@/modules/verdict/services/verdict.validators";
 import {
   Box,
-  Button,
   Chip,
   IconButton,
   Menu,
   MenuItem,
   Skeleton,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableFooter,
-  TableHead,
   TablePagination,
-  TableRow,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -31,6 +23,7 @@ import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import { formatCurrency } from "@/shared/utils/formatters";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import { useTenant } from "@/modules/auth/hooks/useTenant";
 import { useSession } from "next-auth/react";
 import { getBailiffByUserId } from "@/modules/bailiff/actions/bailiff.actions";
@@ -271,296 +264,137 @@ const VerdictsPage: React.FC = () => {
       <Suspense
         fallback={<Skeleton variant="rectangular" width="100%" height={400} />}
       >
-        <TableContainer>
-          <Table
-            stickyHeader
-            sx={{
-              // minWidth: 900,
-              "& .MuiTableCell-root": {
-                border: "1px solid #e0e0e0",
-              },
-            }}
-            aria-label="vonnissentabel"
-            size="small"
-          >
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Zaaknummer
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Datum Utispraak
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Beschrijving Vonnis
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Naam Schuldenaar
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Vorderingsbedrag
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Rente
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Overige Proceskosten
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Totaal
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Status
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                />
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {(rowsPerPage > 0
-                ? verdicts.slice(
-                    page * rowsPerPage,
-                    page * rowsPerPage + rowsPerPage,
-                  )
-                : verdicts
-              ).map((verdict: VerdictResponse) => (
-                <TableRow key={verdict.id}>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {verdict.registration_number}
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {verdict.sentence_date
-                      ? new Date(verdict.sentence_date).toLocaleDateString(
-                          "es-ES",
-                          {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                          },
-                        )
-                      : ""}
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {verdict.invoice_number}
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {verdict.debtor?.fullname}
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {formatCurrency(verdict.sentence_amount)}
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {formatCurrency(
-                      verdict.verdict_interest.reduce(
-                        (acc, curr) =>
-                          Number(acc) + Number(curr.total_interest),
-                        0,
-                      ),
-                    )}
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {formatCurrency(
-                      (verdict.bailiff_services ?? []).reduce(
-                        (acc, curr) => Number(acc) + Number(curr.service_cost),
-                        0,
-                      ) +
-                        verdict.verdict_embargo.reduce(
-                          (acc, curr) =>
-                            Number(acc) + Number(curr.embargo_amount),
-                          0,
-                        ) +
-                        (verdict.procesal_cost || 0),
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {formatCurrency(
-                      Number(verdict.sentence_amount) +
-                        verdict.verdict_interest.reduce(
-                          (acc, curr) =>
-                            Number(acc) + Number(curr.total_interest),
-                          0,
-                        ) +
-                        (verdict.bailiff_services ?? []).reduce(
-                          (acc, curr) =>
-                            Number(acc) + Number(curr.service_cost),
-                          0,
-                        ) +
-                        verdict.verdict_embargo.reduce(
-                          (acc, curr) =>
-                            Number(acc) + Number(curr.embargo_amount),
-                          0,
-                        ) +
-                        (verdict.procesal_cost || 0),
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Chip label={verdict.status} color={"default"} />
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    <IconButton
-                      id={`actions-button-${verdict.id}`}
-                      aria-controls={
-                        open && selectedVerdict?.id === verdict.id
-                          ? `actions-menus-${verdict.id}`
-                          : undefined
-                      }
-                      aria-haspopup="true"
-                      aria-expanded={
-                        open && selectedVerdict?.id === verdict.id
-                          ? "true"
-                          : undefined
-                      }
-                      onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                        handleClick(e, verdict)
-                      }
-                    >
-                      <MoreVertIcon />
-                    </IconButton>
-                    <Menu
-                      id={`actions-menus-${verdict.id}`}
-                      anchorEl={anchorEl}
-                      open={open && selectedVerdict?.id === verdict.id}
-                      onClose={handleClose}
-                      MenuListProps={{
-                        "aria-labelledby": `actions-button-${verdict.id}`,
+        {(() => {
+          const totalCost = (verdict: VerdictResponse) =>
+            (verdict.bailiff_services ?? []).reduce((acc, curr) => Number(acc) + Number(curr.service_cost), 0) +
+            verdict.verdict_embargo.reduce((acc, curr) => Number(acc) + Number(curr.embargo_amount), 0) +
+            (verdict.procesal_cost || 0);
+          const totalInterest = (verdict: VerdictResponse) =>
+            verdict.verdict_interest.reduce((acc, curr) => Number(acc) + Number(curr.total_interest), 0);
+
+          const columns: ListColumn<VerdictResponse>[] = [
+            { key: "registration_number", label: "Zaaknummer", render: (v) => v.registration_number },
+            {
+              key: "sentence_date",
+              label: "Datum uitspraak",
+              render: (v) =>
+                v.sentence_date
+                  ? new Date(v.sentence_date).toLocaleDateString("es-ES", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })
+                  : "",
+              hideOnMobile: true,
+            },
+            { key: "invoice_number", label: "Beschrijving vonnis", render: (v) => v.invoice_number, hideOnMobile: true },
+            { key: "debtor", label: "Naam schuldenaar", render: (v) => v.debtor?.fullname },
+            {
+              key: "sentence_amount",
+              label: "Vorderingsbedrag",
+              align: "right",
+              render: (v) => formatCurrency(v.sentence_amount),
+            },
+            {
+              key: "interest",
+              label: "Rente",
+              align: "right",
+              render: (v) => formatCurrency(totalInterest(v)),
+              hideOnMobile: true,
+            },
+            {
+              key: "costs",
+              label: "Overige proceskosten",
+              align: "right",
+              render: (v) => formatCurrency(totalCost(v)),
+              hideOnMobile: true,
+            },
+            {
+              key: "total",
+              label: "Totaal",
+              align: "right",
+              render: (v) => formatCurrency(Number(v.sentence_amount) + totalInterest(v) + totalCost(v)),
+            },
+            { key: "status", label: "Status", render: (v) => <Chip label={v.status} color="default" /> },
+            {
+              key: "actions",
+              label: "",
+              render: (verdict) => (
+                <>
+                  <IconButton
+                    id={`actions-button-${verdict.id}`}
+                    aria-controls={
+                      open && selectedVerdict?.id === verdict.id ? `actions-menus-${verdict.id}` : undefined
+                    }
+                    aria-haspopup="true"
+                    aria-expanded={open && selectedVerdict?.id === verdict.id ? "true" : undefined}
+                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                      e.stopPropagation();
+                      handleClick(e, verdict);
+                    }}
+                  >
+                    <MoreVertIcon />
+                  </IconButton>
+                  <Menu
+                    id={`actions-menus-${verdict.id}`}
+                    anchorEl={anchorEl}
+                    open={open && selectedVerdict?.id === verdict.id}
+                    onClose={handleClose}
+                    MenuListProps={{ "aria-labelledby": `actions-button-${verdict.id}` }}
+                  >
+                    <MenuItem
+                      onClick={() => {
+                        if (selectedVerdict) handleEdit(selectedVerdict.id);
+                        handleClose();
                       }}
                     >
-                      <MenuItem
-                        onClick={() => {
-                          if (selectedVerdict) handleEdit(selectedVerdict.id);
-                          handleClose();
-                        }}
-                        // disabled={verdict.status !== "DRAFT"}
-                      >
-                        Bewerken
-                      </MenuItem>
-                      <MenuItem
-                        onClick={() => {
-                          if (selectedVerdict) handleDelete(selectedVerdict);
-                          handleClose();
-                        }}
-                        disabled={verdict.status !== "DRAFT"}
-                      >
-                        Verwijderen
-                      </MenuItem>
-                    </Menu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TablePagination
-                  rowsPerPageOptions={[5, 10, 25, { label: "All", value: -1 }]}
-                  colSpan={10}
-                  count={verdicts.length}
-                  rowsPerPage={rowsPerPage}
-                  page={page}
-                  slotProps={{
-                    select: {
-                      inputProps: {
-                        "aria-label": "rows per page",
-                      },
-                      native: true,
-                    },
-                  }}
-                  onPageChange={handleChangePage}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                  ActionsComponent={TablePaginationActions}
-                />
-              </TableRow>
-            </TableFooter>
-          </Table>
-        </TableContainer>
+                      Bewerken
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        if (selectedVerdict) handleDelete(selectedVerdict);
+                        handleClose();
+                      }}
+                      disabled={verdict.status !== "DRAFT"}
+                    >
+                      Verwijderen
+                    </MenuItem>
+                  </Menu>
+                </>
+              ),
+            },
+          ];
+
+          const pagedVerdicts =
+            rowsPerPage > 0 ? verdicts.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) : verdicts;
+
+          return (
+            <>
+              <ResponsiveListTable
+                columns={columns}
+                rows={pagedVerdicts}
+                getRowKey={(v) => v.id}
+                emptyMessage="Nog geen vonnissen geregistreerd."
+              />
+              <TablePagination
+                component="div"
+                rowsPerPageOptions={[5, 10, 25, { label: "All", value: -1 }]}
+                count={verdicts.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                slotProps={{
+                  select: {
+                    inputProps: { "aria-label": "rows per page" },
+                    native: true,
+                  },
+                }}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                ActionsComponent={TablePaginationActions}
+              />
+            </>
+          );
+        })()}
       </Suspense>
     </Box>
   );

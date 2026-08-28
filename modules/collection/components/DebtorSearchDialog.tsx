@@ -6,12 +6,6 @@ import {
   DialogTitle,
   TextField,
   Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Skeleton,
   Box,
   Stack,
@@ -24,6 +18,7 @@ import { DebtorResponse } from "@/modules/collection/services/debtor.validators"
 import TouchAppIcon from "@mui/icons-material/TouchApp";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 interface DebtorSearchDialogProps {
   open: boolean;
@@ -124,95 +119,58 @@ export function DebtorSearchDialog({
           </Stack>
 
           {/* Tabla */}
-          <TableContainer>
-            <Table sx={{ minWidth: 400 }}>
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                  <TableCell sx={{ width: 120, fontWeight: 600 }}>
-                    Identificatie
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600, minWidth: 150 }}>
-                    Naam
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Telefoon</TableCell>
-                  <TableCell sx={{ fontWeight: 600, minWidth: 150 }}>
-                    Adres
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>E-mail</TableCell>
-                  <TableCell
-                    sx={{ width: 120, fontWeight: 600 }}
-                    align="right"
-                  />
-                </TableRow>
-              </TableHead>
+          {loading ? (
+            <Stack spacing={1}>
+              {Array.from({ length: 3 }).map((_, index) => (
+                <Skeleton key={index} variant="rounded" height={48} />
+              ))}
+            </Stack>
+          ) : (
+            (() => {
+              const columns: ListColumn<DebtorResponse>[] = [
+                {
+                  key: "identification",
+                  label: "Identificatie",
+                  render: (option) => option.person?.identification,
+                },
+                {
+                  key: "name",
+                  label: "Naam",
+                  render: (option) => `${option.person?.first_name} ${option.person?.last_name}`,
+                },
+                { key: "phone", label: "Telefoon", render: (option) => option.person?.phone, hideOnMobile: true },
+                { key: "address", label: "Adres", render: (option) => option.person?.address, hideOnMobile: true },
+                { key: "email", label: "E-mail", render: (option) => option.person?.email },
+                {
+                  key: "actions",
+                  label: "",
+                  render: (option) => (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => {
+                        onSelect(option);
+                        onOpenChange(false);
+                      }}
+                      startIcon={<TouchAppIcon />}
+                      sx={{ textTransform: "none" }}
+                    >
+                      Selecteren
+                    </Button>
+                  ),
+                },
+              ];
 
-              <TableBody>
-                {loading
-                  ? Array.from({ length: 3 }).map((_, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          <Skeleton variant="text" width={80} />
-                        </TableCell>
-
-                        <TableCell align="right">
-                          <Skeleton variant="text" width={100} />
-                        </TableCell>
-
-                        <TableCell>
-                          <Skeleton variant="text" width={80} />
-                        </TableCell>
-
-                        <TableCell>
-                          <Skeleton variant="text" width="100%" />
-                        </TableCell>
-
-                        <TableCell>
-                          <Skeleton variant="text" width="100%" />
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  : options.map((option: DebtorResponse) => (
-                      <TableRow key={option.id} hover>
-                        <TableCell sx={{ fontWeight: 500 }}>
-                          {option.person?.identification}
-                        </TableCell>
-
-                        <TableCell>{`${option.person?.first_name} ${option.person?.last_name}`}</TableCell>
-                        <TableCell>{option.person?.phone}</TableCell>
-                        <TableCell>{option.person?.address}</TableCell>
-                        <TableCell>{option.person?.email}</TableCell>
-
-                        <TableCell align="right">
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => {
-                              onSelect(option);
-                              onOpenChange(false);
-                            }}
-                            startIcon={<TouchAppIcon />}
-                            sx={{ textTransform: "none" }}
-                          >
-                            Selecteren
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-
-                {options.length === 0 && !loading && (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
-                      <Stack alignItems="center" spacing={1}>
-                        <Typography variant="body2" color="textSecondary">
-                          Geen resultaten gevonden
-                        </Typography>
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+              return (
+                <ResponsiveListTable
+                  columns={columns}
+                  rows={options}
+                  getRowKey={(option) => option.id}
+                  emptyMessage="Geen resultaten gevonden"
+                />
+              );
+            })()
+          )}
 
           {/* Paginación */}
           <Stack

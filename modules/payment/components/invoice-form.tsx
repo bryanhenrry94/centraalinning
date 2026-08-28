@@ -9,12 +9,6 @@ import {
   IconButton,
   MenuItem,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Typography,
   Grid,
@@ -22,6 +16,7 @@ import {
 // icons
 import SaveIcon from "@mui/icons-material/Save";
 import { Delete as DeleteIcon, Print } from "@mui/icons-material";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 // context
 import { useTenant } from "@/modules/auth/hooks/useTenant";
 // utils
@@ -116,19 +111,16 @@ const InvoiceFormPage: React.FC<InvoiceFormPageProps> = ({ id }) => {
     });
   };
 
-  const CustomRow = ({
-    item,
-    index,
-  }: {
-    item: BillingInvoiceDetailBase;
-    index: number;
-  }) => (
-    <TableRow key={item.id}>
-      <TableCell sx={{ textAlign: "center" }}>
+  const detailColumns: ListColumn<{ id: string; index: number }>[] = [
+    {
+      key: "item_quantity",
+      label: "Hoeveelheid",
+      align: "center",
+      render: ({ index }) => (
         <Controller
           name={`invoice_details.${index}.item_quantity`}
           control={control}
-          defaultValue={item.item_quantity ?? 0}
+          defaultValue={fields[index]?.item_quantity ?? 0}
           render={({ field }) => (
             <TextField
               {...field}
@@ -138,17 +130,21 @@ const InvoiceFormPage: React.FC<InvoiceFormPageProps> = ({ id }) => {
               helperText={
                 errors.invoice_details?.[index]?.item_quantity?.message
               }
-              // slotProps={{ input: { min: 1 } }}
               fullWidth
             />
           )}
         />
-      </TableCell>
-      <TableCell sx={{ textAlign: "center" }}>
+      ),
+    },
+    {
+      key: "item_description",
+      label: "Product/dienst",
+      align: "center",
+      render: ({ index }) => (
         <Controller
           name={`invoice_details.${index}.item_description`}
           control={control}
-          defaultValue={item.item_description ?? ""}
+          defaultValue={fields[index]?.item_description ?? ""}
           render={({ field }) => (
             <TextField
               {...field}
@@ -161,12 +157,17 @@ const InvoiceFormPage: React.FC<InvoiceFormPageProps> = ({ id }) => {
             />
           )}
         />
-      </TableCell>
-      <TableCell sx={{ textAlign: "center" }}>
+      ),
+    },
+    {
+      key: "item_unit_price",
+      label: "Prijs per stuk",
+      align: "center",
+      render: ({ index }) => (
         <Controller
           name={`invoice_details.${index}.item_unit_price`}
           control={control}
-          defaultValue={item.item_unit_price ?? 0}
+          defaultValue={fields[index]?.item_unit_price ?? 0}
           render={({ field }) => (
             <TextField
               {...field}
@@ -209,12 +210,17 @@ const InvoiceFormPage: React.FC<InvoiceFormPageProps> = ({ id }) => {
             />
           )}
         />
-      </TableCell>
-      <TableCell sx={{ textAlign: "center" }}>
+      ),
+    },
+    {
+      key: "item_tax_amount",
+      label: "ABB 6%",
+      align: "center",
+      render: ({ index }) => (
         <Controller
           name={`invoice_details.${index}.item_tax_amount`}
           control={control}
-          defaultValue={item.item_tax_amount ?? 0}
+          defaultValue={fields[index]?.item_tax_amount ?? 0}
           render={({ field }) => (
             <TextField
               {...field}
@@ -228,12 +234,17 @@ const InvoiceFormPage: React.FC<InvoiceFormPageProps> = ({ id }) => {
             />
           )}
         />
-      </TableCell>
-      <TableCell sx={{ textAlign: "center" }}>
+      ),
+    },
+    {
+      key: "item_total_with_tax",
+      label: "Subtotaal",
+      align: "center",
+      render: ({ index }) => (
         <Controller
           name={`invoice_details.${index}.item_total_with_tax`}
           control={control}
-          defaultValue={item?.item_total_with_tax ?? 0}
+          defaultValue={fields[index]?.item_total_with_tax ?? 0}
           render={({ field }) => (
             <TextField
               {...field}
@@ -248,14 +259,19 @@ const InvoiceFormPage: React.FC<InvoiceFormPageProps> = ({ id }) => {
             />
           )}
         />
-      </TableCell>
-      <TableCell sx={{ textAlign: "center" }}>
+      ),
+    },
+    {
+      key: "actions",
+      label: "",
+      align: "center",
+      render: ({ index }) => (
         <IconButton color="error" onClick={() => remove(index)} size="small">
           <DeleteIcon />
         </IconButton>
-      </TableCell>
-    </TableRow>
-  );
+      ),
+    },
+  ];
 
   useEffect(() => {
     setModeEdit(false);
@@ -498,118 +514,31 @@ const InvoiceFormPage: React.FC<InvoiceFormPageProps> = ({ id }) => {
             </Box>
           </Paper>
 
-          <TableContainer>
-            <Table
-              stickyHeader
-              sx={{
-                // minWidth: 900,
-                "& .MuiTableCell-root": {
-                  border: "1px solid #e0e0e0",
-                },
-              }}
-              aria-label="factuurtabel"
-              size="small"
+          <ResponsiveListTable
+            columns={detailColumns}
+            rows={fields.map((field, index) => ({ id: field.id, index }))}
+            getRowKey={(row) => row.id}
+            emptyMessage="Geen items toegevoegd."
+          />
+          <Box sx={{ mt: 2 }}>
+            <Button
+              variant="outlined"
+              onClick={() =>
+                append({
+                  item_description: "",
+                  item_quantity: 0,
+                  item_unit_price: 0,
+                  item_total_price: 0,
+                  item_tax_rate: 6,
+                  item_tax_amount: 0,
+                  item_total_with_tax: 0,
+                })
+              }
+              sx={{ textTransform: "none" }}
             >
-              <TableHead>
-                <TableRow>
-                  <TableCell
-                    sx={{
-                      minWidth: 50,
-                      backgroundColor: "#bdbdbd",
-                      fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  >
-                    Hoeveelheid
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      minWidth: 150,
-                      backgroundColor: "#bdbdbd",
-                      fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  >
-                    Product/dienst
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      minWidth: 50,
-                      backgroundColor: "#bdbdbd",
-                      fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  >
-                    Prijs per stuk
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      minWidth: 50,
-                      backgroundColor: "#bdbdbd",
-                      fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  >
-                    ABB 6%
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      minWidth: 50,
-                      backgroundColor: "#bdbdbd",
-                      fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  >
-                    Subtotaal
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      minWidth: 50,
-                      backgroundColor: "#bdbdbd",
-                      fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  />
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {fields.map((field, index) => (
-                  <CustomRow
-                    key={field.id}
-                    item={field as BillingInvoiceDetailBase}
-                    index={index}
-                  />
-                ))}
-                <TableRow>
-                  <TableCell colSpan={6} align="left">
-                    <Button
-                      variant="outlined"
-                      onClick={() =>
-                        append({
-                          item_description: "",
-                          item_quantity: 0,
-                          item_unit_price: 0,
-                          item_total_price: 0,
-                          item_tax_rate: 6,
-                          item_tax_amount: 0,
-                          item_total_with_tax: 0,
-                        })
-                      }
-                      sx={{ textTransform: "none" }}
-                    >
-                      + Item toevoegen
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
+              + Item toevoegen
+            </Button>
+          </Box>
 
           <Grid container spacing={2} sx={{ mt: 4 }}>
             <Grid size={{ xs: 12, md: 8 }}>

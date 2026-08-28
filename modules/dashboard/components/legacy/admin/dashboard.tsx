@@ -3,24 +3,10 @@
 import { getTableSummary } from "@/modules/dashboard/actions/dashboard.actions";
 import { TableSummaryResponse } from "@/modules/dashboard/types/report.types";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
-import {
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  Grid,
-  Typography,
-  Button,
-  Stack,
-  TableContainer,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-} from "@mui/material";
+import { Box, Card, CardContent, Chip, Grid, Typography } from "@mui/material";
 import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 const contracts = [
   {
@@ -115,80 +101,72 @@ export const DashboardAdmin = () => {
               </Box>
 
 
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Modulo</TableCell>
-                      <TableCell>Datum</TableCell>
-                      <TableCell>Referentie</TableCell>
-                      <TableCell>Naam</TableCell>
-                      <TableCell align="right">Totaal</TableCell>
-                      <TableCell align="center">Status</TableCell>
-                    </TableRow>
-                  </TableHead>
+              {(() => {
+                const columns: ListColumn<TableSummaryResponse>[] = [
+                  {
+                    key: "source",
+                    label: "Modulo",
+                    render: (row) => (
+                      <Chip
+                        size="small"
+                        label={
+                          row.source === "contract"
+                            ? "Acuerdo"
+                            : row.source === "collection"
+                              ? "Cobranza"
+                              : "Bloqueo"
+                        }
+                        variant="outlined"
+                      />
+                    ),
+                  },
+                  { key: "date", label: "Datum", render: (row) => formatDate(row.date.toString()) },
+                  { key: "reference_number", label: "Referentie", render: (row) => row.reference_number },
+                  { key: "name", label: "Naam", render: (row) => row.name },
+                  {
+                    key: "amount",
+                    label: "Totaal",
+                    align: "right",
+                    render: (row) =>
+                      new Intl.NumberFormat("es-EC", {
+                        style: "currency",
+                        currency: "USD",
+                      }).format(row.amount),
+                  },
+                  {
+                    key: "status",
+                    label: "Status",
+                    align: "center",
+                    render: (row) => (
+                      <Chip
+                        size="small"
+                        label={row.status}
+                        color={
+                          row.status === "OPEN"
+                            ? "warning"
+                            : row.status === "PAID"
+                              ? "success"
+                              : "default"
+                        }
+                      />
+                    ),
+                  },
+                ];
 
-                  <TableBody>
-                    {dataTableSummary.map((row, index) => (
-                      <TableRow
-                        key={`${row.source}-${row.reference_number}-${index}`}
-                        hover
-                      >
-                        <TableCell>
-                          <Chip
-                            size="small"
-                            label={
-                              row.source === "contract"
-                                ? "Acuerdo"
-                                : row.source === "collection"
-                                  ? "Cobranza"
-                                  : "Bloqueo"
-                            }
-                            variant="outlined"
-                          />
-                        </TableCell>
+                const rows = dataTableSummary.map((row, index) => ({
+                  ...row,
+                  _key: `${row.source}-${row.reference_number}-${index}`,
+                }));
 
-                        <TableCell>{formatDate(row.date.toString())}</TableCell>
-
-                        <TableCell>{row.reference_number}</TableCell>
-
-                        <TableCell>{row.name}</TableCell>
-
-                        <TableCell align="right">
-                          {new Intl.NumberFormat("es-EC", {
-                            style: "currency",
-                            currency: "USD",
-                          }).format(row.amount)}
-                        </TableCell>
-
-                        <TableCell align="center">
-                          <Chip
-                            size="small"
-                            label={row.status}
-                            color={
-                              row.status === "OPEN"
-                                ? "warning"
-                                : row.status === "PAID"
-                                  ? "success"
-                                  : "default"
-                            }
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-
-                    {dataTableSummary.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={6} align="center">
-                          <Typography color="text.secondary">
-                            No existen registros
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                return (
+                  <ResponsiveListTable
+                    columns={columns}
+                    rows={rows}
+                    getRowKey={(row) => row._key}
+                    emptyMessage="No existen registros"
+                  />
+                );
+              })()}
             </CardContent>
           </Card>
         </Grid>

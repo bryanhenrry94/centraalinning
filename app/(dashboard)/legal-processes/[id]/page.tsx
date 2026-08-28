@@ -15,14 +15,10 @@ import {
   Stack,
   Divider,
   Button,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
 } from "@mui/material";
 
 import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
@@ -329,36 +325,32 @@ const LegalProcessDetailPage: React.FC = () => {
           <Card>
             <CardHeader title="Vonnissen" />
             <CardContent>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Vonnisnummer</TableCell>
-                    <TableCell>Rechtbank</TableCell>
-                    <TableCell>Datum</TableCell>
-                    <TableCell align="right">Bedrag</TableCell>
-                    <TableCell>Verjaringsdatum</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {legalProcess.verdicts.map((verdict) => (
-                    <TableRow key={verdict.id}>
-                      <TableCell>{verdict.registration_number}</TableCell>
-                      <TableCell>{verdict.court || "-"}</TableCell>
-                      <TableCell>
-                        {formatDate(verdict.sentence_date.toString())}
-                      </TableCell>
-                      <TableCell align="right">
-                        {formatCurrency(verdict.sentence_amount)}
-                      </TableCell>
-                      <TableCell>
-                        {verdict.prescription_due_date
-                          ? formatDate(verdict.prescription_due_date.toString())
-                          : "-"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              {(() => {
+                const columns: ListColumn<(typeof legalProcess.verdicts)[number]>[] = [
+                  { key: "registration_number", label: "Vonnisnummer", render: (v) => v.registration_number },
+                  { key: "court", label: "Rechtbank", render: (v) => v.court || "-", hideOnMobile: true },
+                  {
+                    key: "sentence_date",
+                    label: "Datum",
+                    render: (v) => formatDate(v.sentence_date.toString()),
+                  },
+                  {
+                    key: "sentence_amount",
+                    label: "Bedrag",
+                    align: "right",
+                    render: (v) => formatCurrency(v.sentence_amount),
+                  },
+                  {
+                    key: "prescription_due_date",
+                    label: "Verjaringsdatum",
+                    render: (v) => (v.prescription_due_date ? formatDate(v.prescription_due_date.toString()) : "-"),
+                    hideOnMobile: true,
+                  },
+                ];
+                return (
+                  <ResponsiveListTable columns={columns} rows={legalProcess.verdicts} getRowKey={(v) => v.id} />
+                );
+              })()}
             </CardContent>
           </Card>
         )}
@@ -391,38 +383,31 @@ const LegalProcessDetailPage: React.FC = () => {
                 />
               </Grid>
             </Grid>
-            {agreements.length > 0 && (
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Bedrag</TableCell>
-                    <TableCell>Termijnen</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Reden afwijzing</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {agreements.map((agreement) => (
-                    <TableRow
-                      key={agreement.id}
-                      hover
-                      sx={{ cursor: "pointer" }}
-                      onClick={() => {
-                        setSelectedAgreement(agreement);
-                        setDialog("decide-agreement");
-                      }}
-                    >
-                      <TableCell>
-                        {formatCurrency(agreement.total_amount)}
-                      </TableCell>
-                      <TableCell>{agreement.installments_count}</TableCell>
-                      <TableCell>{agreement.status}</TableCell>
-                      <TableCell>{agreement.rejection_reason ?? "-"}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
+            {agreements.length > 0 &&
+              (() => {
+                const columns: ListColumn<(typeof agreements)[number]>[] = [
+                  { key: "total_amount", label: "Bedrag", align: "right", render: (a) => formatCurrency(a.total_amount) },
+                  { key: "installments_count", label: "Termijnen", render: (a) => a.installments_count },
+                  { key: "status", label: "Status", render: (a) => a.status },
+                  {
+                    key: "rejection_reason",
+                    label: "Reden afwijzing",
+                    render: (a) => a.rejection_reason ?? "-",
+                    hideOnMobile: true,
+                  },
+                ];
+                return (
+                  <ResponsiveListTable
+                    columns={columns}
+                    rows={agreements}
+                    getRowKey={(a) => a.id}
+                    onRowClick={(a) => {
+                      setSelectedAgreement(a);
+                      setDialog("decide-agreement");
+                    }}
+                  />
+                );
+              })()}
           </CardContent>
         </Card>
 

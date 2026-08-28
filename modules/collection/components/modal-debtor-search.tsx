@@ -6,13 +6,6 @@ import {
   Box,
   Typography,
   TextField,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   IconButton,
   Button,
 } from "@mui/material";
@@ -24,6 +17,7 @@ import {
   DebtorCreate as DebtorCreateBase,
   DebtorResponse,
 } from "@/modules/collection/services/debtor.type";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 type DebtorCreate = DebtorCreateBase & { id: string };
 
@@ -93,59 +87,58 @@ const ModalSearchDebtor: React.FC<ModalSearchDebtorProps> = ({
           onChange={(e) => setSearch(e.target.value)}
           sx={{ mb: 2 }}
         />
-        <TableContainer component={Paper}>
-          <Table stickyHeader>
-            <TableHead>
-              <TableRow>
-                <TableCell>Naam</TableCell>
-                <TableCell>Identificatie</TableCell>
-                <TableCell>E-mail</TableCell>
-                <TableCell align="center">Bewerken</TableCell>
-                <TableCell align="center">Selecteren</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredDebtors.map((debtor) => (
-                <TableRow key={debtor.id}>
-                  <TableCell>
-                    {debtor.person?.first_name} {debtor.person?.last_name}
-                  </TableCell>
-                  <TableCell>{debtor.person?.identification}</TableCell>
-                  <TableCell>{debtor.email}</TableCell>
-                  <TableCell align="center">
-                    <IconButton
-                      color="primary"
-                      onClick={() => {
-                        onEdit(debtor.id);
-                        onClose();
-                      }}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                  </TableCell>
-                  <TableCell align="center">
-                    <IconButton
-                      color="primary"
-                      onClick={() => {
-                        onSelect(debtor);
-                        onClose();
-                      }}
-                    >
-                      <CheckIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {filteredDebtors.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={3} align="center">
-                    Geen debiteuren gevonden.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        {(() => {
+          const columns: ListColumn<DebtorResponse>[] = [
+            {
+              key: "name",
+              label: "Naam",
+              render: (debtor) => `${debtor.person?.first_name} ${debtor.person?.last_name}`,
+            },
+            { key: "identification", label: "Identificatie", render: (debtor) => debtor.person?.identification },
+            { key: "email", label: "E-mail", render: (debtor) => debtor.email },
+            {
+              key: "edit",
+              label: "Bewerken",
+              align: "center",
+              render: (debtor) => (
+                <IconButton
+                  color="primary"
+                  onClick={() => {
+                    onEdit(debtor.id);
+                    onClose();
+                  }}
+                >
+                  <EditIcon />
+                </IconButton>
+              ),
+            },
+            {
+              key: "select",
+              label: "Selecteren",
+              align: "center",
+              render: (debtor) => (
+                <IconButton
+                  color="primary"
+                  onClick={() => {
+                    onSelect(debtor);
+                    onClose();
+                  }}
+                >
+                  <CheckIcon />
+                </IconButton>
+              ),
+            },
+          ];
+
+          return (
+            <ResponsiveListTable
+              columns={columns}
+              rows={filteredDebtors}
+              getRowKey={(debtor) => debtor.id}
+              emptyMessage="Geen debiteuren gevonden."
+            />
+          );
+        })()}
         <Box mt={2} display="flex" justifyContent="flex-end">
           <Button onClick={onClose}>Sluiten</Button>
         </Box>

@@ -3,26 +3,14 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import {
-  Container,
-  Typography,
-  Card,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Chip,
-  Button,
-  Stack,
-  Box,
-} from "@mui/material";
+import { Container, Typography, Chip, Button, Stack, Box } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 
 import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { notifyError } from "@/shared/ui/notifications";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 import { getAllFinancialAgreementsForTenant } from "@/modules/financial-agreement/actions/financial-agreement.actions";
 import { getFinancialAgreementStatusInfo } from "@/modules/financial-agreement/utils/financial-agreement-status";
@@ -79,52 +67,44 @@ const FinancialAgreementsPage: React.FC = () => {
         </Button>
       </Stack>
 
-      <Card>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Referentie</TableCell>
-              <TableCell>Debiteur</TableCell>
-              <TableCell align="right">Bedrag</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Aangemaakt</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {items.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5}>
-                  <Box sx={{ color: "text.secondary", py: 2, textAlign: "center" }}>
-                    Nog geen financiële afspraken geregistreerd.
-                  </Box>
-                </TableCell>
-              </TableRow>
-            )}
-            {items.map((item) => {
-              const statusInfo = getFinancialAgreementStatusInfo(item.status);
-              const debtorName = item.debtor?.person
+      {(() => {
+        const columns: ListColumn<FinancialAgreementListItem>[] = [
+          { key: "reference", label: "Referentie", render: (item) => item.reference ?? "-" },
+          {
+            key: "debtor",
+            label: "Debiteur",
+            render: (item) =>
+              item.debtor?.person
                 ? `${item.debtor.person.first_name ?? ""} ${item.debtor.person.last_name ?? ""}`.trim()
-                : "-";
-              return (
-                <TableRow
-                  key={item.id}
-                  hover
-                  sx={{ cursor: "pointer" }}
-                  onClick={() => router.push(`/financial-agreements/${item.id}`)}
-                >
-                  <TableCell>{item.reference ?? "-"}</TableCell>
-                  <TableCell>{debtorName}</TableCell>
-                  <TableCell align="right">{formatCurrency(item.amount)}</TableCell>
-                  <TableCell>
-                    <Chip label={statusInfo.label} color={statusInfo.color} size="small" sx={{ fontWeight: 700 }} />
-                  </TableCell>
-                  <TableCell>{formatDate(item.createdAt.toString())}</TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </Card>
+                : "-",
+          },
+          { key: "amount", label: "Bedrag", align: "right", render: (item) => formatCurrency(item.amount) },
+          {
+            key: "status",
+            label: "Status",
+            render: (item) => {
+              const statusInfo = getFinancialAgreementStatusInfo(item.status);
+              return <Chip label={statusInfo.label} color={statusInfo.color} size="small" sx={{ fontWeight: 700 }} />;
+            },
+          },
+          {
+            key: "createdAt",
+            label: "Aangemaakt",
+            render: (item) => formatDate(item.createdAt.toString()),
+            hideOnMobile: true,
+          },
+        ];
+
+        return (
+          <ResponsiveListTable
+            columns={columns}
+            rows={items}
+            getRowKey={(item) => item.id}
+            getRowHref={(item) => `/financial-agreements/${item.id}`}
+            emptyMessage="Nog geen financiële afspraken geregistreerd."
+          />
+        );
+      })()}
     </Container>
   );
 };

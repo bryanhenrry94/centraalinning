@@ -8,12 +8,6 @@ import {
   IconButton,
   InputAdornment,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Typography,
   Button,
@@ -27,9 +21,9 @@ import { useRouter } from "next/navigation";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { useDebounce } from "@/shared/hooks/useDebounce";
 
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import { REASONS } from "@/modules/blockade/constants/reason-blockades";
 import { getBlockadeStatusInfo } from "@/modules/blockade/utils/blockade-status";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 export default function BlocksPage() {
   const router = useRouter();
@@ -85,10 +79,6 @@ export default function BlocksPage() {
       search: e.target.value,
       page: 0, // Reset to first page on new search
     }));
-  };
-
-  const handleClicShowDetails = (contractId: string) => {
-    router.push(`/blocks/${contractId}`);
   };
 
   const getLabelForReason = (reason: string) => {
@@ -158,178 +148,69 @@ export default function BlocksPage() {
           />
         </Stack>
 
-        <TableContainer>
-          <Table size="small" stickyHeader aria-label="sticky table">
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  sx={{
-                    minWidth: 120,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Blokkadenr.
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 120,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Registratiedatum
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 250,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Schuldenaar
-                </TableCell>
+        {(() => {
+          const columns: ListColumn<(typeof blockades)[number]>[] = [
+            { key: "reference", label: "Blokkadenr.", render: (b) => b.originDebtClaim?.reference || "-" },
+            { key: "createdAt", label: "Registratiedatum", render: (b) => formatDate(b.createdAt) },
+            {
+              key: "debtor",
+              label: "Schuldenaar",
+              render: (b) => `${b.debtor?.person?.first_name ?? ""} ${b.debtor?.person?.last_name ?? ""}`.trim() || "-",
+            },
+            {
+              key: "amount",
+              label: "Bedrag",
+              align: "right",
+              render: (b) => formatCurrency(Number(b.originDebtClaim?.principalAmount) || 0),
+            },
+            { key: "reason", label: "Reden blokkade", render: (b) => getLabelForReason(b.reason), hideOnMobile: true },
+            {
+              key: "status",
+              label: "Status",
+              render: (b) => {
+                const statusInfo = getBlockadeStatusInfo(b.status);
+                return <Chip size="small" label={statusInfo.label} color={statusInfo.color} />;
+              },
+            },
+          ];
 
-                <TableCell
-                  sx={{
-                    minWidth: 150,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Bedrag
-                </TableCell>
+          return (
+            <ResponsiveListTable
+              columns={columns}
+              rows={blockades}
+              getRowKey={(b) => b.id}
+              getRowHref={(b) => `/blocks/${b.id}`}
+              emptyMessage="Geen blokkades gevonden."
+            />
+          );
+        })()}
+        <TablePagination
+          component="div"
+          count={total}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          onPageChange={(_, newPage) => {
+            setPage(newPage);
 
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Reden blokkade
-                </TableCell>
+            fetchBlockades({
+              search: debouncedSearch,
+              page: newPage,
+              limit: rowsPerPage,
+            });
+          }}
+          onRowsPerPageChange={(event) => {
+            const newSize = parseInt(event.target.value, 10);
 
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Status
-                </TableCell>
+            setRowsPerPage(newSize);
+            setPage(0);
 
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Acties
-                </TableCell>
-              </TableRow>
-            </TableHead>
-
-            <TableBody>
-              {blockades.map((blockade) => {
-                const statusInfo = getBlockadeStatusInfo(blockade.status);
-
-                return (
-                  <TableRow key={blockade.id}>
-                    <TableCell sx={{ textAlign: "center" }}>
-                      {blockade.originDebtClaim?.reference || "-"}
-                    </TableCell>
-                    <TableCell>{formatDate(blockade.createdAt)}</TableCell>
-
-                    <TableCell>
-                      {blockade?.debtor?.person?.first_name}{" "}
-                      {blockade?.debtor?.person?.last_name}
-                    </TableCell>
-
-                    <TableCell sx={{ textAlign: "center" }}>
-                      <Typography variant="body2">
-                        {formatCurrency(
-                          Number(blockade.originDebtClaim?.principalAmount) || 0,
-                        )}
-                      </Typography>
-                    </TableCell>
-
-                    <TableCell sx={{ textAlign: "center" }}>
-                      {getLabelForReason(blockade.reason)}
-                    </TableCell>
-
-                    <TableCell sx={{ textAlign: "center" }}>
-                      <Chip
-                        size="small"
-                        label={statusInfo.label}
-                        color={statusInfo.color}
-                      />
-                    </TableCell>
-
-                    <TableCell align="center">
-                      <IconButton
-                        aria-haspopup="true"
-                        onClick={() => handleClicShowDetails(blockade.id)}
-                      >
-                        <VisibilityIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-          <TablePagination
-            component="div"
-            count={total}
-            page={page}
-            rowsPerPage={rowsPerPage}
-            onPageChange={(_, newPage) => {
-              setPage(newPage);
-
-              fetchBlockades({
-                search: debouncedSearch,
-                page: newPage,
-                limit: rowsPerPage,
-              });
-            }}
-            onRowsPerPageChange={(event) => {
-              const newSize = parseInt(event.target.value, 10);
-
-              setRowsPerPage(newSize);
-              setPage(0);
-
-              fetchBlockades({
-                search: debouncedSearch,
-                page: 0,
-                limit: newSize,
-              });
-            }}
-          />
-        </TableContainer>
+            fetchBlockades({
+              search: debouncedSearch,
+              page: 0,
+              limit: newSize,
+            });
+          }}
+        />
       </Card>
     </Container>
   );

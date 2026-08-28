@@ -12,14 +12,7 @@ import {
   MenuItem,
   Skeleton,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableFooter,
-  TableHead,
   TablePagination,
-  TableRow,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -44,6 +37,7 @@ import {
   BillingInvoiceResponse,
 } from "@/modules/payment/services/billing-invoice.validators";
 import { UserRole } from "@/shared/constants/user-role";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 interface TablePaginationActionsProps {
   count: number;
@@ -274,180 +268,62 @@ const InvoicesPage: React.FC = () => {
       <Suspense
         fallback={<Skeleton variant="rectangular" width="100%" height={400} />}
       >
-        <TableContainer>
-          <Table
-            stickyHeader
-            sx={{
-              // minWidth: 900,
-              "& .MuiTableCell-root": {
-                border: "1px solid #e0e0e0",
-              },
-            }}
-            aria-label="factuurtabel"
-            size="small"
-          >
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Factuurnummer
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Factuurdatum
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Aan
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Subtotaal
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  ABB 6%
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Totaal
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                >
-                  Status
-                </TableCell>
-                <TableCell
-                  sx={{
-                    minWidth: 50,
-                    backgroundColor: "secondary.main",
-                    color: "#fff",
-                    fontWeight: "bold",
-                    border: "1px solid #bdbdbd",
-                  }}
-                  align="center"
-                />
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {invoices?.map((invoice: BillingInvoiceResponse) => (
-                <TableRow key={invoice.id}>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {invoice.invoice_number}
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {invoice.issue_date
-                      ? new Date(invoice.issue_date).toLocaleDateString(
-                          "es-ES",
-                          {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                          }
-                        )
-                      : ""}
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {invoice.tenant_id}
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {formatCurrency(
-                      invoice.invoice_details
-                        .map((d) => d.item_total_price)
-                        .reduce((a, b) => a + b, 0)
-                    )}
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {formatCurrency(
-                      invoice.invoice_details
-                        .map((d) => d.item_tax_amount)
-                        .reduce((a, b) => a + b, 0)
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {formatCurrency(
-                      invoice.invoice_details
-                        .map((d) => d.item_total_with_tax)
-                        .reduce((a, b) => a + b, 0)
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Chip label={invoice.status} color={"default"} />
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center" }}>
-                    {!isBailiff && (
-                      <>
+        {(() => {
+          const columns: ListColumn<BillingInvoiceResponse>[] = [
+            { key: "invoice_number", label: "Factuurnummer", render: (i) => i.invoice_number },
+            {
+              key: "issue_date",
+              label: "Factuurdatum",
+              render: (i) =>
+                i.issue_date
+                  ? new Date(i.issue_date).toLocaleDateString("es-ES", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })
+                  : "",
+              hideOnMobile: true,
+            },
+            { key: "tenant_id", label: "Aan", render: (i) => i.tenant_id, hideOnMobile: true },
+            {
+              key: "subtotal",
+              label: "Subtotaal",
+              align: "right",
+              render: (i) => formatCurrency(i.invoice_details.map((d) => d.item_total_price).reduce((a, b) => a + b, 0)),
+              hideOnMobile: true,
+            },
+            {
+              key: "abb",
+              label: "ABB 6%",
+              align: "right",
+              render: (i) => formatCurrency(i.invoice_details.map((d) => d.item_tax_amount).reduce((a, b) => a + b, 0)),
+              hideOnMobile: true,
+            },
+            {
+              key: "total",
+              label: "Totaal",
+              align: "right",
+              render: (i) =>
+                formatCurrency(i.invoice_details.map((d) => d.item_total_with_tax).reduce((a, b) => a + b, 0)),
+            },
+            { key: "status", label: "Status", render: (i) => <Chip label={i.status} color="default" /> },
+            {
+              key: "actions",
+              label: "",
+              render: (invoice) =>
+                !isBailiff && (
+                  <>
                     <IconButton
                       id={`actions-button-${invoice.id}`}
                       aria-controls={
-                        open && selectedRow?.id === invoice.id
-                          ? `actions-menus-${invoice.id}`
-                          : undefined
+                        open && selectedRow?.id === invoice.id ? `actions-menus-${invoice.id}` : undefined
                       }
                       aria-haspopup="true"
-                      aria-expanded={
-                        open && selectedRow?.id === invoice.id
-                          ? "true"
-                          : undefined
-                      }
-                      onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                        handleClick(e, invoice)
-                      }
+                      aria-expanded={open && selectedRow?.id === invoice.id ? "true" : undefined}
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                        e.stopPropagation();
+                        handleClick(e, invoice);
+                      }}
                     >
                       <MoreVertIcon />
                     </IconButton>
@@ -456,9 +332,7 @@ const InvoicesPage: React.FC = () => {
                       anchorEl={anchorEl}
                       open={open && selectedRow?.id === invoice.id}
                       onClose={handleClose}
-                      MenuListProps={{
-                        "aria-labelledby": `actions-button-${invoice.id}`,
-                      }}
+                      MenuListProps={{ "aria-labelledby": `actions-button-${invoice.id}` }}
                     >
                       <MenuItem
                         onClick={() => {
@@ -497,36 +371,41 @@ const InvoicesPage: React.FC = () => {
                         Verwijderen
                       </MenuItem>
                     </Menu>
-                      </>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TablePagination
-                  rowsPerPageOptions={[5, 10, 25, { label: "All", value: -1 }]}
-                  colSpan={9}
-                  count={invoices.length}
-                  rowsPerPage={rowsPerPage}
-                  page={page}
-                  slotProps={{
-                    select: {
-                      inputProps: {
-                        "aria-label": "rows per page",
-                      },
-                      native: true,
-                    },
-                  }}
-                  onPageChange={handleChangePage}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                  ActionsComponent={TablePaginationActions}
-                />
-              </TableRow>
-            </TableFooter>
-          </Table>
-        </TableContainer>
+                  </>
+                ),
+            },
+          ];
+
+          const pagedInvoices =
+            rowsPerPage > 0 ? invoices.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) : invoices;
+
+          return (
+            <>
+              <ResponsiveListTable
+                columns={columns}
+                rows={pagedInvoices}
+                getRowKey={(i) => i.id}
+                emptyMessage="Nog geen facturen geregistreerd."
+              />
+              <TablePagination
+                component="div"
+                rowsPerPageOptions={[5, 10, 25, { label: "All", value: -1 }]}
+                count={invoices.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                slotProps={{
+                  select: {
+                    inputProps: { "aria-label": "rows per page" },
+                    native: true,
+                  },
+                }}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                ActionsComponent={TablePaginationActions}
+              />
+            </>
+          );
+        })()}
       </Suspense>
     </Box>
   );

@@ -40,3 +40,4 @@ export const planCreateSchema = planSchema.omit({
 export const planUpdateSchema = planCreateSchema.partial();
 
 export type Plan = z.infer<typeof planSchema>;
+export type PlanUpdate = z.infer<typeof planUpdateSchema>;

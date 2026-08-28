@@ -3,14 +3,6 @@ import {
   Chip,
   Dialog,
   IconButton,
-  Modal,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -18,6 +10,7 @@ import { formatCurrency } from "@/shared/utils/formatters";
 import React, { useEffect } from "react";
 import { Payment } from "@/modules/payment/services/payment.validators";
 import { getPaymentsByInvoice } from "@/modules/payment/actions/payment.actions";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 type ChipColor =
   | "default"
@@ -85,126 +78,45 @@ export const PaymentsDialog: React.FC<PaymentsDialogProps> = ({
           </IconButton>
         </Box>
         <Box sx={{ p: 2, bgcolor: "background.paper" }}>
-          <TableContainer component={Paper}>
-            <Table
-              stickyHeader
-              sx={{
-                "& .MuiTableCell-root": {
-                  border: "1px solid #e0e0e0",
+          {(() => {
+            const columns: ListColumn<Payment>[] = [
+              { key: "method", label: "Method", align: "center", render: (payment) => payment.method },
+              { key: "reference_number", label: "Referentie", align: "center", render: (payment) => payment.reference_number },
+              {
+                key: "paid_at",
+                label: "Datum betaald",
+                align: "center",
+                render: (payment) => (payment.paid_at ? new Date(payment.paid_at).toLocaleDateString() : "-"),
+              },
+              {
+                key: "total_amount",
+                label: "Betaald",
+                align: "center",
+                render: (payment) => formatCurrency(payment.total_amount),
+              },
+              {
+                key: "status",
+                label: "Status",
+                align: "center",
+                render: (payment) => {
+                  const statusInfo = PAYMENT_STATUS_LABELS[payment.status] || {
+                    label: payment.status,
+                    color: "default" as ChipColor,
+                  };
+                  return <Chip label={statusInfo.label} color={statusInfo.color} size="small" />;
                 },
-              }}
-              aria-label="betalingentabel"
-              size="small"
-            >
-              <TableHead>
-                <TableRow>
-                  <TableCell
-                    sx={{
-                      minWidth: 50,
-                      backgroundColor: "paper.main",
-                      color: "#000",
-                      fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  >
-                    Method
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      minWidth: 50,
-                      backgroundColor: "paper.main",
-                      color: "#000",
-                      fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  >
-                    Referentie
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      minWidth: 50,
-                      backgroundColor: "paper.main",
-                      color: "#000",
-                      fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  >
-                    Datum betaald
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      minWidth: 50,
-                      backgroundColor: "paper.main",
-                      color: "#000",
-                      fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  >
-                    Betaald
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      minWidth: 50,
-                      backgroundColor: "paper.main",
-                      color: "#000",
-                      fontWeight: "bold",
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  >
-                    Status
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {/* Aquí irían las filas de datos dinámicos */}
-                {payments.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      align="center"
-                      sx={{ fontStyle: "italic" }}
-                    >
-                      Geen betalingen gevonden.
-                    </TableCell>
-                  </TableRow>
-                )}
-                {payments.map((payment) => {
-                  const statusInfo = PAYMENT_STATUS_LABELS[
-                    payment.status
-                  ] || { label: payment.status, color: "default" as ChipColor };
+              },
+            ];
 
-                  return (
-                    <TableRow key={payment.id}>
-                      <TableCell align="center">{payment.method}</TableCell>
-                      <TableCell align="center">
-                        {payment.reference_number}
-                      </TableCell>
-                      <TableCell align="center">
-                        {payment.paid_at
-                          ? new Date(payment.paid_at).toLocaleDateString()
-                          : "-"}
-                      </TableCell>
-                      <TableCell align="center">
-                        {formatCurrency(payment.total_amount)}
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip
-                          label={statusInfo.label}
-                          color={statusInfo.color}
-                          size="small"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
+            return (
+              <ResponsiveListTable
+                columns={columns}
+                rows={payments}
+                getRowKey={(payment) => payment.id}
+                emptyMessage="Geen betalingen gevonden."
+              />
+            );
+          })()}
         </Box>
       </Dialog>
     </>

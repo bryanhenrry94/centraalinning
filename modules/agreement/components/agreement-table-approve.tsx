@@ -1,22 +1,14 @@
 "use client";
 import React from "react";
 // mui
-import {
-  IconButton,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-} from "@mui/material";
+import { IconButton } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 
 // components
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
 import { AgreementRequestDialog } from "./agreement-request-dialog";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 interface AgreementTableApproveProps {
   agreements: AgreementResponse[];
@@ -47,191 +39,59 @@ export const AgreementTableApprove = ({
     onUpdate();
   };
 
+  const columns: ListColumn<AgreementResponse>[] = [
+    {
+      key: "actions",
+      label: "Acties",
+      render: (agreement) => (
+        <IconButton
+          color="primary"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleOpenModal(agreement.id);
+          }}
+        >
+          <VisibilityIcon />
+        </IconButton>
+      ),
+    },
+    { key: "type", label: "Zaaktype", render: () => "Buitengerechtelijk", hideOnMobile: true },
+    {
+      key: "date",
+      label: "Datum",
+      render: (a) => new Date(a.created_at || "").toLocaleDateString(),
+      hideOnMobile: true,
+    },
+    { key: "debtor", label: "Debiteur", render: (a) => (a.debtor ? a.debtor.fullname : "Sin deudor asignado") },
+    { key: "total", label: "Totaal", align: "right", render: (a) => formatCurrency(a.total_amount) },
+    { key: "boet", label: "Boet", align: "right", render: () => formatCurrency(0), hideOnMobile: true },
+    { key: "betaling", label: "Betaling", align: "right", render: () => formatCurrency(0), hideOnMobile: true },
+    { key: "installments_count", label: "Termijn", render: (a) => a.installments_count, hideOnMobile: true },
+    {
+      key: "installment_amount",
+      label: "Aflosbedrag",
+      align: "right",
+      render: (a) => formatCurrency(a.installment_amount),
+    },
+    {
+      key: "start_date",
+      label: "Startdatum",
+      render: (a) => formatDate(a.start_date.toString()),
+      hideOnMobile: true,
+    },
+    { key: "end_date", label: "Einddatum", render: (a) => formatDate(a.end_date.toString()), hideOnMobile: true },
+    { key: "open", label: "Open", align: "right", render: (a) => formatCurrency(a.total_amount), hideOnMobile: true },
+  ];
+
   return (
     <>
-      <TableContainer component={Paper}>
-        <Table
-          stickyHeader
-          sx={{
-            "& .MuiTableCell-root": {
-              border: "1px solid #e0e0e0",
-            },
-          }}
-          aria-label="tabel met betalingsregelingen"
-          size="small"
-        >
-          <TableHead>
-            <TableRow>
-              <TableCell
-                sx={{
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-                align="center"
-              >
-                Acties
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-                align="center"
-              >
-                Zaaktype
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-                align="center"
-              >
-                Datum
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-                align="center"
-              >
-                Debiteur
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-                align="center"
-              >
-                Totaal
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-                align="center"
-              >
-                Boet
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-                align="center"
-              >
-                Betaling
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-                align="center"
-              >
-                Termijn
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-                align="center"
-              >
-                Aflosbedrag
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-                align="center"
-              >
-                Startdatum
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-                align="center"
-              >
-                Einddatum
-              </TableCell>
-              <TableCell
-                sx={{
-                  backgroundColor: "secondary.main",
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-                align="center"
-              >
-                Open
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {agreements.map((agreement: AgreementResponse) => (
-              <TableRow key={agreement.id}>
-                <TableCell align="center">
-                  <IconButton
-                    color="primary"
-                    onClick={() => handleOpenModal(agreement.id)}
-                  >
-                    <VisibilityIcon />
-                  </IconButton>
-                </TableCell>
-                <TableCell align="center">
-                  {"Buitengerechtelijk"}
-                </TableCell>
-                <TableCell align="center">
-                  {new Date(agreement.created_at || "").toLocaleDateString()}
-                </TableCell>
-                <TableCell align="center">
-                  {agreement.debtor
-                    ? agreement.debtor.fullname
-                    : "Sin deudor asignado"}
-                </TableCell>
-                <TableCell align="center">
-                  {formatCurrency(agreement.total_amount)}
-                </TableCell>
-                <TableCell align="center">{formatCurrency(0)}</TableCell>
-                <TableCell align="center">{formatCurrency(0)}</TableCell>
-
-                <TableCell align="center">
-                  {agreement.installments_count}
-                </TableCell>
-                <TableCell align="center">
-                  {formatCurrency(agreement.installment_amount)}
-                </TableCell>
-                <TableCell align="center">
-                  {formatDate(agreement.start_date.toString())}
-                </TableCell>
-                <TableCell align="center">
-                  {formatDate(agreement.end_date.toString())}
-                </TableCell>
-                <TableCell align="right">
-                  {formatCurrency(agreement.total_amount)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <ResponsiveListTable
+        columns={columns}
+        rows={agreements}
+        getRowKey={(a) => a.id}
+        onRowClick={(a) => handleOpenModal(a.id)}
+        emptyMessage="Geen betalingsregelingen in behandeling."
+      />
 
       <AgreementRequestDialog
         open={openModal}

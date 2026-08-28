@@ -9,12 +9,6 @@ import {
   Modal,
   Paper,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   TextField,
   Typography,
 } from "@mui/material";
@@ -24,10 +18,7 @@ import {
   useFormContext,
   useWatch,
 } from "react-hook-form";
-import {
-  IVerdictInterest,
-  IVerdictInterestCreate,
-} from "@/modules/verdict/services/verdict-interest.validators";
+import { IVerdictInterestCreate } from "@/modules/verdict/services/verdict-interest.validators";
 import { getAllInterestTypes } from "@/modules/settings/actions/interest-type.actions";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import CloseIcon from "@mui/icons-material/Close";
@@ -35,6 +26,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import InterestCell from "../interest-cell";
 import TotalCell from "../total-cell";
 import TotalInterest from "../total-interest";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 const StatutoryInterestSection: React.FC = () => {
   const [interesTipos, setInteresTipos] = React.useState<InterestType[]>([]);
@@ -125,155 +117,165 @@ const StatutoryInterestSection: React.FC = () => {
     );
   };
 
-  const CreateCustomRow: React.FC<{
-    item: IVerdictInterest;
-    index: number;
-  }> = ({ item, index }) => {
-    return (
-      <TableRow key={item.id}>
-        {/* interest_type */}
-        <TableCell sx={{ textAlign: "center" }}>
-          <Controller
-            name={`verdict_interest.${index}.interest_type`}
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                id="outlined-select-interest_type"
-                select
-                value={field.value ?? ""}
-                fullWidth
-                size="small"
-                error={!!errors.verdict_interest?.[index]?.interest_type}
-                helperText={
-                  errors.verdict_interest?.[index]?.interest_type?.message
-                }
-              >
-                {interesTipos.map((option) => (
-                  <MenuItem key={option.id} value={option.id}>
-                    {option.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-            )}
-          />
-        </TableCell>
-
-        {/* calculation_start */}
-        <TableCell sx={{ textAlign: "center" }}>
-          <Controller
-            name={`verdict_interest.${index}.calculation_start`}
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                type="date"
-                fullWidth
-                size="small"
-                slotProps={{ inputLabel: { shrink: true } }}
-                error={!!errors.verdict_interest?.[index]?.calculation_start}
-                helperText={
-                  errors.verdict_interest?.[index]?.calculation_start?.message
-                }
-                value={
-                  field.value
-                    ? new Date(field.value).toISOString().slice(0, 10)
-                    : ""
-                }
-                onChange={(e) => {
-                  field.onChange(
-                    e.target.value ? new Date(e.target.value) : null
-                  );
-                }}
-              />
-            )}
-          />
-        </TableCell>
-        {/* calculation_end */}
-        <TableCell sx={{ textAlign: "center" }}>
-          <Controller
-            name={`verdict_interest.${index}.calculation_end`}
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                type="date"
-                fullWidth
-                size="small"
-                slotProps={{ inputLabel: { shrink: true } }}
-                error={!!errors.verdict_interest?.[index]?.calculation_end}
-                helperText={
-                  errors.verdict_interest?.[index]?.calculation_end?.message
-                }
-                value={
-                  field.value
-                    ? new Date(field.value).toISOString().slice(0, 10)
-                    : ""
-                }
-                onChange={(e) => {
-                  field.onChange(
-                    e.target.value ? new Date(e.target.value) : null
-                  );
-                }}
-              />
-            )}
-          />
-        </TableCell>
-        {/* base_amount */}
-        <TableCell sx={{ textAlign: "center" }}>
-          <Controller
-            name={`verdict_interest.${index}.base_amount`}
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                size="small"
-                fullWidth
-                type="number"
-                placeholder="0.00"
-                inputProps={{ step: "any" }}
-                error={!!errors.verdict_interest?.[index]?.base_amount}
-                helperText={
-                  errors.verdict_interest?.[index]?.base_amount?.message
-                }
-                value={field.value ?? ""} // si es null/undefined → ""
-                onChange={(e) => {
-                  const val = e.target.value;
-                  field.onChange(val === "" ? null : parseFloat(val));
-                }}
-              />
-            )}
-          />
-        </TableCell>
-
-        {/* total_interest */}
-        <TableCell sx={{ textAlign: "center" }}>
-          <InterestCell control={control} index={index} />
-        </TableCell>
-        {/* total */}
-        <TableCell sx={{ textAlign: "center" }}>
-          <TotalCell control={control} index={index} />
-        </TableCell>
-        {/* calculated_interest */}
-        {/* <TableCell sx={{ textAlign: "center" }}>
-              <CalculatedInterestCell control={control} index={index} />
-            </TableCell> */}
-        {/* action */}
-        <TableCell sx={{ textAlign: "center" }}>
-          <Stack direction="row" spacing={1} justifyContent="center">
-            <IconButton
-              aria-label="delete"
-              color="error"
+  const columns: ListColumn<{ id: string; index: number }>[] = [
+    {
+      key: "interest_type",
+      label: "Soort rente",
+      render: ({ index }) => (
+        <Controller
+          name={`verdict_interest.${index}.interest_type`}
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              id="outlined-select-interest_type"
+              select
+              value={field.value ?? ""}
+              fullWidth
               size="small"
-              onClick={() => remove(index)}
+              error={!!errors.verdict_interest?.[index]?.interest_type}
+              helperText={
+                errors.verdict_interest?.[index]?.interest_type?.message
+              }
             >
-              <DeleteIcon />
-            </IconButton>
-          </Stack>
-        </TableCell>
-      </TableRow>
-    );
-  };
+              {interesTipos.map((option) => (
+                <MenuItem key={option.id} value={option.id}>
+                  {option.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
+        />
+      ),
+    },
+    {
+      key: "calculation_start",
+      label: "Berekenen vanaf",
+      align: "center",
+      render: ({ index }) => (
+        <Controller
+          name={`verdict_interest.${index}.calculation_start`}
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              type="date"
+              fullWidth
+              size="small"
+              slotProps={{ inputLabel: { shrink: true } }}
+              error={!!errors.verdict_interest?.[index]?.calculation_start}
+              helperText={
+                errors.verdict_interest?.[index]?.calculation_start?.message
+              }
+              value={
+                field.value
+                  ? new Date(field.value).toISOString().slice(0, 10)
+                  : ""
+              }
+              onChange={(e) => {
+                field.onChange(
+                  e.target.value ? new Date(e.target.value) : null
+                );
+              }}
+            />
+          )}
+        />
+      ),
+    },
+    {
+      key: "calculation_end",
+      label: "Berekenen tot en met",
+      align: "center",
+      render: ({ index }) => (
+        <Controller
+          name={`verdict_interest.${index}.calculation_end`}
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              type="date"
+              fullWidth
+              size="small"
+              slotProps={{ inputLabel: { shrink: true } }}
+              error={!!errors.verdict_interest?.[index]?.calculation_end}
+              helperText={
+                errors.verdict_interest?.[index]?.calculation_end?.message
+              }
+              value={
+                field.value
+                  ? new Date(field.value).toISOString().slice(0, 10)
+                  : ""
+              }
+              onChange={(e) => {
+                field.onChange(
+                  e.target.value ? new Date(e.target.value) : null
+                );
+              }}
+            />
+          )}
+        />
+      ),
+    },
+    {
+      key: "base_amount",
+      label: "Hoofdsom",
+      align: "center",
+      render: ({ index }) => (
+        <Controller
+          name={`verdict_interest.${index}.base_amount`}
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              size="small"
+              fullWidth
+              type="number"
+              placeholder="0.00"
+              inputProps={{ step: "any" }}
+              error={!!errors.verdict_interest?.[index]?.base_amount}
+              helperText={
+                errors.verdict_interest?.[index]?.base_amount?.message
+              }
+              value={field.value ?? ""} // si es null/undefined → ""
+              onChange={(e) => {
+                const val = e.target.value;
+                field.onChange(val === "" ? null : parseFloat(val));
+              }}
+            />
+          )}
+        />
+      ),
+    },
+    {
+      key: "total_interest",
+      label: "Rente",
+      align: "center",
+      render: ({ index }) => <InterestCell control={control} index={index} />,
+    },
+    {
+      key: "total",
+      label: "Totaal",
+      align: "center",
+      render: ({ index }) => <TotalCell control={control} index={index} />,
+    },
+    {
+      key: "actions",
+      label: "Acties",
+      align: "center",
+      render: ({ index }) => (
+        <Stack direction="row" spacing={1} justifyContent="center">
+          <IconButton
+            aria-label="delete"
+            color="error"
+            size="small"
+            onClick={() => remove(index)}
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Stack>
+      ),
+    },
+  ];
 
   return (
     <Paper
@@ -317,155 +319,33 @@ const StatutoryInterestSection: React.FC = () => {
       </Box>
       <Box sx={{ p: 2 }}>
         <Box>
-          <TableContainer
-            component={Paper}
-            sx={{ width: "100%", boxShadow: "none" }}
-          >
-            <Table
-              stickyHeader
-              sx={{
-                width: "100%",
-                "& .MuiTableCell-root": {
-                  border: "1px solid #e0e0e0",
-                },
-              }}
-              aria-label="rentetabel"
+          <ResponsiveListTable
+            columns={columns}
+            rows={fields.map((field, index) => ({ id: field.id, index }))}
+            getRowKey={(row) => row.id}
+            emptyMessage="Geen renteberekeningen toegevoegd."
+          />
+          <Box sx={{ mt: 2 }}>
+            <Button
+              variant="outlined"
+              color="primary"
               size="small"
+              onClick={() =>
+                append({
+                  interest_type: "",
+                  base_amount: 0,
+                  calculated_interest: 0,
+                  calculation_start: new Date(),
+                  calculation_end: new Date(),
+                  total_interest: 0,
+                  details: [],
+                })
+              }
+              sx={{ textTransform: "none" }}
             >
-              <TableHead>
-                <TableRow>
-                  <TableCell
-                    sx={{
-                      minWidth: 150,
-                      backgroundColor: "#f5f5f5",
-
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="left"
-                  >
-                    Soort rente
-                  </TableCell>
-
-                  <TableCell
-                    sx={{
-                      minWidth: 75,
-                      backgroundColor: "#f5f5f5",
-
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  >
-                    Berekenen vanaf
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      minWidth: 75,
-                      backgroundColor: "#f5f5f5",
-
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  >
-                    Berekenen tot en met
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      minWidth: 100,
-                      backgroundColor: "#f5f5f5",
-
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  >
-                    Hoofdsom
-                  </TableCell>
-
-                  <TableCell
-                    sx={{
-                      minWidth: 100,
-                      backgroundColor: "#f5f5f5",
-
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  >
-                    Rente
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      minWidth: 75,
-                      backgroundColor: "#f5f5f5",
-
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  >
-                    Totaal
-                  </TableCell>
-                  {/* <TableCell
-                sx={{
-                  minWidth: 75,
-                  backgroundColor: "#f5f5f5",
-                  
-                  
-                  border: "1px solid #bdbdbd",
-                }}
-                align="center"
-              >
-                Interés
-              </TableCell> */}
-                  <TableCell
-                    sx={{
-                      minWidth: 50,
-                      backgroundColor: "#f5f5f5",
-
-                      border: "1px solid #bdbdbd",
-                    }}
-                    align="center"
-                  >
-                    Acties
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {fields.map((item, index) => {
-                  const field = item as IVerdictInterest;
-
-                  return (
-                    <CreateCustomRow
-                      key={field.id}
-                      item={field}
-                      index={index}
-                    />
-                  );
-                })}
-
-                <TableRow>
-                  <TableCell colSpan={8} align="left">
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      size="small"
-                      onClick={() =>
-                        append({
-                          interest_type: "",
-                          base_amount: 0,
-                          calculated_interest: 0,
-                          calculation_start: new Date(),
-                          calculation_end: new Date(),
-                          total_interest: 0,
-                          details: [],
-                        })
-                      }
-                      sx={{ textTransform: "none" }}
-                    >
-                      Nieuwe renteberekening toevoegen
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
+              Nieuwe renteberekening toevoegen
+            </Button>
+          </Box>
 
           {/* <FormHelperText sx={{ color: "error.main" }}>
         {Object.keys(errors).length > 0 && (
@@ -547,163 +427,71 @@ const StatutoryInterestSection: React.FC = () => {
                   <CloseIcon />
                 </IconButton>
               </Box>
-              <TableContainer sx={{ maxHeight: 350 }}>
-                <Table
-                  stickyHeader
-                  sx={{ minWidth: 900, bgcolor: "white" }}
-                  aria-label="tabel met berekende rente"
-                  size="small"
-                >
-                  <TableHead>
-                    <TableRow>
-                      <TableCell
-                        sx={{
-                          minWidth: 50,
-                          backgroundColor: "#f5f5f5",
+              {(() => {
+                const detailColumns: ListColumn<VerdictInterestDetailCreate>[] = [
+                  { key: "period", label: "Tramo", align: "center", render: (row) => row.period },
+                  {
+                    key: "period_start",
+                    label: "Fecha Ini.",
+                    align: "center",
+                    render: (row) => row.period_start.toLocaleDateString("es-ES"),
+                  },
+                  {
+                    key: "period_end",
+                    label: "Fecha Fin",
+                    align: "center",
+                    render: (row) => row.period_end.toLocaleDateString("es-ES"),
+                  },
+                  { key: "days", label: "Dias", align: "center", render: (row) => row.days },
+                  {
+                    key: "annual_rate",
+                    label: "Tasa Anual",
+                    align: "center",
+                    render: (row) => (
+                      <TextField
+                        type="number"
+                        value={Number(row.annual_rate).toFixed(2)}
+                        size="small"
+                        fullWidth
+                        disabled
+                        inputProps={{ step: "any" }}
+                      />
+                    ),
+                  },
+                  {
+                    key: "proportional_rate",
+                    label: "Proporcional",
+                    align: "center",
+                    render: (row) => Number(row.proportional_rate).toFixed(8),
+                  },
+                  {
+                    key: "base_amount",
+                    label: "Monto",
+                    align: "right",
+                    render: (row) => `$ ${Number(row.base_amount).toFixed(2)}`,
+                  },
+                  {
+                    key: "interest",
+                    label: "Interes",
+                    align: "right",
+                    render: (row) => `$ ${Number(row.interest).toFixed(2)}`,
+                  },
+                  {
+                    key: "total",
+                    label: "Total",
+                    align: "right",
+                    render: (row) => `$ ${Number(row.total).toFixed(2)}`,
+                  },
+                ];
 
-                          border: "1px solid #bdbdbd",
-                        }}
-                        align="center"
-                      >
-                        Tramo
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          minWidth: 75,
-                          backgroundColor: "#f5f5f5",
-
-                          border: "1px solid #bdbdbd",
-                        }}
-                        align="center"
-                      >
-                        Fecha Ini.
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          minWidth: 75,
-                          backgroundColor: "#f5f5f5",
-
-                          border: "1px solid #bdbdbd",
-                        }}
-                        align="center"
-                      >
-                        Fecha Fin
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          minWidth: 50,
-                          backgroundColor: "#f5f5f5",
-
-                          border: "1px solid #bdbdbd",
-                        }}
-                        align="center"
-                      >
-                        Dias
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          minWidth: 75,
-                          backgroundColor: "#f5f5f5",
-
-                          border: "1px solid #bdbdbd",
-                        }}
-                        align="center"
-                      >
-                        Tasa Anual
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          minWidth: 75,
-                          backgroundColor: "#f5f5f5",
-
-                          border: "1px solid #bdbdbd",
-                        }}
-                        align="center"
-                      >
-                        Proporcional
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          minWidth: 75,
-                          backgroundColor: "#f5f5f5",
-
-                          border: "1px solid #bdbdbd",
-                        }}
-                        align="center"
-                      >
-                        Monto
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          minWidth: 75,
-                          backgroundColor: "#f5f5f5",
-
-                          border: "1px solid #bdbdbd",
-                        }}
-                        align="center"
-                      >
-                        Interes
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          minWidth: 100,
-                          backgroundColor: "#f5f5f5",
-
-                          border: "1px solid #bdbdbd",
-                        }}
-                        align="center"
-                      >
-                        Total
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {rowsInterest.map((row) => (
-                      <TableRow
-                        key={row.period}
-                        sx={{
-                          "&:last-child td, &:last-child th": {
-                            border: 0,
-                          },
-                        }}
-                      >
-                        <TableCell align="center" component="th" scope="row">
-                          {row.period}
-                        </TableCell>
-                        <TableCell align="center">
-                          {row.period_start.toLocaleDateString("es-ES")}
-                        </TableCell>
-                        <TableCell align="center">
-                          {row.period_end.toLocaleDateString("es-ES")}
-                        </TableCell>
-                        <TableCell align="center">{row.days}</TableCell>
-                        <TableCell align="center">
-                          <TextField
-                            type="number"
-                            value={Number(row.annual_rate).toFixed(2)}
-                            size="small"
-                            fullWidth
-                            disabled // Deshabilitado para evitar edición accidental
-                            inputProps={{ step: "any" }}
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          {Number(row.proportional_rate).toFixed(8)}
-                        </TableCell>
-                        <TableCell align="center" sx={{ textAlign: "right" }}>
-                          {`$ ${Number(row.base_amount).toFixed(2)}`}
-                        </TableCell>
-                        <TableCell align="center" sx={{ textAlign: "right" }}>
-                          {`$ ${Number(row.interest).toFixed(2)}`}
-                        </TableCell>
-                        <TableCell align="center" sx={{ textAlign: "right" }}>
-                          {`$ ${Number(row.total).toFixed(2)}`}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                return (
+                  <ResponsiveListTable
+                    columns={detailColumns}
+                    rows={rowsInterest}
+                    getRowKey={(row) => String(row.period)}
+                  />
+                );
+              })()}
               <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
                 <Button
                   variant="outlined"

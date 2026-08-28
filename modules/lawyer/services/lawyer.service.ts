@@ -91,6 +91,16 @@ export class LawyerService {
     }) as Promise<Lawyer[]>;
   }
 
+  // Registro completo para CFSB Admin — a diferencia de getAllActive (solo
+  // ACTIVE con userId), acá se listan todos los abogados sin filtrar, para
+  // que el admin pueda ver también los inactivos/sin cuenta vinculada.
+  static async getAllForAdmin(): Promise<Lawyer[]> {
+    return prisma.lawyer.findMany({
+      where: { deletedAt: null },
+      orderBy: { createdAt: "desc" },
+    }) as Promise<Lawyer[]>;
+  }
+
   static async getByUserId(
     user_id: string,
   ): Promise<{ success: boolean; data?: Lawyer; error?: string }> {

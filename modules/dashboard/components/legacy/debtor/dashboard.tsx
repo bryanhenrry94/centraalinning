@@ -3,16 +3,9 @@ import React, { Suspense, useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import {
   Container,
-  Paper,
   Typography,
   Box,
   IconButton,
-  TableContainer,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
   Menu,
   MenuItem,
   ListItemIcon,
@@ -20,12 +13,12 @@ import {
   Chip,
   Divider,
 } from "@mui/material";
+import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import FolderOffOutlinedIcon from "@mui/icons-material/FolderOffOutlined";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
@@ -357,233 +350,168 @@ const DashboardDebtor = () => {
       />
 
       <Suspense fallback={<h1>Loading collection cases...</h1>}>
-        <TableContainer
-          component={Paper}
-          variant="outlined"
-          sx={{ borderColor: "grey.200" }}
-        >
-          <Table
-            stickyHeader
-            size="small"
-            sx={{
-              "& .MuiTableCell-root": {
-                borderBottom: "1px solid",
-                borderColor: "grey.200",
-                padding: "8px 12px",
+        {(() => {
+          const columns: ListColumn<DebtorSummary>[] = [
+            { key: "tenant_name", label: "Deelnemer", render: (debt) => debt.tenant_name },
+            { key: "reference", label: "Referentie", render: (debt) => debt.reference },
+            {
+              key: "status",
+              label: "Status",
+              render: (debt) => {
+                const status = getSourceStatusInfo(debt.source_status);
+                return (
+                  <Chip label={status.label} color={status.color} size="small" variant="outlined" sx={{ width: 150 }} />
+                );
               },
-            }}
-          >
-            <TableHead>
-              <TableRow>
-                {[
-                  "Deelnemer",
-                  "Referentie",
-                  "Status",
-                  "Registratiedatum",
-                  "Reactietermijn",
-                  "Openstaand",
-                  "Betaalregeling",
-                  "Actie",
-                ].map((col) => (
-                  <TableCell
-                    key={col}
-                    align="center"
-                    sx={{
-                      minWidth: 50,
-                      backgroundColor: "secondary.main",
-                      color: "#fff",
-                      fontWeight: 600,
+            },
+            {
+              key: "issue_date",
+              label: "Registratiedatum",
+              render: (debt) => (debt.issue_date ? formatDate(debt.issue_date.toString()) : "-"),
+              hideOnMobile: true,
+            },
+            {
+              key: "due_date",
+              label: "Reactietermijn",
+              render: (debt) => {
+                if (!debt.due_date) return "-";
+                const reaction = getReactietermijnInfo(debt.due_date.toString());
+                return (
+                  <Chip
+                    label={reaction.label}
+                    color={reaction.color}
+                    size="small"
+                    variant="outlined"
+                    sx={{ width: 150 }}
+                  />
+                );
+              },
+              hideOnMobile: true,
+            },
+            { key: "balance", label: "Openstaand", align: "right", render: (debt) => formatCurrency(debt.balance) },
+            {
+              key: "agreement",
+              label: "Betaalregeling",
+              render: (debt) => (
+                <Chip
+                  icon={<HandshakeIcon fontSize="small" />}
+                  label={
+                    isAgreementApproved(debt.agreement_status)
+                      ? "Actief"
+                      : hasOpenAgreement(debt.agreement_status)
+                        ? "In behandeling"
+                        : "Geen"
+                  }
+                  color={
+                    isAgreementApproved(debt.agreement_status)
+                      ? "info"
+                      : hasOpenAgreement(debt.agreement_status)
+                        ? undefined
+                        : "default"
+                  }
+                  size="small"
+                  variant="outlined"
+                  sx={{
+                    width: 150,
+                    ...(hasOpenAgreement(debt.agreement_status) &&
+                      !isAgreementApproved(debt.agreement_status) && {
+                        color: "#F97316",
+                        borderColor: "#F97316",
+                        "& .MuiChip-icon": { color: "#F97316" },
+                      }),
+                  }}
+                />
+              ),
+            },
+            {
+              key: "actions",
+              label: "Actie",
+              render: (debt) => (
+                <>
+                  <IconButton
+                    size="small"
+                    aria-label="Acties"
+                    aria-haspopup="true"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMenuOpen(e, debt);
                     }}
                   >
-                    {col}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-
-            <TableBody>
-              {filteredDebts.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={8}
-                    align="center"
-                    sx={{ borderBottom: 0, py: 6 }}
+                    <MoreVertIcon fontSize="small" />
+                  </IconButton>
+                  <Menu
+                    anchorEl={menuAnchorEl}
+                    open={Boolean(menuAnchorEl) && menuDebt?.id === debt.id}
+                    onClose={handleMenuClose}
                   >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: 1,
+                    <MenuItem
+                      onClick={() => {
+                        openPaymentModal(debt);
+                        handleMenuClose();
                       }}
                     >
-                      <FolderOffOutlinedIcon
-                        sx={{ fontSize: 48, color: "grey.400" }}
-                      />
-                      <Typography variant="subtitle1" fontWeight={700}>
-                        Geen resultaten gevonden
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Er zijn geen dossiers die overeenkomen met uw
-                        zoekcriteria.
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              )}
-              {filteredDebts.map((debt) => (
-                <TableRow key={debt.id} hover>
-                  <TableCell>{debt.tenant_name}</TableCell>
-                  <TableCell>{debt.reference}</TableCell>
-                  <TableCell align="center">
-                    {(() => {
-                      const status = getSourceStatusInfo(debt.source_status);
-                      return (
-                        <Chip
-                          label={status.label}
-                          color={status.color}
-                          size="small"
-                          variant="outlined"
-                          sx={{ width: 150 }}
-                        />
-                      );
-                    })()}
-                  </TableCell>
-                  <TableCell align="center">
-                    {debt.issue_date
-                      ? formatDate(debt.issue_date.toString())
-                      : "-"}
-                  </TableCell>
-                  <TableCell align="center">
-                    {debt.due_date
-                      ? (() => {
-                          const reaction = getReactietermijnInfo(
-                            debt.due_date.toString(),
-                          );
-                          return (
-                            <Chip
-                              label={reaction.label}
-                              color={reaction.color}
-                              size="small"
-                              variant="outlined"
-                              sx={{ width: 150 }}
-                            />
-                          );
-                        })()
-                      : "-"}
-                  </TableCell>
-                  <TableCell align="right">
-                    {formatCurrency(debt.balance)}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Chip
-                      icon={<HandshakeIcon fontSize="small" />}
-                      label={
-                        isAgreementApproved(debt.agreement_status)
-                          ? "Actief"
-                          : hasOpenAgreement(debt.agreement_status)
-                            ? "In behandeling"
-                            : "Geen"
-                      }
-                      color={
-                        isAgreementApproved(debt.agreement_status)
-                          ? "info"
-                          : hasOpenAgreement(debt.agreement_status)
-                            ? undefined
-                            : "default"
-                      }
-                      size="small"
-                      variant="outlined"
-                      sx={{
-                        width: 150,
-                        ...(hasOpenAgreement(debt.agreement_status) &&
-                          !isAgreementApproved(debt.agreement_status) && {
-                            color: "#F97316",
-                            borderColor: "#F97316",
-                            "& .MuiChip-icon": { color: "#F97316" },
-                          }),
+                      <ListItemIcon>
+                        <PaymentsIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText>Betalingen</ListItemText>
+                    </MenuItem>
+
+                    <MenuItem
+                      disabled={debt.debtor_to_participant_balance <= 0}
+                      onClick={() => {
+                        handlePaymentDebtor(debt);
+                        handleMenuClose();
                       }}
-                    />
-                  </TableCell>
-                  <TableCell align="center">
-                    <IconButton
-                      size="small"
-                      aria-label="Acties"
-                      aria-haspopup="true"
-                      onClick={(e) => handleMenuOpen(e, debt)}
                     >
-                      <MoreVertIcon fontSize="small" />
-                    </IconButton>
-                    <Menu
-                      anchorEl={menuAnchorEl}
-                      open={Boolean(menuAnchorEl) && menuDebt?.id === debt.id}
-                      onClose={handleMenuClose}
+                      <ListItemIcon>
+                        <AttachMoneyIcon fontSize="small" color="error" />
+                      </ListItemIcon>
+                      <ListItemText>Aan deelnemer betalen</ListItemText>
+                    </MenuItem>
+
+                    <MenuItem
+                      disabled={debt.debtor_to_cfsb_balance <= 0}
+                      onClick={() => {
+                        setDebtSelected(debt);
+                        setOpenModalCollectionFee(true);
+                        handleMenuClose();
+                      }}
                     >
-                      <MenuItem
-                        onClick={() => {
-                          openPaymentModal(debt);
-                          handleMenuClose();
-                        }}
-                      >
-                        <ListItemIcon>
-                          <PaymentsIcon fontSize="small" />
-                        </ListItemIcon>
-                        <ListItemText>Betalingen</ListItemText>
-                      </MenuItem>
+                      <ListItemIcon>
+                        <AccountBalanceIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText>CFSB-kosten betalen</ListItemText>
+                    </MenuItem>
 
-                      <MenuItem
-                        disabled={debt.debtor_to_participant_balance <= 0}
-                        onClick={() => {
-                          handlePaymentDebtor(debt);
-                          handleMenuClose();
-                        }}
-                      >
-                        <ListItemIcon>
-                          <AttachMoneyIcon fontSize="small" color="error" />
-                        </ListItemIcon>
-                        <ListItemText>Aan deelnemer betalen</ListItemText>
-                      </MenuItem>
+                    <MenuItem
+                      disabled={!hasOpenAgreement(debt.agreement_status) && isReactionTermExpired(debt.due_date)}
+                      onClick={() => {
+                        handleBetaalregelingClick(debt);
+                        handleMenuClose();
+                      }}
+                    >
+                      <ListItemIcon>
+                        <HandshakeIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText>
+                        {hasOpenAgreement(debt.agreement_status) ? "Regeling" : "Regeling aanvragen"}
+                      </ListItemText>
+                    </MenuItem>
+                  </Menu>
+                </>
+              ),
+            },
+          ];
 
-                      <MenuItem
-                        disabled={debt.debtor_to_cfsb_balance <= 0}
-                        onClick={() => {
-                          setDebtSelected(debt);
-                          setOpenModalCollectionFee(true);
-                          handleMenuClose();
-                        }}
-                      >
-                        <ListItemIcon>
-                          <AccountBalanceIcon fontSize="small" />
-                        </ListItemIcon>
-                        <ListItemText>CFSB-kosten betalen</ListItemText>
-                      </MenuItem>
-
-                      <MenuItem
-                        disabled={
-                          !hasOpenAgreement(debt.agreement_status) &&
-                          isReactionTermExpired(debt.due_date)
-                        }
-                        onClick={() => {
-                          handleBetaalregelingClick(debt);
-                          handleMenuClose();
-                        }}
-                      >
-                        <ListItemIcon>
-                          <HandshakeIcon fontSize="small" />
-                        </ListItemIcon>
-                        <ListItemText>
-                          {hasOpenAgreement(debt.agreement_status)
-                            ? "Regeling"
-                            : "Regeling aanvragen"}
-                        </ListItemText>
-                      </MenuItem>
-                    </Menu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+          return (
+            <ResponsiveListTable
+              columns={columns}
+              rows={filteredDebts}
+              getRowKey={(debt) => debt.id}
+              emptyMessage="Er zijn geen dossiers die overeenkomen met uw zoekcriteria."
+            />
+          );
+        })()}
       </Suspense>
 
       <AgreementFormDialog
