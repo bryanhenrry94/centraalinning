@@ -6,6 +6,7 @@ import { ToastContainer } from "react-toastify";
 import { SessionAuthProvider } from "@/shared/providers/sessionAuthProvider";
 import "@/lib/initServer"; // inicializa el scheduler
 import type { Viewport } from "next";
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -38,10 +39,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SessionAuthProvider>
-          <AppTheme>{children}</AppTheme>
-          <ToastContainer />
-        </SessionAuthProvider>
+        <AppRouterCacheProvider>
+          <SessionAuthProvider>
+            <AppTheme>{children}</AppTheme>
+            <ToastContainer />
+          </SessionAuthProvider>
+        </AppRouterCacheProvider>
       </body>
     </html>
   );
