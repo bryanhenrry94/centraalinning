@@ -10,12 +10,6 @@ import {
   ListItemText,
   Menu,
   MenuItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Tooltip,
   useMediaQuery,
   useTheme,
@@ -23,13 +17,16 @@ import {
 import TablePagination from "@mui/material/TablePagination";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import PaidIcon from "@mui/icons-material/Paid";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import GavelIcon from "@mui/icons-material/Gavel";
 import GroupIcon from "@mui/icons-material/Group";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { DebtClaimResponse } from "@/modules/collection/services/collection.type";
 import {
@@ -41,15 +38,13 @@ import { isAgreementPending } from "@/modules/agreement/constants/agreement-stat
 import { TransferToLawyerDialog } from "@/modules/legal-process/components/transfer-to-lawyer-dialog";
 import { StartCopDialog } from "@/modules/collective-follow-up/components/start-cop-dialog";
 
-const HEAD_SX = {
-  backgroundColor: "secondary.main",
-  color: "#fff",
-  fontWeight: "bold",
-  whiteSpace: "nowrap" as const,
-  textAlign: "center" as const,
-};
-
 const ROWS_PER_PAGE_OPTIONS = [10, 25, 50];
+
+// Atenúa la fila/card completa mientras el pago inicial sigue pendiente
+// (status OPEN) — antes era un `opacity` en el <TableRow>; acá se aplica
+// por celda porque ResponsiveListTable no expone estilo a nivel de fila.
+const dim = (node: React.ReactNode, isPending: boolean): React.ReactNode =>
+  isPending ? <Box sx={{ opacity: 0.75 }}>{node}</Box> : node;
 
 interface CollectionTableProps {
   invoices: DebtClaimResponse[];
@@ -117,120 +112,143 @@ const CollectionTable = ({
 
   return (
     <Box sx={{ width: "100%", overflow: "hidden" }}>
-      <TableContainer>
-        <Table size="small" stickyHeader aria-label="collection table">
-          <TableHead>
-            <TableRow>
-              <TableCell sx={HEAD_SX}>Datum</TableCell>
-              {!isMobile && <TableCell sx={HEAD_SX}>Referentie</TableCell>}
-              <TableCell sx={{ ...HEAD_SX, minWidth: 150 }}>Naam</TableCell>
-              <TableCell sx={{ ...HEAD_SX, textAlign: "right" }}>
-                Vordering
-              </TableCell>
-              {!isMobile && (
-                <TableCell sx={{ ...HEAD_SX, textAlign: "right" }}>
-                  Saldo
-                </TableCell>
-              )}
-              <TableCell sx={HEAD_SX}>Status</TableCell>
-              <TableCell sx={HEAD_SX}>Fase</TableCell>
-              <TableCell sx={{ ...HEAD_SX, textAlign: "center" }}>
-                Actie
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {paginatedData.map((row) => {
+      {(() => {
+        const columns: ListColumn<DebtClaimResponse>[] = [
+          {
+            key: "date",
+            label: "Datum",
+            render: (row) =>
+              dim(
+                formatDate(row.createdAt?.toString() ?? ""),
+                row.status === "OPEN",
+              ),
+          },
+          {
+            key: "reference",
+            label: "Referentie",
+            hideOnMobile: true,
+            render: (row) =>
+              dim(row.reference ?? "—", row.status === "OPEN"),
+          },
+          {
+            key: "name",
+            label: "Naam",
+            render: (row) =>
+              dim(row.debtor.fullname || "Onbekend", row.status === "OPEN"),
+          },
+          {
+            key: "amount",
+            label: "Vordering",
+            align: "right",
+            render: (row) =>
+              dim(
+                formatCurrency(Number(row.principalAmount)),
+                row.status === "OPEN",
+              ),
+          },
+          {
+            key: "balance",
+            label: "Saldo",
+            align: "right",
+            hideOnMobile: true,
+            render: (row) =>
+              row.status === "OPEN"
+                ? "—"
+                : formatCurrency(
+                    row.receivableBalance ?? Number(row.principalAmount),
+                  ),
+          },
+          {
+            key: "status",
+            label: "Status",
+            align: "center",
+            render: (row) => {
               const statusInfo = STATUS_CONFIG[row.status] ?? {
                 label: row.status,
                 color: "default" as ChipColor,
               };
-              const aopInfo = row.aopStep ? AOP_STEP_CONFIG[row.aopStep] : null;
-              const isPending = row.status === "OPEN";
 
               return (
-                <TableRow
-                  key={row.id}
-                  hover
-                  // onClick={() => handleView(row.id)}
-                  sx={{ cursor: "pointer", opacity: isPending ? 0.75 : 1 }}
-                >
-                  <TableCell sx={{ whiteSpace: "nowrap" }}>
-                    {formatDate(row.createdAt?.toString() ?? "")}
-                  </TableCell>
-                  {!isMobile && <TableCell>{row.reference ?? "—"}</TableCell>}
-                  <TableCell>{row.debtor.fullname || "Onbekend"}</TableCell>
-                  <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                    {formatCurrency(Number(row.principalAmount))}
-                  </TableCell>
-                  {!isMobile && (
-                    <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                      {isPending
-                        ? "—"
-                        : formatCurrency(row.receivableBalance ?? Number(row.principalAmount))}
-                    </TableCell>
-                  )}
-                  <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
-                    <Chip
-                      label={statusInfo.label}
-                      color={statusInfo.color}
-                      size="small"
-                      sx={{ minWidth: 150 }}
-                    />
-                  </TableCell>
-                  <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
-                    {aopInfo ? (
-                      <Chip
-                        label={aopInfo.label}
-                        color={aopInfo.color}
-                        size="small"
-                        variant="outlined"
-                      />
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                  <TableCell align="center">
-                    {isPending ? (
-                      row.paymentLink ? (
-                        <Tooltip title="Link de pago pendiente">
-                          <IconButton
-                            size="small"
-                            component="a"
-                            href={row.paymentLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            color="primary"
-                            onClick={(e: React.MouseEvent) =>
-                              e.stopPropagation()
-                            }
-                          >
-                            <OpenInNewIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      ) : (
-                        <Tooltip title="Wacht op betalingsbevestiging">
-                          <HourglassEmptyIcon
-                            fontSize="small"
-                            color="disabled"
-                          />
-                        </Tooltip>
-                      )
-                    ) : (
-                      <IconButton
-                        size="small"
-                        onClick={(e) => handleMenuOpen(e, row)}
-                      >
-                        <MoreVertIcon fontSize="small" />
-                      </IconButton>
-                    )}
-                  </TableCell>
-                </TableRow>
+                <Chip
+                  label={statusInfo.label}
+                  color={statusInfo.color}
+                  size="small"
+                  sx={{ minWidth: 150 }}
+                />
               );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            },
+          },
+          {
+            key: "phase",
+            label: "Fase",
+            align: "center",
+            render: (row) => {
+              const aopInfo = row.aopStep
+                ? AOP_STEP_CONFIG[row.aopStep]
+                : null;
+
+              return aopInfo ? (
+                <Chip
+                  label={aopInfo.label}
+                  color={aopInfo.color}
+                  size="small"
+                  variant="outlined"
+                />
+              ) : (
+                "—"
+              );
+            },
+          },
+          {
+            key: "actions",
+            label: "Actie",
+            align: "center",
+            render: (row) => {
+              const isPending = row.status === "OPEN";
+
+              if (!isPending) {
+                return (
+                  <IconButton
+                    size="small"
+                    onClick={(e) => handleMenuOpen(e, row)}
+                  >
+                    <MoreVertIcon fontSize="small" />
+                  </IconButton>
+                );
+              }
+
+              return row.paymentLink ? (
+                <Tooltip title="Link de pago pendiente">
+                  <IconButton
+                    size="small"
+                    component="a"
+                    href={row.paymentLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    color="primary"
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                  >
+                    <OpenInNewIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              ) : (
+                <Tooltip title="Wacht op betalingsbevestiging">
+                  <HourglassEmptyIcon fontSize="small" color="disabled" />
+                </Tooltip>
+              );
+            },
+          },
+        ];
+
+        return (
+          <ResponsiveListTable
+            columns={columns}
+            rows={paginatedData}
+            getRowKey={(row) => row.id}
+            emptyMessage="Geen vorderingen gevonden."
+          />
+        );
+      })()}
       <TablePagination
         component="div"
         count={invoices.length}

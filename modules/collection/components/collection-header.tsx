@@ -33,7 +33,7 @@ export const CollectionHeader = ({ onRefresh }: CollectionHeaderProps) => {
   const { data: session } = useSession();
   const router = useRouter();
 
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(true);
   const [bankAccountDialogOpen, setBankAccountDialogOpen] =
     React.useState(false);
   const [checkingBankAccount, setCheckingBankAccount] = React.useState(false);
@@ -61,7 +61,7 @@ export const CollectionHeader = ({ onRefresh }: CollectionHeaderProps) => {
   const handleCloseBankAccountDialog = () => setBankAccountDialogOpen(false);
   const handleGoToBankAccountSettings = () => {
     setBankAccountDialogOpen(false);
-    router.push("/settings?tab=5");
+    router.push("/settings?tab=5&returnTo=/collections");
   };
 
   const handleSave = () => {};
@@ -69,7 +69,7 @@ export const CollectionHeader = ({ onRefresh }: CollectionHeaderProps) => {
   return (
     <>
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
-        Overzicht Administratieve opvolging
+        Administratieve opvolging (AOP)
       </Typography>
 
       <Grid container spacing={2} alignItems="center">
@@ -159,6 +159,9 @@ export const CollectionHeader = ({ onRefresh }: CollectionHeaderProps) => {
       <Dialog
         open={bankAccountDialogOpen}
         onClose={handleCloseBankAccountDialog}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { overflow: "hidden" } }}
       >
         <DialogTitle
           sx={{
@@ -167,28 +170,40 @@ export const CollectionHeader = ({ onRefresh }: CollectionHeaderProps) => {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            gap: 1,
             fontWeight: 600,
+            fontSize: "1.1rem",
           }}
         >
-          Geen bankrekening geregistreerd
-          <IconButton onClick={handleCloseBankAccountDialog} sx={{ color: "white" }}>
-            <CloseIcon />
+          Geen bankrekening
+          <IconButton
+            onClick={handleCloseBankAccountDialog}
+            size="small"
+            sx={{ color: "white" }}
+          >
+            <CloseIcon fontSize="small" />
           </IconButton>
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ pt: 8 }}>
           <DialogContentText>
-            U moet eerst een bankrekening registreren voordat u een nieuwe
-            AOP-vordering kunt aanmaken.
+            Registreer eerst een bankrekening voordat u een nieuwe AOP-vordering
+            kunt aanmaken.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseBankAccountDialog}>Annuleren</Button>
+        <DialogActions sx={{ px: 3, pb: 3, gap: 1.5 }}>
+          <Button
+            onClick={handleCloseBankAccountDialog}
+            sx={{ textTransform: "none" }}
+          >
+            Annuleren
+          </Button>
           <Button
             onClick={handleGoToBankAccountSettings}
             variant="contained"
             color="primary"
+            sx={{ textTransform: "none", whiteSpace: "nowrap" }}
           >
-            Ga naar configuratie
+            Bankrekening registreren
           </Button>
         </DialogActions>
       </Dialog>

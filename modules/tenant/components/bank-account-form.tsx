@@ -16,8 +16,12 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 import { useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -47,6 +51,13 @@ const defaultFormValues: CreateBankAccount = {
 
 export const BankAccountForm = () => {
   const { data: session } = useSession();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  // Cuando se llega acá desde el diálogo "Geen bankrekening geregistreerd"
+  // (AOP), este parámetro trae la página de origen para volver ahí en
+  // cuanto la cuenta quede registrada, en vez de dejar al usuario varado
+  // en Configuratie.
+  const returnTo = searchParams.get("returnTo");
   const [open, setOpen] = React.useState(false);
   const [bankAccounts, setBankAccounts] = React.useState<BankAccount[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -117,6 +128,10 @@ export const BankAccountForm = () => {
 
       await fetchBankAccounts();
       handleClose();
+
+      if (returnTo?.startsWith("/")) {
+        router.push(returnTo);
+      }
     } catch (error) {
       console.error("Error saving bank account:", error);
     }
@@ -147,7 +162,11 @@ export const BankAccountForm = () => {
           Bankrekeningen
         </Typography>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2} mt={1}>
-          <Button variant="contained" onClick={() => handleOpen()}>
+          <Button
+            variant="contained"
+            onClick={() => handleOpen()}
+            disabled={bankAccounts.length > 0}
+          >
             Nieuwe Bankrekening
           </Button>
         </Stack>
@@ -161,21 +180,34 @@ export const BankAccountForm = () => {
         (() => {
           const columns: ListColumn<(typeof bankAccounts)[number]>[] = [
             { key: "bank_name", label: "Bank", render: (b) => b.bank_name },
-            { key: "account_number", label: "Rekeningnummer", render: (b) => b.account_number },
+            {
+              key: "account_number",
+              label: "Rekeningnummer",
+              render: (b) => b.account_number,
+            },
             {
               key: "account_type",
               label: "Type",
-              render: (b) => ACCOUNT_TYPE_LABELS[b.account_type] || b.account_type,
+              render: (b) =>
+                ACCOUNT_TYPE_LABELS[b.account_type] || b.account_type,
             },
             {
               key: "actions",
               label: "Acties",
               render: (bankAccount) => (
                 <>
-                  <IconButton color="secondary" size="small" onClick={() => handleOpen(bankAccount)}>
+                  <IconButton
+                    color="secondary"
+                    size="small"
+                    onClick={() => handleOpen(bankAccount)}
+                  >
                     <EditIcon />
                   </IconButton>
-                  <IconButton color="error" size="small" onClick={() => handleDelete(bankAccount.id)}>
+                  <IconButton
+                    color="error"
+                    size="small"
+                    onClick={() => handleDelete(bankAccount.id)}
+                  >
                     <DeleteIcon />
                   </IconButton>
                 </>
@@ -205,8 +237,14 @@ export const BankAccountForm = () => {
             fontWeight: 600,
           }}
         >
-          {selectedBankAccount ? "Bankrekening Bewerken" : "Nieuwe Bankrekening"}
-          <IconButton onClick={handleClose} disabled={isSubmitting} sx={{ color: "white" }}>
+          {selectedBankAccount
+            ? "Bankrekening Bewerken"
+            : "Nieuwe Bankrekening"}
+          <IconButton
+            onClick={handleClose}
+            disabled={isSubmitting}
+            sx={{ color: "white" }}
+          >
             <CloseIcon />
           </IconButton>
         </DialogTitle>
