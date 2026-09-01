@@ -113,7 +113,7 @@ export const ResultView: React.FC<ResultViewProps> = ({ result }) => {
           }}
         >
           {hasBlockade
-            ? "Verzoek de debiteur een financiële verklaring bij CFSB aan te vragen voor een volledig financieel overzicht."
+            ? "Vraag uw klant voor een CFSB Financiële Verklaring."
             : "Er is geen actieve economische blokkade geregistreerd"}
         </Alert>
       </CardContent>

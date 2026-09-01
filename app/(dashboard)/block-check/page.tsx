@@ -95,7 +95,9 @@ const BlokCheckPage = () => {
 
       setShowCostDialog(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Er is een fout opgetreden");
+      setError(
+        err instanceof Error ? err.message : "Er is een fout opgetreden",
+      );
     } finally {
       setLoading(false);
     }
@@ -119,7 +121,9 @@ const BlokCheckPage = () => {
       setBlokCheck(result.data);
       setShowResult(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Er is een fout opgetreden");
+      setError(
+        err instanceof Error ? err.message : "Er is een fout opgetreden",
+      );
     } finally {
       setLoading(false);
     }
@@ -262,17 +266,6 @@ const BlokCheckPage = () => {
               )}
             </CardContent>
           </Card>
-          <Alert severity="info" sx={{ mt: 3 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-              Wat kunt u doen?
-            </Typography>
-            <Typography variant="body2" sx={{ textAlign: "justify" }}>
-              Voer een ID- of KVK-nummer in om te controleren of een persoon of
-              onderneming voorkomt op de lijst met economisch geblokkeerde
-              partijen. U kunt ook zoeken op het CFSB-nummer (persoonlijk
-              identificatienummer).
-            </Typography>
-          </Alert>
         </>
       ) : (
         <ResultView result={blokCheck} />
