@@ -60,7 +60,6 @@ export class DebtorService {
           tenant?.jurisdictionId ?? (await PersonService.resolveDefaultJurisdictionId());
         const personal_number = await PersonService.generatePersonalNumber(
           debtorData.person_type,
-          jurisdictionId,
           tx,
         );
 
@@ -231,7 +230,6 @@ export class DebtorService {
           tenant?.jurisdictionId ?? (await PersonService.resolveDefaultJurisdictionId());
         const personal_number = await PersonService.generatePersonalNumber(
           debtorFormatted.person?.person_type ?? "INDIVIDUAL",
-          jurisdictionId,
         );
 
         const newPerson = await prisma.person.create({

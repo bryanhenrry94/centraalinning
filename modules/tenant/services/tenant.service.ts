@@ -69,21 +69,11 @@ export class TenantService {
     return !!tenant;
   };
 
-  // El prefijo viene de Jurisdiction (dato), nunca de un array hardcodeado
-  // en el código (punto 13 del análisis CFSB). country_code de Tenant
-  // coincide con Jurisdiction.islandCode.
-  static generateCode = async (country_code: string): Promise<string> => {
-    const jurisdiction = await prisma.jurisdiction.findUnique({
-      where: { islandCode: country_code },
-    });
-    const prefix = jurisdiction?.islandCode ?? "XXX";
-    const last_sequence = await prisma.tenant.count({
-      where: {
-        country_code,
-      },
-    });
-
+  // Numeración general de empresas (CFSB-B-001, etc.) — ya no por isla.
+  // Reemplaza el esquema anterior CFSB-<islandCode>-001.
+  static generateCode = async (): Promise<string> => {
+    const last_sequence = await prisma.tenant.count();
     const new_sequence = last_sequence + 1;
-    return `CFSB-${prefix}-${new_sequence.toString().padStart(3, "0")}`;
+    return `CFSB-B-${new_sequence.toString().padStart(3, "0")}`;
   };
 }

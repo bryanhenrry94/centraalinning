@@ -537,8 +537,8 @@ export class CollectiveCollectionService {
 
   // "Presión de red": difunde una pregunta Sí/No a todos los tenants activos
   // de la red (excepto el dueño del expediente) — sin monto ni acreedor,
-  // solo el nombre y el número CFSBP del deudor. Reemplaza el match
-  // silencioso por identification exacta que existía antes.
+  // solo el nombre y el número personal (CFSB-P/CFSB-B) del deudor. Reemplaza
+  // el match silencioso por identification exacta que existía antes.
   static broadcastNetworkQuery = async (collectionId: string) => {
     const collection = await prisma.collectiveCollection.findUnique({
       where: { id: collectionId },

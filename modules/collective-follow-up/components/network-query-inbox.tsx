@@ -22,8 +22,8 @@ import {
 type NetworkQueryRow = Awaited<ReturnType<typeof getPendingNetworkQueriesForTenant>>[number];
 
 // Inbox de preguntas "¿Tiene a esta persona en su organización?" recibidas
-// de la red — no muestra monto ni acreedor, solo nombre + número CFSBP
-// (ver CollectiveCollectionService.broadcastNetworkQuery). Cualquier staff
+// de la red — no muestra monto ni acreedor, solo nombre + número personal
+// (CFSB-P/CFSB-B, ver CollectiveCollectionService.broadcastNetworkQuery). Cualquier staff
 // del tenant puede responder; una vez respondida desaparece de este inbox.
 export const NetworkQueryInbox: React.FC = () => {
   const { data: session } = useSession();

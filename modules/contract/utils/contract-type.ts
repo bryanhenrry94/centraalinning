@@ -10,6 +10,8 @@ export const getContractTypeLabel = (type: string) => {
       return "Lening";
     case "PAYMENT_ARRANGEMENT":
       return "Betalingsregeling";
+    case "HUURACHTERSTAND":
+      return "Huurachterstand";
     case "OTHER":
       return "Overig";
     default:

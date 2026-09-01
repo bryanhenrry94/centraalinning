@@ -1272,20 +1272,16 @@ model Person {
   @@map("person")
 }
 
-// Contador seguro para la numeración permanente CFSBP-<ISLA>-000001
-// (persona física) / CFSB-<ISLA>-000001 (empresa). Una fila por
-// combinación prefix+jurisdicción; PersonService la bloquea con SELECT ...
-// FOR UPDATE antes de incrementar, así dos altas concurrentes nunca reciben
-// el mismo número.
+// Contador seguro para la numeración permanente CFSB-P-001 (persona física)
+// / CFSB-B-001 (empresa) — ya no por isla, un contador global por prefix.
+// PersonService la bloquea con SELECT ... FOR UPDATE antes de incrementar,
+// así dos altas concurrentes nunca reciben el mismo número.
 model PersonIdentitySequence {
-  id             String       @id @default(cuid())
-  prefix         String
-  jurisdictionId String
-  jurisdiction   Jurisdiction @relation(fields: [jurisdictionId], references: [id])
-  lastValue      Int          @default(0)
-  updatedAt      DateTime     @updatedAt
+  id        String   @id @default(cuid())
+  prefix    String   @unique
+  lastValue Int      @default(0)
+  updatedAt DateTime @updatedAt
 
-  @@unique([prefix, jurisdictionId])
   @@map("person_identity_sequence")
 }
 
@@ -1345,11 +1341,10 @@ model Jurisdiction {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tenants   Tenant[]
-  persons   Person[]
-  services  JurisdictionService[]
-  sequences PersonIdentitySequence[]
-  settings  Setting[]
+  tenants  Tenant[]
+  persons  Person[]
+  services JurisdictionService[]
+  settings Setting[]
 
   @@map("jurisdiction")
 }
@@ -2111,6 +2106,7 @@ enum ContractType {
   RENT
   LOAN
   PAYMENT_ARRANGEMENT
+  HUURACHTERSTAND
   OTHER
 }
 

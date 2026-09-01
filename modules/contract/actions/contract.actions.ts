@@ -18,22 +18,35 @@ export async function createContract(
   try {
     const input = ContractSchema.parse(data);
     const contract = await ContractService.create(tenantId, input);
-    revalidatePath("/contracts");
+    revalidatePath("/workstation");
     return { success: true, data: contract };
   } catch (error) {
     console.error("[CREATE_CONTRACT]", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to create contract" };
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to create contract",
+    };
   }
 }
 
-export async function getContract(contractId: string, tenantId: string): Promise<ActionResponse> {
+export async function getContract(
+  contractId: string,
+  tenantId: string,
+): Promise<ActionResponse> {
   try {
-    const contract = await ContractService.getByIdForTenant(contractId, tenantId);
+    const contract = await ContractService.getByIdForTenant(
+      contractId,
+      tenantId,
+    );
     if (!contract) return { success: false, error: "Contract not found" };
     return { success: true, data: contract };
   } catch (error) {
     console.error("[GET_CONTRACT]", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to get contract" };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to get contract",
+    };
   }
 }
 
@@ -43,11 +56,18 @@ export async function listContracts(tenantId: string): Promise<ActionResponse> {
     return { success: true, data: contracts };
   } catch (error) {
     console.error("[LIST_CONTRACTS]", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to list contracts" };
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to list contracts",
+    };
   }
 }
 
-export async function lastContracts(tenantId: string, limit: number = 5): Promise<ActionResponse> {
+export async function lastContracts(
+  tenantId: string,
+  limit: number = 5,
+): Promise<ActionResponse> {
   const contracts = await ContractService.last(tenantId, limit);
   return {
     success: true,
@@ -67,21 +87,38 @@ export async function updateStatusContract(
   status: "DRAFT" | "REGISTERED",
 ): Promise<ActionResponse> {
   try {
-    const contract = await ContractService.updateStatus(contractId, tenantId, status);
+    const contract = await ContractService.updateStatus(
+      contractId,
+      tenantId,
+      status,
+    );
     return { success: true, data: contract };
   } catch (error) {
     console.error("[UPDATE_STATUS_CONTRACT]", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to update contract status" };
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to update contract status",
+    };
   }
 }
 
-export async function deleteContract(contractId: string, tenantId: string): Promise<ActionResponse> {
+export async function deleteContract(
+  contractId: string,
+  tenantId: string,
+): Promise<ActionResponse> {
   try {
     await ContractService.deleteById(contractId, tenantId);
     revalidatePath("/contracts");
     return { success: true };
   } catch (error) {
     console.error("[DELETE_CONTRACT]", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to delete contract" };
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to delete contract",
+    };
   }
 }

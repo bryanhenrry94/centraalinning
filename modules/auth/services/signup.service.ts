@@ -82,7 +82,7 @@ export class SignupService {
         validatedData.company_name,
       );
 
-      const code = await TenantService.generateCode(validatedData.country);
+      const code = await TenantService.generateCode();
       // La isla elegida en el signup (island-step.tsx) ya viene de
       // Jurisdiction — acá se resuelve el FK correspondiente (punto 13 del
       // análisis CFSB).
@@ -103,7 +103,8 @@ export class SignupService {
               country_code: validatedData.country,
               jurisdictionId: jurisdiction?.id,
               contact_email: normalizedEmail,
-              address: "",
+              address: validatedData.address,
+              phone: validatedData.phone,
               number_of_employees: 0,
               terms_accepted: validatedData.accept_terms,
               is_active: true,

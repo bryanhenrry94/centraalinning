@@ -37,7 +37,11 @@ import {
 
 import GroupIcon from "@mui/icons-material/Group";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import ListAltIcon from "@mui/icons-material/ListAlt";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import {
   ContractPartyInput,
@@ -62,6 +66,7 @@ import { identificationTypeOptions } from "@/modules/collection/components/modal
 import { getInfoPersonAction } from "@/modules/collection/actions/person.actions";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
+import { getContractTypeLabel } from "@/modules/contract/utils/contract-type";
 
 const steps = ["Gegevens", "Overeenkomst", "Documenten", "Overzicht"];
 
@@ -119,6 +124,58 @@ const OvereenkomstenRegistrerenPage = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-avance: apenas todos los campos de un paso quedan completos y
+  // válidos, se salta al siguiente sin esperar clic en "Volgende" (pedido
+  // del sponsor). Los refs guardan el último estado de validez conocido
+  // por paso, para avanzar solo en la transición inválido → válido — así
+  // "Vorige" para revisar un paso ya completo no te vuelve a empujar hacia
+  // adelante de inmediato.
+  const step0ValidRef = useRef(false);
+  const step1ValidRef = useRef(false);
+
+  useEffect(() => {
+    const subscription = watch(async (_value, { name }) => {
+      // `name` viene undefined en un reset() completo del formulario — no
+      // es una edición del usuario, así que no dispara el auto-avance.
+      if (!name) return;
+
+      if (name.startsWith("parties")) {
+        const isValid = await trigger("parties");
+
+        if (isValid && !step0ValidRef.current) {
+          step0ValidRef.current = true;
+          setActiveStep((prev) => (prev === 0 ? 1 : prev));
+        } else if (!isValid) {
+          step0ValidRef.current = false;
+        }
+
+        return;
+      }
+
+      const step1Fields = [
+        "contract_date",
+        "start_date",
+        "end_date",
+        "installment_amount",
+        "installment_count",
+        "amount",
+      ] as const;
+
+      if (step1Fields.includes(name as (typeof step1Fields)[number])) {
+        const isValid = await trigger(step1Fields);
+
+        if (isValid && !step1ValidRef.current) {
+          step1ValidRef.current = true;
+          setActiveStep((prev) => (prev === 1 ? 2 : prev));
+        } else if (!isValid) {
+          step1ValidRef.current = false;
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [watch, trigger]);
 
   const [openDialog, setOpenDialog] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -203,8 +260,9 @@ const OvereenkomstenRegistrerenPage = () => {
           "contract_date",
           "start_date",
           "end_date",
-          "amount",
+          "installment_amount",
           "installment_count",
+          "amount",
           "description",
         ]);
 
@@ -275,6 +333,12 @@ const OvereenkomstenRegistrerenPage = () => {
     setDocuments((prev) => [...prev, ...newDocuments]);
 
     event.target.value = "";
+
+    // Auto-avance: en cuanto hay al menos un documento adjunto, salta al
+    // resumen sin esperar clic en "Volgende".
+    if (newDocuments.length > 0) {
+      setActiveStep((prev) => (prev === 2 ? 3 : prev));
+    }
   };
 
   const handleDeleteDocument = (id: string) => {
@@ -432,7 +496,7 @@ const OvereenkomstenRegistrerenPage = () => {
 
     // wait a few seconds before redirecting to ensure the user sees the notification
     setTimeout(() => {
-      router.push("/contracts");
+      router.push("/workstation");
     }, 3000);
   };
 
@@ -451,14 +515,35 @@ const OvereenkomstenRegistrerenPage = () => {
           sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
         >
           {/* Header */}
-          <Box sx={{ mb: { xs: 2, sm: 4 } }}>
-            <Typography variant="h4" sx={{ fontWeight: 700 }}>
-              Financiële afspraak registreren
-            </Typography>
-            <Typography variant="body2" color="textSecondary">
-              Vul de gegevens van de betrokken partijen in en registreer uw
-              financiële afspraak.
-            </Typography>
+          <Box
+            sx={{
+              mb: { xs: 2, sm: 4 },
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: { xs: "stretch", sm: "flex-start" },
+              justifyContent: "space-between",
+              gap: 2,
+            }}
+          >
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                Financiële afspraak registreren
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                Vul de gegevens van de betrokken partijen in en registreer uw
+                financiële afspraak voor meer duidelijkheid, controle en
+                bescherming.
+              </Typography>
+            </Box>
+            <Button
+              type="button"
+              variant="outlined"
+              startIcon={<ListAltIcon />}
+              onClick={() => router.push("/contracts")}
+              sx={{ textTransform: "none", whiteSpace: "nowrap" }}
+            >
+              Bekijk alle FAR-registraties
+            </Button>
           </Box>
 
           {/* Stepper */}
@@ -836,20 +921,6 @@ const OvereenkomstenRegistrerenPage = () => {
                 >
                   + Partij toevoegen
                 </Button>
-
-                <Alert severity="info" sx={{ mt: 3 }}>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{ fontWeight: 600, mb: 1 }}
-                  >
-                    Waarom registreren bij CFSB?
-                  </Typography>
-                  <Typography variant="body2" sx={{ textAlign: "justify" }}>
-                    Door uw financiële afspraak te registreren binnen de
-                    CFSB-samenwerking creëert u duidelijkheid, controle en
-                    bescherming tussen betrokken partijen.
-                  </Typography>
-                </Alert>
               </Box>
             )}
 
@@ -887,32 +958,6 @@ const OvereenkomstenRegistrerenPage = () => {
                           slotProps={{
                             inputLabel: { shrink: true },
                           }}
-                        />
-                      )}
-                    />
-                  </Grid>
-
-                  <Grid size={{ xs: 12, sm: 2 }}>
-                    <Controller
-                      name="amount"
-                      control={control}
-                      render={({ field, fieldState }) => (
-                        <NumericFormat
-                          customInput={TextField}
-                          fullWidth
-                          label="Totaalbedrag"
-                          value={field.value ?? ""}
-                          thousandSeparator
-                          decimalScale={2}
-                          fixedDecimalScale
-                          allowNegative={false}
-                          prefix="$ "
-                          size="small"
-                          onValueChange={(values) => {
-                            field.onChange(Number(values.value) || 0);
-                          }}
-                          error={!!fieldState.error}
-                          helperText={fieldState.error?.message}
                         />
                       )}
                     />
@@ -974,6 +1019,46 @@ const OvereenkomstenRegistrerenPage = () => {
                     />
                   </Grid>
 
+                  {/* Volgorde: eerst het termijnbedrag, dan het aantal
+                      termijnen — het totaalbedrag wordt daaruit automatisch
+                      berekend (niet meer omgekeerd). */}
+                  <Grid size={{ xs: 12, sm: 2 }}>
+                    <Controller
+                      name="installment_amount"
+                      control={control}
+                      render={({ field, fieldState }) => (
+                        <NumericFormat
+                          customInput={TextField}
+                          fullWidth
+                          label="Termijnbedrag"
+                          value={field.value ?? ""}
+                          thousandSeparator
+                          decimalScale={2}
+                          fixedDecimalScale
+                          allowNegative={false}
+                          prefix="$ "
+                          size="small"
+                          onValueChange={(values) => {
+                            const installmentAmount = Number(values.value) || 0;
+
+                            field.onChange(installmentAmount);
+
+                            const installmentCount =
+                              getValues("installment_count") || 0;
+
+                            setValue(
+                              "amount",
+                              installmentAmount * installmentCount,
+                              { shouldValidate: true },
+                            );
+                          }}
+                          error={!!fieldState.error}
+                          helperText={fieldState.error?.message}
+                        />
+                      )}
+                    />
+                  </Grid>
+
                   <Grid size={{ xs: 12, sm: 2 }}>
                     <Controller
                       name="installment_count"
@@ -991,16 +1076,13 @@ const OvereenkomstenRegistrerenPage = () => {
 
                             field.onChange(installmentCount);
 
-                            const amount = getValues("amount");
+                            const installmentAmount =
+                              getValues("installment_amount") || 0;
 
                             setValue(
-                              "installment_amount",
-                              installmentCount > 0
-                                ? amount / installmentCount
-                                : 0,
-                              {
-                                shouldValidate: true,
-                              },
+                              "amount",
+                              installmentAmount * installmentCount,
+                              { shouldValidate: true },
                             );
                           }}
                           error={!!fieldState.error}
@@ -1012,25 +1094,26 @@ const OvereenkomstenRegistrerenPage = () => {
 
                   <Grid size={{ xs: 12, sm: 2 }}>
                     <Controller
-                      name="installment_amount"
+                      name="amount"
                       control={control}
                       render={({ field, fieldState }) => (
                         <NumericFormat
                           customInput={TextField}
                           fullWidth
-                          label="Termijnbedrag"
-                          value={field.value ?? 0}
+                          label="Totaalbedrag"
+                          value={field.value ?? ""}
                           thousandSeparator
                           decimalScale={2}
                           fixedDecimalScale
                           allowNegative={false}
                           prefix="$ "
                           size="small"
-                          onValueChange={(values) => {
-                            field.onChange(Number(values.value) || 0);
-                          }}
+                          disabled
                           error={!!fieldState.error}
-                          helperText={fieldState.error?.message}
+                          helperText={
+                            fieldState.error?.message ||
+                            "Automatisch berekend: termijnbedrag × aantal termijnen"
+                          }
                         />
                       )}
                     />
@@ -1057,6 +1140,9 @@ const OvereenkomstenRegistrerenPage = () => {
                             <MenuItem value="LOAN">Lening</MenuItem>
                             <MenuItem value="PAYMENT_ARRANGEMENT">
                               Betalingsregeling
+                            </MenuItem>
+                            <MenuItem value="HUURACHTERSTAND">
+                              Huurachterstand
                             </MenuItem>
                             <MenuItem value="OTHER">Overig</MenuItem>
                           </Select>
@@ -1127,20 +1213,21 @@ const OvereenkomstenRegistrerenPage = () => {
                   >
                     Document uploaden
                   </Button>
-                  <Typography
-                    variant="caption"
-                    color="textSecondary"
-                    display="block"
-                  >
-                    Ondersteunde formaten: PDF, PNG, JPG - Max. 10 MB per
-                    bestand
-                  </Typography>
                 </Box>
 
                 {(() => {
                   const columns: ListColumn<(typeof documents)[number]>[] = [
-                    { key: "name", label: "Bestandsnaam", render: (doc) => doc.name },
-                    { key: "size", label: "Grootte", render: (doc) => doc.size, hideOnMobile: true },
+                    {
+                      key: "name",
+                      label: "Bestandsnaam",
+                      render: (doc) => doc.name,
+                    },
+                    {
+                      key: "size",
+                      label: "Grootte",
+                      render: (doc) => doc.size,
+                      hideOnMobile: true,
+                    },
                     {
                       key: "actions",
                       label: "Acties",
@@ -1149,7 +1236,11 @@ const OvereenkomstenRegistrerenPage = () => {
                           <IconButton size="small" color="primary">
                             <DownloadIcon fontSize="small" />
                           </IconButton>
-                          <IconButton size="small" color="error" onClick={() => handleDeleteDocument(doc.id)}>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleDeleteDocument(doc.id)}
+                          >
                             <DeleteIcon fontSize="small" />
                           </IconButton>
                         </>
@@ -1157,7 +1248,13 @@ const OvereenkomstenRegistrerenPage = () => {
                     },
                   ];
 
-                  return <ResponsiveListTable columns={columns} rows={documents} getRowKey={(doc) => doc.id} />;
+                  return (
+                    <ResponsiveListTable
+                      columns={columns}
+                      rows={documents}
+                      getRowKey={(doc) => doc.id}
+                    />
+                  );
                 })()}
               </Box>
             )}
@@ -1175,17 +1272,7 @@ const OvereenkomstenRegistrerenPage = () => {
                   Betreft:
                 </Typography>
                 <Typography variant="body2" sx={{ mb: 3 }}>
-                  {watch("contract_type") === "DELIVERY_OF_GOODS"
-                    ? "Levering van goederen"
-                    : watch("contract_type") === "SERVICES"
-                      ? "Diensten"
-                      : watch("contract_type") === "RENT"
-                        ? "Huur"
-                        : watch("contract_type") === "LOAN"
-                          ? "Lening"
-                          : watch("contract_type") === "PAYMENT_ARRANGEMENT"
-                            ? "Betalingsregeling"
-                            : "Overig"}
+                  {getContractTypeLabel(watch("contract_type"))}
                 </Typography>
 
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -1226,24 +1313,69 @@ const OvereenkomstenRegistrerenPage = () => {
                     </Typography>
                   </Box>
 
-                  {/* <Box>
+                  <Box>
                     <Typography
                       variant="subtitle2"
                       sx={{ fontWeight: 600, mb: 1, color: "#666" }}
                     >
-                      Status:
+                      Betalingsperiode:
                     </Typography>
-                    <StatusContractChip status={statusContract} />
-                  </Box> */}
+                    <Box sx={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                      <Box>
+                        <Typography variant="caption" color="textSecondary">
+                          Startdatum
+                        </Typography>
+                        <Typography variant="body2">
+                          {watch("start_date")
+                            ? formatDate(watch("start_date"))
+                            : "Onbekend"}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="textSecondary">
+                          Vervaldatum
+                        </Typography>
+                        <Typography variant="body2">
+                          {watch("end_date")
+                            ? formatDate(watch("end_date") as string)
+                            : "Onbekend"}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
 
-                  <Box sx={{ pt: 2, borderTop: "1px solid #eee" }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <CheckCircleIcon
-                        sx={{ color: "#4caf50", fontSize: 20 }}
-                      />
-                      <Typography variant="body2">
-                        Klaar voor registratie
-                      </Typography>
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ fontWeight: 600, mb: 1, color: "#666" }}
+                    >
+                      Betalingsoverzicht:
+                    </Typography>
+                    <Box sx={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                      <Box>
+                        <Typography variant="caption" color="textSecondary">
+                          Aantal termijnen
+                        </Typography>
+                        <Typography variant="body2">
+                          {watch("installment_count") || "Onbekend"}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="textSecondary">
+                          Termijnbedrag
+                        </Typography>
+                        <Typography variant="body2">
+                          {formatCurrency(watch("installment_amount") || 0)}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="textSecondary">
+                          Totaalbedrag
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                          {formatCurrency(watch("amount") || 0)}
+                        </Typography>
+                      </Box>
                     </Box>
                   </Box>
                 </Box>
@@ -1300,7 +1432,11 @@ const OvereenkomstenRegistrerenPage = () => {
             }}
           >
             Financiële afspraak registreren
-            <IconButton onClick={() => setOpenDialog(false)} disabled={loading} sx={{ color: "white" }}>
+            <IconButton
+              onClick={() => setOpenDialog(false)}
+              disabled={loading}
+              sx={{ color: "white" }}
+            >
               <CloseIcon />
             </IconButton>
           </DialogTitle>
@@ -1350,7 +1486,10 @@ const OvereenkomstenRegistrerenPage = () => {
               Betaling bevestigen
             </Typography>
           </Box>
-          <IconButton onClick={() => setShowCostDialog(false)} sx={{ color: "white" }}>
+          <IconButton
+            onClick={() => setShowCostDialog(false)}
+            sx={{ color: "white" }}
+          >
             <CloseIcon />
           </IconButton>
         </Box>

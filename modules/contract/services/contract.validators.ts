@@ -6,6 +6,7 @@ const contractTypes = [
   "RENT",
   "LOAN",
   "PAYMENT_ARRANGEMENT",
+  "HUURACHTERSTAND",
   "OTHER",
 ] as const;
 

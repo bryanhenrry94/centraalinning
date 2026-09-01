@@ -14,11 +14,12 @@ export const IdentificationType = [
   "RIJBEWIJS",
 ] as const;
 
-// CFSBP = persona física (individual), CFSB = empresa participante. Nunca
-// cambiar a "CFSB-P-..." — nomenclatura acordada explícitamente con CFSB.
+// CFSB-P = persona física (individual), CFSB-B = empresa participante.
+// Nomenclatura general (sin isla) acordada con CFSB el 2026-08-31,
+// reemplaza el esquema anterior por isla (CFSBP-<ISLA>-000001 / CFSB-<ISLA>-000001).
 const IDENTITY_PREFIX_BY_PERSON_TYPE: Record<string, string> = {
-  INDIVIDUAL: "CFSBP",
-  COMPANY: "CFSB",
+  INDIVIDUAL: "CFSB-P",
+  COMPANY: "CFSB-B",
 };
 
 export class PersonService {
@@ -70,27 +71,20 @@ export class PersonService {
     return fallback.id;
   }
 
-  // Formato acordado con CFSB — NUNCA cambiar el separador:
-  //   CFSBP-<ISLAND>-000001  (person_type INDIVIDUAL — persona física)
-  //   CFSB-<ISLAND>-000001   (person_type COMPANY — empresa participante)
-  // <ISLAND> viene de Jurisdiction.numberingPrefix (dato), nunca de un
-  // literal en el código. Es un número permanente: una vez asignado no se
-  // regenera (ver ensurePersonalNumber). El secuencial es seguro contra
-  // duplicados: usa una fila dedicada por (prefix, jurisdictionId) en
-  // PersonIdentitySequence, bloqueada con SELECT ... FOR UPDATE dentro de
-  // una transacción — dos altas concurrentes nunca leen el mismo valor
-  // "actual", a diferencia del patrón anterior (findFirst + parseInt) que
-  // sí podía colisionar.
+  // Formato general acordado con CFSB (sin isla) — NUNCA cambiar el separador:
+  //   CFSB-P-001  (person_type INDIVIDUAL — persona física)
+  //   CFSB-B-001  (person_type COMPANY — empresa participante)
+  // Es un número permanente: una vez asignado no se regenera (ver
+  // ensurePersonalNumber). El secuencial es seguro contra duplicados: usa
+  // una fila dedicada por prefix en PersonIdentitySequence, bloqueada con
+  // SELECT ... FOR UPDATE dentro de una transacción — dos altas
+  // concurrentes nunca leen el mismo valor "actual", a diferencia del
+  // patrón anterior (findFirst + parseInt) que sí podía colisionar.
   static async generatePersonalNumber(
     personType: string,
-    jurisdictionId: string,
     client: PrismaOrTx = prisma,
   ): Promise<string> {
-    const prefix = IDENTITY_PREFIX_BY_PERSON_TYPE[personType] ?? "CFSB";
-
-    const jurisdiction = await prisma.jurisdiction.findUnique({ where: { id: jurisdictionId } });
-    if (!jurisdiction) throw new Error("Jurisdictie niet gevonden.");
-    const islandCode = jurisdiction.numberingPrefix;
+    const prefix = IDENTITY_PREFIX_BY_PERSON_TYPE[personType] ?? "CFSB-P";
 
     // Alta de la fila del contador FUERA de la transacción de bloqueo, en su
     // propia sentencia auto-confirmada: si el INSERT IGNORE (que también
@@ -101,21 +95,21 @@ export class PersonService {
     // Separarlos reduce la sección crítica del lock a 2 sentencias sobre
     // una fila que ya existe.
     await prisma.$executeRaw`
-      INSERT IGNORE INTO person_identity_sequence (id, prefix, jurisdictionId, lastValue, updatedAt)
-      VALUES (${crypto.randomUUID()}, ${prefix}, ${jurisdictionId}, 0, NOW())
+      INSERT IGNORE INTO person_identity_sequence (id, prefix, lastValue, updatedAt)
+      VALUES (${crypto.randomUUID()}, ${prefix}, 0, NOW())
     `;
 
     const runLocked = async (tx: Prisma.TransactionClient): Promise<number> => {
       const rows = await tx.$queryRaw<{ lastValue: number }[]>`
         SELECT lastValue FROM person_identity_sequence
-        WHERE prefix = ${prefix} AND jurisdictionId = ${jurisdictionId}
+        WHERE prefix = ${prefix}
         FOR UPDATE
       `;
       const next = (rows[0]?.lastValue ?? 0) + 1;
 
       await tx.$executeRaw`
         UPDATE person_identity_sequence SET lastValue = ${next}, updatedAt = NOW()
-        WHERE prefix = ${prefix} AND jurisdictionId = ${jurisdictionId}
+        WHERE prefix = ${prefix}
       `;
 
       return next;
@@ -139,7 +133,7 @@ export class PersonService {
           ? await (client as typeof prisma).$transaction((tx) => runLocked(tx))
           : await runLocked(client as Prisma.TransactionClient);
 
-        return `${prefix}-${islandCode}-${String(next).padStart(6, "0")}`;
+        return `${prefix}-${String(next).padStart(3, "0")}`;
       } catch (error) {
         lastError = error;
         const isDeadlock =
@@ -161,7 +155,7 @@ export class PersonService {
     if (person.personal_number) return person.personal_number;
 
     const jurisdictionId = person.jurisdictionId ?? (await this.resolveDefaultJurisdictionId());
-    const personal_number = await this.generatePersonalNumber(person.person_type, jurisdictionId);
+    const personal_number = await this.generatePersonalNumber(person.person_type);
 
     await prisma.person.update({
       where: { id: personId },

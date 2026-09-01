@@ -27,6 +27,7 @@ export const SignUpSchema = z
         "Bevestigingswachtwoord kan niet beginnen of eindigen met een spatie",
       ),
     phone: z.string().optional(),
+    address: z.string().nonempty("Adres is verplicht"),
     kvk: z.string().nonempty("KVK is verplicht"),
     company_name: z.string().nonempty("Bedrijfsnaam is verplicht"),
     country: z.string().nonempty("Land is verplicht"),

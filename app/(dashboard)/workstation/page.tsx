@@ -56,8 +56,8 @@ export default function WorkstationPage() {
       icon: DescriptionIcon,
       buttonText: "Nieuwe financiële afspraak →",
       linkText: "📋 Mijn financiële afspraken",
-      linkList: "/contracts",
-      newLink: "/contracts",
+      linkList: "/contracts/new",
+      newLink: "/contracts/new",
     },
     {
       id: 2,

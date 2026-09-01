@@ -77,6 +77,7 @@ export const DetailsStep = ({
       password: "",
       confirm_password: "",
       phone: "",
+      address: "",
       kvk: "",
       company_name: "",
       country,
@@ -343,6 +344,31 @@ export const DetailsStep = ({
                     startAdornment: (
                       <InputAdornment position="start">
                         <Phone sx={{ color: "#9e9e9e" }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={commonStyles}
+                />
+              )}
+            />
+          </Grid>
+
+          {/* Address */}
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Controller
+              name="address"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  placeholder="Adres"
+                  error={!!errors.address}
+                  helperText={errors.address?.message}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Place sx={{ color: "#9e9e9e" }} />
                       </InputAdornment>
                     ),
                   }}

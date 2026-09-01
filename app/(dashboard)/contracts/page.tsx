@@ -20,7 +20,10 @@ import {
   DialogContent,
   Paper,
 } from "@mui/material";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 
 import SearchIcon from "@mui/icons-material/Search";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
@@ -328,9 +331,14 @@ export default function ContractsPage() {
           <Typography variant="h4" sx={{ fontWeight: 700 }}>
             Financiële afspraak registreren
           </Typography>
-          <Typography variant="body2" color="textSecondary">
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            sx={{ textAlign: "justify" }}
+          >
             Vul de gegevens van de betrokken partijen in en registreer uw
-            financiële afspraak.
+            financiële afspraak voor meer duidelijkheid, controle en
+            bescherming.
           </Typography>
         </Box>
 
@@ -390,12 +398,18 @@ export default function ContractsPage() {
 
         {(() => {
           const columns: ListColumn<(typeof contracts)[number]>[] = [
-            { key: "reference_number", label: "Registratienummer", render: (c) => c.reference_number },
+            {
+              key: "reference_number",
+              label: "Registratienummer",
+              render: (c) => c.reference_number,
+            },
             {
               key: "parties",
               label: "Partij",
               render: (c) => (
-                <Typography variant="body2">{c.parties.map((party: any) => party.fullname).join(" / ")}</Typography>
+                <Typography variant="body2">
+                  {c.parties.map((party: any) => party.fullname).join(" / ")}
+                </Typography>
               ),
             },
             {
@@ -404,11 +418,18 @@ export default function ContractsPage() {
               render: (c) => formatDate(c.contract_date),
               hideOnMobile: true,
             },
-            { key: "amount", label: "Bedrag", align: "right", render: (c) => formatCurrency(c.amount) },
+            {
+              key: "amount",
+              label: "Bedrag",
+              align: "right",
+              render: (c) => formatCurrency(c.amount),
+            },
             {
               key: "status",
               label: "Status",
-              render: (c) => <StatusContractChip status={c.status} width={175} />,
+              render: (c) => (
+                <StatusContractChip status={c.status} width={175} />
+              ),
             },
             {
               key: "actions",
@@ -569,8 +590,8 @@ export default function ContractsPage() {
             <Stack spacing={1} textAlign="center">
               <Typography variant="body2" color="text.secondary">
                 Zodra de betaling is bevestigd, wordt de administratieve
-                opvolging (AOP) voor deze overeenkomst automatisch gestart.
-                Klik op "Annuleren" als u dit nu nog niet wilt doen.
+                opvolging (AOP) voor deze overeenkomst automatisch gestart. Klik
+                op "Annuleren" als u dit nu nog niet wilt doen.
               </Typography>
             </Stack>
 

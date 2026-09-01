@@ -198,7 +198,7 @@ export default function Header() {
                 // fontWeight={700}
                 sx={{
                   color: "white",
-                  fontSize: "0.95rem",
+                  fontSize: "0.75rem",
                   lineHeight: 1.3,
                   maxWidth: 200,
                   display: {
@@ -207,7 +207,11 @@ export default function Header() {
                   },
                 }}
               >
-                Centrale Financiële Samenwerking &amp; Bescherming
+                Centrale
+                <br />
+                Financiële
+                <br />
+                Samenwerking &amp; Bescherming
               </Typography>
             </Link>
           </Box>
