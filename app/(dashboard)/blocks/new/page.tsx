@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import {
+  Alert,
   Avatar,
   Box,
   Button,
@@ -40,6 +41,7 @@ import {
 } from "@/modules/blockade/actions/create-blockade";
 import { notifyError, notifyInfo } from "@/shared/ui/notifications";
 import CloseIcon from "@mui/icons-material/Close";
+import ListAltIcon from "@mui/icons-material/ListAlt";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 import { formatCurrency } from "@/shared/utils/formatters";
 import { useRouter } from "next/navigation";
@@ -311,9 +313,10 @@ export default function BlockCreatePage() {
       <Box
         sx={{
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          alignItems: { xs: "stretch", sm: "flex-start" },
           justifyContent: "space-between",
-          gap: 1,
-          alignItems: "center",
+          gap: 2,
           mb: { xs: 2, sm: 4 },
         }}
       >
@@ -326,6 +329,16 @@ export default function BlockCreatePage() {
             Registreer een economische blokkade conform de geldende voorwaarden.
           </Typography>
         </Box>
+
+        <Button
+          type="button"
+          variant="outlined"
+          startIcon={<ListAltIcon />}
+          onClick={() => router.push("/blocks")}
+          sx={{ textTransform: "none", whiteSpace: "nowrap" }}
+        >
+          Bekijk alle blokkades
+        </Button>
       </Box>
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack spacing={3} sx={{ py: { xs: 2, sm: 8 } }}>
@@ -392,6 +405,16 @@ export default function BlockCreatePage() {
                             >
                               {errors.debtorId.message}
                             </Typography>
+                          )}
+
+                          {debtor && !debtor.email && (
+                            <Alert severity="warning" sx={{ mt: 1 }}>
+                              Deze debiteur heeft geen e-mailadres
+                              geregistreerd. CFSB kan de blokkade dan niet per
+                              e-mail bevestigen — klik op het persoon-icoon
+                              naast het zoekveld om de debiteurgegevens bij te
+                              werken voordat u verdergaat.
+                            </Alert>
                           )}
                         </Box>
                       )}
@@ -592,7 +615,7 @@ export default function BlockCreatePage() {
               variant="contained"
               type="submit"
               sx={{ textTransform: "none" }}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !!(debtor && !debtor.email)}
             >
               {isSubmitting
                 ? "Bezig met registreren..."

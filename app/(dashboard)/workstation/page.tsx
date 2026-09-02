@@ -91,7 +91,10 @@ export default function WorkstationPage() {
       buttonText: "Blokkade registreren →",
       linkText: "📋 Mijn blokkades",
       linkList: "/blocks",
-      newLink: "/blocks",
+      // Directe toegang tot het registratieformulier — vanaf daar kan de
+      // gebruiker via een knop alsnog naar het overzicht (/blocks), in
+      // plaats van dat de dienst je eerst naar het overzicht stuurt.
+      newLink: "/blocks/new",
     },
   ];
 

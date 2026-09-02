@@ -160,7 +160,7 @@ export class BlockadeService {
       return { success: false, message: "Debiteur niet gevonden" };
     }
 
-    if (!debtor.email || !debtor.person.email) {
+    if (!debtor.email) {
       return {
         success: false,
         message: "De debiteur heeft geen gekoppeld e-mailadres",
@@ -214,7 +214,8 @@ export class BlockadeService {
       // Registro de auditoría de la ruta directa: quién la registró, con
       // qué motivo y con cuántos documentos de respaldo — bypassa AOP/GOP,
       // así que este es el único rastro de verificación previa que existe.
-      const reasonLabel = REASONS.find((r) => r.value === input.reason)?.label ?? input.reason;
+      const reasonLabel =
+        REASONS.find((r) => r.value === input.reason)?.label ?? input.reason;
       await tx.claimTimeline.create({
         data: {
           debtClaimId: debtClaim.id,
@@ -287,6 +288,15 @@ export class BlockadeService {
     return `BLK-${year}-${String(total + 1).padStart(3, "0")}`;
   };
 
+  // Solo enlaza el paymentId a la blokkade DRAFT ya creada — el envío del
+  // correo al deudor pasa después, cuando el webhook de Sentoo confirma el
+  // pago (ver processBlokCheckPayment más abajo), así que acá no hace falta
+  // repetir la validación de email de createFull. Antes esta función además
+  // volvía a buscar al deudor y fallaba si faltaba debtor.person.email —
+  // pero el UPDATE de arriba ya se había persistido, así que ese chequeo
+  // solo producía un "success: false" engañoso sobre un enlace que en
+  // realidad sí se había guardado, sin que nada consumiera el
+  // debtorEmail/debtorName/creditorName que devolvía.
   static updatePaymentReference = async (
     blockadeId: string,
     input: { paymentId: string },
@@ -298,36 +308,17 @@ export class BlockadeService {
       },
     });
 
-    const debtor = await prisma.debtor.findUnique({
-      where: { id: blockade.debtorId },
-      include: { person: true, tenant: true },
-    });
-
-    if (!debtor) {
-      return { success: false, message: "Debiteur niet gevonden" };
-    }
-
-    if (!debtor.email || !debtor.person.email) {
-      return {
-        success: false,
-        message: "De debiteur heeft geen gekoppeld e-mailadres",
-      };
-    }
-
-    return {
-      success: true,
-      id: blockade.id,
-      debtorEmail: debtor.email,
-      debtorName: `${debtor.person?.first_name} ${debtor.person?.last_name}`,
-      creditorName: debtor.tenant?.name || "",
-    };
+    return { success: true, id: blockade.id };
   };
 
   // Suspende temporalmente el/los bloqueo(s) ACTIVE de este deudor con este
   // tenant cuando se acepta un acuerdo de pago. releasedAt se limpia porque
   // BlockCheckService (y ahora también el reporte financiero) usan ese campo
   // como única señal de "está bloqueado" en tiempo real.
-  static suspendActiveForDebtor = async (debtorId: string, tenantId: string) => {
+  static suspendActiveForDebtor = async (
+    debtorId: string,
+    tenantId: string,
+  ) => {
     const blockades = await prisma.blockade.findMany({
       where: { debtorId, tenantId, status: "ACTIVE" },
     });
@@ -368,7 +359,11 @@ export class BlockadeService {
 
     await prisma.claimService.updateMany({
       where: { debtClaimId, service: "BLK" },
-      data: { status: "COMPLETED", finishedAt: new Date(), finishedById: actorUserId },
+      data: {
+        status: "COMPLETED",
+        finishedAt: new Date(),
+        finishedById: actorUserId,
+      },
     });
 
     const debtor = await prisma.debtor.findUnique({ where: { id: debtorId } });
@@ -388,7 +383,10 @@ export class BlockadeService {
         debtClaimId,
         "BLOCKADE_RELEASED",
         "Dit dossier is volledig voldaan en het bijbehorende bloqueo werd opgeheven, maar de persoon blijft geblokkeerd wegens een ander openstaand dossier.",
-        { blockadeId: updated.id, otherActiveBlockadeId: otherActiveBlockade.id },
+        {
+          blockadeId: updated.id,
+          otherActiveBlockadeId: otherActiveBlockade.id,
+        },
         actorUserId,
       );
       return updated;
@@ -408,7 +406,8 @@ export class BlockadeService {
         user_id: debtor.user_id,
         type: NotificationType.BLOCKADE_SUSPENDED,
         title: "Economische blokkade opgeheven",
-        message: "Uw schuld werd volledig voldaan en u heeft geen andere actieve blokkades: uw economische blokkade werd opgeheven.",
+        message:
+          "Uw schuld werd volledig voldaan en u heeft geen andere actieve blokkades: uw economische blokkade werd opgeheven.",
         link: "/block-status",
         entity_type: "Blockade",
         entity_id: updated.id,
