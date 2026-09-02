@@ -1065,12 +1065,24 @@ const OvereenkomstenRegistrerenPage = () => {
                       control={control}
                       render={({ field, fieldState }) => (
                         <TextField
+                          // `key` fuerza a remontar el input (no controlado)
+                          // si el valor cambia por fuera del tecleo del
+                          // usuario (p.ej. un reset del formulario) — al
+                          // salir del campo el valor mostrado y el de RHF
+                          // ya coinciden, así que no genera saltos visuales.
+                          key={field.value}
                           fullWidth
                           label="Aantal termijnen"
                           type="number"
                           size="small"
-                          value={field.value || ""}
-                          onChange={(e) => {
+                          defaultValue={field.value || ""}
+                          // Antes se calculaba en cada tecla (onChange), lo
+                          // que validaba el paso a mitad de tecleo de un
+                          // número de varios dígitos y disparaba el
+                          // auto-avance antes de tiempo. Ahora se calcula
+                          // recién al salir del campo (onBlur), dando
+                          // tiempo a terminar de escribir.
+                          onBlur={(e) => {
                             const installmentCount =
                               Number(e.target.value) || 0;
 
@@ -1084,6 +1096,8 @@ const OvereenkomstenRegistrerenPage = () => {
                               installmentAmount * installmentCount,
                               { shouldValidate: true },
                             );
+
+                            field.onBlur();
                           }}
                           error={!!fieldState.error}
                           helperText={fieldState.error?.message}

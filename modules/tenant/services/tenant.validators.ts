@@ -31,3 +31,25 @@ export const TenantUpdateSchema = TenantCreateSchema.partial().extend({
 
 export type Tenant = z.infer<typeof TenantSchema>;
 export type TenantUpdate = z.infer<typeof TenantUpdateSchema>;
+
+// Subconjunto editable por el propio tenant desde /settings (Rekening) —
+// deliberadamente excluye subdomain, country_code, kvk, is_active y
+// terms_accepted: son datos de identidad/jurisdicción/estado de cuenta con
+// efectos en cascada (routing, numeración legal, facturación) que quedan
+// fuera del alcance de "editar mis datos de empresa".
+export const TenantCompanyUpdateSchema = z.object({
+  name: z.string().trim().min(1, "Bedrijfsnaam is verplicht"),
+  contact_email: z.string().trim().email("Ongeldig e-mailadres"),
+  phone: z.string().trim().optional().nullable(),
+  website: z.string().trim().optional().nullable(),
+  address: z.string().trim().optional().nullable(),
+  city: z.string().trim().optional().nullable(),
+  number_of_employees: z
+    .number()
+    .int()
+    .nonnegative("Aantal medewerkers kan niet negatief zijn")
+    .optional()
+    .nullable(),
+});
+
+export type TenantCompanyUpdate = z.infer<typeof TenantCompanyUpdateSchema>;

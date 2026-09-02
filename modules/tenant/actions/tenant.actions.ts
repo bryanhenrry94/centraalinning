@@ -1,6 +1,10 @@
 "use server";
-import { Tenant } from "@/modules/tenant/services/tenant.validators";
+import {
+  Tenant,
+  TenantCompanyUpdate,
+} from "@/modules/tenant/services/tenant.validators";
 import { TenantService } from "@/modules/tenant/services/tenant.service";
+import { requireTenantAdminForTenant } from "@/modules/tenant/services/tenant-guards";
 
 export const getTenantByEmail = async (
   email: string,
@@ -55,4 +59,19 @@ export const getAllTenants = async (): Promise<Tenant[]> => {
 
 export const validaSubdomain = async (subdomain: string) => {
   return TenantService.subdomainExists(subdomain);
+};
+
+export const updateTenantCompanyInfo = async (
+  id: string,
+  data: TenantCompanyUpdate,
+): Promise<{ success: boolean; error?: string; data?: Tenant }> => {
+  try {
+    await requireTenantAdminForTenant(id);
+    return await TenantService.updateCompanyInfo(id, data);
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Onbekende fout",
+    };
+  }
 };

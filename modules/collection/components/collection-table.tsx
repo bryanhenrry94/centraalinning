@@ -66,9 +66,8 @@ const CollectionTable = ({
   const [transferDebtClaimId, setTransferDebtClaimId] = React.useState<
     string | null
   >(null);
-  const [startCopRow, setStartCopRow] = React.useState<DebtClaimResponse | null>(
-    null,
-  );
+  const [startCopRow, setStartCopRow] =
+    React.useState<DebtClaimResponse | null>(null);
   const [menuAnchorEl, setMenuAnchorEl] = React.useState<HTMLElement | null>(
     null,
   );
@@ -127,8 +126,7 @@ const CollectionTable = ({
             key: "reference",
             label: "Referentie",
             hideOnMobile: true,
-            render: (row) =>
-              dim(row.reference ?? "—", row.status === "OPEN"),
+            render: (row) => dim(row.reference ?? "—", row.status === "OPEN"),
           },
           {
             key: "name",
@@ -138,7 +136,7 @@ const CollectionTable = ({
           },
           {
             key: "amount",
-            label: "Vordering",
+            label: "Openstaande vordering",
             align: "right",
             render: (row) =>
               dim(
@@ -183,9 +181,7 @@ const CollectionTable = ({
             label: "Fase",
             align: "center",
             render: (row) => {
-              const aopInfo = row.aopStep
-                ? AOP_STEP_CONFIG[row.aopStep]
-                : null;
+              const aopInfo = row.aopStep ? AOP_STEP_CONFIG[row.aopStep] : null;
 
               return aopInfo ? (
                 <Chip

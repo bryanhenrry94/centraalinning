@@ -20,6 +20,7 @@ import UserTable from "@/modules/auth/components/user-table";
 import InvitationTable from "@/modules/auth/components/invitation-table";
 import { EmployeeForm } from "@/modules/employee/components/employee-form";
 import { BankAccountForm } from "@/modules/tenant/components/bank-account-form";
+import { CompanyInfoForm } from "@/modules/tenant/components/company-info-form";
 import { UserRole } from "@/shared/constants/user-role";
 
 const SettingPageContent = () => {
@@ -39,6 +40,8 @@ const SettingPageContent = () => {
 
   const isSimplifiedSettingsRole =
     !!user?.roles?.includes(UserRole.LAWYER) || !!user?.roles?.includes(UserRole.BAILIFF);
+
+  const canEditCompanyInfo = !!user?.roles?.includes(UserRole.TENANT_ADMIN);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -166,7 +169,7 @@ const SettingPageContent = () => {
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
-        <AccountForm />
+        <CompanyInfoForm canEdit={canEditCompanyInfo} />
       </TabPanel>
       <TabPanel value={value} index={1}>
         <ProfileForm

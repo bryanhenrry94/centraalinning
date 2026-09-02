@@ -91,7 +91,7 @@ export const CollectionHeader = ({ onRefresh }: CollectionHeaderProps) => {
           />
         </Grid>
         <Grid size={{ xs: 12, sm: "auto" }}>
-          <Stack spacing={2} direction="row">
+          <Stack spacing={2} direction="row" sx={{ mt: 4 }}>
             <IconButton onClick={onRefresh} color="primary">
               <RefreshIcon />
             </IconButton>
@@ -103,7 +103,7 @@ export const CollectionHeader = ({ onRefresh }: CollectionHeaderProps) => {
               startIcon={<AddIcon />}
               disabled={checkingBankAccount}
             >
-              Nieuwe
+              Nieuwe vordering
             </Button>
           </Stack>
         </Grid>

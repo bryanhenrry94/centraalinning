@@ -1,10 +1,33 @@
 import { prisma } from "@/lib/prisma";
+import {
+  TenantCompanyUpdate,
+  TenantCompanyUpdateSchema,
+} from "@/modules/tenant/services/tenant.validators";
 
 export class TenantService {
   static getById = async (tenantId: string) => {
     return await prisma.tenant.findUnique({
       where: { id: tenantId },
     });
+  };
+
+  static updateCompanyInfo = async (
+    id: string,
+    data: TenantCompanyUpdate,
+  ): Promise<{ success: boolean; error?: string; data?: any }> => {
+    try {
+      const validated = TenantCompanyUpdateSchema.parse(data);
+      const tenant = await prisma.tenant.update({
+        where: { id },
+        data: validated,
+      });
+      return { success: true, data: tenant };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Onbekende fout",
+      };
+    }
   };
 
   static generateUniqueSubdomain = async (
