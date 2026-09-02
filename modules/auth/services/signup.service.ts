@@ -11,6 +11,7 @@ import {
 } from "@/modules/payment/services/payment.validators";
 import { PaymentService } from "@/modules/payment/services/payment.service";
 import { MailService } from "@/infrastructure/mail/mail.service";
+import { sendNewClitentEmail } from "@/modules/tenant/services/tenant-mail.service";
 
 export class SignupService {
   static register = async (
@@ -304,6 +305,21 @@ export class SignupService {
         paymentUrl,
         pricePlan,
         tenant.kvk || "",
+      );
+
+      // Avisa a los demás participantes activos que se registró un cliente
+      // nuevo — un solo correo con copia a todos, no uno por tenant.
+      const activeParticipants = await TenantService.getActiveParticipants();
+      const ccEmails = activeParticipants
+        .filter((t) => t.id !== tenant.id && !!t.contact_email)
+        .map((t) => t.contact_email);
+      const totalClients = await prisma.tenant.count();
+
+      await sendNewClitentEmail(
+        tenant.name,
+        new Date().toLocaleDateString("nl-NL"),
+        totalClients,
+        ccEmails,
       );
 
       return {

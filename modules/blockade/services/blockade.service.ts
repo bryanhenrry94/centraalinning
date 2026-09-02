@@ -3,6 +3,8 @@ import { CreateBlockadeInput } from "./blockade.validators";
 import { Prisma } from "@prisma/client";
 import { StorageService } from "@/infrastructure/storage/storage.service";
 import { sendMailBlockade } from "./blockade-mail.service";
+import { InvoiceService } from "@/modules/payment/services/invoice-service";
+import { sendInvoiceEmail } from "@/modules/payment/services/payment-mail.service";
 import { CollectionService } from "@/modules/collection/services/collection.service";
 import { REASONS } from "@/modules/blockade/constants/reason-blockades";
 import { ClaimTimelineService } from "@/modules/collection/services/claim-timeline.service";
@@ -453,6 +455,7 @@ export class BlockadeService {
   static processBlokCheckPayment = async (paymentId: string) => {
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId },
+      include: { tenant: true },
     });
 
     if (!payment) {
@@ -479,17 +482,30 @@ export class BlockadeService {
       throw new Error("Blokkade niet gevonden");
     }
 
-    // Aquí puedes agregar la lógica específica para procesar el pago de la blokkade
     await prisma.blockade.update({
       where: { id: blockade.id },
       data: { status: "ACTIVE" },
     });
 
-    sendMailBlockade(
-      blockade.debtor.email!,
-      `${blockade.debtor.person?.first_name} ${blockade.debtor.person?.last_name}`,
-      blockade.debtor.tenant?.name || "",
-    );
+    // Factuur naar de klant (de tenant die de BLK-service betaalde) — zelfde
+    // patroon als processContractPayment/processSubscriptionPayment.
+    // createInvoice is idempotent (zoekt eerst op payment_id), dus een
+    // eventuele retry van de Sentoo-webhook maakt geen dubbele factuur aan.
+    const invoiceData = await InvoiceService.generateInvoiceData(payment.id);
+    const invoice = await InvoiceService.createInvoice(invoiceData);
+
+    if (payment.tenant?.contact_email) {
+      await sendInvoiceEmail(payment.tenant.contact_email, invoice.id, true);
+    }
+
+    // Blokkade-notificatie naar de debiteur.
+    if (blockade.debtor.email) {
+      await sendMailBlockade(
+        blockade.debtor.email,
+        `${blockade.debtor.person?.first_name ?? ""} ${blockade.debtor.person?.last_name ?? ""}`.trim(),
+        blockade.debtor.tenant?.name || "",
+      );
+    }
 
     return { success: true };
   };
