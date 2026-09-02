@@ -1,8 +1,49 @@
 import { prisma } from "@/lib/prisma";
 import { BlokCheckResponse } from "./block-check.types";
-import { Prisma } from "@prisma/client";
+import { Person, Prisma } from "@prisma/client";
+
+const MULTIPLE_PERSONS_FOUND_ERROR =
+  "Meerdere personen gevonden met deze naam. Gebruik het identificatienummer of CFSB-nummer om te verfijnen.";
 
 export class BlockCheckService {
+  private static buildFullName(
+    person: Pick<Person, "first_name" | "last_name">,
+  ): string {
+    return [person.first_name, person.last_name].filter(Boolean).join(" ");
+  }
+
+  // Zoeken op naam (voornaam/achternaam) naast identificatienummer en
+  // CFSB-nummer — vereiste sponsor 2026-09-02. De term wordt in woorden
+  // gesplitst zodat "Joselyn Andrade" matcht ongeacht de volgorde van de
+  // namen; is de match niet eenduidig (meerdere personen), dan wordt dat
+  // expliciet gemeld in plaats van willekeurig de eerste te kiezen.
+  private static async findPersonByName(
+    term: string,
+  ): Promise<{ person: Person | null; ambiguous: boolean }> {
+    const tokens = term.split(/\s+/).filter(Boolean);
+    if (tokens.length === 0) return { person: null, ambiguous: false };
+
+    const candidates = await prisma.person.findMany({
+      where: {
+        person_type: "INDIVIDUAL",
+        OR: tokens.flatMap((token) => [
+          { first_name: { contains: token } },
+          { last_name: { contains: token } },
+        ]),
+      },
+    });
+
+    const normalizedTokens = tokens.map((token) => token.toLowerCase());
+    const matches = candidates.filter((candidate) => {
+      const fullName = this.buildFullName(candidate).toLowerCase();
+      return normalizedTokens.every((token) => fullName.includes(token));
+    });
+
+    if (matches.length === 0) return { person: null, ambiguous: false };
+    if (matches.length > 1) return { person: null, ambiguous: true };
+    return { person: matches[0], ambiguous: false };
+  }
+
   static existsBlockCheck = async (
     search: string,
     context: {
@@ -10,14 +51,25 @@ export class BlockCheckService {
       userId?: string;
       price: number;
     },
-  ): Promise<{ success: boolean; data?: BlokCheckResponse }> => {
+  ): Promise<{ success: boolean; data?: BlokCheckResponse; error?: string }> => {
     const term = search.trim();
 
     const where: Prisma.PersonWhereInput = {
       OR: [{ identification: term }, { personal_number: term }],
     };
 
-    const person = await prisma.person.findFirst({ where });
+    let person = await prisma.person.findFirst({ where });
+
+    if (!person) {
+      const { person: matchedPerson, ambiguous } =
+        await this.findPersonByName(term);
+
+      if (ambiguous) {
+        return { success: false, error: MULTIPLE_PERSONS_FOUND_ERROR };
+      }
+
+      person = matchedPerson;
+    }
 
     if (!person) {
       return { success: false };
@@ -58,8 +110,7 @@ export class BlockCheckService {
         document_number: person.identification,
         person_id: person.id,
         fullname:
-          (`${person.first_name ?? ""} ${person.last_name ?? ""}`.trim() ||
-            person.business_name) ?? undefined,
+          (this.buildFullName(person) || person.business_name) ?? undefined,
         has_blockade,
         reference: blockCheck.id,
         checked_at: blockCheck.checkedAt,

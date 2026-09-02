@@ -60,6 +60,7 @@ export const sendBlokkadeMail = async (to: string, caseId: string) => {
         <BlokkadeEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
           fullname={debtorName || "Debtor"}
+          tenantName={claim.tenant.name || "Organisatie"}
         />
       ),
       attachments,

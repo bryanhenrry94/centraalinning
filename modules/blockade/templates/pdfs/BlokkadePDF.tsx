@@ -258,8 +258,12 @@ const BlokkadePDF: React.FC<BlokkadePDFProps> = ({
 
           <Text style={styles.paragraph}>
             Er is een economische blokkade op uw naam geregistreerd binnen de
-            CFSB-samenwerking. Deze blokkade is het gevolg van het niet nakomen
-            van uw financiële verplichting.
+            CFSB-samenwerking.
+          </Text>
+
+          <Text style={styles.paragraph}>
+            Deze blokkade is het gevolg van het niet nakomen van uw
+            betalingsverplichting.
           </Text>
 
           <Text style={styles.paragraph}>
@@ -267,16 +271,16 @@ const BlokkadePDF: React.FC<BlokkadePDFProps> = ({
           </Text>
 
           <Text style={[styles.listItem]}>
-            • het openstaande bedrag volledig te voldoen;
+            • het openstaande bedrag volledig te voldoen; of
           </Text>
 
           <Text style={styles.listItem}>
-            • een betalingsregeling te treffen en deze correct na te komen; of
+            • een betalingsregeling te treffen en deze correct na te komen.
           </Text>
 
           <Text style={[styles.paragraph, { marginTop: 10 }]}>
-            Om te betalen, een betalingsregeling te treffen of een financiële
-            verklaring aan te vragen, kunt u gebruikmaken van de aan u
+            Om te betalen, een betalingsregeling te treffen of een Financiële
+            Verklaring aan te vragen, kunt u gebruikmaken van de aan u
             verstrekte betaallink of inloggen via{" "}
             <Link src="https://www.cfsbgroup.com" style={styles.link}>
               www.cfsbgroup.com
@@ -305,8 +309,6 @@ const BlokkadePDF: React.FC<BlokkadePDFProps> = ({
         <Text style={styles.footer}>
           Dit document is automatisch opgesteld en verzonden binnen de
           CFSB-samenwerking.
-          {"\n"}
-          Beheer en administratie: CIO
         </Text>
       </Page>
     </Document>

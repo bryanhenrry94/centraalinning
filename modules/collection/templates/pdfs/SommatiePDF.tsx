@@ -303,13 +303,15 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
           </Text>
 
           <Text style={styles.paragraph}>
-            Hierbij vragen wij uw aandacht voor onderstaande openstaande
-            verplichting.
+            Hierbij vragen wij uw aandacht voor uw openstaande
+            betalingsverplichting.
           </Text>
 
           <Text style={styles.paragraph}>
             Op {aanmaningDate} hebben wij u reeds verzocht om uw openstaande
-            verplichting te voldoen.
+            betalingsverplichting te voldoen. Tot op heden is deze
+            verplichting niet volledig voldaan en is geen betalingsregeling
+            tot stand gekomen.
           </Text>
 
           {/* TABLE */}
@@ -375,17 +377,18 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
           </Text>
 
           <Text style={styles.paragraph}>
-            Om te betalen of een betalingsregeling te treffen, kunt u gebruik
-            maken van de aan u verstrekte betaallink of inloggen via{" "}
+            Om te betalen of een betalingsregeling te treffen, kunt u
+            gebruikmaken van de aan u verstrekte betaallink of inloggen via
+            {" "}
             <Link src="https://www.cfsbgroup.com" style={styles.link}>
               www.cfsbgroup.com
             </Link>
           </Text>
 
           <Text style={styles.paragraph}>
-            {"Indien betaling uitblijft, wordt uw openstaande verplichting verhoogd met USD\u00A0250,00 " +
-              "aan administratieve opvolgingskosten, exclusief 6% ABB. De opvolging wordt vervolgens " +
-              "automatisch voortgezet volgens de vastgestelde stappen binnen de CFSB-samenwerking, " +
+            {"Indien betaling of een betalingsregeling binnen deze termijn uitblijft, wordt uw openstaande verplichting verhoogd met USD\u00A0250,00 " +
+              "aan aanvullende administratieve opvolgingskosten, exclusief 6% ABB. De opvolging wordt vervolgens " +
+              "voortgezet volgens de vastgestelde stappen binnen de CFSB-samenwerking, " +
               "waaronder een ingebrekestelling."}
           </Text>
 

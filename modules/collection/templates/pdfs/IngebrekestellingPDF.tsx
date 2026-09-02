@@ -212,20 +212,30 @@ const IngebrekestellingPDF: React.FC<IngebrekestellingProps> = ({
           <Text style={styles.paragraph}>Geachte heer/mevrouw,</Text>
 
           <Text style={styles.paragraph}>
-            Hierbij vragen wij opnieuw uw aandacht voor onderstaande openstaande
-            verplichting.
+            Hierbij vragen wij opnieuw uw aandacht voor uw openstaande
+            betalingsverplichting.
           </Text>
 
           <Text style={styles.paragraph}>
             Op {aanmaningDate} hebben wij u aangemaand en op {sommatieDate}{" "}
-            gesommeerd om uw openstaande verplichting te voldoen. Tot op heden
-            hebben wij geen volledige betaling of betalingsregeling van u
-            ontvangen. Het totale openstaande bedrag bedraagt USD{" "}
+            gesommeerd om uw openstaande betalingsverplichting te voldoen. Tot
+            op heden hebben wij geen volledige betaling ontvangen en is geen
+            betalingsregeling tot stand gekomen.
+          </Text>
+
+          <Text style={styles.paragraph}>
+            Het totale openstaande bedrag bedraagt USD{" "}
             <Text style={styles.bold}>{totalAmount}</Text>.
           </Text>
 
           <Text style={styles.paragraph}>
             U wordt hierbij officieel in gebreke gesteld.
+          </Text>
+
+          <Text style={styles.paragraph}>
+            Als gevolg van het uitblijven van betaling of een
+            betalingsregeling wordt een economische blokkade op uw naam
+            geregistreerd binnen de CFSB-samenwerking.
           </Text>
 
           <Text style={styles.paragraph}>Hoogachtend,</Text>
@@ -248,8 +258,6 @@ const IngebrekestellingPDF: React.FC<IngebrekestellingProps> = ({
         <Text style={styles.footer}>
           Dit document is automatisch opgesteld en verzonden binnen de
           CFSB-samenwerking.
-          {"\n"}
-          Beheer en administratie: CIO
         </Text>
       </Page>
     </Document>

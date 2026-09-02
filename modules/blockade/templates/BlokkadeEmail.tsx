@@ -11,9 +11,14 @@ import { Link } from "@react-email/components";
 interface BlokkadeMailProps {
   logoUrl: string;
   fullname: string;
+  tenantName: string;
 }
 
-export const BlokkadeEmail = ({ logoUrl, fullname }: BlokkadeMailProps) => (
+export const BlokkadeEmail = ({
+  logoUrl,
+  fullname,
+  tenantName,
+}: BlokkadeMailProps) => (
   <Html>
     <Head />
     <Body style={main}>
@@ -24,8 +29,8 @@ export const BlokkadeEmail = ({ logoUrl, fullname }: BlokkadeMailProps) => (
         </Text>
         <br />
         <Text style={paragraph}>
-          Er is een economische blokkade op uw naam geregistreerd binnen de
-          CFSB-samenwerking.
+          Er is namens <strong>{tenantName}</strong> een economische
+          blokkade op uw naam geregistreerd binnen de CFSB-samenwerking.
         </Text>
 
         <Text style={{ ...paragraph, marginTop: "10px" }}>
@@ -46,6 +51,7 @@ BlokkadeEmail.PreviewProps = {
   logoUrl:
     "https://www.centraalinning.com/wp-content/uploads/2020/06/CI-Logo-Orange.png",
   fullname: "Alan",
+  tenantName: "Deelnemer B.V.",
 } as BlokkadeMailProps;
 
 export default BlokkadeEmail;

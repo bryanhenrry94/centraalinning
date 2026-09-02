@@ -45,8 +45,8 @@ export default function EconomischeBlokkadeEmail({
             </Text>
 
             <Text style={paragraph}>
-              Er is een economische blokkade op uw naam geregistreerd bij{" "}
-              <strong>CFSB</strong>.
+              Er is namens <strong>{creditorName}</strong> een economische
+              blokkade op uw naam geregistreerd binnen de CFSB-samenwerking.
             </Text>
 
             <Text style={paragraph}>

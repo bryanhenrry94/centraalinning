@@ -112,7 +112,8 @@ const BlokCheckPage = () => {
 
       if (!result.success || !result.data) {
         setError(
-          "Geen persoon gevonden met dit identificatienummer in het systeem",
+          result.error ??
+            "Geen persoon gevonden met dit identificatienummer, CFSB-nummer of deze naam in het systeem",
         );
         setLoading(false);
         return;
@@ -225,7 +226,7 @@ const BlokCheckPage = () => {
               >
                 <TextField
                   fullWidth
-                  placeholder="ID-nummer / KVK-nummer of CFSB-nummer"
+                  placeholder="ID-nummer / KVK-nummer, CFSB-nummer of volledige naam"
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);
