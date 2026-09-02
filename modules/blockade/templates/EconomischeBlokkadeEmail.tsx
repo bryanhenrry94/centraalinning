@@ -45,12 +45,12 @@ export default function EconomischeBlokkadeEmail({
             </Text>
 
             <Text style={paragraph}>
-              Er is een economische blokkade op uw naam geregistreerd door{" "}
-              <strong>{creditorName}</strong>.
+              Er is een economische blokkade op uw naam geregistreerd bij{" "}
+              <strong>CFSB</strong>.
             </Text>
 
             <Text style={paragraph}>
-              Deze registratie houdt mogelijk verband met een openstaande
+              Deze registratie houdt verband met een openstaande
               betalingsverplichting.
             </Text>
 

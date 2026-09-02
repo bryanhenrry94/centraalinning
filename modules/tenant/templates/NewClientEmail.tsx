@@ -13,6 +13,7 @@ import {
 export interface NewClientEmailProps {
   logoUrl: string;
   clientName: string;
+  tenantCode: string;
   registeredAt: string;
   totalClients: number;
 }
@@ -25,6 +26,7 @@ const logo = {
 export default function NewClientEmail({
   logoUrl,
   clientName,
+  tenantCode,
   registeredAt,
   totalClients,
 }: NewClientEmailProps) {
@@ -72,7 +74,7 @@ export default function NewClientEmail({
               textAlign: "left",
             }}
           >
-            Nieuwe Klant 🎉
+            Nieuwe deelnemer 🎉
           </Heading>
 
           <Text
@@ -83,8 +85,8 @@ export default function NewClientEmail({
               textAlign: "justify",
             }}
           >
-            Een nieuwe klant heeft zich geregistreerd op het platform en sluit
-            zich aan bij onze samenwerking.
+            Een nieuwe deelnemer heeft zich geregistreerd en is aangesloten
+            bij de CFSB-samenwerking.
           </Text>
 
           <Text
@@ -94,7 +96,16 @@ export default function NewClientEmail({
               color: "#1a1a1a",
             }}
           >
-            <strong>Klant:</strong> {clientName}
+            <strong>Deelnemer:</strong> {clientName}
+          </Text>
+          <Text
+            style={{
+              margin: "0 0 6px 0",
+              fontSize: "15px",
+              color: "#1a1a1a",
+            }}
+          >
+            <strong>CFSBB-nummer:</strong> {tenantCode}
           </Text>
           <Text style={{ margin: 0, fontSize: "15px", color: "#1a1a1a" }}>
             <strong>Geregistreerd op:</strong> {registeredAt}
@@ -103,7 +114,7 @@ export default function NewClientEmail({
           <Text
             style={{ fontSize: "16px", color: "#444", marginBottom: "16px" }}
           >
-            <strong>We zijn gegroeid naar {totalClients} klanten</strong>
+            <strong>CFSB telt nu {totalClients} deelnemers.</strong>
           </Text>
 
           <Text

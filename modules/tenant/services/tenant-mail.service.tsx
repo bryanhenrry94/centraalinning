@@ -9,6 +9,7 @@ import NewClientEmail, {
 // CFSB (OWNER_EMAIL_ADDRESS/EMAIL_FROM) y el resto de tenants van en CC.
 export const sendNewClitentEmail = async (
   clientName: string,
+  tenantCode: string,
   registeredAt: string,
   totalClients: number,
   ccEmails: string[],
@@ -27,6 +28,7 @@ export const sendNewClitentEmail = async (
     const params: NewClientEmailProps = {
       logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
       clientName,
+      tenantCode,
       registeredAt,
       totalClients,
     };

@@ -317,6 +317,7 @@ export class SignupService {
 
       await sendNewClitentEmail(
         tenant.name,
+        tenant.code,
         new Date().toLocaleDateString("nl-NL"),
         totalClients,
         ccEmails,
