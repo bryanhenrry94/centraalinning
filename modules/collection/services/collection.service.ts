@@ -704,8 +704,13 @@ export class CollectionService {
   static getAll = async (
     params: DebtClaimFilter,
   ): Promise<DebtClaimResponse[]> => {
+    const { excludeOrigin, ...filters } = params;
+
     const claims = await prisma.debtClaim.findMany({
-      where: { ...params },
+      where: {
+        ...filters,
+        ...(excludeOrigin?.length ? { origin: { notIn: excludeOrigin } } : {}),
+      },
       orderBy: { createdAt: "desc" },
       include: {
         debtor: { include: { person: true } },

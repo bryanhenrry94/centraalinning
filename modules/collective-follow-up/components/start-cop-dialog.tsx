@@ -88,7 +88,7 @@ export const StartCopDialog: React.FC<StartCopDialogProps> = ({
       </DialogTitle>
       <DialogContent>
         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, mb: 3 }}>
-          <Stack spacing={2}>
+          <Stack spacing={2} sx={{ mt: 4 }}>
             <Typography
               variant="body2"
               color="text.primary"

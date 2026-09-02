@@ -25,6 +25,10 @@ export default function CollectionsPage() {
 
       const invoices = await getDebtClaimsAction({
         tenantId: session.user.tenant_id,
+        // BLK crea su propio DebtClaim como registro compartido, pero tiene
+        // su propio listado en /blocks — acá solo van los expedientes de
+        // seguimiento administrativo (AOP).
+        excludeOrigin: ["BLK"],
       });
 
       setInvoices(invoices);
