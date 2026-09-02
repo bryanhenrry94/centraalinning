@@ -100,50 +100,11 @@ export default function NewClientEmail({
             <strong>Geregistreerd op:</strong> {registeredAt}
           </Text>
 
-          {/* <Section
-            style={{
-              backgroundColor: "#f7f9fc",
-              padding: "20px 18px",
-              borderRadius: "10px",
-              border: "1px solid #e5e8eb",
-              marginBottom: "32px",
-            }}
-          ></Section> */}
-
           <Text
             style={{ fontSize: "16px", color: "#444", marginBottom: "16px" }}
           >
             <strong>We zijn gegroeid naar {totalClients} klanten</strong>
           </Text>
-
-          {/* <Text
-            style={{
-              fontSize: "32px",
-              fontWeight: "700",
-              color: "#0a66c2",
-              textAlign: "center",
-              margin: "0 0 36px 0",
-            }}
-          >
-            {totalClients} klanten 🚀
-          </Text> */}
-
-          <Button
-            href="https://centraal-inning.com/dashboard"
-            style={{
-              backgroundColor: "#0a66c2",
-              color: "#ffffff",
-              padding: "14px 22px",
-              borderRadius: "10px",
-              fontSize: "16px",
-              textDecoration: "none",
-              display: "block",
-              fontWeight: "600",
-              textAlign: "center",
-            }}
-          >
-            [Ga naar het dashboard]
-          </Button>
 
           <Text
             style={{
