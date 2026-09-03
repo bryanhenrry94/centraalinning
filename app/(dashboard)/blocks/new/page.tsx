@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Avatar,
@@ -12,6 +12,7 @@ import {
   Container,
   Dialog,
   DialogContent,
+  Divider,
   FormControlLabel,
   Grid,
   IconButton,
@@ -47,6 +48,7 @@ import { formatCurrency } from "@/shared/utils/formatters";
 import { useRouter } from "next/navigation";
 import { REASONS } from "@/modules/blockade/constants/reason-blockades";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
+import { getParameterForTenantAction } from "@/modules/settings/actions/parameter.actions";
 
 const ALLOWED_TYPES = [
   "application/pdf",
@@ -80,7 +82,30 @@ export default function BlockCreatePage() {
   const [pendingFormValues, setPendingFormValues] =
     useState<CreateBlockadeInput>();
 
-  const amountService = 35.0; // monto fijo para el servicio, se puede ajustar según sea necesario
+  const [amountService, setAmountService] = useState<number>(35.0);
+  const [abbRate, setAbbRate] = useState<number>(0);
+
+  // Prijs in het parameter is exclusief ABB — de eindgebruiker betaalt en
+  // ziet altijd prijs + 6% ABB bovenop (nooit ABB die uit het totaal wordt
+  // teruggerekend, zelfde regel als BLC/Financieel Rapport/COP).
+  const abbAmount = Number(((amountService * abbRate) / 100).toFixed(2));
+  const totalAmount = Number((amountService + abbAmount).toFixed(2));
+
+  useEffect(() => {
+    if (!tenant?.id) return;
+
+    const fetchParameter = async () => {
+      try {
+        const parameter = await getParameterForTenantAction();
+        setAmountService(parameter?.blockade_registration_pricing ?? 35);
+        setAbbRate(parameter?.abb_rate ?? 0);
+      } catch (err) {
+        console.error("Error fetching parameter:", err);
+      }
+    };
+
+    fetchParameter();
+  }, [tenant?.id]);
 
   const {
     control,
@@ -244,7 +269,7 @@ export default function BlockCreatePage() {
       return { success: false, error: "Geen formuliergegevens beschikbaar" };
     }
 
-    if (amountService <= 0) {
+    if (totalAmount <= 0) {
       notifyError("Het servicebedrag moet groter zijn dan 0");
       return { success: false, error: "Servicebedrag is 0" };
     }
@@ -266,7 +291,7 @@ export default function BlockCreatePage() {
     const res = await fetch("/api/payments/create", {
       method: "POST",
       body: JSON.stringify({
-        amount: amountService,
+        amount: totalAmount,
         currency: "USD",
         description: "Blokkade (BLK)",
         payment_type: PaymentType.BLOK_CHECK,
@@ -652,17 +677,47 @@ export default function BlockCreatePage() {
                 width: "100%",
                 p: 2,
                 borderRadius: 2,
-                textAlign: "center",
                 bgcolor: "background.default",
               }}
             >
-              <Typography variant="body2" color="text.secondary">
-                Servicewaarde
-              </Typography>
+              <Stack spacing={1}>
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="body2" color="text.secondary">
+                    Servicewaarde (excl. ABB)
+                  </Typography>
+                  <Typography variant="body2" fontWeight={600}>
+                    {formatCurrency(amountService)}
+                  </Typography>
+                </Stack>
 
-              <Typography variant="h4" fontWeight={700} color="primary.main">
-                {formatCurrency(amountService)}
-              </Typography>
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="body2" color="text.secondary">
+                    ABB {abbRate}%
+                  </Typography>
+                  <Typography variant="body2" fontWeight={600}>
+                    {formatCurrency(abbAmount)}
+                  </Typography>
+                </Stack>
+
+                <Divider />
+
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    Totaal
+                  </Typography>
+                  <Typography
+                    variant="h5"
+                    fontWeight={700}
+                    color="primary.main"
+                  >
+                    {formatCurrency(totalAmount)}
+                  </Typography>
+                </Stack>
+              </Stack>
             </Paper>
 
             {/* Bericht */}

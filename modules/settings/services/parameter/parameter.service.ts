@@ -159,6 +159,10 @@ export class ParameterService {
         jurisdiction.reportFinancialPricing,
       ),
       blok_check_pricing: num("blok_check_pricing", jurisdiction.blokCheckPricing),
+      blockade_registration_pricing: num(
+        "blockade_registration_pricing",
+        jurisdiction.blockadeRegistrationPricing,
+      ),
       bank_account: jurisdiction.bankAccount || globalParameter?.bank_account || "",
       bank_name: jurisdiction.bankName || globalParameter?.bank_name || "",
     };

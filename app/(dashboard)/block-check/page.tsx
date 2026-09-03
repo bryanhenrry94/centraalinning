@@ -17,6 +17,7 @@ import {
   Stack,
   Paper,
   IconButton,
+  Divider,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { Close as CloseIcon } from "@mui/icons-material";
@@ -47,6 +48,13 @@ const BlokCheckPage = () => {
   const [showCostDialog, setShowCostDialog] = useState(false);
   const [blokCheck, setBlokCheck] = useState<BlokCheckResponse | null>(null);
   const [amountService, setAmountService] = useState<number>(0);
+  const [abbRate, setAbbRate] = useState<number>(0);
+
+  // Prijs in het parameter is exclusief ABB — de eindgebruiker betaalt en
+  // ziet altijd prijs + 6% ABB bovenop (nooit ABB die uit het totaal wordt
+  // teruggerekend, zodat het totaal toevallig gelijk blijft aan de parameter).
+  const abbAmount = Number(((amountService * abbRate) / 100).toFixed(2));
+  const totalAmount = Number((amountService + abbAmount).toFixed(2));
 
   useEffect(() => {
     if (!session?.user?.tenant_id) return;
@@ -55,6 +63,7 @@ const BlokCheckPage = () => {
       try {
         const parameter = await getParameterForTenantAction();
         setAmountService(parameter?.blok_check_pricing ?? 35);
+        setAbbRate(parameter?.abb_rate ?? 0);
       } catch (err) {
         console.error("Error fetching parameter:", err);
       }
@@ -152,7 +161,7 @@ const BlokCheckPage = () => {
     //   return { success: false, error: "Formulario inválido" };
     // }
 
-    if (amountService <= 0) {
+    if (totalAmount <= 0) {
       notifyError("Het servicebedrag moet groter zijn dan 0");
       return { success: false, error: "Servicebedrag is 0" };
     }
@@ -160,7 +169,7 @@ const BlokCheckPage = () => {
     const res = await fetch("/api/payments/create", {
       method: "POST",
       body: JSON.stringify({
-        amount: amountService,
+        amount: totalAmount,
         currency: "USD",
         description: "Blok-Check (BLC)",
         payment_type: PaymentType.COLLECTION,
@@ -325,26 +334,47 @@ const BlokCheckPage = () => {
                 width: "100%",
                 p: 2,
                 borderRadius: 2,
-                textAlign: "center",
                 bgcolor: "background.default",
               }}
             >
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Typography variant="h4" fontWeight={700} color="primary.main">
-                  {formatCurrency(amountService)}
-                </Typography>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-                <Typography variant="body2" color="text.secondary">
-                  Per blok
-                </Typography>
-              </Box>
+              <Stack spacing={1}>
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="body2" color="text.secondary">
+                    Blok-Check (excl. ABB)
+                  </Typography>
+                  <Typography variant="body2" fontWeight={600}>
+                    {formatCurrency(amountService)}
+                  </Typography>
+                </Stack>
+
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="body2" color="text.secondary">
+                    ABB {abbRate}%
+                  </Typography>
+                  <Typography variant="body2" fontWeight={600}>
+                    {formatCurrency(abbAmount)}
+                  </Typography>
+                </Stack>
+
+                <Divider />
+
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    Totaal
+                  </Typography>
+                  <Typography
+                    variant="h5"
+                    fontWeight={700}
+                    color="primary.main"
+                  >
+                    {formatCurrency(totalAmount)}
+                  </Typography>
+                </Stack>
+              </Stack>
             </Paper>
 
             {/* Acties */}

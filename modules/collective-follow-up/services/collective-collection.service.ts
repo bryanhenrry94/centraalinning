@@ -11,6 +11,9 @@ import { PaymentService } from "@/modules/payment/services/payment.service";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { SettingsService } from "@/modules/settings/services/settings/settings.service";
 import { TenantService } from "@/modules/tenant/services/tenant.service";
+import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
+import { InvoiceService } from "@/modules/payment/services/invoice-service";
+import { sendInvoiceEmail } from "@/modules/payment/services/payment-mail.service";
 import { sendEmployerMatchNoticeEmail } from "@/modules/collective-follow-up/services/collective-collection-mail.service";
 import { computeDebtClaimBalances } from "@/modules/collection/utils/debt-claim-balance";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
@@ -217,10 +220,19 @@ export class CollectiveCollectionService {
     const feeAmount =
       Math.round(Number(debtClaim.principalAmount) * COP_START_FEE_RATE * 100) / 100;
 
+    // De 5%-vergoeding is netto (excl. ABB) — de deelnemer die de actie
+    // start betaalt en ziet altijd vergoeding + ABB bovenop, nooit ABB die
+    // uit het totaal wordt teruggerekend (zelfde regel als BLC/Financieel
+    // Rapport, sponsor-eis 2026-09-02).
+    const parameter = await ParameterService.getParameterForTenant(debtClaim.tenantId);
+    const abbRate = parameter?.abb_rate ?? 0;
+    const abbAmount = Number(((feeAmount * abbRate) / 100).toFixed(2));
+    const totalWithAbb = Number((feeAmount + abbAmount).toFixed(2));
+
     const paymentResult = await PaymentService.create(debtClaim.tenantId, {
-      amount: feeAmount,
+      amount: totalWithAbb,
       currency: debtClaim.currency,
-      description: `CFSB-startvergoeding (5%) voor start Collectieve Opvolging — dossier ${
+      description: `CFSB-startvergoeding (5%) voor start Collectieve Opvolging, incl. ${abbRate}% ABB — dossier ${
         debtClaim.reference ?? debtClaimId
       }`,
       reference: `cop_start_${debtClaimId}_${Date.now()}`,
@@ -369,6 +381,21 @@ export class CollectiveCollectionService {
         },
       });
     });
+
+    // Factuur naar de tenant die de startvergoeding betaalde — zelfde
+    // patroon als CollectionService.activate/BlockadeService.processBlokCheckPayment.
+    // createInvoice is idempotent (zoekt eerst op payment_id), dus een
+    // eventuele retry van de Sentoo-webhook maakt geen dubbele factuur aan.
+    try {
+      const invoiceData = await InvoiceService.generateInvoiceData(paymentId);
+      const invoice = await InvoiceService.createInvoice(invoiceData);
+
+      if (debtClaim.tenant.contact_email) {
+        await sendInvoiceEmail(debtClaim.tenant.contact_email, invoice.id, true);
+      }
+    } catch (error) {
+      console.error("Error generating COP start fee invoice:", error);
+    }
 
     // Best-effort: el COP ya está confirmado y activo, estos pasos no
     // deben poder revertirlo si fallan.

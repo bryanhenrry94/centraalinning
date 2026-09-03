@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -11,11 +11,13 @@ import {
   Box,
   Paper,
   Stack,
+  Divider,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { notifyError } from "@/shared/ui/notifications";
 import { formatCurrency } from "@/shared/utils/formatters";
 import { requestStartCollectiveCollection } from "@/modules/collective-follow-up/actions/collective-collection.actions";
+import { getParameterForTenantAction } from "@/modules/settings/actions/parameter.actions";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 
 // Solo para mostrar el monto antes de pagar — el monto real y autoritativo
@@ -40,8 +42,29 @@ export const StartCopDialog: React.FC<StartCopDialogProps> = ({
   onStarted,
 }) => {
   const [collectionId, setCollectionId] = useState<string | null>(null);
+  const [abbRate, setAbbRate] = useState<number>(0);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const fetchAbbRate = async () => {
+      try {
+        const parameter = await getParameterForTenantAction();
+        setAbbRate(parameter?.abb_rate ?? 0);
+      } catch (error) {
+        console.error("Error fetching ABB rate:", error);
+      }
+    };
+
+    fetchAbbRate();
+  }, [open]);
+
+  // De 5%-startvergoeding is netto (excl. ABB) — de deelnemer ziet en
+  // betaalt altijd vergoeding + ABB bovenop (zelfde regel als BLC/Financieel
+  // Rapport), nooit ABB die uit het totaal wordt teruggerekend.
   const feeAmount = principalAmount * COP_START_FEE_RATE;
+  const abbAmount = Number(((feeAmount * abbRate) / 100).toFixed(2));
+  const totalAmount = Number((feeAmount + abbAmount).toFixed(2));
 
   const handleCreateTransaction = async () => {
     try {
@@ -115,17 +138,44 @@ export const StartCopDialog: React.FC<StartCopDialogProps> = ({
             width: "100%",
             p: 2,
             borderRadius: 2,
-            textAlign: "center",
             bgcolor: "#FFF7ED",
             borderColor: "#FBD9B4",
           }}
         >
-          <Typography variant="h4" fontWeight={700} sx={{ color: "#F97316" }}>
-            {formatCurrency(feeAmount)}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Startvergoeding (5%)
-          </Typography>
+          <Stack spacing={1}>
+            <Stack direction="row" justifyContent="space-between">
+              <Typography variant="body2" color="text.secondary">
+                Startvergoeding (5%, excl. ABB)
+              </Typography>
+              <Typography variant="body2" fontWeight={600}>
+                {formatCurrency(feeAmount)}
+              </Typography>
+            </Stack>
+
+            <Stack direction="row" justifyContent="space-between">
+              <Typography variant="body2" color="text.secondary">
+                ABB {abbRate}%
+              </Typography>
+              <Typography variant="body2" fontWeight={600}>
+                {formatCurrency(abbAmount)}
+              </Typography>
+            </Stack>
+
+            <Divider />
+
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <Typography variant="subtitle1" fontWeight={700}>
+                Totaal
+              </Typography>
+              <Typography variant="h5" fontWeight={700} sx={{ color: "#F97316" }}>
+                {formatCurrency(totalAmount)}
+              </Typography>
+            </Stack>
+          </Stack>
         </Paper>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>

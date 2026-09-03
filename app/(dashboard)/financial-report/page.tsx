@@ -35,9 +35,16 @@ import { registerDebtPayment } from "@/modules/payment/actions/payment.actions";
 const VerklaringPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [price, setPrice] = useState<number>(0);
+  const [abbRate, setAbbRate] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
 
   const { data: session } = useSession();
+
+  // Prijs in het parameter is exclusief ABB — de eindgebruiker betaalt en
+  // ziet altijd prijs + 6% ABB bovenop (nooit ABB die uit het totaal wordt
+  // teruggerekend, zodat het totaal toevallig gelijk blijft aan de parameter).
+  const abbAmount = Number(((price * abbRate) / 100).toFixed(2));
+  const totalPrice = Number((price + abbAmount).toFixed(2));
 
   useEffect(() => {
     const fetchPrice = async () => {
@@ -47,6 +54,7 @@ const VerklaringPage: React.FC = () => {
         if (parameter?.report_financial_pricing) {
           setPrice(Number(parameter.report_financial_pricing));
         }
+        setAbbRate(Number(parameter?.abb_rate ?? 0));
       } catch (err) {
         console.error(err);
         setError("Kon de prijs van het rapport niet laden.");
@@ -73,7 +81,7 @@ const VerklaringPage: React.FC = () => {
         throw new Error("Geen organisatie gevonden.");
       }
 
-      if (!price || price <= 0) {
+      if (!totalPrice || totalPrice <= 0) {
         throw new Error("Ongeldig bedrag.");
       }
 
@@ -94,7 +102,7 @@ const VerklaringPage: React.FC = () => {
        * Crear pago en Sentoo
        */
       const sentooResponse = await createSentooPayment({
-        amount: price,
+        amount: totalPrice,
         description: "Financieel Rapport",
         reference: "financieel_rapport",
       });
@@ -121,7 +129,7 @@ const VerklaringPage: React.FC = () => {
 
         method: "TRANSFER",
 
-        total_amount: price,
+        total_amount: totalPrice,
 
         paid_at: null,
 
@@ -166,7 +174,7 @@ const VerklaringPage: React.FC = () => {
         tenant_id: tenantId,
         person_id: debtor.person_id || "",
         payment_id: paymentResult?.id || "",
-        amount: price,
+        amount: totalPrice,
       });
 
       /**
@@ -287,11 +295,21 @@ const VerklaringPage: React.FC = () => {
 
                 <Stack direction="row" justifyContent="space-between">
                   <Typography variant="body2" color="text.secondary">
-                    Prijs
+                    Prijs (excl. ABB)
                   </Typography>
 
                   <Typography fontWeight={600}>
                     {formatCurrency(price)}
+                  </Typography>
+                </Stack>
+
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="body2" color="text.secondary">
+                    ABB {abbRate}%
+                  </Typography>
+
+                  <Typography fontWeight={600}>
+                    {formatCurrency(abbAmount)}
                   </Typography>
                 </Stack>
 
@@ -311,7 +329,7 @@ const VerklaringPage: React.FC = () => {
                     fontWeight={800}
                     color="primary.main"
                   >
-                    {formatCurrency(price)}
+                    {formatCurrency(totalPrice)}
                   </Typography>
                 </Stack>
               </Stack>

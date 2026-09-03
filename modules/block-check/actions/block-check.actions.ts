@@ -14,9 +14,14 @@ export const existsBlockCheck = async (search: string) => {
   }
 
   // Precio del Blok-Check por isla/jurisdicción del tenant (punto 13 del
-  // análisis CFSB).
+  // análisis CFSB). El parámetro es el precio neto (excl. ABB); el usuario
+  // final paga y ve siempre precio + 6% ABB encima, así que el precio que
+  // queda registrado en el audit trail (BlockCheck.price) refleja lo que
+  // realmente se cobró, no el valor neto del parámetro.
   const parameter = await ParameterService.getParameterForTenant(session.user.tenant_id);
-  const price = parameter?.blok_check_pricing ?? 0;
+  const basePrice = parameter?.blok_check_pricing ?? 0;
+  const abbRate = parameter?.abb_rate ?? 0;
+  const price = Number((basePrice * (1 + abbRate / 100)).toFixed(2));
 
   const result = await BlockCheckService.existsBlockCheck(search, {
     tenantId: session.user.tenant_id,

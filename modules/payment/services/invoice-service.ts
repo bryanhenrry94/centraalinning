@@ -189,6 +189,9 @@ export class InvoiceService {
       case PaymentType.FINANCIAL_REPORT:
         return "Financial report service";
 
+      case PaymentType.COP_START:
+        return "Collectieve Opvolging (COP) — startvergoeding";
+
       default:
         return "Service payment";
     }
