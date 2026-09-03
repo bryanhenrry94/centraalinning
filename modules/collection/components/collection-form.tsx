@@ -294,7 +294,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
                   <Typography>{formatUSD(subtotal)}</Typography>
                 </Box>
                 <Box display="flex" justifyContent="space-between">
-                  <Typography>Factuur:</Typography>
+                  <Typography>AOP-Kosten:</Typography>
                   <Typography>{`-${formatUSD(amountService)}`}</Typography>
                 </Box>
                 <Box display="flex" justifyContent="space-between">
