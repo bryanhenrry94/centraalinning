@@ -17,6 +17,7 @@ import SommatiePDF, {
 import IngebrekestellingPDF, {
   IngebrekestellingProps,
 } from "@/modules/collection/templates/pdfs/IngebrekestellingPDF";
+import { NO_RESPONSE_FEE_DESCRIPTION } from "@/modules/collection/services/collection.service";
 
 export const sendAanmaningEmail = async (
   to: string,
@@ -153,16 +154,17 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
     // Recargo por no responder la aanmaning dentro del plazo (ver
     // CollectionService.applyNoResponseFee). Se modela como
     // DebtClaimObligation (COLLECTION/CFSB), no como ClaimCharge, porque es
-    // una obligación del deudor directamente con CFSB. La primera
-    // obligación COLLECTION/CFSB de un expediente es siempre la comisión
-    // base de cobranza (creada en createPending, antes de que exista AOP);
-    // cualquier obligación posterior del mismo tipo es un recargo por
-    // incumplimiento aplicado por el job del AOP.
-    const collectionObligations = claim.obligations.filter(
-      (o) => o.type === "COLLECTION" && o.beneficiary === "CFSB",
-    );
-    const noResponseFeeAmount = collectionObligations
-      .slice(1)
+    // una obligación del deudor directamente con CFSB. Se identifica por su
+    // descripción exacta (USD 150 por defecto), nunca por posición en el
+    // array de obligations — este también contiene "AOP-activeringskosten"
+    // y "AOP-kosten" con el mismo type/beneficiary.
+    const additionalCosts = claim.obligations
+      .filter(
+        (o) =>
+          o.type === "COLLECTION" &&
+          o.beneficiary === "CFSB" &&
+          o.description === NO_RESPONSE_FEE_DESCRIPTION.REMINDER,
+      )
       .reduce((sum, o) => sum + Number(o.originalAmount), 0);
 
     const aanmaningSentAt = claim.administrativeCollection?.steps.find(
@@ -171,7 +173,6 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
 
     const administrativeCosts = feeCharge ? Number(feeCharge.amount) : 0;
     const calculatedABBAmount = abbCharge ? Number(abbCharge.amount) : 0;
-    const additionalCosts = noResponseFeeAmount;
     const additionalABBAmount = 0;
 
     const totalAmount =
@@ -274,14 +275,19 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
       (c) => c.concept === "ABB (belasting)",
     );
 
-    // Suma de los recargos por incumplimiento (aanmaning + sommatie sin
-    // respuesta). Igual que en sendSommatieEmail: la primera obligación
-    // COLLECTION/CFSB es la comisión base de cobranza, no un recargo.
-    const collectionObligations = claim.obligations.filter(
-      (o) => o.type === "COLLECTION" && o.beneficiary === "CFSB",
-    );
-    const noResponseFeesTotal = collectionObligations
-      .slice(1)
+    // Suma de los recargos por incumplimiento (aanmaning USD 150 + sommatie
+    // USD 250 sin respuesta), identificados por su descripción exacta —
+    // igual que en sendSommatieEmail, nunca por posición en el array de
+    // obligations (que también contiene "AOP-activeringskosten" y
+    // "AOP-kosten" con el mismo type/beneficiary).
+    const noResponseFeesTotal = claim.obligations
+      .filter(
+        (o) =>
+          o.type === "COLLECTION" &&
+          o.beneficiary === "CFSB" &&
+          (o.description === NO_RESPONSE_FEE_DESCRIPTION.REMINDER ||
+            o.description === NO_RESPONSE_FEE_DESCRIPTION.FINAL_NOTICE),
+      )
       .reduce((sum, o) => sum + Number(o.originalAmount), 0);
 
     const totalAmount =

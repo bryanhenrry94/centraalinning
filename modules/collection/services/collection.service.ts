@@ -25,6 +25,16 @@ import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { NotificationService } from "@/modules/notification/services/notification.service";
 import { NotificationType } from "@/modules/notification/constants/notification-type";
 
+// Descripciones exactas de las obligaciones COLLECTION/CFSB creadas por
+// applyNoResponseFee — únicas usadas también por collection-mail.service.tsx
+// para identificar el recargo por falta de reacción (nunca por posición en
+// el array de obligations, que también incluye "AOP-activeringskosten" y
+// "AOP-kosten" con el mismo type/beneficiary).
+export const NO_RESPONSE_FEE_DESCRIPTION = {
+  REMINDER: "Aanvullende kosten na aanmaning",
+  FINAL_NOTICE: "Aanvullende kosten na sommatie",
+} as const;
+
 export class CollectionService {
   /**
    * Crea un DebtClaim en estado OPEN (pre-pago) a partir de un Contract (FAR),
@@ -666,10 +676,7 @@ export class CollectionService {
     const stepLabel = step === "REMINDER" ? "de aanmaning" : "de sommatie";
     // Etiqueta que ve el deudor en el diálogo de pago CFSB — debe explicar
     // POR QUÉ surgió el costo, no solo decir "extra kosten N".
-    const description =
-      step === "REMINDER"
-        ? "Aanvullende kosten na aanmaning"
-        : "Aanvullende kosten na sommatie";
+    const description = NO_RESPONSE_FEE_DESCRIPTION[step];
 
     return prisma.$transaction(async (tx) => {
       const obligation = await tx.debtClaimObligation.create({

@@ -29,8 +29,8 @@ export const SommatieEmail = ({
         </Text>
         <br />
         <Text style={paragraph}>
-          Er is een sommatie op uw naam geregistreerd namens{" "}
-          <strong>{tenantName}</strong>, via de CFSB-samenwerking.
+          Namens <strong>{tenantName}</strong> is een sommatie op uw naam
+          geregistreerd binnen de CFSB-samenwerking.
         </Text>
 
         <Text style={{ ...paragraph, marginTop: "10px" }}>
