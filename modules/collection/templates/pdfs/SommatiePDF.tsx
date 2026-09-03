@@ -309,9 +309,9 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
 
           <Text style={styles.paragraph}>
             Op {aanmaningDate} hebben wij u reeds verzocht om uw openstaande
-            betalingsverplichting te voldoen. Tot op heden is deze
-            verplichting niet volledig voldaan en is geen betalingsregeling
-            tot stand gekomen.
+            betalingsverplichting te voldoen. Tot op heden is deze verplichting
+            niet volledig voldaan en is geen betalingsregeling tot stand
+            gekomen.
           </Text>
 
           {/* TABLE */}
@@ -358,12 +358,6 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
               <Text style={styles.tableValue}>{additionalCosts}</Text>
             </View>
 
-            <View style={styles.tableRow}>
-              <Text style={styles.tableLabel}>ABB 6%</Text>
-              <Text style={styles.tableSymbol}>USD</Text>
-              <Text style={styles.tableValue}>{additionalABB}</Text>
-            </View>
-
             <View style={[styles.tableRow, styles.totalRow]}>
               <Text style={styles.totalLabel}>Totaal te voldoen</Text>
               <Text style={styles.totalSymbol}>USD</Text>
@@ -378,8 +372,7 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
 
           <Text style={styles.paragraph}>
             Om te betalen of een betalingsregeling te treffen, kunt u
-            gebruikmaken van de aan u verstrekte betaallink of inloggen via
-            {" "}
+            gebruikmaken van de aan u verstrekte betaallink of inloggen via{" "}
             <Link src="https://www.cfsbgroup.com" style={styles.link}>
               www.cfsbgroup.com
             </Link>
