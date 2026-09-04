@@ -24,6 +24,7 @@ import { PaymentService } from "@/modules/payment/services/payment.service";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { NotificationService } from "@/modules/notification/services/notification.service";
 import { NotificationType } from "@/modules/notification/constants/notification-type";
+import { formatAmount } from "@/shared/utils/formatters";
 
 // Descripciones exactas de las obligaciones COLLECTION/CFSB creadas por
 // applyNoResponseFee — únicas usadas también por collection-mail.service.tsx
@@ -700,7 +701,7 @@ export class CollectionService {
         data: {
           debtClaimId,
           event: "AOP_STEP_COMPLETED",
-          description: `Administratieve boete van ${amount} toegevoegd (geen reactie van de debiteur op ${stepLabel}).`,
+          description: `Administratieve boete van ${formatAmount(amount)} toegevoegd (geen reactie van de debiteur op ${stepLabel}).`,
         },
       });
 

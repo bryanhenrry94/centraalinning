@@ -8,6 +8,7 @@ import {
   Image,
   Link,
 } from "@react-pdf/renderer";
+import { formatAmount } from "@/shared/utils/formatters";
 
 const styles = StyleSheet.create({
   page: {
@@ -225,7 +226,7 @@ const IngebrekestellingPDF: React.FC<IngebrekestellingProps> = ({
 
           <Text style={styles.paragraph}>
             Het totale openstaande bedrag bedraagt USD{" "}
-            <Text style={styles.bold}>{totalAmount}</Text>.
+            <Text style={styles.bold}>{formatAmount(totalAmount)}</Text>.
           </Text>
 
           <Text style={styles.paragraph}>

@@ -8,6 +8,7 @@ import { AgreementStatus } from "@/modules/agreement/constants/agreement-status"
 import { AgreementService } from "@/modules/agreement/services/agreement.service";
 import { TenantService } from "@/modules/tenant/services/tenant.service";
 import { UserRole } from "@/shared/constants/user-role";
+import { formatAmount } from "@/shared/utils/formatters";
 
 type PaymentAgreementFilter = {
   debtClaim_id?: string;
@@ -128,7 +129,7 @@ export const notifyApprovalAgreement = async (agreement_id: string) => {
 
   sendEmail({
     to: tenant?.contact_email || "",
-    subject: `Betalingsovereenkomst Goedgekeurd: ${agreement.total_amount} over ${agreement.installments_count} termijnen`,
+    subject: `Betalingsovereenkomst Goedgekeurd: ${formatAmount(agreement.total_amount)} over ${agreement.installments_count} termijnen`,
     html: "Aprobado",
   });
 };

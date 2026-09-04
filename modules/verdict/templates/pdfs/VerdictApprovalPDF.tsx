@@ -8,6 +8,7 @@ import {
   Image,
   Link,
 } from "@react-pdf/renderer";
+import { formatAmount } from "@/shared/utils/formatters";
 
 export interface VerdictApprovalPDFProps {
   logoUrl: string;
@@ -180,7 +181,7 @@ const VerdictApprovalPDF: React.FC<VerdictApprovalPDFProps> = ({
             De schuldeiser {creditor_name} heeft bij CFSB een vonnis
             geregistreerd, betreffende vonnisnummer {reference},
             uitspraakdatum {sentence_date}, met een toegewezen vordering van USD{" "}
-            {sentence_amount}.
+            {formatAmount(sentence_amount)}.
           </Text>
 
           <Text style={styles.paragraph}>

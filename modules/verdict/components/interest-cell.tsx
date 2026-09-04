@@ -3,6 +3,7 @@ import { Controller, useWatch, useFormContext } from "react-hook-form";
 import { TextField } from "@mui/material";
 import { calculateInterestDetail } from "@/modules/verdict/actions/verdict.actions";
 import { IVerdictInterestCreate } from "@/modules/verdict/services/verdict-interest.validators";
+import { formatAmount } from "@/shared/utils/formatters";
 
 interface InterestCellProps {
   control: any;
@@ -60,7 +61,7 @@ const InterestCell: React.FC<InterestCellProps> = ({ control, index }) => {
       render={({ field }) => (
         <TextField
           {...field}
-          value={total_interest.toFixed(2)}
+          value={formatAmount(total_interest)}
           size="small"
           error={!!errors.verdict_interest?.[index]?.total_interest}
           helperText={errors.verdict_interest?.[index]?.total_interest?.message}

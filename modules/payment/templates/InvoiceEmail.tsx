@@ -20,26 +20,26 @@ export const InvoiceEmail = ({ logoUrl, fullname }: InvoiceEmailProps) => (
     <Head />
     <Body style={main}>
       <Container style={container}>
-        <Img
-          src={logoUrl}
-          width="120"
-          height="50"
-          alt="CFSB"
-          style={logo}
-        />
+        <Img src={logoUrl} width="120" height="50" alt="CFSB" style={logo} />
 
         <Text style={paragraph}>
-          <strong>Betalingsbewijs</strong>
+          <strong>Betalingsbevestiging</strong>
         </Text>
 
         <br />
 
-        <Text style={paragraph}>
-          Hierbij bevestigen wij dat wij uw betaling in goede orde hebben
-          ontvangen en verwerkt.
-        </Text>
+        <Text style={paragraph}>Geachte heer/mevrouw,</Text>
 
         <br />
+
+        <Text style={paragraph}>
+          Hierbij bevestigen wij dat uw betaling in goede orde is ontvangen en
+          verwerkt.
+        </Text>
+
+        <Text style={paragraph}>
+          De betaalde factuur vindt u als bijlage bij deze e-mail.
+        </Text>
 
         <Text style={paragraph}>Hartelijk dank voor uw betaling.</Text>
 

@@ -1,4 +1,5 @@
 import { Html, Head, Body, Container, Text, Hr } from "@react-email/components";
+import { formatAmount } from "@/shared/utils/formatters";
 
 export interface TransferPaymentReceiptEmailProps {
   debtClaimReference: string;
@@ -44,7 +45,7 @@ export function TransferPaymentReceiptEmail({
           <Text
             style={{ fontSize: "16px", color: "#374151", lineHeight: "24px" }}
           >
-            U heeft de betaling van <strong>${amount.toFixed(2)}</strong> voor
+            U heeft de betaling van <strong>${formatAmount(amount)}</strong> voor
             vordering <strong>{debtClaimReference}</strong> goedgekeurd
             ({decidedByName}). Het bedrag is toegepast op de vordering.
           </Text>

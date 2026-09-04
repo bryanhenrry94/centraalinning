@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useWatch } from "react-hook-form";
 import { TextField } from "@mui/material";
+import { formatAmount } from "@/shared/utils/formatters";
 
 const TotalCell = ({ control, index }: { control: any; index: number }) => {
   const item = useWatch({
@@ -17,7 +18,7 @@ const TotalCell = ({ control, index }: { control: any; index: number }) => {
 
   return (
     <TextField
-      value={total.toFixed(2)}
+      value={formatAmount(total)}
       size="small"
       InputProps={{
         readOnly: true,

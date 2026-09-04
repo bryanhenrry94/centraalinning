@@ -7,6 +7,7 @@ import {
   Button,
   Hr,
 } from "@react-email/components";
+import { formatAmount } from "@/shared/utils/formatters";
 
 export interface TransferPaymentVerificationEmailProps {
   debtorEmail: string;
@@ -62,7 +63,7 @@ export function TransferPaymentVerificationEmail({
           </Text>
 
           <Text style={{ fontSize: "15px", color: "#111827", marginTop: "20px" }}>
-            <strong>Bedrag:</strong> ${amount.toFixed(2)}
+            <strong>Bedrag:</strong> ${formatAmount(amount)}
           </Text>
           <Text style={{ fontSize: "15px", color: "#111827" }}>
             <strong>Referentienummer:</strong> {referenceNumber}

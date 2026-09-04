@@ -4,6 +4,7 @@ import { Box, Typography, Chip, Paper, Divider, Button, Container } from "@mui/m
 import ActionToolbar from "@/shared/ui/breadcrums";
 import PaymentList from "./payment-lists";
 import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import { formatCurrency } from "@/shared/utils/formatters";
 // Datos de prueba
 const sampleData = [
   {
@@ -138,19 +139,19 @@ export default function AccountsPage() {
                 render: (row) => (row.installment ? `#${row.installment}` : "-"),
                 hideOnMobile: true,
               },
-              { key: "amount", label: "Bedrag", align: "right", render: (row) => `$${row.amount.toFixed(2)}` },
+              { key: "amount", label: "Bedrag", align: "right", render: (row) => formatCurrency(row.amount) },
               {
                 key: "paidAmount",
                 label: "Betaald",
                 align: "right",
-                render: (row) => `$${row.paidAmount.toFixed(2)}`,
+                render: (row) => formatCurrency(row.paidAmount),
                 hideOnMobile: true,
               },
               {
                 key: "balance",
                 label: "Saldo",
                 align: "right",
-                render: (row) => `$${(row.amount - row.paidAmount).toFixed(2)}`,
+                render: (row) => formatCurrency(row.amount - row.paidAmount),
               },
               { key: "due_date", label: "Vervaldatum", render: (row) => row.due_date, hideOnMobile: true },
               { key: "status", label: "Status", render: (row) => <StatusChip status={row.status} /> },

@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Image,
 } from "@react-pdf/renderer";
+import { formatAmount } from "@/shared/utils/formatters";
 
 // Define styles
 const styles = StyleSheet.create({
@@ -161,9 +162,9 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
       <View style={styles.content}>
         <Text style={styles.paragraph}>
           Volgens onze administratie is factuur nr. {reference_number} nog niet
-          volledig betaald. Het openstaande bedrag van USD {total_amount} dient
-          binnen een termijn van 14 dagen na de datum van deze brief te worden
-          voldaan.
+          volledig betaald. Het openstaande bedrag van USD{" "}
+          {formatAmount(total_amount)} dient binnen een termijn van 14 dagen na
+          de datum van deze brief te worden voldaan.
         </Text>
 
         <Text style={styles.paragraph}>
@@ -176,19 +177,27 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
         <View style={styles.table}>
           <View style={styles.tableRow}>
             <Text style={styles.tableCell}>Digitale dossierkosten</Text>
-            <Text style={styles.tableCellRight}>${digitalFileCosts}</Text>
+            <Text style={styles.tableCellRight}>
+              ${formatAmount(digitalFileCosts)}
+            </Text>
           </View>
           <View style={styles.tableRow}>
             <Text style={styles.tableCell}>Hoofdsom</Text>
-            <Text style={styles.tableCellRight}>${amount_original}</Text>
+            <Text style={styles.tableCellRight}>
+              ${formatAmount(amount_original)}
+            </Text>
           </View>
           <View style={styles.tableRow}>
             <Text style={styles.tableCell}>Incassokosten 15% / min. $40</Text>
-            <Text style={styles.tableCellRight}>${extraCosts}</Text>
+            <Text style={styles.tableCellRight}>
+              ${formatAmount(extraCosts)}
+            </Text>
           </View>
           <View style={styles.tableRow}>
             <Text style={styles.tableCell}>ABB 6%</Text>
-            <Text style={styles.tableCellRight}>${calculatedABB}</Text>
+            <Text style={styles.tableCellRight}>
+              ${formatAmount(calculatedABB)}
+            </Text>
           </View>
           <View style={[styles.tableRow, styles.totalRow]}>
             <Text style={styles.tableCell}>Totaalbedrag</Text>
@@ -198,7 +207,7 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
                 { borderTopWidth: 2, borderTopColor: "#161515" },
               ]}
             >
-              ${total_amount}
+              ${formatAmount(total_amount)}
             </Text>
           </View>
         </View>

@@ -28,6 +28,7 @@ import {
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { useTenant } from "@/modules/auth/hooks/useTenant";
 import { getParameterAction } from "@/modules/settings/actions/parameter.actions";
+import { formatCurrency } from "@/shared/utils/formatters";
 import { ParameterInput } from "@/modules/settings/services/parameter/parameter.type";
 import { getDebtorsAction } from "@/modules/collection/actions/debtor.actions";
 import { createPendingDebtClaimAction } from "@/modules/collection/actions/debt-claim.actions";
@@ -124,14 +125,6 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
 
   const amountService = cobranza + abbValue + additionalCosts;
   const totalFinal = subtotal - amountService;
-
-  const formatUSD = (value: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value);
 
   const handleClickNewDebtor = () => {
     setModalFormDebtor({ open: true, debtor_id: debtorId });
@@ -291,15 +284,15 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
               <CardContent>
                 <Box display="flex" justifyContent="space-between">
                   <Typography>Vordering:</Typography>
-                  <Typography>{formatUSD(subtotal)}</Typography>
+                  <Typography>{formatCurrency(subtotal)}</Typography>
                 </Box>
                 <Box display="flex" justifyContent="space-between">
                   <Typography>AOP-Kosten:</Typography>
-                  <Typography>{`-${formatUSD(amountService)}`}</Typography>
+                  <Typography>{`-${formatCurrency(amountService)}`}</Typography>
                 </Box>
                 <Box display="flex" justifyContent="space-between">
                   <Typography variant="h6">Te ontvangen:</Typography>
-                  <Typography variant="h6">{formatUSD(totalFinal)}</Typography>
+                  <Typography variant="h6">{formatCurrency(totalFinal)}</Typography>
                 </Box>
               </CardContent>
             </Card>

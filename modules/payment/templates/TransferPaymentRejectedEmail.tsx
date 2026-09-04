@@ -1,4 +1,5 @@
 import { Html, Head, Body, Container, Text, Hr } from "@react-email/components";
+import { formatAmount } from "@/shared/utils/formatters";
 
 export interface TransferPaymentRejectedEmailProps {
   debtClaimReference: string;
@@ -46,7 +47,7 @@ export function TransferPaymentRejectedEmail({
           >
             Uw betalingsbewijs voor vordering{" "}
             <strong>{debtClaimReference}</strong> van{" "}
-            <strong>${amount.toFixed(2)}</strong> is gecontroleerd en
+            <strong>${formatAmount(amount)}</strong> is gecontroleerd en
             afgewezen. Er is geen betaling toegepast op uw schuld.
           </Text>
 

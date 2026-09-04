@@ -7,6 +7,7 @@ import {
   Image,
   StyleSheet,
 } from "@react-pdf/renderer";
+import { formatAmount } from "@/shared/utils/formatters";
 
 export interface VerdictCreditorPDFProps {
   logoUrl: string;
@@ -192,7 +193,8 @@ const VerdictCreditorPDF: React.FC<VerdictCreditorPDFProps> = ({
               ({reference_number}) {creditor_name} vs {debtorName}{" "}
             </Text>
             via CFSB, factuurnummer CFSB{" "}
-            {invoice_number}, ten bedrage van USD {total_amount}. Deze factuur
+            {invoice_number}, ten bedrage van USD {formatAmount(total_amount)}.
+            Deze factuur
             zal rechtstreeks worden verrekend met het bedrag dat u te ontvangen
             heeft via de debiteur.
           </Text>

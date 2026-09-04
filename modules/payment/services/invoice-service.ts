@@ -193,7 +193,7 @@ export class InvoiceService {
         return "Collectieve Opvolging (COP) — startvergoeding";
 
       default:
-        return "Service payment";
+        return "AOP - Registratie";
     }
   }
 
@@ -220,7 +220,9 @@ export class InvoiceService {
     });
 
     if (!tenant) {
-      throw new Error("Geen contact-e-mailadres gevonden voor deze organisatie");
+      throw new Error(
+        "Geen contact-e-mailadres gevonden voor deze organisatie",
+      );
     }
 
     // Definir valores base
@@ -248,8 +250,7 @@ export class InvoiceService {
         currency: "USD",
         issue_date,
         due_date,
-        description:
-          "Factuur voor activering van CFSB-systeemaccount",
+        description: "Factuur voor activering van CFSB-systeemaccount",
         status: "unpaid",
         payment_id: "",
       },
@@ -279,7 +280,9 @@ export class InvoiceService {
     });
 
     if (!res.success) {
-      throw new Error("Er is een fout opgetreden bij het aanmaken van de betaling in Sentoo");
+      throw new Error(
+        "Er is een fout opgetreden bij het aanmaken van de betaling in Sentoo",
+      );
     }
 
     console.log("payment created:", res.payment);

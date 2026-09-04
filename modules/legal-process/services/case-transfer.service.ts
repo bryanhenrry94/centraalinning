@@ -17,6 +17,7 @@ import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 import { SettingsService } from "@/modules/settings/services/settings/settings.service";
 import { StorageService } from "@/infrastructure/storage/storage.service";
+import { formatAmount } from "@/shared/utils/formatters";
 
 const ACCEPTANCE_WINDOW_DAYS = 7;
 // Valor por defecto — el Superadministrador puede configurar la antelación
@@ -740,7 +741,7 @@ export class CaseTransferService {
     await ClaimTimelineService.logEvent(
       caseTransfer.debtClaimId,
       "STATUS_CHANGED",
-      `De advocaat registreerde zijn honorariumfactuur (${params.totalAmount}). CFSB-commissie van ${total_with_tax} in behandeling.`,
+      `De advocaat registreerde zijn honorariumfactuur (${formatAmount(params.totalAmount)}). CFSB-commissie van ${formatAmount(total_with_tax)} in behandeling.`,
       { totalAmount: params.totalAmount, cfsbFee: total_with_tax },
       actorUserId,
     );

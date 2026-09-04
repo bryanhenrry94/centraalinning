@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Image,
 } from "@react-pdf/renderer";
+import { formatAmount } from "@/shared/utils/formatters";
 
 // Define styles
 const styles = StyleSheet.create({
@@ -191,7 +192,8 @@ const VerdictDebtorPDF: React.FC<VerdictDebtorPDFProps> = ({
           </Text>
 
           <Text style={styles.paragraph}>
-            Het totaal verschuldigde bedrag bedraagt USD {sentence_amount}. U
+            Het totaal verschuldigde bedrag bedraagt USD{" "}
+            {formatAmount(sentence_amount)}. U
             dient dit bedrag binnen 2 dagen te voldoen op: Bank MCB
             Rekeningnummer (derdengelden) {bankAccountNumber}.
           </Text>

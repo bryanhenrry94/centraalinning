@@ -21,7 +21,12 @@ interface IslandStepProps {
   onNext: () => void;
 }
 
-export const IslandStep = ({ value, islands, onSelect, onNext }: IslandStepProps) => {
+export const IslandStep = ({
+  value,
+  islands,
+  onSelect,
+  onNext,
+}: IslandStepProps) => {
   return (
     <Box sx={{ width: "100%", maxWidth: 560, mx: "auto" }}>
       <Typography
@@ -37,25 +42,6 @@ export const IslandStep = ({ value, islands, onSelect, onNext }: IslandStepProps
       >
         Selecteer het eiland waar uw organisatie is gevestigd.
       </Typography>
-
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "flex-start",
-          gap: 1.5,
-          bgcolor: "#eef2fb",
-          border: "1px solid #dbe4f7",
-          borderRadius: 2,
-          p: 2,
-          mb: 3,
-        }}
-      >
-        <InfoOutlined sx={{ color: PRIMARY, fontSize: 20, mt: 0.2 }} />
-        <Typography variant="body2" sx={{ color: PRIMARY }}>
-          Uw keuze bepaalt onder welk eiland uw organisatie wordt
-          geregistreerd.
-        </Typography>
-      </Box>
 
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 4 }}>
         {islands.map((island) => {

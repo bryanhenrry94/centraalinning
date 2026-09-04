@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Box, Typography, Alert } from "@mui/material";
 import { ShoppingCart } from "@mui/icons-material";
 import { PaymentCXForm } from "@/modules/payment/components/financial-report-payment-form";
+import { formatCurrency } from "@/shared/utils/formatters";
 
 type Item = {
   id: number;
@@ -76,7 +77,7 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
                   {item.name}
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: "bold" }}>
-                  ${item.price.toFixed(2)}
+                  {formatCurrency(item.price)}
                 </Typography>
               </Box>
               <Typography variant="caption" color="textSecondary">
@@ -90,8 +91,8 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
             textAlign={"right"}
             sx={{ mt: 2, borderTop: "1px solid #e0e3e7", pt: 1 }}
           >
-            Total: $
-            {items.reduce((sum, item) => sum + item.price, 0).toFixed(2)}
+            Total:{" "}
+            {formatCurrency(items.reduce((sum, item) => sum + item.price, 0))}
           </Typography>
 
           {orderCompleted && (

@@ -25,6 +25,7 @@ import { UserRole } from "@/shared/constants/user-role";
 import { notifyError } from "@/shared/ui/notifications";
 import { uploadVerdictSupportingDocument } from "@/modules/legal-process/actions/legal-process.actions";
 import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import { formatAmount } from "@/shared/utils/formatters";
 
 const TotalCell = ({ control, index }: { control: any; index: number }) => {
   const { setValue } = useFormContext();
@@ -46,7 +47,7 @@ const TotalCell = ({ control, index }: { control: any; index: number }) => {
 
   return (
     <TextField
-      value={total.toFixed(2)}
+      value={formatAmount(total)}
       size="small"
       InputProps={{
         readOnly: true,

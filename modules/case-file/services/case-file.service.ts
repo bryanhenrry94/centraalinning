@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { CaseFileCategory, CASE_FILE_CATEGORY_LABEL } from "@/modules/case-file/constants/case-file-category";
+import { formatAmount } from "@/shared/utils/formatters";
 
 export interface CaseFileItem {
   id: string;
@@ -159,7 +160,7 @@ export class CaseFileService {
           category: CaseFileCategory.PAYMENT_PROOF,
           categoryLabel: CASE_FILE_CATEGORY_LABEL[CaseFileCategory.PAYMENT_PROOF],
           title: confirmation.proofOriginalName,
-          sourceLabel: `${confirmation.status} — ${Number(confirmation.payment.total_amount)}`,
+          sourceLabel: `${confirmation.status} — ${formatAmount(Number(confirmation.payment.total_amount))}`,
           mimeType: confirmation.proofMimeType,
           size: confirmation.proofSize,
           createdAt: confirmation.recordedAt,
@@ -217,7 +218,7 @@ export class CaseFileService {
           id: negotiation.id,
           category: CaseFileCategory.COP,
           categoryLabel: CASE_FILE_CATEGORY_LABEL[CaseFileCategory.COP],
-          title: `Betalingsregeling voorgesteld: ${Number(negotiation.proposalAmount)}`,
+          title: `Betalingsregeling voorgesteld: ${formatAmount(Number(negotiation.proposalAmount))}`,
           sourceLabel: negotiation.status,
           createdAt: cop.startedAt,
         });

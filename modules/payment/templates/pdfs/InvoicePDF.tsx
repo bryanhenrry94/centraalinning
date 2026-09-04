@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Image,
 } from "@react-pdf/renderer";
+import { formatAmount } from "@/shared/utils/formatters";
 
 export interface InvoiceItem {
   item_description: string;
@@ -200,13 +201,13 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({
             <Text style={styles.description}>{item.item_description}</Text>
             <Text style={styles.tableCellCenter}>{item.item_quantity}</Text>
             <Text style={styles.tableCellRight}>
-              ${item.item_unit_price.toFixed(2)}
+              ${formatAmount(item.item_unit_price)}
             </Text>
             <Text style={styles.tableCellRight}>
-              {item.item_tax_rate.toFixed(2)}
+              {formatAmount(item.item_tax_rate)}
             </Text>
             <Text style={styles.tableCellRight}>
-              ${item.item_subtotal.toFixed(2)}
+              ${formatAmount(item.item_subtotal)}
             </Text>
           </View>
         ))}
@@ -217,7 +218,7 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({
         <View style={styles.totalsBox}>
           <View style={styles.totalRow}>
             <Text style={{ fontWeight: "bold" }}>Te betalen:</Text>
-            <Text style={{ fontWeight: "bold" }}>${total.toFixed(2)}</Text>
+            <Text style={{ fontWeight: "bold" }}>${formatAmount(total)}</Text>
           </View>
         </View>
       </View>

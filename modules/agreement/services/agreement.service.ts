@@ -138,7 +138,7 @@ export class AgreementService {
       data: {
         debtClaimId: data.debtClaim_id,
         event: "AGREEMENT_CREATED",
-        description: `Betalingsregeling voorgesteld: ${data.installments_count} termijnen van ${data.installment_amount}.`,
+        description: `Betalingsregeling voorgesteld: ${data.installments_count} termijnen van ${formatCurrency(data.installment_amount)}.`,
         metadata: { agreementId: newAgreement.id, legalProcessId: data.legalProcessId ?? null, caseTransferId: data.caseTransferId ?? null },
         createdById: actorUserId ?? requestingUserId,
       },

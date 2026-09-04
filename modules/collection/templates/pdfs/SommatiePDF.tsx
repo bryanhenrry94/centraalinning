@@ -8,6 +8,7 @@ import {
   Image,
   Link,
 } from "@react-pdf/renderer";
+import { formatAmount } from "@/shared/utils/formatters";
 
 const styles = StyleSheet.create({
   page: {
@@ -323,7 +324,9 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
             <View style={styles.tableRow}>
               <Text style={styles.tableLabel}>Hoofdsom</Text>
               <Text style={styles.tableSymbol}>USD</Text>
-              <Text style={styles.tableValue}>{amount_original}</Text>
+              <Text style={styles.tableValue}>
+                {formatAmount(amount_original)}
+              </Text>
             </View>
 
             <View style={styles.tableRow}>
@@ -331,7 +334,9 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
                 Administratieve opvolgingskosten
               </Text>
               <Text style={styles.tableSymbol}>USD</Text>
-              <Text style={styles.tableValue}>{administrativeCosts}</Text>
+              <Text style={styles.tableValue}>
+                {formatAmount(administrativeCosts)}
+              </Text>
             </View>
 
             <View style={[styles.tableRow, { marginBottom: 5 }]}>
@@ -346,7 +351,7 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
               <Text
                 style={[styles.tableValueWithUnderline, { paddingBottom: 5 }]}
               >
-                {calculatedABB}
+                {formatAmount(calculatedABB)}
               </Text>
             </View>
 
@@ -355,13 +360,17 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
                 Aanvullende opvolgingskosten
               </Text>
               <Text style={styles.tableSymbol}>USD</Text>
-              <Text style={styles.tableValue}>{additionalCosts}</Text>
+              <Text style={styles.tableValue}>
+                {formatAmount(additionalCosts)}
+              </Text>
             </View>
 
             <View style={[styles.tableRow, styles.totalRow]}>
               <Text style={styles.totalLabel}>Totaal te voldoen</Text>
               <Text style={styles.totalSymbol}>USD</Text>
-              <Text style={styles.totalValue}>{total_amount}</Text>
+              <Text style={styles.totalValue}>
+                {formatAmount(total_amount)}
+              </Text>
             </View>
           </View>
 

@@ -30,6 +30,7 @@ import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 import { SettingsService } from "@/modules/settings/services/settings/settings.service";
 import { StorageService } from "@/infrastructure/storage/storage.service";
+import { formatAmount } from "@/shared/utils/formatters";
 
 const legalProcessInclude = {
   debtClaim: { include: { debtor: { include: { person: true } }, tenant: true } },
@@ -933,7 +934,7 @@ export class LegalProcessService {
     await ClaimTimelineService.logEvent(
       legalProcess.debtClaimId,
       "STATUS_CHANGED",
-      `De deurwaarder registreerde zijn kostenfactuur (${params.totalAmount}). CFSB-commissie van ${total_with_tax} in behandeling.`,
+      `De deurwaarder registreerde zijn kostenfactuur (${formatAmount(params.totalAmount)}). CFSB-commissie van ${formatAmount(total_with_tax)} in behandeling.`,
       { totalAmount: params.totalAmount, cfsbFee: total_with_tax },
       actorUserId,
     );
@@ -1181,7 +1182,7 @@ export class LegalProcessService {
     });
     if (obligation && Number(obligation.balanceAmount) > 0) {
       throw new Error(
-        `Nog niet volledig betaald: openstaand saldo van ${Number(obligation.balanceAmount)}.`,
+        `Nog niet volledig betaald: openstaand saldo van ${formatAmount(Number(obligation.balanceAmount))}.`,
       );
     }
 
@@ -1615,7 +1616,7 @@ export class LegalProcessService {
     await ClaimTimelineService.logEvent(
       legalProcess.debtClaimId,
       "PAYMENT_REGISTERED",
-      `Betaling van ${data.amount} geregistreerd (ontvangen door ${receivedByLabel}). In afwachting van bevestiging door de andere partij.`,
+      `Betaling van ${formatAmount(data.amount)} geregistreerd (ontvangen door ${receivedByLabel}). In afwachting van bevestiging door de andere partij.`,
       { paymentId: payment.id, confirmationId: confirmation.id, amount: data.amount, receivedBy: data.receivedBy },
       actorUserId,
     );
@@ -1693,7 +1694,7 @@ export class LegalProcessService {
     await ClaimTimelineService.logEvent(
       legalProcess.debtClaimId,
       "PAYMENT_VERIFIED",
-      `Betaling van ${Number(confirmation.payment.total_amount)} bevestigd door de andere partij. Nieuw saldo: ${updatedObligation.balanceAmount}.`,
+      `Betaling van ${formatAmount(Number(confirmation.payment.total_amount))} bevestigd door de andere partij. Nieuw saldo: ${formatAmount(Number(updatedObligation.balanceAmount))}.`,
       { paymentId: confirmation.paymentId, balanceAmount: Number(updatedObligation.balanceAmount) },
       actorUserId,
     );
@@ -1743,7 +1744,7 @@ export class LegalProcessService {
     await ClaimTimelineService.logEvent(
       legalProcess.debtClaimId,
       "PAYMENT_REJECTED",
-      `Betaling van ${Number(confirmation.payment.total_amount)} betwist: ${reason}`,
+      `Betaling van ${formatAmount(Number(confirmation.payment.total_amount))} betwist: ${reason}`,
       { paymentId: confirmation.paymentId, reason },
       actorUserId,
     );

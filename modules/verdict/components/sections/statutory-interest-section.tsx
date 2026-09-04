@@ -20,6 +20,7 @@ import {
 } from "react-hook-form";
 import { IVerdictInterestCreate } from "@/modules/verdict/services/verdict-interest.validators";
 import { getAllInterestTypes } from "@/modules/settings/actions/interest-type.actions";
+import { formatCurrency } from "@/shared/utils/formatters";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -468,19 +469,19 @@ const StatutoryInterestSection: React.FC = () => {
                     key: "base_amount",
                     label: "Monto",
                     align: "right",
-                    render: (row) => `$ ${Number(row.base_amount).toFixed(2)}`,
+                    render: (row) => formatCurrency(Number(row.base_amount)),
                   },
                   {
                     key: "interest",
                     label: "Interes",
                     align: "right",
-                    render: (row) => `$ ${Number(row.interest).toFixed(2)}`,
+                    render: (row) => formatCurrency(Number(row.interest)),
                   },
                   {
                     key: "total",
                     label: "Total",
                     align: "right",
-                    render: (row) => `$ ${Number(row.total).toFixed(2)}`,
+                    render: (row) => formatCurrency(Number(row.total)),
                   },
                 ];
 

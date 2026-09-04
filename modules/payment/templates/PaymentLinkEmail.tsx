@@ -7,6 +7,7 @@ import {
   Button,
   Hr,
 } from "@react-email/components";
+import { formatAmount } from "@/shared/utils/formatters";
 
 export interface PaymentLinkEmailProps {
   fullname: string;
@@ -91,7 +92,7 @@ export function PaymentLinkEmail({
                 color: "#111827",
               }}
             >
-              <strong>Bedrag:</strong> ${amount.toFixed(2)}
+              <strong>Bedrag:</strong> ${formatAmount(amount)}
             </Text>
           )}
 

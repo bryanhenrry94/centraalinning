@@ -1,5 +1,6 @@
 import { Typography } from "@mui/material";
 import { useWatch } from "react-hook-form";
+import { formatAmount } from "@/shared/utils/formatters";
 
 const TotalInterest: React.FC<{ control: any }> = ({ control }) => {
   interface VerdictInterestItem {
@@ -21,7 +22,7 @@ const TotalInterest: React.FC<{ control: any }> = ({ control }) => {
 
   return (
     <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
-      Totaal ${Number(total).toFixed(2)}
+      Totaal ${formatAmount(total)}
     </Typography>
   );
 };

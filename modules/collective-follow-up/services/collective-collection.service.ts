@@ -16,7 +16,7 @@ import { InvoiceService } from "@/modules/payment/services/invoice-service";
 import { sendInvoiceEmail } from "@/modules/payment/services/payment-mail.service";
 import { sendEmployerMatchNoticeEmail } from "@/modules/collective-follow-up/services/collective-collection-mail.service";
 import { computeDebtClaimBalances } from "@/modules/collection/utils/debt-claim-balance";
-import { formatCurrency, formatDate } from "@/shared/utils/formatters";
+import { formatAmount, formatCurrency, formatDate } from "@/shared/utils/formatters";
 import {
   CollectiveCollectionStatus,
   COP_START_FEE_RATE,
@@ -820,7 +820,7 @@ export class CollectiveCollectionService {
         data: {
           debtClaimId: collection.debtClaimId,
           event: "COL_NEGOTIATION_CREATED",
-          description: `Betalingsregeling aangevraagd: ${input.installmentsCount} termijnen van ${installmentAmount} vanaf ${input.startDate.toISOString().slice(0, 10)} (totaal ${proposalAmount}).`,
+          description: `Betalingsregeling aangevraagd: ${input.installmentsCount} termijnen van ${formatAmount(installmentAmount)} vanaf ${input.startDate.toISOString().slice(0, 10)} (totaal ${formatAmount(proposalAmount)}).`,
         },
       });
 
@@ -848,7 +848,7 @@ export class CollectiveCollectionService {
         user_id: collection.debtClaim.debtor.user_id,
         type: NotificationType.COL_NEGOTIATION_REQUESTED_BY_EMPLOYER,
         title: "Uw werkgever heeft namens u een betalingsregeling aangevraagd",
-        message: `Voor dossier ${collection.debtClaim.reference ?? collection.debtClaimId} werd een betalingsregeling van ${proposalAmount} aangevraagd door uw werkgever, namens u.`,
+        message: `Voor dossier ${collection.debtClaim.reference ?? collection.debtClaimId} werd een betalingsregeling van ${formatAmount(proposalAmount)} aangevraagd door uw werkgever, namens u.`,
         link: `/collective-follow-up/${collectionId}`,
         entity_type: "CollectiveCollection",
         entity_id: collectionId,
@@ -942,7 +942,7 @@ export class CollectiveCollectionService {
         data: {
           debtClaimId: collection.debtClaimId,
           event: "COL_NEGOTIATION_ACCEPTED",
-          description: `Betalingsregeling geaccepteerd voor ${acceptedAmount}. Collectieve Opvolging afgerond.`,
+          description: `Betalingsregeling geaccepteerd voor ${formatAmount(acceptedAmount)}. Collectieve Opvolging afgerond.`,
         },
       });
     });
@@ -958,7 +958,7 @@ export class CollectiveCollectionService {
         user_id: collection.debtClaim.debtor.user_id,
         type: NotificationType.COL_NEGOTIATION_ACCEPTED,
         title: "Betalingsregeling geaccepteerd",
-        message: `Uw voorstel voor dossier ${debtClaimReference} werd geaccepteerd voor ${acceptedAmount}.`,
+        message: `Uw voorstel voor dossier ${debtClaimReference} werd geaccepteerd voor ${formatAmount(acceptedAmount)}.`,
         link: `/collective-follow-up/${collection.id}`,
         entity_type: "CollectiveCollection",
         entity_id: collection.id,

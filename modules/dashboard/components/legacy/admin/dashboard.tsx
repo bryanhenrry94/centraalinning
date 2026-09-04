@@ -127,11 +127,7 @@ export const DashboardAdmin = () => {
                     key: "amount",
                     label: "Totaal",
                     align: "right",
-                    render: (row) =>
-                      new Intl.NumberFormat("es-EC", {
-                        style: "currency",
-                        currency: "USD",
-                      }).format(row.amount),
+                    render: (row) => formatCurrency(row.amount),
                   },
                   {
                     key: "status",

@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { StorageService } from "@/infrastructure/storage/storage.service";
 import { ObligationService } from "@/modules/collection/services/obligation.service";
 import { ClaimTimelineService } from "@/modules/collection/services/claim-timeline.service";
+import { formatAmount } from "@/shared/utils/formatters";
 import { CollectiveCollectionService } from "@/modules/collective-follow-up/services/collective-collection.service";
 import {
   sendTransferPaymentApprovedEmail,
@@ -273,7 +274,7 @@ export class PaymentTransferService {
     await ClaimTimelineService.logEvent(
       debtClaim.id,
       "PAYMENT_VERIFIED",
-      `Betaling van ${Number(verification.payment.total_amount).toFixed(2)} goedgekeurd door ${actingUser.displayName}.`,
+      `Betaling van ${formatAmount(Number(verification.payment.total_amount))} goedgekeurd door ${actingUser.displayName}.`,
       {
         paymentId: verification.payment_id,
         amount: Number(verification.payment.total_amount),
