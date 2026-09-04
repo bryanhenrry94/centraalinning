@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
 
   attention: {
     marginTop: 10,
-    marginBottom: 18,
+    marginBottom: 6,
     fontSize: 11,
     fontWeight: "bold",
   },
@@ -228,7 +228,7 @@ const BlokkadePDF: React.FC<BlokkadePDFProps> = ({
           <View style={styles.headerTop}>
             <Image style={styles.logo} src={logoUrl} />
 
-            <Text style={styles.title}>Blokkade</Text>
+            <Text style={styles.title}>Economische Blokkade</Text>
           </View>
 
           <View style={styles.divider} />
@@ -257,34 +257,37 @@ const BlokkadePDF: React.FC<BlokkadePDFProps> = ({
           <Text style={styles.paragraph}>Geachte heer/mevrouw,</Text>
 
           <Text style={styles.paragraph}>
-            Er is een economische blokkade op uw naam geregistreerd binnen de
-            CFSB-samenwerking.
+            Hierbij informeren wij u dat op uw naam een economische blokkade
+            is geregistreerd binnen de CFSB-samenwerking.
           </Text>
 
           <Text style={styles.paragraph}>
-            Deze blokkade is het gevolg van het niet nakomen van uw
-            betalingsverplichting.
+            Deze blokkade is het gevolg van het niet nakomen van de
+            betalingsverplichting in bovenstaand dossier.
+          </Text>
+
+          <Text style={styles.attention}>
+            Opheffing van de economische blokkade
           </Text>
 
           <Text style={styles.paragraph}>
-            U kunt deze blokkade laten opheffen door:
+            Bij volledige betaling van de betalingsverplichting wordt de
+            economische blokkade opgeheven.
           </Text>
 
-          <Text style={[styles.listItem]}>
-            • het openstaande bedrag volledig te voldoen; of
-          </Text>
-
-          <Text style={styles.listItem}>
-            • een betalingsregeling te treffen en deze correct na te komen.
+          <Text style={styles.paragraph}>
+            Indien een betalingsregeling wordt overeengekomen, wordt de
+            economische blokkade tijdelijk opgeheven gedurende de looptijd van
+            de regeling, overeenkomstig de geldende CFSB-voorwaarden.
           </Text>
 
           <Text style={[styles.paragraph, { marginTop: 10 }]}>
-            Om te betalen, een betalingsregeling te treffen of een Financiële
-            Verklaring aan te vragen, kunt u gebruikmaken van de aan u
-            verstrekte betaallink of inloggen via{" "}
+            Voor het betalen of aanvragen van een betalingsregeling kunt u
+            gebruikmaken van de aan u verstrekte instructies of inloggen via{" "}
             <Link src="https://www.cfsbgroup.com" style={styles.link}>
-              www.cfsbgroup.com
-            </Link>{" "}
+              de CFSB-omgeving
+            </Link>
+            .
           </Text>
 
           <Text style={[styles.paragraph, { marginTop: 20 }]}>

@@ -7,16 +7,18 @@ const MULTIPLE_PERSONS_FOUND_ERROR =
 
 export class BlockCheckService {
   private static buildFullName(
-    person: Pick<Person, "first_name" | "last_name">,
+    person: Pick<Person, "first_name" | "middle_name" | "last_name">,
   ): string {
-    return [person.first_name, person.last_name].filter(Boolean).join(" ");
+    return [person.first_name, person.middle_name, person.last_name]
+      .filter(Boolean)
+      .join(" ");
   }
 
-  // Zoeken op naam (voornaam/achternaam) naast identificatienummer en
-  // CFSB-nummer — vereiste sponsor 2026-09-02. De term wordt in woorden
-  // gesplitst zodat "Joselyn Andrade" matcht ongeacht de volgorde van de
-  // namen; is de match niet eenduidig (meerdere personen), dan wordt dat
-  // expliciet gemeld in plaats van willekeurig de eerste te kiezen.
+  // Zoeken op naam (voornaam/middelnaam/achternaam) naast identificatienummer
+  // en CFSB-nummer — vereiste sponsor 2026-09-02/03. De term wordt in
+  // woorden gesplitst zodat "Joselyn Andrade" matcht ongeacht de volgorde
+  // van de namen; is de match niet eenduidig (meerdere personen), dan wordt
+  // dat expliciet gemeld in plaats van willekeurig de eerste te kiezen.
   private static async findPersonByName(
     term: string,
   ): Promise<{ person: Person | null; ambiguous: boolean }> {
@@ -28,6 +30,7 @@ export class BlockCheckService {
         person_type: "INDIVIDUAL",
         OR: tokens.flatMap((token) => [
           { first_name: { contains: token } },
+          { middle_name: { contains: token } },
           { last_name: { contains: token } },
         ]),
       },

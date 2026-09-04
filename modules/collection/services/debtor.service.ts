@@ -142,6 +142,7 @@ export class DebtorService {
                 identification: debtor.person.identification,
                 id: debtor.person.id,
                 first_name: debtor.person.first_name,
+                middle_name: debtor.person.middle_name,
                 last_name: debtor.person.last_name,
                 business_name: debtor.person.business_name,
               }
@@ -240,6 +241,7 @@ export class DebtorService {
               IdentificationType.CEDULA,
             identification: debtorFormatted.person?.identification || "",
             first_name: debtorFormatted.person?.first_name || "",
+            middle_name: debtorFormatted.person?.middle_name || "",
             last_name: debtorFormatted.person?.last_name || "",
             business_name: debtorFormatted.person?.business_name || "",
             address: debtorFormatted.person?.address || "",
@@ -303,6 +305,7 @@ export class DebtorService {
           where: { id: debtorResult.person_id },
           data: {
             first_name: debtor.person?.first_name,
+            middle_name: debtor.person?.middle_name,
             last_name: debtor.person?.last_name,
             business_name: debtor.person?.business_name,
             identification: debtor.person?.identification,

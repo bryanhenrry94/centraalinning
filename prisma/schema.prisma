@@ -1232,6 +1232,9 @@ model Person {
   identification      String             @unique
 
   first_name    String?
+  // Middelnaam / tussenvoegsel — nooit verplicht, niet iedereen heeft er een
+  // (sponsor 2026-09-03, ook gebruikt door BLC-zoeken op naam).
+  middle_name   String?
   last_name     String?
   business_name String?
 

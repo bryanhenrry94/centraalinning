@@ -68,6 +68,7 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
         address: "",
         phone: "",
         first_name: "",
+        middle_name: "",
         last_name: "",
         business_name: "",
       },
@@ -170,6 +171,7 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
         ...methods.getValues().person,
         id: person?.id || undefined,
         first_name: person?.first_name || "",
+        middle_name: person?.middle_name || "",
         last_name: person?.last_name || "",
         email: person?.email || "",
         phone: person?.phone || "",
@@ -311,6 +313,11 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
                       name="person.first_name"
                       label="First Name"
                       required={true}
+                    />
+                    <InputHookForm
+                      name="person.middle_name"
+                      label="Middle Name"
+                      required={false}
                     />
                     <InputHookForm
                       name="person.last_name"

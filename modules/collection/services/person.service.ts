@@ -39,6 +39,7 @@ export class PersonService {
       identification_type: person.identification_type,
       identification: person.identification,
       first_name: person.first_name,
+      middle_name: person.middle_name,
       last_name: person.last_name,
       business_name: person.business_name,
       email: person.email,
