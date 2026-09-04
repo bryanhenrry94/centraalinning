@@ -58,9 +58,13 @@ export const InvoiceEmail = ({
           Status: {status}
         </Text>
 
+        <br />
+
         <Text style={paragraph}>
           De betaalde factuur vindt u als bijlage bij deze e-mail.
         </Text>
+
+        <br />
 
         <Text style={paragraph}>Hartelijk dank voor uw betaling.</Text>
 
