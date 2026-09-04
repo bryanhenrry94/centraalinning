@@ -53,14 +53,22 @@ export const sendInvoiceEmail = async (
 
     const recipient = await getEmailByEnv(to);
 
+    const status = isPaid ? "Betaald" : "Openstaand";
+
     await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
-      subject: `FACTUUR - ${billing.invoice_number}`,
+      subject: isPaid
+        ? `Betaling ontvangen – ${billing.invoice_number}`
+        : `FACTUUR - ${billing.invoice_number}`,
       react: (
         <InvoiceEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
           fullname={billing.tenant.name || "Customer"}
+          invoiceNumber={billing.invoice_number}
+          serviceDescription={billing.description || "CFSB-dienst"}
+          amount={formatCurrency(billing.amount)}
+          status={status}
         />
       ),
       attachments,

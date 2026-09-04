@@ -13,9 +13,20 @@ interface InvoiceEmailProps {
   logoUrl: string;
   fullname: string;
   paymentLink?: string;
+  invoiceNumber: string;
+  serviceDescription: string;
+  amount: string;
+  status: string;
 }
 
-export const InvoiceEmail = ({ logoUrl, fullname }: InvoiceEmailProps) => (
+export const InvoiceEmail = ({
+  logoUrl,
+  fullname,
+  invoiceNumber,
+  serviceDescription,
+  amount,
+  status,
+}: InvoiceEmailProps) => (
   <Html>
     <Head />
     <Body style={main}>
@@ -38,6 +49,16 @@ export const InvoiceEmail = ({ logoUrl, fullname }: InvoiceEmailProps) => (
         </Text>
 
         <Text style={paragraph}>
+          Factuurnummer: {invoiceNumber}
+          <br />
+          Dienst: {serviceDescription}
+          <br />
+          Betaald bedrag: {amount}
+          <br />
+          Status: {status}
+        </Text>
+
+        <Text style={paragraph}>
           De betaalde factuur vindt u als bijlage bij deze e-mail.
         </Text>
 
@@ -56,6 +77,10 @@ InvoiceEmail.PreviewProps = {
   logoUrl: "/static/logo.png",
   fullname: "Alan",
   paymentLink: "https://example.com/pay-invoice/12345",
+  invoiceNumber: "INV-2026-029",
+  serviceDescription: "AOP - Registratie",
+  amount: "$ 200,80",
+  status: "Betaald",
 } as InvoiceEmailProps;
 
 export default InvoiceEmail;
