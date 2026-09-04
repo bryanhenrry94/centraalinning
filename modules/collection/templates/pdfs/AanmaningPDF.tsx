@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
   },
   table: {
     marginVertical: 20,
-    width: "35%",
+    width: "50%",
   },
   tableRow: {
     flexDirection: "row",
@@ -216,8 +216,7 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
           Wij verzoek u binnen de gestelde termijn te betalen, Indien u het
           bedrag reeds heeft voldaan, kunt u deze aanmaning als niet verzonden
           beschouwen. Voor betaling, het treffen van een regeling of contact met
-          de schuldeiser kunt u zich registreren of inloggen via:
-          CFSB
+          de schuldeiser kunt u zich registreren of inloggen via: CFSB
         </Text>
 
         <Text style={styles.paragraph}>
@@ -242,8 +241,7 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
 
       {/* Footer */}
       <Text style={styles.footer}>
-        Dit bericht is automatisch opgesteld en verzonden via het Centraal
-        CFSB.
+        Dit bericht is automatisch opgesteld en verzonden via het Centraal CFSB.
       </Text>
     </Page>
   </Document>
