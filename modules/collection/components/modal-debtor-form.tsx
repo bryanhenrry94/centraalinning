@@ -235,7 +235,7 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="id"
+                      label="ID"
                       type="text"
                       required={true}
                       size="small"
@@ -251,7 +251,7 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Person Type"
+                      label="Persoonstype"
                       select
                       required={true}
                       size="small"
@@ -273,7 +273,7 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
 
                 <SelectHookForm
                   name="person.identification_type"
-                  label="Identification Type"
+                  label="Identificatietype"
                   options={
                     watch("person.person_type") === "COMPANY"
                       ? [{ value: IdentificationType.KVK, label: "KVK" }]
@@ -289,7 +289,7 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Identification"
+                      label="Identificatienummer"
                       type="text"
                       required={true}
                       size="small"
@@ -311,17 +311,43 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
                   <>
                     <InputHookForm
                       name="person.first_name"
-                      label="First Name"
+                      label="Voornaam"
                       required={true}
                     />
-                    <InputHookForm
+                    <Controller
+                      control={control}
                       name="person.middle_name"
-                      label="Middle Name"
-                      required={false}
+                      render={({ field, fieldState }) => (
+                        <TextField
+                          {...field}
+                          label="Middelnaam"
+                          type="text"
+                          size="small"
+                          placeholder="B.N"
+                          value={field.value || ""}
+                          error={!!fieldState.error}
+                          helperText={
+                            fieldState.error?.message ||
+                            "Twee initialen, bijv. B.N"
+                          }
+                          slotProps={{ htmlInput: { maxLength: 3 } }}
+                          onChange={(e: any) => {
+                            const letters = e.target.value
+                              .replace(/[^a-zA-Z]/g, "")
+                              .toUpperCase()
+                              .slice(0, 2);
+                            const formatted =
+                              letters.length <= 1
+                                ? letters
+                                : `${letters[0]}.${letters[1]}`;
+                            field.onChange(formatted);
+                          }}
+                        />
+                      )}
                     />
                     <InputHookForm
                       name="person.last_name"
-                      label="Last Name"
+                      label="Achternaam"
                       required={true}
                     />
                   </>
@@ -329,7 +355,7 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
                 {watch("person.person_type") === "COMPANY" && (
                   <InputHookForm
                     name="business_name"
-                    label="Business Name"
+                    label="Bedrijfsnaam"
                     required={true}
                   />
                 )}
@@ -369,7 +395,7 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Total Income"
+                      label="Totaal inkomen"
                       type="number"
                       required={true}
                       size="small"
@@ -395,7 +421,7 @@ export const ModalFormDebtor: React.FC<ModalFormDebtorProps> = ({
                     disabled={loading}
                     fullWidth
                   >
-                    {id ? "UPDATE" : "SAVE"}
+                    {id ? "BIJWERKEN" : "OPSLAAN"}
                   </Button>
                 </Stack>
               </Box>

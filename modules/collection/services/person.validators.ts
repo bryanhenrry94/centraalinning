@@ -7,7 +7,17 @@ export const PersonSchema = z.object({
   identification_type: z.enum(IdentificationType),
   identification: z.string().min(1, "Het identificatienummer is verplicht"),
   first_name: z.string().optional().nullable(),
-  middle_name: z.string().optional().nullable(),
+  // Twee initialen gescheiden door een punt, bijv. "B.N" — sponsor-eis
+  // 2026-09-03. Leeg toegestaan (het veld is optioneel), maar als er iets
+  // staat moet het exact dit formaat volgen.
+  middle_name: z
+    .string()
+    .regex(
+      /^([A-Z]\.[A-Z])?$/,
+      "Middelnaam moet uit twee initialen bestaan, bijv. B.N",
+    )
+    .optional()
+    .nullable(),
   last_name: z.string().optional().nullable(),
   business_name: z.string().optional().nullable(),
   email: z.email().optional().nullable(),
