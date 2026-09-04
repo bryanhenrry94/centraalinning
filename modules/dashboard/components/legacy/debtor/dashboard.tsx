@@ -86,12 +86,17 @@ const DashboardDebtor = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [tenantFilter, setTenantFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  // Aparte van statusFilter (AOP-stap) — vereiste sponsor 2026-09-03: een
+  // simpel Openstaand/Afgerond-filter op basis van saldo, dat de KPI
+  // "Totaal dossiers" (altijd het volledige aantal, ongeacht filters) niet
+  // mag beïnvloeden.
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
   const [filtersKey, setFiltersKey] = useState(0);
 
   const [filteredDebts, setFilteredDebts] = useState<DebtorSummary[]>([]);
 
   useEffect(() => {
-    // filtra debts según searchQuery, tenantFilter y statusFilter
+    // filtra debts según searchQuery, tenantFilter, statusFilter y paymentStatusFilter
     let filtered = [...debts];
 
     if (searchQuery) {
@@ -110,8 +115,14 @@ const DashboardDebtor = () => {
       filtered = filtered.filter((d) => d.source_status === statusFilter);
     }
 
+    if (paymentStatusFilter === "OPEN") {
+      filtered = filtered.filter((d) => (d.balance || 0) > 0);
+    } else if (paymentStatusFilter === "CLOSED") {
+      filtered = filtered.filter((d) => (d.balance || 0) <= 0);
+    }
+
     setFilteredDebts(filtered);
-  }, [debts, searchQuery, tenantFilter, statusFilter]);
+  }, [debts, searchQuery, tenantFilter, statusFilter, paymentStatusFilter]);
 
   /** ---------------------------------------------------------------------
    * FETCH DEBTS
@@ -278,10 +289,15 @@ const DashboardDebtor = () => {
     // Implementar lógica de filtrado por estado aquí
   };
 
+  const handlePaymentStatusChange = (status: string) => {
+    setPaymentStatusFilter(status);
+  };
+
   const handleResetFilters = () => {
     setSearchQuery("");
     setTenantFilter("");
     setStatusFilter("");
+    setPaymentStatusFilter("");
     setFiltersKey((k) => k + 1);
   };
 
@@ -311,41 +327,31 @@ const DashboardDebtor = () => {
   /** ---------------------------------------------------------------------
    * RENDER
    * -------------------------------------------------------------------- */
-  const activeCount = filteredDebts.filter(
-    (d) => d.status === "OPEN" || d.status === "IN_PROGRESS",
-  ).length;
-  const paidCount = filteredDebts.filter((d) => (d.total_paid || 0) > 0).length;
+  // Baseline KPI's op basis van ALLE dossiers (debts), nooit filteredDebts —
+  // vereiste sponsor 2026-09-03: "Totaal dossiers" (en de andere kaarten
+  // ernaast) mogen niet veranderen wanneer de gebruiker filtert, anders
+  // verandert de betekenis van de KPI. De tabel eronder gebruikt wel
+  // filteredDebts.
+  const totalOutstanding = parseFloat(
+    debts.reduce((t, d) => t + (d.balance || 0), 0).toFixed(2),
+  );
+  const totalOwedToCfsb = parseFloat(
+    debts.reduce((t, d) => t + (d.debtor_to_cfsb_balance || 0), 0).toFixed(2),
+  );
 
   return (
     <Container maxWidth="xl">
       <DashboardHeader
         key={filtersKey}
-        total={parseFloat(
-          filteredDebts.reduce((t, d) => t + (d.balance || 0), 0).toFixed(2),
-        )}
-        openToParticipant={parseFloat(
-          filteredDebts
-            .reduce((t, d) => t + (d.debtor_to_participant_balance || 0), 0)
-            .toFixed(2),
-        )}
-        openToCfsb={parseFloat(
-          filteredDebts.reduce((t, d) => t + (d.debtor_to_cfsb_balance || 0), 0).toFixed(2),
-        )}
-        count={filteredDebts.length}
-        activeCount={activeCount}
-        totalPaid={parseFloat(
-          filteredDebts.reduce((t, d) => t + (d.paid_to_cfsb || 0), 0).toFixed(2),
-        )}
-        paidToParticipant={parseFloat(
-          filteredDebts.reduce((t, d) => t + (d.paid_to_participant || 0), 0).toFixed(2),
-        )}
-        paidCount={paidCount}
+        total={totalOutstanding}
+        openToCfsb={totalOwedToCfsb}
+        count={debts.length}
         blockadeActiveCount={blockadeActiveCount}
-        blockadeInactiveCount={blockadeInactiveCount}
         tenants={tenants}
         onSearch={handleSearch}
         onTenantChange={handleTenantChange}
         onStatusChange={handleStatusChange}
+        onPaymentStatusChange={handlePaymentStatusChange}
         onReset={handleResetFilters}
       />
 

@@ -15,7 +15,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
 import DescriptionIcon from "@mui/icons-material/Description";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import FolderIcon from "@mui/icons-material/Folder";
 import ShieldIcon from "@mui/icons-material/Shield";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import { formatCurrency } from "@/shared/utils/formatters";
@@ -75,35 +75,25 @@ type TenantTypes = {
 
 const DashboardHeader = ({
   total,
-  openToParticipant,
   openToCfsb,
   count,
-  activeCount,
-  totalPaid,
-  paidToParticipant,
-  paidCount,
   blockadeActiveCount,
-  blockadeInactiveCount,
   tenants,
   onSearch,
   onTenantChange,
   onStatusChange,
+  onPaymentStatusChange,
   onReset,
 }: {
   total: number;
-  openToParticipant: number;
   openToCfsb: number;
   count: number;
-  activeCount: number;
-  totalPaid: number;
-  paidToParticipant: number;
-  paidCount: number;
   blockadeActiveCount: number;
-  blockadeInactiveCount: number;
   tenants: TenantTypes[];
   onSearch: (query: string) => void;
   onTenantChange: (tenantId: string) => void;
   onStatusChange: (status: string) => void;
+  onPaymentStatusChange: (status: string) => void;
   onReset: () => void;
 }) => {
   return (
@@ -112,10 +102,10 @@ const DashboardHeader = ({
       <Grid container spacing={2} mb={2}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
-            title="Totaal openstaand"
+            title="Totaal openstaand bedrag"
             value={total}
             type="currency"
-            subtitle={`Aan deelnemer: ${formatCurrency(openToParticipant)} · CFSB: ${formatCurrency(openToCfsb)}`}
+            subtitle="Som van alle openstaande bedragen"
             icon={
               <DescriptionIcon
                 fontSize="small"
@@ -129,22 +119,19 @@ const DashboardHeader = ({
           <StatCard
             title="Totaal dossiers"
             value={count}
-            subtitle={`${activeCount} actief`}
+            subtitle="Alle geregistreerde dossiers"
             icon={
-              <CheckCircleIcon
-                fontSize="small"
-                sx={{ color: "text.secondary" }}
-              />
+              <FolderIcon fontSize="small" sx={{ color: "text.secondary" }} />
             }
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
-            title="Totaal betaald aan CFSB"
-            value={totalPaid}
+            title="Totaal verschuldigd aan CFSB"
+            value={openToCfsb}
             type="currency"
-            subtitle={`Aan deelnemer betaald: ${formatCurrency(paidToParticipant)}`}
+            subtitle="Openstaande kosten aan CFSB"
             icon={
               <AttachMoneyIcon
                 fontSize="small"
@@ -157,13 +144,17 @@ const DashboardHeader = ({
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card
             variant="outlined"
-            sx={{ height: "100%", borderColor: "grey.200" }}
+            sx={{
+              height: "100%",
+              borderColor: "warning.main",
+              bgcolor: "#FFF7ED",
+            }}
           >
             <CardContent>
               <Box display="flex" alignItems="center" gap={2}>
                 <Box
                   sx={{
-                    bgcolor: "grey.100",
+                    bgcolor: "warning.light",
                     borderRadius: "50%",
                     width: 44,
                     height: 44,
@@ -173,47 +164,18 @@ const DashboardHeader = ({
                     flexShrink: 0,
                   }}
                 >
-                  <ShieldIcon
-                    fontSize="small"
-                    sx={{ color: "text.secondary" }}
-                  />
+                  <ShieldIcon fontSize="small" sx={{ color: "warning.dark" }} />
                 </Box>
                 <Box>
                   <Typography variant="body2" color="text.secondary">
                     Economische blokkade
                   </Typography>
-                  <Box sx={{ display: "flex", gap: 2, mt: 0.5 }}>
-                    <Box
-                      sx={{ display: "flex", alignItems: "center", gap: 0.75 }}
-                    >
-                      <Box
-                        sx={{
-                          width: 7,
-                          height: 7,
-                          borderRadius: "50%",
-                          bgcolor: "success.main",
-                        }}
-                      />
-                      <Typography variant="body2">
-                        <strong>{blockadeActiveCount}</strong> actief
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{ display: "flex", alignItems: "center", gap: 0.75 }}
-                    >
-                      <Box
-                        sx={{
-                          width: 7,
-                          height: 7,
-                          borderRadius: "50%",
-                          bgcolor: "grey.400",
-                        }}
-                      />
-                      <Typography variant="body2">
-                        <strong>{blockadeInactiveCount}</strong> niet actief
-                      </Typography>
-                    </Box>
-                  </Box>
+                  <Typography variant="h5" fontWeight={700}>
+                    {blockadeActiveCount}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Actieve blokkades
+                  </Typography>
                 </Box>
               </Box>
             </CardContent>
@@ -222,10 +184,10 @@ const DashboardHeader = ({
       </Grid>
 
       {/* Filtros */}
-      <Card variant="outlined" sx={{ borderColor: "grey.200", mt: 4 }}>
+      <Card variant="outlined" sx={{ borderColor: "grey.200", mt: 8 }}>
         <CardContent>
           <Grid container spacing={2} alignItems="center">
-            <Grid size={{ xs: 12, md: 4 }}>
+            <Grid size={{ xs: 12, md: 3 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -244,7 +206,7 @@ const DashboardHeader = ({
               />
             </Grid>
 
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 2 }}>
               <TextField
                 select
                 fullWidth
@@ -262,6 +224,23 @@ const DashboardHeader = ({
               </TextField>
             </Grid>
 
+            <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label="AOP-stap"
+                defaultValue=""
+                onChange={(e) => onStatusChange(e.target.value)}
+              >
+                <MenuItem value="">Alle stappen</MenuItem>
+                <MenuItem value="REMINDER">Aanmaning</MenuItem>
+                <MenuItem value="FINAL_NOTICE">Sommatie</MenuItem>
+                <MenuItem value="DEFAULT_NOTICE">Ingebrekestelling</MenuItem>
+                <MenuItem value="BLK_NOTIFICATION">Blokkade</MenuItem>
+              </TextField>
+            </Grid>
+
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <TextField
                 select
@@ -269,13 +248,11 @@ const DashboardHeader = ({
                 size="small"
                 label="Status"
                 defaultValue=""
-                onChange={(e) => onStatusChange(e.target.value)}
+                onChange={(e) => onPaymentStatusChange(e.target.value)}
               >
-                <MenuItem value="">Alle statussen</MenuItem>
-                <MenuItem value="REMINDER">Aanmaning</MenuItem>
-                <MenuItem value="FINAL_NOTICE">Sommatie</MenuItem>
-                <MenuItem value="DEFAULT_NOTICE">Ingebrekestelling</MenuItem>
-                <MenuItem value="BLK_NOTIFICATION">Blokkade</MenuItem>
+                <MenuItem value="">Alle dossiers</MenuItem>
+                <MenuItem value="OPEN">Openstaand</MenuItem>
+                <MenuItem value="CLOSED">Afgerond</MenuItem>
               </TextField>
             </Grid>
 
