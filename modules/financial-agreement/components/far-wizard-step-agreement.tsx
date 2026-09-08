@@ -61,6 +61,25 @@ export const FarWizardStepAgreement: React.FC<FarWizardStepAgreementProps> = ({ 
 
           <Grid size={{ xs: 12, sm: 6 }}>
             <Controller
+              name="agreement.invoiceDate"
+              control={control}
+              render={({ field, fieldState }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  size="small"
+                  type="date"
+                  label="Factuurdatum"
+                  slotProps={{ inputLabel: { shrink: true } }}
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message}
+                />
+              )}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Controller
               name="agreement.amount"
               control={control}
               render={({ field, fieldState }) => (
@@ -76,25 +95,6 @@ export const FarWizardStepAgreement: React.FC<FarWizardStepAgreementProps> = ({ 
                   allowNegative={false}
                   prefix="$ "
                   onValueChange={(values) => field.onChange(Number(values.value) || 0)}
-                  error={!!fieldState.error}
-                  helperText={fieldState.error?.message}
-                />
-              )}
-            />
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Controller
-              name="agreement.invoiceDate"
-              control={control}
-              render={({ field, fieldState }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  size="small"
-                  type="date"
-                  label="Factuurdatum"
-                  slotProps={{ inputLabel: { shrink: true } }}
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
                 />

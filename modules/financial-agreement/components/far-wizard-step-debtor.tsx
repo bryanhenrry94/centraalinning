@@ -81,7 +81,7 @@ export const FarWizardStepDebtor: React.FC<FarWizardStepDebtorProps> = ({
         </Typography>
 
         <Grid container spacing={2.5}>
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <Controller
               name="debtor.person_type"
               control={control}
@@ -131,7 +131,7 @@ export const FarWizardStepDebtor: React.FC<FarWizardStepDebtorProps> = ({
             />
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 6 }}>
+          <Grid size={{ xs: 12 }}>
             <Controller
               name="debtor.identification"
               control={control}

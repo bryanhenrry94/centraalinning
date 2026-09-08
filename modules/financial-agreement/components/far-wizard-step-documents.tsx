@@ -14,9 +14,17 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
+import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import ArticleIcon from "@mui/icons-material/Article";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { notifyError } from "@/shared/ui/notifications";
+
+const MAX_FILE_SIZE_BYTES = 1024 * 1024; // 1 MB, ver hint "Toegestane formaten" hieronder
+const ACCEPTED_MIME_TYPES = {
+  "application/pdf": [".pdf"],
+  "image/jpeg": [".jpg", ".jpeg"],
+  "image/png": [".png"],
+};
 
 interface FarWizardStepDocumentsProps {
   files: File[];
@@ -49,7 +57,21 @@ export const FarWizardStepDocuments: React.FC<FarWizardStepDocumentsProps> = ({
           Voeg eventuele bewijsstukken toe (optioneel).
         </Typography>
 
-        <Dropzone onDrop={(accepted) => onAddFiles(accepted)}>
+        <Dropzone
+          onDrop={(accepted) => onAddFiles(accepted)}
+          onDropRejected={(rejections) => {
+            const tooLarge = rejections.some((r) =>
+              r.errors.some((e) => e.code === "file-too-large"),
+            );
+            notifyError(
+              tooLarge
+                ? "Bestand te groot. Maximaal 1 MB per bestand."
+                : "Ongeldig bestandsformaat. Alleen PDF, JPG of PNG toegestaan.",
+            );
+          }}
+          accept={ACCEPTED_MIME_TYPES}
+          maxSize={MAX_FILE_SIZE_BYTES}
+        >
           {({ getRootProps, getInputProps, isDragActive }) => (
             <Box
               {...getRootProps()}
@@ -80,13 +102,13 @@ export const FarWizardStepDocuments: React.FC<FarWizardStepDocumentsProps> = ({
                   mb: 2,
                 }}
               >
-                <UploadFileIcon color="primary" />
+                <CloudUploadOutlinedIcon color="primary" fontSize="large" />
               </Box>
               <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 0.5 }}>
-                Sleep bestanden hierheen, of klik om te selecteren
+                Sleep bestanden hiernaartoe of klik om te uploaden
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Alle bestandstypen toegestaan
+                Toegestane formaten: PDF, JPG, PNG (max. 1 MB per bestand)
               </Typography>
               <Button variant="outlined" sx={{ textTransform: "none" }}>
                 Nog een document toevoegen

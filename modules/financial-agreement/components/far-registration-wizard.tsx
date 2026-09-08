@@ -214,17 +214,46 @@ export const FarRegistrationWizard: React.FC = () => {
 
   return (
     <Stack spacing={3}>
-      <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2.5 } }}>
-        <Stepper activeStep={activeStep} alternativeLabel>
-          {STEP_LABELS.map((label, index) => (
-            <Step key={label}>
-              <StepLabel>
-                {`Stap ${index + 1} van 4 — ${label}`}
-              </StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+      <Paper
+        elevation={0}
+        sx={{
+          bgcolor: "secondary.main",
+          color: "white",
+          borderRadius: 2,
+          px: { xs: 2, sm: 4 },
+          py: { xs: 2, sm: 3 },
+          textAlign: "center",
+        }}
+      >
+        <Typography variant="h5" fontWeight={700}>
+          FAR – Financiële Afspraken Registreren
+        </Typography>
+        <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
+          Registreer vandaag. Voorkom problemen morgen.
+        </Typography>
       </Paper>
+
+      {activeStep < 4 && (
+        <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2.5 } }}>
+          <Stepper
+            activeStep={activeStep}
+            alternativeLabel
+            sx={{
+              "& .MuiStepIcon-root.Mui-active": { color: "secondary.main" },
+              "& .MuiStepIcon-root.Mui-completed": { color: "secondary.main" },
+              "& .MuiStepConnector-line": { borderColor: "divider" },
+              "& .Mui-active .MuiStepConnector-line": { borderColor: "secondary.main" },
+              "& .Mui-completed .MuiStepConnector-line": { borderColor: "secondary.main" },
+            }}
+          >
+            {STEP_LABELS.map((label, index) => (
+              <Step key={label}>
+                <StepLabel>{`Stap ${index + 1} van 4 — ${label}`}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+        </Paper>
+      )}
 
       {activeStep === 0 && (
         <FarWizardStepDebtor
@@ -244,11 +273,7 @@ export const FarRegistrationWizard: React.FC = () => {
       )}
       {activeStep === 3 && (
         <>
-          <FarWizardStepOverview
-            values={values}
-            documentCount={documents.length}
-            onEditStep={setActiveStep}
-          />
+          <FarWizardStepOverview values={values} documents={documents} onEditStep={setActiveStep} />
 
           <Paper variant="outlined" sx={{ p: 2.5 }}>
             <Stack spacing={1}>

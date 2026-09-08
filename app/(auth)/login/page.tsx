@@ -191,15 +191,16 @@ export default function RegistroPage() {
           height: "100vh",
           overflow: "hidden",
           display: { xs: "none", lg: "block" },
+          bgcolor: "#f5f5f5",
         }}
       >
         <Image
-          src="/static/registro-1200x1200.svg"
+          src="/static/islas.png"
           alt="Registro Image"
           fill
           priority
           style={{
-            objectFit: "cover",
+            objectFit: "contain",
             objectPosition: "center",
           }}
         />

@@ -7,20 +7,30 @@ import {
   CardContent,
   Divider,
   Grid,
+  List,
+  ListItem,
+  ListItemText,
   Stack,
   Typography,
 } from "@mui/material";
+import ArticleIcon from "@mui/icons-material/Article";
 
-import { formatCurrency } from "@/shared/utils/formatters";
+import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { PersonType } from "@/shared/constants/person-type";
 import {
   FarWizardFormValues,
   IDENTIFICATION_TYPE_LABELS,
 } from "@/modules/financial-agreement/types/far-wizard.types";
 
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 interface FarWizardStepOverviewProps {
   values: FarWizardFormValues;
-  documentCount: number;
+  documents: File[];
   onEditStep: (step: number) => void;
 }
 
@@ -78,7 +88,7 @@ function SummaryCard({
 // betalen") es el PaymentIntent que se renderiza en far-registration-wizard.tsx.
 export const FarWizardStepOverview: React.FC<FarWizardStepOverviewProps> = ({
   values,
-  documentCount,
+  documents,
   onEditStep,
 }) => {
   const { debtor, agreement } = values;
@@ -106,21 +116,36 @@ export const FarWizardStepOverview: React.FC<FarWizardStepOverviewProps> = ({
         <Grid container spacing={2}>
           <SummaryRow label="Omschrijving" value={agreement.description} />
           <SummaryRow label="Factuurnummer" value={agreement.reference} />
+          <SummaryRow
+            label="Factuurdatum"
+            value={agreement.invoiceDate ? formatDate(agreement.invoiceDate) : undefined}
+          />
           <SummaryRow label="Totaalbedrag" value={formatCurrency(agreement.amount)} />
-          <SummaryRow label="Factuurdatum" value={agreement.invoiceDate} />
-          <SummaryRow label="Vervaldatum" value={agreement.dueDate} />
+          <SummaryRow
+            label="Vervaldatum"
+            value={agreement.dueDate ? formatDate(agreement.dueDate) : undefined}
+          />
           <SummaryRow label="Opmerkingen" value={agreement.notes} />
         </Grid>
       </SummaryCard>
 
-      <SummaryCard title={`Documenten (${documentCount})`} onEdit={() => onEditStep(2)}>
-        <Box>
+      <SummaryCard title={`Documenten (${documents.length})`} onEdit={() => onEditStep(2)}>
+        {documents.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
-            {documentCount === 0
-              ? "Geen documenten toegevoegd."
-              : `${documentCount} document${documentCount === 1 ? "" : "en"} toegevoegd.`}
+            Geen documenten toegevoegd.
           </Typography>
-        </Box>
+        ) : (
+          <List disablePadding>
+            {documents.map((file, index) => (
+              <ListItem key={`${file.name}-${index}`} disablePadding sx={{ py: 0.5 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <ArticleIcon color="action" fontSize="small" />
+                  <ListItemText primary={file.name} secondary={formatFileSize(file.size)} />
+                </Box>
+              </ListItem>
+            ))}
+          </List>
+        )}
       </SummaryCard>
     </Stack>
   );
