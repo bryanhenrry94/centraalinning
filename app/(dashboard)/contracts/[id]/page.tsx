@@ -51,7 +51,7 @@ export default async function ContractDetailPage({
       <AppBreadcrumbs
         items={[
           {
-            label: "Financiële afspraken",
+            label: "Overeenkomsten",
             href: "/contracts",
           },
           {

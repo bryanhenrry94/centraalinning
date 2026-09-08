@@ -54,3 +54,12 @@ export const getFinancialAgreementDocuments = async (financialAgreementId: strin
   await requireTenantStaffForFinancialAgreement(financialAgreementId);
   return FinancialAgreementService.getDocuments(financialAgreementId);
 };
+
+// "Vervolgen": inicia manualmente un expediente AOP nuevo a partir de un FAR
+// registrado (ver FinancialAgreementService.initiateFollowUp). Crea el
+// DebtClaim + verplichting en OPEN; el AOP recién se activa cuando se
+// confirma el pago de esa verplichting (PaymentType.COLLECTION).
+export const initiateFollowUpFromFinancialAgreement = async (financialAgreementId: string) => {
+  await requireTenantStaffForFinancialAgreement(financialAgreementId);
+  return FinancialAgreementService.initiateFollowUp(financialAgreementId);
+};

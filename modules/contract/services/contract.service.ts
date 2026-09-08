@@ -12,7 +12,7 @@ export class ContractService {
 
     const total = await client.contract.count();
 
-    return `FAR-${year}-${String(total + 1).padStart(3, "0")}`;
+    return `OVK-${year}-${String(total + 1).padStart(3, "0")}`;
   };
 
   static list = async (
@@ -67,8 +67,8 @@ export class ContractService {
   };
 
   // La referencia se genera contando filas existentes, así que dos
-  // registros de FAR simultáneos (p.ej. una empresa registrando varios
-  // expedientes seguidos) pueden calcular el mismo número antes de que
+  // registros de Overeenkomst simultáneos (p.ej. una empresa registrando
+  // varios expedientes seguidos) pueden calcular el mismo número antes de que
   // ninguno haga commit. Se genera dentro de la transacción (como
   // CollectionService.generateClaimReference) y, si aun así choca con la
   // unique constraint, se reintenta con una referencia nueva.

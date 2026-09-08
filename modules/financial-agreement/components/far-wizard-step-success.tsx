@@ -7,6 +7,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 
 interface FarWizardStepSuccessProps {
+  farNumber: string;
   debtorName: string;
   amount: number;
   createdAt: string;
@@ -20,6 +21,7 @@ interface FarWizardStepSuccessProps {
 // no existe hoy un estado intermedio "in verwerking" separado en el flujo
 // de Sentoo, así que no se inventa una pantalla extra para eso acá.
 export const FarWizardStepSuccess: React.FC<FarWizardStepSuccessProps> = ({
+  farNumber,
   debtorName,
   amount,
   createdAt,
@@ -39,6 +41,14 @@ export const FarWizardStepSuccess: React.FC<FarWizardStepSuccessProps> = ({
 
         <Box sx={{ maxWidth: 420, mx: "auto", mb: 3 }}>
           <Grid container spacing={2} textAlign="left">
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="caption" color="text.secondary" display="block">
+                Dossiernummer
+              </Typography>
+              <Typography variant="body2" fontWeight={700}>
+                {farNumber}
+              </Typography>
+            </Grid>
             <Grid size={{ xs: 6 }}>
               <Typography variant="caption" color="text.secondary" display="block">
                 Debiteur

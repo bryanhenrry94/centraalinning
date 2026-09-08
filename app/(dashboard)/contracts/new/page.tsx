@@ -457,7 +457,7 @@ const OvereenkomstenRegistrerenPage = () => {
         body: JSON.stringify({
           amount: amountService,
           currency: "USD",
-          description: "Financiële Afspraken Registreren (FAR)",
+          description: "Overeenkomst registreren",
           payment_type: PaymentType.CONTRACT_ACTIVATION,
           contractId: contract.id,
         }),
@@ -527,11 +527,11 @@ const OvereenkomstenRegistrerenPage = () => {
           >
             <Box sx={{ mb: 4 }}>
               <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                Financiële afspraak registreren
+                Overeenkomst registreren
               </Typography>
               <Typography variant="body2" color="textSecondary">
                 Vul de gegevens van de betrokken partijen in en registreer uw
-                financiële afspraak voor meer duidelijkheid, controle en
+                overeenkomst voor meer duidelijkheid, controle en
                 bescherming.
               </Typography>
             </Box>
@@ -542,7 +542,7 @@ const OvereenkomstenRegistrerenPage = () => {
               onClick={() => router.push("/contracts")}
               sx={{ textTransform: "none", whiteSpace: "nowrap" }}
             >
-              Bekijk alle FAR-registraties
+              Bekijk alle overeenkomsten
             </Button>
           </Box>
 
@@ -1445,7 +1445,7 @@ const OvereenkomstenRegistrerenPage = () => {
               fontWeight: 600,
             }}
           >
-            Financiële afspraak registreren
+            Overeenkomst registreren
             <IconButton
               onClick={() => setOpenDialog(false)}
               disabled={loading}
@@ -1456,7 +1456,7 @@ const OvereenkomstenRegistrerenPage = () => {
           </DialogTitle>
           <DialogContent>
             <Typography variant="body2" sx={{ mt: 2 }}>
-              Weet u zeker dat u deze financiële afspraak wilt registreren? Deze
+              Weet u zeker dat u deze overeenkomst wilt registreren? Deze
               actie kan niet ongedaan worden gemaakt.
             </Typography>
           </DialogContent>

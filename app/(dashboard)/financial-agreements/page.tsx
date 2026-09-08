@@ -69,7 +69,8 @@ const FinancialAgreementsPage: React.FC = () => {
 
       {(() => {
         const columns: ListColumn<FinancialAgreementListItem>[] = [
-          { key: "reference", label: "Referentie", render: (item) => item.reference ?? "-" },
+          { key: "farNumber", label: "Dossiernummer", render: (item) => item.farNumber },
+          { key: "reference", label: "Factuurnummer", render: (item) => item.reference ?? "-" },
           {
             key: "debtor",
             label: "Debiteur",

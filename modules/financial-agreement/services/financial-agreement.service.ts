@@ -12,6 +12,7 @@ import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { DebtorService } from "@/modules/collection/services/debtor.service";
 import { StorageService } from "@/infrastructure/storage/storage.service";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
+import { CollectionService } from "@/modules/collection/services/collection.service";
 
 const financialAgreementInclude = {
   debtor: { include: { person: true } },
@@ -43,11 +44,12 @@ function serializeFinancialAgreement<T extends FinancialAgreementWithInclude>(fi
 }
 
 // FAR (Financiële Afspraken Registreren): servicio independiente y
-// preventivo. A propósito NO tiene métodos de seguimiento, recordatorios ni
-// escalamiento automático a AOP — el acuerdo definitivo con el negocio es
-// que FAR nunca pasa solo a AOP; un nuevo AOP se inicia siempre como un
-// expediente (DebtClaim) nuevo con su propia tarifa (ver
-// modules/contract/services/contract.service.ts:initiateFollowUp).
+// preventivo, sin seguimiento ni recordatorios propios. A propósito NO
+// escala solo/automáticamente a AOP — eso solo ocurre cuando el
+// participante decide manualmente iniciarlo (ver initiateFollowUp más
+// abajo, mismo patrón que ContractService.initiateFollowUp), y siempre
+// como un DebtClaim nuevo e independiente con su propia tarifa, nunca por
+// conversión de tipo del registro FAR.
 export class FinancialAgreementService {
   static getById = async (id: string) => {
     const financialAgreement = await prisma.financialAgreement.findUnique({
@@ -64,6 +66,16 @@ export class FinancialAgreementService {
       orderBy: { createdAt: "desc" },
     });
     return items.map(serializeFinancialAgreement);
+  };
+
+  // Mismo patrón que ContractService.generateContractReference — ahora que
+  // Contract usa el prefijo "OVK-", el FAR real recupera el prefijo "FAR-".
+  static generateFarReference = async (
+    client: Prisma.TransactionClient | typeof prisma = prisma,
+  ) => {
+    const year = new Date().getFullYear();
+    const total = await client.financialAgreement.count();
+    return `FAR-${year}-${String(total + 1).padStart(3, "0")}`;
   };
 
   // ---------------------------------------------------------------------
@@ -105,24 +117,47 @@ export class FinancialAgreementService {
       throw new Error(paymentResult.message || "Kon geen Sentoo-betaling aanmaken.");
     }
 
-    const financialAgreement = await prisma.financialAgreement.create({
-      data: {
-        tenantId,
-        debtorId: input.debtorId,
-        contractId: input.contractId ?? null,
-        reference: input.reference,
-        description: input.description,
-        invoiceDate: input.invoiceDate ?? null,
-        dueDate: input.dueDate ?? null,
-        amount: input.amount,
-        currency: input.currency,
-        status: "PENDING_PAYMENT",
-        registrationFeePaymentId: paymentResult.data.paymentId,
-      },
-    });
+    // Reintento por si dos registros simultáneos calculan el mismo número
+    // (mismo patrón que ContractService.create) — el pago ya se creó una
+    // sola vez arriba, así que el reintento solo cubre el insert del FAR.
+    const MAX_ATTEMPTS = 3;
+    let financialAgreement;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        const farNumber = await this.generateFarReference();
+        financialAgreement = await prisma.financialAgreement.create({
+          data: {
+            tenantId,
+            debtorId: input.debtorId,
+            contractId: input.contractId ?? null,
+            farNumber,
+            reference: input.reference,
+            description: input.description,
+            invoiceDate: input.invoiceDate ?? null,
+            dueDate: input.dueDate ?? null,
+            amount: input.amount,
+            currency: input.currency,
+            status: "PENDING_PAYMENT",
+            registrationFeePaymentId: paymentResult.data.paymentId,
+          },
+        });
+        break;
+      } catch (error) {
+        const target =
+          error instanceof Prisma.PrismaClientKnownRequestError ? error.meta?.target : undefined;
+        const isDuplicateFarNumber =
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2002" &&
+          (Array.isArray(target) ? target.includes("farNumber") : target === "farNumber");
+
+        if (!isDuplicateFarNumber || attempt === MAX_ATTEMPTS) throw error;
+      }
+    }
+    if (!financialAgreement) throw new Error("Kon FAR niet registreren.");
 
     return {
       financialAgreementId: financialAgreement.id,
+      farNumber: financialAgreement.farNumber,
       paymentId: paymentResult.data.paymentId,
       paymentUrl: paymentResult.data.paymentUrl,
     };
@@ -245,5 +280,76 @@ export class FinancialAgreementService {
     });
 
     return updated;
+  };
+
+  // ---------------------------------------------------------------------
+  // Vervolgen (escalar manualmente a AOP) — mismo patrón que
+  // ContractService.initiateFollowUp: crea un DebtClaim + verplichting
+  // nuevos e independientes (nunca convierte el registro FAR en sí), y deja
+  // la referencia en escalatedToDebtClaimId/escalatedAt. Idempotente: si ya
+  // hay un DebtClaim vinculado y sigue OPEN sin pagar, reusa la misma
+  // obligación en vez de duplicarla.
+  // ---------------------------------------------------------------------
+  static initiateFollowUp = async (
+    financialAgreementId: string,
+  ): Promise<{ claimId: string; obligationId: string; amount: number }> => {
+    const financialAgreement = await prisma.financialAgreement.findUnique({
+      where: { id: financialAgreementId },
+    });
+    if (!financialAgreement) throw new Error("FAR niet gevonden.");
+
+    if (financialAgreement.status !== "REGISTERED") {
+      throw new Error(
+        "Alleen geregistreerde FAR-afspraken kunnen het administratieve vervolgingsproces starten.",
+      );
+    }
+
+    if (financialAgreement.escalatedToDebtClaimId) {
+      const existingClaim = await prisma.debtClaim.findUnique({
+        where: { id: financialAgreement.escalatedToDebtClaimId },
+        include: {
+          obligations: {
+            where: { beneficiary: "CFSB", type: "COLLECTION", status: "PENDING" },
+            take: 1,
+          },
+        },
+      });
+
+      const pendingObligation = existingClaim?.obligations[0];
+
+      if (existingClaim?.status === "OPEN" && pendingObligation) {
+        return {
+          claimId: existingClaim.id,
+          obligationId: pendingObligation.id,
+          amount: Number(pendingObligation.balanceAmount),
+        };
+      }
+
+      throw new Error("Voor deze FAR is het vervolgingsproces al gestart.");
+    }
+
+    const pending = await CollectionService.createPendingFromFinancialAgreement(
+      {
+        amount: financialAgreement.amount,
+        reference: financialAgreement.reference,
+        tenantId: financialAgreement.tenantId,
+      },
+      financialAgreement.debtorId,
+    );
+
+    if (!pending.success || !pending.claimId || !pending.obligationId) {
+      throw new Error(pending.error || "Kon het vervolgingsproces niet starten.");
+    }
+
+    await prisma.financialAgreement.update({
+      where: { id: financialAgreementId },
+      data: { escalatedToDebtClaimId: pending.claimId, escalatedAt: new Date() },
+    });
+
+    return {
+      claimId: pending.claimId,
+      obligationId: pending.obligationId,
+      amount: pending.amount ?? 0,
+    };
   };
 }

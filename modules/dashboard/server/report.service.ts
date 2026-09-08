@@ -42,8 +42,9 @@ export class ReportService {
   ): Promise<TableSummaryResponse[]> => {
     const { limit, filter = "all" } = options;
 
-    // Contracten (FAR) kennen geen "afgerond"-status (alleen DRAFT/REGISTERED),
-    // dus ze horen enkel thuis in de open/alle weergave, nooit bij "afgerond".
+    // Contracten (Overeenkomsten) kennen geen "afgerond"-status (alleen
+    // DRAFT/REGISTERED), dus ze horen enkel thuis in de open/alle weergave,
+    // nooit bij "afgerond".
     const includeContracts = filter !== "completed";
 
     const debtClaimStatusFilter =
@@ -138,7 +139,7 @@ export class ReportService {
     const contractRows: TableSummaryResponse[] = contracts.map((contract) => {
       return {
         id: contract.id,
-        source: "FAR - Financiele afspraken registreren",
+        source: "Overeenkomst registreren",
         date: contract.contract_date,
         reference_number: contract.reference_number,
         name: contract.parties.map((p) => p.fullname).join(" / "),

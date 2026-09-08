@@ -67,15 +67,18 @@ export const FarRegistrationWizard: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [documents, setDocuments] = useState<File[]>([]);
   const [abbRate, setAbbRate] = useState(0);
-  const [result, setResult] = useState<{ financialAgreementId: string; createdAt: string } | null>(
-    null,
-  );
+  const [result, setResult] = useState<{
+    financialAgreementId: string;
+    farNumber: string;
+    createdAt: string;
+  } | null>(null);
 
   const {
     control,
     trigger,
     watch,
     getValues,
+    setValue,
     reset,
   } = useForm<FarWizardFormValues>({
     resolver: zodResolver(FarWizardSchema),
@@ -174,7 +177,11 @@ export const FarRegistrationWizard: React.FC = () => {
         documents,
       );
 
-      setResult({ financialAgreementId: response.financialAgreementId, createdAt: new Date().toISOString() });
+      setResult({
+        financialAgreementId: response.financialAgreementId,
+        farNumber: response.farNumber,
+        createdAt: new Date().toISOString(),
+      });
       return { success: true, paymentId: response.paymentId, paymentUrl: response.paymentUrl };
     } catch (error) {
       return {
@@ -195,6 +202,7 @@ export const FarRegistrationWizard: React.FC = () => {
   if (activeStep === 4 && result) {
     return (
       <FarWizardStepSuccess
+        farNumber={result.farNumber}
         debtorName={values.debtor.fullname}
         amount={values.agreement.amount}
         createdAt={result.createdAt}
@@ -219,7 +227,12 @@ export const FarRegistrationWizard: React.FC = () => {
       </Paper>
 
       {activeStep === 0 && (
-        <FarWizardStepDebtor control={control} personType={values.debtor.person_type} />
+        <FarWizardStepDebtor
+          control={control}
+          personType={values.debtor.person_type}
+          getValues={getValues}
+          setValue={setValue}
+        />
       )}
       {activeStep === 1 && <FarWizardStepAgreement control={control} />}
       {activeStep === 2 && (

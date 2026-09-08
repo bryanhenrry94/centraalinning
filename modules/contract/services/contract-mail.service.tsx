@@ -13,7 +13,7 @@ export const sendActivateContractMail = async (
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
-      subject: `Financiële afspraakregistratie: ${reference_number}`,
+      subject: `Overeenkomstregistratie: ${reference_number}`,
       react: (
         <ActivateContractEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}

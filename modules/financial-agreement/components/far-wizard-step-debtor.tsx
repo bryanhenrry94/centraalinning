@@ -17,10 +17,11 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Controller, Control } from "react-hook-form";
+import { Controller, Control, UseFormGetValues, UseFormSetValue } from "react-hook-form";
 
 import { PersonType } from "@/shared/constants/person-type";
 import { IdentificationType } from "@/shared/constants/identification-type";
+import { getInfoPersonAction } from "@/modules/collection/actions/person.actions";
 import {
   FarWizardFormValues,
   IDENTIFICATION_TYPE_LABELS,
@@ -29,6 +30,8 @@ import {
 interface FarWizardStepDebtorProps {
   control: Control<FarWizardFormValues>;
   personType: PersonType;
+  getValues: UseFormGetValues<FarWizardFormValues>;
+  setValue: UseFormSetValue<FarWizardFormValues>;
 }
 
 // Stap 1 van 4 — "Gegevens" (Wederpartij/debiteur). A propósito no pide
@@ -37,8 +40,35 @@ interface FarWizardStepDebtorProps {
 export const FarWizardStepDebtor: React.FC<FarWizardStepDebtorProps> = ({
   control,
   personType,
+  getValues,
+  setValue,
 }) => {
   const isCompany = personType === PersonType.COMPANY;
+
+  // Mismo patrón que contracts/new/page.tsx: si la persona ya existe en el
+  // sistema (cross-tenant, vía Person.identification), autocompletar en vez
+  // de obligar a retipear todo — solo completa campos vacíos, nunca pisa
+  // lo que el usuario ya haya escrito.
+  const handleIdentificationBlur = async () => {
+    const identificationType = getValues("debtor.identification_type");
+    const identification = getValues("debtor.identification");
+    if (!identificationType || !identification) return;
+
+    const personInfo = await getInfoPersonAction(identificationType, identification);
+    if (!personInfo) return;
+
+    if (!getValues("debtor.fullname")) {
+      setValue(
+        "debtor.fullname",
+        personInfo.person_type === PersonType.COMPANY
+          ? personInfo.business_name || ""
+          : `${personInfo.first_name ?? ""} ${personInfo.last_name ?? ""}`.trim(),
+      );
+    }
+    if (!getValues("debtor.email") && personInfo.email) setValue("debtor.email", personInfo.email);
+    if (!getValues("debtor.phone") && personInfo.phone) setValue("debtor.phone", personInfo.phone);
+    if (!getValues("debtor.address") && personInfo.address) setValue("debtor.address", personInfo.address);
+  };
 
   return (
     <Card>
@@ -113,6 +143,10 @@ export const FarWizardStepDebtor: React.FC<FarWizardStepDebtorProps> = ({
                   label="Identificatienummer"
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
+                  onBlur={() => {
+                    field.onBlur();
+                    handleIdentificationBlur();
+                  }}
                 />
               )}
             />

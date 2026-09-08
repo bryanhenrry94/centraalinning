@@ -38,9 +38,17 @@ export const NO_RESPONSE_FEE_DESCRIPTION = {
 
 export class CollectionService {
   /**
-   * Crea un DebtClaim en estado OPEN (pre-pago) a partir de un Contract (FAR),
-   * junto con su obligación de cobranza. No activa el AOP: eso ocurre cuando
-   * el webhook confirma el pago de la obligación (ver `processCollectionPayment`).
+   * Crea un DebtClaim en estado OPEN (pre-pago) a partir de un Contract
+   * (Overeenkomst), junto con su obligación de cobranza. No activa el AOP:
+   * eso ocurre cuando el webhook confirma el pago de la obligación (ver
+   * `processCollectionPayment`).
+   *
+   * origin "MANUAL" (no "FAR"): un Contract no es un FinancialAgreement —
+   * "FAR" como DebtClaimOrigin/ServiceType está reservado para cuando el
+   * expediente realmente escaló desde un FAR (ver
+   * createPendingFromFinancialAgreement más abajo), que es lo único que
+   * dispara el registro de servicio "FAR" completado más adelante en este
+   * archivo.
    */
   static createPendingFromContract = async (
     contract: Awaited<ReturnType<typeof ContractService.getById>>,
@@ -56,11 +64,37 @@ export class CollectionService {
       externalReference: contract.reference_number || null,
       principalAmount,
       currency: "USD",
-      origin: "FAR",
+      origin: "MANUAL",
       status: "OPEN",
     };
 
     return this.createPending(claimData, contract.tenant_id);
+  };
+
+  /**
+   * Crea un DebtClaim en estado OPEN (pre-pago) a partir de un
+   * FinancialAgreement (FAR) registrado, cuando el participante decide
+   * manualmente iniciar el seguimiento administrativo (AOP) tras un
+   * incumplimiento. Mismo patrón que createPendingFromContract — no activa
+   * el AOP hasta que se confirme el pago de la obligación.
+   */
+  static createPendingFromFinancialAgreement = async (
+    financialAgreement: { amount: Prisma.Decimal | number; reference: string | null; tenantId: string },
+    debtorId: string,
+  ) => {
+    const principalAmount = Number(financialAgreement.amount);
+    if (principalAmount <= 0) throw new Error("Ongeldig FAR-bedrag");
+
+    const claimData: DebtClaimCreate = {
+      debtorId,
+      externalReference: financialAgreement.reference || null,
+      principalAmount,
+      currency: "USD",
+      origin: "FAR",
+      status: "OPEN",
+    };
+
+    return this.createPending(claimData, financialAgreement.tenantId);
   };
 
   private static calculateAmounts(amount: number, parameter: ParameterInput) {

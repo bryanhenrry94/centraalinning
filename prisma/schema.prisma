@@ -146,6 +146,11 @@ model FinancialAgreement {
   contractId String?
   contract   Contract? @relation(fields: [contractId], references: [id])
 
+  // Dossiernummer generado por CFSB, ahora que Contract liberó el prefijo
+  // "FAR-" (renombrado a "OVK-" — Contract ya no es el FAR real). Distinto
+  // de `reference`, que es el Factuurnummer que carga el propio usuario.
+  farNumber String @unique
+
   reference   String?
   description String? @db.Text
 

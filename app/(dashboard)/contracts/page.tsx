@@ -184,7 +184,7 @@ export default function ContractsPage() {
       body: JSON.stringify({
         amount: aopPaymentDialog.amount,
         currency: "USD",
-        description: "Financiële Afspraken Registreren (FAR)",
+        description: "Administratieve opvolging starten (vanuit overeenkomst)",
         payment_type: PaymentType.COLLECTION,
         obligationId: aopPaymentDialog.obligationId,
       }),
@@ -279,7 +279,7 @@ export default function ContractsPage() {
         body: JSON.stringify({
           amount: CONTRACT_ACTIVATION_AMOUNT,
           currency: "USD",
-          description: "Financiële Afspraken Registreren (FAR)",
+          description: "Overeenkomst registreren",
           payment_type: PaymentType.CONTRACT_ACTIVATION,
           contractId: contract.id,
         }),
@@ -329,7 +329,7 @@ export default function ContractsPage() {
       >
         <Box>
           <Typography variant="h4" sx={{ fontWeight: 700 }}>
-            Financiële afspraak registreren
+            Overeenkomst registreren
           </Typography>
           <Typography
             variant="body2"
@@ -337,7 +337,7 @@ export default function ContractsPage() {
             sx={{ textAlign: "justify" }}
           >
             Vul de gegevens van de betrokken partijen in en registreer uw
-            financiële afspraak voor meer duidelijkheid, controle en
+            overeenkomst voor meer duidelijkheid, controle en
             bescherming.
           </Typography>
         </Box>
@@ -349,7 +349,7 @@ export default function ContractsPage() {
           sx={{ textTransform: "none" }}
           onClick={() => router.push("/contracts/new")}
         >
-          Nieuwe financiële afspraak
+          Nieuwe overeenkomst
         </Button>
       </Box>
 
@@ -550,7 +550,7 @@ export default function ContractsPage() {
           alignItems="center"
         >
           <Typography variant="body2" color="text.secondary">
-            Totaal {contracts.length} financiële afspraak
+            Totaal {contracts.length} overeenkomst(en)
           </Typography>
         </Box>
       </Card>
