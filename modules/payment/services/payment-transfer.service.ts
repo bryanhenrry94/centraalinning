@@ -5,6 +5,7 @@ import { ObligationService } from "@/modules/collection/services/obligation.serv
 import { ClaimTimelineService } from "@/modules/collection/services/claim-timeline.service";
 import { formatAmount } from "@/shared/utils/formatters";
 import { CollectiveCollectionService } from "@/modules/collective-follow-up/services/collective-collection.service";
+import { BlockadeService } from "@/modules/blockade/services/blockade.service";
 import {
   sendTransferPaymentApprovedEmail,
   sendTransferPaymentReceiptToTenant,
@@ -324,6 +325,23 @@ export class PaymentTransferService {
         await CollectiveCollectionService.checkAndCloseIfSettled(debtClaim.id, actingUser.id);
       } catch (error) {
         console.error("Error checking/closing COP after settled payment:", error);
+      }
+
+      // Ruta Inteligente CFSB (punto 5): si el Blockade nace únicamente del
+      // AOP (nunca escaló a COP), checkAndCloseIfSettled arriba no hace nada
+      // — no hay ningún CollectiveCollection que cerrar. Sin este llamado
+      // directo, el bloqueo quedaba ACTIVE para siempre pese al pago total.
+      // releaseForSettledDebtClaim es idempotente (solo actúa si sigue
+      // ACTIVE), así que si COP ya lo liberó arriba esto no hace nada.
+      try {
+        await BlockadeService.releaseForSettledDebtClaim(
+          debtClaim.id,
+          debtClaim.debtorId,
+          debtClaim.tenantId,
+          actingUser.id,
+        );
+      } catch (error) {
+        console.error("Error releasing blockade after settled payment:", error);
       }
     }
 

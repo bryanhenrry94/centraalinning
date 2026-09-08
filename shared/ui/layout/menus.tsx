@@ -79,16 +79,12 @@ export const menuGroups: HeaderMenuGroup[] = [
         href: "/blocks",
         icon: <ShieldOutlined fontSize="small" />,
       },
-      {
-        label: "Collectieve opvolging",
-        href: "/collective-follow-up",
-        icon: <GroupOutlined fontSize="small" />,
-      },
-      {
-        label: "Dossieroverdracht",
-        href: "/legal-processes",
-        icon: <GavelOutlined fontSize="small" />,
-      },
+      // Ruta Inteligente CFSB (punto 2/7): "Collectieve opvolging" (COP) en
+      // "Dossieroverdracht" (GOP) zijn geen zelfstandige diensten — ze
+      // horen hier expres niet als navigatie-item thuis. Ze zijn alleen
+      // bereikbaar vanuit een dossier met een actieve Blokkade (zie de
+      // knoppen "Collectieve Opvolging starten"/"Dossieroverdracht" op
+      // app/(dashboard)/collections/[id]/page.tsx), nooit via dit menu.
     ],
   },
 

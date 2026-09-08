@@ -142,6 +142,17 @@ export async function processAopWorkflow() {
         }
 
         await cancelAgreementsByCliam(debtClaimId);
+        // El acuerdo se acaba de cancelar por incumplimiento: cae al
+        // avance normal de paso más abajo, igual que si nunca hubiera
+        // existido un acuerdo.
+      } else {
+        // Ruta Inteligente CFSB (punto 5): existe un acuerdo de pago
+        // ACCEPTED y el deudor está al día con las cuotas — el AOP no debe
+        // seguir escalando pasos mientras el acuerdo se cumple. Antes este
+        // chequeo solo eximía del recargo por no-respuesta pero igual
+        // avanzaba el paso; ahora directamente no se toca el expediente en
+        // esta corrida.
+        continue;
       }
     } else if (
       (currentStepType === "REMINDER" || currentStepType === "FINAL_NOTICE") &&

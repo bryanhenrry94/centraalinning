@@ -18,6 +18,7 @@ import { ParameterService } from "@/modules/settings/services/parameter/paramete
 import { SettingsService } from "@/modules/settings/services/settings/settings.service";
 import { StorageService } from "@/infrastructure/storage/storage.service";
 import { formatAmount } from "@/shared/utils/formatters";
+import { CollectiveCollectionService } from "@/modules/collective-follow-up/services/collective-collection.service";
 
 const ACCEPTANCE_WINDOW_DAYS = 7;
 // Valor por defecto — el Superadministrador puede configurar la antelación
@@ -361,13 +362,33 @@ export class CaseTransferService {
       actorUserId,
     );
 
+    // Ruta Inteligente CFSB (punto 8): si esta transferencia se originó
+    // desde un COP (Collectieve Opvolging), la cancelación automática debe
+    // devolverle al participante las dos únicas salidas válidas — reactivar
+    // el mismo COP sin costo, o elegir otro profesional — en vez de dejar
+    // el dossier varado en "Transferido". No-op si esta transferencia no
+    // vino de un COP.
+    let reopenedCollectiveCollectionId: string | null = null;
+    try {
+      reopenedCollectiveCollectionId = await CollectiveCollectionService.reopenAfterTransferRejected(
+        caseTransferId,
+        actorUserId,
+      );
+    } catch (error) {
+      console.error("Error reopening COP after transfer rejection:", error);
+    }
+
     await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.tenantId, {
       type: NotificationType.LEGAL_PROCESS_REJECTED,
       title: "Dossier afgewezen",
-      message: `De ${rejectedByLawyer ? "advocaat" : "deurwaarder"} heeft dossier ${caseTransfer.debtClaim.reference} afgewezen: ${reason}. Selecteer een andere advocaat of deurwaarder.`,
-      link: `/legal-processes/transfers/${updated.id}`,
-      entity_type: "CaseTransfer",
-      entity_id: updated.id,
+      message: reopenedCollectiveCollectionId
+        ? `De ${rejectedByLawyer ? "advocaat" : "deurwaarder"} heeft dossier ${caseTransfer.debtClaim.reference} afgewezen: ${reason}. Kies: opnieuw Collectieve Opvolging uitvoeren zonder kosten, of een andere advocaat/deurwaarder selecteren.`
+        : `De ${rejectedByLawyer ? "advocaat" : "deurwaarder"} heeft dossier ${caseTransfer.debtClaim.reference} afgewezen: ${reason}. Selecteer een andere advocaat of deurwaarder.`,
+      link: reopenedCollectiveCollectionId
+        ? `/collective-follow-up/${reopenedCollectiveCollectionId}`
+        : `/legal-processes/transfers/${updated.id}`,
+      entity_type: reopenedCollectiveCollectionId ? "CollectiveCollection" : "CaseTransfer",
+      entity_id: reopenedCollectiveCollectionId ?? updated.id,
     });
 
     return updated;

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { BlokCheckResponse } from "./block-check.types";
 import { Person, Prisma } from "@prisma/client";
+import { sendFinancialDeclarationInvitationMail } from "@/modules/block-check/services/financial-declaration-invite-mail.service";
 
 const MULTIPLE_PERSONS_FOUND_ERROR =
   "Meerdere personen gevonden met deze naam. Gebruik het identificatienummer of CFSB-nummer om te verfijnen.";
@@ -119,5 +120,48 @@ export class BlockCheckService {
         checked_at: blockCheck.checkedAt,
       },
     };
+  };
+
+  // Ruta Inteligente CFSB (punto 4): invitación opcional, disparada por el
+  // checkbox en el resultado del Blok-Check cuando se encontró un bloqueo.
+  // El deudor sigue pagando su Declaración Financiera directamente — esto
+  // solo le avisa que puede/debe presentarla, y audita quién lo pidió.
+  static inviteForFinancialDeclaration = async (
+    blockCheckId: string,
+    context: { tenantId: string; actorUserId?: string },
+  ): Promise<{ success: boolean; error?: string }> => {
+    const blockCheck = await prisma.blockCheck.findUnique({
+      where: { id: blockCheckId },
+      include: { person: true, tenant: true },
+    });
+    if (!blockCheck || blockCheck.tenantId !== context.tenantId) {
+      return { success: false, error: "Blok-Check niet gevonden." };
+    }
+    if (!blockCheck.blockadeFound) {
+      return { success: false, error: "Er is geen blokkade gevonden voor deze aanvraag." };
+    }
+    if (blockCheck.financialDeclarationInvitedAt) {
+      return { success: false, error: "De uitnodiging is al eerder verstuurd." };
+    }
+    if (!blockCheck.person?.email) {
+      return { success: false, error: "Deze persoon heeft geen e-mailadres geregistreerd." };
+    }
+
+    await prisma.blockCheck.update({
+      where: { id: blockCheckId },
+      data: {
+        financialDeclarationInvitedAt: new Date(),
+        financialDeclarationInvitedById: context.actorUserId,
+      },
+    });
+
+    await sendFinancialDeclarationInvitationMail(
+      blockCheck.person.email,
+      this.buildFullName(blockCheck.person) || blockCheck.person.business_name || blockCheck.person.email,
+      blockCheck.tenant.name,
+      blockCheck.tenant.subdomain,
+    );
+
+    return { success: true };
   };
 }

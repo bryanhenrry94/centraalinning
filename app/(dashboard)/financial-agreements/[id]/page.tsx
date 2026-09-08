@@ -14,7 +14,13 @@ import {
   Stack,
   Divider,
   Alert,
+  List,
+  ListItem,
+  ListItemText,
+  Button,
 } from "@mui/material";
+import DownloadIcon from "@mui/icons-material/Download";
+import ArticleIcon from "@mui/icons-material/Article";
 
 import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
@@ -138,10 +144,67 @@ const FinancialAgreementDetailPage: React.FC = () => {
                   />
                 </Grid>
               )}
+              {financialAgreement.invoiceDate && (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <InfoField
+                    label="Factuurdatum"
+                    value={formatDate(financialAgreement.invoiceDate.toString())}
+                  />
+                </Grid>
+              )}
+              {financialAgreement.dueDate && (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                  <InfoField
+                    label="Vervaldatum"
+                    value={formatDate(financialAgreement.dueDate.toString())}
+                  />
+                </Grid>
+              )}
               <Grid size={{ xs: 12 }}>
                 <InfoField label="Omschrijving" value={financialAgreement.description || "-"} />
               </Grid>
             </Grid>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader title={`Documenten (${financialAgreement.documents?.length ?? 0})`} />
+          <Divider />
+          <CardContent>
+            {!financialAgreement.documents || financialAgreement.documents.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                Geen documenten toegevoegd.
+              </Typography>
+            ) : (
+              <List disablePadding>
+                {financialAgreement.documents.map((doc, index) => (
+                  <Box key={doc.id}>
+                    <ListItem
+                      disablePadding
+                      secondaryAction={
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<DownloadIcon />}
+                          href={`/api/financial-agreements/documents/${doc.id}/download`}
+                        >
+                          Downloaden
+                        </Button>
+                      }
+                    >
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 1 }}>
+                        <ArticleIcon color="action" fontSize="small" />
+                        <ListItemText
+                          primary={doc.originalName}
+                          secondary={formatDate(doc.createdAt.toString())}
+                        />
+                      </Box>
+                    </ListItem>
+                    {index < financialAgreement.documents.length - 1 && <Divider />}
+                  </Box>
+                ))}
+              </List>
+            )}
           </CardContent>
         </Card>
       </Stack>

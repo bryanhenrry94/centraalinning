@@ -1,16 +1,33 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
-import { CreateFinancialAgreementInput } from "@/modules/financial-agreement/services/financial-agreement.validators";
+import {
+  CreateFinancialAgreementInput,
+  CreateFinancialAgreementWithDebtorInput,
+} from "@/modules/financial-agreement/services/financial-agreement.validators";
 import { FAR_REGISTRATION_FEE } from "@/modules/financial-agreement/constants/financial-agreement";
 import { NotificationService } from "@/modules/notification/services/notification.service";
 import { NotificationType } from "@/modules/notification/constants/notification-type";
 import { PaymentService } from "@/modules/payment/services/payment.service";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
+import { DebtorService } from "@/modules/collection/services/debtor.service";
+import { StorageService } from "@/infrastructure/storage/storage.service";
+import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 
 const financialAgreementInclude = {
   debtor: { include: { person: true } },
   contract: true,
+  documents: true,
 } satisfies Prisma.FinancialAgreementInclude;
+
+type UploadFinancialAgreementDocumentParams = {
+  financialAgreementId: string;
+  tenantId: string;
+  uploadedById?: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  buffer: Buffer;
+};
 
 type FinancialAgreementWithInclude = Prisma.FinancialAgreementGetPayload<{
   include: typeof financialAgreementInclude;
@@ -69,8 +86,16 @@ export class FinancialAgreementService {
       if (!contract) throw new Error("Overeenkomst niet gevonden.");
     }
 
+    // Mismo patrón que block-check.actions.ts: FAR_REGISTRATION_FEE es el
+    // precio neto excl. ABB — el wizard muestra "Totaal te betalen" con el
+    // ABB de la isla/tenant encima, así que lo que se cobra vía Sentoo acá
+    // tiene que ser exactamente ese mismo total, no el neto.
+    const parameter = await ParameterService.getParameterForTenant(tenantId);
+    const abbRate = parameter?.abb_rate ?? 0;
+    const feeAmount = Number((FAR_REGISTRATION_FEE * (1 + abbRate / 100)).toFixed(2));
+
     const paymentResult = await PaymentService.create(tenantId, {
-      amount: FAR_REGISTRATION_FEE,
+      amount: feeAmount,
       currency: input.currency,
       description: `FAR-registratiekosten${input.reference ? ` — ${input.reference}` : ""}`,
       reference: `far_registration_${debtor.id}_${Date.now()}`,
@@ -87,6 +112,8 @@ export class FinancialAgreementService {
         contractId: input.contractId ?? null,
         reference: input.reference,
         description: input.description,
+        invoiceDate: input.invoiceDate ?? null,
+        dueDate: input.dueDate ?? null,
         amount: input.amount,
         currency: input.currency,
         status: "PENDING_PAYMENT",
@@ -99,6 +126,96 @@ export class FinancialAgreementService {
       paymentId: paymentResult.data.paymentId,
       paymentUrl: paymentResult.data.paymentUrl,
     };
+  };
+
+  // ---------------------------------------------------------------------
+  // Wizard de alta (4 pasos): crea/reusa el Debtor (Wederpartij) y registra
+  // el FAR + documentos adjuntos en un solo submit ("Registreren en
+  // betalen"). Reutiliza DebtorService.findOrCreate tal cual — no duplica
+  // la lógica de búsqueda/creación de Person+Debtor.
+  // ---------------------------------------------------------------------
+
+  static createWithDebtor = async (
+    tenantId: string,
+    input: CreateFinancialAgreementWithDebtorInput,
+    files: Array<{ fileName: string; mimeType: string; size: number; buffer: Buffer }>,
+    actorUserId?: string,
+  ) => {
+    const { debtor } = await DebtorService.findOrCreate(
+      {
+        person_type: input.debtor.person_type,
+        identification_type: input.debtor.identification_type,
+        identification: input.debtor.identification,
+        fullname: input.debtor.fullname,
+        email: input.debtor.email,
+        phone: input.debtor.phone,
+        address: input.debtor.address,
+      },
+      tenantId,
+    );
+
+    const result = await this.create(
+      tenantId,
+      { ...input.agreement, debtorId: debtor.id },
+      actorUserId,
+    );
+
+    for (const file of files) {
+      await this.uploadDocument({
+        financialAgreementId: result.financialAgreementId,
+        tenantId,
+        uploadedById: actorUserId,
+        ...file,
+      });
+    }
+
+    return { ...result, debtorId: debtor.id };
+  };
+
+  // ---------------------------------------------------------------------
+  // Documentos adjuntos (paso "Documenten")
+  // ---------------------------------------------------------------------
+
+  static uploadDocument = async (params: UploadFinancialAgreementDocumentParams) => {
+    const sanitizedName = `${crypto.randomUUID()}-${params.fileName}`.replace(/\s+/g, "-");
+    const folder = `${params.tenantId}/financial-agreements/${params.financialAgreementId}`;
+    const storageKey = await StorageService.uploadFile(
+      folder,
+      sanitizedName,
+      params.mimeType,
+      params.buffer,
+    );
+
+    return prisma.financialAgreementDocument.create({
+      data: {
+        financialAgreementId: params.financialAgreementId,
+        fileName: sanitizedName,
+        originalName: params.fileName,
+        mimeType: params.mimeType,
+        size: params.size,
+        storageKey,
+        uploadedById: params.uploadedById,
+      },
+    });
+  };
+
+  static getDocuments = async (financialAgreementId: string) => {
+    return prisma.financialAgreementDocument.findMany({
+      where: { financialAgreementId },
+      orderBy: { createdAt: "desc" },
+    });
+  };
+
+  static getDocumentById = async (documentId: string) => {
+    return prisma.financialAgreementDocument.findUnique({ where: { id: documentId } });
+  };
+
+  static deleteDocument = async (documentId: string) => {
+    const document = await prisma.financialAgreementDocument.findUnique({ where: { id: documentId } });
+    if (!document) throw new Error("Document niet gevonden.");
+
+    await StorageService.removeDocument(document.storageKey);
+    await prisma.financialAgreementDocument.delete({ where: { id: documentId } });
   };
 
   // Se llama desde el webhook de Sentoo cuando el Payment FAR_REGISTRATION

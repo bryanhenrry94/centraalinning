@@ -1168,4 +1168,61 @@ export class CollectiveCollectionService {
 
     return { collectionId, status: CollectiveCollectionStatus.CLOSED };
   };
+
+  // ---------------------------------------------------------------------
+  // Ruta Inteligente CFSB (punto 8): si el abogado/alguacil RECHAZA la
+  // transferencia que se originó desde este COP (transferToGop), el
+  // documento pide no dejar el expediente varado en TRANSFERRED (terminal)
+  // — hay que devolverlo al estado CLOSED del que salió, para que el
+  // participante tenga otra vez las dos únicas salidas válidas: reactivar
+  // el mismo COP sin costo (keepActive) o elegir otro profesional
+  // (transferToGop de nuevo, ahora que TRANSFERABLE_COLLECTIVE_COLLECTION_STATUSES
+  // vuelve a incluir CLOSED). Nunca crea un CollectiveCollection nuevo.
+  // No-op si esta transferencia no vino de un COP (p.ej. transferencias
+  // directas desde un BLK activo).
+  // ---------------------------------------------------------------------
+  static reopenAfterTransferRejected = async (caseTransferId: string, actorUserId?: string) => {
+    const collection = await prisma.collectiveCollection.findUnique({
+      where: { transferredToCaseTransferId: caseTransferId },
+      include: { debtClaim: { include: { debtor: true, tenant: true } } },
+    });
+    if (!collection || collection.status !== CollectiveCollectionStatus.TRANSFERRED) {
+      return null;
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.collectiveCollection.update({
+        where: { id: collection.id },
+        data: {
+          status: CollectiveCollectionStatus.CLOSED,
+          transferredToCaseTransferId: null,
+          finishedAt: null,
+        },
+      });
+      await tx.claimService.updateMany({
+        where: { debtClaimId: collection.debtClaimId, service: "COP" },
+        data: { status: "IN_PROGRESS", finishedAt: null, finishedById: null },
+      });
+      await tx.claimTimeline.create({
+        data: {
+          debtClaimId: collection.debtClaimId,
+          event: "CLAIM_UPDATED",
+          description: `De overdracht werd afgewezen. Collectieve Opvolging (dossier ${collection.debtClaim.reference ?? collection.debtClaimId}) is heropend: reactiveer zonder kosten of kies een andere advocaat/deurwaarder.`,
+        },
+      });
+    });
+
+    await NotificationService.notifyTenantStaff(collection.debtClaim.tenantId, {
+      type: NotificationType.COL_CLOSED,
+      title: "Overdracht afgewezen — dossier heropend",
+      message: `De advocaat/deurwaarder heeft de overdracht van dossier ${
+        collection.debtClaim.reference ?? collection.debtClaimId
+      } afgewezen. Kies: opnieuw Collectieve Opvolging uitvoeren zonder kosten, of een andere advocaat/deurwaarder selecteren.`,
+      link: `/collective-follow-up/${collection.id}`,
+      entity_type: "CollectiveCollection",
+      entity_id: collection.id,
+    });
+
+    return collection.id;
+  };
 }

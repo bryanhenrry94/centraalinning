@@ -149,6 +149,13 @@ model FinancialAgreement {
   reference   String?
   description String? @db.Text
 
+  // Factuurdatum / Vervaldatum del wizard de alta (paso "Overeenkomst") —
+  // datos estructurados de la propia afspraak, separados de `description`
+  // (que queda para la "Omschrijving"/opmerkingen libres), para poder
+  // filtrar/reportar por fecha de vencimiento a futuro sin parsear texto.
+  invoiceDate DateTime?
+  dueDate     DateTime?
+
   amount   Decimal @db.Decimal(18, 2)
   currency String  @default("USD")
 
@@ -167,8 +174,35 @@ model FinancialAgreement {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  documents FinancialAgreementDocument[]
+
   @@index([debtorId])
   @@map("financial_agreement")
+}
+
+// Documentos adjuntos al alta de un FAR (paso "Documenten" del wizard) —
+// mismo patrón que CaseTransferDocument, sin `category` porque acá no
+// aporta valor (siempre son comprobantes/soporte del acuerdo).
+model FinancialAgreementDocument {
+  id String @id @default(cuid())
+
+  financialAgreementId String
+  financialAgreement   FinancialAgreement @relation(fields: [financialAgreementId], references: [id], onDelete: Cascade)
+
+  fileName     String
+  originalName String
+
+  mimeType String
+  size     Int
+
+  storageKey String
+
+  uploadedById String?
+
+  createdAt DateTime @default(now())
+
+  @@index([financialAgreementId])
+  @@map("financial_agreement_document")
 }
 
 model DebtClaimObligation {
@@ -265,7 +299,16 @@ model BlockCheck {
 
   checkedAt   DateTime @default(now())
   checkedById String?
-  checkedBy   User?    @relation(fields: [checkedById], references: [id])
+  checkedBy   User?    @relation("BlockCheckCheckedBy", fields: [checkedById], references: [id])
+
+  // Ruta Inteligente CFSB (punto 4): invitación opcional al deudor a
+  // presentar su Declaración Financiera, marcada explícitamente por el
+  // tenant que hizo el Blok-Check (checkbox en el resultado). El deudor
+  // sigue pagando la declaración directamente — esto solo audita que se
+  // envió la invitación y quién la disparó.
+  financialDeclarationInvitedAt   DateTime?
+  financialDeclarationInvitedById String?
+  financialDeclarationInvitedBy   User?     @relation("BlockCheckInvitedBy", fields: [financialDeclarationInvitedById], references: [id])
 
   @@map("block_check")
 }
@@ -1137,7 +1180,8 @@ model User {
   lawyers                        Lawyer[]
   messages                       ChatMessage[]
   password_reset_tokens          PasswordResetToken[]
-  block_checks                   BlockCheck[]
+  block_checks                   BlockCheck[] @relation("BlockCheckCheckedBy")
+  block_check_invitations_sent   BlockCheck[] @relation("BlockCheckInvitedBy")
   payment_transfer_verifications PaymentTransferVerification[]
   notifications                  Notification[]
   claim_timeline_entries         ClaimTimeline[]

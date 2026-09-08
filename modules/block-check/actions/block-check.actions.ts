@@ -42,3 +42,16 @@ export const existsBlockCheck = async (search: string) => {
 
   return result;
 };
+
+export const inviteForFinancialDeclaration = async (blockCheckId: string) => {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.tenant_id) {
+    return { success: false, error: "Geen organisatie gevonden." };
+  }
+
+  return BlockCheckService.inviteForFinancialDeclaration(blockCheckId, {
+    tenantId: session.user.tenant_id,
+    actorUserId: session.user.id,
+  });
+};

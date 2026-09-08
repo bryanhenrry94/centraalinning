@@ -472,15 +472,20 @@ const CollectiveCollectionDetailPage: React.FC = () => {
                 Collectieve Opvolging beëindigd zonder oplossing.
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
-                Beschikbare vervolgstap
+                Beschikbare vervolgstappen
               </Typography>
-              <Button
-                variant="contained"
-                startIcon={<SwapHorizIcon />}
-                onClick={() => setDialog("transfer")}
-              >
-                Dossier overdragen
-              </Button>
+              <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+                <Button variant="outlined" onClick={handleKeepActive}>
+                  Opnieuw uitvoeren zonder kosten
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<SwapHorizIcon />}
+                  onClick={() => setDialog("transfer")}
+                >
+                  Advocaat/deurwaarder selecteren
+                </Button>
+              </Stack>
             </CardContent>
           </Card>
         )}

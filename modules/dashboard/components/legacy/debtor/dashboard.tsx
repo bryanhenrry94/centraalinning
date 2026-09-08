@@ -6,12 +6,11 @@ import {
   Typography,
   Box,
   IconButton,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
   Chip,
   Divider,
+  Stack,
+  Button,
+  Tooltip,
 } from "@mui/material";
 import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
@@ -20,7 +19,7 @@ import PaymentsIcon from "@mui/icons-material/Payments";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
 
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
@@ -64,9 +63,6 @@ const DashboardDebtor = () => {
   const [debts, setDebts] = useState<DebtorSummary[]>([]);
   const [debtSelected, setDebtSelected] = useState<DebtorSummary | null>(null);
   const [agreements, setAgreements] = useState<AgreementResponse[]>([]);
-
-  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
-  const [menuDebt, setMenuDebt] = useState<DebtorSummary | null>(null);
 
   const [openModalAgreement, setOpenModalAgreement] = useState(false);
   const [openModalNotifications, setOpenModalNotifications] = useState(false);
@@ -261,19 +257,6 @@ const DashboardDebtor = () => {
     setOpenModalTransferPayment(true);
   };
 
-  const handleMenuOpen = (
-    event: React.MouseEvent<HTMLElement>,
-    debt: DebtorSummary,
-  ) => {
-    setMenuAnchorEl(event.currentTarget);
-    setMenuDebt(debt);
-  };
-
-  const handleMenuClose = () => {
-    setMenuAnchorEl(null);
-    setMenuDebt(null);
-  };
-
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     // Implementar lógica de búsqueda aquí (ej. filtrar deudas por referencia o descripción)
@@ -323,6 +306,64 @@ const DashboardDebtor = () => {
     if (diffDays === 0) return { label: "Vandaag", color: "warning" };
     return { label: `${Math.abs(diffDays)} dagen geleden`, color: "error" };
   };
+
+  // Ruta Inteligente CFSB (punto 12): por expediente, mostrar únicamente la
+  // acción que actualmente necesita realizarse — nunca todos los pasos
+  // futuros a la vez. Mismo orden de prioridad que ya usaba el gating
+  // disperso en los ítems del menú (CFSB primero, luego regeling, luego
+  // saldo al participante), ahora expresado como una única decisión.
+  type PrimaryAction = {
+    label: string;
+    icon: React.ReactNode;
+    color: "primary" | "warning" | "error";
+    onClick: (debt: DebtorSummary) => void;
+  };
+
+  const getPrimaryAction = (debt: DebtorSummary): PrimaryAction | null => {
+    if (debt.debtor_to_cfsb_balance > 0) {
+      return {
+        label: "CFSB-kosten betalen",
+        icon: <AccountBalanceIcon fontSize="small" />,
+        color: "warning",
+        onClick: (d) => {
+          setDebtSelected(d);
+          setOpenModalCollectionFee(true);
+        },
+      };
+    }
+
+    if (hasOpenAgreement(debt.agreement_status)) {
+      return {
+        label: isAgreementApproved(debt.agreement_status)
+          ? "Regeling bekijken"
+          : "Regeling in behandeling",
+        icon: <HandshakeIcon fontSize="small" />,
+        color: "primary",
+        onClick: (d) => openNotificationsModal(d),
+      };
+    }
+
+    if (debt.debtor_to_participant_balance > 0) {
+      return {
+        label: "Betalen",
+        icon: <AttachMoneyIcon fontSize="small" />,
+        color: "error",
+        onClick: (d) => handlePaymentDebtor(d),
+      };
+    }
+
+    return null;
+  };
+
+  // Alternativa disponible junto a "Betalen": pedir una regeling en vez de
+  // pagar todo de una vez. Solo tiene sentido cuando aún no hay una regeling
+  // abierta y el plazo de reacción no venció — misma condición que antes
+  // deshabilitaba el ítem "Regeling aanvragen" del menú.
+  const canRequestAgreement = (debt: DebtorSummary) =>
+    debt.debtor_to_cfsb_balance <= 0 &&
+    !hasOpenAgreement(debt.agreement_status) &&
+    debt.debtor_to_participant_balance > 0 &&
+    !isReactionTermExpired(debt.due_date);
 
   /** ---------------------------------------------------------------------
    * RENDER
@@ -432,80 +473,49 @@ const DashboardDebtor = () => {
             {
               key: "actions",
               label: "Actie",
-              render: (debt) => (
-                <>
-                  <IconButton
-                    size="small"
-                    aria-label="Acties"
-                    aria-haspopup="true"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleMenuOpen(e, debt);
-                    }}
-                  >
-                    <MoreVertIcon fontSize="small" />
-                  </IconButton>
-                  <Menu
-                    anchorEl={menuAnchorEl}
-                    open={Boolean(menuAnchorEl) && menuDebt?.id === debt.id}
-                    onClose={handleMenuClose}
-                  >
-                    <MenuItem
-                      onClick={() => {
-                        openPaymentModal(debt);
-                        handleMenuClose();
-                      }}
-                    >
-                      <ListItemIcon>
+              render: (debt) => {
+                const primary = getPrimaryAction(debt);
+                return (
+                  <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="flex-end">
+                    {primary ? (
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color={primary.color}
+                        startIcon={primary.icon}
+                        onClick={() => primary.onClick(debt)}
+                        sx={{ whiteSpace: "nowrap" }}
+                      >
+                        {primary.label}
+                      </Button>
+                    ) : (
+                      <Chip
+                        icon={<TaskAltIcon fontSize="small" />}
+                        label="Voltooid"
+                        color="success"
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
+
+                    {canRequestAgreement(debt) && (
+                      <Button size="small" variant="text" onClick={() => handleBetaalregelingClick(debt)}>
+                        Regeling aanvragen
+                      </Button>
+                    )}
+
+                    <Tooltip title="Betalingen bekijken">
+                      <IconButton
+                        size="small"
+                        aria-label="Betalingen bekijken"
+                        onClick={() => openPaymentModal(debt)}
+                      >
                         <PaymentsIcon fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText>Betalingen</ListItemText>
-                    </MenuItem>
-
-                    <MenuItem
-                      disabled={debt.debtor_to_participant_balance <= 0}
-                      onClick={() => {
-                        handlePaymentDebtor(debt);
-                        handleMenuClose();
-                      }}
-                    >
-                      <ListItemIcon>
-                        <AttachMoneyIcon fontSize="small" color="error" />
-                      </ListItemIcon>
-                      <ListItemText>Aan deelnemer betalen</ListItemText>
-                    </MenuItem>
-
-                    <MenuItem
-                      disabled={debt.debtor_to_cfsb_balance <= 0}
-                      onClick={() => {
-                        setDebtSelected(debt);
-                        setOpenModalCollectionFee(true);
-                        handleMenuClose();
-                      }}
-                    >
-                      <ListItemIcon>
-                        <AccountBalanceIcon fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText>CFSB-kosten betalen</ListItemText>
-                    </MenuItem>
-
-                    <MenuItem
-                      disabled={!hasOpenAgreement(debt.agreement_status) && isReactionTermExpired(debt.due_date)}
-                      onClick={() => {
-                        handleBetaalregelingClick(debt);
-                        handleMenuClose();
-                      }}
-                    >
-                      <ListItemIcon>
-                        <HandshakeIcon fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText>
-                        {hasOpenAgreement(debt.agreement_status) ? "Regeling" : "Regeling aanvragen"}
-                      </ListItemText>
-                    </MenuItem>
-                  </Menu>
-                </>
-              ),
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
+                );
+              },
             },
           ];
 
