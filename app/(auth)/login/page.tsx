@@ -200,7 +200,7 @@ export default function RegistroPage() {
           fill
           priority
           style={{
-            objectFit: "contain",
+            objectFit: "fill",
             objectPosition: "center",
           }}
         />
