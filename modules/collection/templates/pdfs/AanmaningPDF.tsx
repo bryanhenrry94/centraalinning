@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   billTo: {
-    marginTop: 30,
+    marginTop: 15,
     flexDirection: "row",
     justifyContent: "space-between",
   },
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   },
   signature: {
     fontSize: 11,
-    marginTop: 20,
+    marginTop: 10,
   },
   footer: {
     position: "absolute",
