@@ -112,7 +112,10 @@ export const FarRegistrationWizard: React.FC = () => {
   const step0ValidRef = useRef(false);
   const step1ValidRef = useRef(false);
 
-  const handleStepBlur = async (stepIndex: number, validRef: React.RefObject<boolean>) => {
+  const handleStepBlur = async (
+    stepIndex: number,
+    validRef: React.RefObject<boolean>,
+  ) => {
     const fields = STEP_FIELDS[stepIndex];
     if (!fields) return;
 
@@ -232,7 +235,7 @@ export const FarRegistrationWizard: React.FC = () => {
         debtorName={values.debtor.fullname}
         amount={values.agreement.amount}
         createdAt={result.createdAt}
-        onGoToList={() => router.push("/financial-agreements")}
+        onGoToList={() => router.push("/workstation")}
         onRegisterAnother={resetWizard}
       />
     );

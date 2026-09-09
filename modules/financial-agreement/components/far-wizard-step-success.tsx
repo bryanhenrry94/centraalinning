@@ -1,7 +1,15 @@
 "use client";
 
 import React from "react";
-import { Box, Button, Card, CardContent, Grid, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Grid,
+  Stack,
+  Typography,
+} from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
@@ -42,7 +50,11 @@ export const FarWizardStepSuccess: React.FC<FarWizardStepSuccessProps> = ({
         <Box sx={{ maxWidth: 420, mx: "auto", mb: 3 }}>
           <Grid container spacing={2} textAlign="left">
             <Grid size={{ xs: 12 }}>
-              <Typography variant="caption" color="text.secondary" display="block">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+              >
                 Dossiernummer
               </Typography>
               <Typography variant="body2" fontWeight={700}>
@@ -50,7 +62,11 @@ export const FarWizardStepSuccess: React.FC<FarWizardStepSuccessProps> = ({
               </Typography>
             </Grid>
             <Grid size={{ xs: 6 }}>
-              <Typography variant="caption" color="text.secondary" display="block">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+              >
                 Debiteur
               </Typography>
               <Typography variant="body2" fontWeight={600}>
@@ -58,7 +74,11 @@ export const FarWizardStepSuccess: React.FC<FarWizardStepSuccessProps> = ({
               </Typography>
             </Grid>
             <Grid size={{ xs: 6 }}>
-              <Typography variant="caption" color="text.secondary" display="block">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+              >
                 Bedrag
               </Typography>
               <Typography variant="body2" fontWeight={600}>
@@ -66,7 +86,11 @@ export const FarWizardStepSuccess: React.FC<FarWizardStepSuccessProps> = ({
               </Typography>
             </Grid>
             <Grid size={{ xs: 6 }}>
-              <Typography variant="caption" color="text.secondary" display="block">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+              >
                 Datum
               </Typography>
               <Typography variant="body2" fontWeight={600}>
@@ -74,7 +98,11 @@ export const FarWizardStepSuccess: React.FC<FarWizardStepSuccessProps> = ({
               </Typography>
             </Grid>
             <Grid size={{ xs: 6 }}>
-              <Typography variant="caption" color="text.secondary" display="block">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+              >
                 Status
               </Typography>
               <Typography variant="body2" fontWeight={600}>
@@ -84,9 +112,13 @@ export const FarWizardStepSuccess: React.FC<FarWizardStepSuccessProps> = ({
           </Grid>
         </Box>
 
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} justifyContent="center">
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={1.5}
+          justifyContent="center"
+        >
           <Button variant="outlined" onClick={onRegisterAnother}>
-            Nieuwe FAR registreren
+            Diensten
           </Button>
           <Button variant="contained" onClick={onGoToList}>
             Naar mijn dossiers
