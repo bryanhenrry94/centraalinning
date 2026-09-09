@@ -13,7 +13,7 @@ const NewFinancialAgreementPage: React.FC = () => {
       disableGutters
       sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
     >
-      {/* <AppBreadcrumbs
+      <AppBreadcrumbs
         items={[
           {
             label: "FAR — Financiële Afspraken Registreren",
@@ -21,7 +21,7 @@ const NewFinancialAgreementPage: React.FC = () => {
           },
           { label: "Nieuw" },
         ]}
-      /> */}
+      />
 
       <FarRegistrationWizard />
     </Container>

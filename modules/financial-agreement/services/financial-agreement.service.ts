@@ -18,6 +18,11 @@ const financialAgreementInclude = {
   debtor: { include: { person: true } },
   contract: true,
   documents: true,
+  // Necesario para que la UI (lista y detalle) pueda decidir si "Vervolgen"
+  // sigue disponible: si ya escaló, solo debe reactivarse mientras el
+  // DebtClaim resultante siga OPEN (mismo criterio que Contract usa con su
+  // propio debtClaim.status).
+  escalatedToDebtClaim: { select: { id: true, status: true } },
 } satisfies Prisma.FinancialAgreementInclude;
 
 type UploadFinancialAgreementDocumentParams = {
