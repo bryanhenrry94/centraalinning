@@ -100,45 +100,30 @@ export const FarRegistrationWizard: React.FC = () => {
 
   const values = watch();
 
-  // Auto-avance (pedido sponsor): apenas todos los campos requeridos de un
-  // paso quedan completos y válidos, se salta al siguiente sin esperar clic
-  // en "Volgende". Mismo patrón que app/(dashboard)/contracts/new/page.tsx
-  // — los refs guardan el último estado de validez conocido por paso, para
-  // avanzar solo en la transición inválido → válido, así "Vorige" para
+  // Auto-avance (pedido sponsor): recién cuando el usuario termina de editar
+  // un campo y le quita el foco (blur) — no en cada tecla — se revisa si
+  // todos los campos requeridos del paso ya quedaron completos y válidos, y
+  // si es así se salta al siguiente sin esperar clic en "Volgende". El
+  // onBlur se pone una sola vez en el contenedor de cada paso (React lo
+  // burbujea desde cualquier campo interno) en vez de repetirlo campo por
+  // campo. Los refs guardan el último estado de validez conocido por paso,
+  // para avanzar solo en la transición inválido → válido, así "Vorige" para
   // revisar un paso ya completo no te vuelve a empujar hacia adelante.
   const step0ValidRef = useRef(false);
   const step1ValidRef = useRef(false);
 
-  useEffect(() => {
-    const subscription = watch(async (_value, { name }) => {
-      // `name` viene undefined en un reset() completo del formulario — no
-      // es una edición del usuario, así que no dispara el auto-avance.
-      if (!name) return;
+  const handleStepBlur = async (stepIndex: number, validRef: React.RefObject<boolean>) => {
+    const fields = STEP_FIELDS[stepIndex];
+    if (!fields) return;
 
-      if (name.startsWith("debtor")) {
-        const isValid = await trigger(STEP_FIELDS[0] as never);
-        if (isValid && !step0ValidRef.current) {
-          step0ValidRef.current = true;
-          setActiveStep((prev) => (prev === 0 ? 1 : prev));
-        } else if (!isValid) {
-          step0ValidRef.current = false;
-        }
-        return;
-      }
-
-      if (name.startsWith("agreement")) {
-        const isValid = await trigger(STEP_FIELDS[1] as never);
-        if (isValid && !step1ValidRef.current) {
-          step1ValidRef.current = true;
-          setActiveStep((prev) => (prev === 1 ? 2 : prev));
-        } else if (!isValid) {
-          step1ValidRef.current = false;
-        }
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [watch, trigger]);
+    const isValid = await trigger(fields as never);
+    if (isValid && !validRef.current) {
+      validRef.current = true;
+      setActiveStep((prev) => (prev === stepIndex ? stepIndex + 1 : prev));
+    } else if (!isValid) {
+      validRef.current = false;
+    }
+  };
 
   const handleNext = async () => {
     const fields = STEP_FIELDS[activeStep];
@@ -292,14 +277,20 @@ export const FarRegistrationWizard: React.FC = () => {
       )}
 
       {activeStep === 0 && (
-        <FarWizardStepDebtor
-          control={control}
-          personType={values.debtor.person_type}
-          getValues={getValues}
-          setValue={setValue}
-        />
+        <Box onBlur={() => handleStepBlur(0, step0ValidRef)}>
+          <FarWizardStepDebtor
+            control={control}
+            personType={values.debtor.person_type}
+            getValues={getValues}
+            setValue={setValue}
+          />
+        </Box>
       )}
-      {activeStep === 1 && <FarWizardStepAgreement control={control} />}
+      {activeStep === 1 && (
+        <Box onBlur={() => handleStepBlur(1, step1ValidRef)}>
+          <FarWizardStepAgreement control={control} />
+        </Box>
+      )}
       {activeStep === 2 && (
         <FarWizardStepDocuments
           files={documents}

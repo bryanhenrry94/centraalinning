@@ -130,7 +130,7 @@ export const FarWizardStepAgreement: React.FC<FarWizardStepAgreementProps> = ({
             />
           </Grid>
 
-          <Grid size={{ xs: 12 }}>
+          {/* <Grid size={{ xs: 12 }}>
             <Controller
               name="agreement.notes"
               control={control}
@@ -147,7 +147,7 @@ export const FarWizardStepAgreement: React.FC<FarWizardStepAgreementProps> = ({
                 />
               )}
             />
-          </Grid>
+          </Grid> */}
         </Grid>
       </CardContent>
     </Card>
