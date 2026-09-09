@@ -19,8 +19,18 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { notifyError } from "@/shared/ui/notifications";
 
 const MAX_FILE_SIZE_BYTES = 1024 * 1024; // 1 MB, ver hint "Toegestane formaten" hieronder
-const ACCEPTED_EXTENSIONS = [".pdf", ".jpg", ".jpeg", ".png"];
-const ACCEPT_ATTR = "application/pdf,image/jpeg,image/png";
+const ACCEPTED_EXTENSIONS = [
+  ".pdf",
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".doc",
+  ".docx",
+  ".xls",
+  ".xlsx",
+];
+const ACCEPT_ATTR =
+  "application/pdf,image/jpeg,image/png,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 interface FarWizardStepDocumentsProps {
   files: File[];
@@ -75,7 +85,7 @@ export const FarWizardStepDocuments: React.FC<FarWizardStepDocumentsProps> = ({
       notifyError("Bestand te groot. Maximaal 1 MB per bestand.");
     if (hasInvalidType)
       notifyError(
-        "Ongeldig bestandsformaat. Alleen PDF, JPG of PNG toegestaan.",
+        "Ongeldig bestandsformaat. Alleen PDF, JPG, PNG, Word of Excel toegestaan.",
       );
     if (accepted.length > 0) onAddFiles(accepted);
   };
@@ -90,7 +100,7 @@ export const FarWizardStepDocuments: React.FC<FarWizardStepDocumentsProps> = ({
           Voeg eventuele bewijsstukken toe (optioneel).
         </Typography>
         {/* <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
-          Toegestane formaten: PDF, JPG, PNG (max. 1 MB per bestand)
+          Toegestane formaten: PDF, JPG, PNG, Word, Excel (max. 1 MB per bestand)
         </Typography> */}
 
         <input
