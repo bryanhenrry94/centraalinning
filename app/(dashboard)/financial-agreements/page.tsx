@@ -145,7 +145,9 @@ const FinancialAgreementsPage: React.FC = () => {
   const handleAopPaymentConfirmed = async () => {
     closeAopPaymentDialog();
     notifySuccess("Vervolgingsproces gestart.");
-    load();
+    // Ir directo a /collections para que el nuevo AOP quede visible de
+    // inmediato, en vez de recargar este listado de FAR.
+    router.push("/collections");
   };
 
   const handleAopPaymentFailed = async () => {
