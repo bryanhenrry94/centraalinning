@@ -1,7 +1,6 @@
 "use client";
 
-import React from "react";
-import Dropzone from "react-dropzone";
+import React, { useRef } from "react";
 import {
   Box,
   Button,
@@ -14,17 +13,14 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
-import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
 import ArticleIcon from "@mui/icons-material/Article";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { notifyError } from "@/shared/ui/notifications";
 
 const MAX_FILE_SIZE_BYTES = 1024 * 1024; // 1 MB, ver hint "Toegestane formaten" hieronder
-const ACCEPTED_MIME_TYPES = {
-  "application/pdf": [".pdf"],
-  "image/jpeg": [".jpg", ".jpeg"],
-  "image/png": [".png"],
-};
+const ACCEPTED_EXTENSIONS = [".pdf", ".jpg", ".jpeg", ".png"];
+const ACCEPT_ATTR = "application/pdf,image/jpeg,image/png";
 
 interface FarWizardStepDocumentsProps {
   files: File[];
@@ -42,81 +38,77 @@ function formatFileSize(bytes: number): string {
 // nada. Los archivos quedan en memoria (File[]) hasta el submit final del
 // wizard ("Registreren en betalen"), porque hasta que no exista el
 // FinancialAgreement no hay a qué entidad adjuntarlos en el storage.
+// A propósito sin Dropzone (pedido sponsor): ocupaba demasiado espacio —
+// un botón simple con input oculto alcanza para este caso de uso.
 export const FarWizardStepDocuments: React.FC<FarWizardStepDocumentsProps> = ({
   files,
   onAddFiles,
   onRemoveFile,
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (selected.length === 0) return;
+
+    const accepted: File[] = [];
+    let hasInvalidType = false;
+    let hasTooLarge = false;
+
+    for (const file of selected) {
+      const isValidType = ACCEPTED_EXTENSIONS.some((ext) =>
+        file.name.toLowerCase().endsWith(ext),
+      );
+      if (!isValidType) {
+        hasInvalidType = true;
+        continue;
+      }
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        hasTooLarge = true;
+        continue;
+      }
+      accepted.push(file);
+    }
+
+    if (hasTooLarge)
+      notifyError("Bestand te groot. Maximaal 1 MB per bestand.");
+    if (hasInvalidType)
+      notifyError(
+        "Ongeldig bestandsformaat. Alleen PDF, JPG of PNG toegestaan.",
+      );
+    if (accepted.length > 0) onAddFiles(accepted);
+  };
+
   return (
     <Card>
       <CardContent>
         <Typography variant="h6" fontWeight={700} gutterBottom>
           Documenten
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
           Voeg eventuele bewijsstukken toe (optioneel).
         </Typography>
+        {/* <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
+          Toegestane formaten: PDF, JPG, PNG (max. 1 MB per bestand)
+        </Typography> */}
 
-        <Dropzone
-          onDrop={(accepted) => onAddFiles(accepted)}
-          onDropRejected={(rejections) => {
-            const tooLarge = rejections.some((r) =>
-              r.errors.some((e) => e.code === "file-too-large"),
-            );
-            notifyError(
-              tooLarge
-                ? "Bestand te groot. Maximaal 1 MB per bestand."
-                : "Ongeldig bestandsformaat. Alleen PDF, JPG of PNG toegestaan.",
-            );
-          }}
-          accept={ACCEPTED_MIME_TYPES}
-          maxSize={MAX_FILE_SIZE_BYTES}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          hidden
+          accept={ACCEPT_ATTR}
+          onChange={handleFileChange}
+        />
+        <Button
+          variant="outlined"
+          startIcon={<AttachFileIcon />}
+          sx={{ textTransform: "none" }}
+          onClick={() => fileInputRef.current?.click()}
         >
-          {({ getRootProps, getInputProps, isDragActive }) => (
-            <Box
-              {...getRootProps()}
-              sx={{
-                border: "2px dashed",
-                borderColor: isDragActive ? "primary.main" : "divider",
-                borderRadius: 2,
-                p: { xs: 3, sm: 5 },
-                textAlign: "center",
-                cursor: "pointer",
-                bgcolor: isDragActive ? "action.hover" : "background.default",
-                transition: "background-color 0.2s",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Box
-                sx={{
-                  bgcolor: "action.selected",
-                  borderRadius: "50%",
-                  width: 64,
-                  height: 64,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  mb: 2,
-                }}
-              >
-                <CloudUploadOutlinedIcon color="primary" fontSize="large" />
-              </Box>
-              <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 0.5 }}>
-                Sleep bestanden hiernaartoe of klik om te uploaden
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Toegestane formaten: PDF, JPG, PNG (max. 1 MB per bestand)
-              </Typography>
-              <Button variant="outlined" sx={{ textTransform: "none" }}>
-                Nog een document toevoegen
-              </Button>
-              <input {...getInputProps()} />
-            </Box>
-          )}
-        </Dropzone>
+          Document toevoegen
+        </Button>
 
         {files.length > 0 && (
           <List sx={{ mt: 2 }} disablePadding>
@@ -136,9 +128,19 @@ export const FarWizardStepDocuments: React.FC<FarWizardStepDocumentsProps> = ({
                     </IconButton>
                   }
                 >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 1 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      py: 1,
+                    }}
+                  >
                     <ArticleIcon color="action" fontSize="small" />
-                    <ListItemText primary={file.name} secondary={formatFileSize(file.size)} />
+                    <ListItemText
+                      primary={file.name}
+                      secondary={formatFileSize(file.size)}
+                    />
                   </Box>
                 </ListItem>
                 {index < files.length - 1 && <Divider />}

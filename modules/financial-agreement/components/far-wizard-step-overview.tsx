@@ -69,7 +69,7 @@ function SummaryCard({
           </Typography>
           <Typography
             variant="body2"
-            color="primary.main"
+            color="secondary.main"
             sx={{ cursor: "pointer", fontWeight: 600 }}
             onClick={onEdit}
           >

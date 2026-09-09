@@ -15,14 +15,14 @@ export const FarWizardDebtorSchema = z.object({
   fullname: z.string().min(1, "Naam is verplicht."),
   email: z.email({ message: "Het e-mailadres is niet geldig." }),
   phone: z.string().optional(),
-  address: z.string().optional(),
+  address: z.string().min(1, "Vestigingsadres is verplicht."),
 });
 
 export const FarWizardAgreementSchema = z.object({
-  description: z.string().optional(),
-  reference: z.string().optional(),
-  invoiceDate: z.string().optional(),
-  dueDate: z.string().optional(),
+  description: z.string().min(1, "Omschrijving is verplicht."),
+  reference: z.string().min(1, "Factuurnummer is verplicht."),
+  invoiceDate: z.string().min(1, "Factuurdatum is verplicht."),
+  dueDate: z.string().min(1, "Vervaldatum is verplicht."),
   amount: z.number().positive("Vul een geldig bedrag in."),
   currency: z.string().min(1),
   notes: z.string().optional(),

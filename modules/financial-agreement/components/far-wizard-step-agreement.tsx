@@ -14,7 +14,9 @@ interface FarWizardStepAgreementProps {
 // Stap 2 van 4 — "Overeenkomst" (Afspraakgegevens). "Factuurnummer" mapea a
 // FinancialAgreement.reference (ya existente); "Factuurdatum"/"Vervaldatum"
 // mapean a las nuevas columnas invoiceDate/dueDate.
-export const FarWizardStepAgreement: React.FC<FarWizardStepAgreementProps> = ({ control }) => {
+export const FarWizardStepAgreement: React.FC<FarWizardStepAgreementProps> = ({
+  control,
+}) => {
   return (
     <Card>
       <CardContent>
@@ -31,6 +33,7 @@ export const FarWizardStepAgreement: React.FC<FarWizardStepAgreementProps> = ({ 
                 <TextField
                   {...field}
                   fullWidth
+                  required
                   multiline
                   minRows={2}
                   size="small"
@@ -50,27 +53,9 @@ export const FarWizardStepAgreement: React.FC<FarWizardStepAgreementProps> = ({ 
                 <TextField
                   {...field}
                   fullWidth
+                  required
                   size="small"
                   label="Factuurnummer"
-                  error={!!fieldState.error}
-                  helperText={fieldState.error?.message}
-                />
-              )}
-            />
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Controller
-              name="agreement.invoiceDate"
-              control={control}
-              render={({ field, fieldState }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  size="small"
-                  type="date"
-                  label="Factuurdatum"
-                  slotProps={{ inputLabel: { shrink: true } }}
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
                 />
@@ -86,6 +71,7 @@ export const FarWizardStepAgreement: React.FC<FarWizardStepAgreementProps> = ({ 
                 <NumericFormat
                   customInput={TextField}
                   fullWidth
+                  required
                   size="small"
                   label="Totaalbedrag (USD)"
                   value={field.value ?? ""}
@@ -94,7 +80,29 @@ export const FarWizardStepAgreement: React.FC<FarWizardStepAgreementProps> = ({ 
                   fixedDecimalScale
                   allowNegative={false}
                   prefix="$ "
-                  onValueChange={(values) => field.onChange(Number(values.value) || 0)}
+                  onValueChange={(values) =>
+                    field.onChange(Number(values.value) || 0)
+                  }
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message}
+                />
+              )}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Controller
+              name="agreement.invoiceDate"
+              control={control}
+              render={({ field, fieldState }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  required
+                  size="small"
+                  type="date"
+                  label="Factuurdatum"
+                  slotProps={{ inputLabel: { shrink: true } }}
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
                 />
@@ -110,6 +118,7 @@ export const FarWizardStepAgreement: React.FC<FarWizardStepAgreementProps> = ({ 
                 <TextField
                   {...field}
                   fullWidth
+                  required
                   size="small"
                   type="date"
                   label="Vervaldatum"

@@ -8,14 +8,14 @@ import { IdentificationType } from "@/shared/constants/identification-type";
 export const CreateFinancialAgreementSchema = z.object({
   debtorId: z.string().min(1),
   contractId: z.string().nullable().optional(),
-  reference: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
+  reference: z.string().min(1, "Factuurnummer is verplicht."),
+  description: z.string().min(1, "Omschrijving is verplicht."),
   amount: z.number().positive(),
   currency: z.string().min(1),
   // Factuurdatum / Vervaldatum — ver FinancialAgreement.invoiceDate/dueDate
   // en prisma/schema.prisma.
-  invoiceDate: z.date().nullable().optional(),
-  dueDate: z.date().nullable().optional(),
+  invoiceDate: z.date({ message: "Factuurdatum is verplicht." }),
+  dueDate: z.date({ message: "Vervaldatum is verplicht." }),
 });
 export type CreateFinancialAgreementInput = z.infer<typeof CreateFinancialAgreementSchema>;
 
@@ -33,7 +33,7 @@ export const FinancialAgreementDebtorInputSchema = z.object({
   fullname: z.string().min(1, "Naam is verplicht."),
   email: z.email({ message: "Het e-mailadres is niet geldig." }),
   phone: z.string().nullable().optional(),
-  address: z.string().nullable().optional(),
+  address: z.string().min(1, "Vestigingsadres is verplicht."),
 });
 export type FinancialAgreementDebtorInput = z.infer<typeof FinancialAgreementDebtorInputSchema>;
 

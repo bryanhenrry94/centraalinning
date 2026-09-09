@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
@@ -36,7 +36,10 @@ import { FarWizardStepSuccess } from "@/modules/financial-agreement/components/f
 
 const STEP_LABELS = ["Gegevens", "Overeenkomst", "Documenten", "Overzicht"];
 
-const STEP_FIELDS: Record<number, (keyof FarWizardFormValues | `debtor.${string}` | `agreement.${string}`)[]> = {
+const STEP_FIELDS: Record<
+  number,
+  (keyof FarWizardFormValues | `debtor.${string}` | `agreement.${string}`)[]
+> = {
   0: [
     "debtor.person_type",
     "debtor.identification_type",
@@ -73,18 +76,12 @@ export const FarRegistrationWizard: React.FC = () => {
     createdAt: string;
   } | null>(null);
 
-  const {
-    control,
-    trigger,
-    watch,
-    getValues,
-    setValue,
-    reset,
-  } = useForm<FarWizardFormValues>({
-    resolver: zodResolver(FarWizardSchema),
-    mode: "onBlur",
-    defaultValues: FAR_WIZARD_DEFAULT_VALUES,
-  });
+  const { control, trigger, watch, getValues, setValue, reset } =
+    useForm<FarWizardFormValues>({
+      resolver: zodResolver(FarWizardSchema),
+      mode: "onBlur",
+      defaultValues: FAR_WIZARD_DEFAULT_VALUES,
+    });
 
   useEffect(() => {
     getParameterForTenantAction()
@@ -103,6 +100,46 @@ export const FarRegistrationWizard: React.FC = () => {
 
   const values = watch();
 
+  // Auto-avance (pedido sponsor): apenas todos los campos requeridos de un
+  // paso quedan completos y válidos, se salta al siguiente sin esperar clic
+  // en "Volgende". Mismo patrón que app/(dashboard)/contracts/new/page.tsx
+  // — los refs guardan el último estado de validez conocido por paso, para
+  // avanzar solo en la transición inválido → válido, así "Vorige" para
+  // revisar un paso ya completo no te vuelve a empujar hacia adelante.
+  const step0ValidRef = useRef(false);
+  const step1ValidRef = useRef(false);
+
+  useEffect(() => {
+    const subscription = watch(async (_value, { name }) => {
+      // `name` viene undefined en un reset() completo del formulario — no
+      // es una edición del usuario, así que no dispara el auto-avance.
+      if (!name) return;
+
+      if (name.startsWith("debtor")) {
+        const isValid = await trigger(STEP_FIELDS[0] as never);
+        if (isValid && !step0ValidRef.current) {
+          step0ValidRef.current = true;
+          setActiveStep((prev) => (prev === 0 ? 1 : prev));
+        } else if (!isValid) {
+          step0ValidRef.current = false;
+        }
+        return;
+      }
+
+      if (name.startsWith("agreement")) {
+        const isValid = await trigger(STEP_FIELDS[1] as never);
+        if (isValid && !step1ValidRef.current) {
+          step1ValidRef.current = true;
+          setActiveStep((prev) => (prev === 1 ? 2 : prev));
+        } else if (!isValid) {
+          step1ValidRef.current = false;
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [watch, trigger]);
+
   const handleNext = async () => {
     const fields = STEP_FIELDS[activeStep];
     if (fields) {
@@ -114,7 +151,8 @@ export const FarRegistrationWizard: React.FC = () => {
 
   const handleBack = () => setActiveStep((step) => Math.max(0, step - 1));
 
-  const handleAddFiles = (files: File[]) => setDocuments((prev) => [...prev, ...files]);
+  const handleAddFiles = (files: File[]) =>
+    setDocuments((prev) => [...prev, ...files]);
   const handleRemoveFile = (index: number) =>
     setDocuments((prev) => prev.filter((_, i) => i !== index));
 
@@ -143,7 +181,10 @@ export const FarRegistrationWizard: React.FC = () => {
 
     // "Aanvullende opmerkingen" no tiene columna propia — se agrega al
     // final de description, ver nota en far-wizard.types.ts.
-    const description = [formValues.agreement.description, formValues.agreement.notes]
+    const description = [
+      formValues.agreement.description,
+      formValues.agreement.notes,
+    ]
       .filter((part) => part && part.trim().length > 0)
       .join("\n\nOpmerkingen: ");
 
@@ -158,19 +199,15 @@ export const FarRegistrationWizard: React.FC = () => {
             fullname: formValues.debtor.fullname,
             email: formValues.debtor.email,
             phone: formValues.debtor.phone || null,
-            address: formValues.debtor.address || null,
+            address: formValues.debtor.address,
           },
           agreement: {
-            reference: formValues.agreement.reference || null,
-            description: description || null,
+            reference: formValues.agreement.reference,
+            description,
             amount: formValues.agreement.amount,
             currency: "USD",
-            invoiceDate: formValues.agreement.invoiceDate
-              ? new Date(formValues.agreement.invoiceDate)
-              : null,
-            dueDate: formValues.agreement.dueDate
-              ? new Date(formValues.agreement.dueDate)
-              : null,
+            invoiceDate: new Date(formValues.agreement.invoiceDate),
+            dueDate: new Date(formValues.agreement.dueDate),
             contractId: null,
           },
         },
@@ -182,7 +219,11 @@ export const FarRegistrationWizard: React.FC = () => {
         farNumber: response.farNumber,
         createdAt: new Date().toISOString(),
       });
-      return { success: true, paymentId: response.paymentId, paymentUrl: response.paymentUrl };
+      return {
+        success: true,
+        paymentId: response.paymentId,
+        paymentUrl: response.paymentUrl,
+      };
     } catch (error) {
       return {
         success: false,
@@ -214,41 +255,36 @@ export const FarRegistrationWizard: React.FC = () => {
 
   return (
     <Stack spacing={3}>
-      <Paper
-        elevation={0}
-        sx={{
-          bgcolor: "secondary.main",
-          color: "white",
-          borderRadius: 2,
-          px: { xs: 2, sm: 4 },
-          py: { xs: 2, sm: 3 },
-          textAlign: "center",
-        }}
-      >
-        <Typography variant="h5" fontWeight={700}>
-          FAR – Financiële Afspraken Registreren
-        </Typography>
-        <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
-          Registreer vandaag. Voorkom problemen morgen.
-        </Typography>
-      </Paper>
-
       {activeStep < 4 && (
         <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2.5 } }}>
+          <Typography variant="h6" fontWeight={700} sx={{ mb: 2.5 }}>
+            FAR – Financiële Afspraken Registreren
+          </Typography>
           <Stepper
             activeStep={activeStep}
             alternativeLabel
             sx={{
+              "& .MuiStepIcon-root": { color: "grey.300", fontSize: "2rem" },
               "& .MuiStepIcon-root.Mui-active": { color: "secondary.main" },
               "& .MuiStepIcon-root.Mui-completed": { color: "secondary.main" },
-              "& .MuiStepConnector-line": { borderColor: "divider" },
-              "& .Mui-active .MuiStepConnector-line": { borderColor: "secondary.main" },
-              "& .Mui-completed .MuiStepConnector-line": { borderColor: "secondary.main" },
+              "& .MuiStepLabel-label": { color: "text.disabled" },
+              "& .MuiStepLabel-label.Mui-active": {
+                color: "text.primary",
+                fontWeight: 700,
+              },
+              "& .MuiStepLabel-label.Mui-completed": { color: "text.primary" },
+              "& .MuiStepConnector-line": { borderColor: "grey.300" },
+              "& .Mui-active .MuiStepConnector-line": {
+                borderColor: "secondary.main",
+              },
+              "& .Mui-completed .MuiStepConnector-line": {
+                borderColor: "secondary.main",
+              },
             }}
           >
-            {STEP_LABELS.map((label, index) => (
+            {STEP_LABELS.map((label) => (
               <Step key={label}>
-                <StepLabel>{`Stap ${index + 1} van 4 — ${label}`}</StepLabel>
+                <StepLabel>{label}</StepLabel>
               </Step>
             ))}
           </Stepper>
@@ -273,7 +309,11 @@ export const FarRegistrationWizard: React.FC = () => {
       )}
       {activeStep === 3 && (
         <>
-          <FarWizardStepOverview values={values} documents={documents} onEditStep={setActiveStep} />
+          <FarWizardStepOverview
+            values={values}
+            documents={documents}
+            onEditStep={setActiveStep}
+          />
 
           <Paper variant="outlined" sx={{ p: 2.5 }}>
             <Stack spacing={1}>
@@ -294,7 +334,11 @@ export const FarRegistrationWizard: React.FC = () => {
                 </Typography>
               </Stack>
               <Divider />
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+              >
                 <Typography variant="subtitle1" fontWeight={700}>
                   Totaal te betalen
                 </Typography>
@@ -304,13 +348,19 @@ export const FarRegistrationWizard: React.FC = () => {
               </Stack>
             </Stack>
           </Paper>
+
+          <Typography variant="body2" color="text.secondary">
+            Betaal met: online betaling (Sentoo)
+          </Typography>
         </>
       )}
 
       <Stack direction="row" spacing={1.5} justifyContent="space-between">
         <Box>
           {activeStep === 0 ? (
-            <Button onClick={() => router.push("/financial-agreements")}>Annuleren</Button>
+            <Button onClick={() => router.push("/financial-agreements")}>
+              Annuleren
+            </Button>
           ) : (
             <Button onClick={handleBack}>Vorige</Button>
           )}
@@ -330,6 +380,12 @@ export const FarRegistrationWizard: React.FC = () => {
           </Box>
         )}
       </Stack>
+
+      {activeStep === 3 && (
+        <Typography variant="caption" color="text.secondary" textAlign="center">
+          🔒 Uw betaling is veilig en beveiligd.
+        </Typography>
+      )}
     </Stack>
   );
 };
