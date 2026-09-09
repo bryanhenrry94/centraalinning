@@ -200,13 +200,27 @@ export class FinancialAgreementService {
       actorUserId,
     );
 
+    // Los documentos son opcionales para FAR (se puede avanzar sin adjuntar
+    // nada) — en este punto el FinancialAgreement y el Payment de Sentoo YA
+    // se crearon arriba, así que si falla la subida de un adjunto (p.ej. R2
+    // mal configurado en el servidor) no debe tirar abajo todo el registro
+    // ni dejarlo huérfano en PENDING_PAYMENT sin que el usuario llegue a
+    // pagar. Se loguea y se sigue; el usuario puede reintentar el adjunto
+    // más tarde desde el detalle del FAR.
     for (const file of files) {
-      await this.uploadDocument({
-        financialAgreementId: result.financialAgreementId,
-        tenantId,
-        uploadedById: actorUserId,
-        ...file,
-      });
+      try {
+        await this.uploadDocument({
+          financialAgreementId: result.financialAgreementId,
+          tenantId,
+          uploadedById: actorUserId,
+          ...file,
+        });
+      } catch (error) {
+        console.error(
+          `Error uploading FAR document "${file.fileName}" for ${result.financialAgreementId}:`,
+          error,
+        );
+      }
     }
 
     return { ...result, debtorId: debtor.id };
