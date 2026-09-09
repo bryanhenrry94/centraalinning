@@ -235,8 +235,8 @@ export const FarRegistrationWizard: React.FC = () => {
         debtorName={values.debtor.fullname}
         amount={values.agreement.amount}
         createdAt={result.createdAt}
-        onGoToList={() => router.push("/workstation")}
-        onRegisterAnother={resetWizard}
+        onGoToList={() => router.push("/financial-agreements")}
+        onRegisterAnother={() => router.push("/workstation")}
       />
     );
   }
