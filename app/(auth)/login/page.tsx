@@ -102,7 +102,7 @@ export default function RegistroPage() {
                 color="text.secondary"
                 sx={{ mb: 2, mt: -1 }}
               >
-                Log in op uw account om toegang te krijgen tot uw dashboard.
+                Log in op uw account om toegang te krijgen tot uw CFSB.
               </Typography>
 
               {/* FORM */}
@@ -164,7 +164,7 @@ export default function RegistroPage() {
                     Uw gegevens zijn veilig bij CFSB.
                   </Typography>
 
-                  <Typography
+                  {/* <Typography
                     variant="caption"
                     sx={{
                       color: "gray",
@@ -175,7 +175,7 @@ export default function RegistroPage() {
                   >
                     Wij gebruiken beveiligde technologie om uw informatie te
                     beschermen.
-                  </Typography>
+                  </Typography> */}
                 </Box>
               </Box>
             </Box>

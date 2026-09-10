@@ -47,7 +47,7 @@ export const FarWizardStepSuccess: React.FC<FarWizardStepSuccessProps> = ({
           De betaling is bevestigd en de financiële afspraak is geregistreerd.
         </Typography>
 
-        <Box sx={{ maxWidth: 420, mx: "auto", mb: 3 }}>
+        <Box sx={{ maxWidth: 420, mx: "auto", mb: 8 }}>
           <Grid container spacing={2} textAlign="left">
             <Grid size={{ xs: 12 }}>
               <Typography
@@ -114,8 +114,9 @@ export const FarWizardStepSuccess: React.FC<FarWizardStepSuccessProps> = ({
 
         <Stack
           direction={{ xs: "column", sm: "row" }}
-          spacing={1.5}
+          spacing={2}
           justifyContent="center"
+          sx={{ mt: 8 }}
         >
           <Button variant="outlined" onClick={onRegisterAnother}>
             Diensten
