@@ -60,7 +60,8 @@ const FinancialAgreementsPage: React.FC = () => {
   const [items, setItems] = useState<FinancialAgreementListItem[]>([]);
 
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
-  const [selectedItem, setSelectedItem] = useState<FinancialAgreementListItem | null>(null);
+  const [selectedItem, setSelectedItem] =
+    useState<FinancialAgreementListItem | null>(null);
   const menuOpen = Boolean(anchorEl);
 
   const [aopPaymentDialog, setAopPaymentDialog] = useState<{
@@ -102,15 +103,22 @@ const FinancialAgreementsPage: React.FC = () => {
     handleMenuClose();
     try {
       const result = await initiateFollowUpFromFinancialAgreement(item.id);
-      setAopPaymentDialog({ open: true, obligationId: result.obligationId, amount: result.amount });
+      setAopPaymentDialog({
+        open: true,
+        obligationId: result.obligationId,
+        amount: result.amount,
+      });
     } catch (error) {
       notifyError(
-        error instanceof Error ? error.message : "Kon het vervolgingsproces niet starten.",
+        error instanceof Error
+          ? error.message
+          : "Kon het vervolgingsproces niet starten.",
       );
     }
   };
 
-  const closeAopPaymentDialog = () => setAopPaymentDialog({ open: false, obligationId: null, amount: 0 });
+  const closeAopPaymentDialog = () =>
+    setAopPaymentDialog({ open: false, obligationId: null, amount: 0 });
 
   const handleCreateAopTransaction = async (): Promise<{
     success: boolean;
@@ -139,7 +147,11 @@ const FinancialAgreementsPage: React.FC = () => {
     }
 
     const data = await res.json();
-    return { success: true, paymentId: data.paymentId, paymentUrl: data.paymentUrl };
+    return {
+      success: true,
+      paymentId: data.paymentId,
+      paymentUrl: data.paymentUrl,
+    };
   };
 
   const handleAopPaymentConfirmed = async () => {
@@ -152,7 +164,9 @@ const FinancialAgreementsPage: React.FC = () => {
 
   const handleAopPaymentFailed = async () => {
     closeAopPaymentDialog();
-    notifyError("De betaling is mislukt. U kunt het opnieuw proberen via 'Administratieve opvolging starten'.");
+    notifyError(
+      "De betaling is mislukt. U kunt het opnieuw proberen via 'Administratieve opvolging starten'.",
+    );
     load();
   };
 
@@ -164,16 +178,16 @@ const FinancialAgreementsPage: React.FC = () => {
       disableGutters
       sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
     >
-      <AppBreadcrumbs
+      {/* <AppBreadcrumbs
         items={[{ label: "FAR — Financiële Afspraken Registreren" }]}
-      />
+      /> */}
 
       <Stack
         direction="row"
         justifyContent="space-between"
         alignItems="center"
         mb={3}
-        gap={1}
+        gap={6}
         flexWrap="wrap"
       >
         <Box>
@@ -282,7 +296,12 @@ const FinancialAgreementsPage: React.FC = () => {
         </MenuItem>
       </Menu>
 
-      <Dialog open={aopPaymentDialog.open} onClose={closeAopPaymentDialog} maxWidth="xs" fullWidth>
+      <Dialog
+        open={aopPaymentDialog.open}
+        onClose={closeAopPaymentDialog}
+        maxWidth="xs"
+        fullWidth
+      >
         <Box
           sx={{
             bgcolor: "secondary.main",
@@ -303,12 +322,19 @@ const FinancialAgreementsPage: React.FC = () => {
         </Box>
         <DialogContent sx={{ p: { xs: 2, sm: 4 } }}>
           <Stack spacing={3} alignItems="center">
-            <Typography variant="body2" color="text.secondary" textAlign="center">
-              Deze service vereist betaling voordat de administratieve opvolging (AOP) wordt
-              geactiveerd.
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              textAlign="center"
+            >
+              Deze service vereist betaling voordat de administratieve opvolging
+              (AOP) wordt geactiveerd.
             </Typography>
 
-            <Paper variant="outlined" sx={{ width: "100%", p: 2, borderRadius: 2, textAlign: "center" }}>
+            <Paper
+              variant="outlined"
+              sx={{ width: "100%", p: 2, borderRadius: 2, textAlign: "center" }}
+            >
               <Typography variant="body2" color="text.secondary">
                 Te betalen bedrag
               </Typography>
@@ -318,7 +344,12 @@ const FinancialAgreementsPage: React.FC = () => {
             </Paper>
 
             <Stack direction="row" spacing={2} width="100%">
-              <Button fullWidth variant="outlined" color="inherit" onClick={closeAopPaymentDialog}>
+              <Button
+                fullWidth
+                variant="outlined"
+                color="inherit"
+                onClick={closeAopPaymentDialog}
+              >
                 Annuleren
               </Button>
               <PaymentIntent

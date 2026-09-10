@@ -243,11 +243,31 @@ export const FarRegistrationWizard: React.FC = () => {
 
   return (
     <Stack spacing={3}>
+      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+        <Button
+          variant="contained"
+          onClick={() => router.push("/financial-agreements")}
+        >
+          FAR - Overzicht
+        </Button>
+      </Box>
+
       {activeStep < 4 && (
         <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2.5 } }}>
-          <Typography variant="h6" fontWeight={700} sx={{ mb: 2.5 }}>
-            FAR – Financiële Afspraken Registreren
-          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: { xs: "flex-start", sm: "center" },
+              justifyContent: "space-between",
+              gap: 1.5,
+              mb: 2.5,
+            }}
+          >
+            <Typography variant="h6" fontWeight={700}>
+              FAR – Financiële Afspraken Registreren
+            </Typography>
+          </Box>
           <Stepper
             activeStep={activeStep}
             alternativeLabel
