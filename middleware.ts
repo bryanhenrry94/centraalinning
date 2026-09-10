@@ -12,6 +12,7 @@ const DEBTOR_ALLOWED_PREFIXES = [
   "/dashboard",
   "/payments",
   "/agreements",
+  "/collective-follow-up",
   "/financial-report",
   "/block-status",
   "/settings",
