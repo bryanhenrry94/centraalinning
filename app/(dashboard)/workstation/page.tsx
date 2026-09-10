@@ -159,11 +159,15 @@ export default function WorkstationPage() {
                     >
                       {service.title}
                     </Typography>
-                    <Typography variant="body2" sx={{ color: "text.secondary", flexGrow: 1, mb: 3 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "text.secondary", flexGrow: 1, mb: 3 }}
+                    >
                       {service.description}
                     </Typography>
                     <Button
                       variant="contained"
+                      fullWidth
                       size="small"
                       endIcon={<ArrowForwardIcon fontSize="small" />}
                       onClick={(event) => {
@@ -171,7 +175,7 @@ export default function WorkstationPage() {
                         handleServiceClick(service.newLink || "#");
                       }}
                       sx={{
-                        alignSelf: "flex-start",
+                        // alignSelf: "flex-end",
                         bgcolor: service.buttonColor,
                         justifyContent: "space-between",
                         textTransform: "none",
@@ -179,7 +183,10 @@ export default function WorkstationPage() {
                         fontSize: "0.8125rem",
                         px: 2,
                         py: 0.6,
-                        "&:hover": { bgcolor: service.buttonColor, opacity: 0.9 },
+                        "&:hover": {
+                          bgcolor: service.buttonColor,
+                          opacity: 0.9,
+                        },
                       }}
                     >
                       {service.buttonText}
