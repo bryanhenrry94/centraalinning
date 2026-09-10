@@ -137,6 +137,8 @@ export default function WorkstationPage() {
                     cursor: "pointer",
                     bgcolor: service.bgColor,
                     borderRadius: 3,
+                    border: "2px solid",
+                    borderColor: service.buttonColor,
                     transition: "box-shadow .15s ease",
                     "&:hover": {
                       boxShadow: 4,
@@ -162,17 +164,21 @@ export default function WorkstationPage() {
                     </Typography>
                     <Button
                       variant="contained"
-                      endIcon={<ArrowForwardIcon />}
+                      size="small"
+                      endIcon={<ArrowForwardIcon fontSize="small" />}
                       onClick={(event) => {
                         event.stopPropagation();
                         handleServiceClick(service.newLink || "#");
                       }}
                       sx={{
+                        alignSelf: "flex-start",
                         bgcolor: service.buttonColor,
                         justifyContent: "space-between",
                         textTransform: "none",
                         fontWeight: 700,
-                        py: 1.2,
+                        fontSize: "0.8125rem",
+                        px: 2,
+                        py: 0.6,
                         "&:hover": { bgcolor: service.buttonColor, opacity: 0.9 },
                       }}
                     >
