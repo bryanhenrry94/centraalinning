@@ -8,12 +8,9 @@ import {
   Grid,
   Card,
   CardContent,
-  Avatar,
-  Stack,
+  Button,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import DescriptionIcon from "@mui/icons-material/Description";
-import LockIcon from "@mui/icons-material/Lock";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useRouter } from "next/navigation";
 import { useAuthSession } from "@/modules/auth/hooks/useAuthSession";
 import { UserRole } from "@/shared/constants/user-role";
@@ -49,13 +46,11 @@ export default function WorkstationPage() {
   const services = [
     {
       id: 1,
-      title: "Financiële Afspraken Registreren (FAR)",
-      description:
-        "Registreer financiële afspraken centraal en creëer duidelijkheid tussen betrokken partijen.",
-      color: "#388e3c",
-      icon: DescriptionIcon,
-      buttonText: "Nieuwe financiële afspraak →",
-      linkText: "📋 Mijn financiële afspraken",
+      title: "Afspraak registreren (FAR)",
+      description: "Registreer financiële afspraken centraal.",
+      bgColor: "#EAF2FE",
+      buttonColor: "#1450C4",
+      buttonText: "Start FAR",
       linkList: "/financial-agreements",
       newLink: "/financial-agreements/new",
     },
@@ -64,10 +59,9 @@ export default function WorkstationPage() {
       title: "Blok-Check (BLC)",
       description:
         "Controleer vooraf of een persoon of onderneming geregistreerd staat met een economische blokkade.",
-      color: "#1976d2",
-      icon: SearchIcon,
-      buttonText: "Blok-Check uitvoeren →",
-      linkText: "📋 Blok-Check overzicht",
+      bgColor: "#FFF4E5",
+      buttonColor: "primary.main",
+      buttonText: "Start BLC",
       linkList: "/block-check",
       newLink: "/block-check",
     },
@@ -75,10 +69,9 @@ export default function WorkstationPage() {
       id: 3,
       title: "Administratieve Opvolging (AOP)",
       description: "Start administratieve opvolging.",
-      color: "#f57c00",
-      icon: DescriptionIcon,
-      buttonText: "Nieuwe opvolging starten →",
-      linkText: "📋 Mijn opvolgingen",
+      bgColor: "#EAF2FE",
+      buttonColor: "#1450C4",
+      buttonText: "Start AOP",
       linkList: "/collections",
       newLink: "/collections",
     },
@@ -86,10 +79,9 @@ export default function WorkstationPage() {
       id: 4,
       title: "Blokkade (BLK)",
       description: "Start per direct een economische blokkade.",
-      color: "#d32f2f",
-      icon: LockIcon,
-      buttonText: "Blokkade registreren →",
-      linkText: "📋 Mijn blokkades",
+      bgColor: "#FDECEC",
+      buttonColor: "#D32F2F",
+      buttonText: "Start BLK",
       linkList: "/blocks",
       // Directe toegang tot het registratieformulier — vanaf daar kan de
       // gebruiker via een knop alsnog naar het overzicht (/blocks), in
@@ -132,10 +124,10 @@ export default function WorkstationPage() {
         {/* Grid of Services */}
         <Grid container spacing={3} mb={3}>
           {services.map((service) => {
-            const IconComponent = service.icon;
             return (
               <Grid size={{ xs: 12, md: 6, lg: 3 }} key={service.id}>
                 <Card
+                  elevation={0}
                   onClick={() => handleServiceClick(service.newLink || "#")}
                   sx={{
                     height: "100%",
@@ -143,10 +135,11 @@ export default function WorkstationPage() {
                     flexDirection: "column",
                     position: "relative",
                     cursor: "pointer",
-                    borderTop: `4px solid ${service.color}`,
+                    bgcolor: service.bgColor,
+                    borderRadius: 3,
                     transition: "box-shadow .15s ease",
                     "&:hover": {
-                      boxShadow: 6,
+                      boxShadow: 4,
                     },
                   }}
                 >
@@ -155,32 +148,36 @@ export default function WorkstationPage() {
                       flexGrow: 1,
                       display: "flex",
                       flexDirection: "column",
+                      p: 3,
                     }}
                   >
-                    <Stack
-                      direction="row"
-                      spacing={2}
-                      sx={{ mb: 2, alignItems: "center" }}
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: 700, color: "secondary.main", mb: 1.5 }}
                     >
-                      <Avatar
-                        sx={{
-                          width: 48,
-                          height: 48,
-                          bgcolor: service.color,
-                        }}
-                      >
-                        <IconComponent sx={{ fontSize: 24 }} />
-                      </Avatar>
-                      <Typography
-                        variant="h6"
-                        sx={{ fontWeight: "bold", color: service.color }}
-                      >
-                        {service.title}
-                      </Typography>
-                    </Stack>
-                    <Typography variant="body2" sx={{ color: "#666" }}>
+                      {service.title}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "text.secondary", flexGrow: 1, mb: 3 }}>
                       {service.description}
                     </Typography>
+                    <Button
+                      variant="contained"
+                      endIcon={<ArrowForwardIcon />}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleServiceClick(service.newLink || "#");
+                      }}
+                      sx={{
+                        bgcolor: service.buttonColor,
+                        justifyContent: "space-between",
+                        textTransform: "none",
+                        fontWeight: 700,
+                        py: 1.2,
+                        "&:hover": { bgcolor: service.buttonColor, opacity: 0.9 },
+                      }}
+                    >
+                      {service.buttonText}
+                    </Button>
                   </CardContent>
                 </Card>
               </Grid>
