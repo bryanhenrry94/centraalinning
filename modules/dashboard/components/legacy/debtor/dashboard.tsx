@@ -1,6 +1,7 @@
 "use client";
 import React, { Suspense, useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   Container,
   Typography,
@@ -9,17 +10,28 @@ import {
   Chip,
   Divider,
   Stack,
-  Button,
   Tooltip,
+  Card,
+  CardActionArea,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Button,
 } from "@mui/material";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
+import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
@@ -50,6 +62,7 @@ import {
   ChipColor,
 } from "@/modules/collection/utils/debt-claim-status";
 import { getBlockadesByDebtorAction } from "@/modules/blockade/actions/get-blockades-by-debtor";
+import { getParameterAction } from "@/modules/settings/actions/parameter.actions";
 
 type TenantTypes = {
   id: string;
@@ -59,6 +72,7 @@ type TenantTypes = {
 const DashboardDebtor = () => {
   const { data: session } = useSession();
   const user = session?.user;
+  const router = useRouter();
 
   const [debts, setDebts] = useState<DebtorSummary[]>([]);
   const [debtSelected, setDebtSelected] = useState<DebtorSummary | null>(null);
@@ -71,6 +85,31 @@ const DashboardDebtor = () => {
   const [openModalCollectionFee, setOpenModalCollectionFee] = useState(false);
   const [openModalTransferPayment, setOpenModalTransferPayment] =
     useState(false);
+
+  // Onthoudt de deelnemer-betaling die moet volgen zodra de CFSB-kosten voor
+  // hetzelfde dossier bevestigd zijn (zie getActionMenuItems/handleCfsbPaid)
+  // — zo verloopt "CFSB-kosten + deelnemer betalen" als één ononderbroken
+  // proces in plaats van twee losse acties.
+  const [pendingParticipantDebt, setPendingParticipantDebt] =
+    useState<DebtorSummary | null>(null);
+
+  const [financialReportPrice, setFinancialReportPrice] = useState<
+    number | null
+  >(null);
+
+  // Eén "..."-icoon per rij dat de beschikbare acties (betalen/regeling
+  // aanvragen/betalingen bekijken) in een menu bundelt, in plaats van losse
+  // knoppen naast elkaar in de Actie-kolom.
+  const [actionMenuAnchorEl, setActionMenuAnchorEl] =
+    useState<HTMLElement | null>(null);
+  const [actionMenuDebt, setActionMenuDebt] = useState<DebtorSummary | null>(
+    null,
+  );
+
+  const closeActionMenu = () => {
+    setActionMenuAnchorEl(null);
+    setActionMenuDebt(null);
+  };
 
   const [blockadeActiveCount, setBlockadeActiveCount] = useState(0);
   const [blockadeInactiveCount, setBlockadeInactiveCount] = useState(0);
@@ -184,6 +223,19 @@ const DashboardDebtor = () => {
     fetchDebts();
   }, [user?.id, session?.user?.tenant_id, fetchDebts]);
 
+  // Prijs voor de "Financiële Verklaring aanvragen"-kaart bovenaan het
+  // scherm — dezelfde parameter als /financial-report gebruikt, hier alleen
+  // getoond ter indicatie voordat de debiteur doorklikt.
+  useEffect(() => {
+    getParameterAction()
+      .then((parameter) =>
+        setFinancialReportPrice(
+          Number(parameter?.report_financial_pricing ?? 0),
+        ),
+      )
+      .catch(() => setFinancialReportPrice(null));
+  }, []);
+
   /** ---------------------------------------------------------------------
    * FETCH AGREEMENTS
    * -------------------------------------------------------------------- */
@@ -257,6 +309,21 @@ const DashboardDebtor = () => {
     setOpenModalTransferPayment(true);
   };
 
+  // Zodra de PayCollectionFeeDialog de CFSB-betaling bevestigt, ververst dit
+  // de dossiers én opent meteen de deelnemer-betaling als daar nog een saldo
+  // voor openstond — de debiteur hoeft na "CFSB-kosten betalen" niet apart
+  // nog eens op "Betalen" te klikken.
+  const handleCfsbPaid = async () => {
+    await fetchDebts();
+    if (
+      pendingParticipantDebt &&
+      pendingParticipantDebt.debtor_to_participant_balance > 0
+    ) {
+      handlePaymentDebtor(pendingParticipantDebt);
+    }
+    setPendingParticipantDebt(null);
+  };
+
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     // Implementar lógica de búsqueda aquí (ej. filtrar deudas por referencia o descripción)
@@ -307,54 +374,6 @@ const DashboardDebtor = () => {
     return { label: `${Math.abs(diffDays)} dagen geleden`, color: "error" };
   };
 
-  // Ruta Inteligente CFSB (punto 12): por expediente, mostrar únicamente la
-  // acción que actualmente necesita realizarse — nunca todos los pasos
-  // futuros a la vez. Mismo orden de prioridad que ya usaba el gating
-  // disperso en los ítems del menú (CFSB primero, luego regeling, luego
-  // saldo al participante), ahora expresado como una única decisión.
-  type PrimaryAction = {
-    label: string;
-    icon: React.ReactNode;
-    color: "primary" | "warning" | "error";
-    onClick: (debt: DebtorSummary) => void;
-  };
-
-  const getPrimaryAction = (debt: DebtorSummary): PrimaryAction | null => {
-    if (debt.debtor_to_cfsb_balance > 0) {
-      return {
-        label: "CFSB-kosten betalen",
-        icon: <AccountBalanceIcon fontSize="small" />,
-        color: "warning",
-        onClick: (d) => {
-          setDebtSelected(d);
-          setOpenModalCollectionFee(true);
-        },
-      };
-    }
-
-    if (hasOpenAgreement(debt.agreement_status)) {
-      return {
-        label: isAgreementApproved(debt.agreement_status)
-          ? "Regeling bekijken"
-          : "Regeling in behandeling",
-        icon: <HandshakeIcon fontSize="small" />,
-        color: "primary",
-        onClick: (d) => openNotificationsModal(d),
-      };
-    }
-
-    if (debt.debtor_to_participant_balance > 0) {
-      return {
-        label: "Betalen",
-        icon: <AttachMoneyIcon fontSize="small" />,
-        color: "error",
-        onClick: (d) => handlePaymentDebtor(d),
-      };
-    }
-
-    return null;
-  };
-
   // Alternativa disponible junto a "Betalen": pedir una regeling en vez de
   // pagar todo de una vez. Solo tiene sentido cuando aún no hay una regeling
   // abierta y el plazo de reacción no venció — misma condición que antes
@@ -364,6 +383,87 @@ const DashboardDebtor = () => {
     !hasOpenAgreement(debt.agreement_status) &&
     debt.debtor_to_participant_balance > 0 &&
     !isReactionTermExpired(debt.due_date);
+
+  // Una regeling PENDING/IN_NEGOTIATION/COUNTEROFFER todavía no tiene
+  // condiciones vinculantes (a la espera de que el tenant la apruebe), así
+  // que bloquea el pago directo del saldo al deelnemer. Una vez ACCEPTED
+  // (Actief) esa razón ya no aplica: el deudor debe poder seguir pagando su
+  // saldo aunque la regeling siga abierta.
+  const participantPaymentBlockedByAgreement = (debt: DebtorSummary) =>
+    hasOpenAgreement(debt.agreement_status) &&
+    !isAgreementApproved(debt.agreement_status);
+
+  type ActionMenuItem = {
+    key: string;
+    label: string;
+    icon: React.ReactNode;
+    onClick: () => void;
+  };
+
+  // Bundelt alle acties die voor dit dossier beschikbaar zijn voor het
+  // "..."-menu in de Actie-kolom. CFSB-kosten hebben voorrang en het proces
+  // springt daarna automatisch door naar de deelnemer-betaling
+  // (handleCfsbPaid) — los van een eventuele regeling, want die gaat alleen
+  // over het deelnemer-bedrag. "Regeling bekijken/in behandeling" en
+  // "Betalen" kunnen naast elkaar bestaan zodra de regeling Actief is.
+  const getActionMenuItems = (debt: DebtorSummary): ActionMenuItem[] => {
+    const items: ActionMenuItem[] = [];
+
+    if (debt.debtor_to_cfsb_balance > 0) {
+      items.push({
+        key: "pay-cfsb",
+        label: "Betalen",
+        icon: <AttachMoneyIcon fontSize="small" />,
+        onClick: () => {
+          setDebtSelected(debt);
+          setPendingParticipantDebt(debt);
+          setOpenModalCollectionFee(true);
+        },
+      });
+    }
+
+    if (hasOpenAgreement(debt.agreement_status)) {
+      items.push({
+        key: "agreement-view",
+        label: isAgreementApproved(debt.agreement_status)
+          ? "Regeling bekijken"
+          : "Regeling in behandeling",
+        icon: <HandshakeIcon fontSize="small" />,
+        onClick: () => openNotificationsModal(debt),
+      });
+    }
+
+    if (
+      debt.debtor_to_cfsb_balance <= 0 &&
+      debt.debtor_to_participant_balance > 0 &&
+      !participantPaymentBlockedByAgreement(debt)
+    ) {
+      items.push({
+        key: "pay-participant",
+        label: "Betalen",
+        icon: <AttachMoneyIcon fontSize="small" />,
+        onClick: () => handlePaymentDebtor(debt),
+      });
+    }
+
+    if (canRequestAgreement(debt)) {
+      items.push({
+        key: "agreement-request",
+        label: "Regeling aanvragen",
+        icon: <HandshakeIcon fontSize="small" />,
+        onClick: () => handleBetaalregelingClick(debt),
+      });
+    }
+
+    items.push({
+      key: "payments",
+      label: "Betalingen bekijken",
+      icon: <PaymentsIcon fontSize="small" />,
+      onClick: () => openPaymentModal(debt),
+    });
+
+    return items;
+  };
 
   /** ---------------------------------------------------------------------
    * RENDER
@@ -382,6 +482,33 @@ const DashboardDebtor = () => {
 
   return (
     <Container maxWidth="xl">
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        justifyContent="space-between"
+        alignItems={{ xs: "stretch", sm: "flex-start" }}
+        spacing={2}
+        sx={{ mt: { xs: 1.5, sm: 4 } }}
+      >
+        <Box>
+          <Typography variant="h4" fontWeight={700} gutterBottom>
+            Welkom, {user?.fullname}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Hier vindt u al uw openstaande dossiers, bedragen en beschikbare
+            acties.
+          </Typography>
+        </Box>
+
+        <Button
+          color="primary"
+          variant="contained"
+          onClick={() => router.push("/financial-report")}
+          sx={{ textTransform: "none" }}
+        >
+          Financiële Verklaring aanvragen
+        </Button>
+      </Stack>
+
       <DashboardHeader
         key={filtersKey}
         total={totalOutstanding}
@@ -399,22 +526,21 @@ const DashboardDebtor = () => {
       <Suspense fallback={<h1>Loading collection cases...</h1>}>
         {(() => {
           const columns: ListColumn<DebtorSummary>[] = [
-            { key: "tenant_name", label: "Deelnemer", render: (debt) => debt.tenant_name },
-            { key: "reference", label: "Referentie", render: (debt) => debt.reference },
             {
-              key: "status",
-              label: "Status",
-              render: (debt) => {
-                const status = getSourceStatusInfo(debt.source_status);
-                return (
-                  <Chip label={status.label} color={status.color} size="small" variant="outlined" sx={{ width: 150 }} />
-                );
-              },
+              key: "tenant_name",
+              label: "Deelnemer",
+              render: (debt) => debt.tenant_name,
+            },
+            {
+              key: "reference",
+              label: "Referentie",
+              render: (debt) => debt.reference,
             },
             {
               key: "issue_date",
               label: "Registratiedatum",
-              render: (debt) => (debt.issue_date ? formatDate(debt.issue_date.toString()) : "-"),
+              render: (debt) =>
+                debt.issue_date ? formatDate(debt.issue_date.toString()) : "-",
               hideOnMobile: true,
             },
             {
@@ -422,7 +548,9 @@ const DashboardDebtor = () => {
               label: "Reactietermijn",
               render: (debt) => {
                 if (!debt.due_date) return "-";
-                const reaction = getReactietermijnInfo(debt.due_date.toString());
+                const reaction = getReactietermijnInfo(
+                  debt.due_date.toString(),
+                );
                 return (
                   <Chip
                     label={reaction.label}
@@ -435,7 +563,35 @@ const DashboardDebtor = () => {
               },
               hideOnMobile: true,
             },
-            { key: "balance", label: "Openstaand", align: "right", render: (debt) => formatCurrency(debt.balance) },
+            {
+              key: "status",
+              label: "Status",
+              align: "center",
+              render: (debt) => {
+                const status = getSourceStatusInfo(debt.source_status);
+                return (
+                  <Chip
+                    label={status.label}
+                    color={status.color}
+                    size="small"
+                    variant="outlined"
+                    sx={{ width: 150 }}
+                  />
+                );
+              },
+            },
+            {
+              key: "total_paid",
+              label: "Totaal Betaald",
+              align: "right",
+              render: (debt) => formatCurrency(debt.total_paid || 0),
+            },
+            {
+              key: "balance",
+              label: "Openstaand",
+              align: "right",
+              render: (debt) => formatCurrency(debt.balance),
+            },
             {
               key: "agreement",
               label: "Betaalregeling",
@@ -473,49 +629,40 @@ const DashboardDebtor = () => {
             {
               key: "actions",
               label: "Actie",
-              render: (debt) => {
-                const primary = getPrimaryAction(debt);
-                return (
-                  <Stack direction="row" spacing={0.5} alignItems="center" justifyContent="flex-end">
-                    {primary ? (
-                      <Button
-                        size="small"
-                        variant="contained"
-                        color={primary.color}
-                        startIcon={primary.icon}
-                        onClick={() => primary.onClick(debt)}
-                        sx={{ whiteSpace: "nowrap" }}
-                      >
-                        {primary.label}
-                      </Button>
-                    ) : (
-                      <Chip
-                        icon={<TaskAltIcon fontSize="small" />}
-                        label="Voltooid"
-                        color="success"
-                        size="small"
-                        variant="outlined"
-                      />
-                    )}
+              align: "right",
+              render: (debt) => (
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  justifyContent="flex-end"
+                >
+                  {getActionMenuItems(debt).length <= 1 && (
+                    <Chip
+                      icon={<TaskAltIcon fontSize="small" />}
+                      label="Voltooid"
+                      color="success"
+                      size="small"
+                      variant="outlined"
+                    />
+                  )}
 
-                    {canRequestAgreement(debt) && (
-                      <Button size="small" variant="text" onClick={() => handleBetaalregelingClick(debt)}>
-                        Regeling aanvragen
-                      </Button>
-                    )}
-
-                    <Tooltip title="Betalingen bekijken">
-                      <IconButton
-                        size="small"
-                        aria-label="Betalingen bekijken"
-                        onClick={() => openPaymentModal(debt)}
-                      >
-                        <PaymentsIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </Stack>
-                );
-              },
+                  <Tooltip title="Acties">
+                    <IconButton
+                      size="small"
+                      aria-label="Acties"
+                      aria-haspopup="true"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setActionMenuAnchorEl(event.currentTarget);
+                        setActionMenuDebt(debt);
+                      }}
+                    >
+                      <MoreVertIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+              ),
             },
           ];
 
@@ -529,6 +676,26 @@ const DashboardDebtor = () => {
           );
         })()}
       </Suspense>
+
+      <Menu
+        anchorEl={actionMenuAnchorEl}
+        open={Boolean(actionMenuAnchorEl)}
+        onClose={closeActionMenu}
+      >
+        {actionMenuDebt &&
+          getActionMenuItems(actionMenuDebt).map((item) => (
+            <MenuItem
+              key={item.key}
+              onClick={() => {
+                item.onClick();
+                closeActionMenu();
+              }}
+            >
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemText>{item.label}</ListItemText>
+            </MenuItem>
+          ))}
+      </Menu>
 
       <AgreementFormDialog
         open={openModalAgreement}
@@ -580,7 +747,7 @@ const DashboardDebtor = () => {
         open={openModalCollectionFee}
         onClose={() => setOpenModalCollectionFee(false)}
         debtClaimId={debtSelected?.id || ""}
-        onPaid={fetchDebts}
+        onPaid={handleCfsbPaid}
       />
     </Container>
   );

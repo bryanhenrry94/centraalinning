@@ -1,16 +1,13 @@
-import {
-  Box,
-  Chip,
-  Dialog,
-  IconButton,
-  Typography,
-} from "@mui/material";
+import { Box, Chip, Dialog, IconButton, Typography } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { formatCurrency } from "@/shared/utils/formatters";
 import React, { useEffect } from "react";
 import { Payment } from "@/modules/payment/services/payment.validators";
 import { getPaymentsByInvoice } from "@/modules/payment/actions/payment.actions";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 
 type ChipColor =
   | "default"
@@ -21,7 +18,10 @@ type ChipColor =
   | "primary"
   | "secondary";
 
-const PAYMENT_STATUS_LABELS: Record<string, { label: string; color: ChipColor }> = {
+const PAYMENT_STATUS_LABELS: Record<
+  string,
+  { label: string; color: ChipColor }
+> = {
   pending: { label: "In behandeling", color: "warning" },
   paid: { label: "Betaald", color: "success" },
   failed: { label: "Afgewezen", color: "error" },
@@ -77,16 +77,29 @@ export const PaymentsDialog: React.FC<PaymentsDialogProps> = ({
             <CloseIcon onClick={onClose} />
           </IconButton>
         </Box>
-        <Box sx={{ p: 2, bgcolor: "background.paper" }}>
+        <Box sx={{ p: 2, bgcolor: "background.paper", mt: 4 }}>
           {(() => {
             const columns: ListColumn<Payment>[] = [
-              { key: "method", label: "Method", align: "center", render: (payment) => payment.method },
-              { key: "reference_number", label: "Referentie", align: "center", render: (payment) => payment.reference_number },
+              {
+                key: "method",
+                label: "Method",
+                align: "center",
+                render: (payment) => payment.method,
+              },
+              {
+                key: "reference_number",
+                label: "Referentie",
+                align: "center",
+                render: (payment) => payment.reference_number,
+              },
               {
                 key: "paid_at",
-                label: "Datum betaald",
+                label: "Datum",
                 align: "center",
-                render: (payment) => (payment.paid_at ? new Date(payment.paid_at).toLocaleDateString() : "-"),
+                render: (payment) =>
+                  payment.paid_at
+                    ? new Date(payment.paid_at).toLocaleDateString()
+                    : "-",
               },
               {
                 key: "total_amount",
@@ -94,18 +107,18 @@ export const PaymentsDialog: React.FC<PaymentsDialogProps> = ({
                 align: "center",
                 render: (payment) => formatCurrency(payment.total_amount),
               },
-              {
-                key: "status",
-                label: "Status",
-                align: "center",
-                render: (payment) => {
-                  const statusInfo = PAYMENT_STATUS_LABELS[payment.status] || {
-                    label: payment.status,
-                    color: "default" as ChipColor,
-                  };
-                  return <Chip label={statusInfo.label} color={statusInfo.color} size="small" />;
-                },
-              },
+              // {
+              //   key: "status",
+              //   label: "Status",
+              //   align: "center",
+              //   render: (payment) => {
+              //     const statusInfo = PAYMENT_STATUS_LABELS[payment.status] || {
+              //       label: payment.status,
+              //       color: "default" as ChipColor,
+              //     };
+              //     return <Chip label={statusInfo.label} color={statusInfo.color} size="small" />;
+              //   },
+              // },
             ];
 
             return (
@@ -114,6 +127,11 @@ export const PaymentsDialog: React.FC<PaymentsDialogProps> = ({
                 rows={payments}
                 getRowKey={(payment) => payment.id}
                 emptyMessage="Geen betalingen gevonden."
+                // Deze tabel zit al onder een navy-blauwe dialoogkop —
+                // een grijze tabelkop voorkomt dat hetzelfde blauw
+                // vlak daaronder wordt herhaald.
+                headerSx={{ backgroundColor: "grey.200", color: "text.primary" }}
+                containerSx={{ borderRadius: 0 }}
               />
             );
           })()}

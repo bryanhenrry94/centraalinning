@@ -8,12 +8,12 @@ import {
   IconButton,
   Typography,
   Box,
-  Paper,
   Stack,
   Divider,
   CircularProgress,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import RequestQuoteOutlinedIcon from "@mui/icons-material/RequestQuoteOutlined";
 import { formatCurrency } from "@/shared/utils/formatters";
 import {
   getDebtorCollectionFeeObligations,
@@ -66,7 +66,9 @@ export const PayCollectionFeeDialog: React.FC<PayCollectionFeeDialogProps> = ({
       };
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Kon de betaling niet aanmaken";
+        error instanceof Error
+          ? error.message
+          : "Kon de betaling niet aanmaken";
       return { success: false, error: message };
     }
   };
@@ -77,7 +79,13 @@ export const PayCollectionFeeDialog: React.FC<PayCollectionFeeDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth PaperProps={{ sx: { overflow: "hidden" } }}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="xs"
+      fullWidth
+      PaperProps={{ sx: { overflow: "hidden" } }}
+    >
       <Box
         sx={{
           bgcolor: "secondary.main",
@@ -90,74 +98,63 @@ export const PayCollectionFeeDialog: React.FC<PayCollectionFeeDialogProps> = ({
         }}
       >
         <Typography variant="h6" component="h3" sx={{ fontWeight: 700 }}>
-          CFSB-KOSTEN BETALEN
+          CFSB-kosten
         </Typography>
         <IconButton onClick={onClose} sx={{ color: "white" }}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
-      <DialogContent>
-        <Typography
-          variant="body2"
-          color="text.primary"
-          sx={{ textAlign: "justify", mb: 3 }}
-        >
-          Naast het bedrag dat u aan de deelnemer betaalt, betaalt u de
-          CFSB-kosten rechtstreeks aan CFSB — in één betaling.
-        </Typography>
-
+      <DialogContent sx={{ pt: 4 }}>
         {loading ? (
           <Box display="flex" justifyContent="center" py={3}>
             <CircularProgress size={28} />
           </Box>
         ) : obligations.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center" }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ textAlign: "center" }}
+          >
             Geen openstaande CFSB-kosten voor dit dossier.
           </Typography>
         ) : (
-          <>
-            <Paper
-              variant="outlined"
+          <Stack alignItems="center" spacing={1.5}>
+            <Box
               sx={{
-                width: "100%",
-                p: 2,
-                borderRadius: 2,
-                textAlign: "center",
-                bgcolor: "#FFF7ED",
-                borderColor: "#FBD9B4",
-                mb: 2,
+                bgcolor: "secondary.light",
+                borderRadius: "50%",
+                width: 80,
+                height: 80,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              <Typography variant="h4" fontWeight={700} sx={{ color: "#F97316" }}>
-                {formatCurrency(total)}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Totaal CFSB-kosten
-              </Typography>
-            </Paper>
+              <RequestQuoteOutlinedIcon
+                sx={{ fontSize: 36, color: "secondary.main" }}
+              />
+            </Box>
 
-            {obligations.length > 1 && (
-              <>
-                <Divider sx={{ mb: 1.5 }} />
-                <Stack spacing={1} sx={{ mb: 1 }}>
-                  {obligations.map((obligation) => (
-                    <Stack
-                      key={obligation.obligationId}
-                      direction="row"
-                      justifyContent="space-between"
-                    >
-                      <Typography variant="body2" color="text.secondary">
-                        {obligation.description}
-                      </Typography>
-                      <Typography variant="body2">
-                        {formatCurrency(obligation.balanceAmount)}
-                      </Typography>
-                    </Stack>
-                  ))}
-                </Stack>
-              </>
-            )}
-          </>
+            <Typography variant="body1" color="secondary.main">
+              Te betalen CFSB-kosten
+            </Typography>
+
+            <Typography variant="h4" fontWeight={700} sx={{ color: "#F97316" }}>
+              {formatCurrency(total)}
+            </Typography>
+
+            <Divider sx={{ width: "100%", my: 1 }} />
+
+            <Typography
+              variant="body2"
+              color="secondary.main"
+              sx={{ textAlign: "justify" }}
+            >
+              U betaalt de openstaande CFSB-kosten rechtstreeks aan CFSB. Deze
+              kosten staan los van het bedrag dat u aan de deelnemer
+              verschuldigd bent.
+            </Typography>
+          </Stack>
         )}
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>

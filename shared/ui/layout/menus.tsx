@@ -7,7 +7,6 @@ import {
   GavelOutlined,
   HandshakeOutlined,
   AssignmentOutlined,
-  CreditCardOutlined,
   MoveToInboxOutlined,
   GroupOutlined,
   HelpOutlineOutlined,
@@ -88,43 +87,17 @@ export const menuGroups: HeaderMenuGroup[] = [
     ],
   },
 
-  {
-    id: "verplichtingen",
-    label: "Mijn verplichtingen",
-    roles: [UserRole.DEBTOR],
-    items: [
-      {
-        label: "Mijn dossiers",
-        href: "/dashboard",
-        icon: <AssignmentOutlined fontSize="small" />,
-      },
-      {
-        label: "Betalen",
-        href: "/payments",
-        icon: <CreditCardOutlined fontSize="small" />,
-      },
-      {
-        label: "Betalingsregeling aanvragen",
-        href: "/agreements",
-        icon: <HandshakeOutlined fontSize="small" />,
-      },
-      {
-        label: "Collectieve opvolging",
-        href: "/collective-follow-up",
-        icon: <GroupOutlined fontSize="small" />,
-      },
-      {
-        label: "Mijn financiële verklaring",
-        href: "/financial-report",
-        icon: <DescriptionOutlined fontSize="small" />,
-      },
-      {
-        label: "Economische blokkade",
-        href: "/block-status",
-        icon: <ShieldOutlined fontSize="small" />,
-      },
-    ],
-  },
+  // De vroegere "verplichtingen"-dropdown (Betalen/Betalingsregeling
+  // aanvragen/Financiële verklaring/Economische blokkade) is opgeheven: al
+  // deze acties zitten nu in één scherm, "Mijn verplichtingen" (/dashboard —
+  // zie header.tsx, dat voor DEBTOR het vaste "Dashboard"-knop-label
+  // vervangt door "Mijn verplichtingen"). De routes /payments, /agreements,
+  // /financial-report en /block-status blijven wel bestaan — ze worden nog
+  // rechtstreeks geopend vanuit notificatie-/e-maillinks (zie
+  // modules/agreement/services/agreement.service.ts,
+  // modules/blockade/services/blockade.service.ts en
+  // modules/block-check/services/financial-declaration-invite-mail.service.tsx)
+  // en vanuit de "Financiële Verklaring aanvragen"-knop op het dashboard.
 
   {
     id: "advocaat",
@@ -173,33 +146,141 @@ export const menuGroups: HeaderMenuGroup[] = [
     label: "CFSB Admin",
     roles: [UserRole.PLATFORM_OWNER],
     items: [
-      { label: "Dashboard", href: "/admin", icon: <DashboardOutlined fontSize="small" /> },
-      { label: "Deelnemers", href: "/admin/tenants", icon: <BusinessOutlined fontSize="small" /> },
-      { label: "Personenregister", href: "/admin/persons", icon: <BadgeOutlined fontSize="small" /> },
-      { label: "Advocaten", href: "/admin/lawyers", icon: <BalanceOutlined fontSize="small" /> },
-      { label: "Deurwaarders", href: "/admin/bailiffs", icon: <GavelOutlined fontSize="small" /> },
-      { label: "Alle dossiers", href: "/admin/case-files", icon: <FolderOutlined fontSize="small" /> },
-      { label: "FAR-register", href: "/admin/far-register", icon: <DescriptionOutlined fontSize="small" /> },
-      { label: "BLC-register", href: "/admin/blc-register", icon: <ShieldOutlined fontSize="small" /> },
-      { label: "AOP-register", href: "/admin/aop-register", icon: <ReceiptOutlined fontSize="small" /> },
-      { label: "BLK-register", href: "/admin/blk-register", icon: <ShieldOutlined fontSize="small" /> },
-      { label: "COP-register", href: "/admin/cop-register", icon: <GroupOutlined fontSize="small" /> },
-      { label: "Dossieroverdrachten", href: "/admin/transfers-register", icon: <MoveToInboxOutlined fontSize="small" /> },
-      { label: "GOP-register", href: "/admin/gop-register", icon: <GavelOutlined fontSize="small" /> },
-      { label: "CFSB-facturen", href: "/invoices", icon: <ReceiptOutlined fontSize="small" /> },
-      { label: "Betalingen", href: "/admin/payments", icon: <PaymentsOutlined fontSize="small" /> },
-      { label: "Financiële verplichtingen", href: "/admin/obligations", icon: <AccountBalanceWalletOutlined fontSize="small" /> },
-      { label: "Tariefinstellingen", href: "/admin/settings/parameters", icon: <TuneOutlined fontSize="small" /> },
-      { label: "Plannen", href: "/admin/plans", icon: <AssignmentOutlined fontSize="small" /> },
-      { label: "Eilanden/landen", href: "/admin/jurisdictions", icon: <MapOutlined fontSize="small" /> },
-      { label: "Systeemparameters", href: "/admin/settings/parameters", icon: <TuneOutlined fontSize="small" /> },
-      { label: "Document-/briefinstellingen", href: "/admin/document-settings", icon: <ArticleOutlined fontSize="small" /> },
-      { label: "Notificatiebeheer", href: "/admin/settings/parameters", icon: <NotificationsOutlined fontSize="small" /> },
-      { label: "Gebruikers & rollen", href: "/admin/users", icon: <ManageAccountsOutlined fontSize="small" /> },
-      { label: "Auditlog", href: "/admin/audit-log", icon: <HistoryOutlined fontSize="small" /> },
-      { label: "Overtredingen/vergoedingen", href: "/admin/administrative-fees", icon: <ReportProblemOutlined fontSize="small" /> },
-      { label: "Werkgeverbevestigingen", href: "/admin/employer-confirmations", icon: <HandshakeOutlined fontSize="small" /> },
-      { label: "Systeem-/procescontrole", href: "/admin/system-control", icon: <MonitorHeartOutlined fontSize="small" /> },
+      {
+        label: "Dashboard",
+        href: "/admin",
+        icon: <DashboardOutlined fontSize="small" />,
+      },
+      {
+        label: "Deelnemers",
+        href: "/admin/tenants",
+        icon: <BusinessOutlined fontSize="small" />,
+      },
+      {
+        label: "Personenregister",
+        href: "/admin/persons",
+        icon: <BadgeOutlined fontSize="small" />,
+      },
+      {
+        label: "Advocaten",
+        href: "/admin/lawyers",
+        icon: <BalanceOutlined fontSize="small" />,
+      },
+      {
+        label: "Deurwaarders",
+        href: "/admin/bailiffs",
+        icon: <GavelOutlined fontSize="small" />,
+      },
+      {
+        label: "Alle dossiers",
+        href: "/admin/case-files",
+        icon: <FolderOutlined fontSize="small" />,
+      },
+      {
+        label: "FAR-register",
+        href: "/admin/far-register",
+        icon: <DescriptionOutlined fontSize="small" />,
+      },
+      {
+        label: "BLC-register",
+        href: "/admin/blc-register",
+        icon: <ShieldOutlined fontSize="small" />,
+      },
+      {
+        label: "AOP-register",
+        href: "/admin/aop-register",
+        icon: <ReceiptOutlined fontSize="small" />,
+      },
+      {
+        label: "BLK-register",
+        href: "/admin/blk-register",
+        icon: <ShieldOutlined fontSize="small" />,
+      },
+      {
+        label: "COP-register",
+        href: "/admin/cop-register",
+        icon: <GroupOutlined fontSize="small" />,
+      },
+      {
+        label: "Dossieroverdrachten",
+        href: "/admin/transfers-register",
+        icon: <MoveToInboxOutlined fontSize="small" />,
+      },
+      {
+        label: "GOP-register",
+        href: "/admin/gop-register",
+        icon: <GavelOutlined fontSize="small" />,
+      },
+      {
+        label: "CFSB-facturen",
+        href: "/invoices",
+        icon: <ReceiptOutlined fontSize="small" />,
+      },
+      {
+        label: "Betalingen",
+        href: "/admin/payments",
+        icon: <PaymentsOutlined fontSize="small" />,
+      },
+      {
+        label: "Financiële verplichtingen",
+        href: "/admin/obligations",
+        icon: <AccountBalanceWalletOutlined fontSize="small" />,
+      },
+      {
+        label: "Tariefinstellingen",
+        href: "/admin/settings/parameters",
+        icon: <TuneOutlined fontSize="small" />,
+      },
+      {
+        label: "Plannen",
+        href: "/admin/plans",
+        icon: <AssignmentOutlined fontSize="small" />,
+      },
+      {
+        label: "Eilanden/landen",
+        href: "/admin/jurisdictions",
+        icon: <MapOutlined fontSize="small" />,
+      },
+      {
+        label: "Systeemparameters",
+        href: "/admin/settings/parameters",
+        icon: <TuneOutlined fontSize="small" />,
+      },
+      {
+        label: "Document-/briefinstellingen",
+        href: "/admin/document-settings",
+        icon: <ArticleOutlined fontSize="small" />,
+      },
+      {
+        label: "Notificatiebeheer",
+        href: "/admin/settings/parameters",
+        icon: <NotificationsOutlined fontSize="small" />,
+      },
+      {
+        label: "Gebruikers & rollen",
+        href: "/admin/users",
+        icon: <ManageAccountsOutlined fontSize="small" />,
+      },
+      {
+        label: "Auditlog",
+        href: "/admin/audit-log",
+        icon: <HistoryOutlined fontSize="small" />,
+      },
+      {
+        label: "Overtredingen/vergoedingen",
+        href: "/admin/administrative-fees",
+        icon: <ReportProblemOutlined fontSize="small" />,
+      },
+      {
+        label: "Werkgeverbevestigingen",
+        href: "/admin/employer-confirmations",
+        icon: <HandshakeOutlined fontSize="small" />,
+      },
+      {
+        label: "Systeem-/procescontrole",
+        href: "/admin/system-control",
+        icon: <MonitorHeartOutlined fontSize="small" />,
+      },
     ],
   },
 

@@ -7,12 +7,14 @@ const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "cio.test:3000";
 const PROTOCOL = process.env.NODE_ENV === "production" ? "https" : "http";
 
 // Rutas a las que un usuario con únicamente el rol DEBTOR tiene acceso.
-// Debe reflejar shared/ui/layout/menus.tsx (grupo "verplichtingen").
+// /dashboard ("Mijn verplichtingen") es la única de estas visible en el menú
+// (ver shared/ui/layout/header.tsx); las demás ya no tienen entrada de menú
+// pero se mantienen alcanzables por deep-link (notificaciones, e-mails, y el
+// botón "Financiële Verklaring aanvragen" del dashboard).
 const DEBTOR_ALLOWED_PREFIXES = [
   "/dashboard",
   "/payments",
   "/agreements",
-  "/collective-follow-up",
   "/financial-report",
   "/block-status",
   "/settings",

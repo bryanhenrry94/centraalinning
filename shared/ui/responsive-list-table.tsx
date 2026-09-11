@@ -13,6 +13,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+import { SxProps, Theme } from "@mui/material/styles";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -46,6 +47,13 @@ interface ResponsiveListTableProps<T> {
   getRowHref?: (row: T) => string;
   onRowClick?: (row: T) => void;
   emptyMessage?: string;
+  // Override voor HEAD_SX — nodig wanneer de tabel al binnen een eigen
+  // secondary.main-koptekst zit (bv. de Betalingsoverzicht-dialoog), zodat de
+  // tabelkop niet dezelfde blauwe kleur herhaalt.
+  headerSx?: SxProps<Theme>;
+  // Override voor de TableContainer (bv. borderRadius: 0 wanneer de tabel
+  // direct onder een vierkante dialoogkop hangt).
+  containerSx?: SxProps<Theme>;
 }
 
 export function ResponsiveListTable<T>({
@@ -55,6 +63,8 @@ export function ResponsiveListTable<T>({
   getRowHref,
   onRowClick,
   emptyMessage = "Geen resultaten gevonden.",
+  headerSx,
+  containerSx,
 }: ResponsiveListTableProps<T>) {
   const router = useRouter();
 
@@ -121,13 +131,22 @@ export function ResponsiveListTable<T>({
       <TableContainer
         component={Paper}
         elevation={0}
-        sx={{ display: { xs: "none", sm: "block" }, border: "1px solid", borderColor: "divider" }}
+        sx={{
+          display: { xs: "none", sm: "block" },
+          border: "1px solid",
+          borderColor: "divider",
+          ...containerSx,
+        }}
       >
         <Table size="small" stickyHeader>
           <TableHead>
             <TableRow>
               {columns.map((col) => (
-                <TableCell key={col.key} align={col.align ?? "left"} sx={HEAD_SX}>
+                <TableCell
+                  key={col.key}
+                  align={col.align ?? "left"}
+                  sx={headerSx ? { ...HEAD_SX, ...headerSx } : HEAD_SX}
+                >
                   {col.label}
                 </TableCell>
               ))}

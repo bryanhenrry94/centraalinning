@@ -1,13 +1,22 @@
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Box, Button, Chip, Container, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Chip,
+  Container,
+  IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Stack,
+  Typography,
+} from "@mui/material";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import HistoryIcon from "@mui/icons-material/History";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 import { formatCurrency } from "@/shared/utils/formatters";
 import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
@@ -44,6 +53,19 @@ const PaymentsPage = () => {
   const [openModalAgreement, setOpenModalAgreement] = useState(false);
   const [openModalAgreementView, setOpenModalAgreementView] = useState(false);
   const [agreements, setAgreements] = useState<AgreementResponse[]>([]);
+  // Onthoudt de deelnemer-betaling die moet volgen zodra de CFSB-kosten voor
+  // hetzelfde dossier bevestigd zijn (zie handleBetalenClick/handleCfsbPaid).
+  const [pendingParticipantDebt, setPendingParticipantDebt] =
+    useState<DebtorSummary | null>(null);
+
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [selectedDebt, setSelectedDebt] = useState<DebtorSummary | null>(null);
+  const menuOpen = Boolean(anchorEl);
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedDebt(null);
+  };
 
   const fetchDebts = useCallback(async () => {
     if (!user?.id || !user?.tenant_id) return;
@@ -69,8 +91,27 @@ const PaymentsPage = () => {
     fetchDebts();
   }, [fetchDebts]);
 
-  const handlePay = (debt: DebtorSummary) => {
-    setTransferDebt(debt);
+  // Eén knop "Betalen" die de debiteur door beide betaalstromen leidt: als er
+  // nog CFSB-kosten openstaan, wordt eerst dát dialoogvenster getoond; pas
+  // zodra die betaling bevestigd is (handleCfsbPaid), verschijnt meteen het
+  // dialoogvenster om het bewijs van de betaling aan de deelnemer te uploaden.
+  const handleBetalenClick = (debt: DebtorSummary) => {
+    if (debt.debtor_to_cfsb_balance > 0) {
+      setCollectionFeeDebtId(debt.id);
+      setPendingParticipantDebt(debt);
+      return;
+    }
+    if (debt.debtor_to_participant_balance > 0) {
+      setTransferDebt(debt);
+    }
+  };
+
+  const handleCfsbPaid = async () => {
+    await fetchDebts();
+    if (pendingParticipantDebt && pendingParticipantDebt.debtor_to_participant_balance > 0) {
+      setTransferDebt(pendingParticipantDebt);
+    }
+    setPendingParticipantDebt(null);
   };
 
   const handleBetaalregelingClick = async (debt: DebtorSummary) => {
@@ -105,15 +146,28 @@ const PaymentsPage = () => {
   const outstandingDebts = debts.filter((d) => d.balance > 0);
 
   return (
-    <Container maxWidth="xl">
-      <Box sx={{ mt: { xs: 1.5, sm: 4 }, mb: 2 }}>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
-          Betalen
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Overzicht van openstaande bedragen en betalingen.
-        </Typography>
-      </Box>
+    <Container
+      maxWidth="xl"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+    >
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={3}
+        gap={6}
+        flexWrap="wrap"
+      >
+        <Box>
+          <Typography variant="h4" fontWeight={700}>
+            Betalen
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Overzicht van openstaande bedragen en betalingen.
+          </Typography>
+        </Box>
+      </Stack>
 
       {(() => {
         const columns: ListColumn<DebtorSummary>[] = [
@@ -131,85 +185,56 @@ const PaymentsPage = () => {
             ),
           },
           {
-            key: "outstanding",
-            label: "Openstaand",
+            key: "to_participant",
+            label: "Aan deelnemer",
+            align: "right",
             render: (debt) => (
-              <Stack spacing={1} alignItems="flex-end">
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Aan deelnemer
-                  </Typography>
-                  <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
-                    <Typography variant="body2" fontWeight={600}>
-                      {formatCurrency(debt.debtor_to_participant_balance)}
-                    </Typography>
-                    <Chip
-                      size="small"
-                      label={debt.debtor_to_participant_balance > 0 ? "Openstaand" : "Betaald"}
-                      color={debt.debtor_to_participant_balance > 0 ? "warning" : "success"}
-                    />
-                  </Stack>
-                </Box>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    CFSB-kosten
-                  </Typography>
-                  <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
-                    <Typography variant="body2" fontWeight={600}>
-                      {formatCurrency(debt.debtor_to_cfsb_balance)}
-                    </Typography>
-                    <Chip
-                      size="small"
-                      label={debt.debtor_to_cfsb_balance > 0 ? "Openstaand" : "Betaald"}
-                      color={debt.debtor_to_cfsb_balance > 0 ? "warning" : "success"}
-                    />
-                  </Stack>
-                </Box>
+              <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
+                <Typography variant="body2" fontWeight={600}>
+                  {formatCurrency(debt.debtor_to_participant_balance)}
+                </Typography>
+                <Chip
+                  size="small"
+                  label={debt.debtor_to_participant_balance > 0 ? "Openstaand" : "Betaald"}
+                  color={debt.debtor_to_participant_balance > 0 ? "warning" : "success"}
+                />
+              </Stack>
+            ),
+          },
+          {
+            key: "to_cfsb",
+            label: "CFSB-kosten",
+            align: "right",
+            render: (debt) => (
+              <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
+                <Typography variant="body2" fontWeight={600}>
+                  {formatCurrency(debt.debtor_to_cfsb_balance)}
+                </Typography>
+                <Chip
+                  size="small"
+                  label={debt.debtor_to_cfsb_balance > 0 ? "Openstaand" : "Betaald"}
+                  color={debt.debtor_to_cfsb_balance > 0 ? "warning" : "success"}
+                />
               </Stack>
             ),
           },
           {
             key: "actions",
-            label: "Actie",
+            label: "Acties",
+            align: "right",
             render: (debt) => (
-              <Stack spacing={1} alignItems="center">
-                <Tooltip title="Betalingsoverzicht">
-                  <IconButton size="small" onClick={() => setHistoryDebtId(debt.id)}>
-                    <HistoryIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-                <Button
-                  size="small"
-                  variant="contained"
-                  color="error"
-                  startIcon={<AttachMoneyIcon fontSize="small" />}
-                  onClick={() => handlePay(debt)}
-                  disabled={debt.debtor_to_participant_balance <= 0}
-                  fullWidth
-                >
-                  Aan deelnemer betalen
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<AccountBalanceIcon fontSize="small" />}
-                  onClick={() => setCollectionFeeDebtId(debt.id)}
-                  disabled={debt.debtor_to_cfsb_balance <= 0}
-                  fullWidth
-                >
-                  CFSB-kosten betalen
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  color="secondary"
-                  startIcon={<HandshakeIcon fontSize="small" />}
-                  onClick={() => handleBetaalregelingClick(debt)}
-                  fullWidth
-                >
-                  {hasOpenAgreement(debt.agreement_status) ? "Regeling" : "Regeling aanvragen"}
-                </Button>
-              </Stack>
+              <IconButton
+                aria-label="Acties"
+                aria-haspopup="true"
+                size="small"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setAnchorEl(event.currentTarget);
+                  setSelectedDebt(debt);
+                }}
+              >
+                <MoreVertIcon fontSize="small" />
+              </IconButton>
             ),
           },
         ];
@@ -223,6 +248,54 @@ const PaymentsPage = () => {
           />
         );
       })()}
+
+      <Menu anchorEl={anchorEl} open={menuOpen} onClose={handleMenuClose}>
+        <MenuItem
+          onClick={() => {
+            if (!selectedDebt) return;
+            setHistoryDebtId(selectedDebt.id);
+            handleMenuClose();
+          }}
+        >
+          <ListItemIcon>
+            <HistoryIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Betalingsoverzicht</ListItemText>
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (!selectedDebt) return;
+            handleBetalenClick(selectedDebt);
+            handleMenuClose();
+          }}
+          disabled={!selectedDebt || selectedDebt.balance <= 0}
+        >
+          <ListItemIcon>
+            <AttachMoneyIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>
+            {selectedDebt && selectedDebt.debtor_to_cfsb_balance > 0
+              ? "Betalen (CFSB-kosten eerst)"
+              : "Betalen"}
+          </ListItemText>
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (!selectedDebt) return;
+            handleBetaalregelingClick(selectedDebt);
+            handleMenuClose();
+          }}
+        >
+          <ListItemIcon>
+            <HandshakeIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>
+            {selectedDebt && hasOpenAgreement(selectedDebt.agreement_status)
+              ? "Regeling bekijken"
+              : "Regeling aanvragen"}
+          </ListItemText>
+        </MenuItem>
+      </Menu>
 
       <PaymentsDialog
         open={!!historyDebtId}
@@ -242,7 +315,7 @@ const PaymentsPage = () => {
         open={!!collectionFeeDebtId}
         onClose={() => setCollectionFeeDebtId(null)}
         debtClaimId={collectionFeeDebtId || ""}
-        onPaid={fetchDebts}
+        onPaid={handleCfsbPaid}
       />
 
       <AgreementFormDialog

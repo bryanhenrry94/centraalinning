@@ -236,7 +236,7 @@ export default function Header() {
                   fontWeight: 500,
                 }}
               >
-                Dashboard
+                {isPureDebtor ? "Mijn verplichtingen" : "Dashboard"}
               </Button>
 
               {canAccessWorkstation && (
@@ -326,7 +326,7 @@ export default function Header() {
             <IconButton onClick={(e) => setAvatarAnchorEl(e.currentTarget)}>
               <Avatar
                 src={session?.user?.image ?? undefined}
-                alt={session?.user?.name ?? ""}
+                alt={session?.user?.fullname ?? ""}
                 sx={{
                   width: 36,
                   height: 36,
@@ -348,7 +348,7 @@ export default function Header() {
                 whiteSpace: "nowrap",
               }}
             >
-              {session?.user?.name}
+              {session?.user?.fullname}
             </Typography>
 
             <Menu
@@ -357,7 +357,7 @@ export default function Header() {
               onClose={() => setAvatarAnchorEl(null)}
             >
               <Box sx={{ px: 2, py: 1 }}>
-                <Typography fontWeight={600}>{session?.user?.name}</Typography>
+                <Typography fontWeight={600}>{session?.user?.fullname}</Typography>
 
                 <Typography variant="body2" color="text.secondary">
                   {session?.user?.email}
@@ -464,7 +464,9 @@ export default function Header() {
             >
               <DashboardIcon sx={{ mr: 2 }} />
 
-              <ListItemText primary="Dashboard" />
+              <ListItemText
+                primary={isPureDebtor ? "Mijn verplichtingen" : "Dashboard"}
+              />
             </ListItemButton>
 
             {canAccessWorkstation && (
