@@ -34,6 +34,7 @@ import { getCaseTransferStatusInfo } from "@/modules/legal-process/utils/case-tr
 import { CaseTransferStatus } from "@/modules/legal-process/constants/case-transfer-status";
 import { GopTimeline } from "@/modules/legal-process/components/gop-timeline";
 import { CaseTransferDocuments } from "@/modules/legal-process/components/case-transfer-documents";
+import { CaseTransferAopLetters } from "@/modules/legal-process/components/case-transfer-aop-letters";
 import { RejectTransferDialog } from "@/modules/legal-process/components/reject-transfer-dialog";
 import { AcceptTransferDialog } from "@/modules/legal-process/components/accept-transfer-dialog";
 import { CancelTransferDialog } from "@/modules/legal-process/components/cancel-transfer-dialog";
@@ -279,6 +280,17 @@ const CaseTransferDetailPage: React.FC = () => {
                 </Grid>
               )}
             </Grid>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader title="Ontvangen brieven (AOP)" />
+          <Divider />
+          <CardContent>
+            <CaseTransferAopLetters
+              caseTransferId={caseTransfer.id}
+              debtClaimId={caseTransfer.debtClaimId}
+            />
           </CardContent>
         </Card>
 

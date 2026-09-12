@@ -99,28 +99,13 @@ export const menuGroups: HeaderMenuGroup[] = [
   // modules/block-check/services/financial-declaration-invite-mail.service.tsx)
   // en vanuit de "Financiële Verklaring aanvragen"-knop op het dashboard.
 
-  {
-    id: "advocaat",
-    label: "Advocaat",
-    roles: [UserRole.LAWYER],
-    items: [
-      {
-        label: "Nieuwe dossieroverdrachten",
-        href: "/legal-processes?tab=pending",
-        icon: <MoveToInboxOutlined fontSize="small" />,
-      },
-      {
-        label: "Mijn gerechtelijke dossiers",
-        href: "/legal-processes",
-        icon: <GavelOutlined fontSize="small" />,
-      },
-      {
-        label: "Documenten",
-        href: "/documents",
-        icon: <DescriptionOutlined fontSize="small" />,
-      },
-    ],
-  },
+  // De vroegere "advocaat"-dropdown (Nieuwe dossieroverdrachten/Mijn
+  // gerechtelijke dossiers/Documenten) is opgeheven — de advocaat heeft nu
+  // precies één menu-item: de vaste knop "Mijn dossiers" (zie header.tsx),
+  // die naar /dashboard leidt (DashboardLawyer, modules/dashboard/components
+  // /legacy/lawyer/dashboard.tsx). Ook "Ondersteuning" is voor dit rol
+  // bewust uitgesloten (zie isLawyerRole in header.tsx) — expliciet
+  // gevraagd: alleen "Mijn dossiers" in het menu, niets anders.
 
   {
     // Sin submenú desplegable: un solo botón fijo hacia /legal-processes —

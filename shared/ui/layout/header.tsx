@@ -102,6 +102,7 @@ export default function Header() {
     !userRoles.includes(UserRole.LAWYER);
 
   const isBailiffRole = userRoles.includes(UserRole.BAILIFF);
+  const isLawyerRole = userRoles.includes(UserRole.LAWYER);
 
   const availableGroups = menuGroups.filter((group) =>
     group.roles.some((role) => userRoles.includes(role)),
@@ -109,9 +110,15 @@ export default function Header() {
 
   // "dossiers" (Diensten) ya tiene su propio botón fijo hacia /workstation, y
   // "deurwaarder" (Mijn dossiers) el suyo hacia /legal-processes — acá sólo
-  // mostramos los demás grupos (p.ej. el del deudor) como dropdown.
+  // mostramos los demás grupos (p.ej. el del deudor) como dropdown. El
+  // advocaat no tiene ningún dropdown: su único punto de entrada es el botón
+  // fijo "Mijn dossiers" (ver más abajo), así que su grupo también queda
+  // afuera de este listado.
   const dropdownGroups = availableGroups.filter(
-    (group) => group.id !== "dossiers" && group.id !== "deurwaarder",
+    (group) =>
+      group.id !== "dossiers" &&
+      group.id !== "deurwaarder" &&
+      !(group.id === "ondersteuning" && isLawyerRole),
   );
 
   const handleSignOut = () => {
@@ -236,7 +243,11 @@ export default function Header() {
                   fontWeight: 500,
                 }}
               >
-                {isPureDebtor ? "Mijn verplichtingen" : "Dashboard"}
+                {isPureDebtor
+                  ? "Mijn verplichtingen"
+                  : isLawyerRole
+                    ? "Mijn dossiers"
+                    : "Dashboard"}
               </Button>
 
               {canAccessWorkstation && (
@@ -465,7 +476,13 @@ export default function Header() {
               <DashboardIcon sx={{ mr: 2 }} />
 
               <ListItemText
-                primary={isPureDebtor ? "Mijn verplichtingen" : "Dashboard"}
+                primary={
+                  isPureDebtor
+                    ? "Mijn verplichtingen"
+                    : isLawyerRole
+                      ? "Mijn dossiers"
+                      : "Dashboard"
+                }
               />
             </ListItemButton>
 
