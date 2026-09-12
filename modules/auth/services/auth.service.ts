@@ -67,13 +67,13 @@ export class AuthService {
     });
 
     if (!user || !user.password_hash) {
-      return { success: false, error: "Credenciales incorrectas" };
+      return { success: false, error: "Onjuiste inloggegevens" };
     }
 
     const valid = await bcrypt.compare(password, user.password_hash);
 
     if (!valid) {
-      return { success: false, error: "Credenciales incorrectas" };
+      return { success: false, error: "Onjuiste inloggegevens" };
     }
 
     if (user.memberships.length === 0) {

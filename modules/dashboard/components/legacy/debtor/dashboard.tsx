@@ -629,39 +629,22 @@ const DashboardDebtor = () => {
             {
               key: "actions",
               label: "Actie",
-              align: "right",
+              align: "center",
               render: (debt) => (
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                  justifyContent="flex-end"
-                >
-                  {getActionMenuItems(debt).length <= 1 && (
-                    <Chip
-                      icon={<TaskAltIcon fontSize="small" />}
-                      label="Voltooid"
-                      color="success"
-                      size="small"
-                      variant="outlined"
-                    />
-                  )}
-
-                  <Tooltip title="Acties">
-                    <IconButton
-                      size="small"
-                      aria-label="Acties"
-                      aria-haspopup="true"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setActionMenuAnchorEl(event.currentTarget);
-                        setActionMenuDebt(debt);
-                      }}
-                    >
-                      <MoreVertIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </Stack>
+                <Tooltip title="Acties">
+                  <IconButton
+                    size="small"
+                    aria-label="Acties"
+                    aria-haspopup="true"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setActionMenuAnchorEl(event.currentTarget);
+                      setActionMenuDebt(debt);
+                    }}
+                  >
+                    <MoreVertIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               ),
             },
           ];
