@@ -8,6 +8,7 @@ import { VerdictAttachment } from "@/modules/verdict/services/verdict-attachment
 import { protocol, rootDomain } from "@/lib/config";
 import { notifyError } from "@/shared/ui/notifications";
 import { VerdictService } from "@/modules/verdict/services/verdict.service";
+import { requireAssignedBailiffForVerdict } from "@/modules/verdict/services/verdict-guards";
 
 export const getAllVerdicts = async (
   tenant_id: string,
@@ -47,6 +48,7 @@ export const updateVerdict = async (
   data: VerdictUpdate,
 ): Promise<VerdictResponse | null> => {
   try {
+    await requireAssignedBailiffForVerdict(verdict_id);
     return await VerdictService.update(verdict_id, data);
   } catch (error) {
     console.error("Error updating Verdict:", error);
@@ -76,6 +78,7 @@ export const calculateInterestDetail = async (
 
 export const deleteVerdict = async (id: string): Promise<boolean> => {
   try {
+    await requireAssignedBailiffForVerdict(id);
     return await VerdictService.delete(id);
   } catch (error) {
     console.error("Error deleting Verdict:", error);

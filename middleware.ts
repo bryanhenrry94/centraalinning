@@ -31,6 +31,36 @@ const STAFF_ROLES: UserRole[] = [
   UserRole.BANK,
 ];
 
+// Staff del tenant propiamente dicho (los "deelnemersdiensten": FAR, BLC,
+// AOP, BLK). LAWYER/BAILIFF quedan afuera a propósito: son roles operativos
+// externos al tenant, solo con acceso a su propio circuito judicial (GOP) —
+// ver shared/ui/layout/menus.tsx, grupos "advocaat"/"deurwaarder".
+const TENANT_STAFF_ROLES: UserRole[] = [
+  UserRole.PLATFORM_OWNER,
+  UserRole.TENANT_ADMIN,
+  UserRole.AGENT,
+  UserRole.EMPLOYEE,
+  UserRole.BANK,
+];
+
+// Rutas a las que un usuario con únicamente el rol LAWYER (sin ningún rol de
+// TENANT_STAFF_ROLES) tiene acceso — debe reflejar el grupo "advocaat" en
+// shared/ui/layout/menus.tsx. Sin acceso a /verdicts: registrar un vonnis es
+// exclusivo del deurwaarder (ver requireAssignedBailiff en
+// modules/legal-process/services/legal-process-guards.ts).
+const LAWYER_ALLOWED_PREFIXES = [
+  "/dashboard",
+  "/legal-processes",
+  "/documents",
+  "/settings",
+  "/support",
+  "/logout",
+];
+
+// El deurwaarder comparte las mismas rutas que el advocaat, más /verdicts
+// (registrar el vonnis) — ver grupo "deurwaarder" en menus.tsx.
+const BAILIFF_ALLOWED_PREFIXES = [...LAWYER_ALLOWED_PREFIXES, "/verdicts"];
+
 export async function middleware(req: NextRequest) {
   const token = await getToken({
     req,
@@ -123,6 +153,33 @@ export async function middleware(req: NextRequest) {
 
   if (!isAuthDomain && isPureDebtor) {
     const isAllowed = DEBTOR_ALLOWED_PREFIXES.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    );
+
+    if (!isAllowed) {
+      return NextResponse.redirect(
+        new URL(`${PROTOCOL}://${subdomain}.${ROOT_DOMAIN}/dashboard`),
+      );
+    }
+  }
+
+  // ========================================
+  // RESTRINGIR ADVOCAAT/DEURWAARDER A SU EIGEN CIRCUITO (GOP)
+  // ========================================
+  // Sin esto, un LAWYER/BAILIFF podía navegar por URL directa a las
+  // deelnemersdiensten (FAR/BLC/AOP/BLK) aunque no estén en su menú — el
+  // spec de la Smart Route Advocaat exige "Geen toegang", no solo "oculto".
+
+  const isPureLawyerOrBailiff =
+    (roles.includes(UserRole.LAWYER) || roles.includes(UserRole.BAILIFF)) &&
+    !roles.some((role) => TENANT_STAFF_ROLES.includes(role));
+
+  if (!isAuthDomain && isPureLawyerOrBailiff) {
+    const allowedPrefixes = roles.includes(UserRole.BAILIFF)
+      ? BAILIFF_ALLOWED_PREFIXES
+      : LAWYER_ALLOWED_PREFIXES;
+
+    const isAllowed = allowedPrefixes.some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
     );
 
