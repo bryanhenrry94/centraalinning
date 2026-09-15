@@ -2,10 +2,10 @@ import { z } from "zod";
 import { SupportMessageType } from "@/modules/support/constants/support-message";
 
 export const CreateSupportMessageSchema = z.object({
-  type: z.nativeEnum(SupportMessageType),
+  type: z.nativeEnum(SupportMessageType, "Type bericht is verplicht"),
   subject: z.string().min(1, "Onderwerp is verplicht"),
   caseReference: z.string().nullable().optional(),
-  message: z.string().min(1, "Bericht is verplicht").max(2000, "Maximaal 2000 tekens"),
+  message: z.string().min(1, "Bericht is verplicht").max(1000, "Maximaal 1000 tekens"),
 });
 export type CreateSupportMessageInput = z.infer<typeof CreateSupportMessageSchema>;
 

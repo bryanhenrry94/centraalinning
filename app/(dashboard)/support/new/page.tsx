@@ -1,7 +1,5 @@
-"use client";
-import React from "react";
-import { SupportMessageForm } from "@/modules/support/components/support-message-form";
+import { redirect } from "next/navigation";
 
-const SupportNewPage: React.FC = () => <SupportMessageForm />;
+const SupportNewPage = () => redirect("/support");
 
 export default SupportNewPage;

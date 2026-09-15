@@ -21,7 +21,7 @@ export interface SupportMessageRow {
 interface SupportMessageListProps {
   rows: SupportMessageRow[];
   showTenant?: boolean;
-  basePath: string;
+  basePath?: string;
 }
 
 export const SupportMessageList: React.FC<SupportMessageListProps> = ({
@@ -51,7 +51,7 @@ export const SupportMessageList: React.FC<SupportMessageListProps> = ({
       columns={columns}
       rows={rows}
       getRowKey={(row) => row.id}
-      getRowHref={(row) => `${basePath}/${row.id}`}
+      getRowHref={basePath ? (row) => `${basePath}/${row.id}` : undefined}
       emptyMessage="Geen berichten gevonden."
     />
   );

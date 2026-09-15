@@ -19,7 +19,7 @@ export function getSupportMessageStatusInfo(status: string) {
 }
 
 const SUPPORT_MESSAGE_TYPE_LABELS: Record<string, string> = {
-  SUGGESTION: "Tip",
+  SUGGESTION: "Suggestie",
   COMPLAINT: "Klacht",
   TECHNICAL_ISSUE: "Technisch probleem",
 };

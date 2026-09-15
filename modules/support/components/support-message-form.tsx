@@ -1,27 +1,23 @@
 "use client";
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useForm, FormProvider, Controller, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  Alert,
   Box,
   Button,
-  Container,
   Divider,
   Grid,
+  IconButton,
+  MenuItem,
   Paper,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
-import LightbulbOutlinedIcon from "@mui/icons-material/LightbulbOutlined";
-import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
+import CloseIcon from "@mui/icons-material/Close";
 import SendIcon from "@mui/icons-material/Send";
-import { notifyError, notifySuccess } from "@/shared/ui/notifications";
+import { notifyError } from "@/shared/ui/notifications";
 import { submitSupportMessage } from "@/modules/support/actions/support.actions";
 import {
   CreateSupportMessageInput,
@@ -33,29 +29,20 @@ import { SupportMessageType } from "@/modules/support/constants/support-message"
 const defaultValues: CreateSupportMessageInput = {
   type: SupportMessageType.SUGGESTION,
   subject: "",
-  caseReference: "",
   message: "",
 };
 
-const TYPE_ICONS: Record<string, React.ReactNode> = {
-  SUGGESTION: <LightbulbOutlinedIcon fontSize="medium" />,
-  COMPLAINT: <ReportProblemOutlinedIcon fontSize="medium" />,
-  TECHNICAL_ISSUE: <SettingsOutlinedIcon fontSize="medium" />,
-};
-
-const MAX_MESSAGE_LENGTH = 2000;
+const MAX_MESSAGE_LENGTH = 1000;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
-// Geel is te licht om als tekst-/icoonkleur te gebruiken (slecht contrast) —
-// voor dat accent tekenen we het icoon/de titel bijna zwart, terwijl de
-// cirkelachtergrond wel het gele accent behoudt.
-const accentTextColor = (accent: string) =>
-  accent === "warning" ? "text.primary" : `${accent}.main`;
+interface SupportMessageFormProps {
+  onSubmitted?: () => void;
+}
 
-export const SupportMessageForm: React.FC = () => {
-  const router = useRouter();
+export const SupportMessageForm: React.FC<SupportMessageFormProps> = ({
+  onSubmitted,
+}) => {
   const [file, setFile] = useState<File | null>(null);
-  const [dragOver, setDragOver] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const methods = useForm<CreateSupportMessageInput>({
@@ -68,11 +55,10 @@ export const SupportMessageForm: React.FC = () => {
     handleSubmit,
     control,
     watch,
-    setValue,
+    reset,
     formState: { errors },
   } = methods;
 
-  const selectedType = watch("type");
   const messageLength = watch("message")?.length ?? 0;
 
   const handleFileSelected = (selected: File | null) => {
@@ -83,12 +69,18 @@ export const SupportMessageForm: React.FC = () => {
     setFile(selected);
   };
 
+  const handleCancel = () => {
+    reset(defaultValues);
+    setFile(null);
+  };
+
   const onSubmit = async (data: CreateSupportMessageInput) => {
     setLoading(true);
     try {
-      const created = await submitSupportMessage(data, file ?? undefined);
-      notifySuccess("Uw bericht is verzonden naar CFSB.");
-      router.push(`/support/${created.id}`);
+      await submitSupportMessage(data, file ?? undefined);
+      reset(defaultValues);
+      setFile(null);
+      onSubmitted?.();
     } catch (error) {
       notifyError(error instanceof Error ? error.message : "Verzenden mislukt");
     } finally {
@@ -97,82 +89,13 @@ export const SupportMessageForm: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 1.5, sm: 4 } }}>
-      <Typography variant="h5" gutterBottom fontWeight={700} sx={{ mb: 4 }}>
-        Feedback &amp; Ondersteuning
+    <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3 }, borderRadius: 3 }}>
+      <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2 }}>
+        Nieuw bericht
       </Typography>
 
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            {SUPPORT_MESSAGE_TYPE_OPTIONS.map((option) => {
-              const selected = selectedType === option.value;
-              return (
-                <Grid key={option.value} size={{ xs: 12, sm: 4 }}>
-                  <Paper
-                    onClick={() =>
-                      setValue("type", option.value as SupportMessageType)
-                    }
-                    variant="outlined"
-                    sx={{
-                      p: 2.5,
-                      textAlign: "center",
-                      cursor: "pointer",
-                      borderRadius: 2,
-                      borderWidth: selected ? 2 : 1,
-                      borderColor: selected
-                        ? `${option.accent}.main`
-                        : "divider",
-                      transition: "border-color .15s ease",
-                      "&:hover": { borderColor: `${option.accent}.main` },
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: 56,
-                        height: 56,
-                        borderRadius: "50%",
-                        bgcolor: (theme) =>
-                          alpha(
-                            theme.palette[option.accent].main,
-                            option.accent === "warning" ? 0.25 : 0.12,
-                          ),
-                        color: accentTextColor(option.accent),
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        mx: "auto",
-                        mb: 1.5,
-                      }}
-                    >
-                      {TYPE_ICONS[option.value]}
-                    </Box>
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={700}
-                      color={accentTextColor(option.accent)}
-                    >
-                      {option.label}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mt: 0.5 }}
-                    >
-                      {option.description}
-                    </Typography>
-                  </Paper>
-                </Grid>
-              );
-            })}
-          </Grid>
-
-          <Divider sx={{ mb: 3 }} />
-
-          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2 }}>
-            Bericht details
-          </Typography>
-
           <Stack spacing={2.5}>
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -183,6 +106,7 @@ export const SupportMessageForm: React.FC = () => {
                     <TextField
                       {...field}
                       label="Onderwerp"
+                      placeholder="Vul het onderwerp in"
                       required
                       fullWidth
                       size="small"
@@ -194,16 +118,25 @@ export const SupportMessageForm: React.FC = () => {
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Controller
-                  name="caseReference"
+                  name="type"
                   control={control}
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      value={field.value ?? ""}
-                      label="Dossier (optioneel)"
+                      select
+                      label="Categorie"
+                      required
                       fullWidth
                       size="small"
-                    />
+                      error={!!errors.type}
+                      helperText={errors.type?.message}
+                    >
+                      {SUPPORT_MESSAGE_TYPE_OPTIONS.map((option) => (
+                        <MenuItem key={option.value} value={option.value}>
+                          {option.label}
+                        </MenuItem>
+                      ))}
+                    </TextField>
                   )}
                 />
               </Grid>
@@ -217,6 +150,7 @@ export const SupportMessageForm: React.FC = () => {
                   <TextField
                     {...field}
                     label="Uw bericht"
+                    placeholder="Typ hier uw bericht..."
                     required
                     fullWidth
                     multiline
@@ -236,70 +170,56 @@ export const SupportMessageForm: React.FC = () => {
               </Typography>
             </Box>
 
-            <Box>
-              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-                Bijlage toevoegen (optioneel)
-              </Typography>
-              <Box
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              <Button
                 component="label"
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragOver(true);
-                }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setDragOver(false);
-                  handleFileSelected(e.dataTransfer.files?.[0] ?? null);
-                }}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                  p: 3,
-                  border: "1px dashed",
-                  borderColor: dragOver ? "primary.main" : "divider",
-                  bgcolor: dragOver ? "action.hover" : "transparent",
-                  borderRadius: 2,
-                  cursor: "pointer",
-                  transition: "all .15s ease",
-                }}
+                variant="outlined"
+                size="small"
+                startIcon={<AttachFileIcon />}
               >
-                <CloudUploadOutlinedIcon color="action" fontSize="large" />
-                <Box>
-                  <Typography variant="body2" fontWeight={600}>
-                    {file
-                      ? file.name
-                      : "Sleep een bestand hierheen of klik om te bladeren"}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Max. 1 bestand, maximaal 10 MB.
-                  </Typography>
-                </Box>
+                Bijlage toevoegen
                 <input
                   type="file"
                   hidden
-                  onChange={(e) =>
-                    handleFileSelected(e.target.files?.[0] ?? null)
-                  }
+                  onChange={(e) => handleFileSelected(e.target.files?.[0] ?? null)}
                 />
-              </Box>
+              </Button>
+              {file && (
+                <>
+                  <Typography variant="body2" color="text.secondary" noWrap>
+                    {file.name}
+                  </Typography>
+                  <IconButton size="small" onClick={() => setFile(null)}>
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </>
+              )}
             </Box>
 
-            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+            <Divider />
+
+            <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1.5 }}>
+              <Button
+                type="button"
+                variant="outlined"
+                onClick={handleCancel}
+                disabled={loading}
+              >
+                Annuleren
+              </Button>
               <Button
                 type="submit"
                 variant="contained"
                 startIcon={<SendIcon />}
                 loading={loading}
               >
-                Verzenden
+                Versturen
               </Button>
             </Box>
           </Stack>
         </form>
       </FormProvider>
-    </Container>
+    </Paper>
   );
 };
 
