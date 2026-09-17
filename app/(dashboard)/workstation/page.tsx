@@ -78,7 +78,7 @@ export default function WorkstationPage() {
     {
       id: 4,
       title: "Blokkade (BLK)",
-      description: "Start per direct een economische blokkade.",
+      description: "Registreer een economische blokkade",
       bgColor: "#FDECEC",
       buttonColor: "#D32F2F",
       buttonText: "Start BLK",

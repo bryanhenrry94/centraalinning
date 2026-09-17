@@ -102,7 +102,7 @@ export default function RegistroPage() {
                 color="text.secondary"
                 sx={{ mb: 2, mt: -1 }}
               >
-                Log in op uw account om toegang te krijgen tot uw CFSB.
+                Log in op uw account om toegang te krijgen tot CFSB.
               </Typography>
 
               {/* FORM */}
@@ -124,6 +124,7 @@ export default function RegistroPage() {
                   p: 1,
                   display: "flex",
                   alignItems: "center",
+                  justifyContent: "center",
                   gap: 1,
                   border: "1px solid #e5e7eb",
                   borderRadius: 2,
@@ -150,14 +151,14 @@ export default function RegistroPage() {
                   />
                 </Box>
 
-                <Box sx={{ minWidth: 0 }}>
+                <Box sx={{ minWidth: 0, textAlign: "center" }}>
                   <Typography
                     variant="body2"
                     sx={{
                       fontWeight: 600,
                       color: "gray",
                       fontSize: 13,
-                      lineHeight: 1.2,
+                      // lineHeight: 1.2,
                       mb: 0.2,
                     }}
                   >
