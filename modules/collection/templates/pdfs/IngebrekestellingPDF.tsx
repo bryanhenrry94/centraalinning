@@ -6,9 +6,7 @@ import {
   View,
   StyleSheet,
   Image,
-  Link,
 } from "@react-pdf/renderer";
-import { formatAmount } from "@/shared/utils/formatters";
 
 const styles = StyleSheet.create({
   page: {
@@ -84,10 +82,6 @@ const styles = StyleSheet.create({
     textAlign: "justify",
   },
 
-  bold: {
-    fontWeight: "bold",
-  },
-
   greeting: {
     marginBottom: 22,
   },
@@ -144,11 +138,6 @@ const styles = StyleSheet.create({
     color: "#4B5563",
     lineHeight: 1.3,
   },
-
-  link: {
-    color: "#1D4ED8",
-    textDecoration: "underline",
-  },
 });
 
 export interface IngebrekestellingProps {
@@ -174,7 +163,6 @@ const IngebrekestellingPDF: React.FC<IngebrekestellingProps> = ({
   tenantName,
   aanmaningDate,
   sommatieDate,
-  totalAmount,
 }) => {
   return (
     <Document>
@@ -213,20 +201,10 @@ const IngebrekestellingPDF: React.FC<IngebrekestellingProps> = ({
           <Text style={styles.paragraph}>Geachte heer/mevrouw,</Text>
 
           <Text style={styles.paragraph}>
-            Hierbij vragen wij opnieuw uw aandacht voor uw openstaande
-            betalingsverplichting.
-          </Text>
-
-          <Text style={styles.paragraph}>
             Op {aanmaningDate} hebben wij u aangemaand en op {sommatieDate}{" "}
-            gesommeerd om uw openstaande betalingsverplichting te voldoen. Tot
-            op heden hebben wij geen volledige betaling ontvangen en is geen
-            betalingsregeling tot stand gekomen.
-          </Text>
-
-          <Text style={styles.paragraph}>
-            Het totale openstaande bedrag bedraagt USD{" "}
-            <Text style={styles.bold}>{formatAmount(totalAmount)}</Text>.
+            gesommeerd om uw openstaande verplichting te voldoen. Tot op
+            heden heeft geen volledige betaling plaatsgevonden en is geen
+            betalingsregeling getroffen.
           </Text>
 
           <Text style={styles.paragraph}>
@@ -234,12 +212,12 @@ const IngebrekestellingPDF: React.FC<IngebrekestellingProps> = ({
           </Text>
 
           <Text style={styles.paragraph}>
-            Als gevolg van het uitblijven van betaling of een
-            betalingsregeling wordt een economische blokkade op uw naam
-            geregistreerd binnen de CFSB-samenwerking.
+            Om volledige toegang tot uw CFSB-account te krijgen, dient u in
+            te loggen op uw account en eerst de openstaande CFSB-kosten
+            volledig te betalen.
           </Text>
 
-          <Text style={styles.paragraph}>Hoogachtend,</Text>
+          <Text style={styles.paragraph}>Met vriendelijke groet,</Text>
 
           {/* SIGNATURE */}
           <View style={styles.signatureWrapper}>
@@ -250,7 +228,7 @@ const IngebrekestellingPDF: React.FC<IngebrekestellingProps> = ({
             </View>
 
             <Text style={styles.signatureRole}>
-              Schuldeiser / CFSB deelnemer
+              Schuldeiser / CFSB-deelnemer
             </Text>
           </View>
         </View>

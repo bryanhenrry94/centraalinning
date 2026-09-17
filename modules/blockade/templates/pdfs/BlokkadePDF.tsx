@@ -6,7 +6,6 @@ import {
   View,
   StyleSheet,
   Image,
-  Link,
 } from "@react-pdf/renderer";
 
 export interface BlokkadePDFProps {
@@ -95,13 +94,6 @@ const styles = StyleSheet.create({
   },
 
   strongText: {
-    fontWeight: "bold",
-  },
-
-  attention: {
-    marginTop: 10,
-    marginBottom: 6,
-    fontSize: 11,
     fontWeight: "bold",
   },
 
@@ -204,11 +196,6 @@ const styles = StyleSheet.create({
     color: "#4B5563",
     lineHeight: 1.3,
   },
-
-  link: {
-    color: "#1D4ED8",
-    textDecoration: "underline",
-  },
 });
 
 const BlokkadePDF: React.FC<BlokkadePDFProps> = ({
@@ -257,41 +244,25 @@ const BlokkadePDF: React.FC<BlokkadePDFProps> = ({
           <Text style={styles.paragraph}>Geachte heer/mevrouw,</Text>
 
           <Text style={styles.paragraph}>
-            Hierbij informeren wij u dat op uw naam een economische blokkade
-            is geregistreerd binnen de CFSB-samenwerking.
+            Er is een economische blokkade op uw naam geregistreerd binnen de
+            CFSB-samenwerking. Deze blokkade is het gevolg van het niet
+            nakomen van uw financiële verplichting.
           </Text>
 
           <Text style={styles.paragraph}>
-            Deze blokkade is het gevolg van het niet nakomen van de
-            betalingsverplichting in bovenstaand dossier.
+            U kunt deze blokkade laten opheffen door:
           </Text>
 
-          <Text style={styles.attention}>
-            Opheffing van de economische blokkade
+          <Text style={styles.listItem}>
+            het openstaande bedrag volledig te betalen; of
           </Text>
 
-          <Text style={styles.paragraph}>
-            Bij volledige betaling van de betalingsverplichting wordt de
-            economische blokkade opgeheven.
-          </Text>
-
-          <Text style={styles.paragraph}>
-            Indien een betalingsregeling wordt overeengekomen, wordt de
-            economische blokkade tijdelijk opgeheven gedurende de looptijd van
-            de regeling, overeenkomstig de geldende CFSB-voorwaarden.
-          </Text>
-
-          <Text style={[styles.paragraph, { marginTop: 10 }]}>
-            Voor het betalen of aanvragen van een betalingsregeling kunt u
-            gebruikmaken van de aan u verstrekte instructies of inloggen via{" "}
-            <Link src="https://www.cfsbgroup.com" style={styles.link}>
-              de CFSB-omgeving
-            </Link>
-            .
+          <Text style={[styles.listItem, { marginBottom: 10 }]}>
+            een betalingsregeling te treffen en deze correct na te komen.
           </Text>
 
           <Text style={[styles.paragraph, { marginTop: 20 }]}>
-            Hoogachtend,
+            Met vriendelijke groet,
           </Text>
 
           {/* SIGNATURE */}
