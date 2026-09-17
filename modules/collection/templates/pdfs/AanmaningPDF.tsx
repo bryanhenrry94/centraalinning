@@ -176,27 +176,20 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
         {/* Table */}
         <View style={styles.table}>
           <View style={styles.tableRow}>
-            <Text style={styles.tableCell}>Digitale dossierkosten</Text>
-            <Text style={styles.tableCellRight}>
-              ${formatAmount(digitalFileCosts)}
-            </Text>
-          </View>
-          <View style={styles.tableRow}>
             <Text style={styles.tableCell}>Hoofdsom</Text>
             <Text style={styles.tableCellRight}>
               ${formatAmount(amount_original)}
             </Text>
           </View>
           <View style={styles.tableRow}>
-            <Text style={styles.tableCell}>Incassokosten 15% / min. $40</Text>
+            <Text style={styles.tableCell}>CFSB – AOP-kosten</Text>
             <Text style={styles.tableCellRight}>
-              ${formatAmount(extraCosts)}
-            </Text>
-          </View>
-          <View style={styles.tableRow}>
-            <Text style={styles.tableCell}>ABB 6%</Text>
-            <Text style={styles.tableCellRight}>
-              ${formatAmount(calculatedABB)}
+              $
+              {formatAmount(
+                Number(digitalFileCosts) +
+                  Number(extraCosts) +
+                  Number(calculatedABB)
+              )}
             </Text>
           </View>
           <View style={[styles.tableRow, styles.totalRow]}>

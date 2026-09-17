@@ -1,9 +1,15 @@
-import { SupportMessageStatus, SupportMessageType } from "@/modules/support/constants/support-message";
+import {
+  SupportMessageStatus,
+  SupportMessageType,
+} from "@/modules/support/constants/support-message";
 
 type StatusColor = "default" | "info" | "warning" | "success" | "error";
 
-const SUPPORT_MESSAGE_STATUS_CONFIG: Record<string, { label: string; color: StatusColor }> = {
-  RECEIVED: { label: "Ontvangen", color: "info" },
+const SUPPORT_MESSAGE_STATUS_CONFIG: Record<
+  string,
+  { label: string; color: StatusColor }
+> = {
+  RECEIVED: { label: "Verzonden", color: "info" },
   IN_PROGRESS: { label: "In behandeling", color: "warning" },
   ANSWERED: { label: "Beantwoord", color: "success" },
   CLOSED: { label: "Gesloten", color: "default" },
@@ -53,13 +59,17 @@ const SUPPORT_MESSAGE_TYPE_META: Record<
   },
 };
 
-export const SUPPORT_MESSAGE_TYPE_OPTIONS = Object.values(SupportMessageType).map((type) => ({
+export const SUPPORT_MESSAGE_TYPE_OPTIONS = Object.values(
+  SupportMessageType,
+).map((type) => ({
   value: type,
   label: getSupportMessageTypeLabel(type),
   ...SUPPORT_MESSAGE_TYPE_META[type],
 }));
 
-export const SUPPORT_MESSAGE_STATUS_OPTIONS = Object.values(SupportMessageStatus).map((status) => ({
+export const SUPPORT_MESSAGE_STATUS_OPTIONS = Object.values(
+  SupportMessageStatus,
+).map((status) => ({
   value: status,
   ...getSupportMessageStatusInfo(status),
 }));

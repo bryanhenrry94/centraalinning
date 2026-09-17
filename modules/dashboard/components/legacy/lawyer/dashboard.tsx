@@ -47,14 +47,14 @@ const QUICK_ACTIONS = [
     icon: <MoveToInboxOutlinedIcon fontSize="small" />,
   },
   {
-    label: "Mijn gerechtelijke dossiers",
-    description: "Overzicht van al uw toegewezen dossiers",
+    label: "Mijn dossiers",
+    description: "Overzicht van al uw overgedragen dossiers",
     href: "/legal-processes",
     icon: <GavelOutlinedIcon fontSize="small" />,
   },
   {
     label: "Documenten",
-    description: "Processtukken en bijlagen per dossier",
+    description: "Bijlagen",
     href: "/documents",
     icon: <DescriptionOutlinedIcon fontSize="small" />,
   },
@@ -150,37 +150,14 @@ export const DashboardLawyer = () => {
               sx={{ mb: 1.5 }}
             >
               <Typography variant="subtitle1" fontWeight={700}>
-                Mijn dossiers
+                Nieuwe dossieroverdrachten
               </Typography>
-              <Button
-                component={Link}
-                href="/legal-processes?tab=pending"
-                size="small"
-              >
-                Bekijk alle
-              </Button>
             </Stack>
             <LatestTransfersTable
               items={pendingItems.slice(0, LATEST_TRANSFERS_LIMIT)}
               onChanged={load}
             />
           </Paper>
-
-          <Alert
-            severity="info"
-            icon={<InfoOutlinedIcon />}
-            sx={{ mt: 2, borderRadius: 2 }}
-          >
-            <Typography variant="subtitle2" fontWeight={700}>
-              Belangrijk
-            </Typography>
-            <Typography variant="body2">
-              Nadat een vonnis is geregistreerd door de deurwaarder en bevestigd
-              in CFSB, wordt automatisch een economische blokkade actief. De
-              status en opvolging van het dossier kunt u volgen via &quot;Mijn
-              gerechtelijke dossiers&quot;.
-            </Typography>
-          </Alert>
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>

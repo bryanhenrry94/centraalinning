@@ -287,12 +287,14 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
                   <Typography>{formatCurrency(subtotal)}</Typography>
                 </Box>
                 <Box display="flex" justifyContent="space-between">
-                  <Typography>AOP-Kosten:</Typography>
+                  <Typography>CFSB-Kosten:</Typography>
                   <Typography>{`-${formatCurrency(amountService)}`}</Typography>
                 </Box>
                 <Box display="flex" justifyContent="space-between">
                   <Typography variant="h6">Te ontvangen:</Typography>
-                  <Typography variant="h6">{formatCurrency(totalFinal)}</Typography>
+                  <Typography variant="h6">
+                    {formatCurrency(totalFinal)}
+                  </Typography>
                 </Box>
               </CardContent>
             </Card>
