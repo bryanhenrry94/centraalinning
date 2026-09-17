@@ -163,6 +163,7 @@ export class ParameterService {
         "blockade_registration_pricing",
         jurisdiction.blockadeRegistrationPricing,
       ),
+      far_registration_fee: num("far_registration_fee", jurisdiction.farRegistrationFee),
       bank_account: jurisdiction.bankAccount || globalParameter?.bank_account || "",
       bank_name: jurisdiction.bankName || globalParameter?.bank_name || "",
     };

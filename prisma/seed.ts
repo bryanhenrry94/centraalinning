@@ -65,6 +65,7 @@ async function seedParameter() {
       report_financial_pricing: 35,
       blok_check_pricing: 35,
       blockade_registration_pricing: 35,
+      far_registration_fee: 10,
 
       // Banco receptor
       bank_name: "MCB (Maduro & Curiel's Bank)",
@@ -113,6 +114,7 @@ const JURISDICTIONS = [
     naturalPaymentAgreementFee: 25,
     blokCheckPricing: 35,
     blockadeRegistrationPricing: 35,
+    farRegistrationFee: 10,
     digitalFileCosts: 10,
     extraAdministrativeCosts: 0,
     reportFinancialPricing: 35,
@@ -151,6 +153,7 @@ const JURISDICTIONS = [
     naturalPaymentAgreementFee: 25,
     blokCheckPricing: 35,
     blockadeRegistrationPricing: 35,
+    farRegistrationFee: 10,
     digitalFileCosts: 10,
     extraAdministrativeCosts: 0,
     reportFinancialPricing: 35,
@@ -188,6 +191,7 @@ const JURISDICTIONS = [
     naturalPaymentAgreementFee: 25,
     blokCheckPricing: 35,
     blockadeRegistrationPricing: 35,
+    farRegistrationFee: 10,
     digitalFileCosts: 10,
     extraAdministrativeCosts: 0,
     reportFinancialPricing: 35,
@@ -309,6 +313,12 @@ async function seedJurisdictionSettings() {
         name: "Blokkade (BLK) registratieprijs",
         categoryId: "cat-rates",
         value: String(jurisdiction.blockadeRegistrationPricing),
+      },
+      {
+        key: "far_registration_fee",
+        name: "FAR-registratiekosten",
+        categoryId: "cat-rates",
+        value: String(jurisdiction.farRegistrationFee),
       },
       {
         key: "digital_file_costs",

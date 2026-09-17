@@ -70,6 +70,7 @@ export const FarRegistrationWizard: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [documents, setDocuments] = useState<File[]>([]);
   const [abbRate, setAbbRate] = useState(0);
+  const [registrationFee, setRegistrationFee] = useState(FAR_REGISTRATION_FEE);
   const [result, setResult] = useState<{
     financialAgreementId: string;
     farNumber: string;
@@ -85,17 +86,23 @@ export const FarRegistrationWizard: React.FC = () => {
 
   useEffect(() => {
     getParameterForTenantAction()
-      .then((parameter) => setAbbRate(parameter?.abb_rate ?? 0))
-      .catch(() => setAbbRate(0));
+      .then((parameter) => {
+        setAbbRate(parameter?.abb_rate ?? 0);
+        setRegistrationFee(parameter?.far_registration_fee ?? FAR_REGISTRATION_FEE);
+      })
+      .catch(() => {
+        setAbbRate(0);
+        setRegistrationFee(FAR_REGISTRATION_FEE);
+      });
   }, []);
 
   const abbAmount = useMemo(
-    () => Number(((FAR_REGISTRATION_FEE * abbRate) / 100).toFixed(2)),
-    [abbRate],
+    () => Number(((registrationFee * abbRate) / 100).toFixed(2)),
+    [abbRate, registrationFee],
   );
   const totalAmount = useMemo(
-    () => Number((FAR_REGISTRATION_FEE + abbAmount).toFixed(2)),
-    [abbAmount],
+    () => Number((registrationFee + abbAmount).toFixed(2)),
+    [abbAmount, registrationFee],
   );
 
   const values = watch();
@@ -336,7 +343,7 @@ export const FarRegistrationWizard: React.FC = () => {
                   Bedrag (excl. ABB)
                 </Typography>
                 <Typography variant="body2" fontWeight={600}>
-                  {formatCurrency(FAR_REGISTRATION_FEE)}
+                  {formatCurrency(registrationFee)}
                 </Typography>
               </Stack>
               <Stack direction="row" justifyContent="space-between">

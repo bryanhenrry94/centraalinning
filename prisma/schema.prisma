@@ -1384,6 +1384,7 @@ model Jurisdiction {
   naturalPaymentAgreementFee Float  @default(0)
   blokCheckPricing           Float  @default(35)
   blockadeRegistrationPricing Float @default(35)
+  farRegistrationFee         Float  @default(10)
   digitalFileCosts           Float  @default(0)
   extraAdministrativeCosts   Float  @default(0)
   reportFinancialPricing     Float  @default(0)
@@ -1495,6 +1496,7 @@ model Parameter {
   report_financial_pricing   Float @default(0)
   blok_check_pricing         Float @default(35)
   blockade_registration_pricing Float @default(35)
+  far_registration_fee       Float @default(10)
 
   //                             =========================================
   //                             SYSTEM

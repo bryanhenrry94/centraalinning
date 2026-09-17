@@ -29,6 +29,7 @@ export const ParameterSchema = z.object({
   report_financial_pricing: z.number().min(0),
   blok_check_pricing: z.number().min(0),
   blockade_registration_pricing: z.number().min(0),
+  far_registration_fee: z.number().min(0),
   bank_account: z.string(),
   bank_name: z.string(),
 });

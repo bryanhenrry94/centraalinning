@@ -13,6 +13,11 @@ import { DebtorService } from "@/modules/collection/services/debtor.service";
 import { StorageService } from "@/infrastructure/storage/storage.service";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 import { CollectionService } from "@/modules/collection/services/collection.service";
+import {
+  sendFarRegisteredMailToDebtor,
+  sendFarRegisteredMailToTenant,
+} from "@/modules/financial-agreement/services/financial-agreement-mail.service";
+import { formatDate } from "@/shared/utils/formatters";
 
 const financialAgreementInclude = {
   debtor: { include: { person: true } },
@@ -103,13 +108,16 @@ export class FinancialAgreementService {
       if (!contract) throw new Error("Overeenkomst niet gevonden.");
     }
 
-    // Mismo patrón que block-check.actions.ts: FAR_REGISTRATION_FEE es el
-    // precio neto excl. ABB — el wizard muestra "Totaal te betalen" con el
-    // ABB de la isla/tenant encima, así que lo que se cobra vía Sentoo acá
-    // tiene que ser exactamente ese mismo total, no el neto.
+    // Mismo patrón que block-check.actions.ts: el precio de registro FAR es
+    // el neto excl. ABB — el wizard muestra "Totaal te betalen" con el ABB
+    // de la isla/tenant encima, así que lo que se cobra vía Sentoo acá tiene
+    // que ser exactamente ese mismo total, no el neto. El precio viene de
+    // Parameter/Jurisdiction (configurable por el Superadministrador en
+    // Instellingen) — FAR_REGISTRATION_FEE solo sirve de fallback.
     const parameter = await ParameterService.getParameterForTenant(tenantId);
     const abbRate = parameter?.abb_rate ?? 0;
-    const feeAmount = Number((FAR_REGISTRATION_FEE * (1 + abbRate / 100)).toFixed(2));
+    const registrationFee = parameter?.far_registration_fee ?? FAR_REGISTRATION_FEE;
+    const feeAmount = Number((registrationFee * (1 + abbRate / 100)).toFixed(2));
 
     const paymentResult = await PaymentService.create(tenantId, {
       amount: feeAmount,
@@ -278,7 +286,7 @@ export class FinancialAgreementService {
   static processRegistrationPaymentConfirmed = async (paymentId: string) => {
     const financialAgreement = await prisma.financialAgreement.findUnique({
       where: { registrationFeePaymentId: paymentId },
-      include: { debtor: { include: { person: true } } },
+      include: { debtor: { include: { person: true } }, tenant: true },
     });
     if (!financialAgreement || financialAgreement.status !== "PENDING_PAYMENT") return;
 
@@ -297,6 +305,43 @@ export class FinancialAgreementService {
       entity_type: "FinancialAgreement",
       entity_id: updated.id,
     });
+
+    // Confirmación por correo (pedido sponsor): al deudor/wederpartij ligado
+    // al acuerdo y al tenant que registró y pagó la tarifa — cada uno recibe
+    // el número de registro y la fecha. Nunca debe tumbar el flujo de
+    // confirmación de pago si el envío falla (mismo criterio que
+    // uploadDocument en createWithDebtor).
+    const registeredAt = formatDate(updated.registeredAt!.toISOString());
+    const debtorFullname =
+      `${financialAgreement.debtor.person?.first_name ?? ""} ${
+        financialAgreement.debtor.person?.last_name ?? ""
+      }`.trim() ||
+      financialAgreement.debtor.person?.business_name ||
+      "Klant";
+
+    try {
+      if (financialAgreement.debtor.email) {
+        await sendFarRegisteredMailToDebtor({
+          to: financialAgreement.debtor.email,
+          debtorFullname,
+          farNumber: updated.farNumber,
+          registeredAt,
+          tenantName: financialAgreement.tenant.name || "CFSB",
+        });
+      }
+
+      if (financialAgreement.tenant.contact_email) {
+        await sendFarRegisteredMailToTenant({
+          to: financialAgreement.tenant.contact_email,
+          tenantContactName: financialAgreement.tenant.name || "",
+          farNumber: updated.farNumber,
+          registeredAt,
+          tenantName: financialAgreement.tenant.name || "CFSB",
+        });
+      }
+    } catch (error) {
+      console.error(`Error sending FAR registration confirmation emails for ${updated.id}:`, error);
+    }
 
     return updated;
   };
