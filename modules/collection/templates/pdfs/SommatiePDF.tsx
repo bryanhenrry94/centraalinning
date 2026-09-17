@@ -6,7 +6,6 @@ import {
   View,
   StyleSheet,
   Image,
-  Link,
 } from "@react-pdf/renderer";
 import { formatAmount } from "@/shared/utils/formatters";
 
@@ -120,71 +119,11 @@ const styles = StyleSheet.create({
     lineHeight: 1,
   },
 
-  tableSymbolWithUnderline: {
-    width: "12%",
-    fontSize: 10,
-    lineHeight: 1,
-    borderBottomWidth: 1,
-    borderBottomColor: "#111827",
-  },
-
   tableValue: {
     width: "16%",
     fontSize: 10,
     textAlign: "right",
     lineHeight: 1,
-  },
-
-  tableValueWithUnderline: {
-    width: "16%",
-    fontSize: 10,
-    textAlign: "right",
-    lineHeight: 1,
-    borderBottomWidth: 1,
-    borderBottomColor: "#111827",
-  },
-
-  totalLabel: {
-    width: "72%",
-    fontSize: 10,
-    fontWeight: "bold",
-    marginTop: 5,
-    paddingTop: 5,
-    lineHeight: 1,
-  },
-
-  totalSymbol: {
-    width: "12%",
-    fontWeight: "bold",
-    fontSize: 10,
-    marginTop: 5,
-    paddingTop: 5,
-    lineHeight: 1,
-    borderTopWidth: 1,
-    borderTopColor: "#111827",
-  },
-
-  totalValue: {
-    width: "16%",
-    fontSize: 10,
-    fontWeight: "bold",
-    textAlign: "right",
-    marginTop: 5,
-    paddingTop: 5,
-    lineHeight: 1,
-    borderTopWidth: 1,
-    borderTopColor: "#111827",
-  },
-
-  separator: {
-    borderTopWidth: 1,
-    borderTopColor: "#111827",
-    marginTop: 6,
-    marginBottom: 6,
-  },
-
-  totalRow: {
-    marginTop: 5,
   },
 
   // SIGNATURE
@@ -224,11 +163,6 @@ const styles = StyleSheet.create({
     color: "#4B5563",
     lineHeight: 1.3,
   },
-
-  link: {
-    color: "#1D4ED8",
-    textDecoration: "underline",
-  },
 });
 
 export interface SommatiePDFProps {
@@ -256,7 +190,6 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
   debtorAddress,
   island,
   reference_number,
-  total_amount,
   amount_original,
   calculatedABB,
   tenantName,
@@ -264,6 +197,12 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
   additionalCosts,
   additionalABB,
 }) => {
+  const cfsbKosten =
+    Number(administrativeCosts) +
+    Number(calculatedABB) +
+    Number(additionalCosts) +
+    Number(additionalABB);
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -304,15 +243,15 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
           </Text>
 
           <Text style={styles.paragraph}>
-            Hierbij vragen wij uw aandacht voor uw openstaande
-            betalingsverplichting.
+            Hierbij vragen wij uw aandacht voor onderstaande openstaande
+            verplichting.
           </Text>
 
           <Text style={styles.paragraph}>
-            Op {aanmaningDate} hebben wij u reeds verzocht om uw openstaande
-            betalingsverplichting te voldoen. Tot op heden is deze verplichting
-            niet volledig voldaan en is geen betalingsregeling tot stand
-            gekomen.
+            Op {aanmaningDate} hebben wij u reeds verzocht uw openstaande
+            verplichting te voldoen. Binnen de gestelde termijn heeft geen
+            volledige betaling plaatsgevonden en is geen betalingsregeling
+            getroffen.
           </Text>
 
           {/* TABLE */}
@@ -330,71 +269,34 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
             </View>
 
             <View style={styles.tableRow}>
-              <Text style={styles.tableLabel}>
-                Administratieve opvolgingskosten
-              </Text>
+              <Text style={styles.tableLabel}>CFSB-kosten</Text>
               <Text style={styles.tableSymbol}>USD</Text>
               <Text style={styles.tableValue}>
-                {formatAmount(administrativeCosts)}
-              </Text>
-            </View>
-
-            <View style={[styles.tableRow, { marginBottom: 5 }]}>
-              <Text style={[styles.tableLabel, { paddingBottom: 5 }]}>
-                ABB 6%
-              </Text>
-              <Text
-                style={[styles.tableSymbolWithUnderline, { paddingBottom: 5 }]}
-              >
-                USD
-              </Text>
-              <Text
-                style={[styles.tableValueWithUnderline, { paddingBottom: 5 }]}
-              >
-                {formatAmount(calculatedABB)}
-              </Text>
-            </View>
-
-            <View style={styles.tableRow}>
-              <Text style={styles.tableLabel}>
-                Aanvullende opvolgingskosten
-              </Text>
-              <Text style={styles.tableSymbol}>USD</Text>
-              <Text style={styles.tableValue}>
-                {formatAmount(additionalCosts)}
-              </Text>
-            </View>
-
-            <View style={[styles.tableRow, styles.totalRow]}>
-              <Text style={styles.totalLabel}>Totaal te voldoen</Text>
-              <Text style={styles.totalSymbol}>USD</Text>
-              <Text style={styles.totalValue}>
-                {formatAmount(total_amount)}
+                {formatAmount(cfsbKosten)}
               </Text>
             </View>
           </View>
 
           <Text style={styles.paragraph}>
-            Wij verzoeken u het totale openstaande bedrag binnen 2 dagen na
-            dagtekening van deze brief te voldoen.
+            Wij verzoeken u de openstaande hoofdsom binnen 2 dagen na
+            dagtekening van deze brief volledig te voldoen.
           </Text>
 
           <Text style={styles.paragraph}>
-            Om te betalen of een betalingsregeling te treffen, kunt u
-            gebruikmaken van de aan u verstrekte betaallink of inloggen via{" "}
-            <Link src="https://www.cfsbgroup.com" style={styles.link}>
-              www.cfsbgroup.com
-            </Link>
+            Om volledige toegang tot uw CFSB-account te krijgen, dient u in te
+            loggen op uw account en eerst de openstaande CFSB-kosten van USD{" "}
+            {formatAmount(cfsbKosten)} volledig te betalen.
           </Text>
 
           <Text style={styles.paragraph}>
-            {"Indien betaling of een betalingsregeling binnen deze termijn uitblijft, wordt uw openstaande verplichting verhoogd met USD\u00A0250,00 " +
-              "aan aanvullende administratieve opvolgingskosten, exclusief 6% ABB. De opvolging wordt vervolgens " +
-              "voortgezet volgens de vastgestelde stappen binnen de CFSB-samenwerking, " +
-              "waaronder een ingebrekestelling."}
+            Indien binnen deze termijn geen volledige betaling plaatsvindt of
+            geen betalingsregeling wordt getroffen, wordt het dossier volgens
+            de geldende CFSB-procedure verder opgevolgd. Bij het uitblijven
+            van een oplossing kan een economische blokkade worden
+            geactiveerd. Aanvullende kosten kunnen van toepassing zijn.
           </Text>
 
-          <Text style={styles.paragraph}>Met vriendelijke groet,</Text>
+          <Text style={styles.paragraph}>Hoogachtend,</Text>
 
           {/* SIGNATURE */}
           <View style={styles.signatureWrapper}>
@@ -405,7 +307,7 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
             </View>
 
             <Text style={styles.signatureRole}>
-              Schuldeiser / CFSB deelnemer
+              Schuldeiser / CFSB-deelnemer
             </Text>
           </View>
         </View>
@@ -414,8 +316,6 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
         <Text style={styles.footer}>
           Dit document is automatisch opgesteld en verzonden binnen de
           CFSB-samenwerking.
-          {"\n"}
-          Beheer en administratie: CIO
         </Text>
       </Page>
     </Document>
