@@ -178,6 +178,9 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
           </Text>
 
           {/* Table */}
+          <Text style={{ fontSize: 12, fontWeight: "bold" }}>
+            Specificatie
+          </Text>
           <View style={styles.table}>
             <View style={styles.tableRow}>
               <Text style={styles.tableCell}>Hoofdsom</Text>
