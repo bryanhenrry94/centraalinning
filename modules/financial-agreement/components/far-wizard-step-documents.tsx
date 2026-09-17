@@ -18,7 +18,7 @@ import ArticleIcon from "@mui/icons-material/Article";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { notifyError } from "@/shared/ui/notifications";
 
-const MAX_FILE_SIZE_BYTES = 1024 * 1024; // 1 MB, ver hint "Toegestane formaten" hieronder
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB, ver hint "Toegestane formaten" hieronder
 const ACCEPTED_EXTENSIONS = [
   ".pdf",
   ".jpg",
