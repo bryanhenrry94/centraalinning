@@ -134,7 +134,11 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
   extraCosts,
   calculatedABB,
   tenantName,
-}) => (
+}) => {
+  const aopCosts =
+    Number(digitalFileCosts) + Number(extraCosts) + Number(calculatedABB);
+
+  return (
   <Document>
     <Page size="A4" style={styles.page}>
       {/* Header */}
@@ -182,14 +186,9 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
             </Text>
           </View>
           <View style={styles.tableRow}>
-            <Text style={styles.tableCell}>CFSB – AOP-kosten</Text>
+            <Text style={styles.tableCell}>CFSB-kosten</Text>
             <Text style={styles.tableCellRight}>
-              $
-              {formatAmount(
-                Number(digitalFileCosts) +
-                  Number(extraCosts) +
-                  Number(calculatedABB)
-              )}
+              ${formatAmount(aopCosts)}
             </Text>
           </View>
           <View style={[styles.tableRow, styles.totalRow]}>
@@ -213,15 +212,22 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
         </Text>
 
         <Text style={styles.paragraph}>
-          <Text style={{ fontWeight: "bold" }}>Let op:</Text>
-          {"\n"}
-          Bij uitblijven van betaling wordt USD 93,00 in rekening gebracht en
-          kan er een tijdelijke economische blokkade voor de buitengerechtelijke
-          fase worden ingesteld. Dit betekent dat uw betalingsachterstand kan
-          worden geregistreerd in het centrale betalingssysteem en dat u
-          tijdelijk wordt beperkt in uw zakelijke en financiële activiteiten op
-          Bonaire, totdat uw schuld volledig is voldaan. Alle bijkomende kosten
-          komen volledig voor uw rekening.
+          Wij verzoeken u de hoofdsom binnen 14 dagen na dagtekening van deze
+          brief te voldoen.
+        </Text>
+
+        <Text style={styles.paragraph}>
+          Om te betalen, een betalingsregeling te treffen en volledige
+          toegang tot uw account te krijgen, dient u eerst de CFSB –
+          AOP-kosten van USD {formatAmount(aopCosts)} volledig te betalen.
+        </Text>
+
+        <Text style={styles.paragraph}>
+          Indien binnen deze termijn geen volledige betaling plaatsvindt of
+          geen betalingsregeling wordt getroffen, wordt het dossier volgens
+          de geldende CFSB-procedure verder opgevolgd. De toegang tot uw
+          account kan beperkt blijven en aanvullende kosten kunnen van
+          toepassing zijn.
         </Text>
 
         <Text style={styles.paragraph}>Met vriendelijke groet,</Text>
@@ -238,6 +244,7 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
       </Text>
     </Page>
   </Document>
-);
+  );
+};
 
 export default AanmaningPDF;
