@@ -35,10 +35,6 @@ export interface FarRegisteredEmailProps {
   agreementDueDate: string;
   agreementAmount: string;
   documentsCount: number;
-  // Registratiekosten
-  feeExclAbb: string;
-  abbLabel: string;
-  totalPaid: string;
 }
 
 function ResultRow({ label, value }: { label: string; value: string }) {
@@ -71,9 +67,6 @@ export default function FarRegisteredEmail({
   agreementDueDate,
   agreementAmount,
   documentsCount,
-  feeExclAbb,
-  abbLabel,
-  totalPaid,
 }: FarRegisteredEmailProps) {
   return (
     <Html>
@@ -82,7 +75,13 @@ export default function FarRegisteredEmail({
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>
-            <Img src={logoUrl} width="100" height="50" alt="CFSB" style={logo} />
+            <Img
+              src={logoUrl}
+              width="100"
+              height="50"
+              alt="CFSB"
+              style={logo}
+            />
           </Section>
 
           <Section>
@@ -93,7 +92,7 @@ export default function FarRegisteredEmail({
               <ResultRow label="Organisatie" value={tenantName} />
             </Section>
 
-            <Text style={sectionTitle}>Opdrachtgever</Text>
+            <Text style={sectionTitle}>Partij</Text>
             <Section style={resultBox}>
               <ResultRow label="Naam" value={clientName} />
               <ResultRow label="KvK-nummer" value={clientKvk} />
@@ -119,19 +118,15 @@ export default function FarRegisteredEmail({
               <ResultRow label="Factuurdatum" value={agreementInvoiceDate} />
               <ResultRow label="Vervaldatum" value={agreementDueDate} />
               <ResultRow label="Totaalbedrag" value={agreementAmount} />
-              <ResultRow label="Documenten" value={`${documentsCount} bijgevoegd`} />
-            </Section>
-
-            <Text style={sectionTitle}>Registratiekosten</Text>
-            <Section style={resultBox}>
-              <ResultRow label="Bedrag (excl. ABB)" value={feeExclAbb} />
-              <ResultRow label="ABB" value={abbLabel} />
-              <ResultRow label="Totaal betaald" value={totalPaid} />
+              <ResultRow
+                label="Documenten"
+                value={`${documentsCount} bijgevoegd`}
+              />
             </Section>
 
             <Text style={paragraph}>
-              Dit overzicht bevat de volledige voorwaarden van de FAR-registratie
-              zoals bevestigd bij het afronden van de betaling.
+              Dit overzicht bevat de volledige voorwaarden van de
+              FAR-registratie zoals bevestigd bij het afronden van de betaling.
             </Text>
           </Section>
 
@@ -172,9 +167,6 @@ FarRegisteredEmail.PreviewProps = {
   agreementDueDate: "30-09-2026",
   agreementAmount: "$ 1.250,00",
   documentsCount: 2,
-  feeExclAbb: "$ 35,00",
-  abbLabel: "6% — $ 2,10",
-  totalPaid: "$ 37,10",
 } satisfies FarRegisteredEmailProps;
 
 const main = {
@@ -194,7 +186,7 @@ const container = {
 
 const header = {
   textAlign: "center" as const,
-  padding: "30px 40px 10px",
+  padding: "30px 40px 28px",
 };
 
 const logo = {

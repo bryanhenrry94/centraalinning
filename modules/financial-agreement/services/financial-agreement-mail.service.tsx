@@ -23,9 +23,6 @@ export type FarRegisteredMailDetails = {
   agreementDueDate: string;
   agreementAmount: string;
   documentsCount: number;
-  feeExclAbb: string;
-  abbLabel: string;
-  totalPaid: string;
 };
 
 // Correo de confirmación con el detalle completo de la afspraak (opdrachtgever

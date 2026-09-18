@@ -289,7 +289,6 @@ export class FinancialAgreementService {
         debtor: { include: { person: true } },
         tenant: true,
         documents: true,
-        registrationFeePayment: true,
       },
     });
     if (!financialAgreement || financialAgreement.status !== "PENDING_PAYMENT") return;
@@ -328,16 +327,6 @@ export class FinancialAgreementService {
       ? `${IDENTIFICATION_TYPE_LABELS[person.identification_type]} — ${person.identification}`
       : "-";
 
-    // El total efectivamente cobrado vía Sentoo (registrationFeePayment.
-    // total_amount) ya incluye el ABB — se desglosa acá solo para mostrar
-    // el mismo detalle "Bedrag (excl. ABB)" / "ABB" / "Totaal" que el
-    // wizard, usando la tarifa ABB vigente de la isla del tenant.
-    const parameter = await ParameterService.getParameterForTenant(financialAgreement.tenantId);
-    const abbRate = parameter.abb_rate;
-    const totalPaid = Number(financialAgreement.registrationFeePayment?.total_amount ?? 0);
-    const feeExclAbb = Number((totalPaid / (1 + abbRate / 100)).toFixed(2));
-    const abbAmount = Number((totalPaid - feeExclAbb).toFixed(2));
-
     const tenant = financialAgreement.tenant;
     const clientAddress = [tenant.address, tenant.city].filter(Boolean).join(", ");
 
@@ -366,9 +355,6 @@ export class FinancialAgreementService {
         : "-",
       agreementAmount: formatCurrency(Number(financialAgreement.amount)),
       documentsCount: financialAgreement.documents.length,
-      feeExclAbb: formatCurrency(feeExclAbb),
-      abbLabel: `${abbRate}% — ${formatCurrency(abbAmount)}`,
-      totalPaid: formatCurrency(totalPaid),
     };
 
     try {
