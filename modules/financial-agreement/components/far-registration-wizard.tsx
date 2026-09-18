@@ -18,7 +18,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { formatCurrency } from "@/shared/utils/formatters";
-import { notifyError } from "@/shared/ui/notifications";
+import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 import { getParameterForTenantAction } from "@/modules/settings/actions/parameter.actions";
 import { createFinancialAgreementWithDebtor } from "@/modules/financial-agreement/actions/financial-agreement.actions";
@@ -32,7 +32,6 @@ import { FarWizardStepDebtor } from "@/modules/financial-agreement/components/fa
 import { FarWizardStepAgreement } from "@/modules/financial-agreement/components/far-wizard-step-agreement";
 import { FarWizardStepDocuments } from "@/modules/financial-agreement/components/far-wizard-step-documents";
 import { FarWizardStepOverview } from "@/modules/financial-agreement/components/far-wizard-step-overview";
-import { FarWizardStepSuccess } from "@/modules/financial-agreement/components/far-wizard-step-success";
 
 const STEP_LABELS = ["Gegevens", "Overeenkomst", "Documenten", "Overzicht"];
 
@@ -71,13 +70,8 @@ export const FarRegistrationWizard: React.FC = () => {
   const [documents, setDocuments] = useState<File[]>([]);
   const [abbRate, setAbbRate] = useState(0);
   const [registrationFee, setRegistrationFee] = useState(FAR_REGISTRATION_FEE);
-  const [result, setResult] = useState<{
-    financialAgreementId: string;
-    farNumber: string;
-    createdAt: string;
-  } | null>(null);
 
-  const { control, trigger, watch, getValues, setValue, reset } =
+  const { control, trigger, watch, getValues, setValue } =
     useForm<FarWizardFormValues>({
       resolver: zodResolver(FarWizardSchema),
       mode: "onBlur",
@@ -151,13 +145,6 @@ export const FarRegistrationWizard: React.FC = () => {
   const handleRemoveFile = (index: number) =>
     setDocuments((prev) => prev.filter((_, i) => i !== index));
 
-  const resetWizard = () => {
-    reset(FAR_WIZARD_DEFAULT_VALUES);
-    setDocuments([]);
-    setResult(null);
-    setActiveStep(0);
-  };
-
   const handleCreateTransaction = async (): Promise<{
     success: boolean;
     error?: string;
@@ -209,11 +196,6 @@ export const FarRegistrationWizard: React.FC = () => {
         documents,
       );
 
-      setResult({
-        financialAgreementId: response.financialAgreementId,
-        farNumber: response.farNumber,
-        createdAt: new Date().toISOString(),
-      });
       return {
         success: true,
         paymentId: response.paymentId,
@@ -227,26 +209,18 @@ export const FarRegistrationWizard: React.FC = () => {
     }
   };
 
+  // Confirmado el pago, el FAR ya quedó geregistreerd (ver
+  // FinancialAgreementService.processRegistrationPaymentConfirmed, que
+  // también envía la confirmación por correo con el detalle completo) —
+  // acá alcanza con avisar y redirigir a servicios, sin pantalla intermedia.
   const handlePaymentConfirmed = async () => {
-    setActiveStep(4);
+    notifySuccess("FAR geregistreerd. De betaling is bevestigd.");
+    router.push("/workstation");
   };
 
   const handlePaymentFailed = async () => {
     notifyError("De betaling is niet gelukt. Probeer het opnieuw.");
   };
-
-  if (activeStep === 4 && result) {
-    return (
-      <FarWizardStepSuccess
-        farNumber={result.farNumber}
-        debtorName={values.debtor.fullname}
-        amount={values.agreement.amount}
-        createdAt={result.createdAt}
-        onGoToList={() => router.push("/financial-agreements")}
-        onRegisterAnother={() => router.push("/workstation")}
-      />
-    );
-  }
 
   return (
     <Stack spacing={3}>

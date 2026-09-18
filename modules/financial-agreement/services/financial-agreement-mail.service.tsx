@@ -2,22 +2,38 @@ import { resend } from "@/infrastructure/mail/resend-client";
 import { getEmailByEnv } from "@/shared/utils/mail";
 import FarRegisteredEmail from "@/modules/financial-agreement/templates/FarRegisteredEmail";
 
-type SendFarRegisteredMailParams = {
-  to: string;
-  fullname: string;
-  introText: string;
+type FarRegisteredMailDetails = {
   farNumber: string;
   registeredAt: string;
   tenantName: string;
+  debtorTypeLabel: string;
+  debtorName: string;
+  debtorIdentification: string;
+  debtorAddress: string;
+  debtorPhone: string;
+  debtorEmail: string;
+  agreementDescription: string;
+  agreementReference: string;
+  agreementInvoiceDate: string;
+  agreementDueDate: string;
+  agreementAmount: string;
+  documentsCount: number;
+  feeExclAbb: string;
+  abbLabel: string;
+  totalPaid: string;
+};
+
+type SendFarRegisteredMailParams = FarRegisteredMailDetails & {
+  to: string;
+  fullname: string;
+  introText: string;
 };
 
 const sendFarRegisteredMail = async ({
   to,
   fullname,
   introText,
-  farNumber,
-  registeredAt,
-  tenantName,
+  ...details
 }: SendFarRegisteredMailParams) => {
   try {
     const recipient = await getEmailByEnv(to);
@@ -25,15 +41,13 @@ const sendFarRegisteredMail = async ({
     const { error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
-      subject: `CFSB - FAR-registratie bevestigd (${farNumber})`,
+      subject: `CFSB - FAR-registratie bevestigd (${details.farNumber})`,
       react: (
         <FarRegisteredEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
           fullname={fullname}
           introText={introText}
-          farNumber={farNumber}
-          registeredAt={registeredAt}
-          tenantName={tenantName}
+          {...details}
         />
       ),
     });
@@ -47,43 +61,35 @@ const sendFarRegisteredMail = async ({
 };
 
 // Correo al deudor (Wederpartij) ligado al contrato/acuerdo: confirma que
-// CFSB registró la afspraak en su nombre.
-export const sendFarRegisteredMailToDebtor = async (params: {
-  to: string;
-  debtorFullname: string;
-  farNumber: string;
-  registeredAt: string;
-  tenantName: string;
-}) => {
+// CFSB registró de afspraak op zijn naam, met de volledige voorwaarden
+// (bedrag, vervaldatum, kosten) zodat beide partijen duidelijkheid hebben.
+export const sendFarRegisteredMailToDebtor = async (
+  params: FarRegisteredMailDetails & { to: string },
+) => {
+  const { to, ...details } = params;
   await sendFarRegisteredMail({
-    to: params.to,
-    fullname: params.debtorFullname || "Klant",
+    to,
+    fullname: details.debtorName || "Klant",
     introText:
-      `Namens ${params.tenantName} is er een financiële afspraak (FAR) op uw naam geregistreerd binnen ` +
-      "de CFSB-samenwerking. Hieronder vindt u de registratiegegevens ter bevestiging.",
-    farNumber: params.farNumber,
-    registeredAt: params.registeredAt,
-    tenantName: params.tenantName,
+      `Namens ${details.tenantName} is er een financiële afspraak (FAR) op uw naam geregistreerd binnen ` +
+      "de CFSB-samenwerking. Hieronder vindt u de volledige registratiegegevens ter bevestiging.",
+    ...details,
   });
 };
 
 // Correo al cliente (tenant) que registró el FAR: confirma que el pago de
-// la tarifa de registro se procesó correctamente.
-export const sendFarRegisteredMailToTenant = async (params: {
-  to: string;
-  tenantContactName: string;
-  farNumber: string;
-  registeredAt: string;
-  tenantName: string;
-}) => {
+// la tarifa de registro se procesó correctamente, con el mismo detalle que
+// se mostró en el resumen del wizard al momento de registrar.
+export const sendFarRegisteredMailToTenant = async (
+  params: FarRegisteredMailDetails & { to: string; tenantContactName: string },
+) => {
+  const { to, tenantContactName, ...details } = params;
   await sendFarRegisteredMail({
-    to: params.to,
-    fullname: params.tenantContactName || params.tenantName,
+    to,
+    fullname: tenantContactName || details.tenantName,
     introText:
       "Uw registratie van een financiële afspraak (FAR) is bevestigd. De registratiekosten zijn " +
-      "succesvol ontvangen en de afspraak staat nu geregistreerd.",
-    farNumber: params.farNumber,
-    registeredAt: params.registeredAt,
-    tenantName: params.tenantName,
+      "succesvol ontvangen en de afspraak staat nu geregistreerd. Hieronder vindt u het volledige overzicht.",
+    ...details,
   });
 };

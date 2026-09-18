@@ -13,9 +13,36 @@ export interface FarRegisteredEmailProps {
   logoUrl: string;
   fullname: string;
   introText: string;
+  // Registratie
   farNumber: string;
   registeredAt: string;
   tenantName: string;
+  // Wederpartij (debiteur)
+  debtorTypeLabel: string;
+  debtorName: string;
+  debtorIdentification: string;
+  debtorAddress: string;
+  debtorPhone: string;
+  debtorEmail: string;
+  // Afspraakgegevens
+  agreementDescription: string;
+  agreementReference: string;
+  agreementInvoiceDate: string;
+  agreementDueDate: string;
+  agreementAmount: string;
+  documentsCount: number;
+  // Registratiekosten
+  feeExclAbb: string;
+  abbLabel: string;
+  totalPaid: string;
+}
+
+function ResultRow({ label, value }: { label: string; value: string }) {
+  return (
+    <Text style={resultRow}>
+      <strong>{label}:</strong> {value || "-"}
+    </Text>
+  );
 }
 
 export default function FarRegisteredEmail({
@@ -25,6 +52,21 @@ export default function FarRegisteredEmail({
   farNumber,
   registeredAt,
   tenantName,
+  debtorTypeLabel,
+  debtorName,
+  debtorIdentification,
+  debtorAddress,
+  debtorPhone,
+  debtorEmail,
+  agreementDescription,
+  agreementReference,
+  agreementInvoiceDate,
+  agreementDueDate,
+  agreementAmount,
+  documentsCount,
+  feeExclAbb,
+  abbLabel,
+  totalPaid,
 }: FarRegisteredEmailProps) {
   return (
     <Html>
@@ -43,17 +85,47 @@ export default function FarRegisteredEmail({
 
             <Text style={paragraph}>{introText}</Text>
 
+            <Text style={sectionTitle}>Registratiegegevens</Text>
             <Section style={resultBox}>
-              <Text style={resultRow}>
-                <strong>Registratienummer:</strong> {farNumber}
-              </Text>
-              <Text style={resultRow}>
-                <strong>Datum:</strong> {registeredAt}
-              </Text>
-              <Text style={resultRow}>
-                <strong>Organisatie:</strong> {tenantName}
-              </Text>
+              <ResultRow label="Registratienummer" value={farNumber} />
+              <ResultRow label="Datum" value={registeredAt} />
+              <ResultRow label="Organisatie" value={tenantName} />
             </Section>
+
+            <Text style={sectionTitle}>Wederpartij</Text>
+            <Section style={resultBox}>
+              <ResultRow label="Type partij" value={debtorTypeLabel} />
+              <ResultRow label="Naam" value={debtorName} />
+              <ResultRow label="Identificatie" value={debtorIdentification} />
+              <ResultRow label="Vestigingsadres" value={debtorAddress} />
+              <ResultRow label="Telefoonnummer" value={debtorPhone} />
+              <ResultRow label="E-mailadres" value={debtorEmail} />
+            </Section>
+
+            <Text style={sectionTitle}>Afspraakgegevens</Text>
+            <Section style={resultBox}>
+              <ResultRow label="Omschrijving" value={agreementDescription} />
+              <ResultRow label="Factuurnummer" value={agreementReference} />
+              <ResultRow label="Factuurdatum" value={agreementInvoiceDate} />
+              <ResultRow label="Vervaldatum" value={agreementDueDate} />
+              <ResultRow label="Totaalbedrag" value={agreementAmount} />
+              <ResultRow
+                label="Documenten"
+                value={`${documentsCount} bijgevoegd`}
+              />
+            </Section>
+
+            <Text style={sectionTitle}>Registratiekosten</Text>
+            <Section style={resultBox}>
+              <ResultRow label="Bedrag (excl. ABB)" value={feeExclAbb} />
+              <ResultRow label="ABB" value={abbLabel} />
+              <ResultRow label="Totaal betaald" value={totalPaid} />
+            </Section>
+
+            <Text style={paragraph}>
+              Dit overzicht bevat de volledige voorwaarden van de FAR-registratie
+              zoals bevestigd bij het afronden van de betaling.
+            </Text>
           </Section>
 
           <Hr style={divider} />
@@ -79,6 +151,21 @@ FarRegisteredEmail.PreviewProps = {
   farNumber: "FAR-2026-001",
   registeredAt: "17-09-2026",
   tenantName: "CFSB",
+  debtorTypeLabel: "Bedrijf",
+  debtorName: "Jane Doe N.V.",
+  debtorIdentification: "KvK-nummer — 123456789",
+  debtorAddress: "Kaya Grandi 12, Bonaire",
+  debtorPhone: "+599 700 0000",
+  debtorEmail: "jane@example.com",
+  agreementDescription: "Openstaande factuur voor geleverde diensten",
+  agreementReference: "INV-2026-045",
+  agreementInvoiceDate: "01-09-2026",
+  agreementDueDate: "30-09-2026",
+  agreementAmount: "$ 1.250,00",
+  documentsCount: 2,
+  feeExclAbb: "$ 35,00",
+  abbLabel: "6% — $ 2,10",
+  totalPaid: "$ 37,10",
 } satisfies FarRegisteredEmailProps;
 
 const main = {
@@ -115,8 +202,18 @@ const paragraph = {
   textAlign: "justify" as const,
 };
 
+const sectionTitle = {
+  color: "#1a365d",
+  fontSize: "13px",
+  fontWeight: 700,
+  textTransform: "uppercase" as const,
+  letterSpacing: "0.4px",
+  padding: "0 40px",
+  margin: "0 0 8px",
+};
+
 const resultBox = {
-  margin: "0 40px 16px",
+  margin: "0 40px 20px",
   padding: "16px 20px",
   borderRadius: "8px",
   border: "1px solid #e5e7eb",

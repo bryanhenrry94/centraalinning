@@ -17,7 +17,9 @@ import {
   sendFarRegisteredMailToDebtor,
   sendFarRegisteredMailToTenant,
 } from "@/modules/financial-agreement/services/financial-agreement-mail.service";
-import { formatDate } from "@/shared/utils/formatters";
+import { formatCurrency, formatDate } from "@/shared/utils/formatters";
+import { IDENTIFICATION_TYPE_LABELS } from "@/modules/financial-agreement/types/far-wizard.types";
+import { PersonType } from "@/shared/constants/person-type";
 
 const financialAgreementInclude = {
   debtor: { include: { person: true } },
@@ -286,7 +288,12 @@ export class FinancialAgreementService {
   static processRegistrationPaymentConfirmed = async (paymentId: string) => {
     const financialAgreement = await prisma.financialAgreement.findUnique({
       where: { registrationFeePaymentId: paymentId },
-      include: { debtor: { include: { person: true } }, tenant: true },
+      include: {
+        debtor: { include: { person: true } },
+        tenant: true,
+        documents: true,
+        registrationFeePayment: true,
+      },
     });
     if (!financialAgreement || financialAgreement.status !== "PENDING_PAYMENT") return;
 
@@ -307,26 +314,63 @@ export class FinancialAgreementService {
     });
 
     // Confirmación por correo (pedido sponsor): al deudor/wederpartij ligado
-    // al acuerdo y al tenant que registró y pagó la tarifa — cada uno recibe
-    // el número de registro y la fecha. Nunca debe tumbar el flujo de
-    // confirmación de pago si el envío falla (mismo criterio que
-    // uploadDocument en createWithDebtor).
+    // al acuerdo y al tenant que registró y pagó la tarifa, con el mismo
+    // detalle que el wizard mostró en "Overzicht" (paso 4) — para que
+    // ambas partes tengan claros los términos de la afspraak, no solo el
+    // número y la fecha. Nunca debe tumbar el flujo de confirmación de
+    // pago si el envío falla (mismo criterio que uploadDocument en
+    // createWithDebtor).
     const registeredAt = formatDate(updated.registeredAt!.toISOString());
-    const debtorFullname =
-      `${financialAgreement.debtor.person?.first_name ?? ""} ${
-        financialAgreement.debtor.person?.last_name ?? ""
-      }`.trim() ||
-      financialAgreement.debtor.person?.business_name ||
+    const person = financialAgreement.debtor.person;
+    const debtorName =
+      `${person?.first_name ?? ""} ${person?.last_name ?? ""}`.trim() ||
+      person?.business_name ||
       "Klant";
+    const debtorTypeLabel = person?.person_type === PersonType.COMPANY ? "Bedrijf" : "Persoon";
+    const debtorIdentification = person
+      ? `${IDENTIFICATION_TYPE_LABELS[person.identification_type]} — ${person.identification}`
+      : "-";
+
+    // El total efectivamente cobrado vía Sentoo (registrationFeePayment.
+    // total_amount) ya incluye el ABB — se desglosa acá solo para mostrar
+    // el mismo detalle "Bedrag (excl. ABB)" / "ABB" / "Totaal" que el
+    // wizard, usando la tarifa ABB vigente de la isla del tenant.
+    const parameter = await ParameterService.getParameterForTenant(financialAgreement.tenantId);
+    const abbRate = parameter.abb_rate;
+    const totalPaid = Number(financialAgreement.registrationFeePayment?.total_amount ?? 0);
+    const feeExclAbb = Number((totalPaid / (1 + abbRate / 100)).toFixed(2));
+    const abbAmount = Number((totalPaid - feeExclAbb).toFixed(2));
+
+    const mailDetails = {
+      farNumber: updated.farNumber,
+      registeredAt,
+      tenantName: financialAgreement.tenant.name || "CFSB",
+      debtorTypeLabel,
+      debtorName,
+      debtorIdentification,
+      debtorAddress: person?.address || "-",
+      debtorPhone: person?.phone || "-",
+      debtorEmail: financialAgreement.debtor.email,
+      agreementDescription: financialAgreement.description || "-",
+      agreementReference: financialAgreement.reference || "-",
+      agreementInvoiceDate: financialAgreement.invoiceDate
+        ? formatDate(financialAgreement.invoiceDate.toISOString())
+        : "-",
+      agreementDueDate: financialAgreement.dueDate
+        ? formatDate(financialAgreement.dueDate.toISOString())
+        : "-",
+      agreementAmount: formatCurrency(Number(financialAgreement.amount)),
+      documentsCount: financialAgreement.documents.length,
+      feeExclAbb: formatCurrency(feeExclAbb),
+      abbLabel: `${abbRate}% — ${formatCurrency(abbAmount)}`,
+      totalPaid: formatCurrency(totalPaid),
+    };
 
     try {
       if (financialAgreement.debtor.email) {
         await sendFarRegisteredMailToDebtor({
           to: financialAgreement.debtor.email,
-          debtorFullname,
-          farNumber: updated.farNumber,
-          registeredAt,
-          tenantName: financialAgreement.tenant.name || "CFSB",
+          ...mailDetails,
         });
       }
 
@@ -334,9 +378,7 @@ export class FinancialAgreementService {
         await sendFarRegisteredMailToTenant({
           to: financialAgreement.tenant.contact_email,
           tenantContactName: financialAgreement.tenant.name || "",
-          farNumber: updated.farNumber,
-          registeredAt,
-          tenantName: financialAgreement.tenant.name || "CFSB",
+          ...mailDetails,
         });
       }
     } catch (error) {
