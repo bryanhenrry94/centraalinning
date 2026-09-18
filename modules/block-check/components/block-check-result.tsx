@@ -41,7 +41,11 @@ export const ResultView: React.FC<ResultViewProps> = ({ result }) => {
       setInviteSent(true);
       notifySuccess("Uitnodiging voor de Financiële Verklaring verstuurd.");
     } catch (error) {
-      notifyError(error instanceof Error ? error.message : "Kon de uitnodiging niet versturen.");
+      notifyError(
+        error instanceof Error
+          ? error.message
+          : "Kon de uitnodiging niet versturen.",
+      );
     } finally {
       setInviteSending(false);
     }
@@ -152,7 +156,7 @@ export const ResultView: React.FC<ResultViewProps> = ({ result }) => {
                   onChange={(e) => setInviteChecked(e.target.checked)}
                 />
               }
-              label="Nodig de debiteur uit om een Financiële Verklaring in te dienen"
+              label="Nodig de debiteur uit om een Financiële Verklaring aan te vragen."
             />
             {inviteChecked && !inviteSent && (
               <Box>
@@ -167,7 +171,11 @@ export const ResultView: React.FC<ResultViewProps> = ({ result }) => {
               </Box>
             )}
             {inviteSent && (
-              <Typography variant="caption" color="success.main" sx={{ display: "block", mt: 0.5 }}>
+              <Typography
+                variant="caption"
+                color="success.main"
+                sx={{ display: "block", mt: 0.5 }}
+              >
                 Uitnodiging verstuurd.
               </Typography>
             )}

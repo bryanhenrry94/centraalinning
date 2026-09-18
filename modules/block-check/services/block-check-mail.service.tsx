@@ -23,7 +23,6 @@ export const sendBlockCheckResultMail = async (
           documentNumber={result.document_number}
           identificationType={result.identification_type}
           hasBlockade={result.has_blockade}
-          reference={result.reference}
           checkedAt={result.checked_at}
         />
       ),

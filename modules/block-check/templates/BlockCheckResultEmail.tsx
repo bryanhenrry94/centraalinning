@@ -17,8 +17,13 @@ export interface BlockCheckResultEmailProps {
   documentNumber: string;
   identificationType: string;
   hasBlockade: boolean;
-  reference: string;
   checkedAt: Date;
+}
+
+// KVK is de enige identificatiesoort met een eigen label ("KvK-nummer") —
+// alle andere (CEDULA, PASSPORT, RIJBEWIJS) tonen het generieke "ID-nummer".
+function getDocumentNumberLabel(identificationType: string): string {
+  return identificationType === "KVK" ? "KvK-nummer" : "ID-nummer";
 }
 
 export default function BlockCheckResultEmail({
@@ -28,7 +33,6 @@ export default function BlockCheckResultEmail({
   documentNumber,
   identificationType,
   hasBlockade,
-  reference,
   checkedAt,
 }: BlockCheckResultEmailProps) {
   return (
@@ -47,7 +51,7 @@ export default function BlockCheckResultEmail({
             </Text>
 
             <Text style={paragraph}>
-              Hierbij ontvangt u het resultaat van uw Blok-Check aanvraag.
+              Hierbij ontvangt u het resultaat van uw Blok-Check.
             </Text>
 
             <Section style={resultBox}>
@@ -58,7 +62,7 @@ export default function BlockCheckResultEmail({
                 <strong>Identificatietype:</strong> {identificationType}
               </Text>
               <Text style={resultRow}>
-                <strong>ID-/KVK-nummer:</strong> {documentNumber}
+                <strong>{getDocumentNumberLabel(identificationType)}:</strong> {documentNumber}
               </Text>
               <Text
                 style={{
@@ -73,11 +77,7 @@ export default function BlockCheckResultEmail({
               </Text>
               <Hr style={divider} />
               <Text style={resultRow}>
-                <strong>Datum/tijd aanvraag:</strong>{" "}
-                {formatDateTime(checkedAt.toISOString())}
-              </Text>
-              <Text style={resultRow}>
-                <strong>Referentie:</strong> {reference}
+                <strong>Datum/tijd:</strong> {formatDateTime(checkedAt.toISOString())}
               </Text>
             </Section>
           </Section>
@@ -104,7 +104,6 @@ BlockCheckResultEmail.PreviewProps = {
   documentNumber: "123456789",
   identificationType: "ID",
   hasBlockade: false,
-  reference: "cmck1a2b30001example",
   checkedAt: new Date(),
 } satisfies BlockCheckResultEmailProps;
 

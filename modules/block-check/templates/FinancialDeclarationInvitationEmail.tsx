@@ -39,19 +39,19 @@ export default function FinancialDeclarationInvitationEmail({
             </Text>
 
             <Text style={paragraph}>
-              {tenantName} nodigt u uit om een CFSB Financiële Verklaring in te dienen.
+              {tenantName} nodigt u uit om een Financiële Verklaring aan te vragen.
               Hiermee kunt u uw financiële situatie toelichten in verband met een
               geregistreerde economische blokkade.
             </Text>
 
             <Text style={paragraph}>
               De kosten van de Financiële Verklaring zijn voor uw eigen rekening en
-              worden rechtstreeks via het CFSB-platform voldaan.
+              worden via het CFSB-platform voldaan.
             </Text>
 
             <Section style={{ textAlign: "center", margin: "24px 0" }}>
               <Button style={button} href={financialReportUrl}>
-                Financiële Verklaring indienen
+                Financiële Verklaring aanvragen
               </Button>
             </Section>
           </Section>

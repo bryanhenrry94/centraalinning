@@ -220,7 +220,7 @@ const BlokCheckPage = () => {
               >
                 <TextField
                   fullWidth
-                  placeholder="ID-nummer / KVK-nummer / CFSB-nummer / volledige naam"
+                  placeholder="ID-nummer / KVK-nummer / CFSB-nummer / Volledige naam"
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);

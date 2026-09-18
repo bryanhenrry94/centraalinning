@@ -23,7 +23,7 @@ export const sendFinancialDeclarationInvitationMail = async (
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
-      subject: "CFSB - Uitnodiging Financiële Verklaring",
+      subject: "CFSB – Uitnodiging Financiële Verklaring",
       react: (
         <FinancialDeclarationInvitationEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
