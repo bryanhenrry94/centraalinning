@@ -11,12 +11,16 @@ import {
 
 export interface FarRegisteredEmailProps {
   logoUrl: string;
-  fullname: string;
-  introText: string;
   // Registratie
   farNumber: string;
   registeredAt: string;
   tenantName: string;
+  // Opdrachtgever (cliënt die de FAR registreert)
+  clientName: string;
+  clientKvk: string;
+  clientAddress: string;
+  clientPhone: string;
+  clientEmail: string;
   // Wederpartij (debiteur)
   debtorTypeLabel: string;
   debtorName: string;
@@ -47,11 +51,14 @@ function ResultRow({ label, value }: { label: string; value: string }) {
 
 export default function FarRegisteredEmail({
   logoUrl,
-  fullname,
-  introText,
   farNumber,
   registeredAt,
   tenantName,
+  clientName,
+  clientKvk,
+  clientAddress,
+  clientPhone,
+  clientEmail,
   debtorTypeLabel,
   debtorName,
   debtorIdentification,
@@ -79,17 +86,20 @@ export default function FarRegisteredEmail({
           </Section>
 
           <Section>
-            <Text style={paragraph}>
-              Geachte <strong>{fullname}</strong>,
-            </Text>
-
-            <Text style={paragraph}>{introText}</Text>
-
             <Text style={sectionTitle}>Registratiegegevens</Text>
             <Section style={resultBox}>
               <ResultRow label="Registratienummer" value={farNumber} />
               <ResultRow label="Datum" value={registeredAt} />
               <ResultRow label="Organisatie" value={tenantName} />
+            </Section>
+
+            <Text style={sectionTitle}>Opdrachtgever</Text>
+            <Section style={resultBox}>
+              <ResultRow label="Naam" value={clientName} />
+              <ResultRow label="KvK-nummer" value={clientKvk} />
+              <ResultRow label="Adres" value={clientAddress} />
+              <ResultRow label="Telefoonnummer" value={clientPhone} />
+              <ResultRow label="E-mailadres" value={clientEmail} />
             </Section>
 
             <Text style={sectionTitle}>Wederpartij</Text>
@@ -109,10 +119,7 @@ export default function FarRegisteredEmail({
               <ResultRow label="Factuurdatum" value={agreementInvoiceDate} />
               <ResultRow label="Vervaldatum" value={agreementDueDate} />
               <ResultRow label="Totaalbedrag" value={agreementAmount} />
-              <ResultRow
-                label="Documenten"
-                value={`${documentsCount} bijgevoegd`}
-              />
+              <ResultRow label="Documenten" value={`${documentsCount} bijgevoegd`} />
             </Section>
 
             <Text style={sectionTitle}>Registratiekosten</Text>
@@ -145,12 +152,14 @@ export default function FarRegisteredEmail({
 FarRegisteredEmail.PreviewProps = {
   logoUrl:
     "https://www.centraalinning.com/wp-content/uploads/2020/06/CI-Logo-Orange.png",
-  fullname: "Alan Turing",
-  introText:
-    "Hierbij bevestigen wij de registratie van een financiële afspraak (FAR).",
   farNumber: "FAR-2026-001",
   registeredAt: "17-09-2026",
   tenantName: "CFSB",
+  clientName: "Dazzsoft S.A.S.",
+  clientKvk: "987654321",
+  clientAddress: "Kaya Industria 5, Bonaire",
+  clientPhone: "+599 700 1111",
+  clientEmail: "contact@dazzsoft.com",
   debtorTypeLabel: "Bedrijf",
   debtorName: "Jane Doe N.V.",
   debtorIdentification: "KvK-nummer — 123456789",

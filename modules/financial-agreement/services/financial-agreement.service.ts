@@ -13,10 +13,7 @@ import { DebtorService } from "@/modules/collection/services/debtor.service";
 import { StorageService } from "@/infrastructure/storage/storage.service";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 import { CollectionService } from "@/modules/collection/services/collection.service";
-import {
-  sendFarRegisteredMailToDebtor,
-  sendFarRegisteredMailToTenant,
-} from "@/modules/financial-agreement/services/financial-agreement-mail.service";
+import { sendFarRegisteredMail } from "@/modules/financial-agreement/services/financial-agreement-mail.service";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { IDENTIFICATION_TYPE_LABELS } from "@/modules/financial-agreement/types/far-wizard.types";
 import { PersonType } from "@/shared/constants/person-type";
@@ -341,10 +338,18 @@ export class FinancialAgreementService {
     const feeExclAbb = Number((totalPaid / (1 + abbRate / 100)).toFixed(2));
     const abbAmount = Number((totalPaid - feeExclAbb).toFixed(2));
 
+    const tenant = financialAgreement.tenant;
+    const clientAddress = [tenant.address, tenant.city].filter(Boolean).join(", ");
+
     const mailDetails = {
       farNumber: updated.farNumber,
       registeredAt,
-      tenantName: financialAgreement.tenant.name || "CFSB",
+      tenantName: tenant.name || "CFSB",
+      clientName: tenant.name || "-",
+      clientKvk: tenant.kvk || "-",
+      clientAddress: clientAddress || "-",
+      clientPhone: tenant.phone || "-",
+      clientEmail: tenant.contact_email || "-",
       debtorTypeLabel,
       debtorName,
       debtorIdentification,
@@ -368,16 +373,15 @@ export class FinancialAgreementService {
 
     try {
       if (financialAgreement.debtor.email) {
-        await sendFarRegisteredMailToDebtor({
+        await sendFarRegisteredMail({
           to: financialAgreement.debtor.email,
           ...mailDetails,
         });
       }
 
-      if (financialAgreement.tenant.contact_email) {
-        await sendFarRegisteredMailToTenant({
-          to: financialAgreement.tenant.contact_email,
-          tenantContactName: financialAgreement.tenant.name || "",
+      if (tenant.contact_email) {
+        await sendFarRegisteredMail({
+          to: tenant.contact_email,
           ...mailDetails,
         });
       }

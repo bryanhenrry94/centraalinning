@@ -71,12 +71,11 @@ export const FarRegistrationWizard: React.FC = () => {
   const [abbRate, setAbbRate] = useState(0);
   const [registrationFee, setRegistrationFee] = useState(FAR_REGISTRATION_FEE);
 
-  const { control, trigger, watch, getValues, setValue } =
-    useForm<FarWizardFormValues>({
-      resolver: zodResolver(FarWizardSchema),
-      mode: "onBlur",
-      defaultValues: FAR_WIZARD_DEFAULT_VALUES,
-    });
+  const { control, trigger, watch, getValues, setValue } = useForm<FarWizardFormValues>({
+    resolver: zodResolver(FarWizardSchema),
+    mode: "onBlur",
+    defaultValues: FAR_WIZARD_DEFAULT_VALUES,
+  });
 
   useEffect(() => {
     getParameterForTenantAction()
