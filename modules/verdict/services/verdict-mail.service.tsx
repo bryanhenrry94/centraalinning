@@ -3,7 +3,6 @@ import { resend } from "@/infrastructure/mail/resend-client";
 import { generatePdfBase64 } from "@/infrastructure/pdf/pdf";
 import { getEmailByEnv } from "@/shared/utils/mail";
 import { formatDate } from "@/shared/utils/formatters";
-import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 import VerdictApprovalEmail from "@/modules/verdict/templates/VerdictApprovalEmail";
 import VerdictDebtorMail from "@/modules/verdict/templates/VerdictDebtorMail";
 import VerdictCreditorMail from "@/modules/verdict/templates/VerdictCreditorMail";
@@ -43,12 +42,6 @@ export const sendVerdictApprovalEmail = async (
 
     if (!verdict) {
       throw new Error("Verdict not found");
-    }
-
-    const parameter = await ParameterService.getParameter();
-
-    if (!parameter) {
-      throw new Error("Parameters not found");
     }
 
     const params: VerdictApprovalPDFProps = {

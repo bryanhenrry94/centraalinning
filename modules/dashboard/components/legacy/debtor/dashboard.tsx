@@ -62,7 +62,7 @@ import {
   ChipColor,
 } from "@/modules/collection/utils/debt-claim-status";
 import { getBlockadesByDebtorAction } from "@/modules/blockade/actions/get-blockades-by-debtor";
-import { getParameterAction } from "@/modules/settings/actions/parameter.actions";
+import { getParameterForTenantAction } from "@/modules/settings/actions/parameter.actions";
 
 type TenantTypes = {
   id: string;
@@ -227,7 +227,7 @@ const DashboardDebtor = () => {
   // scherm — dezelfde parameter als /financial-report gebruikt, hier alleen
   // getoond ter indicatie voordat de debiteur doorklikt.
   useEffect(() => {
-    getParameterAction()
+    getParameterForTenantAction()
       .then((parameter) =>
         setFinancialReportPrice(
           Number(parameter?.report_financial_pricing ?? 0),

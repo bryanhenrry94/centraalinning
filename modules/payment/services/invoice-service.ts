@@ -45,11 +45,7 @@ export class InvoiceService {
       throw new Error(`Betaling ${paymentId} niet gevonden`);
     }
 
-    const parameter = await ParameterService.getParameter();
-
-    if (!parameter) {
-      throw new Error("Systeemconfiguratie niet gevonden");
-    }
+    const parameter = await ParameterService.getParameterForTenant(payment.tenant_id);
 
     const amount = Number(payment.total_amount);
 
@@ -230,10 +226,7 @@ export class InvoiceService {
     const due_date = addDays(issue_date, 7);
 
     // Obtener parámetro necesario
-    const parameter = await ParameterService.getParameter();
-    if (!parameter) {
-      throw new Error("Parameter niet gevonden");
-    }
+    const parameter = await ParameterService.getParameterForTenant(params.tenant_id);
 
     // Costo base de activación
     const activationFee = params.fee_amount;

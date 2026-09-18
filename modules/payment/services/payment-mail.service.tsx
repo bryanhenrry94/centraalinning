@@ -3,7 +3,6 @@ import { resend } from "@/infrastructure/mail/resend-client";
 import { generatePdfBase64 } from "@/infrastructure/pdf/pdf";
 import { getEmailByEnv } from "@/shared/utils/mail";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
-import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 import InvoiceEmail from "@/modules/payment/templates/InvoiceEmail";
 import FinancialSummaryEmail from "@/modules/payment/templates/FinancialSummaryEmail";
 import {
@@ -89,12 +88,6 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
 
   if (!financial_report) {
     throw new Error("Financial report not found");
-  }
-
-  const parameter = await ParameterService.getParameter();
-
-  if (!parameter) {
-    throw new Error("Parameters not found");
   }
 
   const qrCode = await QRCode.toDataURL(

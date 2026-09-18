@@ -2,70 +2,60 @@ import { prisma } from "@/lib/prisma";
 import { ParameterInput } from "./parameter.type";
 import { SettingsService } from "@/modules/settings/services/settings/settings.service";
 
+// Únicos valores por defecto que quedan "en código": se usan solo cuando
+// ni el tenant, ni su isla, ni ningún Setting global tienen todavía un
+// valor cargado (p.ej. un tenant sin jurisdictionId asignado). Reemplazan
+// al antiguo singleton `Parameter` (eliminado — ver docs/plan-alineacion-
+// cfsb.md punto 2.5); el Superadministrador sigue pudiendo cambiar
+// cualquiera de estos valores sin tocar código editando `Setting`.
+const DEFAULT_PARAMETER: ParameterInput = {
+  collection_fee_rate: 15,
+  abb_rate: 6,
+  collection_fee_minimum_amount: 40,
+  company_aanmaning_term_days: 5,
+  consumer_aanmaning_term_days: 14,
+  company_sommatie_term_days: 7,
+  consumer_sommatie_term_days: 14,
+  company_aanmaning_penalty: 25,
+  natural_aanmaning_penalty: 15,
+  company_sommatie_penalty: 50,
+  natural_sommatie_penalty: 25,
+  company_reaction_limit_days: 5,
+  company_no_reaction_penalty: 100,
+  natural_no_reaction_penalty: 50,
+  company_payment_agreement_fee: 50,
+  natural_payment_agreement_fee: 25,
+  invoice_number_length: 8,
+  invoice_prefix: "INV",
+  invoice_sequence: 0,
+  digital_file_costs: 10,
+  extra_administrative_costs: 0,
+  report_financial_pricing: 35,
+  blok_check_pricing: 35,
+  blockade_registration_pricing: 35,
+  far_registration_fee: 10,
+  bank_account: "",
+  bank_name: "",
+};
+
 export class ParameterService {
-  static getParameters = async () => {
-    const parameter = await prisma.parameter.findFirst();
-
-    if (!parameter) {
-      return await prisma.parameter.create({
-        data: {},
-      });
-    }
-
-    return parameter;
-  };
-
-  static updateParameters = async (data: ParameterInput) => {
-    const parameter = await prisma.parameter.findFirst();
-
-    if (!parameter) {
-      return prisma.parameter.create({
-        data,
-      });
-    }
-
-    return prisma.parameter.update({
-      where: {
-        id: parameter.id,
-      },
-      data,
-    });
-  };
-
-  static getParameter = async (): Promise<ParameterInput | null> => {
-    const PARAMETER_ID = process.env.NEXT_PUBLIC_PARAMETER_ID;
-
-    if (PARAMETER_ID) {
-      const parameter = await prisma.parameter.findUnique({
-        where: { id: PARAMETER_ID },
-      });
-
-      if (parameter) return parameter;
-    }
-
-    return prisma.parameter.findFirst();
-  };
-
   // Tarifas, plazos y ABB por isla/jurisdicción (punto 14 del análisis
-  // CFSB — reemplaza al singleton global Parameter). Jerarquía de
-  // resolución por cada campo (ver SettingsService.getResolvedSettings):
-  //   1) Setting de tenant  2) Setting de la isla  3) columna histórica en
-  //   Jurisdiction (punto 13)  4) Parameter global. Así el Superadministrador
-  //   cambia tarifas/plazos/ABB editando Settings, sin tocar código — y
-  //   nada se rompe para las claves que todavía no tengan un Setting cargado.
-  static getParameterForTenant = async (tenantId: string): Promise<ParameterInput | null> => {
+  // CFSB). Jerarquía de resolución por cada campo (ver
+  // SettingsService.getResolvedSettings): 1) Setting de tenant 2) Setting
+  // de la isla 3) columna histórica en Jurisdiction (punto 13) 4) default
+  // fijo (DEFAULT_PARAMETER, arriba). Así el Superadministrador cambia
+  // tarifas/plazos/ABB editando Settings, sin tocar código — y nada se
+  // rompe para las claves que todavía no tengan un Setting cargado.
+  static getParameterForTenant = async (tenantId: string): Promise<ParameterInput> => {
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },
       include: { jurisdiction: true },
     });
     const jurisdiction = tenant?.jurisdiction;
-    const globalParameter = await this.getParameter();
-
-    if (!jurisdiction) return globalParameter;
 
     const settings = await SettingsService.getResolvedSettings({
       tenantId,
-      jurisdictionId: jurisdiction.id,
+      jurisdictionId: jurisdiction?.id ?? null,
     });
 
     const num = (key: string, fallback: number) => {
@@ -75,97 +65,96 @@ export class ParameterService {
     };
 
     return {
-      collection_fee_rate: num("collection_fee_rate", jurisdiction.collectionFeeRate),
-      abb_rate: num("abb_rate", jurisdiction.abbRate),
+      collection_fee_rate: num(
+        "collection_fee_rate",
+        jurisdiction?.collectionFeeRate ?? DEFAULT_PARAMETER.collection_fee_rate,
+      ),
+      abb_rate: num("abb_rate", jurisdiction?.abbRate ?? DEFAULT_PARAMETER.abb_rate),
       collection_fee_minimum_amount: num(
         "collection_fee_minimum_amount",
-        jurisdiction.collectionFeeMinimumAmount,
+        jurisdiction?.collectionFeeMinimumAmount ?? DEFAULT_PARAMETER.collection_fee_minimum_amount,
       ),
       company_aanmaning_term_days: num(
         "company_aanmaning_term_days",
-        jurisdiction.companyAanmaningTermDays,
+        jurisdiction?.companyAanmaningTermDays ?? DEFAULT_PARAMETER.company_aanmaning_term_days,
       ),
       consumer_aanmaning_term_days: num(
         "consumer_aanmaning_term_days",
-        jurisdiction.consumerAanmaningTermDays,
+        jurisdiction?.consumerAanmaningTermDays ?? DEFAULT_PARAMETER.consumer_aanmaning_term_days,
       ),
       company_sommatie_term_days: num(
         "company_sommatie_term_days",
-        jurisdiction.companySommatieTermDays,
+        jurisdiction?.companySommatieTermDays ?? DEFAULT_PARAMETER.company_sommatie_term_days,
       ),
       consumer_sommatie_term_days: num(
         "consumer_sommatie_term_days",
-        jurisdiction.consumerSommatieTermDays,
-      ),
-      small_company_price: num("small_company_price", globalParameter?.small_company_price ?? 0),
-      small_company_pfc_contribution: num(
-        "small_company_pfc_contribution",
-        globalParameter?.small_company_pfc_contribution ?? 0,
-      ),
-      large_company_price: num("large_company_price", globalParameter?.large_company_price ?? 0),
-      large_company_pfc_contribution: num(
-        "large_company_pfc_contribution",
-        globalParameter?.large_company_pfc_contribution ?? 0,
+        jurisdiction?.consumerSommatieTermDays ?? DEFAULT_PARAMETER.consumer_sommatie_term_days,
       ),
       company_aanmaning_penalty: num(
         "company_aanmaning_penalty",
-        jurisdiction.companyAanmaningPenalty,
+        jurisdiction?.companyAanmaningPenalty ?? DEFAULT_PARAMETER.company_aanmaning_penalty,
       ),
       natural_aanmaning_penalty: num(
         "natural_aanmaning_penalty",
-        jurisdiction.naturalAanmaningPenalty,
+        jurisdiction?.naturalAanmaningPenalty ?? DEFAULT_PARAMETER.natural_aanmaning_penalty,
       ),
       company_sommatie_penalty: num(
         "company_sommatie_penalty",
-        jurisdiction.companySommatiePenalty,
+        jurisdiction?.companySommatiePenalty ?? DEFAULT_PARAMETER.company_sommatie_penalty,
       ),
       natural_sommatie_penalty: num(
         "natural_sommatie_penalty",
-        jurisdiction.naturalSommatiePenalty,
+        jurisdiction?.naturalSommatiePenalty ?? DEFAULT_PARAMETER.natural_sommatie_penalty,
       ),
       company_reaction_limit_days: num(
         "company_reaction_limit_days",
-        jurisdiction.companyReactionLimitDays,
+        jurisdiction?.companyReactionLimitDays ?? DEFAULT_PARAMETER.company_reaction_limit_days,
       ),
       company_no_reaction_penalty: num(
         "company_no_reaction_penalty",
-        jurisdiction.companyNoReactionPenalty,
+        jurisdiction?.companyNoReactionPenalty ?? DEFAULT_PARAMETER.company_no_reaction_penalty,
       ),
       natural_no_reaction_penalty: num(
         "natural_no_reaction_penalty",
-        jurisdiction.naturalNoReactionPenalty,
+        jurisdiction?.naturalNoReactionPenalty ?? DEFAULT_PARAMETER.natural_no_reaction_penalty,
       ),
       company_payment_agreement_fee: num(
         "company_payment_agreement_fee",
-        jurisdiction.companyPaymentAgreementFee,
+        jurisdiction?.companyPaymentAgreementFee ?? DEFAULT_PARAMETER.company_payment_agreement_fee,
       ),
       natural_payment_agreement_fee: num(
         "natural_payment_agreement_fee",
-        jurisdiction.naturalPaymentAgreementFee,
+        jurisdiction?.naturalPaymentAgreementFee ?? DEFAULT_PARAMETER.natural_payment_agreement_fee,
       ),
-      invoice_number_length: num(
-        "invoice_number_length",
-        globalParameter?.invoice_number_length ?? 8,
+      invoice_number_length: num("invoice_number_length", DEFAULT_PARAMETER.invoice_number_length),
+      invoice_prefix: settings.invoice_prefix ?? DEFAULT_PARAMETER.invoice_prefix,
+      invoice_sequence: num("invoice_sequence", DEFAULT_PARAMETER.invoice_sequence),
+      digital_file_costs: num(
+        "digital_file_costs",
+        jurisdiction?.digitalFileCosts ?? DEFAULT_PARAMETER.digital_file_costs,
       ),
-      invoice_prefix: settings.invoice_prefix ?? globalParameter?.invoice_prefix ?? "",
-      invoice_sequence: num("invoice_sequence", globalParameter?.invoice_sequence ?? 0),
-      digital_file_costs: num("digital_file_costs", jurisdiction.digitalFileCosts),
       extra_administrative_costs: num(
         "extra_administrative_costs",
-        jurisdiction.extraAdministrativeCosts,
+        jurisdiction?.extraAdministrativeCosts ?? DEFAULT_PARAMETER.extra_administrative_costs,
       ),
       report_financial_pricing: num(
         "report_financial_pricing",
-        jurisdiction.reportFinancialPricing,
+        jurisdiction?.reportFinancialPricing ?? DEFAULT_PARAMETER.report_financial_pricing,
       ),
-      blok_check_pricing: num("blok_check_pricing", jurisdiction.blokCheckPricing),
+      blok_check_pricing: num(
+        "blok_check_pricing",
+        jurisdiction?.blokCheckPricing ?? DEFAULT_PARAMETER.blok_check_pricing,
+      ),
       blockade_registration_pricing: num(
         "blockade_registration_pricing",
-        jurisdiction.blockadeRegistrationPricing,
+        jurisdiction?.blockadeRegistrationPricing ?? DEFAULT_PARAMETER.blockade_registration_pricing,
       ),
-      far_registration_fee: num("far_registration_fee", jurisdiction.farRegistrationFee),
-      bank_account: jurisdiction.bankAccount || globalParameter?.bank_account || "",
-      bank_name: jurisdiction.bankName || globalParameter?.bank_name || "",
+      far_registration_fee: num(
+        "far_registration_fee",
+        jurisdiction?.farRegistrationFee ?? DEFAULT_PARAMETER.far_registration_fee,
+      ),
+      bank_account: jurisdiction?.bankAccount || DEFAULT_PARAMETER.bank_account,
+      bank_name: jurisdiction?.bankName || DEFAULT_PARAMETER.bank_name,
     };
   };
 }

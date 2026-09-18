@@ -102,8 +102,7 @@ export class BillingInvoiceService {
 
     if (!invoice) throw new Error("Factuur niet gevonden");
 
-    const parameter = await ParameterService.getParameter();
-    if (!parameter) throw new Error("Parameter niet gevonden");
+    const parameter = await ParameterService.getParameterForTenant(invoice.tenant_id);
 
     const island = getNameCountry(invoice.tenant.country_code);
 
@@ -277,8 +276,7 @@ export class BillingInvoiceService {
   }
 
   static async getNextInvoiceNumber(tenant_id: string): Promise<string> {
-    const parameter = await ParameterService.getParameter();
-    if (!parameter) throw new Error("Parameter niet gevonden");
+    const parameter = await ParameterService.getParameterForTenant(tenant_id);
 
     const lastInvoice = await prisma.billingInvoice.findFirst({
       where: { tenant_id },

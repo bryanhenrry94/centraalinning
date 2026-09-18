@@ -5,80 +5,10 @@ const prisma = new PrismaClient();
 
 // IDs fijos para poder referenciarlos entre sí y desde el .env
 const ADMIN_TENANT_ID = "0874303e-6795-46ef-8416-5d76bba8071b";
-const PARAMETER_ID = "0874303e-6795-46ef-8416-5d76bba8071b";
 const ADMIN_USER_EMAIL = "bryanhenrry94@gmail.com";
 const PLAN_DEELNEMER_ID = "plan-klant-001";
 const PLAN_ADVOCAAT_ID = "plan-advocaat-001";
 const PLAN_DEURWAARDER_ID = "plan-deurwaarder-001";
-
-async function seedParameter() {
-  await prisma.parameter.upsert({
-    where: { id: PARAMETER_ID },
-    update: {},
-    create: {
-      id: PARAMETER_ID,
-
-      // Tarifa de cobranza AOP
-      collection_fee_rate: 15, // 15 % sobre el monto principal
-      collection_fee_minimum_amount: 40, // mínimo USD 40
-
-      // ABB (belasting) – impuesto Bonaire/Curaçao ~6 %
-      abb_rate: 6,
-
-      // Plazos aanmaning (recordatorio de pago)
-      company_aanmaning_term_days: 5,
-      consumer_aanmaning_term_days: 14,
-
-      // Plazos sommatie (intimación formal)
-      company_sommatie_term_days: 7,
-      consumer_sommatie_term_days: 14,
-
-      // Precios de membresía
-      small_company_price: 49,
-      small_company_pfc_contribution: 5,
-      large_company_price: 99,
-      large_company_pfc_contribution: 10,
-
-      // Penalidades por incumplimiento de acuerdo de pago
-      company_aanmaning_penalty: 25,
-      natural_aanmaning_penalty: 15,
-      company_sommatie_penalty: 50,
-      natural_sommatie_penalty: 25,
-
-      // Límite de respuesta y penalidades sin reacción
-      company_reaction_limit_days: 5,
-      company_no_reaction_penalty: 100,
-      natural_no_reaction_penalty: 50,
-
-      // Honorarios por acuerdo de pago
-      company_payment_agreement_fee: 50,
-      natural_payment_agreement_fee: 25,
-
-      // Facturación
-      invoice_number_length: 8,
-      invoice_prefix: "INV",
-      invoice_sequence: 0,
-
-      // Costos adicionales
-      digital_file_costs: 10,
-      extra_administrative_costs: 0,
-      report_financial_pricing: 35,
-      blok_check_pricing: 35,
-      blockade_registration_pricing: 35,
-      far_registration_fee: 10,
-
-      // Banco receptor
-      bank_name: "MCB (Maduro & Curiel's Bank)",
-      bank_account: "123456789",
-
-      // Sistema
-      currency_code: "USD",
-      timezone: "America/Kralendijk",
-    },
-  });
-
-  console.log("✓ Parameter seeded");
-}
 
 // Orden de implementación acordado: Bonaire (activa) → Curaçao → Aruba
 // (preparadas, isActive=false). Los nombres de isla viven acá como datos,
@@ -838,6 +768,30 @@ async function seedSettingCategories() {
       key: "vat_number",
       value: "",
     },
+    // Facturnummering CFSB-facturen (voorheen Parameter.invoice_prefix/
+    // invoice_sequence/invoice_number_length — global, niet per isla/tenant,
+    // want het is één doorlopende reeks platform-breed).
+    {
+      id: "setting-invoice-prefix",
+      categoryId: "cat-billing",
+      name: "Factuurprefix",
+      key: "invoice_prefix",
+      value: "INV",
+    },
+    {
+      id: "setting-invoice-sequence",
+      categoryId: "cat-billing",
+      name: "Factuurvolgnummer (startwaarde)",
+      key: "invoice_sequence",
+      value: "0",
+    },
+    {
+      id: "setting-invoice-number-length",
+      categoryId: "cat-billing",
+      name: "Lengte factuurnummer",
+      key: "invoice_number_length",
+      value: "8",
+    },
     // Beveiliging
     {
       id: "setting-session-timeout",
@@ -888,7 +842,6 @@ async function main() {
   await seedJurisdictions();
   await seedAdminTenant();
   await seedAdminUser();
-  await seedParameter();
   await seedPlans();
   await seedInterestTypes();
   await seedSettingCategories();

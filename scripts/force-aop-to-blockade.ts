@@ -10,6 +10,7 @@
  *   npx tsx scripts/force-aop-to-blockade.ts <debtClaimId> [baseUrl]
  */
 import { prisma } from "../lib/prisma";
+import { ParameterService } from "../modules/settings/services/parameter/parameter.service";
 
 const TOKEN = process.env.CRON_SECRET_TOKEN;
 const MAX_ITERATIONS = 6;
@@ -40,8 +41,7 @@ async function main() {
   });
   if (!debtClaim) throw new Error(`DebtClaim ${debtClaimId} no encontrado`);
 
-  const parameter = await prisma.parameter.findFirst();
-  if (!parameter) throw new Error("No hay ninguna fila en la tabla parameter");
+  const parameter = await ParameterService.getParameterForTenant(debtClaim.tenantId);
 
   const isCompany = debtClaim.debtor.person?.person_type === "COMPANY";
   const daysMap: Record<string, number> = {

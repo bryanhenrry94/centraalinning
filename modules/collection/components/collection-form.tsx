@@ -27,7 +27,7 @@ import {
 } from "@/modules/collection/services/debtor.type";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { useTenant } from "@/modules/auth/hooks/useTenant";
-import { getParameterAction } from "@/modules/settings/actions/parameter.actions";
+import { getParameterForTenantAction } from "@/modules/settings/actions/parameter.actions";
 import { formatCurrency } from "@/shared/utils/formatters";
 import { ParameterInput } from "@/modules/settings/services/parameter/parameter.type";
 import { getDebtorsAction } from "@/modules/collection/actions/debtor.actions";
@@ -87,7 +87,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
 
   const fetchParameter = async () => {
     try {
-      const result = await getParameterAction();
+      const result = await getParameterForTenantAction();
       setParameter(result);
     } catch (error) {
       console.error("Fout bij het ophalen van de parameter:", error);

@@ -38,11 +38,7 @@ export const buildAanmaningPdfProps = async (
     throw new Error("Debt claim not found");
   }
 
-  const parameter = await ParameterService.getParameter();
-
-  if (!parameter) {
-    throw new Error("Parameters not found");
-  }
+  const parameter = await ParameterService.getParameterForTenant(claim.tenantId);
 
   const island = getNameCountry(claim.tenant.country_code);
 

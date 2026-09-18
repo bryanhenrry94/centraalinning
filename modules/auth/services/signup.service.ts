@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { SignUpSchema } from "./signup.validators";
 import { SignUpInput } from "./signup.type";
-import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 import { TenantService } from "@/modules/tenant/services/tenant.service";
 import { SentooService } from "@/infrastructure/sentoo/sentoo.service";
 import {
@@ -37,16 +36,6 @@ export class SignupService {
         return {
           success: false,
           error: "Dit KVK-nummer is al geregistreerd",
-        };
-      }
-
-      // 3. GET PARAMETERS
-      const parameter = await ParameterService.getParameter();
-
-      if (!parameter) {
-        return {
-          success: false,
-          error: "Systeemconfiguratie niet gevonden",
         };
       }
 

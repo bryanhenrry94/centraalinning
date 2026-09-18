@@ -29,7 +29,7 @@ import {
 } from "@/modules/payment/services/payment.validators";
 import { createFinancialReportRequest } from "@/modules/payment/actions/financial-report.actions";
 import { getDebtorByUserId } from "@/modules/collection/actions/debtor.actions";
-import { getParameterAction } from "@/modules/settings/actions/parameter.actions";
+import { getParameterForTenantAction } from "@/modules/settings/actions/parameter.actions";
 import { registerDebtPayment } from "@/modules/payment/actions/payment.actions";
 
 const VerklaringPage: React.FC = () => {
@@ -49,7 +49,7 @@ const VerklaringPage: React.FC = () => {
   useEffect(() => {
     const fetchPrice = async () => {
       try {
-        const parameter = await getParameterAction();
+        const parameter = await getParameterForTenantAction();
 
         if (parameter?.report_financial_pricing) {
           setPrice(Number(parameter.report_financial_pricing));

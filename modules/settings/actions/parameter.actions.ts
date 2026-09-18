@@ -4,15 +4,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 
-export async function getParameterAction() {
-  return ParameterService.getParameter();
-}
-
-// A diferencia de getParameterAction (Parameter global, sin resolver por
-// isla/tenant), esta resuelve la jerarquía Setting(tenant) -> Setting(isla)
-// -> Jurisdiction -> Parameter global. Usar esta en pantallas que muestran
-// un precio/plazo que también se cobra o valida vía getParameterForTenant,
-// para que lo mostrado nunca pueda divergir de lo cobrado.
+// Resuelve la jerarquía Setting(tenant) -> Setting(isla) -> Jurisdiction ->
+// default fijo (ver ParameterService.getParameterForTenant). Es la única
+// forma soportada de leer estos parámetros — así lo mostrado en pantalla
+// nunca puede divergir de lo que efectivamente se cobra/valida.
 export async function getParameterForTenantAction() {
   const session = await getServerSession(authOptions);
 
