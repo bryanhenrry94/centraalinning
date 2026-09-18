@@ -5,8 +5,6 @@ import {
   CreateFinancialAgreementWithDebtorInput,
 } from "@/modules/financial-agreement/services/financial-agreement.validators";
 import { FAR_REGISTRATION_FEE } from "@/modules/financial-agreement/constants/financial-agreement";
-import { NotificationService } from "@/modules/notification/services/notification.service";
-import { NotificationType } from "@/modules/notification/constants/notification-type";
 import { PaymentService } from "@/modules/payment/services/payment.service";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { DebtorService } from "@/modules/collection/services/debtor.service";
@@ -212,8 +210,12 @@ export class FinancialAgreementService {
     // se crearon arriba, así que si falla la subida de un adjunto (p.ej. R2
     // mal configurado en el servidor) no debe tirar abajo todo el registro
     // ni dejarlo huérfano en PENDING_PAYMENT sin que el usuario llegue a
-    // pagar. Se loguea y se sigue; el usuario puede reintentar el adjunto
-    // más tarde desde el detalle del FAR.
+    // pagar. Se loguea Y se reporta al caller (documentsReceived/
+    // documentUploadErrors) para que el wizard pueda avisarle al usuario
+    // que un adjunto no se guardó — documentsReceived es cuántos archivos
+    // llegaron realmente al server action, para poder distinguir "el
+    // navegador nunca envió el archivo" de "se subió pero R2/DB falló".
+    const documentUploadErrors: string[] = [];
     for (const file of files) {
       try {
         await this.uploadDocument({
@@ -227,10 +229,16 @@ export class FinancialAgreementService {
           `Error uploading FAR document "${file.fileName}" for ${result.financialAgreementId}:`,
           error,
         );
+        documentUploadErrors.push(file.fileName);
       }
     }
 
-    return { ...result, debtorId: debtor.id };
+    return {
+      ...result,
+      debtorId: debtor.id,
+      documentsReceived: files.length,
+      documentUploadErrors,
+    };
   };
 
   // ---------------------------------------------------------------------
@@ -296,17 +304,6 @@ export class FinancialAgreementService {
     const updated = await prisma.financialAgreement.update({
       where: { id: financialAgreement.id },
       data: { status: "REGISTERED", registeredAt: new Date() },
-    });
-
-    await NotificationService.notifyTenantStaff(financialAgreement.tenantId, {
-      type: NotificationType.FAR_REGISTERED,
-      title: "FAR registrado",
-      message: `El acuerdo financiero ${
-        financialAgreement.reference ?? financialAgreement.id
-      } quedó registrado. No requiere seguimiento ni recordatorios.`,
-      link: `/financial-agreements/${updated.id}`,
-      entity_type: "FinancialAgreement",
-      entity_id: updated.id,
     });
 
     // Confirmación por correo (pedido sponsor): al deudor/wederpartij ligado

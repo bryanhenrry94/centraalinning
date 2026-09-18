@@ -18,7 +18,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { formatCurrency } from "@/shared/utils/formatters";
-import { notifyError, notifySuccess } from "@/shared/ui/notifications";
+import { notifyError, notifySuccess, notifyWarning } from "@/shared/ui/notifications";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 import { getParameterForTenantAction } from "@/modules/settings/actions/parameter.actions";
 import { createFinancialAgreementWithDebtor } from "@/modules/financial-agreement/actions/financial-agreement.actions";
@@ -194,6 +194,24 @@ export const FarRegistrationWizard: React.FC = () => {
         },
         documents,
       );
+
+      // Aviso inmediato si algún adjunto no llegó a guardarse — antes esto
+      // fallaba en silencio (solo un console.error del lado servidor) y el
+      // usuario recién se enteraba al leer "Documenten: 0 bijgevoegd" en el
+      // correo de confirmación. documentsReceived compara con lo que el
+      // wizard efectivamente intentó enviar (documents.length) para además
+      // detectar si el archivo nunca llegó al server action.
+      if (documents.length > 0) {
+        if (response.documentsReceived < documents.length) {
+          notifyWarning(
+            "Let op: niet alle documenten zijn meegestuurd. De FAR is wel geregistreerd, maar controleer de bijlagen.",
+          );
+        } else if (response.documentUploadErrors.length > 0) {
+          notifyWarning(
+            `Let op: ${response.documentUploadErrors.length} document(en) konden niet worden opgeslagen. De FAR is wel geregistreerd.`,
+          );
+        }
+      }
 
       return {
         success: true,
