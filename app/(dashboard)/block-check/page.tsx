@@ -22,7 +22,6 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import { Close as CloseIcon } from "@mui/icons-material";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 import { formatCurrency } from "@/shared/utils/formatters";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
@@ -35,11 +34,8 @@ import { AppAction } from "@/shared/constants/AppAction";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { notifyError } from "@/shared/ui/notifications";
 
-const RESULT_REDIRECT_DELAY_MS = 15_000;
-
 const BlokCheckPage = () => {
   const { data: session } = useSession();
-  const router = useRouter();
 
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
@@ -71,18 +67,6 @@ const BlokCheckPage = () => {
 
     fetchParameter();
   }, [session?.user?.tenant_id]);
-
-  // Tras mostrar el resultado del pago, se redirige automáticamente a
-  // Diensten al cabo de 15 segundos, sin aviso previo.
-  useEffect(() => {
-    if (!showResult) return;
-
-    const timer = setTimeout(() => {
-      router.push("/workstation");
-    }, RESULT_REDIRECT_DELAY_MS);
-
-    return () => clearTimeout(timer);
-  }, [showResult, router]);
 
   // Membership gate
   const currentMembership =
@@ -122,7 +106,8 @@ const BlokCheckPage = () => {
       if (!result.success || !result.data) {
         setError(
           result.error ??
-            "Geen persoon gevonden met dit identificatienummer, CFSB-nummer of deze naam in het systeem",
+            `Geen resultaat gevonden. 
+            Er is geen registratie gevonden die overeenkomt met de ingevoerde gegevens.`,
         );
         setLoading(false);
         return;
@@ -215,8 +200,8 @@ const BlokCheckPage = () => {
             Blok-Check uitvoeren
           </Typography>
           <Typography variant="body2" color="textSecondary">
-            Controleer of een persoon of onderneming is geregistreerd met een
-            economische blokkade.
+            Controleer of een persoon of onderneming een economische blokkade
+            heeft.
           </Typography>
         </Box>
       </Box>
@@ -235,7 +220,7 @@ const BlokCheckPage = () => {
               >
                 <TextField
                   fullWidth
-                  placeholder="ID-nummer / KVK-nummer, CFSB-nummer of volledige naam"
+                  placeholder="ID-nummer / KVK-nummer / CFSB-nummer / volledige naam"
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);
