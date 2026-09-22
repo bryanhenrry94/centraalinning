@@ -177,6 +177,8 @@ export interface SommatiePDFProps {
   amount_original: string;
   calculatedABB: string;
   tenantName: string;
+  bankName: string;
+  accountNumber: string;
   administrativeCosts: string;
   additionalCosts: string;
   additionalABB: string;
@@ -190,9 +192,12 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
   debtorAddress,
   island,
   reference_number,
+  total_amount,
   amount_original,
   calculatedABB,
   tenantName,
+  bankName,
+  accountNumber,
   administrativeCosts,
   additionalCosts,
   additionalABB,
@@ -239,19 +244,13 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
         {/* CONTENT */}
         <View style={styles.content}>
           <Text style={[styles.paragraph, styles.greeting]}>
-            Geachte heer/mevrouw,
+            Geachte {debtorName},
           </Text>
 
           <Text style={styles.paragraph}>
-            Hierbij vragen wij uw aandacht voor onderstaande openstaande
-            verplichting.
-          </Text>
-
-          <Text style={styles.paragraph}>
-            Op {aanmaningDate} hebben wij u reeds verzocht uw openstaande
-            verplichting te voldoen. Binnen de gestelde termijn heeft geen
-            volledige betaling plaatsgevonden en is geen betalingsregeling
-            getroffen.
+            Op {aanmaningDate} hebben wij u aangemaand om uw openstaande
+            vordering te voldoen. Binnen de gestelde termijn is hieraan niet
+            voldaan.
           </Text>
 
           {/* TABLE */}
@@ -275,28 +274,48 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
                 {formatAmount(cfsbKosten)}
               </Text>
             </View>
+
+            <View
+              style={[
+                styles.tableRow,
+                { borderTopWidth: 1, borderTopColor: "#111827", marginTop: 4, paddingTop: 4 },
+              ]}
+            >
+              <Text style={styles.tableLabel}>Totaalbedrag</Text>
+              <Text style={styles.tableSymbol}>USD</Text>
+              <Text style={styles.tableValue}>
+                {formatAmount(total_amount)}
+              </Text>
+            </View>
           </View>
 
           <Text style={styles.paragraph}>
-            Wij verzoeken u de openstaande hoofdsom binnen 2 dagen na
-            dagtekening van deze brief volledig te voldoen.
+            Wij verzoeken u de openstaande hoofdsom van USD{" "}
+            {formatAmount(amount_original)} binnen 2 dagen na dagtekening van
+            deze brief volledig te voldoen.
           </Text>
 
           <Text style={styles.paragraph}>
-            Om volledige toegang tot uw CFSB-account te krijgen, dient u in te
-            loggen op uw account en eerst de openstaande CFSB-kosten van USD{" "}
-            {formatAmount(cfsbKosten)} volledig te betalen.
+            U kunt hiervoor inloggen op uw CFSB-account en daar direct
+            betalen of bij ons een betalingsregeling aanvragen. De hoofdsom
+            wordt rechtstreeks overgemaakt aan {tenantName} op {bankName}
+            -bankrekening {accountNumber}.
           </Text>
 
           <Text style={styles.paragraph}>
-            Indien binnen deze termijn geen volledige betaling plaatsvindt of
-            geen betalingsregeling wordt getroffen, wordt het dossier volgens
-            de geldende CFSB-procedure verder opgevolgd. Bij het uitblijven
-            van een oplossing kan een economische blokkade worden
-            geactiveerd. Aanvullende kosten kunnen van toepassing zijn.
+            Indien u buiten CFSB betaalt, vermeld dan uw naam en
+            dossiernummer {reference_number}. De CFSB-kosten van USD{" "}
+            {formatAmount(cfsbKosten)} blijven afzonderlijk verschuldigd en
+            dienen rechtstreeks te worden betaald.
           </Text>
 
-          <Text style={styles.paragraph}>Hoogachtend,</Text>
+          <Text style={styles.paragraph}>
+            Indien binnen de gestelde termijn niet aan de
+            betalingsverplichting wordt voldaan, wordt het dossier verder
+            opgevolgd. Aanvullende kosten kunnen van toepassing zijn.
+          </Text>
+
+          <Text style={styles.paragraph}>Met vriendelijke groet,</Text>
 
           {/* SIGNATURE */}
           <View style={styles.signatureWrapper}>

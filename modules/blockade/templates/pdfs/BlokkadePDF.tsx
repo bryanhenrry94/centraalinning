@@ -215,7 +215,7 @@ const BlokkadePDF: React.FC<BlokkadePDFProps> = ({
           <View style={styles.headerTop}>
             <Image style={styles.logo} src={logoUrl} />
 
-            <Text style={styles.title}>Economische Blokkade</Text>
+            <Text style={styles.title}>Economische blokkade</Text>
           </View>
 
           <View style={styles.divider} />
@@ -241,7 +241,7 @@ const BlokkadePDF: React.FC<BlokkadePDFProps> = ({
 
         {/* CONTENT */}
         <View style={styles.content}>
-          <Text style={styles.paragraph}>Geachte heer/mevrouw,</Text>
+          <Text style={styles.paragraph}>Geachte {debtorName},</Text>
 
           <Text style={styles.paragraph}>
             Er is een economische blokkade op uw naam geregistreerd binnen de
@@ -254,15 +254,19 @@ const BlokkadePDF: React.FC<BlokkadePDFProps> = ({
           </Text>
 
           <Text style={styles.listItem}>
-            het openstaande bedrag volledig te betalen; of
+            het openstaande bedrag volledig te voldoen;
           </Text>
 
           <Text style={[styles.listItem, { marginBottom: 10 }]}>
             een betalingsregeling te treffen en deze correct na te komen.
           </Text>
 
+          <Text style={styles.paragraph}>
+            U kunt hiervoor inloggen op uw CFSB-account.
+          </Text>
+
           <Text style={[styles.paragraph, { marginTop: 20 }]}>
-            Met vriendelijke groet,
+            Hoogachtend,
           </Text>
 
           {/* SIGNATURE */}

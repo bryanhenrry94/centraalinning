@@ -16,7 +16,6 @@ import {
   FormControlLabel,
   Grid,
   IconButton,
-  MenuItem,
   Paper,
   Stack,
   TextField,
@@ -46,7 +45,6 @@ import ListAltIcon from "@mui/icons-material/ListAlt";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 import { formatCurrency } from "@/shared/utils/formatters";
 import { useRouter } from "next/navigation";
-import { REASONS } from "@/modules/blockade/constants/reason-blockades";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { getParameterForTenantAction } from "@/modules/settings/actions/parameter.actions";
 
@@ -127,7 +125,8 @@ export default function BlockCreatePage() {
 
   const selectedReason = watch("reason");
   const reasonNoteRequired =
-    selectedReason === "EXTERNAL_PROCEDURE_COMPLETED" || selectedReason === "OTHER";
+    selectedReason === "EXTERNAL_PROCEDURE_COMPLETED" ||
+    selectedReason === "OTHER";
 
   const onSubmit = async (data: CreateBlockadeInput) => {
     // Validación con react-hook-form + zod ya pasó
@@ -180,7 +179,9 @@ export default function BlockCreatePage() {
     );
 
     if (invalidFiles.length > 0) {
-      notifyError("Alleen PDF-, Word-, Excel-bestanden en afbeeldingen zijn toegestaan.");
+      notifyError(
+        "Alleen PDF-, Word-, Excel-bestanden en afbeeldingen zijn toegestaan.",
+      );
     }
 
     if (validFiles.length === 0) {
@@ -454,7 +455,7 @@ export default function BlockCreatePage() {
                       <NumericFormat
                         customInput={TextField}
                         fullWidth
-                        label="Openstaand bedrag"
+                        label="Openstaande vordering"
                         value={field.value ?? ""}
                         thousandSeparator
                         decimalScale={2}
@@ -478,19 +479,12 @@ export default function BlockCreatePage() {
                     render={({ field }) => (
                       <TextField
                         {...field}
-                        select
+                        value="Uitblijven van betaling"
                         label="Reden Blokkade"
                         fullWidth
                         size="small"
-                        error={!!errors.reason}
-                        helperText={errors.reason?.message}
-                      >
-                        {REASONS.map((reason) => (
-                          <MenuItem key={reason.value} value={reason.value}>
-                            {reason.label}
-                          </MenuItem>
-                        ))}
-                      </TextField>
+                        disabled
+                      />
                     )}
                   />
                 </Grid>
@@ -620,12 +614,16 @@ export default function BlockCreatePage() {
                         onChange={(e) => field.onChange(e.target.checked)}
                       />
                     }
-                    label="Ik bevestig dat de informatie en bijgevoegde documenten juist zijn en, indien van toepassing, dat het externe traject correct werd afgerond."
+                    label="Ik bevestig dat de bovenstaande gegevens en eventuele bewijsstukken juist zijn."
                   />
                 )}
               />
               {errors.confirmed && (
-                <Typography color="error" variant="caption" sx={{ display: "block", mt: 0.5 }}>
+                <Typography
+                  color="error"
+                  variant="caption"
+                  sx={{ display: "block", mt: 0.5 }}
+                >
                   {errors.confirmed.message}
                 </Typography>
               )}

@@ -159,6 +159,10 @@ export const buildSommatiePdfProps = async (
     throw new Error("Debt claim not found");
   }
 
+  const parameter = await ParameterService.getParameterForTenant(
+    claim.tenantId,
+  );
+
   const island = getNameCountry(claim.tenant.country_code);
 
   const debtorName =
@@ -219,6 +223,8 @@ export const buildSommatiePdfProps = async (
     amount_original: Number(claim.principalAmount).toFixed(2),
     calculatedABB: calculatedABBAmount.toFixed(2),
     tenantName: claim.tenant.name || "Organisatie",
+    bankName: parameter.bank_name || "Bank Name",
+    accountNumber: parameter.bank_account || "Account Number",
     administrativeCosts: administrativeCosts.toFixed(2),
     additionalCosts: additionalCosts.toFixed(2),
     additionalABB: additionalABBAmount.toFixed(2),

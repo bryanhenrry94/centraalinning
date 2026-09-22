@@ -21,7 +21,7 @@ export default function EconomischeBlokkadeEmail({
   logoUrl,
   fullname,
   creditorName,
-  portalUrl = "https://www.cfsb.nl",
+  portalUrl = "https://auth.sbxcentraalinning.com/login",
 }: EconomischeBlokkadeEmailProps) {
   return (
     <Html>
@@ -41,24 +41,25 @@ export default function EconomischeBlokkadeEmail({
 
           <Section>
             <Text style={paragraph}>
-              Geachte <strong>{fullname}</strong>,
+              Beste <strong>{fullname}</strong>,
             </Text>
 
             <Text style={paragraph}>
-              Er is namens <strong>{creditorName}</strong> een economische
-              blokkade op uw naam geregistreerd binnen de CFSB-samenwerking.
+              U heeft namens <strong>{creditorName}</strong> een economische
+              blokkade ontvangen.
             </Text>
 
             <Text style={paragraph}>
-              Deze registratie houdt verband met een openstaande
-              betalingsverplichting.
+              Wij verzoeken u de brief te bekijken en, indien nodig, actie te
+              ondernemen via uw CFSB-account.
             </Text>
 
             <Text style={paragraph}>
-              Voor meer informatie of het treffen van een betalingsregeling kunt u inloggen via {" "}
+              Log in via{" "}
               <Link href={portalUrl} style={link}>
-                www.cfsbgroup.com
+                Log hier in
               </Link>
+              .
             </Text>
           </Section>
 

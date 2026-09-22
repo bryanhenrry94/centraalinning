@@ -198,26 +198,19 @@ const IngebrekestellingPDF: React.FC<IngebrekestellingProps> = ({
 
         {/* CONTENT */}
         <View style={styles.content}>
-          <Text style={styles.paragraph}>Geachte heer/mevrouw,</Text>
+          <Text style={styles.paragraph}>Geachte {debtorName},</Text>
 
           <Text style={styles.paragraph}>
             Op {aanmaningDate} hebben wij u aangemaand en op {sommatieDate}{" "}
-            gesommeerd om uw openstaande verplichting te voldoen. Tot op
-            heden heeft geen volledige betaling plaatsgevonden en is geen
-            betalingsregeling getroffen.
+            gesommeerd om uw openstaande vordering te voldoen. Tot op heden
+            is niet aan de betalingsverplichting voldaan.
           </Text>
 
           <Text style={styles.paragraph}>
             U wordt hierbij officieel in gebreke gesteld.
           </Text>
 
-          <Text style={styles.paragraph}>
-            Om volledige toegang tot uw CFSB-account te krijgen, dient u in
-            te loggen op uw account en eerst de openstaande CFSB-kosten
-            volledig te betalen.
-          </Text>
-
-          <Text style={styles.paragraph}>Met vriendelijke groet,</Text>
+          <Text style={styles.paragraph}>Hoogachtend,</Text>
 
           {/* SIGNATURE */}
           <View style={styles.signatureWrapper}>

@@ -31,6 +31,10 @@ const TestSommatiePage = () => {
 
     tenantName: "DAZZSOFT",
 
+    bankName: "MCB",
+
+    accountNumber: "418.825.10",
+
     administrativeCosts: "150.00",
 
     additionalCosts: "250.00",

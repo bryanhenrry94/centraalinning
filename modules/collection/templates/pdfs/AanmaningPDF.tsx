@@ -149,7 +149,10 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
           </View>
           <View style={styles.meta}>
             <Text style={styles.title}>Aanmaning</Text>
-            <Text style={{ fontSize: 11 }}>Verzenddatum: {date}</Text>
+            <Text style={{ fontSize: 11 }}>Datum: {date}</Text>
+            <Text style={{ fontSize: 11 }}>
+              Dossiernummer: {reference_number}
+            </Text>
           </View>
         </View>
 
@@ -165,17 +168,11 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
 
         {/* Content */}
         <View style={styles.content}>
-          <Text style={styles.paragraph}>
-            Volgens onze administratie is factuur nr. {reference_number} nog
-            niet volledig betaald. Het openstaande bedrag van USD{" "}
-            {formatAmount(total_amount)} dient binnen een termijn van 14 dagen
-            na de datum van deze brief te worden voldaan.
-          </Text>
+          <Text style={styles.paragraph}>Geachte {debtorName},</Text>
 
           <Text style={styles.paragraph}>
-            Wij verzoeken u vriendelijk het verschuldigde bedrag over te maken
-            naar rekening {bankName} {accountNumber}, onder vermelding van uw
-            naam, bedrijfsnaam, dossiernummer of factuurnummer in de referentie.
+            Hierbij vragen wij uw aandacht voor onderstaande openstaande
+            vordering.
           </Text>
 
           {/* Table */}
@@ -209,29 +206,36 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
           </View>
 
           <Text style={styles.paragraph}>
-            Wij verzoeken u de hoofdsom binnen 14 dagen na dagtekening van deze
-            brief te voldoen.
+            Wij verzoeken u de openstaande hoofdsom van USD{" "}
+            {formatAmount(amount_original)} binnen 14 dagen na dagtekening van
+            deze brief volledig te voldoen.
           </Text>
 
           <Text style={styles.paragraph}>
-            Om volledige toegang tot uw CFSB-account te krijgen, dient u in te
-            loggen op uw account en eerst de openstaande CFSB-kosten van USD
-            263,50 volledig te betalen.
+            U kunt hiervoor inloggen op uw CFSB-account en daar direct betalen
+            of bij ons een betalingsregeling aanvragen. De hoofdsom wordt
+            rechtstreeks overgemaakt aan {tenantName} op {bankName}
+            -bankrekening {accountNumber}.
           </Text>
 
           <Text style={styles.paragraph}>
-            Indien binnen deze termijn geen volledige betaling plaatsvindt of
-            geen betalingsregeling wordt getroffen, wordt het dossier volgens de
-            geldende CFSB-procedure verder opgevolgd. De toegang tot uw account
-            kan beperkt blijven en aanvullende kosten kunnen van toepassing
-            zijn.
+            Indien u buiten CFSB betaalt, vermeld dan uw naam en dossiernummer{" "}
+            {reference_number}. De CFSB-kosten van USD{" "}
+            {formatAmount(aopCosts)} blijven afzonderlijk verschuldigd en
+            dienen rechtstreeks te worden betaald.
+          </Text>
+
+          <Text style={styles.paragraph}>
+            Indien binnen de gestelde termijn niet aan de
+            betalingsverplichting wordt voldaan, wordt het dossier verder
+            opgevolgd. Aanvullende kosten kunnen van toepassing zijn.
           </Text>
 
           <Text style={styles.paragraph}>Met vriendelijke groet,</Text>
 
           <View style={styles.signature}>
             <Text style={{ fontSize: 11 }}>{tenantName}</Text>
-            <Text style={{ fontSize: 11 }}>Schuldeiser</Text>
+            <Text style={{ fontSize: 11 }}>Schuldeiser / CFSB-deelnemer</Text>
           </View>
         </View>
 
