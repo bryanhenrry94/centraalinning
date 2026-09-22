@@ -29,7 +29,7 @@ export const BlokkadeEmail = ({
         </Text>
         <br />
         <Text style={paragraph}>
-          U heeft namens <strong>{tenantName}</strong> een blokkade
+          U heeft namens <strong>{tenantName}</strong> een economische blokkade
           ontvangen via de CFSB-samenwerking.
         </Text>
 
@@ -40,7 +40,10 @@ export const BlokkadeEmail = ({
 
         <Text style={{ ...paragraph, marginTop: "10px" }}>
           Log in via{" "}
-          <Link href={"https://www.cfsbgroup.com"}>www.cfsbgroup.com</Link>.
+          <Link href={"https://auth.sbxcentraalinning.com/login"}>
+            Log hier in
+          </Link>
+          .
         </Text>
 
         <Text style={footer}>

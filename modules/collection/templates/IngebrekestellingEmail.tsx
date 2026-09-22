@@ -40,7 +40,10 @@ export const IngebrekestellingEmail = ({
 
         <Text style={{ ...paragraph, marginTop: "10px" }}>
           Log in via{" "}
-          <Link href={"https://www.cfsbgroup.com"}>www.cfsbgroup.com</Link>.
+          <Link href={"https://auth.sbxcentraalinning.com/login"}>
+            Log hier in
+          </Link>
+          .
         </Text>
 
         <Text style={footer}>

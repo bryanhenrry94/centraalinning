@@ -33,8 +33,8 @@ export const AanmanningEmail = ({
         </Text>
         <br />
         <Text style={paragraph}>
-          U heeft namens <strong>{tenantName}</strong> een aanmaning
-          ontvangen via de CFSB-samenwerking.
+          U heeft namens <strong>{tenantName}</strong> een aanmaning ontvangen
+          via de CFSB-samenwerking.
         </Text>
 
         <Text style={{ ...paragraph, marginTop: "10px" }}>
@@ -46,11 +46,11 @@ export const AanmanningEmail = ({
           {requiresRegistration ? (
             <>
               Maak eerst uw account aan en log in via{" "}
-              <Link href={invitationLink}>www.cfsbgroup.com</Link>.
+              <Link href={invitationLink}>Registreer</Link>.
             </>
           ) : (
             <>
-              Log in via <Link href={invitationLink}>www.cfsbgroup.com</Link>.
+              Log in via <Link href={invitationLink}>Log hier in</Link>.
             </>
           )}
         </Text>

@@ -29,8 +29,8 @@ export const SommatieEmail = ({
         </Text>
         <br />
         <Text style={paragraph}>
-          U heeft namens <strong>{tenantName}</strong> een sommatie
-          ontvangen via de CFSB-samenwerking.
+          U heeft namens <strong>{tenantName}</strong> een sommatie ontvangen
+          via de CFSB-samenwerking.
         </Text>
 
         <Text style={{ ...paragraph, marginTop: "10px" }}>
@@ -40,7 +40,10 @@ export const SommatieEmail = ({
 
         <Text style={{ ...paragraph, marginTop: "10px" }}>
           Log in via{" "}
-          <Link href={"https://www.cfsbgroup.com"}>www.cfsbgroup.com</Link>.
+          <Link href={"https://auth.sbxcentraalinning.com/login"}>
+            Log hier in
+          </Link>
+          .
         </Text>
 
         <Text style={footer}>
