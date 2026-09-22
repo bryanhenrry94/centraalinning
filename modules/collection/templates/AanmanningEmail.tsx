@@ -33,22 +33,24 @@ export const AanmanningEmail = ({
         </Text>
         <br />
         <Text style={paragraph}>
-          Er is een aanmaning op uw naam geregistreerd namens{" "}
-          <strong>{tenantName}</strong>, via de CFSB-samenwerking.
+          U heeft namens <strong>{tenantName}</strong> een aanmaning
+          ontvangen via de CFSB-samenwerking.
+        </Text>
+
+        <Text style={{ ...paragraph, marginTop: "10px" }}>
+          Wij verzoeken u de brief te bekijken en, indien nodig, actie te
+          ondernemen via uw CFSB-account.
         </Text>
 
         <Text style={{ ...paragraph, marginTop: "10px" }}>
           {requiresRegistration ? (
             <>
-              Maak eerst uw account aan om de gegevens te bekijken, een
-              betaling uit te voeren of een betalingsregeling voor te stellen:{" "}
-              <Link href={invitationLink}>Registreer u hier</Link>.
+              Maak eerst uw account aan en log in via{" "}
+              <Link href={invitationLink}>www.cfsbgroup.com</Link>.
             </>
           ) : (
             <>
-              U kunt de gegevens bekijken, een betaling uitvoeren of een
-              betalingsregeling voorstellen door in te loggen:{" "}
-              <Link href={invitationLink}>Log hier in</Link>.
+              Log in via <Link href={invitationLink}>www.cfsbgroup.com</Link>.
             </>
           )}
         </Text>

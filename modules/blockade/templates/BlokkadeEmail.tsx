@@ -29,13 +29,17 @@ export const BlokkadeEmail = ({
         </Text>
         <br />
         <Text style={paragraph}>
-          Er is namens <strong>{tenantName}</strong> een economische
-          blokkade op uw naam geregistreerd binnen de CFSB-samenwerking.
+          U heeft namens <strong>{tenantName}</strong> een blokkade
+          ontvangen via de CFSB-samenwerking.
         </Text>
 
         <Text style={{ ...paragraph, marginTop: "10px" }}>
-          U kunt de gegevens bekijken, een betaling uitvoeren of een
-          betalingsregeling voorstellen door in te loggen via{" "}
+          Wij verzoeken u de brief te bekijken en, indien nodig, actie te
+          ondernemen via uw CFSB-account.
+        </Text>
+
+        <Text style={{ ...paragraph, marginTop: "10px" }}>
+          Log in via{" "}
           <Link href={"https://www.cfsbgroup.com"}>www.cfsbgroup.com</Link>.
         </Text>
 
