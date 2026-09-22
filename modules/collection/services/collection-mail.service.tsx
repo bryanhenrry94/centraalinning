@@ -328,6 +328,11 @@ export const buildIngebrekestellingPdfProps = async (
     throw new Error("Debt claim not found");
   }
 
+  const parameter = await ParameterService.getParameterForTenant(
+    claim.tenantId,
+  );
+  const bankAccount = await getPrimaryBankAccount(claim.tenantId);
+
   const island = getNameCountry(claim.tenant.country_code);
 
   const debtorName =
@@ -368,8 +373,7 @@ export const buildIngebrekestellingPdfProps = async (
     )
     .reduce((sum, o) => sum + Number(o.originalAmount), 0);
 
-  const totalAmount =
-    Number(claim.principalAmount) +
+  const cfsbKosten =
     (feeCharge ? Number(feeCharge.amount) : 0) +
     (abbCharge ? Number(abbCharge.amount) : 0) +
     noResponseFeesTotal;
@@ -382,13 +386,13 @@ export const buildIngebrekestellingPdfProps = async (
     island: island || "Bonaire",
     referenceNumber: claim.reference || "",
     tenantName: claim.tenant.name || "Organisatie",
-    aanmaningDate: firstReminderStep.sentAt
-      ? formatDate(firstReminderStep.sentAt.toString())
-      : formatDate(claim.createdAt.toString()),
-    sommatieDate: secondStep.sentAt
-      ? formatDate(secondStep.sentAt.toString())
-      : formatDate(claim.createdAt.toString()),
-    totalAmount: totalAmount.toFixed(2),
+    bankName: bankAccount?.bank_name || parameter.bank_name || "Bank Name",
+    accountNumber:
+      bankAccount?.account_number ||
+      parameter.bank_account ||
+      "Account Number",
+    amount_original: Number(claim.principalAmount).toFixed(2),
+    cfsbKosten: cfsbKosten.toFixed(2),
   };
 };
 

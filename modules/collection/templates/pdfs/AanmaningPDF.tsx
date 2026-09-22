@@ -127,7 +127,6 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
   debtorAddress,
   island,
   reference_number,
-  total_amount,
   bankName,
   accountNumber,
   digitalFileCosts,
@@ -192,17 +191,6 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
                 ${formatAmount(aopCosts)}
               </Text>
             </View>
-            <View style={[styles.tableRow, styles.totalRow]}>
-              <Text style={styles.tableCell}>Totaalbedrag</Text>
-              <Text
-                style={[
-                  styles.tableCellRight,
-                  { borderTopWidth: 2, borderTopColor: "#161515" },
-                ]}
-              >
-                ${formatAmount(total_amount)}
-              </Text>
-            </View>
           </View>
 
           <Text style={styles.paragraph}>
@@ -214,15 +202,15 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
           <Text style={styles.paragraph}>
             U kunt hiervoor inloggen op uw CFSB-account en daar direct betalen
             of bij ons een betalingsregeling aanvragen. De hoofdsom wordt
-            rechtstreeks overgemaakt aan {tenantName} op {bankName}
-            -bankrekening {accountNumber}.
+            rechtstreeks overgemaakt aan {tenantName} op {bankName},
+            bankrekening {accountNumber}.
           </Text>
 
           <Text style={styles.paragraph}>
             Indien u buiten CFSB betaalt, vermeld dan uw naam en dossiernummer{" "}
             {reference_number}. De CFSB-kosten van USD{" "}
             {formatAmount(aopCosts)} blijven afzonderlijk verschuldigd en
-            dienen rechtstreeks te worden betaald.
+            dienen rechtstreeks aan CFSB te worden betaald.
           </Text>
 
           <Text style={styles.paragraph}>
@@ -241,8 +229,7 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
 
         {/* Footer */}
         <Text style={styles.footer}>
-          Dit bericht is automatisch opgesteld en verzonden via het Centraal
-          CFSB.
+          Dit bericht is automatisch opgesteld en verzonden via CFSB.
         </Text>
       </Page>
     </Document>

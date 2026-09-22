@@ -187,12 +187,10 @@ export interface SommatiePDFProps {
 const SommatiePDF: React.FC<SommatiePDFProps> = ({
   logoUrl,
   date,
-  aanmaningDate,
   debtorName,
   debtorAddress,
   island,
   reference_number,
-  total_amount,
   amount_original,
   calculatedABB,
   tenantName,
@@ -248,9 +246,8 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
           </Text>
 
           <Text style={styles.paragraph}>
-            Op {aanmaningDate} hebben wij u aangemaand om uw openstaande
-            vordering te voldoen. Binnen de gestelde termijn is hieraan niet
-            voldaan.
+            Ondanks de eerder verzonden aanmaning is de openstaande
+            betalingsverplichting niet binnen de gestelde termijn voldaan.
           </Text>
 
           {/* TABLE */}
@@ -274,45 +271,34 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
                 {formatAmount(cfsbKosten)}
               </Text>
             </View>
-
-            <View
-              style={[
-                styles.tableRow,
-                { borderTopWidth: 1, borderTopColor: "#111827", marginTop: 4, paddingTop: 4 },
-              ]}
-            >
-              <Text style={styles.tableLabel}>Totaalbedrag</Text>
-              <Text style={styles.tableSymbol}>USD</Text>
-              <Text style={styles.tableValue}>
-                {formatAmount(total_amount)}
-              </Text>
-            </View>
           </View>
 
           <Text style={styles.paragraph}>
-            Wij verzoeken u de openstaande hoofdsom van USD{" "}
+            Wij sommeren u de openstaande hoofdsom van USD{" "}
             {formatAmount(amount_original)} binnen 2 dagen na dagtekening van
             deze brief volledig te voldoen.
           </Text>
 
           <Text style={styles.paragraph}>
-            U kunt hiervoor inloggen op uw CFSB-account en daar direct
-            betalen of bij ons een betalingsregeling aanvragen. De hoofdsom
-            wordt rechtstreeks overgemaakt aan {tenantName} op {bankName}
-            -bankrekening {accountNumber}.
+            U kunt hiervoor inloggen op uw CFSB-account en daar de
+            betalingsgegevens bekijken, de CFSB-kosten voldoen of, indien
+            beschikbaar, een betalingsregeling aanvragen. De hoofdsom dient
+            rechtstreeks te worden overgemaakt aan {tenantName} op{" "}
+            {bankName}, bankrekening {accountNumber}.
           </Text>
 
           <Text style={styles.paragraph}>
             Indien u buiten CFSB betaalt, vermeld dan uw naam en
-            dossiernummer {reference_number}. De CFSB-kosten van USD{" "}
-            {formatAmount(cfsbKosten)} blijven afzonderlijk verschuldigd en
-            dienen rechtstreeks te worden betaald.
+            dossiernummer {reference_number}. De CFSB-kosten blijven
+            afzonderlijk verschuldigd en dienen rechtstreeks aan CFSB te
+            worden betaald.
           </Text>
 
           <Text style={styles.paragraph}>
             Indien binnen de gestelde termijn niet aan de
             betalingsverplichting wordt voldaan, wordt het dossier verder
-            opgevolgd. Aanvullende kosten kunnen van toepassing zijn.
+            opgevolgd en kan een economische blokkade worden geregistreerd.
+            Aanvullende kosten kunnen van toepassing zijn.
           </Text>
 
           <Text style={styles.paragraph}>Met vriendelijke groet,</Text>
@@ -333,8 +319,7 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
 
         {/* FOOTER */}
         <Text style={styles.footer}>
-          Dit document is automatisch opgesteld en verzonden binnen de
-          CFSB-samenwerking.
+          Dit bericht is automatisch opgesteld en verzonden via CFSB.
         </Text>
       </Page>
     </Document>

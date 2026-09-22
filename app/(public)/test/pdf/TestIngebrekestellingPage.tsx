@@ -25,11 +25,13 @@ const TestIngebrekestellingPage = () => {
 
     tenantName: "DAZZSOFT",
 
-    aanmaningDate: "10-05-2026",
+    bankName: "MCB",
 
-    sommatieDate: "25-05-2026",
+    accountNumber: "418.825.10",
 
-    totalAmount: "1,621.16",
+    amount_original: "750.00",
+
+    cfsbKosten: "529.25",
   };
 
   return (
