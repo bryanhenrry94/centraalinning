@@ -33,8 +33,7 @@ export const AanmanningEmail = ({
         </Text>
         <br />
         <Text style={paragraph}>
-          U heeft namens <strong>{tenantName}</strong> een aanmaning ontvangen
-          via de CFSB-samenwerking.
+          U heeft namens <strong>{tenantName}</strong> een aanmaning ontvangen.
         </Text>
 
         <Text style={{ ...paragraph, marginTop: "10px" }}>

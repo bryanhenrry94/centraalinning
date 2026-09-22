@@ -30,7 +30,7 @@ export const BlokkadeEmail = ({
         <br />
         <Text style={paragraph}>
           U heeft namens <strong>{tenantName}</strong> een economische blokkade
-          ontvangen via de CFSB-samenwerking.
+          ontvangen.
         </Text>
 
         <Text style={{ ...paragraph, marginTop: "10px" }}>
