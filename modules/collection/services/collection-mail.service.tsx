@@ -5,6 +5,7 @@ import { getEmailByEnv } from "@/shared/utils/mail";
 import { formatDate } from "@/shared/utils/formatters";
 import { getNameCountry } from "@/shared/utils/location";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
+import { BankAccountService } from "@/modules/tenant/services/bank-account.service";
 import AanmanningEmail from "@/modules/collection/templates/AanmanningEmail";
 import SommatieMail from "@/modules/collection/templates/SommatieEmail";
 import { IngebrekestellingEmail } from "@/modules/collection/templates/IngebrekestellingEmail";
@@ -18,6 +19,23 @@ import IngebrekestellingPDF, {
   IngebrekestellingProps,
 } from "@/modules/collection/templates/pdfs/IngebrekestellingPDF";
 import { NO_RESPONSE_FEE_DESCRIPTION } from "@/modules/collection/services/collection.service";
+
+// De brieven vermelden altijd de bankrekening waarop de schuldeiser
+// (tenant) daadwerkelijk betalingen ontvangt — het echte, per-tenant
+// BankAccount-record (modules/tenant), niet het gedeelde bank_name/
+// bank_account op Jurisdiction-niveau uit ParameterService. Bij meerdere
+// rekeningen wordt de eerst aangemaakte gebruikt; ontbreekt er een, dan
+// valt terug op de Jurisdiction-waarde als laatste redmiddel (de UI
+// (collection-header.tsx) dwingt normaliter af dat er al één bestaat
+// voordat een AOP-dossier kan starten).
+const getPrimaryBankAccount = async (tenantId: string) => {
+  const result = await BankAccountService.getAllByTenantId(tenantId);
+  const accounts = result.data ?? [];
+
+  return [...accounts].sort(
+    (a, b) => a.created_at.getTime() - b.created_at.getTime(),
+  )[0];
+};
 
 // Herbruikt door zowel het verzenden van de aanmaning-mail als het
 // on-demand downloaden van de brief (zie app/api/legal-processes/transfers/
@@ -39,6 +57,7 @@ export const buildAanmaningPdfProps = async (
   }
 
   const parameter = await ParameterService.getParameterForTenant(claim.tenantId);
+  const bankAccount = await getPrimaryBankAccount(claim.tenantId);
 
   const island = getNameCountry(claim.tenant.country_code);
 
@@ -66,8 +85,11 @@ export const buildAanmaningPdfProps = async (
       ? parameter.digital_file_costs.toFixed(2)
       : "0.00",
     total_amount: Number(claim.principalAmount).toFixed(2),
-    bankName: parameter.bank_name || "Bank Name",
-    accountNumber: parameter.bank_account || "Account Number",
+    bankName: bankAccount?.bank_name || parameter.bank_name || "Bank Name",
+    accountNumber:
+      bankAccount?.account_number ||
+      parameter.bank_account ||
+      "Account Number",
     amount_original: Number(claim.principalAmount).toFixed(2),
     extraCosts: feeCharge ? Number(feeCharge.amount).toFixed(2) : "0.00",
     calculatedABB: abbCharge ? Number(abbCharge.amount).toFixed(2) : "0.00",
@@ -162,6 +184,7 @@ export const buildSommatiePdfProps = async (
   const parameter = await ParameterService.getParameterForTenant(
     claim.tenantId,
   );
+  const bankAccount = await getPrimaryBankAccount(claim.tenantId);
 
   const island = getNameCountry(claim.tenant.country_code);
 
@@ -223,8 +246,11 @@ export const buildSommatiePdfProps = async (
     amount_original: Number(claim.principalAmount).toFixed(2),
     calculatedABB: calculatedABBAmount.toFixed(2),
     tenantName: claim.tenant.name || "Organisatie",
-    bankName: parameter.bank_name || "Bank Name",
-    accountNumber: parameter.bank_account || "Account Number",
+    bankName: bankAccount?.bank_name || parameter.bank_name || "Bank Name",
+    accountNumber:
+      bankAccount?.account_number ||
+      parameter.bank_account ||
+      "Account Number",
     administrativeCosts: administrativeCosts.toFixed(2),
     additionalCosts: additionalCosts.toFixed(2),
     additionalABB: additionalABBAmount.toFixed(2),
