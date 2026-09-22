@@ -24,7 +24,9 @@ export const sendEmployerMatchNoticeEmail = async (
   const logoUrl = process.env.NEXT_PUBLIC_LOGO_URL || "";
 
   const pdfParams: EmployerMatchPDFProps = { logoUrl, ...params };
-  const pdfBase64 = await generatePdfBase64(<EmployerMatchPDF {...pdfParams} />);
+  const pdfBase64 = await generatePdfBase64(
+    <EmployerMatchPDF {...pdfParams} />,
+  );
   const attachments = [
     { filename: "Collectieve-Opvolging-Werkgever.pdf", content: pdfBase64 },
   ];
@@ -34,7 +36,7 @@ export const sendEmployerMatchNoticeEmail = async (
   const { error } = await resend.emails.send({
     from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
     to: recipient,
-    subject: "CFSB - Werkgever geïdentificeerd",
+    subject: "Werkgever geïdentificeerd",
     react: (
       <EmployerMatchEmail
         logoUrl={logoUrl}

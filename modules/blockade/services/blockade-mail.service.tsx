@@ -107,7 +107,7 @@ export const sendMailBlockade = async (
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
-      subject: "CFSB - Blokkade",
+      subject: "Blokkade",
       react: (
         <EconomischeBlokkadeEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}

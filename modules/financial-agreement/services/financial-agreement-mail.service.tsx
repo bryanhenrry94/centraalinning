@@ -40,7 +40,7 @@ export const sendFarRegisteredMail = async (
     const { error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
-      subject: `CFSB - FAR-registratie bevestigd (${details.farNumber})`,
+      subject: `FAR-registratie bevestigd (${details.farNumber})`,
       react: (
         <FarRegisteredEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
@@ -50,7 +50,10 @@ export const sendFarRegisteredMail = async (
     });
 
     if (error) {
-      console.error("Error sending FAR registration confirmation email:", error);
+      console.error(
+        "Error sending FAR registration confirmation email:",
+        error,
+      );
     }
   } catch (error) {
     console.error("Error sending FAR registration confirmation email:", error);

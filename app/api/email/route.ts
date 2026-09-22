@@ -34,7 +34,7 @@ export async function GET(req: Request) {
     const data = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: ["wsambo38@gmail.com", "bryanhenrry94@gmail.com"],
-      subject: "CFSB - Blokkade",
+      subject: "Blokkade",
       html,
     });
 

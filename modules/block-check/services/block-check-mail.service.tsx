@@ -14,7 +14,7 @@ export const sendBlockCheckResultMail = async (
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
-      subject: "CFSB - Resultaat Blok-Check",
+      subject: "Resultaat Blok-Check",
       react: (
         <BlockCheckResultEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
