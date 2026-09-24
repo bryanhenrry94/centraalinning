@@ -1,4 +1,21 @@
 import { z } from "zod";
+import { PersonType } from "@/shared/constants/person-type";
+import { IdentificationType } from "@/shared/constants/identification-type";
+
+// Gegevens om, in dezelfde stap als het registreren van de blokkade, een
+// debiteur te vinden (via identificatie/e-mail, cross-tenant) of aan te
+// maken — zelfde velden als FarWizardDebtorSchema, zodat beide via
+// DebtorService.findOrCreate lopen. Adres/telefoon zijn hier bewust
+// optioneel (in tegenstelling tot FAR): de blokkade zelf vereist ze niet.
+export const NewBlockadeDebtorSchema = z.object({
+  person_type: z.enum(PersonType),
+  identification_type: z.enum(IdentificationType),
+  identification: z.string().min(1, "Het identificatienummer is verplicht"),
+  fullname: z.string().min(1, "De naam is verplicht"),
+  email: z.email({ message: "Het e-mailadres is niet geldig." }),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+});
 
 export const BlockadeDocumentSchema = z.object({
   file: z.instanceof(File),
@@ -15,7 +32,13 @@ const REASONS_REQUIRING_NOTE = ["EXTERNAL_PROCEDURE_COMPLETED", "OTHER"] as cons
 
 export const BlockadeSchema = z
   .object({
-    debtorId: z.string().min(1, "U dient een debiteur te selecteren"),
+    // Ofwel een bestaande debiteur (debtorId, via zoeken) ofwel de gegevens
+    // om er één aan te maken (newDebtor) — nooit allebei leeg, zie refine
+    // hieronder. Zo kan de gebruiker de debiteur op hetzelfde scherm
+    // registreren zonder eerst naar een apart debiteurenscherm te gaan.
+    debtorId: z.string().optional(),
+
+    newDebtor: NewBlockadeDebtorSchema.optional(),
 
     amount: z.number().positive("Het bedrag moet een positief getal zijn"),
 
@@ -49,6 +72,11 @@ export const BlockadeSchema = z
   .refine((data) => data.confirmed === true, {
     message: "U moet bevestigen dat de gegevens juist zijn voordat u doorgaat.",
     path: ["confirmed"],
+  })
+  .refine((data) => !!data.debtorId || !!data.newDebtor, {
+    message:
+      "Selecteer een bestaande debiteur of vul de gegevens van een nieuwe debiteur in.",
+    path: ["debtorId"],
   });
 
 export type CreateBlockadeInput = z.infer<typeof BlockadeSchema>;

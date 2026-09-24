@@ -2,6 +2,8 @@ import { z } from "zod";
 import { PersonType } from "@/shared/constants/person-type";
 import { IdentificationType } from "@/shared/constants/identification-type";
 
+export { IDENTIFICATION_TYPE_LABELS } from "@/shared/constants/identification-type";
+
 // Schema propio del wizard cliente: las fechas viajan como string
 // (yyyy-mm-dd, tal como las entrega un <input type="date">) y recién se
 // convierten a Date al armar el payload real hacia
@@ -54,11 +56,4 @@ export const FAR_WIZARD_DEFAULT_VALUES: FarWizardFormValues = {
     currency: "USD",
     notes: "",
   },
-};
-
-export const IDENTIFICATION_TYPE_LABELS: Record<IdentificationType, string> = {
-  [IdentificationType.CEDULA]: "Cédula",
-  [IdentificationType.KVK]: "KvK-nummer",
-  [IdentificationType.PASSPORT]: "Paspoort",
-  [IdentificationType.RIJBEWIJS]: "Rijbewijs",
 };

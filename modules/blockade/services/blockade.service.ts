@@ -10,12 +10,17 @@ import { REASONS } from "@/modules/blockade/constants/reason-blockades";
 import { ClaimTimelineService } from "@/modules/collection/services/claim-timeline.service";
 import { NotificationService } from "@/modules/notification/services/notification.service";
 import { NotificationType } from "@/modules/notification/constants/notification-type";
+import { DebtorService } from "@/modules/collection/services/debtor.service";
 
 export class BlockadeService {
   static createBlockade = async (
     input: CreateBlockadeInput,
     tenantId: string,
   ) => {
+    if (!input.debtorId) {
+      throw new Error("debtorId is verplicht");
+    }
+
     const blockade = await prisma.blockade.create({
       data: {
         tenantId: tenantId,
@@ -153,8 +158,33 @@ export class BlockadeService {
     tenantId: string,
     actorUserId?: string,
   ) => {
+    // Ofwel een reeds gekozen debiteur (debtorId, via zoeken), ofwel de
+    // gegevens om er één te vinden of aan te maken (newDebtor) — de UI
+    // garandeert via BlockadeSchema dat minstens één van beide aanwezig is.
+    let debtorId = input.debtorId;
+
+    if (!debtorId && input.newDebtor) {
+      const { debtor: foundOrCreatedDebtor } = await DebtorService.findOrCreate(
+        {
+          person_type: input.newDebtor.person_type,
+          identification_type: input.newDebtor.identification_type,
+          identification: input.newDebtor.identification,
+          fullname: input.newDebtor.fullname,
+          email: input.newDebtor.email,
+          phone: input.newDebtor.phone,
+          address: input.newDebtor.address,
+        },
+        tenantId,
+      );
+      debtorId = foundOrCreatedDebtor.id;
+    }
+
+    if (!debtorId) {
+      return { success: false, message: "Debiteurgegevens ontbreken" };
+    }
+
     const debtor = await prisma.debtor.findUnique({
-      where: { id: input.debtorId },
+      where: { id: debtorId },
       include: { person: true, tenant: true },
     });
 
@@ -181,7 +211,7 @@ export class BlockadeService {
       const debtClaim = await tx.debtClaim.create({
         data: {
           tenantId,
-          debtorId: input.debtorId,
+          debtorId,
           reference,
           principalAmount: input.amount,
           currency: "USD",
@@ -193,7 +223,7 @@ export class BlockadeService {
       const createdBlockade = await tx.blockade.create({
         data: {
           tenantId,
-          debtorId: input.debtorId,
+          debtorId,
           reason: input.reason,
           reasonNote: input.reasonNote,
           registeredAt: input.registeredAt || new Date(),

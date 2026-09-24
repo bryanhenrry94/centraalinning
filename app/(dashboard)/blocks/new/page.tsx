@@ -3,11 +3,8 @@
 import React, { useEffect, useState } from "react";
 import {
   Alert,
-  Avatar,
   Box,
   Button,
-  Card,
-  CardContent,
   Checkbox,
   Container,
   Dialog,
@@ -16,6 +13,7 @@ import {
   FormControlLabel,
   Grid,
   IconButton,
+  MenuItem,
   Paper,
   Stack,
   TextField,
@@ -24,11 +22,20 @@ import {
 import { Controller, useForm } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
 import { useTenant } from "@/modules/auth/hooks/useTenant";
-import { DebtorPicker } from "@/modules/collection/components/DebtorPicker";
 import { DebtorResponse } from "@/modules/collection/services/debtor.validators";
-import UploadIcon from "@mui/icons-material/Upload";
+import { getInfoPersonAction } from "@/modules/collection/actions/person.actions";
+import { PersonType } from "@/shared/constants/person-type";
+import {
+  IdentificationType,
+  IDENTIFICATION_TYPE_LABELS,
+} from "@/shared/constants/identification-type";
+import { personTypeOptions } from "@/shared/constants/identification";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
 import DownloadIcon from "@mui/icons-material/Download";
 import DeleteIcon from "@mui/icons-material/Delete";
+import SearchIcon from "@mui/icons-material/Search";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import {
   BlockadeDocument,
   BlockadeSchema,
@@ -47,6 +54,31 @@ import { formatCurrency } from "@/shared/utils/formatters";
 import { useRouter } from "next/navigation";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { getParameterForTenantAction } from "@/modules/settings/actions/parameter.actions";
+
+// Herbruikte sectiekop (donkerblauwe balk) voor de vier genummerde
+// stappen van het formulier — zelfde stijl als voorheen alleen op
+// "BLOKKADE INFORMATIE" stond, nu consistent op alle vier.
+function SectionHeader({ title }: { title: string }) {
+  return (
+    <Box
+      sx={{
+        bgcolor: "secondary.main",
+        color: "white",
+        px: 2,
+        py: 1.5,
+        borderTopLeftRadius: 8,
+        borderTopRightRadius: 8,
+        borderBottom: "1px solid #e0e0e0",
+        display: "flex",
+        alignItems: "center",
+      }}
+    >
+      <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
+        {title}
+      </Typography>
+    </Box>
+  );
+}
 
 const ALLOWED_TYPES = [
   "application/pdf",
@@ -75,6 +107,14 @@ export default function BlockCreatePage() {
   const [documents, setDocuments] = useState<File[]>([]);
 
   const [debtor, setDebtor] = React.useState<DebtorResponse | null>(null);
+
+  // Búsqueda de debiteur existente en CFSB (sección 1 del formulario)
+  const [debtorSearchQuery, setDebtorSearchQuery] = useState("");
+  const [debtorSearchResults, setDebtorSearchResults] = useState<
+    DebtorResponse[]
+  >([]);
+  const [searchingDebtor, setSearchingDebtor] = useState(false);
+  const [debtorSearchOpen, setDebtorSearchOpen] = useState(false);
 
   const [showCostDialog, setShowCostDialog] = useState(false);
   const [pendingFormValues, setPendingFormValues] =
@@ -115,6 +155,15 @@ export default function BlockCreatePage() {
     resolver: zodResolver(BlockadeSchema),
     defaultValues: {
       debtorId: "",
+      newDebtor: {
+        person_type: PersonType.INDIVIDUAL,
+        identification_type: IdentificationType.CEDULA,
+        identification: "",
+        fullname: "",
+        email: "",
+        phone: "",
+        address: "",
+      },
       amount: 0,
       reason: "UNPAID_PAYMENT",
       reasonNote: "",
@@ -128,21 +177,28 @@ export default function BlockCreatePage() {
     selectedReason === "EXTERNAL_PROCEDURE_COMPLETED" ||
     selectedReason === "OTHER";
 
+  const selectedPersonType = watch("newDebtor.person_type");
+  const identificationTypeOptions =
+    selectedPersonType === PersonType.COMPANY
+      ? [IdentificationType.KVK]
+      : Object.values(IdentificationType).filter(
+          (type) => type !== IdentificationType.KVK,
+        );
+
+  useEffect(() => {
+    const current = watch("newDebtor.identification_type");
+    if (!current || !identificationTypeOptions.includes(current)) {
+      setValue(
+        "newDebtor.identification_type",
+        identificationTypeOptions[0] as IdentificationType,
+      );
+    }
+  }, [selectedPersonType]);
+
   const onSubmit = async (data: CreateBlockadeInput) => {
     // Validación con react-hook-form + zod ya pasó
     setPendingFormValues(data);
     setShowCostDialog(true);
-  };
-
-  const handleChangeDebtor = (debtor: DebtorResponse | null) => {
-    if (debtor) {
-      const debtorWithDates = {
-        ...debtor,
-      };
-      setDebtor(debtorWithDates);
-    } else {
-      setDebtor(null);
-    }
   };
 
   const handleSearchPersons = async (query: string) => {
@@ -156,6 +212,91 @@ export default function BlockCreatePage() {
     return data.data;
   };
 
+  const getDebtorFullName = (found: DebtorResponse) =>
+    found.person?.person_type === "COMPANY"
+      ? found.person?.business_name || ""
+      : `${found.person?.first_name ?? ""} ${found.person?.last_name ?? ""}`.trim();
+
+  const handleSearchDebtor = async () => {
+    if (!debtorSearchQuery.trim()) return;
+
+    try {
+      setSearchingDebtor(true);
+
+      const results = await handleSearchPersons(debtorSearchQuery.trim());
+
+      setDebtorSearchResults(results);
+      setDebtorSearchOpen(true);
+    } finally {
+      setSearchingDebtor(false);
+    }
+  };
+
+  const handleSelectExistingDebtor = (found: DebtorResponse) => {
+    setDebtor(found);
+
+    setValue("debtorId", found.id, { shouldValidate: true });
+    setValue(
+      "newDebtor.person_type",
+      (found.person?.person_type as PersonType) || PersonType.INDIVIDUAL,
+    );
+    setValue(
+      "newDebtor.identification_type",
+      (found.person?.identification_type as IdentificationType) ||
+        IdentificationType.CEDULA,
+    );
+    setValue("newDebtor.identification", found.person?.identification || "");
+    setValue("newDebtor.fullname", getDebtorFullName(found));
+    setValue("newDebtor.email", found.email || "");
+    setValue("newDebtor.phone", found.person?.phone || "");
+    setValue("newDebtor.address", found.person?.address || "");
+
+    setDebtorSearchQuery(getDebtorFullName(found));
+    setDebtorSearchOpen(false);
+  };
+
+  // Elke handmatige wijziging aan de identificatie betekent dat de
+  // gebruiker mogelijk een andere persoon bedoelt dan de eerder
+  // geselecteerde debiteur — de gekoppelde debtorId vervalt dan, zodat bij
+  // het opslaan opnieuw via DebtorService.findOrCreate wordt gezocht/
+  // aangemaakt (idempotent: dezelfde identificatie levert dezelfde persoon
+  // op, dus dit is veilig).
+  const clearSelectedExistingDebtor = () => {
+    if (debtor) setDebtor(null);
+    if (watch("debtorId")) setValue("debtorId", "");
+  };
+
+  // Zelfde patroon als de FAR-wizard (far-wizard-step-debtor.tsx): als de
+  // persoon al bestaat in het systeem (cross-tenant, via Person.identification),
+  // worden alleen de nog lege velden aangevuld — nooit wat de gebruiker al
+  // heeft ingetypt overschrijven.
+  const handleIdentificationBlur = async () => {
+    const identificationType = watch("newDebtor.identification_type");
+    const identification = watch("newDebtor.identification");
+    if (!identificationType || !identification) return;
+
+    const personInfo = await getInfoPersonAction(
+      identificationType,
+      identification,
+    );
+    if (!personInfo) return;
+
+    if (!watch("newDebtor.fullname")) {
+      setValue(
+        "newDebtor.fullname",
+        personInfo.person_type === "COMPANY"
+          ? personInfo.business_name || ""
+          : `${personInfo.first_name ?? ""} ${personInfo.last_name ?? ""}`.trim(),
+      );
+    }
+    if (!watch("newDebtor.email") && personInfo.email)
+      setValue("newDebtor.email", personInfo.email);
+    if (!watch("newDebtor.phone") && personInfo.phone)
+      setValue("newDebtor.phone", personInfo.phone);
+    if (!watch("newDebtor.address") && personInfo.address)
+      setValue("newDebtor.address", personInfo.address);
+  };
+
   const mapFileToDocument = (file: File): BlockadeDocument => {
     return {
       file: file,
@@ -167,8 +308,8 @@ export default function BlockCreatePage() {
   };
 
   // logica de manejo de documentos (agregar, eliminar, etc.) se puede implementar aquí
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files ?? []);
+  const processFiles = (fileList: FileList | null) => {
+    const files = Array.from(fileList ?? []);
 
     const validFiles = files.filter((file) =>
       ALLOWED_TYPES.includes(file.type),
@@ -185,7 +326,6 @@ export default function BlockCreatePage() {
     }
 
     if (validFiles.length === 0) {
-      event.target.value = "";
       return;
     }
 
@@ -201,7 +341,10 @@ export default function BlockCreatePage() {
 
       return updatedFiles;
     });
+  };
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    processFiles(event.target.files);
     event.target.value = "";
   };
 
@@ -343,7 +486,7 @@ export default function BlockCreatePage() {
           alignItems: { xs: "stretch", sm: "flex-start" },
           justifyContent: "space-between",
           gap: 2,
-          mb: { xs: 2, sm: 4 },
+          mb: { xs: 1, sm: 1.5 },
         }}
       >
         <Box>
@@ -352,7 +495,7 @@ export default function BlockCreatePage() {
           </Typography>
 
           <Typography color="text.secondary">
-            Registreer een economische blokkade conform de geldende voorwaarden.
+            Registreer een economische blokkade
           </Typography>
         </Box>
 
@@ -367,87 +510,315 @@ export default function BlockCreatePage() {
         </Button>
       </Box>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Stack spacing={3} sx={{ py: { xs: 2, sm: 8 } }}>
-          {/* Cabecera */}
+        <Stack
+          spacing={3}
+          sx={{ pt: { xs: 0.5, sm: 1 }, pb: { xs: 2, sm: 6 } }}
+        >
+          {/* 1. Debiteur informatie */}
           <Paper
             component="section"
             sx={{
               elevation: 1,
               borderRadius: 1,
               mb: 2,
+              overflow: "hidden",
             }}
           >
-            <Box
-              sx={{
-                bgcolor: "secondary.main",
-                color: "white",
-                px: 2,
-                py: 1.5,
-                borderTopLeftRadius: 8,
-                borderTopRightRadius: 8,
-                borderBottom: "1px solid #e0e0e0",
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
-                BLOKKADE INFORMATIE
+            <SectionHeader title="1. DEBITEUR INFORMATIE" />
+
+            <Box sx={{ p: 2, mb: 2 }}>
+              <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                Zoek debiteur in CFSB *
               </Typography>
+
+              <Stack direction="row" spacing={1} sx={{ position: "relative" }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Zoek op naam, identificatienummer of e-mailadres..."
+                  value={debtorSearchQuery}
+                  onChange={(e) => setDebtorSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleSearchDebtor();
+                    }
+                  }}
+                />
+
+                <Button
+                  variant="contained"
+                  onClick={handleSearchDebtor}
+                  disabled={searchingDebtor || !debtorSearchQuery.trim()}
+                  startIcon={<SearchIcon />}
+                  sx={{ textTransform: "none", whiteSpace: "nowrap" }}
+                >
+                  Zoeken
+                </Button>
+
+                {debtorSearchOpen && (
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      position: "absolute",
+                      top: "100%",
+                      left: 0,
+                      right: 0,
+                      mt: 0.5,
+                      zIndex: 10,
+                      maxHeight: 260,
+                      overflowY: "auto",
+                    }}
+                  >
+                    {debtorSearchResults.length === 0 ? (
+                      <Box sx={{ p: 2 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          Geen debiteuren gevonden.
+                        </Typography>
+                      </Box>
+                    ) : (
+                      debtorSearchResults.map((found) => (
+                        <Box
+                          key={found.id}
+                          onClick={() => handleSelectExistingDebtor(found)}
+                          sx={{
+                            p: 1.5,
+                            cursor: "pointer",
+                            borderBottom: "1px solid",
+                            borderColor: "divider",
+                            "&:hover": { bgcolor: "action.hover" },
+                          }}
+                        >
+                          <Typography variant="body2" fontWeight={600}>
+                            {getDebtorFullName(found)}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {found.person?.identification} · {found.email}
+                          </Typography>
+                        </Box>
+                      ))
+                    )}
+                  </Paper>
+                )}
+              </Stack>
+
+              <Alert
+                icon={<InfoOutlinedIcon fontSize="inherit" />}
+                severity="info"
+                sx={{ mt: 2, mb: 2 }}
+              >
+                Zoek een bestaande debiteur of vul de gegevens in. CFSB koppelt
+                of registreert de debiteur automatisch.
+              </Alert>
+
+              {errors.debtorId && (
+                <Typography
+                  variant="caption"
+                  sx={{ color: "error.main", display: "block", mt: 0.5 }}
+                >
+                  {errors.debtorId.message}
+                </Typography>
+              )}
+
+              {debtor && !debtor.email && (
+                <Alert severity="warning" sx={{ mt: 1 }}>
+                  Deze debiteur heeft geen e-mailadres geregistreerd. CFSB kan
+                  de blokkade dan niet per e-mail bevestigen.
+                </Alert>
+              )}
+
+              <Grid container spacing={2} sx={{ mt: 0.5 }}>
+                <Grid size={{ xs: 12 }}>
+                  <Controller
+                    name="newDebtor.person_type"
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <TextField
+                        {...field}
+                        select
+                        fullWidth
+                        required
+                        size="small"
+                        label="Persoonstype"
+                        error={!!fieldState.error}
+                        helperText={fieldState.error?.message}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          clearSelectedExistingDebtor();
+                        }}
+                      >
+                        {personTypeOptions.map((option) => (
+                          <MenuItem key={option.value} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    )}
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Controller
+                    name="newDebtor.identification_type"
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <TextField
+                        {...field}
+                        select
+                        fullWidth
+                        required
+                        size="small"
+                        label="Identificatietype"
+                        error={!!fieldState.error}
+                        helperText={fieldState.error?.message}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          clearSelectedExistingDebtor();
+                        }}
+                      >
+                        {identificationTypeOptions.map((type) => (
+                          <MenuItem key={type} value={type}>
+                            {IDENTIFICATION_TYPE_LABELS[type]}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    )}
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Controller
+                    name="newDebtor.identification"
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <TextField
+                        {...field}
+                        value={field.value ?? ""}
+                        fullWidth
+                        required
+                        size="small"
+                        label="Identificatienummer"
+                        placeholder="Vul identificatienummer in"
+                        error={!!fieldState.error}
+                        helperText={fieldState.error?.message}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          clearSelectedExistingDebtor();
+                        }}
+                        onBlur={() => {
+                          field.onBlur();
+                          handleIdentificationBlur();
+                        }}
+                      />
+                    )}
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                  <Controller
+                    name="newDebtor.fullname"
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <TextField
+                        {...field}
+                        value={field.value ?? ""}
+                        fullWidth
+                        required
+                        size="small"
+                        label="Naam"
+                        placeholder="Wordt automatisch ingevuld (of vul in bij nieuwe debiteur)"
+                        error={!!fieldState.error}
+                        helperText={fieldState.error?.message}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          clearSelectedExistingDebtor();
+                        }}
+                      />
+                    )}
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Controller
+                    name="newDebtor.email"
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <TextField
+                        {...field}
+                        value={field.value ?? ""}
+                        fullWidth
+                        required
+                        type="email"
+                        size="small"
+                        label="E-mailadres"
+                        placeholder="Vul e-mailadres in"
+                        error={!!fieldState.error}
+                        helperText={fieldState.error?.message}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          clearSelectedExistingDebtor();
+                        }}
+                      />
+                    )}
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Controller
+                    name="newDebtor.phone"
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <TextField
+                        {...field}
+                        value={field.value ?? ""}
+                        fullWidth
+                        size="small"
+                        label="Telefoonnummer"
+                        placeholder="Vul telefoonnummer in"
+                        error={!!fieldState.error}
+                        helperText={fieldState.error?.message}
+                      />
+                    )}
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                  <Controller
+                    name="newDebtor.address"
+                    control={control}
+                    render={({ field, fieldState }) => (
+                      <TextField
+                        {...field}
+                        value={field.value ?? ""}
+                        fullWidth
+                        size="small"
+                        label="Adres"
+                        placeholder="Vul adres in"
+                        error={!!fieldState.error}
+                        helperText={fieldState.error?.message}
+                      />
+                    )}
+                  />
+                </Grid>
+              </Grid>
             </Box>
+          </Paper>
+
+          {/* 2. Blokkade informatie */}
+          <Paper
+            component="section"
+            sx={{
+              elevation: 1,
+              borderRadius: 1,
+              mb: 2,
+              overflow: "hidden",
+            }}
+          >
+            <SectionHeader title="2. BLOKKADE INFORMATIE" />
 
             <Box sx={{ p: 2 }}>
               <Grid container spacing={2}>
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <Controller
-                      name="debtorId"
-                      control={control}
-                      render={({ field }) => (
-                        <Box
-                          sx={{
-                            width: "100%",
-                            display: "flex",
-                            flexDirection: "column",
-                          }}
-                        >
-                          <DebtorPicker
-                            value={debtor}
-                            onChange={(option) => {
-                              handleChangeDebtor(option);
-                              field.onChange(option?.id || "");
-                            }}
-                            onSearch={handleSearchPersons}
-                            // disabled
-                          />
-
-                          {errors.debtorId && (
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                color: "error.main",
-                                display: "block",
-                                mt: 0.5,
-                              }}
-                            >
-                              {errors.debtorId.message}
-                            </Typography>
-                          )}
-
-                          {debtor && !debtor.email && (
-                            <Alert severity="warning" sx={{ mt: 1 }}>
-                              Deze debiteur heeft geen e-mailadres
-                              geregistreerd. CFSB kan de blokkade dan niet per
-                              e-mail bevestigen — klik op het persoon-icoon
-                              naast het zoekveld om de debiteurgegevens bij te
-                              werken voordat u verdergaat.
-                            </Alert>
-                          )}
-                        </Box>
-                      )}
-                    />
-                  </Stack>
-                </Grid>
-                <Grid size={{ xs: 12, md: 4 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <Controller
                     name="amount"
                     control={control}
@@ -455,7 +826,8 @@ export default function BlockCreatePage() {
                       <NumericFormat
                         customInput={TextField}
                         fullWidth
-                        label="Openstaande vordering"
+                        required
+                        label="Openstaande vordering (USD)"
                         value={field.value ?? ""}
                         thousandSeparator
                         decimalScale={2}
@@ -472,7 +844,7 @@ export default function BlockCreatePage() {
                     )}
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 4 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <Controller
                     name="reason"
                     control={control}
@@ -480,7 +852,7 @@ export default function BlockCreatePage() {
                       <TextField
                         {...field}
                         value="Uitblijven van betaling"
-                        label="Reden Blokkade"
+                        label="Reden blokkade"
                         fullWidth
                         size="small"
                         disabled
@@ -513,18 +885,24 @@ export default function BlockCreatePage() {
             </Box>
           </Paper>
 
-          {/* Detalle */}
-          <Card>
-            <CardContent>
-              <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                Bewijsstukken
-              </Typography>
+          {/* 3. Bewijsstukken */}
+          <Paper
+            component="section"
+            sx={{
+              elevation: 1,
+              borderRadius: 1,
+              mb: 2,
+              overflow: "hidden",
+            }}
+          >
+            <SectionHeader title="3. BEWIJSSTUKKEN" />
 
+            <Box sx={{ p: 2 }}>
               <Button
                 variant="outlined"
                 component="label"
                 color="secondary"
-                startIcon={<UploadIcon />}
+                startIcon={<AttachFileIcon />}
                 sx={{ textTransform: "none" }}
               >
                 Document toevoegen
@@ -597,12 +975,22 @@ export default function BlockCreatePage() {
                   {errors.documents.message}
                 </Typography>
               )}
-            </CardContent>
-          </Card>
+            </Box>
+          </Paper>
 
-          {/* Bevestiging */}
-          <Card>
-            <CardContent>
+          {/* 4. Bevestiging */}
+          <Paper
+            component="section"
+            sx={{
+              elevation: 1,
+              borderRadius: 1,
+              mb: 2,
+              overflow: "hidden",
+            }}
+          >
+            <SectionHeader title="4. BEVESTIGING" />
+
+            <Box sx={{ p: 2 }}>
               <Controller
                 name="confirmed"
                 control={control}
@@ -627,22 +1015,39 @@ export default function BlockCreatePage() {
                   {errors.confirmed.message}
                 </Typography>
               )}
-            </CardContent>
-          </Card>
+            </Box>
+          </Paper>
 
           {/* Botones */}
           <Box
-            sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mt: 2 }}
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 2,
+              mt: 2,
+            }}
           >
+            <Button
+              type="button"
+              color="inherit"
+              onClick={() => router.push("/blocks")}
+              sx={{ textTransform: "none" }}
+            >
+              Annuleren
+            </Button>
+
             <Button
               variant="contained"
               type="submit"
+              color="primary"
+              endIcon={<ArrowForwardIcon />}
               sx={{ textTransform: "none" }}
               disabled={isSubmitting || !!(debtor && !debtor.email)}
             >
               {isSubmitting
                 ? "Bezig met registreren..."
-                : "Blokkade registreer"}
+                : "Blokkade registreren"}
             </Button>
           </Box>
         </Stack>
