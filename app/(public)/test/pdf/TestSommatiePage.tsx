@@ -15,6 +15,8 @@ const TestSommatiePage = () => {
 
     aanmaningDate: "10-05-2026",
 
+    deadlineDate: "22-05-2026",
+
     debtorName: "John Doe",
 
     debtorAddress: "Kaya Industria 15",

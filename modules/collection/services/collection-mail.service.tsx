@@ -5,6 +5,7 @@ import { getEmailByEnv } from "@/shared/utils/mail";
 import { formatDate } from "@/shared/utils/formatters";
 import { getNameCountry } from "@/shared/utils/location";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
+import { PersonType } from "@/shared/constants/person-type";
 import { BankAccountService } from "@/modules/tenant/services/bank-account.service";
 import AanmanningEmail from "@/modules/collection/templates/AanmanningEmail";
 import SommatieMail from "@/modules/collection/templates/SommatieEmail";
@@ -221,6 +222,16 @@ export const buildSommatiePdfProps = async (
     (s) => s.step === "REMINDER",
   )?.sentAt;
 
+  const personType =
+    (claim.debtor.person?.person_type as PersonType) ||
+    PersonType.INDIVIDUAL;
+  const sommatieTermDays =
+    personType === PersonType.INDIVIDUAL
+      ? Number(parameter.consumer_sommatie_term_days ?? 0)
+      : Number(parameter.company_sommatie_term_days ?? 0);
+  const deadlineDate = new Date(claim.createdAt);
+  deadlineDate.setDate(deadlineDate.getDate() + sommatieTermDays);
+
   const administrativeCosts = feeCharge ? Number(feeCharge.amount) : 0;
   const calculatedABBAmount = abbCharge ? Number(abbCharge.amount) : 0;
   const additionalABBAmount = 0;
@@ -238,6 +249,7 @@ export const buildSommatiePdfProps = async (
     aanmaningDate: aanmaningSentAt
       ? formatDate(aanmaningSentAt.toString())
       : formatDate(claim.createdAt.toString()),
+    deadlineDate: formatDate(deadlineDate.toString()),
     debtorName: debtorName || "Debtor",
     debtorAddress: debtorAddress,
     island: island || "Bonaire",
@@ -381,6 +393,12 @@ export const buildIngebrekestellingPdfProps = async (
   return {
     logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
     date: formatDate(claim.createdAt.toString()),
+    aanmaningDate: firstReminderStep.sentAt
+      ? formatDate(firstReminderStep.sentAt.toString())
+      : formatDate(claim.createdAt.toString()),
+    sommatieDate: secondStep.sentAt
+      ? formatDate(secondStep.sentAt.toString())
+      : formatDate(claim.createdAt.toString()),
     debtorName: debtorName || "Debtor",
     debtorAddress: debtorAddress || "",
     island: island || "Bonaire",

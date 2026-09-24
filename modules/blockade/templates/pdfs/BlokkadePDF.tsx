@@ -244,9 +244,14 @@ const BlokkadePDF: React.FC<BlokkadePDFProps> = ({
           <Text style={styles.paragraph}>Geachte {debtorName},</Text>
 
           <Text style={styles.paragraph}>
-            Er is een economische blokkade op uw naam geregistreerd binnen de
-            CFSB-samenwerking. Deze blokkade is het gevolg van het niet
-            nakomen van uw financiële verplichting.
+            Naar aanleiding van de eerder verzonden aanmaning, sommatie en
+            ingebrekestelling is een economische blokkade op uw naam
+            geregistreerd in CFSB.
+          </Text>
+
+          <Text style={styles.paragraph}>
+            Deze blokkade is het gevolg van het niet nakomen van uw
+            financiële verplichting.
           </Text>
 
           <Text style={styles.paragraph}>
@@ -285,8 +290,8 @@ const BlokkadePDF: React.FC<BlokkadePDFProps> = ({
 
         {/* FOOTER */}
         <Text style={styles.footer}>
-          Dit document is automatisch opgesteld en verzonden binnen de
-          CFSB-samenwerking.
+          Dit document is automatisch opgesteld en verzonden via het
+          CFSB-platform.
         </Text>
       </Page>
     </Document>

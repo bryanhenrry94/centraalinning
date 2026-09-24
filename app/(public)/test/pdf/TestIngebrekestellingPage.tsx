@@ -15,6 +15,10 @@ const TestIngebrekestellingPage = () => {
 
     date: "20-05-2026",
 
+    aanmaningDate: "01-05-2026",
+
+    sommatieDate: "15-05-2026",
+
     debtorName: "John Doe",
 
     debtorAddress: "Kaya Industria 15",

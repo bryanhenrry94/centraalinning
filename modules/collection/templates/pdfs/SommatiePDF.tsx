@@ -169,6 +169,7 @@ export interface SommatiePDFProps {
   logoUrl: string;
   date: string;
   aanmaningDate: string;
+  deadlineDate: string;
   debtorName: string;
   debtorAddress: string;
   island: string;
@@ -187,6 +188,8 @@ export interface SommatiePDFProps {
 const SommatiePDF: React.FC<SommatiePDFProps> = ({
   logoUrl,
   date,
+  aanmaningDate,
+  deadlineDate,
   debtorName,
   debtorAddress,
   island,
@@ -214,7 +217,7 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
           <View style={styles.headerTop}>
             <Image style={styles.logo} src={logoUrl} />
 
-            <Text style={styles.title}>Sommatie</Text>
+            <Text style={styles.title}>Sommatie tot ingebrekestelling</Text>
           </View>
 
           <View style={styles.divider} />
@@ -246,8 +249,8 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
           </Text>
 
           <Text style={styles.paragraph}>
-            Ondanks de eerder verzonden aanmaning is de openstaande
-            betalingsverplichting niet binnen de gestelde termijn voldaan.
+            Ondanks de aanmaning van {aanmaningDate} heeft u niet binnen de
+            gestelde termijn aan uw betalingsverplichting voldaan.
           </Text>
 
           {/* TABLE */}
@@ -267,38 +270,34 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
             <View style={styles.tableRow}>
               <Text style={styles.tableLabel}>CFSB-kosten</Text>
               <Text style={styles.tableSymbol}>USD</Text>
-              <Text style={styles.tableValue}>
-                {formatAmount(cfsbKosten)}
-              </Text>
+              <Text style={styles.tableValue}>{formatAmount(cfsbKosten)}</Text>
             </View>
           </View>
 
           <Text style={styles.paragraph}>
-            Wij sommeren u de openstaande hoofdsom van USD{" "}
-            {formatAmount(amount_original)} binnen 2 dagen na dagtekening van
-            deze brief volledig te voldoen.
+            Wij sommeren u de hoofdsom van USD {formatAmount(amount_original)}{" "}
+            binnen 2 dagen na dagtekening, uiterlijk {deadlineDate}, volledig te
+            voldoen.
           </Text>
 
           <Text style={styles.paragraph}>
-            U kunt hiervoor inloggen op uw CFSB-account en daar de
-            betalingsgegevens bekijken, de CFSB-kosten voldoen of, indien
-            beschikbaar, een betalingsregeling aanvragen. De hoofdsom dient
-            rechtstreeks te worden overgemaakt aan {tenantName} op{" "}
-            {bankName}, bankrekening {accountNumber}.
+            Via uw CFSB-account kunt u de betalingsverplichting bekijken,
+            betalen en, indien beschikbaar, een betalingsregeling aanvragen.
+            Openstaande CFSB-kosten dienen eerst volledig te worden voldaan om
+            toegang te krijgen tot de betreffende CFSB-diensten.
           </Text>
 
           <Text style={styles.paragraph}>
-            Indien u buiten CFSB betaalt, vermeld dan uw naam en
-            dossiernummer {reference_number}. De CFSB-kosten blijven
-            afzonderlijk verschuldigd en dienen rechtstreeks aan CFSB te
-            worden betaald.
+            Bij betaling wordt het bedrag rechtstreeks overgemaakt naar de{" "}
+            {bankName}-bankrekening van {tenantName}, {accountNumber}. De
+            betaling wordt automatisch verwerkt en is gekoppeld aan dossier{" "}
+            {reference_number}.
           </Text>
 
           <Text style={styles.paragraph}>
-            Indien binnen de gestelde termijn niet aan de
-            betalingsverplichting wordt voldaan, wordt het dossier verder
-            opgevolgd en kan een economische blokkade worden geregistreerd.
-            Aanvullende kosten kunnen van toepassing zijn.
+            Bij niet-tijdige betaling wordt het dossier automatisch volgens de
+            geldende CFSB-procedure verder opgevolgd. Aanvullende
+            administratieve kosten kunnen van toepassing zijn.
           </Text>
 
           <Text style={styles.paragraph}>Met vriendelijke groet,</Text>
@@ -319,7 +318,8 @@ const SommatiePDF: React.FC<SommatiePDFProps> = ({
 
         {/* FOOTER */}
         <Text style={styles.footer}>
-          Dit bericht is automatisch opgesteld en verzonden via CFSB.
+          Dit document is automatisch opgesteld en verzonden via het
+          CFSB-platform.
         </Text>
       </Page>
     </Document>

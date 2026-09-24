@@ -185,6 +185,8 @@ const styles = StyleSheet.create({
 export interface IngebrekestellingProps {
   logoUrl: string;
   date: string;
+  aanmaningDate: string;
+  sommatieDate: string;
   debtorName: string;
   debtorAddress: string;
   island: string;
@@ -199,6 +201,8 @@ export interface IngebrekestellingProps {
 const IngebrekestellingPDF: React.FC<IngebrekestellingProps> = ({
   logoUrl,
   date,
+  aanmaningDate,
+  sommatieDate,
   debtorName,
   debtorAddress,
   island,
@@ -246,14 +250,14 @@ const IngebrekestellingPDF: React.FC<IngebrekestellingProps> = ({
           <Text style={styles.paragraph}>Geachte {debtorName},</Text>
 
           <Text style={styles.paragraph}>
-            Ondanks onze eerdere aanmaning en sommatie is de openstaande
-            betalingsverplichting tot op heden niet voldaan. U bent hiermee
-            in gebreke.
+            Op {aanmaningDate} hebben wij u aangemaand en op {sommatieDate}{" "}
+            gesommeerd om aan uw betalingsverplichting te voldoen. Tot op
+            heden is geen volledige betaling ontvangen.
           </Text>
 
           <Text style={styles.paragraph}>
-            Wij stellen u hierbij formeel in gebreke en geven u een laatste
-            termijn om aan uw betalingsverplichting te voldoen.
+            U wordt hierbij officieel in gebreke gesteld en geven wij u een
+            laatste termijn om aan uw betalingsverplichting te voldoen.
           </Text>
 
           {/* TABLE */}
@@ -309,7 +313,7 @@ const IngebrekestellingPDF: React.FC<IngebrekestellingProps> = ({
             voortvloeien, komen voor uw rekening.
           </Text>
 
-          <Text style={styles.paragraph}>Met vriendelijke groet,</Text>
+          <Text style={styles.paragraph}>Hoogachtend,</Text>
 
           {/* SIGNATURE */}
           <View style={styles.signatureWrapper}>
@@ -327,7 +331,8 @@ const IngebrekestellingPDF: React.FC<IngebrekestellingProps> = ({
 
         {/* FOOTER */}
         <Text style={styles.footer}>
-          Dit bericht is automatisch opgesteld en verzonden via CFSB.
+          Dit document is automatisch opgesteld en verzonden via het
+          CFSB-platform.
         </Text>
       </Page>
     </Document>

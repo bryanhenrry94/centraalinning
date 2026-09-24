@@ -170,8 +170,10 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
           <Text style={styles.paragraph}>Geachte {debtorName},</Text>
 
           <Text style={styles.paragraph}>
-            Hierbij vragen wij uw aandacht voor onderstaande openstaande
-            vordering.
+            {tenantName} is aangesloten bij Centrale Financiële Samenwerking
+            & Bescherming (CFSB). Vanaf heden worden alle communicatie en
+            administratieve opvolging met betrekking tot deze
+            betalingsachterstand centraal via CFSB verzorgd.
           </Text>
 
           {/* Table */}
@@ -194,29 +196,29 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
           </View>
 
           <Text style={styles.paragraph}>
-            Wij verzoeken u de openstaande hoofdsom van USD{" "}
-            {formatAmount(amount_original)} binnen 14 dagen na dagtekening van
-            deze brief volledig te voldoen.
+            Wij verzoeken u de hoofdsom van USD{" "}
+            {formatAmount(amount_original)} binnen 14 dagen na dagtekening
+            volledig te voldoen.
           </Text>
 
           <Text style={styles.paragraph}>
-            U kunt hiervoor inloggen op uw CFSB-account en daar direct betalen
-            of bij ons een betalingsregeling aanvragen. De hoofdsom wordt
-            rechtstreeks overgemaakt aan {tenantName} op {bankName},
-            bankrekening {accountNumber}.
+            Via uw CFSB-account kunt u de betalingsverplichting bekijken,
+            betalen en, indien beschikbaar, een betalingsregeling aanvragen.
+            Openstaande CFSB-kosten dienen eerst volledig te worden voldaan om
+            toegang te krijgen tot de betreffende CFSB-diensten.
           </Text>
 
           <Text style={styles.paragraph}>
-            Indien u buiten CFSB betaalt, vermeld dan uw naam en dossiernummer{" "}
-            {reference_number}. De CFSB-kosten van USD{" "}
-            {formatAmount(aopCosts)} blijven afzonderlijk verschuldigd en
-            dienen rechtstreeks aan CFSB te worden betaald.
+            Bij betaling wordt het bedrag rechtstreeks overgemaakt naar de{" "}
+            {bankName}-bankrekening van {tenantName}, {accountNumber}. De
+            betaling wordt automatisch verwerkt en is gekoppeld aan dossier{" "}
+            {reference_number}.
           </Text>
 
           <Text style={styles.paragraph}>
-            Indien binnen de gestelde termijn niet aan de
-            betalingsverplichting wordt voldaan, wordt het dossier verder
-            opgevolgd. Aanvullende kosten kunnen van toepassing zijn.
+            Bij niet-tijdige betaling wordt het dossier automatisch volgens de
+            geldende CFSB-procedure verder opgevolgd. Aanvullende
+            administratieve kosten kunnen van toepassing zijn.
           </Text>
 
           <Text style={styles.paragraph}>Met vriendelijke groet,</Text>
@@ -229,7 +231,8 @@ const AanmaningPDF: React.FC<AanmaningPDFProps> = ({
 
         {/* Footer */}
         <Text style={styles.footer}>
-          Dit bericht is automatisch opgesteld en verzonden via CFSB.
+          Dit document is automatisch opgesteld en verzonden via het
+          CFSB-platform.
         </Text>
       </Page>
     </Document>
