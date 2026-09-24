@@ -24,33 +24,7 @@ const JURISDICTIONS = [
     numberingPrefix: "BON",
     isActive: true,
     rolloutOrder: 1,
-    // Mismos valores que el Parameter global histórico — Bonaire es la
-    // única isla operativa hoy, así que esto no cambia su comportamiento.
-    collectionFeeRate: 15,
-    collectionFeeMinimumAmount: 40,
-    abbRate: 6,
-    companyAanmaningTermDays: 5,
-    consumerAanmaningTermDays: 14,
-    companySommatieTermDays: 7,
-    consumerSommatieTermDays: 14,
-    companyAanmaningPenalty: 25,
-    naturalAanmaningPenalty: 15,
-    companySommatiePenalty: 50,
-    naturalSommatiePenalty: 25,
-    companyReactionLimitDays: 5,
-    companyNoReactionPenalty: 100,
-    naturalNoReactionPenalty: 50,
-    companyPaymentAgreementFee: 50,
-    naturalPaymentAgreementFee: 25,
-    blokCheckPricing: 35,
-    blockadeRegistrationPricing: 35,
-    farRegistrationFee: 10,
-    digitalFileCosts: 10,
-    extraAdministrativeCosts: 0,
-    reportFinancialPricing: 35,
     currencyCode: "USD",
-    bankName: "MCB (Maduro & Curiel's Bank)",
-    bankAccount: "123456789",
     services: ["FAR", "AOP", "BLC", "BLK", "COP", "GOP"] as const,
   },
   {
@@ -63,33 +37,7 @@ const JURISDICTIONS = [
     numberingPrefix: "CUR",
     isActive: false,
     rolloutOrder: 2,
-    // Placeholder — mismos valores que Bonaire hasta que CFSB confirme las
-    // tarifas reales de Curaçao; queda preparada, no activa.
-    collectionFeeRate: 15,
-    collectionFeeMinimumAmount: 40,
-    abbRate: 6,
-    companyAanmaningTermDays: 5,
-    consumerAanmaningTermDays: 14,
-    companySommatieTermDays: 7,
-    consumerSommatieTermDays: 14,
-    companyAanmaningPenalty: 25,
-    naturalAanmaningPenalty: 15,
-    companySommatiePenalty: 50,
-    naturalSommatiePenalty: 25,
-    companyReactionLimitDays: 5,
-    companyNoReactionPenalty: 100,
-    naturalNoReactionPenalty: 50,
-    companyPaymentAgreementFee: 50,
-    naturalPaymentAgreementFee: 25,
-    blokCheckPricing: 35,
-    blockadeRegistrationPricing: 35,
-    farRegistrationFee: 10,
-    digitalFileCosts: 10,
-    extraAdministrativeCosts: 0,
-    reportFinancialPricing: 35,
     currencyCode: "USD",
-    bankName: "",
-    bankAccount: "",
     services: [] as const,
   },
   {
@@ -102,7 +50,46 @@ const JURISDICTIONS = [
     numberingPrefix: "ARU",
     isActive: false,
     rolloutOrder: 3,
-    // Placeholder — última en el orden de implementación acordado.
+    currencyCode: "USD",
+    services: [] as const,
+  },
+];
+
+// Valores de negocio (tarifas/plazos/datos bancarios) por isla — ya no
+// viven en `Jurisdiction` (que solo guarda datos de la isla), sino
+// directamente como `Setting` con jurisdictionId (ver seedJurisdictionSettings).
+// Bonaire es la única isla operativa hoy; Curaçao/Aruba quedan con los
+// mismos valores como placeholder hasta que CFSB confirme sus tarifas.
+const JURISDICTION_PARAMETERS: Record<
+  string,
+  {
+    collectionFeeRate: number;
+    collectionFeeMinimumAmount: number;
+    abbRate: number;
+    companyAanmaningTermDays: number;
+    consumerAanmaningTermDays: number;
+    companySommatieTermDays: number;
+    consumerSommatieTermDays: number;
+    companyAanmaningPenalty: number;
+    naturalAanmaningPenalty: number;
+    companySommatiePenalty: number;
+    naturalSommatiePenalty: number;
+    companyReactionLimitDays: number;
+    companyNoReactionPenalty: number;
+    naturalNoReactionPenalty: number;
+    companyPaymentAgreementFee: number;
+    naturalPaymentAgreementFee: number;
+    blokCheckPricing: number;
+    blockadeRegistrationPricing: number;
+    farRegistrationFee: number;
+    digitalFileCosts: number;
+    extraAdministrativeCosts: number;
+    reportFinancialPricing: number;
+    bankName: string;
+    bankAccount: string;
+  }
+> = {
+  "jurisdiction-bon-001": {
     collectionFeeRate: 15,
     collectionFeeMinimumAmount: 40,
     abbRate: 6,
@@ -125,12 +112,62 @@ const JURISDICTIONS = [
     digitalFileCosts: 10,
     extraAdministrativeCosts: 0,
     reportFinancialPricing: 35,
-    currencyCode: "USD",
+    bankName: "MCB (Maduro & Curiel's Bank)",
+    bankAccount: "123456789",
+  },
+  "jurisdiction-cur-001": {
+    collectionFeeRate: 15,
+    collectionFeeMinimumAmount: 40,
+    abbRate: 6,
+    companyAanmaningTermDays: 5,
+    consumerAanmaningTermDays: 14,
+    companySommatieTermDays: 7,
+    consumerSommatieTermDays: 14,
+    companyAanmaningPenalty: 25,
+    naturalAanmaningPenalty: 15,
+    companySommatiePenalty: 50,
+    naturalSommatiePenalty: 25,
+    companyReactionLimitDays: 5,
+    companyNoReactionPenalty: 100,
+    naturalNoReactionPenalty: 50,
+    companyPaymentAgreementFee: 50,
+    naturalPaymentAgreementFee: 25,
+    blokCheckPricing: 35,
+    blockadeRegistrationPricing: 35,
+    farRegistrationFee: 10,
+    digitalFileCosts: 10,
+    extraAdministrativeCosts: 0,
+    reportFinancialPricing: 35,
     bankName: "",
     bankAccount: "",
-    services: [] as const,
   },
-];
+  "jurisdiction-aru-001": {
+    collectionFeeRate: 15,
+    collectionFeeMinimumAmount: 40,
+    abbRate: 6,
+    companyAanmaningTermDays: 5,
+    consumerAanmaningTermDays: 14,
+    companySommatieTermDays: 7,
+    consumerSommatieTermDays: 14,
+    companyAanmaningPenalty: 25,
+    naturalAanmaningPenalty: 15,
+    companySommatiePenalty: 50,
+    naturalSommatiePenalty: 25,
+    companyReactionLimitDays: 5,
+    companyNoReactionPenalty: 100,
+    naturalNoReactionPenalty: 50,
+    companyPaymentAgreementFee: 50,
+    naturalPaymentAgreementFee: 25,
+    blokCheckPricing: 35,
+    blockadeRegistrationPricing: 35,
+    farRegistrationFee: 10,
+    digitalFileCosts: 10,
+    extraAdministrativeCosts: 0,
+    reportFinancialPricing: 35,
+    bankName: "",
+    bankAccount: "",
+  },
+};
 
 async function seedJurisdictions() {
   for (const { services, ...jurisdiction } of JURISDICTIONS) {
@@ -213,6 +250,8 @@ async function seedJurisdictionSettings() {
   }
 
   for (const jurisdiction of JURISDICTIONS) {
+    const params = JURISDICTION_PARAMETERS[jurisdiction.id];
+
     const rows: {
       key: string;
       name: string;
@@ -224,136 +263,148 @@ async function seedJurisdictionSettings() {
         key: "collection_fee_minimum_amount",
         name: "Minimum incassokosten",
         categoryId: "cat-rates",
-        value: String(jurisdiction.collectionFeeMinimumAmount),
+        value: String(params.collectionFeeMinimumAmount),
       },
       {
         key: "blok_check_pricing",
         name: "Blok-Check prijs",
         categoryId: "cat-rates",
-        value: String(jurisdiction.blokCheckPricing),
+        value: String(params.blokCheckPricing),
       },
       {
         key: "report_financial_pricing",
         name: "Financieel verslag prijs",
         categoryId: "cat-rates",
-        value: String(jurisdiction.reportFinancialPricing),
+        value: String(params.reportFinancialPricing),
       },
       {
         key: "blockade_registration_pricing",
         name: "Blokkade (BLK) registratieprijs",
         categoryId: "cat-rates",
-        value: String(jurisdiction.blockadeRegistrationPricing),
+        value: String(params.blockadeRegistrationPricing),
       },
       {
         key: "far_registration_fee",
         name: "FAR-registratiekosten",
         categoryId: "cat-rates",
-        value: String(jurisdiction.farRegistrationFee),
+        value: String(params.farRegistrationFee),
       },
       {
         key: "digital_file_costs",
         name: "Digitaal dossierkosten",
         categoryId: "cat-rates",
-        value: String(jurisdiction.digitalFileCosts),
+        value: String(params.digitalFileCosts),
       },
       {
         key: "extra_administrative_costs",
         name: "Extra administratiekosten",
         categoryId: "cat-rates",
-        value: String(jurisdiction.extraAdministrativeCosts),
+        value: String(params.extraAdministrativeCosts),
       },
       {
         key: "company_payment_agreement_fee",
         name: "Betalingsregeling fee (bedrijf)",
         categoryId: "cat-rates",
-        value: String(jurisdiction.companyPaymentAgreementFee),
+        value: String(params.companyPaymentAgreementFee),
       },
       {
         key: "natural_payment_agreement_fee",
         name: "Betalingsregeling fee (particulier)",
         categoryId: "cat-rates",
-        value: String(jurisdiction.naturalPaymentAgreementFee),
+        value: String(params.naturalPaymentAgreementFee),
+      },
+      {
+        key: "bank_name",
+        name: "Bank",
+        categoryId: "cat-billing",
+        value: params.bankName,
+      },
+      {
+        key: "bank_account",
+        name: "Bankrekeningnummer",
+        categoryId: "cat-billing",
+        value: params.bankAccount,
       },
       // Termijnen
       {
         key: "company_aanmaning_term_days",
         name: "Aanmaningstermijn (bedrijf)",
         categoryId: "cat-deadlines",
-        value: String(jurisdiction.companyAanmaningTermDays),
+        value: String(params.companyAanmaningTermDays),
       },
       {
         key: "consumer_aanmaning_term_days",
         name: "Aanmaningstermijn (particulier)",
         categoryId: "cat-deadlines",
-        value: String(jurisdiction.consumerAanmaningTermDays),
+        value: String(params.consumerAanmaningTermDays),
       },
       {
         key: "company_sommatie_term_days",
         name: "Sommatietermijn (bedrijf)",
         categoryId: "cat-deadlines",
-        value: String(jurisdiction.companySommatieTermDays),
+        value: String(params.companySommatieTermDays),
       },
       {
         key: "consumer_sommatie_term_days",
         name: "Sommatietermijn (particulier)",
         categoryId: "cat-deadlines",
-        value: String(jurisdiction.consumerSommatieTermDays),
+        value: String(params.consumerSommatieTermDays),
       },
       {
         key: "company_reaction_limit_days",
         name: "Reactietermijn (bedrijf)",
         categoryId: "cat-deadlines",
-        value: String(jurisdiction.companyReactionLimitDays),
+        value: String(params.companyReactionLimitDays),
       },
       // ABB
       {
         key: "abb_rate",
         name: "ABB-tarief",
         categoryId: "cat-abb",
-        value: String(jurisdiction.abbRate),
+        value: String(params.abbRate),
       },
       // Percentages
       {
         key: "collection_fee_rate",
         name: "Incassotarief (%)",
         categoryId: "cat-percentages",
-        value: String(jurisdiction.collectionFeeRate),
+        value: String(params.collectionFeeRate),
       },
       {
         key: "company_aanmaning_penalty",
         name: "Aanmaningsboete (bedrijf)",
         categoryId: "cat-percentages",
-        value: String(jurisdiction.companyAanmaningPenalty),
+        value: String(params.companyAanmaningPenalty),
       },
       {
         key: "natural_aanmaning_penalty",
         name: "Aanmaningsboete (particulier)",
         categoryId: "cat-percentages",
-        value: String(jurisdiction.naturalAanmaningPenalty),
+        value: String(params.naturalAanmaningPenalty),
       },
       {
         key: "company_sommatie_penalty",
         name: "Sommatieboete (bedrijf)",
         categoryId: "cat-percentages",
-        value: String(jurisdiction.companySommatiePenalty),
+        value: String(params.companySommatiePenalty),
       },
       {
         key: "natural_sommatie_penalty",
         name: "Sommatieboete (particulier)",
         categoryId: "cat-percentages",
-        value: String(jurisdiction.naturalSommatiePenalty),
+        value: String(params.naturalSommatiePenalty),
       },
       {
         key: "company_no_reaction_penalty",
         name: "Boete geen reactie (bedrijf)",
         categoryId: "cat-percentages",
-        value: String(jurisdiction.companyNoReactionPenalty),
+        value: String(params.companyNoReactionPenalty),
       },
       {
         key: "natural_no_reaction_penalty",
         name: "Boete geen reactie (particulier)",
         categoryId: "cat-percentages",
-        value: String(jurisdiction.naturalNoReactionPenalty),
+        value: String(params.naturalNoReactionPenalty),
       },
       // GOP-commissie participant (5%): tarifa CFSB que paga el participante
       // para activar el GOP (LegalProcessService.registerFirstVerdict /

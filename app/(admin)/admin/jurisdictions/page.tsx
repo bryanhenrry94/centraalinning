@@ -5,8 +5,14 @@ import { Chip, Container, Stack, Switch, Typography } from "@mui/material";
 import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
-import { getAdminJurisdictions, setAdminJurisdictionActive } from "@/modules/admin/actions/admin.actions";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
+import {
+  getAdminJurisdictions,
+  setAdminJurisdictionActive,
+} from "@/modules/admin/actions/admin.actions";
 
 type Row = Awaited<ReturnType<typeof getAdminJurisdictions>>[number];
 
@@ -28,7 +34,9 @@ export default function AdminJurisdictionsPage() {
   const handleToggle = async (row: Row) => {
     try {
       await setAdminJurisdictionActive(row.id, !row.isActive);
-      notifySuccess(!row.isActive ? "Jurisdictie geactiveerd" : "Jurisdictie gedeactiveerd");
+      notifySuccess(
+        !row.isActive ? "Jurisdictie geactiveerd" : "Jurisdictie gedeactiveerd",
+      );
       load();
     } catch (error) {
       notifyError(error instanceof Error ? error.message : "Actie mislukt");
@@ -38,24 +46,51 @@ export default function AdminJurisdictionsPage() {
   if (loading) return <LoadingUI />;
 
   const columns: ListColumn<Row>[] = [
-    { key: "name", label: "Naam", render: (r) => r.jurisdictionName },
+    { key: "name", label: "Naam", render: (r) => r.islandName },
     { key: "islandCode", label: "Code", render: (r) => r.islandCode },
-    { key: "rolloutOrder", label: "Volgorde", render: (r) => r.rolloutOrder, hideOnMobile: true },
+    {
+      key: "rolloutOrder",
+      label: "Volgorde",
+      render: (r) => r.rolloutOrder,
+      hideOnMobile: true,
+    },
     {
       key: "isActive",
       label: "Status",
       render: (r) => (
-        <Stack direction="row" alignItems="center" spacing={1} onClick={(e) => e.stopPropagation()}>
-          <Chip size="small" label={r.isActive ? "Actief" : "Inactief"} color={r.isActive ? "success" : "default"} />
-          <Switch size="small" checked={r.isActive} onChange={() => handleToggle(r)} />
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={1}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Chip
+            size="small"
+            label={r.isActive ? "Actief" : "Inactief"}
+            color={r.isActive ? "success" : "default"}
+          />
+          <Switch
+            size="small"
+            checked={r.isActive}
+            onChange={() => handleToggle(r)}
+          />
         </Stack>
       ),
     },
   ];
 
   return (
-    <Container maxWidth="md" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
-      <AppBreadcrumbs items={[{ label: "CFSB Admin", href: "/admin" }, { label: "Eilanden/landen" }]} />
+    <Container
+      maxWidth="md"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+    >
+      <AppBreadcrumbs
+        items={[
+          { label: "CFSB Admin", href: "/admin" },
+          { label: "Eilanden/landen" },
+        ]}
+      />
       <Stack spacing={3}>
         <Typography variant="h4" fontWeight={700}>
           Eilanden/landen
