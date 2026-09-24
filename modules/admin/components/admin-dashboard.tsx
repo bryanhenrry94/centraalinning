@@ -1,7 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Box, Button, Card, CardHeader, Container, Divider, Grid, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Card,
+  CardHeader,
+  Container,
+  Divider,
+  Grid,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import BusinessOutlined from "@mui/icons-material/BusinessOutlined";
@@ -24,14 +34,46 @@ type Stats = Awaited<ReturnType<typeof getAdminDashboardStats>>;
 // filosofie als de rest van het systeem: het dashboard is het startpunt,
 // niet een doodlopend overzicht (feedback sponsor).
 const QUICK_LINKS = [
-  { label: "Deelnemers", href: "/admin/tenants", icon: <BusinessOutlined fontSize="small" /> },
-  { label: "Personenregister", href: "/admin/persons", icon: <GroupsOutlined fontSize="small" /> },
-  { label: "Alle dossiers", href: "/admin/case-files", icon: <FolderOutlined fontSize="small" /> },
-  { label: "Dossieroverdrachten", href: "/admin/transfers-register", icon: <MoveToInboxOutlined fontSize="small" /> },
-  { label: "GOP-register", href: "/admin/gop-register", icon: <GavelOutlined fontSize="small" /> },
-  { label: "Betalingen", href: "/admin/payments", icon: <PaymentsOutlined fontSize="small" /> },
-  { label: "Advocaten", href: "/admin/lawyers", icon: <BalanceOutlined fontSize="small" /> },
-  { label: "BLK-register", href: "/admin/blk-register", icon: <LockOutlined fontSize="small" /> },
+  {
+    label: "Deelnemers",
+    href: "/admin/tenants",
+    icon: <BusinessOutlined fontSize="small" />,
+  },
+  {
+    label: "Personenregister",
+    href: "/admin/persons",
+    icon: <GroupsOutlined fontSize="small" />,
+  },
+  {
+    label: "Alle dossiers",
+    href: "/admin/case-files",
+    icon: <FolderOutlined fontSize="small" />,
+  },
+  {
+    label: "Dossieroverdrachten",
+    href: "/admin/transfers-register",
+    icon: <MoveToInboxOutlined fontSize="small" />,
+  },
+  {
+    label: "GOP-register",
+    href: "/admin/gop-register",
+    icon: <GavelOutlined fontSize="small" />,
+  },
+  {
+    label: "Betalingen",
+    href: "/admin/payments",
+    icon: <PaymentsOutlined fontSize="small" />,
+  },
+  {
+    label: "Advocaten",
+    href: "/admin/lawyers",
+    icon: <BalanceOutlined fontSize="small" />,
+  },
+  {
+    label: "BLK-register",
+    href: "/admin/blk-register",
+    icon: <LockOutlined fontSize="small" />,
+  },
 ];
 
 export const AdminDashboard = () => {
@@ -50,7 +92,11 @@ export const AdminDashboard = () => {
   if (loading || !stats) return <LoadingUI />;
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+    >
       <Stack spacing={3}>
         <Box>
           <Typography variant="h4" fontWeight={700}>
@@ -83,7 +129,7 @@ export const AdminDashboard = () => {
           </Grid>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <StatCard
-              title="Open dossiers"
+              title="Openstaande dossiers"
               value={stats.openDossiers}
               icon={<FolderOutlined />}
               color={theme.palette.warning.main}

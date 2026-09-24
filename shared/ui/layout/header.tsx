@@ -95,11 +95,13 @@ export default function Header() {
 
   // El alguacil y el abogado solo operan dentro del GOP (expedientes ya
   // transferidos); las diensten pre-judiciales (BLC/FAR/AOP/BLK/COP) no son
-  // de su competencia.
+  // de su competencia. El PLATFORM_OWNER tampoco opera diensten — su ámbito
+  // es "CFSB Admin" (cross-tenant), no las operaciones de un tenant.
   const canAccessWorkstation =
     !isPureDebtor &&
     !userRoles.includes(UserRole.BAILIFF) &&
-    !userRoles.includes(UserRole.LAWYER);
+    !userRoles.includes(UserRole.LAWYER) &&
+    !userRoles.includes(UserRole.PLATFORM_OWNER);
 
   const isBailiffRole = userRoles.includes(UserRole.BAILIFF);
   const isLawyerRole = userRoles.includes(UserRole.LAWYER);
