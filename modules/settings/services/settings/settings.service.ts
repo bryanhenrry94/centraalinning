@@ -14,7 +14,7 @@ export class SettingsService {
         tenantId: null,
         OR: jurisdictionId ? [{ jurisdictionId: null }, { jurisdictionId }] : [{ jurisdictionId: null }],
       },
-      include: { jurisdiction: { select: { id: true, islandCode: true, islandName: true } } },
+      include: { jurisdiction: { select: { id: true, code: true, name: true } } },
       orderBy: [{ jurisdictionId: "asc" }, { name: "asc" }],
     });
   }

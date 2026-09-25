@@ -42,7 +42,7 @@ interface DetailsStepProps {
   country: string;
   // Islas activas — vienen de Jurisdiction (dato), nunca de un array
   // hardcodeado en el código (punto 13 del análisis CFSB).
-  jurisdictions: { islandCode: string; islandName: string }[];
+  jurisdictions: { code: string; name: string }[];
   planId: string;
   planName: string;
   billingCycle: "MONTHLY" | "YEARLY";
@@ -126,7 +126,7 @@ export const DetailsStep = ({
   };
 
   const islandLabel =
-    jurisdictions.find((item) => item.islandCode === country)?.islandName || country;
+    jurisdictions.find((item) => item.code === country)?.name || country;
 
   return (
     <Box

@@ -34,7 +34,7 @@ interface Setting {
   name: string;
   description: string | null;
   value_type?: string;
-  jurisdiction?: { id: string; islandCode: string; islandName: string } | null;
+  jurisdiction?: { id: string; code: string; name: string } | null;
 }
 
 interface SettingsCategory {
@@ -231,7 +231,7 @@ export const SettingSection = ({ id }: { id: string }) => {
                       )}
 
                       <Chip
-                        label={setting.jurisdiction?.islandName ?? "Algemeen"}
+                        label={setting.jurisdiction?.name ?? "Algemeen"}
                         size="small"
                         variant="outlined"
                         color={setting.jurisdiction ? "primary" : "default"}

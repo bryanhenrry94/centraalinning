@@ -10,6 +10,7 @@ import { PlanService } from "@/modules/settings/services/plan.service";
 import { JurisdictionService } from "@/modules/jurisdiction/services/jurisdiction.service";
 import { AuditLogService } from "@/modules/verdict/services/audit-log.service";
 import { PlanUpdate } from "@/modules/settings/services/plan.validators";
+import { JurisdictionInput, JurisdictionUpdateInput } from "@/modules/jurisdiction/services/jurisdiction.validators";
 
 export const getAdminDashboardStats = async () => {
   await requirePlatformOwner();
@@ -144,6 +145,21 @@ export const getAdminJurisdictions = async () => {
 export const setAdminJurisdictionActive = async (id: string, isActive: boolean) => {
   await requirePlatformOwner();
   return JurisdictionService.setActive(id, isActive);
+};
+
+export const createAdminJurisdiction = async (input: JurisdictionInput) => {
+  await requirePlatformOwner();
+  return JurisdictionService.create(input);
+};
+
+export const updateAdminJurisdiction = async (id: string, input: JurisdictionUpdateInput) => {
+  await requirePlatformOwner();
+  return JurisdictionService.update(id, input);
+};
+
+export const deleteAdminJurisdiction = async (id: string) => {
+  await requirePlatformOwner();
+  return JurisdictionService.delete(id);
 };
 
 export const getAdminAuditLog = async (page: number = 1, pageSize: number = 50) => {

@@ -7,8 +7,8 @@ import { getAllJurisdictions } from "@/modules/jurisdiction/actions/jurisdiction
 
 type Jurisdiction = {
   id: string;
-  islandCode: string;
-  islandName: string;
+  code: string;
+  name: string;
   isActive: boolean;
 };
 
@@ -68,7 +68,7 @@ export function JurisdictionSelect() {
         <MenuItem value="">Alleen globale waarden</MenuItem>
         {jurisdictions.map((j) => (
           <MenuItem key={j.id} value={j.id}>
-            {j.islandName}
+            {j.name}
             {!j.isActive ? " (voorbereid, inactief)" : ""}
           </MenuItem>
         ))}

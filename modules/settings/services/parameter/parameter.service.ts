@@ -46,7 +46,7 @@ export class ParameterService {
   // Superadministrador cambia tarifas/plazos/ABB editando Settings, sin
   // tocar código — y nada se rompe para las claves que todavía no tengan
   // un Setting cargado. `Jurisdiction` solo guarda datos de la isla
-  // (nombre, código, timezone, etc.), no valores de negocio.
+  // (nombre, código, país, orden de rollout), no valores de negocio.
   static getParameterForTenant = async (tenantId: string): Promise<ParameterInput> => {
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },

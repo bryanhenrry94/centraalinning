@@ -8,8 +8,8 @@ const PRIMARY = "#0A3D91";
 const ACCENT = "#F7931E";
 
 interface IslandOption {
-  islandCode: string;
-  islandName: string;
+  code: string;
+  name: string;
 }
 
 interface IslandStepProps {
@@ -45,11 +45,11 @@ export const IslandStep = ({
 
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 4 }}>
         {islands.map((island) => {
-          const selected = island.islandCode === value;
+          const selected = island.code === value;
 
           return (
             <Card
-              key={island.islandCode}
+              key={island.code}
               elevation={0}
               sx={{
                 border: selected ? `2px solid ${ACCENT}` : "1px solid #e5e7eb",
@@ -63,7 +63,7 @@ export const IslandStep = ({
               }}
             >
               <CardActionArea
-                onClick={() => onSelect(island.islandCode)}
+                onClick={() => onSelect(island.code)}
                 sx={{
                   display: "flex",
                   alignItems: "center",
@@ -82,7 +82,7 @@ export const IslandStep = ({
                       color: selected ? ACCENT : PRIMARY,
                     }}
                   >
-                    {island.islandName}
+                    {island.name}
                   </Typography>
                 </Box>
 

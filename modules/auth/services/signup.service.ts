@@ -77,7 +77,7 @@ export class SignupService {
       // Jurisdiction — acá se resuelve el FK correspondiente (punto 13 del
       // análisis CFSB).
       const jurisdiction = await prisma.jurisdiction.findUnique({
-        where: { islandCode: validatedData.country },
+        where: { code: validatedData.country },
       });
 
       // 6. CREATE TENANT, USER, MEMBERSHIP AND SUBSCRIPTION IN A TRANSACTION

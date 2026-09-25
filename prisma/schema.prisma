@@ -1341,31 +1341,16 @@ model PersonIdentitySequence {
 // nunca deben hardcodearse en el código fuente (punto 13 del análisis
 // CFSB). Bonaire es la primera activa; Curaçao y Aruba quedan preparadas
 // (isActive = false) en el orden de implementación acordado (ver seed.ts).
-// Reúne, por jurisdicción: identidad (isla + jurisdicción legal), zona
-// horaria, configuración de ABB, prefijo de numeración, servicios activos
-// (JurisdictionService) y las tarifas/plazos locales — ver
-// ParameterService.getParameterForTenant.
+// Las tarifas/plazos/ABB por jurisdicción viven como Setting (ver
+// ParameterService.getParameterForTenant), no acá.
 model Jurisdiction {
   id String @id @default(cuid())
 
-  islandCode       String @unique // "BON" | "CUR" | "ARU" (dato, cargado por seed/admin)
-  islandName       String
-  jurisdictionName String
-  countryCode      String
-
-  timezone String
-
-  // Configuración de ABB (impuesto) de esta jurisdicción.
-  abbRate Float @default(0)
-
-  // Prefijo de numeración permanente (CFSBP-<prefix>-000001). Normalmente
-  // igual a islandCode, pero queda separado por si CFSB pide otro código.
-  numberingPrefix String
+  code String @unique // "BON" | "CUR" | "ARU" (dato, cargado por seed/admin)
+  name String
 
   isActive     Boolean @default(false)
   rolloutOrder Int     @default(0)
-
-  currencyCode String @default("USD")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
