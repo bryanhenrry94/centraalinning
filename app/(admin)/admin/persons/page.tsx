@@ -29,7 +29,11 @@ export default function AdminPersonsPage() {
   const columns: ListColumn<PersonRow>[] = [
     { key: "identification", label: "Identificatie", render: (r) => r.identification },
     { key: "name", label: "Naam", render: (r) => personName(r) },
-    { key: "type", label: "Type", render: (r) => r.person_type },
+    {
+      key: "type",
+      label: "Type",
+      render: (r) => (r.person_type === "COMPANY" ? "Bedrijf" : "Natuurlijk persoon"),
+    },
     { key: "email", label: "E-mail", render: (r) => r.email || "-" },
     { key: "phone", label: "Telefoon", render: (r) => r.phone || "-" },
   ];

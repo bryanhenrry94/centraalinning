@@ -130,7 +130,21 @@ export default function AppTheme(props: AppThemeProps) {
       shape: {
         borderRadius: 8,
       },
-      ...(themeComponents ? { components: themeComponents } : {}),
+      components: {
+        // El sponsor pidió que el Chip deje de verse como una píldora
+        // (borderRadius: 16px por defecto de MUI) y pase a tener bordes
+        // suaves, igual que un Button (mismo shape.borderRadius que el
+        // resto de la app) — cambio de theme, así aplica a todos los
+        // Chips existentes sin tocar cada pantalla una por una.
+        MuiChip: {
+          styleOverrides: {
+            root: ({ theme }) => ({
+              borderRadius: theme.shape.borderRadius,
+            }),
+          },
+        },
+        ...themeComponents,
+      },
     });
   }, [themeComponents]);
 
