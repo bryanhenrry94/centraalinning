@@ -175,6 +175,7 @@ export class SignupService {
                 companyName: validatedData.company_name,
                 email: normalizedEmail,
                 phone: validatedData.phone,
+                country: tenant.country_code,
                 status: "INACTIVE",
               },
             });
