@@ -9,6 +9,7 @@ import { notifyError } from "@/shared/ui/notifications";
 import { InfoField } from "@/shared/ui/info-field";
 import { getAdminBailiffById } from "@/modules/admin/actions/admin.actions";
 import { Bailiff } from "@/modules/bailiff/services/bailiff.validators";
+import { getProfessionalAdminStatusInfo } from "@/modules/admin/utils/admin-status";
 
 export default function AdminBailiffDetailPage() {
   const params = useParams();
@@ -47,8 +48,8 @@ export default function AdminBailiffDetailPage() {
           </Typography>
           <Chip
             size="small"
-            label={bailiff.status ?? "-"}
-            color={bailiff.status === "ACTIVE" ? "success" : "default"}
+            label={getProfessionalAdminStatusInfo(bailiff.status ?? "-").label}
+            color={getProfessionalAdminStatusInfo(bailiff.status ?? "-").color}
           />
         </Stack>
         <Card>

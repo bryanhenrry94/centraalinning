@@ -8,6 +8,7 @@ import { notifyError } from "@/shared/ui/notifications";
 import { formatDate } from "@/shared/utils/formatters";
 import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import { getAdminEmployerConfirmations } from "@/modules/admin/actions/admin.actions";
+import { getNetworkQueryAdminStatusInfo } from "@/modules/admin/utils/admin-status";
 
 type Row = Awaited<ReturnType<typeof getAdminEmployerConfirmations>>[number];
 
@@ -42,7 +43,14 @@ export default function AdminEmployerConfirmationsPage() {
         </Stack>
       ),
     },
-    { key: "status", label: "Status", render: (r) => <Chip size="small" label={r.status} /> },
+    {
+      key: "status",
+      label: "Status",
+      render: (r) => {
+        const { label, color } = getNetworkQueryAdminStatusInfo(r.status);
+        return <Chip size="small" label={label} color={color} sx={{ minWidth: 150, justifyContent: "center" }} />;
+      },
+    },
     {
       key: "broadcastAt",
       label: "Verzonden op",

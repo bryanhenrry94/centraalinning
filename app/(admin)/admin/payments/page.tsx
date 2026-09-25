@@ -8,14 +8,10 @@ import { notifyError } from "@/shared/ui/notifications";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import { getAdminPayments } from "@/modules/admin/actions/admin.actions";
+import { getPaymentAdminStatusInfo } from "@/modules/admin/utils/admin-status";
+import { getPaymentMethodLabel, getPaymentTypeLabel } from "@/modules/admin/utils/admin-payment-labels";
 
 type Row = Awaited<ReturnType<typeof getAdminPayments>>[number];
-
-const STATUS_COLOR: Record<string, "success" | "warning" | "error" | "default"> = {
-  paid: "success",
-  pending: "warning",
-  failed: "error",
-};
 
 export default function AdminPaymentsPage() {
   const [loading, setLoading] = useState(true);
@@ -32,13 +28,16 @@ export default function AdminPaymentsPage() {
 
   const columns: ListColumn<Row>[] = [
     { key: "tenantName", label: "Deelnemer", render: (r) => r.tenantName },
-    { key: "paymentType", label: "Type", render: (r) => r.paymentType },
+    { key: "paymentType", label: "Type", render: (r) => getPaymentTypeLabel(r.paymentType) },
     { key: "totalAmount", label: "Bedrag", align: "right", render: (r) => formatCurrency(r.totalAmount) },
-    { key: "method", label: "Methode", render: (r) => r.method, hideOnMobile: true },
+    { key: "method", label: "Methode", render: (r) => getPaymentMethodLabel(r.method) },
     {
       key: "status",
       label: "Status",
-      render: (r) => <Chip size="small" label={r.status} color={STATUS_COLOR[r.status] ?? "default"} />,
+      render: (r) => {
+        const { label, color } = getPaymentAdminStatusInfo(r.status);
+        return <Chip size="small" label={label} color={color} sx={{ minWidth: 120, justifyContent: "center" }} />;
+      },
     },
     { key: "createdAt", label: "Datum", render: (r) => formatDate(r.createdAt.toString()), hideOnMobile: true },
   ];

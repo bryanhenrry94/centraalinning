@@ -17,26 +17,9 @@ import { notifyError } from "@/shared/ui/notifications";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import { getAdminDebtClaims } from "@/modules/admin/actions/admin.actions";
-import { ChipColor } from "@/modules/collection/utils/debt-claim-status";
+import { DEBT_CLAIM_ADMIN_STATUS, getDebtClaimAdminStatusInfo } from "@/modules/admin/utils/admin-status";
 
 type ClaimRow = Awaited<ReturnType<typeof getAdminDebtClaims>>[number];
-
-// Solo para este listado (CFSB Admin > Alle dossiers) — no reemplaza
-// DEBT_CLAIM_STATUS_CONFIG (modules/collection/utils/debt-claim-status.ts),
-// que otras pantallas siguen usando con sus propias etiquetas.
-// IN_PROGRESS usa color="primary": el naranja de marca (brand[400] en
-// shared/theme/colors.ts), no el "warning" del theme (que en realidad está
-// en hue amarillo, no naranja).
-const CASE_FILE_STATUS_CONFIG: Record<string, { label: string; color: ChipColor }> = {
-  OPEN: { label: "Open", color: "success" },
-  IN_PROGRESS: { label: "In behandeling", color: "primary" },
-  SETTLED: { label: "Vereffend", color: "info" },
-  CLOSED: { label: "Gesloten", color: "default" },
-  CANCELLED: { label: "Geannuleerd", color: "error" },
-};
-
-const getStatusInfo = (status: string) =>
-  CASE_FILE_STATUS_CONFIG[status] ?? { label: status, color: "default" as ChipColor };
 
 export default function AdminCaseFilesPage() {
   const [loading, setLoading] = useState(true);
@@ -75,7 +58,7 @@ export default function AdminCaseFilesPage() {
       key: "status",
       label: "Status",
       render: (r) => {
-        const { label, color } = getStatusInfo(r.status);
+        const { label, color } = getDebtClaimAdminStatusInfo(r.status);
         return <Chip size="small" label={label} color={color} sx={{ minWidth: 116, justifyContent: "center" }} />;
       },
     },
@@ -120,7 +103,7 @@ export default function AdminCaseFilesPage() {
               sx={{ minWidth: { sm: 180 } }}
             >
               <MenuItem value="ALL">Alle statussen</MenuItem>
-              {Object.entries(CASE_FILE_STATUS_CONFIG).map(([value, { label }]) => (
+              {Object.entries(DEBT_CLAIM_ADMIN_STATUS).map(([value, { label }]) => (
                 <MenuItem key={value} value={value}>
                   {label}
                 </MenuItem>

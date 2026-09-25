@@ -44,7 +44,12 @@ export default function AdminUsersPage() {
       key: "isActive",
       label: "Status",
       render: (r) => (
-        <Chip size="small" label={r.isActive ? "Actief" : "Inactief"} color={r.isActive ? "success" : "default"} />
+        <Chip
+          size="small"
+          label={r.isActive ? "Actief" : "Inactief"}
+          color={r.isActive ? "success" : "default"}
+          sx={{ minWidth: 90, justifyContent: "center" }}
+        />
       ),
     },
   ];

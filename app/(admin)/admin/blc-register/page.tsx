@@ -35,6 +35,7 @@ export default function AdminBlcRegisterPage() {
           size="small"
           label={r.blockadeFound ? "Actieve blokkade" : "Geen blokkade"}
           color={r.blockadeFound ? "error" : "success"}
+          sx={{ minWidth: 130, justifyContent: "center" }}
         />
       ),
     },

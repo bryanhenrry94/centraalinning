@@ -7,6 +7,7 @@ import LoadingUI from "@/shared/ui/loading-ui";
 import { notifyError } from "@/shared/ui/notifications";
 import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import { getAdminLawyers } from "@/modules/admin/actions/admin.actions";
+import { getProfessionalAdminStatusInfo } from "@/modules/admin/utils/admin-status";
 
 type LawyerRow = Awaited<ReturnType<typeof getAdminLawyers>>[number];
 
@@ -26,13 +27,15 @@ export default function AdminLawyersPage() {
   const columns: ListColumn<LawyerRow>[] = [
     { key: "name", label: "Naam", render: (r) => `${r.firstName} ${r.lastName}` },
     { key: "companyName", label: "Kantoor", render: (r) => r.companyName || "-" },
+    { key: "country", label: "Land/eiland", render: (r) => r.country || "-" },
     { key: "email", label: "E-mail", render: (r) => r.email },
     {
       key: "status",
       label: "Status",
-      render: (r) => (
-        <Chip size="small" label={r.status} color={r.status === "ACTIVE" ? "success" : "default"} />
-      ),
+      render: (r) => {
+        const { label, color } = getProfessionalAdminStatusInfo(r.status);
+        return <Chip size="small" label={label} color={color} sx={{ minWidth: 100, justifyContent: "center" }} />;
+      },
     },
   ];
 

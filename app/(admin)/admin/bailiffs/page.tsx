@@ -7,6 +7,7 @@ import LoadingUI from "@/shared/ui/loading-ui";
 import { notifyError } from "@/shared/ui/notifications";
 import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import { getAdminBailiffs } from "@/modules/admin/actions/admin.actions";
+import { getProfessionalAdminStatusInfo } from "@/modules/admin/utils/admin-status";
 
 type BailiffRow = Awaited<ReturnType<typeof getAdminBailiffs>>[number];
 
@@ -30,9 +31,10 @@ export default function AdminBailiffsPage() {
     {
       key: "status",
       label: "Status",
-      render: (r) => (
-        <Chip size="small" label={r.status ?? "-"} color={r.status === "ACTIVE" ? "success" : "default"} />
-      ),
+      render: (r) => {
+        const { label, color } = getProfessionalAdminStatusInfo(r.status ?? "-");
+        return <Chip size="small" label={label} color={color} sx={{ minWidth: 100, justifyContent: "center" }} />;
+      },
     },
   ];
 

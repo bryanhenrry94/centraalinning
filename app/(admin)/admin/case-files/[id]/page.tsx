@@ -9,6 +9,7 @@ import { notifyError } from "@/shared/ui/notifications";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { InfoField } from "@/shared/ui/info-field";
 import { getAdminDebtClaimById } from "@/modules/admin/actions/admin.actions";
+import { getDebtClaimAdminStatusInfo } from "@/modules/admin/utils/admin-status";
 
 type ClaimDetail = Awaited<ReturnType<typeof getAdminDebtClaimById>>;
 
@@ -47,7 +48,11 @@ export default function AdminCaseFileDetailPage() {
           <Typography variant="h4" fontWeight={700}>
             {claim.reference || "Dossier"}
           </Typography>
-          <Chip size="small" label={claim.status} />
+          <Chip
+            size="small"
+            label={getDebtClaimAdminStatusInfo(claim.status).label}
+            color={getDebtClaimAdminStatusInfo(claim.status).color}
+          />
         </Stack>
         <Card>
           <CardContent>

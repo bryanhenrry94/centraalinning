@@ -107,6 +107,7 @@ export default function AdminJurisdictionsPage() {
             size="small"
             label={r.isActive ? "Actief" : "Inactief"}
             color={r.isActive ? "success" : "default"}
+            sx={{ minWidth: 90, justifyContent: "center" }}
           />
           <Switch
             size="small"

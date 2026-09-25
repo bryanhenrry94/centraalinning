@@ -8,6 +8,7 @@ import { notifyError } from "@/shared/ui/notifications";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import { getAdminFinancialAgreements } from "@/modules/admin/actions/admin.actions";
+import { getFarAdminStatusInfo } from "@/modules/admin/utils/admin-status";
 
 type Row = Awaited<ReturnType<typeof getAdminFinancialAgreements>>[number];
 
@@ -29,7 +30,14 @@ export default function AdminFarRegisterPage() {
     { key: "tenantName", label: "Deelnemer", render: (r) => r.tenantName },
     { key: "debtorName", label: "Debiteur", render: (r) => r.debtorName },
     { key: "amount", label: "Bedrag", align: "right", render: (r) => formatCurrency(r.amount) },
-    { key: "status", label: "Status", render: (r) => <Chip size="small" label={r.status} /> },
+    {
+      key: "status",
+      label: "Status",
+      render: (r) => {
+        const { label, color } = getFarAdminStatusInfo(r.status);
+        return <Chip size="small" label={label} color={color} sx={{ minWidth: 140, justifyContent: "center" }} />;
+      },
+    },
     { key: "createdAt", label: "Datum", render: (r) => formatDate(r.createdAt.toString()), hideOnMobile: true },
   ];
 

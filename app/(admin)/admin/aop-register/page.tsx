@@ -8,6 +8,7 @@ import { notifyError } from "@/shared/ui/notifications";
 import { formatDate } from "@/shared/utils/formatters";
 import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import { getAdminAdministrativeCollections } from "@/modules/admin/actions/admin.actions";
+import { getAopAdminStatusInfo } from "@/modules/admin/utils/admin-status";
 
 type Row = Awaited<ReturnType<typeof getAdminAdministrativeCollections>>[number];
 
@@ -28,7 +29,14 @@ export default function AdminAopRegisterPage() {
     { key: "reference", label: "Referentie", render: (r) => r.reference || "-" },
     { key: "tenantName", label: "Deelnemer", render: (r) => r.tenantName },
     { key: "debtorName", label: "Debiteur", render: (r) => r.debtorName },
-    { key: "status", label: "Status", render: (r) => <Chip size="small" label={r.status} /> },
+    {
+      key: "status",
+      label: "Status",
+      render: (r) => {
+        const { label, color } = getAopAdminStatusInfo(r.status);
+        return <Chip size="small" label={label} color={color} sx={{ minWidth: 150, justifyContent: "center" }} />;
+      },
+    },
     { key: "startedAt", label: "Gestart op", render: (r) => formatDate(r.startedAt.toString()), hideOnMobile: true },
   ];
 

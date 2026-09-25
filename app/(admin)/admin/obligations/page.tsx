@@ -8,6 +8,7 @@ import { notifyError } from "@/shared/ui/notifications";
 import { formatCurrency } from "@/shared/utils/formatters";
 import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import { getAdminObligations } from "@/modules/admin/actions/admin.actions";
+import { getObligationAdminStatusInfo } from "@/modules/admin/utils/admin-status";
 
 type Row = Awaited<ReturnType<typeof getAdminObligations>>[number];
 
@@ -31,7 +32,14 @@ export default function AdminObligationsPage() {
     { key: "description", label: "Omschrijving", render: (r) => r.description || r.type, hideOnMobile: true },
     { key: "beneficiary", label: "Begunstigde", render: (r) => r.beneficiary },
     { key: "balanceAmount", label: "Openstaand", align: "right", render: (r) => formatCurrency(r.balanceAmount) },
-    { key: "status", label: "Status", render: (r) => <Chip size="small" label={r.status} /> },
+    {
+      key: "status",
+      label: "Status",
+      render: (r) => {
+        const { label, color } = getObligationAdminStatusInfo(r.status);
+        return <Chip size="small" label={label} color={color} sx={{ minWidth: 160, justifyContent: "center" }} />;
+      },
+    },
   ];
 
   return (

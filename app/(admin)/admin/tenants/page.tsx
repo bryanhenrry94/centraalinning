@@ -46,6 +46,7 @@ export default function AdminTenantsPage() {
           size="small"
           label={r.is_active ? "Actief" : "Inactief"}
           color={r.is_active ? "success" : "default"}
+          sx={{ minWidth: 90, justifyContent: "center" }}
         />
       ),
     },

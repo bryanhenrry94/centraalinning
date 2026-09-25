@@ -8,6 +8,7 @@ import { notifyError } from "@/shared/ui/notifications";
 import { formatCurrency } from "@/shared/utils/formatters";
 import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import { getAdminClaimCharges } from "@/modules/admin/actions/admin.actions";
+import { getChargeAdminStatusInfo } from "@/modules/admin/utils/admin-status";
 
 type Row = Awaited<ReturnType<typeof getAdminClaimCharges>>[number];
 
@@ -31,7 +32,14 @@ export default function AdminAdministrativeFeesPage() {
     { key: "concept", label: "Concept", render: (r) => r.concept },
     { key: "service", label: "Dienst", render: (r) => r.service, hideOnMobile: true },
     { key: "amount", label: "Bedrag", align: "right", render: (r) => formatCurrency(r.amount) },
-    { key: "status", label: "Status", render: (r) => <Chip size="small" label={r.status} /> },
+    {
+      key: "status",
+      label: "Status",
+      render: (r) => {
+        const { label, color } = getChargeAdminStatusInfo(r.status);
+        return <Chip size="small" label={label} color={color} sx={{ minWidth: 130, justifyContent: "center" }} />;
+      },
+    },
   ];
 
   return (

@@ -9,6 +9,7 @@ import { notifyError } from "@/shared/ui/notifications";
 import { InfoField } from "@/shared/ui/info-field";
 import { getAdminLawyerById } from "@/modules/admin/actions/admin.actions";
 import { Lawyer } from "@/modules/lawyer/services/lawyer.validators";
+import { getProfessionalAdminStatusInfo } from "@/modules/admin/utils/admin-status";
 
 export default function AdminLawyerDetailPage() {
   const params = useParams();
@@ -47,7 +48,11 @@ export default function AdminLawyerDetailPage() {
           <Typography variant="h4" fontWeight={700}>
             {name}
           </Typography>
-          <Chip size="small" label={lawyer.status} color={lawyer.status === "ACTIVE" ? "success" : "default"} />
+          <Chip
+            size="small"
+            label={getProfessionalAdminStatusInfo(lawyer.status).label}
+            color={getProfessionalAdminStatusInfo(lawyer.status).color}
+          />
         </Stack>
         <Card>
           <CardContent>

@@ -8,6 +8,7 @@ import { notifyError } from "@/shared/ui/notifications";
 import { formatDate } from "@/shared/utils/formatters";
 import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import { getAdminCollectiveCollections } from "@/modules/admin/actions/admin.actions";
+import { getCopAdminStatusInfo } from "@/modules/admin/utils/admin-status";
 
 type Row = Awaited<ReturnType<typeof getAdminCollectiveCollections>>[number];
 
@@ -29,7 +30,14 @@ export default function AdminCopRegisterPage() {
     { key: "tenantName", label: "Deelnemer", render: (r) => r.tenantName },
     { key: "debtorName", label: "Debiteur", render: (r) => r.debtorName },
     { key: "employerTenantName", label: "Werkgever", render: (r) => r.employerTenantName ?? "-" },
-    { key: "status", label: "Status", render: (r) => <Chip size="small" label={r.status} /> },
+    {
+      key: "status",
+      label: "Status",
+      render: (r) => {
+        const { label, color } = getCopAdminStatusInfo(r.status);
+        return <Chip size="small" label={label} color={color} sx={{ minWidth: 190, justifyContent: "center" }} />;
+      },
+    },
     { key: "startedAt", label: "Gestart op", render: (r) => formatDate(r.startedAt.toString()), hideOnMobile: true },
   ];
 
