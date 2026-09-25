@@ -1,0 +1,670 @@
+====================================================================
+FLUJO COMPLETO: GOP (Gerechtelijke Opvolging / Seguimiento Judicial)
+CFSB — módulos modules/legal-process, modules/verdict, modules/bailiff,
+modules/lawyer (modelos Prisma: CaseTransfer, LegalProcess, Verdict,
+VerdictEmbargo, VerdictInterest, VerdictBailiffServices,
+LawyerFeeInvoice, BailiffFeeInvoice, GopPaymentConfirmation)
+====================================================================
+Generado a partir del código fuente actual, verificado línea por línea
+contra:
+  - prisma/schema.prisma
+  - modules/legal-process/services/case-transfer.service.ts
+  - modules/legal-process/services/legal-process.service.ts
+  - modules/legal-process/services/case-transfer-guards.ts
+  - modules/legal-process/services/legal-process-guards.ts
+  - modules/legal-process/constants/*.ts
+  - modules/verdict/services/verdict.service.ts
+  - modules/payment/services/payment-processor.ts
+  - lib/jobs/check_gop_deadlines.ts
+  - lib/jobs/check_case_transfer_deadlines.ts
+  - docs/flujo-arreglo-pago.txt (para la parte de Agreement dentro de GOP)
+
+--------------------------------------------------------------------
+0. UBICACIÓN EN EL DOMINIO
+--------------------------------------------------------------------
+GOP es el último escalón del cobro (después de AOP y, opcionalmente,
+COP): transferencia del expediente a un abogado y/o alguacil, registro
+de la sentencia (Vonnis) y ejecución judicial. El modelo está partido
+en DOS fases con estados propios:
+
+  FASE 1 — CaseTransfer ("Overdracht"/transferencia): desde que se
+  decide transferir el expediente hasta que el alguacil registra la
+  primera sentencia. Estados en `CaseTransferStatus`.
+
+  FASE 2 — LegalProcess (el GOP propiamente dicho): nace recién cuando
+  se registra la primera sentencia. Estados en `LegalProcessStatus`.
+  Un CaseTransfer tiene como máximo un LegalProcess (relación 1:1,
+  `LegalProcess.caseTransferId @unique`).
+
+Dentro de GOP puede existir un `Agreement` (acuerdo de pago /
+"arreglo") — ya documentado en detalle en docs/flujo-arreglo-pago.txt,
+sección "RUTA B". Acá solo se referencia como precondición de cierre.
+
+--------------------------------------------------------------------
+1. PRECONDICIÓN PARA INICIAR UNA TRANSFERENCIA A GOP
+--------------------------------------------------------------------
+CaseTransferService.requestTransfer exige UNA de estas dos
+condiciones (si ninguna se cumple, error explícito):
+  a) El AOP del DebtClaim ya llegó al step BLK_NOTIFICATION, o
+  b) Ya existe un Blockade ACTIVE para ese DebtClaim (por vía directa
+     BLK, o porque llegó por COP sin pasar por AOP).
+No hay ningún costo asociado a esta verificación — es puramente una
+condición de flujo.
+
+--------------------------------------------------------------------
+2. FASE 1 — CASETRANSFER (TRANSFERENCIA / OVERDRACHT)
+--------------------------------------------------------------------
+
+2.1 Solicitud de transferencia — GRATIS
+  - requestTransfer(): staff del tenant elige UN abogado (lawyerId) O
+    UN alguacil (bailiffId), nunca ambos a la vez inicialmente.
+  - Ya NO genera ningún Payment/BillingInvoice (decisión del sponsor,
+    ver comentario "La transferencia... ya no genera ningún costo
+    CFSB"). Se crea directamente en PENDING_ACCEPTANCE con
+    acceptanceDeadline = ahora + 7 días.
+  - Existe un flag isEmergencyTransfer ("noodoverdracht") para
+    reemplazar a un profesional ya asignado por fallecimiento/
+    incapacidad — con emergencyReason obligatorio.
+  - Si YA existe una transferencia PENDING_ACCEPTANCE/ACCEPTED/
+    WORK_COMPLETED para ese mismo debtClaim + esa misma persona
+    (lawyerId/bailiffId), se reutiliza tal cual (no duplica).
+  - Se notifica de inmediato al abogado/alguacil asignado
+    (LEGAL_PROCESS_TRANSFER_REQUEST).
+  - Ruta legada (PENDING_PAYMENT + confirmTransferPayment): solo
+    código muerto que queda por si hay filas viejas de antes de que la
+    transferencia se volviera gratuita. Ninguna transferencia nueva
+    pasa por ahí.
+
+2.2 Aceptación / rechazo (por el profesional asignado)
+  - acceptTransfer(): solo válido desde PENDING_ACCEPTANCE -> ACCEPTED,
+    respondedAt = ahora. Notifica al staff del tenant
+    (LEGAL_PROCESS_ACCEPTED). Importante: aceptar la transferencia NO
+    activa el GOP todavía — el GOP nace recién con el primer vonnis.
+  - rejectTransfer(): PENDING_ACCEPTANCE -> REJECTED, con motivo
+    obligatorio. Si esta transferencia se originó desde un COP
+    (Collectieve Opvolging), CollectiveCollectionService.
+    reopenAfterTransferRejected intenta automáticamente reabrir ese
+    mismo COP sin costo; si no, el mensaje al staff simplemente pide
+    elegir otro profesional.
+
+2.3 Plazo de aceptación (7 días) — NUNCA vence ni rechaza solo
+  - Job check_case_transfer_deadlines -> CaseTransferService.
+    sendAcceptanceReminders(), corre en cada ejecución de
+    /api/jobs/run-all:
+      * Día ~5 (configurable, Setting
+        case_transfer_acceptance_reminder_days_before, default 2 días
+        antes del vencimiento): recordatorio al profesional asignado
+        (CASE_TRANSFER_ACCEPTANCE_REMINDER). Una sola notificación por
+        día.
+      * Día 7 (deadline vencido): aviso al staff del tenant
+        (CASE_TRANSFER_ACCEPTANCE_DEADLINE_REACHED), repetido cada día
+        que siga sin resolverse. El sistema NO cancela ni rechaza
+        automáticamente — el participante debe decidir activamente.
+  - extendAcceptanceDeadline(): el participante concede 7 días más al
+    MISMO profesional (nueva acceptanceDeadline = ahora+7). Puede
+    repetirse indefinidamente.
+  - La otra salida es simplemente iniciar una NUEVA requestTransfer
+    con otro lawyerId/bailiffId (la anterior queda REJECTED o
+    simplemente sin resolver mientras se decide).
+
+2.4 Power of attorney (volmacht) — CaseTransferService.
+    setPowerOfAttorney
+  - Solo el participante puede otorgarla o revocarla.
+  - Sin ella: el abogado/alguacil asignado solo puede PROPONER
+    acuerdos de pago (Agreement), nunca decidir.
+  - Con ella: el profesional también puede decidir (aceptar,
+    modificar o rechazar) esos acuerdos por sí mismo — ver
+    docs/flujo-arreglo-pago.txt sección 3, ruta B.
+  - Se puede otorgar/revocar en cualquier momento, con nota libre;
+    queda registrado en el timeline y notifica al profesional.
+
+2.5 Cancelación — CaseTransferService.cancelTransfer
+  - Solo el participante, y SOLO mientras no exista todavía un
+    LegalProcess (es decir, antes de que se registre cualquier
+    vonnis). Una vez que hay vonnis, la transferencia ya no se puede
+    cancelar por esta vía.
+  - Requiere motivo. Marca el ClaimService "GOP" del debtClaim como
+    CANCELLED. Notifica a staff y al profesional asignado.
+
+2.6 CAMINO ABOGADO — finalización de honorarios (solo si lawyerId)
+  - submitLawyerFeeInvoice(): el abogado sube su factura de honorarios
+    (totalAmount libre). Solo permitido en status ACCEPTED.
+      * Comisión CFSB = totalAmount × gop_fee_rate% (Setting, default
+        5%) + ABB de la isla/tenant sobre esa comisión.
+      * Se genera un Payment (Sentoo) tipo GOP_LAWYER_FEE + una
+        BillingInvoice al abogado (se le envía por correo).
+      * Se crea la fila LawyerFeeInvoice en PENDING_PAYMENT.
+  - processLawyerFeePaymentConfirmed() (webhook Sentoo confirmado):
+      * LawyerFeeInvoice -> PAID.
+      * CaseTransfer.workCompletedAt = ahora, status -> WORK_COMPLETED.
+      * Notifica al abogado que ya puede transferir el vonnis al
+        alguacil.
+  - assignBailiffForExecution(): el abogado entrega el expediente a un
+    alguacil. Exige workCompletedAt seteado Y un documento con
+    category "SENTENCIA" ya adjunto (CaseTransferDocument). Solo
+    asigna bailiffId — el CaseTransfer sigue en WORK_COMPLETED.
+
+2.7 CAMINO ALGUACIL DIRECTO (bailiffId, sin abogado)
+  - No hay paso de honorarios/factura en esta fase — el alguacil pasa
+    directo de ACCEPTED a registrar el vonnis (ver sección 3). Sus
+    propios costos/comisión se cobran después, dentro del GOP ya
+    activo (sección 5).
+
+2.8 Documentos de la fase de transferencia
+  - uploadDocument/getDocuments/deleteDocument sobre
+    CaseTransferDocument — texto libre de categoría ("SENTENCIA",
+    etc.). onDelete: Cascade si se borra el CaseTransfer (no aplica en
+    la práctica porque nunca se borra, solo se cancela).
+
+--------------------------------------------------------------------
+3. NACIMIENTO DEL GOP — PRIMER VONNIS Y ACTIVACIÓN (5% PARTICIPANTE)
+--------------------------------------------------------------------
+LegalProcessService.registerVerdict() decide entre dos caminos según
+qué venga en el payload:
+
+3.1 Primer vonnis (data.caseTransferId) — registerFirstVerdict()
+  - Requiere CaseTransfer en status ACCEPTED o WORK_COMPLETED
+    (CASE_TRANSFER_VERDICT_REGISTRABLE_STATUSES) y bailiffId ya
+    asignado (si vino del camino abogado, ya lo asignó
+    assignBailiffForExecution en 2.6).
+  - Si YA existe un LegalProcess para ese CaseTransfer en GOP_DRAFT
+    con un pago pendiente todavía con link válido -> se reutiliza el
+    mismo link de pago (evita duplicar). Si el pago anterior falló/
+    expiró -> retryGopActivationPayment genera uno nuevo sobre el
+    MISMO borrador (no duplica LegalProcess/Verdict). Si el
+    LegalProcess ya no está en GOP_DRAFT (ya se activó) -> error "Dit
+    dossier heeft al een GOP-vonnis geregistreerd."
+  - Cálculo de la comisión CFSB de ACTIVACIÓN (a cargo del
+    PARTICIPANTE):
+      fee = (sentence_amount + Σ totalInterest de todos los
+             verdict_interest cargados) × gop_fee_rate% (Setting,
+             default 5%)
+      tax = fee × abb_rate% (de la isla/tenant)
+      total_with_tax = fee + tax
+  - Se crea el Payment (Sentoo, tipo GOP_ACTIVATION) y su
+    BillingInvoice ANTES de crear ningún registro de negocio (si
+    Sentoo falla, no queda basura).
+  - En una única transacción se crean: el LegalProcess (status
+    GOP_DRAFT, gopActivationPaymentId = el pago recién creado,
+    referenceNumber tipo GOP-2026-001) + el Verdict (status DRAFT) +
+    sus VerdictInterest/VerdictInterestDetails +, si vinieron en el
+    mismo formulario, los VerdictEmbargo y VerdictBailiffServices
+    iniciales (createMany, status "INVOICED" para los costos).
+  - El GOP queda en estado GOP_DRAFT — TODAVÍA NO está activo. No hay
+    Blockade nueva, no hay ClaimService "GOP" todavía.
+
+3.2 Confirmación del pago -> activación real —
+    processGopActivationPaymentConfirmed() (webhook Sentoo, vía
+    payment-processor.ts, PaymentType.GOP_ACTIVATION)
+  - Solo actúa si el LegalProcess sigue en GOP_DRAFT (idempotente).
+  - En transacción:
+      * LegalProcess -> GOP_ACTIVE.
+      * Verdict -> APPROVED.
+      * Se crea el Blockade (status ACTIVE, reason UNPAID_PAYMENT) SI
+        no existía ya uno para ese debtClaim — igual que hace AOP al
+        llegar a BLK_NOTIFICATION. Si ya había uno (típico: ya venía
+        de AOP), se conserva tal cual.
+      * ClaimService "GOP" -> IN_PROGRESS (se crea si no existía).
+      * Se crea una DebtClaimObligation nueva, type LEGAL_COST,
+        beneficiary CFSB, payer DEBTOR, por el monto exacto que el
+        participante acaba de pagar (leído de la BillingInvoice ya
+        generada, no recalculado) — es la parte de la comisión de
+        activación que el participante puede recuperar del deudor.
+        NUNCA toca la obligación principal (sentencia + intereses).
+  - Se envía la factura al contact_email del tenant, y se notifica a
+    staff (GOP_ACTIVATED).
+
+3.3 Vonnis ADICIONAL sobre un GOP ya activo (data.legalProcessId) —
+    registerAdditionalVerdict()
+  - Solo si LegalProcess está en GOP_ACTIVE o GOP_INACTIVE
+    (VERDICT_REGISTRABLE_STATUSES). Se crea directo en status
+    APPROVED (sin fase DRAFT ni gate de pago — a diferencia del
+    primero).
+  - La comisión CFSB del 5% sobre (sentence_amount + intereses) de
+    ESTE vonnis adicional se cobra por un camino DISTINTO:
+    generateGopFeeInvoice() crea el Payment (tipo GOP genérico, no
+    GOP_ACTIVATION) + BillingInvoice, Y ADEMÁS aplica inmediatamente
+    un ClaimCharge tipo "GOP" contra el debtClaim (vía
+    DebtFineService.applyCharge) — no bloquea nada mientras se paga,
+    a diferencia del primer vonnis que sí gatea la activación. Si
+    Sentoo falla acá, el error se traga y queda solo un log en el
+    ClaimTimeline ("Automatische facturering mislukt") — el vonnis
+    adicional queda igual registrado.
+  - processGopFeePaymentConfirmed() (PaymentType.GOP, al confirmarse)
+    solo marca la BillingInvoice como paid; no dispara ningún otro
+    efecto de negocio.
+
+Nota sobre VerdictStatus: el enum define DRAFT, PENDING, APPROVED,
+REJECTED, pero PENDING y REJECTED NUNCA se asignan en ningún punto del
+código actual — en la práctica un Verdict solo transita DRAFT ->
+APPROVED (o nace directo en APPROVED si es adicional).
+
+--------------------------------------------------------------------
+4. QUIÉN PUEDE HACER QUÉ (RESUMEN DE GUARDS)
+--------------------------------------------------------------------
+  - Cambiar de alguacil, cancelar transferencia, otorgar/revocar
+    volmacht: SOLO staff del tenant (participante).
+  - Registrar vonnis / medidas de ejecución / intereses / costos del
+    alguacil / marcar inactivo / reactivar / cerrar GOP / ver
+    documentos: staff del tenant O el alguacil asignado (el backoffice
+    del participante puede operar en nombre del alguacil porque su
+    portal de autoservicio aún no está en producción — comentario
+    explícito en el código).
+  - Registrar un vonnis ADICIONAL sobre un GOP activo: EXCLUSIVO del
+    alguacil asignado, sin fallback de backoffice.
+  - Decidir (aceptar/rechazar) un Agreement dentro de GOP: participante
+    siempre; alguacil asignado solo con power of attorney.
+  - Confirmar/disputar un GopPaymentConfirmation: EXCLUSIVO de la
+    contraparte de quien lo registró (si lo recibió el alguacil,
+    confirma el participante; si lo recibió el participante, confirma
+    el alguacil — nunca la misma parte que lo registró).
+  - Corregir un pago disputado: exclusivo de quien lo registró
+    originalmente.
+  - Aceptar/rechazar la transferencia inicial: exclusivo del
+    abogado/alguacil asignado (esa parte específica, no cualquiera).
+  - Finalizar honorarios del abogado / transferir al alguacil:
+    exclusivo del abogado asignado.
+
+--------------------------------------------------------------------
+5. OPERACIÓN DEL GOP MIENTRAS ESTÁ ACTIVO
+--------------------------------------------------------------------
+
+5.1 Medidas de ejecución (embargos) — VerdictEmbargo
+  - registerExecutionMeasure(): crea la fila (status IN_PROGRESS por
+    defecto). Si el LegalProcess estaba GOP_INACTIVE, se reactiva
+    AUTOMÁTICAMENTE antes de registrar la medida (reactivateIfInactive
+    — ver 6.2).
+  - completeExecutionMeasure(): marca COMPLETED + completed_at. Es uno
+    de los 8 requisitos para poder cerrar el GOP (ver sección 8).
+
+5.2 Actualización de intereses — VerdictInterest/VerdictInterestDetails
+  - registerInterestUpdate(): agrega un nuevo cálculo de intereses
+    sobre un Verdict existente. También reactiva automáticamente si el
+    GOP estaba GOP_INACTIVE.
+
+5.3 Costos del alguacil registrados durante el proceso —
+    VerdictBailiffServices
+  - registerBailiffCost(): registra una actuación/costo puntual
+    (status "INVOICED"). También reactiva si estaba GOP_INACTIVE.
+    IMPORTANTE: esto NO factura nada al participante en este momento
+    — es solo un registro informativo que se SUMA (getBailiffCostsSummary)
+    para comparar contra la factura FINAL del alguacil al cerrar su
+    trabajo (sección 7). Facturar acá sería duplicar la comisión CFSB
+    del alguacil (comentario explícito: "mezclaría las obligaciones
+    del participante y del alguacil").
+
+5.4 Acuerdo de pago (Agreement) dentro de GOP
+  - Ver docs/flujo-arreglo-pago.txt, sección 2/3 ruta B. Resumen: se
+    puede proponer/decidir en cualquier momento que el LegalProcess
+    esté operable (GOP_ACTIVE o GOP_INACTIVE); aceptar SUSPENDE el
+    Blockade ACTIVE (que en GOP siempre existe); incumplir una cuota
+    lo CANCELA y reactiva el Blockade (job check_blockade_reactivation,
+    no un job específico de GOP).
+
+--------------------------------------------------------------------
+6. GOP_INACTIVE — "SIN POSIBILIDAD DE EJECUCIÓN ACTUAL"
+--------------------------------------------------------------------
+6.1 Marcar inactivo — markInactive()
+  - Solo desde GOP_ACTIVE. Requiere reason (enum GopInactiveReason:
+    NO_SEIZABLE_ASSETS, DEBTOR_ABROAD, NO_INCOME,
+    NO_ATTACHABLE_PROPERTY, OTHER), notas libres, foundAt y
+    reviewDate (próxima fecha de control).
+  - IMPORTANTE: esto NUNCA cierra el GOP. La sentencia sigue
+    registrada, el expediente sigue abierto, el Blockade sigue ACTIVE.
+    Es solo un estado de "en pausa a la espera de una oportunidad de
+    ejecución".
+  - Notifica al alguacil y al staff del tenant (GOP_INACTIVE).
+
+6.2 Reactivación
+  - Manual: reactivate() (acción explícita) -> vuelve a GOP_ACTIVE,
+    limpia inactiveReason/inactiveNotes/inactiveFoundAt/reviewDate.
+  - Automática: reactivateIfInactive() se llama internamente desde
+    registerExecutionMeasure, registerInterestUpdate y
+    registerBailiffCost — CUALQUIER nueva actividad operativa saca al
+    GOP de GOP_INACTIVE sin que nadie tenga que reactivarlo a mano.
+
+6.3 Recordatorio de revisión (job check_gop_deadlines)
+  - Por cada LegalProcess en GOP_INACTIVE con reviewDate seteada: si
+    faltan ≤ gop_review_reminder_days (Setting, default 7 días),
+    notifica UNA vez por día al alguacil asignado y al staff del
+    tenant (GOP_REVIEW_REMINDER). No hay límite de repeticiones
+    mientras siga inactivo y sin revisar.
+
+6.4 Prescripción del vonnis (mismo job)
+  - Por cada Verdict con prescription_due_date en un LegalProcess
+    GOP_ACTIVE: si faltan ≤ gop_prescription_reminder_days (Setting,
+    default 30 días), notifica al alguacil y al staff
+    (GOP_PRESCRIPTION_REMINDER), una vez por día, se repite mientras
+    no se registre nueva actividad. El sistema NO hace nada
+    automático al vencer la prescripción — es solo aviso.
+
+--------------------------------------------------------------------
+7. FINALIZACIÓN DEL TRABAJO DEL ALGUACIL (5% COMISIÓN INDEPENDIENTE)
+--------------------------------------------------------------------
+  - submitBailiffFeeInvoice(): el alguacil sube su factura FINAL
+    (totalAmount, libre — se compara solo informativamente contra
+    getBailiffCostsSummary, sin bloquear si no calza). Solo permitido
+    en GOP_OPERABLE_STATUSES (ACTIVE/INACTIVE) y si
+    gopCompletedGateAt todavía no está seteado (no se puede repetir).
+      * Comisión CFSB = totalAmount × gop_bailiff_fee_rate% (Setting
+        INDEPENDIENTE de gop_fee_rate, default también 5%) + ABB.
+      * Se crea Payment (Sentoo, tipo GOP_BAILIFF_FEE) + BillingInvoice
+        al alguacil + fila BailiffFeeInvoice (PENDING_PAYMENT).
+  - processBailiffFeePaymentConfirmed() (webhook Sentoo confirmado):
+      * BailiffFeeInvoice -> PAID.
+      * LegalProcess.gopCompletedGateAt = ahora — esto es lo que
+        habilita el cierre manual del GOP (uno de los 8 requisitos).
+      * Notifica a staff (GOP_BAILIFF_WORK_FINALIZED).
+  - Esta comisión del alguacil es TOTALMENTE independiente de la
+    comisión del participante (activación, sección 3) y de la del
+    abogado (sección 2.6) — nunca se mezclan ni se descuentan entre
+    sí.
+
+--------------------------------------------------------------------
+8. PAGOS DEL DEUDOR DURANTE EL GOP — CONFIRMACIÓN CRUZADA
+--------------------------------------------------------------------
+Mecanismo GopPaymentConfirmation: el deudor puede pagar directamente
+al alguacil O al participante (fuera de este sistema, por eso se
+registra con comprobante). Quien LO RECIBE lo registra; la OTRA parte
+debe confirmarlo para que recién ahí se aplique al saldo.
+
+  1) registerGopPayment(receivedBy: BAILIFF | PARTICIPANT): crea un
+     Payment (status "pending", method TRANSFER) + el
+     GopPaymentConfirmation en AWAITING_CONFIRMATION, con el
+     comprobante subido. NO se aplica al saldo todavía. Notifica a la
+     contraparte (si lo recibió el participante, notifica al alguacil
+     asignado; si lo recibió el alguacil, notifica a todo el staff del
+     tenant).
+  2) La contraparte decide:
+     a) confirmGopPayment(): Payment -> "paid", se aplica de verdad al
+        saldo (ObligationService.applyPayment) -> status CONFIRMED.
+        Se notifica a quien registró. Dispara automáticamente
+        checkAndCloseIfSettled() (sección 9.2) por si esto saldó todo.
+     b) disputeGopPayment(): status DISPUTED, con motivo obligatorio.
+        NO se aplica nada al saldo. Notifica a quien registró.
+  3) Si fue disputado, SOLO quien registró originalmente puede
+     corregirlo — correctGopPayment(): puede ajustar el monto y/o
+     subir un comprobante nuevo -> status CORRECTED, vuelve a esperar
+     confirmación de la contraparte (vuelve al paso 2).
+  - Estados terminales por confirmación: CONFIRMED (aplicado) o
+    quedar indefinidamente en DISPUTED/CORRECTED hasta que se
+    resuelva — no hay timeout ni resolución automática.
+
+--------------------------------------------------------------------
+9. CAMBIO DE ALGUACIL
+--------------------------------------------------------------------
+  - changeBailiff(): solo staff del tenant, en cualquier estado
+    EXCEPTO CLOSED. Reasigna LegalProcess.bailiffId. Notifica al
+    alguacil nuevo, al anterior (si tenía user_id) y al staff.
+  - No hay ninguna restricción por facturas ya emitidas al alguacil
+    anterior — sus BailiffFeeInvoice ya generadas quedan tal cual,
+    ligadas al LegalProcess, no al bailiffId puntual.
+
+--------------------------------------------------------------------
+10. CIERRE DEL GOP
+--------------------------------------------------------------------
+
+10.1 Cierre manual — close() (vía assertCloseable, checklist de 8
+     ítems, TODOS obligatorios; falla con el primer motivo que
+     encuentre):
+  1) Factura del alguacil registrada Y
+  2) su comisión CFSB (5%) confirmada pagada
+     (ambos cubiertos por gopCompletedGateAt, sección 7)
+  3) Saldo de la obligación principal (PRINCIPAL_DEBT, beneficiary
+     PARTICIPANT) en 0 o menos
+  4) Ningún GopPaymentConfirmation sin CONFIRMED
+  5) Ningún GopPaymentConfirmation en DISPUTED (mensaje de error
+     distinto, más específico, si los hay)
+  6) Ningún VerdictBailiffServices en status PENDING (deben estar al
+     menos "INVOICED")
+  7) Ningún VerdictEmbargo (medida de ejecución) en IN_PROGRESS — todas
+     deben estar COMPLETED
+  8) Ningún Agreement en PENDING/IN_NEGOTIATION/COUNTEROFFER
+  - Si pasa el checklist: LegalProcess -> CLOSED, closedAt = ahora.
+    ClaimService "GOP" -> COMPLETED. Se libera el Blockade
+    (BlockadeService.releaseForSettledDebtClaim — misma función que
+    usa AOP/pago directo; solo libera del todo si no queda otro
+    Blockade ACTIVE de la misma persona en otro tenant/dossier).
+    Notifica a staff, al alguacil y al deudor.
+
+10.2 Cierre automático — checkAndCloseIfSettled()
+  - Se llama automáticamente cada vez que confirmGopPayment() deja
+    saldadas todas las obligaciones del debtClaim (incluye el caso de
+    la última cuota de un Agreement aceptado, y el pago vía transfer
+    genérico — mismo patrón que en AOP).
+  - Solo actúa si el LegalProcess está GOP_ACTIVE o GOP_INACTIVE, hay
+    al menos una obligación registrada, y NINGUNA obligación sigue
+    PENDING/PARTIALLY_PAID.
+  - "Mejor esfuerzo": intenta close() y si falla por CUALQUIER otro
+    motivo del checklist (factura del alguacil pendiente, medida de
+    ejecución sin concluir, etc.) simplemente no cierra — el error se
+    descarta silenciosamente, el alguacil deberá cerrarlo a mano
+    cuando complete lo que falte.
+
+--------------------------------------------------------------------
+11. AJUSTE DE MONTOS DEL VONNIS (POST-REGISTRO) — AuditLog
+--------------------------------------------------------------------
+VerdictService.adjustAmounts() — el alguacil (mismo guard que el resto
+de operaciones GOP) puede corregir sentence_amount y/o procesal_cost
+DESPUÉS de registrado, para que el expediente CFSB calce con su
+facturación/saldo real confirmado.
+  - Cada campo modificado queda en el AuditLog genérico (entityType
+    "Verdict", oldValue -> newValue -> actorUserId -> fecha).
+  - Si cambia sentence_amount: se recalcula la obligación
+    LEGAL_COST/CFSB/DEBTOR (el monto recuperable del deudor por la
+    activación, sección 3.2) con la MISMA tarifa gop_fee_rate% vigente
+    — PERO nunca por debajo de lo que el deudor ya pagó de esa
+    obligación (Math.max contra paidAmount): no se puede "deshacer" un
+    pago ya hecho. Ese ajuste también queda en AuditLog
+    (entityType "DebtClaimObligation").
+  - NO toca la obligación principal (sentencia+intereses) ni ningún
+    pago CFSB de Sentoo ya confirmado (esos son liquidaciones
+    cerradas, nunca se revierten retroactivamente).
+
+--------------------------------------------------------------------
+12. RESUMEN DE FLUJOS FINANCIEROS (QUIÉN PAGA QUÉ, CUÁNDO)
+--------------------------------------------------------------------
+  a) Transferencia inicial (CaseTransfer): GRATIS. Sin Payment.
+  b) Comisión de ACTIVACIÓN del GOP: la paga el PARTICIPANTE, sobre
+     (sentence_amount + intereses) del PRIMER vonnis, tarifa
+     `gop_fee_rate` (Setting, default 5%) + ABB. GATEA la activación
+     (GOP_DRAFT -> GOP_ACTIVE): sin este pago confirmado, el GOP nunca
+     se activa.
+  c) Vonnis adicionales sobre un GOP ya activo: también comisión del
+     PARTICIPANTE (misma tarifa `gop_fee_rate`), pero NO gatea nada —
+     el vonnis queda registrado igual aunque el pago falle.
+  d) Camino abogado: el ABOGADO paga honorarios propios (sin tarifa
+     CFSB fija, él decide su totalAmount) + comisión CFSB del 5%
+     (misma `gop_fee_rate`) sobre esos honorarios — gatea poder
+     transferir el expediente al alguacil.
+  e) Comisión FINAL del alguacil: el ALGUACIL paga sobre su propia
+     factura de costos totales, tarifa `gop_bailiff_fee_rate`
+     (Setting INDEPENDIENTE, default también 5%) + ABB — gatea poder
+     cerrar el GOP.
+  f) Lo que el deudor le debe al participante (sentencia + intereses,
+     PRINCIPAL_DEBT): se paga vía GopPaymentConfirmation (sección 8),
+     con doble confirmación entre alguacil y participante — condición
+     de cierre.
+  g) Lo que el deudor debe A CFSB (recuperable por el participante):
+     una obligación separada tipo LEGAL_COST, espejo de lo que pagó el
+     participante en (b) — nunca se mezcla con (f), ni se le hace
+     ningún reembolso cruzado a nadie.
+  Regla general repetida en todos los comentarios del código: las
+  comisiones del participante, del abogado y del alguacil son SIEMPRE
+  obligaciones independientes, cada una con su propio Setting de
+  tarifa y su propio gate — nunca se comparten ni se descuentan entre
+  sí.
+
+--------------------------------------------------------------------
+13. TODOS LOS ESCENARIOS POSIBLES (RESUMEN)
+--------------------------------------------------------------------
+[G1]  Se intenta transferir a GOP sin que el AOP haya llegado a
+      BLK_NOTIFICATION ni exista Blockade ACTIVE -> rechazado, no se
+      crea nada.
+
+[G2]  Transferencia solicitada correctamente -> CaseTransfer
+      PENDING_ACCEPTANCE, notificado de inmediato, gratis.
+
+[G3]  El profesional asignado acepta dentro del plazo -> ACCEPTED.
+      GOP aún NO existe.
+
+[G4]  El profesional asignado rechaza -> REJECTED con motivo; si venía
+      de un COP, ese COP se reabre automáticamente sin costo; si no,
+      el participante debe elegir otro profesional.
+
+[G5]  El profesional no responde dentro de 7 días -> nunca vence
+      solo: se le recuerda (día ~5), luego se avisa al participante
+      (día 7 en adelante, repetido a diario) para que decida.
+
+[G6]  El participante extiende el plazo 7 días más al mismo
+      profesional -> nueva acceptanceDeadline, puede repetirse.
+
+[G7]  El participante otorga volmacht al profesional asignado -> desde
+      ahí ese profesional puede decidir Agreements por sí solo, no
+      solo proponerlos.
+
+[G8]  El participante revoca la volmacht -> el profesional vuelve a
+      solo poder proponer, nunca decidir.
+
+[G9]  El participante cancela la transferencia ANTES de cualquier
+      vonnis -> CANCELLED, ClaimService "GOP" cancelado, ambas partes
+      notificadas.
+
+[G10] Se intenta cancelar una transferencia que YA tiene un
+      LegalProcess (vonnis registrado) -> rechazado, ya no se puede
+      cancelar por esta vía.
+
+[G11] Camino abogado: sube su factura de honorarios -> Sentoo genera
+      el pago de la comisión CFSB (5% + ABB); mientras no se confirme,
+      el CaseTransfer sigue ACCEPTED.
+
+[G12] Se confirma el pago de la comisión del abogado -> WORK_COMPLETED,
+      el abogado ya puede transferir el vonnis a un alguacil.
+
+[G13] El abogado intenta transferir al alguacil sin haber completado
+      el pago, o sin haber adjuntado el documento "SENTENCIA" ->
+      rechazado con el motivo específico faltante.
+
+[G14] Alguacil (directo o vía abogado) registra el PRIMER vonnis ->
+      LegalProcess creado en GOP_DRAFT + Verdict DRAFT + Payment de
+      activación (Sentoo) generado. GOP todavía NO está activo.
+
+[G15] El pago de activación falla/expira antes de confirmarse -> al
+      reintentar registrar el vonnis para el mismo CaseTransfer, se
+      genera un nuevo Payment sobre el MISMO borrador (no duplica
+      nada).
+
+[G16] Se confirma el pago de activación -> GOP_ACTIVE, Verdict
+      APPROVED, se crea (o reutiliza) el Blockade ACTIVE, arranca el
+      ClaimService GOP, se crea la obligación LEGAL_COST recuperable
+      del deudor por ese monto exacto.
+
+[G17] Se intenta registrar el primer vonnis dos veces para el mismo
+      CaseTransfer ya activo -> rechazado ("Dit dossier heeft al een
+      GOP-vonnis geregistreerd").
+
+[G18] Alguacil asignado registra un vonnis ADICIONAL sobre un GOP ya
+      activo -> se crea directo APPROVED (sin gate de pago), se
+      factura la comisión del 5% al participante por un camino
+      paralelo (no bloqueante); si Sentoo falla acá, el vonnis queda
+      igual registrado y solo se loguea el error.
+
+[G19] Se registra una medida de ejecución (embargo) o una actualización
+      de intereses o un costo del alguacil mientras el GOP estaba
+      GOP_INACTIVE -> se reactiva automáticamente a GOP_ACTIVE antes
+      de registrar el dato.
+
+[G20] Alguacil marca el GOP como "sin posibilidad de ejecución actual"
+      (GOP_INACTIVE) con motivo y fecha de revisión -> el expediente
+      sigue abierto, la sentencia sigue vigente, el Blockade sigue
+      ACTIVE; solo deja de estar "en trámite activo" hasta que algo lo
+      reactive.
+
+[G21] Se acerca la fecha de revisión de un GOP_INACTIVE, o la
+      prescripción de un Verdict en GOP_ACTIVE -> recordatorios
+      diarios al alguacil y al staff hasta que se actúe; nada se
+      cierra ni prescribe automáticamente por el solo paso del tiempo.
+
+[G22] Deudor paga directamente al alguacil o al participante (fuera
+      del sistema) -> quien lo recibe lo registra con comprobante,
+      queda AWAITING_CONFIRMATION, NO se aplica al saldo todavía.
+
+[G23] La contraparte confirma ese pago -> se aplica al saldo de verdad,
+      y si eso saldó TODO, se intenta cerrar el GOP automáticamente
+      (best-effort).
+
+[G24] La contraparte disputa el pago (monto/comprobante incorrecto)
+      -> DISPUTED, nada se aplica al saldo; solo quien lo registró
+      puede corregirlo, lo que lo vuelve a poner a la espera de
+      confirmación.
+
+[G25] Alguacil sube su factura final de costos -> se genera el pago de
+      su comisión CFSB independiente (5% + ABB, tarifa propia
+      distinta a la del participante).
+
+[G26] Se confirma el pago de la comisión del alguacil ->
+      gopCompletedGateAt se setea — condición necesaria (no suficiente
+      por sí sola) para poder cerrar el GOP.
+
+[G27] Se intenta cerrar el GOP sin cumplir alguno de los 8 requisitos
+      (factura/comisión del alguacil, saldo pendiente, pagos sin
+      confirmar, pagos disputados, costos del alguacil sin facturar,
+      medidas de ejecución sin concluir, o un Agreement todavía
+      pendiente de decisión) -> rechazado con el motivo específico del
+      primer requisito que falle.
+
+[G28] Se cumplen los 8 requisitos y se cierra manualmente -> CLOSED,
+      ClaimService GOP completado, Blockade liberado (si no hay otra
+      razón activa para mantenerlo), notifica a staff, alguacil y
+      deudor.
+
+[G29] Un pago (directo o vía Agreement) deja saldada toda la deuda
+      mientras faltan otros requisitos del checklist (p.ej. la factura
+      del alguacil) -> NO se cierra solo; queda para que el alguacil
+      lo cierre manualmente cuando complete lo que falta.
+
+[G30] Participante cambia de alguacil en cualquier momento antes de
+      CLOSED -> se reasigna, ambos alguaciles (nuevo y anterior) y
+      staff notificados; las facturas ya emitidas al alguacil anterior
+      no se ven afectadas.
+
+[G31] Se intenta cambiar de alguacil en un GOP ya CLOSED -> rechazado.
+
+[G32] Alguacil ajusta sentence_amount y/o procesal_cost después de
+      registrado -> queda en AuditLog; si cambió sentence_amount, se
+      recalcula la obligación recuperable del deudor con la tarifa
+      vigente, nunca por debajo de lo ya pagado.
+
+[G33] (Ver docs/flujo-arreglo-pago.txt) Se acepta un Agreement dentro
+      de GOP -> se suspende el Blockade ACTIVE; si luego se incumple
+      una cuota -> se cancela el Agreement y se reactiva el Blockade
+      (mismo job check_blockade_reactivation que en AOP, no hay un job
+      específico de GOP para esto).
+
+--------------------------------------------------------------------
+14. INCONSISTENCIAS / DEUDA TÉCNICA DETECTADAS
+--------------------------------------------------------------------
+- VerdictStatus.PENDING y VerdictStatus.REJECTED están en el enum pero
+  nunca se asignan: un Verdict solo transita DRAFT -> APPROVED (o nace
+  directo APPROVED si es adicional). No existe ningún flujo de
+  rechazo/revisión de un vonnis en sí.
+- CaseTransferStatus.PENDING_PAYMENT y PaymentType.GOP_TRANSFER (junto
+  con CaseTransferService.confirmTransferPayment) son código legado:
+  ninguna transferencia nueva los usa desde que se volvió gratuita;
+  solo existen por si quedan filas viejas en la base.
+- El plazo de aceptación de 7 días de una transferencia NUNCA expira
+  ni rechaza solo — depende enteramente de que el participante actúe
+  tras el aviso repetido diario. No hay ningún timeout duro.
+- La reactivación de un GOP_INACTIVE es automática ante CUALQUIER
+  registro nuevo (medida, interés o costo del alguacil) — no hay forma
+  de registrar esos datos "en frío" sin que el estado cambie, lo cual
+  puede sorprender si alguien solo quiere corregir un dato histórico.
+- El vonnis adicional (registerAdditionalVerdict) factura la comisión
+  del 5% sin gate de pago y con manejo de error silencioso
+  (try/catch que solo deja un timeline log) — a diferencia del primer
+  vonnis, que si el pago de Sentoo falla, ni siquiera llega a crear el
+  LegalProcess. Dos comportamientos distintos ante el mismo tipo de
+  falla, según si es el primer vonnis o uno adicional.
+====================================================================
+FIN DEL DOCUMENTO
+====================================================================

@@ -595,6 +595,7 @@ async function seedAdminTenant() {
       legal_name: "Centraal Inning Onderneming B.V.",
       jurisdictionId: "jurisdiction-bon-001",
       is_active: true,
+      is_platform_tenant: true,
       terms_accepted: true,
     },
   });

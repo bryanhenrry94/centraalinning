@@ -77,14 +77,26 @@ export class TenantService {
     return tenants.map((t) => ({ subdomain: t.subdomain, clientName: t.name }));
   };
 
+  // Solo deelnemers reales — nunca el tenant propio de la plataforma
+  // (is_platform_tenant, ver comentario en schema.prisma). Este es el
+  // listado que alimenta CFSB Admin > Deelnemers y cualquier selector de
+  // "elegir un cliente" (p.ej. facturación).
   static getAll = async () => {
-    return prisma.tenant.findMany();
+    return prisma.tenant.findMany({ where: { is_platform_tenant: false } });
   };
 
   // Tenants activos de la red — usado por el broadcast de red de COP
-  // ("presión de red": preguntar a todos los participantes activos).
+  // ("presión de red": preguntar a todos los participantes activos) y por
+  // el cc de "nuevo cliente registrado" del signup. Mismo motivo que
+  // getAll: el tenant de la plataforma no es un participante real.
   static getActiveParticipants = async () => {
-    return prisma.tenant.findMany({ where: { is_active: true } });
+    return prisma.tenant.findMany({ where: { is_active: true, is_platform_tenant: false } });
+  };
+
+  // Toggle mínimo para CFSB Admin (Deelnemers) — desactivar un tenant no
+  // borra nada, es reversible (mismo patrón que JurisdictionService.setActive).
+  static setActive = async (id: string, isActive: boolean) => {
+    return prisma.tenant.update({ where: { id }, data: { is_active: isActive } });
   };
 
   static subdomainExists = async (subdomain: string): Promise<boolean> => {

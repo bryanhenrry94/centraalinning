@@ -31,6 +31,15 @@ model Tenant {
   terms_accepted      Boolean @default(false)
   is_active           Boolean @default(false)
 
+  // true SOLO para el tenant propio de la plataforma (CFSB / Centraal
+  // Inning Onderneming B.V., subdomain "admin" — ver prisma/seed.ts
+  // seedAdminTenant). Ese tenant no es un deelnemer real: existe para que
+  // el PLATFORM_OWNER tenga una organización con la que autenticarse y
+  // administrar CFSB Admin. TenantService.getAll/getActiveParticipants lo
+  // excluyen siempre, así nunca aparece mezclado con los tenants clientes
+  // (listado "Deelnemers", broadcasts de red COP, cc de nuevo signup, etc.).
+  is_platform_tenant Boolean @default(false)
+
   // Jurisdicción/isla operativa de este deelnemer — determina zona horaria,
   // ABB, prefijo de numeración, servicios activos y tarifas/plazos locales
   // (ver Jurisdiction). Nullable por compatibilidad con tenants existentes

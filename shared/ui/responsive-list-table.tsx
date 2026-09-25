@@ -38,6 +38,10 @@ export interface ListColumn<T> {
   // Columnas de baja prioridad se pueden ocultar en la card mobile para no
   // saturarla — por defecto todas se muestran.
   hideOnMobile?: boolean;
+  // Ancho fijo en desktop (p.ej. "160px") para columnas cortas (fechas,
+  // acciones) que si no quedan estiradas por el auto-layout de <Table>,
+  // dejando mucho espacio en blanco. No afecta la card mobile.
+  width?: string | number;
 }
 
 interface ResponsiveListTableProps<T> {
@@ -54,6 +58,10 @@ interface ResponsiveListTableProps<T> {
   // Override voor de TableContainer (bv. borderRadius: 0 wanneer de tabel
   // direct onder een vierkante dialoogkop hangt).
   containerSx?: SxProps<Theme>;
+  // Markeert de rij die momenteel open staat in een side panel/dialog (bv.
+  // Deelnemer details) — zelfde rowKey als getRowKey. Optioneel: zonder dit
+  // gedraagt de tabel zich exact als voorheen.
+  selectedRowKey?: string;
 }
 
 export function ResponsiveListTable<T>({
@@ -65,6 +73,7 @@ export function ResponsiveListTable<T>({
   emptyMessage = "Geen resultaten gevonden.",
   headerSx,
   containerSx,
+  selectedRowKey,
 }: ResponsiveListTableProps<T>) {
   const router = useRouter();
 
@@ -98,6 +107,7 @@ export function ResponsiveListTable<T>({
             sx={{
               border: "1px solid",
               borderColor: "divider",
+              bgcolor: selectedRowKey === getRowKey(row) ? "action.selected" : undefined,
               p: 2,
               cursor: clickable ? "pointer" : "default",
             }}
@@ -145,7 +155,10 @@ export function ResponsiveListTable<T>({
                 <TableCell
                   key={col.key}
                   align={col.align ?? "left"}
-                  sx={headerSx ? { ...HEAD_SX, ...headerSx } : HEAD_SX}
+                  sx={{
+                    ...(headerSx ? { ...HEAD_SX, ...headerSx } : HEAD_SX),
+                    ...(col.width ? { width: col.width } : {}),
+                  }}
                 >
                   {col.label}
                 </TableCell>
@@ -157,11 +170,16 @@ export function ResponsiveListTable<T>({
               <TableRow
                 key={getRowKey(row)}
                 hover
+                selected={selectedRowKey === getRowKey(row)}
                 onClick={() => handleRowClick(row)}
                 sx={{ cursor: clickable ? "pointer" : "default" }}
               >
                 {columns.map((col) => (
-                  <TableCell key={col.key} align={col.align ?? "left"}>
+                  <TableCell
+                    key={col.key}
+                    align={col.align ?? "left"}
+                    sx={col.width ? { width: col.width, whiteSpace: "nowrap" } : undefined}
+                  >
                     {col.render(row)}
                   </TableCell>
                 ))}

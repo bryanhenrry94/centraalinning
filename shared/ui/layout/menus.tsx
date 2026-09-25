@@ -10,7 +10,6 @@ import {
   MoveToInboxOutlined,
   GroupOutlined,
   HelpOutlineOutlined,
-  DashboardOutlined,
   BusinessOutlined,
   BadgeOutlined,
   BalanceOutlined,
@@ -131,11 +130,6 @@ export const menuGroups: HeaderMenuGroup[] = [
     label: "CFSB Admin",
     roles: [UserRole.PLATFORM_OWNER],
     items: [
-      {
-        label: "Dashboard",
-        href: "/admin",
-        icon: <DashboardOutlined fontSize="small" />,
-      },
       {
         label: "Deelnemers",
         href: "/admin/tenants",

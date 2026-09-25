@@ -1,0 +1,426 @@
+====================================================================
+FLUJO COMPLETO: ARREGLO DE PAGO DEL DEUDOR ("Betalingsregeling")
+CFSB — módulo modules/agreement (modelo Prisma: Agreement / AgreementInstallment)
+====================================================================
+Generado a partir del código fuente actual (no de documentación de
+diseño). Cada afirmación está verificada línea por línea contra:
+  - prisma/schema.prisma (modelos Agreement, AgreementInstallment)
+  - modules/agreement/services/agreement.service.ts
+  - modules/agreement/actions/agreement.actions.ts
+  - modules/agreement/components/*.tsx
+  - modules/legal-process/services/case-transfer-guards.ts / legal-process-guards.ts
+  - modules/blockade/services/blockade.service.ts
+  - lib/jobs/process_aop_workflow.ts
+  - lib/jobs/check_blockade_reactivation.ts
+  - modules/payment/services/payment-transfer.service.ts
+
+--------------------------------------------------------------------
+0. UBICACIÓN EN EL DOMINIO Y TÉRMINOS RELACIONADOS QUE NO SON ESTO
+--------------------------------------------------------------------
+"Arreglo de pago" = modelo `Agreement` (tabla `agreement` +
+`agreement_installment`). En la UI en holandés aparece como
+"Betalingsregeling". Es un acuerdo de PLAZOS sobre una deuda que YA
+es un `DebtClaim` (ya está en cobranza AOP, o ya escaló a GOP).
+
+NO confundir con dos mecanismos parecidos pero separados en el código:
+
+  a) FAR (`FinancialAgreement`, módulo financial-agreement): es un
+     acuerdo PREVENTIVO registrado desde un Contract, ANTES de que
+     exista un DebtClaim. Si se incumple, no hay automatismo: un
+     miembro del tenant debe presionar manualmente "Vervolgen"
+     (FinancialAgreementService.initiateFollowUp), lo cual crea un
+     DebtClaim + Obligation nuevos y recién ahí arranca el AOP. El
+     registro FAR original nunca se convierte en el DebtClaim, solo
+     queda enlazado vía `escalatedToDebtClaimId`.
+
+  b) COP / `COLNegotiation` (módulo collective-follow-up): dentro de
+     una Collectieve Opvolging (COP) existe SU PROPIO modelo de
+     negociación de plazos (`COLNegotiation`), con sus propios campos
+     (proposalAmount, installmentsCount, installmentAmount, status
+     OPEN/...). NO usa `Agreement`/`AgreementInstallment` en absoluto.
+     Antes de poder iniciar un COP, `CollectiveCollectionService.canStart`
+     de hecho bloquea el inicio si ya existe un `Agreement` ACCEPTED
+     para ese DebtClaim ("Er is al een actieve betalingsregeling...").
+
+Este documento cubre exclusivamente (a) el `Agreement` "clásico" del
+AOP y (b) su variante usada dentro de GOP/CaseTransfer (mismo modelo,
+distinta ruta de decisión). Se menciona FAR y COP solo para
+contraste, no se detalla su flujo completo acá.
+
+--------------------------------------------------------------------
+1. MODELO DE DATOS
+--------------------------------------------------------------------
+Agreement
+  id, debtor_id, debtClaim_id (obligatorio), legalProcessId (opcional),
+  caseTransferId (opcional), total_amount, installment_amount,
+  installments_count, start_date, end_date, status, tenant_id,
+  comment, rejection_reason, created_at, updated_at
+  -> installments: AgreementInstallment[]
+  -> payment: Payment[]  (relación existe en schema, pero NO se usa en
+     ningún flujo de código actual — ver sección 5)
+
+AgreementInstallment
+  id, agreement_id, number, due_date, amount, status, payment_id,
+  created_at, updated_at
+
+AgreementStatus (enum):
+  PENDING          -> solicitud enviada, esperando decisión del tenant
+  IN_NEGOTIATION   -> definido en el enum, NUNCA se asigna en ningún
+                      punto del código actual (dato muerto)
+  COUNTEROFFER     -> definido en el enum y usado como valor por
+                      defecto en un formulario (agreement-form.tsx,
+                      modo edición), pero ese modo edición NUNCA se
+                      invoca desde ninguna pantalla real hoy (ver
+                      sección 6) — en la práctica, inalcanzable
+  ACCEPTED         -> único estado vinculante
+  REJECTED         -> rechazado, requiere rejection_reason obligatorio
+  CANCELLED        -> cancelado (por incumplimiento automático, o por
+                      escalación manual del AOP — ver sección 4/5)
+  CLOSED           -> definido en el enum, NUNCA se asigna en ningún
+                      punto del código actual (dato muerto — no hay
+                      cierre explícito ni siquiera cuando se paga
+                      totalmente la deuda)
+
+InstallmentStatus (enum): PENDING | PAID | OVERDUE
+  -> PAID y OVERDUE NUNCA se asignan en ningún punto del código
+     actual. Todas las cuotas se crean en PENDING y se quedan así
+     para siempre a nivel de fila (ver sección 5, es importante).
+
+--------------------------------------------------------------------
+2. QUIÉN PUEDE CREAR UN ARREGLO, Y DESDE DÓNDE
+--------------------------------------------------------------------
+Existen DOS rutas de creación distintas para el mismo modelo Agreement:
+
+RUTA A — Contexto AOP normal (sin legalProcessId ni caseTransferId)
+  - La inicia SIEMPRE el propio deudor, desde su panel
+    (/payments, dashboard del deudor). Componente: DebtorAgreementsView
+    / AgreementFormDialog / AgreementForm (modo creación).
+  - El monto total NO es editable por el deudor: se fija al saldo
+    pendiente real (debtor_to_participant_balance). El deudor solo
+    elige fecha de inicio y cantidad de cuotas; el monto por cuota se
+    calcula automáticamente (saldo ÷ cuotas).
+  - Reglas de validación en AgreementService.create():
+      * El DebtClaim debe existir y pertenecer al tenant.
+      * Si viene requestingUserId, debe ser el dueño del debtClaim
+        (el propio deudor).
+      * Se bloquea si el AOP ya pasó su fecha límite de reacción
+        (deadline del último step de AdministrativeCollection): "De
+        reactietermijn... is verstreken."
+      * Se bloquea si ya existe una solicitud PENDING/IN_NEGOTIATION/
+        COUNTEROFFER para ese DebtClaim ("Er is al een
+        betalingsregeling in behandeling").
+      * Se bloquea si ya existe una ACCEPTED para ese DebtClaim ("Er
+        bestaat al een goedgekeurde betalingsregeling").
+  - Se crean automáticamente las N filas AgreementInstallment
+    (mensuales, a partir de start_date), todas en PENDING.
+  - Se notifica al staff del tenant (NotificationType
+    AGREEMENT_PENDING_REVIEW) con link a /agreements?open=<id>.
+  - Se registra en el ClaimTimeline del DebtClaim (evento
+    AGREEMENT_CREATED).
+
+RUTA B — Contexto GOP / CaseTransfer (legalProcessId o caseTransferId
+seteado)
+  - La propuesta la puede registrar el staff del tenant, O el
+    abogado/alguacil asignado a ese CaseTransfer/LegalProcess — SIN
+    necesidad de volmacht (poder) para simplemente proponer.
+    Componente: CreateAgreementDialog (legal-process), acción
+    createGopAgreement.
+  - Acá SÍ se ingresan libremente total_amount, installment_amount,
+    installments_count, start_date, comment (no hay cálculo
+    automático ni tope al saldo real).
+  - Queda en PENDING, a la espera de decisión (ver sección 3, ruta B).
+
+--------------------------------------------------------------------
+3. QUIÉN DECIDE (ACEPTAR / RECHAZAR), Y CÓMO
+--------------------------------------------------------------------
+RUTA A — Decisión en contexto AOP normal
+  Componente: AgreementRequestDialog. Acción: updatePaymentAgreement
+  -> AgreementService.update().
+  - SOLO staff del tenant (requireTenantStaff en el action: si el rol
+    de la sesión es DEBTOR, se rechaza con error). El propio deudor
+    nunca puede autoaprobarse.
+  - Dos botones únicamente: "Accepteren" o "Afwijzen". NO hay opción
+    de modificar montos/cuotas desde esta pantalla (el "modo edición"
+    de AgreementForm que sí soporta cambiar términos y marcar
+    COUNTEROFFER existe en el código pero no está enlazado a ningún
+    botón/ruta real hoy).
+  - Rechazar exige un motivo (rejection_reason obligatorio, UI no deja
+    enviar sin texto). AgreementService.update() también lo valida
+    server-side.
+  - Al aceptar (status ACCEPTED):
+      * Se notifica al deudor (AGREEMENT_ACCEPTED).
+      * Se llama suspendBlockadeIfAny() — ver sección 4.
+  - Al rechazar (status REJECTED):
+      * Se notifica al deudor con el motivo (AGREEMENT_REJECTED),
+        invitándolo a enviar una nueva propuesta.
+      * Como REJECTED no cuenta como "pending" ni "accepted", el
+        deudor puede enviar inmediatamente una nueva solicitud
+        (sujeta a las mismas validaciones de la sección 2).
+
+RUTA B — Decisión en contexto GOP / CaseTransfer
+  Acción: AgreementService.decide() (vía legal-process.actions.ts /
+  case-transfer.actions.ts). Regla de volmacht (poder), resuelta en
+  case-transfer-guards.ts / legal-process-guards.ts:
+      * El PARTICIPANTE (staff del tenant) siempre puede decidir.
+      * El abogado/alguacil asignado SOLO puede decidir si ese
+        CaseTransfer tiene un power of attorney otorgado
+        explícitamente. Si no lo tiene, solo pudo proponer (sección 2
+        ruta B) pero NO decidir: error "U kunt alleen een voorstel
+        registreren... tenzij u een uitdrukkelijk verleende volmacht
+        heeft."
+  - Acá SÍ se puede aceptar CON modificaciones (decision.total_amount
+    / installment_amount / installments_count distintos a los
+    originales) — el resultado sigue siendo status=ACCEPTED (no pasa
+    por un estado COUNTEROFFER intermedio), pero el timeline registra
+    la descripción "geaccepteerd (met aanpassingen)" en vez de
+    "geaccepteerd" a secas, y guarda `modified: true` en los metadatos.
+  - Igual que en ruta A: rechazo exige motivo, aceptar dispara
+    suspendBlockadeIfAny().
+
+--------------------------------------------------------------------
+4. QUÉ HACE EL SISTEMA CUANDO EL ARREGLO SE ACEPTA (ACCEPTED)
+--------------------------------------------------------------------
+1) Se marca ACCEPTED (con o sin ajustes de términos según la ruta).
+2) suspendBlockadeIfAny(): SOLO tiene efecto si el deudor YA tenía un
+   Blockade en estado ACTIVE con ese mismo tenant (esto normalmente
+   solo ocurre si el AOP ya llegó al paso BLK_NOTIFICATION, o si el
+   bloqueo se registró por la vía directa BLK). Si no hay ningún
+   bloqueo ACTIVE, esta llamada no hace nada (silenciosamente).
+   - Si SÍ había uno o más ACTIVE: se pasan todos a SUSPENDED
+     (releasedAt = ahora) y se notifica al deudor
+     (BLOCKADE_SUSPENDED): "Uw economische blokkade is tijdelijk
+     opgeheven. Bij het niet nakomen van de termijnen wordt de
+     blokkade automatisch weer geactiveerd."
+3) El AOP (si el dossier todavía está en curso, es decir, todavía NO
+   llegó a BLK_NOTIFICATION) deja de avanzar de paso MIENTRAS el
+   deudor esté al día — ver sección 5, mecanismo exacto.
+4) NO cambia el status del DebtClaim. NO cierra ni marca CLOSED el
+   propio Agreement (ese estado nunca se usa, ver sección 1).
+
+--------------------------------------------------------------------
+5. SEGUIMIENTO DE PAGOS DEL ARREGLO — LIMITACIÓN IMPORTANTE
+--------------------------------------------------------------------
+Esto es lo más importante para entender "qué pasa si se paga":
+
+- Cuando el deudor paga (por Sentoo o subiendo comprobante de
+  transferencia vía TransferPaymentDialog -> PaymentTransferService),
+  el dinero se aplica contra el SALDO GLOBAL de la obligación
+  principal del DebtClaim (`DebtClaimObligation.balanceAmount`, vía
+  ObligationService.applyPayment). Ese flujo de pago NUNCA toca la
+  tabla `agreement_installment` ni el campo `payment_id` de ninguna
+  cuota. No existe en el código ningún punto que marque una
+  AgreementInstallment como PAID.
+- La única función que lee el estado de las cuotas es
+  AgreementService.hasPaymentsUpToDate(debtClaim_id): recorre las
+  installments del Agreement ACCEPTED y devuelve false si CUALQUIER
+  cuota con due_date <= hoy sigue con status != PAID.
+- Consecuencia práctica: como ninguna cuota pasa nunca a PAID,
+  hasPaymentsUpToDate() devolverá false apenas se cumpla la fecha de
+  vencimiento de la PRIMERA cuota, sin importar si el deudor
+  efectivamente pagó (por transferencia o Sentoo) el monto
+  correspondiente contra el saldo global. Es decir: el sistema hoy NO
+  reconcilia automáticamente "pagué la cuota de este mes" con "la
+  cuota número X quedó saldada" — el seguimiento cuota-por-cuota
+  existe a nivel de esquema/UI mostrando las cuotas, pero la detección
+  de incumplimiento descrita en la sección 6 se dispara en la
+  práctica en cuanto pasa la primera fecha de vencimiento, haya
+  pagado el deudor o no. Esto es una brecha real del sistema tal como
+  está implementado hoy, no una interpretación.
+- No existe ninguna acción "marcar cuota como pagada" en la UI ni en
+  agreement.actions.ts.
+
+--------------------------------------------------------------------
+6. QUÉ HACE EL SISTEMA CUANDO SE INCUMPLE (DEFAULT) — LOS DOS JOBS
+--------------------------------------------------------------------
+La detección de incumplimiento NO es un evento en tiempo real: corre
+por cron (lib/jobs/*, expuestos en /api/jobs/*, todos disparados por
+un scheduler externo con ?token=CRON_SECRET_TOKEN, y agrupados en
+/api/jobs/run-all). Hay DOS jobs distintos que cubren dos momentos
+distintos del ciclo de vida del dossier, y son mutuamente excluyentes
+sobre el mismo dossier (no se pisan):
+
+A) lib/jobs/process_aop_workflow.ts — dossiers que TODAVÍA NO llegaron
+   a BLK_NOTIFICATION (la query del job EXCLUYE explícitamente
+   cualquier AdministrativeCollection cuyo historial ya tenga un step
+   BLK_NOTIFICATION). Se ejecuta por dossier solo cuando ya venció el
+   plazo del step actual (aanmaning/sommatie).
+     - Si hay un Agreement ACCEPTED para ese debtClaim:
+         * Si hasPaymentsUpToDate() = true -> el job hace `continue`:
+           NO aplica recargo, NO avanza de paso. El AOP queda
+           "pausado" en el step actual mientras el acuerdo se cumpla.
+         * Si hasPaymentsUpToDate() = false (incumplimiento) ->
+             1. Se aplica una MULTA (penalty) correspondiente al step
+                actual (company/natural_aanmaning_penalty o
+                company/natural_sommatie_penalty, según tipo de
+                persona), vía applyCharge (queda como ClaimCharge tipo
+                "AOP").
+             2. Se cancela el/los Agreement ACCEPTED de ese debtClaim
+                (cancelAgreementsByCliam -> status = CANCELLED).
+             3. El código NO hace `continue`: sigue de largo y ejecuta
+                advanceAOPStep() igual que si nunca hubiera existido
+                un acuerdo -> el AOP avanza inmediatamente al
+                siguiente step (REMINDER->FINAL_NOTICE->
+                DEFAULT_NOTICE->BLK_NOTIFICATION) en la MISMA corrida.
+             4. Si ese avance llega justo a BLK_NOTIFICATION, se crea
+                automáticamente el Blockade (status ACTIVE) para ese
+                debtor+debtClaim, y potencialmente se intenta
+                autocontinuar hacia COP
+                (CollectiveCollectionService.tryAutoContinueFromAop,
+                si el tenant lo tiene configurado).
+     - Si NO hay Agreement (ni ACCEPTED ni pendiente) y el deudor
+       tampoco tiene ningún pago directo registrado contra el
+       principal (hasPrincipalPayment): se aplica un recargo
+       administrativo fijo por falta de respuesta
+       (aanmaning_no_response_fee / sommatie_no_response_fee,
+       configurable por Setting) — esto es aparte de cualquier lógica
+       de Agreement, pero conviene saberlo: firmar y cumplir un
+       acuerdo es lo que evita este recargo también.
+
+B) lib/jobs/check_blockade_reactivation.ts — dossiers cuyo Blockade
+   YA está SUSPENDED (es decir, ya habían llegado a BLK_NOTIFICATION
+   y luego se aceptó un Agreement que lo suspendió). Como estos
+   dossiers están excluidos del job (A) de por vida (una vez que su
+   AdministrativeCollection tiene un step BLK_NOTIFICATION, el job A
+   nunca vuelve a tocarlo), este es el ÚNICO chequeo de cumplimiento
+   que les aplica de acá en adelante:
+     - Por cada Blockade SUSPENDED, busca el Agreement ACCEPTED de ese
+       mismo debtor+tenant.
+     - Si no hay ninguno -> continue (no hace nada; caso raro, ya que
+       normalmente si se suspendió un blockade fue justamente porque
+       había uno ACCEPTED).
+     - Si hasPaymentsUpToDate() = true -> continue, sigue suspendido
+       (el deudor sigue cumpliendo).
+     - Si hasPaymentsUpToDate() = false (incumplimiento):
+         1. Se cancela el Agreement (cancelAgreementsByCliam).
+         2. Se reactiva el Blockade (BlockadeService.reactivate ->
+            status vuelve a ACTIVE, releasedAt = null, se reenvía el
+            correo de bloqueo al deudor).
+         3. Se notifica al deudor (BLOCKADE_REACTIVATED): "Uw
+            betalingsregeling is geannuleerd wegens gemiste termijnen.
+            Uw economische blokkade is daarom opnieuw geactiveerd."
+     - Este job NO aplica ninguna multa/penalty (esa lógica solo
+       existe en el job A).
+
+En /api/jobs/run-all, el job A corre siempre ANTES que el job B en la
+misma invocación — pero como operan sobre conjuntos de dossiers
+mutuamente excluyentes (con vs. sin step BLK_NOTIFICATION), el orden
+no genera conflictos entre ellos.
+
+--------------------------------------------------------------------
+7. CANCELACIÓN Y ELIMINACIÓN MANUAL
+--------------------------------------------------------------------
+- deletePaymentAgreement (solo staff del tenant, requireTenantStaff):
+  BORRA físicamente el Agreement y todas sus AgreementInstallment
+  (delete real, no soft-delete / no cambia a CANCELLED). Se puede
+  invocar sobre un Agreement en cualquier estado.
+- cancelAgreementsByCliam(debtClaim_id): usado únicamente por los dos
+  jobs de la sección 6 (nunca desde una acción manual del usuario) —
+  pone en CANCELLED todos los Agreement con status ACCEPTED de ese
+  debtClaim (no borra las cuotas, solo cambia el status).
+
+--------------------------------------------------------------------
+8. TODOS LOS ESCENARIOS POSIBLES (RESUMEN)
+--------------------------------------------------------------------
+[S1] Deudor solicita arreglo (AOP) dentro de plazo, sin solicitud
+     previa pendiente ni aprobada -> se crea PENDING + cuotas PENDING,
+     se notifica al tenant.
+
+[S2] Deudor intenta solicitar fuera del plazo de reacción del AOP ->
+     rechazado con error, no se crea nada.
+
+[S3] Deudor intenta solicitar teniendo ya una solicitud PENDING/
+     COUNTEROFFER en curso -> rechazado ("Wacht tot deze is
+     beoordeeld").
+
+[S4] Deudor intenta solicitar teniendo ya una ACCEPTED vigente ->
+     rechazado ("Er bestaat al een goedgekeurde betalingsregeling").
+
+[S5] Tenant staff acepta la solicitud (AOP) -> ACCEPTED; si había
+     Blockade ACTIVE se SUSPENDE; se notifica al deudor; mientras
+     pague a tiempo (según cuotas, con la limitación de la sección 5),
+     el AOP no avanza de step.
+
+[S6] Tenant staff rechaza la solicitud (AOP) -> REJECTED con motivo
+     obligatorio; se notifica al deudor; el deudor puede enviar una
+     nueva propuesta de inmediato.
+
+[S7] Staff/abogado/alguacil propone un arreglo en contexto GOP/
+     CaseTransfer -> PENDING, sin restricción de monto al saldo real.
+
+[S8] Participante (o profesional CON volmacht) acepta ese arreglo GOP,
+     eventualmente con montos/cuotas distintos a los propuestos ->
+     ACCEPTED (con metadata "modified: true" si hubo cambios);
+     suspende Blockade ACTIVE si existía.
+
+[S9] Profesional asignado SIN volmacht intenta decidir (aceptar o
+     rechazar) un arreglo GOP -> rechazado con error, solo puede
+     seguir proponiendo, no decidiendo.
+
+[S10] Arreglo ACCEPTED, dossier aún en AOP (no llegó a BLK), deudor al
+      día según hasPaymentsUpToDate -> AOP pausado indefinidamente
+      mientras se mantenga así (ningún recargo, ningún avance de
+      step).
+
+[S11] Arreglo ACCEPTED, dossier aún en AOP, deudor con una cuota
+      vencida sin marcar PAID (recordar sección 5: esto puede ocurrir
+      aunque haya pagado por otra vía, ya que nada marca la cuota como
+      pagada) -> se aplica multa del step actual + Agreement pasa a
+      CANCELLED + el AOP avanza igual al siguiente step en la misma
+      corrida (puede llegar a crear el Blockade automáticamente si
+      ese paso era DEFAULT_NOTICE->BLK_NOTIFICATION).
+
+[S12] Arreglo ACCEPTED después de que el Blockade ya estaba ACTIVE
+      (dossier en GOP o vía BLK directa) -> Blockade pasa a SUSPENDED.
+      Mientras hasPaymentsUpToDate siga true, sigue SUSPENDED
+      indefinidamente.
+
+[S13] Mismo caso que S12 pero con una cuota vencida sin marcar PAID ->
+      Agreement pasa a CANCELLED, Blockade vuelve a ACTIVE
+      automáticamente, se reenvía el correo de bloqueo, se notifica al
+      deudor. No hay multa adicional en este camino (a diferencia de
+      S11).
+
+[S14] Deudor paga el saldo COMPLETO de su deuda (vía Sentoo o
+      transferencia aprobada) mientras tiene un Agreement ACCEPTED
+      vigente -> DebtClaim pasa a SETTLED, se cierra/libera el
+      Blockade si correspondía (BlockadeService.releaseForSettledDebtClaim
+      / CollectiveCollectionService.checkAndCloseIfSettled), PERO el
+      Agreement en sí NO se marca CLOSED ni se toca de ninguna forma
+      (queda ACCEPTED "para siempre" a nivel de registro, ya que ese
+      estado nunca se asigna).
+
+[S15] Staff elimina manualmente un Agreement (cualquier estado, vía
+      deletePaymentAgreement) -> se borra el registro y sus cuotas por
+      completo; no queda rastro salvo lo que ya se haya escrito antes
+      en el ClaimTimeline.
+
+[S16] Se intenta iniciar un COP (Collectieve Opvolging) para un
+      debtClaim que tiene un Agreement ACCEPTED vigente ->
+      bloqueado explícitamente ("Er is al een actieve
+      betalingsregeling... de collectieve opvolging kan niet
+      starten").
+
+--------------------------------------------------------------------
+9. INCONSISTENCIAS / DEUDA TÉCNICA DETECTADAS (para que el equipo lo
+   sepa, no son interpretación sino lectura directa del código)
+--------------------------------------------------------------------
+- InstallmentStatus.PAID / OVERDUE nunca se asignan -> el chequeo de
+  "está al día" se basa solo en fechas, no en pagos reales conciliados
+  cuota por cuota (sección 5). Esto puede cancelar arreglos de deudores
+  que sí están pagando, o al revés, no detectar que alguien dejó de
+  pagar si el saldo global igual se movió por otro concepto.
+- AgreementStatus.IN_NEGOTIATION y CLOSED están en el enum pero jamás
+  se asignan en ningún flujo real.
+- El "modo edición / contraoferta" de AgreementForm (que sí permite
+  cambiar montos y setear COUNTEROFFER) no está conectado a ningún
+  botón ni pantalla: hoy es código muerto en el camino AOP estándar.
+- notifyApprovalAgreement (agreement.actions.ts) envía un correo al
+  tenant con html hardcodeado `"Aprobado"`, sin usar la plantilla real
+  AgreementApprovalEmail.tsx que sí existe en
+  modules/agreement/templates/.
+- La relación `Agreement.payment: Payment[]` existe en el schema pero
+  no se usa en ningún flujo de creación/actualización de Payment
+  actual.
+====================================================================
+FIN DEL DOCUMENTO
+====================================================================
