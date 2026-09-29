@@ -6,7 +6,10 @@ import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { notifyError } from "@/shared/ui/notifications";
 import { formatDate } from "@/shared/utils/formatters";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 import { getAdminCaseTransfers } from "@/modules/admin/actions/admin.actions";
 import { getTransferAdminStatusInfo } from "@/modules/admin/utils/admin-status";
 
@@ -26,16 +29,42 @@ export default function AdminTransfersRegisterPage() {
   if (loading) return <LoadingUI />;
 
   const columns: ListColumn<Row>[] = [
-    { key: "reference", label: "Referentie", render: (r) => r.reference || "-" },
-    { key: "tenantName", label: "Deelnemer", render: (r) => r.tenantName },
-    { key: "debtorName", label: "Debiteur", render: (r) => r.debtorName },
-    { key: "assigneeName", label: "Toegewezen aan", render: (r) => r.assigneeName },
+    {
+      key: "reference",
+      label: "Dossiernummer",
+      render: (r) => r.reference || "-",
+    },
+    {
+      key: "tenantName",
+      label: "Deelnemer",
+      align: "left",
+      render: (r) => r.tenantName,
+    },
+    {
+      key: "debtorName",
+      label: "Debiteur",
+      align: "left",
+      render: (r) => r.debtorName,
+    },
+    {
+      key: "assigneeName",
+      label: "Overgedragen",
+      align: "left",
+      render: (r) => r.assigneeName,
+    },
     {
       key: "status",
       label: "Status",
       render: (r) => {
         const { label, color } = getTransferAdminStatusInfo(r.status);
-        return <Chip size="small" label={label} color={color} sx={{ minWidth: 190, justifyContent: "center" }} />;
+        return (
+          <Chip
+            size="small"
+            label={label}
+            color={color}
+            sx={{ minWidth: 190, justifyContent: "center" }}
+          />
+        );
       },
     },
     {
@@ -47,8 +76,17 @@ export default function AdminTransfersRegisterPage() {
   ];
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
-      <AppBreadcrumbs items={[{ label: "CFSB Admin", href: "/admin" }, { label: "Dossieroverdrachten" }]} />
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+    >
+      <AppBreadcrumbs
+        items={[
+          { label: "CFSB Admin", href: "/admin" },
+          { label: "Dossieroverdrachten" },
+        ]}
+      />
       <Stack spacing={3}>
         <Typography variant="h4" fontWeight={700}>
           Dossieroverdrachten

@@ -5,7 +5,10 @@ import { Chip, Container, Stack, Typography } from "@mui/material";
 import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { notifyError } from "@/shared/ui/notifications";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 import { getAdminUsers } from "@/modules/admin/actions/admin.actions";
 
 type Row = Awaited<ReturnType<typeof getAdminUsers>>[number];
@@ -24,11 +27,17 @@ export default function AdminUsersPage() {
   if (loading) return <LoadingUI />;
 
   const columns: ListColumn<Row>[] = [
-    { key: "fullname", label: "Naam", render: (r) => r.fullname || "-" },
-    { key: "email", label: "E-mail", render: (r) => r.email },
+    {
+      key: "fullname",
+      label: "Naam",
+      align: "left",
+      render: (r) => r.fullname || "-",
+    },
+    { key: "email", label: "E-mail", align: "left", render: (r) => r.email },
     {
       key: "memberships",
       label: "Deelnemers & rollen",
+      align: "left",
       render: (r) => (
         <Stack spacing={0.5}>
           {r.memberships.length === 0 && "-"}
@@ -55,8 +64,17 @@ export default function AdminUsersPage() {
   ];
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
-      <AppBreadcrumbs items={[{ label: "CFSB Admin", href: "/admin" }, { label: "Gebruikers & rollen" }]} />
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+    >
+      <AppBreadcrumbs
+        items={[
+          { label: "CFSB Admin", href: "/admin" },
+          { label: "Gebruikers & rollen" },
+        ]}
+      />
       <Stack spacing={3}>
         <Typography variant="h4" fontWeight={700}>
           Gebruikers & rollen
@@ -64,7 +82,12 @@ export default function AdminUsersPage() {
         <Typography variant="body2" color="text.secondary">
           Laatste 500 gebruikers, alle deelnemers.
         </Typography>
-        <ResponsiveListTable columns={columns} rows={rows} getRowKey={(r) => r.id} emptyMessage="Nog geen gebruikers." />
+        <ResponsiveListTable
+          columns={columns}
+          rows={rows}
+          getRowKey={(r) => r.id}
+          emptyMessage="Nog geen gebruikers."
+        />
       </Stack>
     </Container>
   );

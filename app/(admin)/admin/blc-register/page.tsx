@@ -6,7 +6,10 @@ import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { notifyError } from "@/shared/ui/notifications";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 import { getAdminBlockChecks } from "@/modules/admin/actions/admin.actions";
 
 type Row = Awaited<ReturnType<typeof getAdminBlockChecks>>[number];
@@ -25,8 +28,18 @@ export default function AdminBlcRegisterPage() {
   if (loading) return <LoadingUI />;
 
   const columns: ListColumn<Row>[] = [
-    { key: "personName", label: "Persoon", render: (r) => r.personName },
-    { key: "tenantName", label: "Deelnemer", render: (r) => r.tenantName },
+    {
+      key: "personName",
+      label: "Persoon",
+      align: "left",
+      render: (r) => r.personName,
+    },
+    {
+      key: "tenantName",
+      label: "Deelnemer",
+      align: "left",
+      render: (r) => r.tenantName,
+    },
     {
       key: "blockadeFound",
       label: "Resultaat",
@@ -39,18 +52,42 @@ export default function AdminBlcRegisterPage() {
         />
       ),
     },
-    { key: "price", label: "Prijs", align: "right", render: (r) => formatCurrency(r.price) },
-    { key: "checkedAt", label: "Datum", render: (r) => formatDate(r.checkedAt.toString()), hideOnMobile: true },
+    {
+      key: "price",
+      label: "Prijs",
+      align: "right",
+      render: (r) => formatCurrency(r.price),
+    },
+    {
+      key: "checkedAt",
+      label: "Datum",
+      render: (r) => formatDate(r.checkedAt.toString()),
+      hideOnMobile: true,
+    },
   ];
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
-      <AppBreadcrumbs items={[{ label: "CFSB Admin", href: "/admin" }, { label: "BLC-register" }]} />
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+    >
+      <AppBreadcrumbs
+        items={[
+          { label: "CFSB Admin", href: "/admin" },
+          { label: "BLC-register" },
+        ]}
+      />
       <Stack spacing={3}>
         <Typography variant="h4" fontWeight={700}>
           BLC-register
         </Typography>
-        <ResponsiveListTable columns={columns} rows={rows} getRowKey={(r) => r.id} emptyMessage="Nog geen BLC-controles." />
+        <ResponsiveListTable
+          columns={columns}
+          rows={rows}
+          getRowKey={(r) => r.id}
+          emptyMessage="Nog geen BLC-controles."
+        />
       </Stack>
     </Container>
   );

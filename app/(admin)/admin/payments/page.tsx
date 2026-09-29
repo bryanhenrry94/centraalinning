@@ -6,10 +6,16 @@ import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { notifyError } from "@/shared/ui/notifications";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 import { getAdminPayments } from "@/modules/admin/actions/admin.actions";
 import { getPaymentAdminStatusInfo } from "@/modules/admin/utils/admin-status";
-import { getPaymentMethodLabel, getPaymentTypeLabel } from "@/modules/admin/utils/admin-payment-labels";
+import {
+  getPaymentMethodLabel,
+  getPaymentTypeLabel,
+} from "@/modules/admin/utils/admin-payment-labels";
 
 type Row = Awaited<ReturnType<typeof getAdminPayments>>[number];
 
@@ -27,32 +33,83 @@ export default function AdminPaymentsPage() {
   if (loading) return <LoadingUI />;
 
   const columns: ListColumn<Row>[] = [
-    { key: "tenantName", label: "Deelnemer", render: (r) => r.tenantName },
-    { key: "paymentType", label: "Type", render: (r) => getPaymentTypeLabel(r.paymentType) },
-    { key: "totalAmount", label: "Bedrag", align: "right", render: (r) => formatCurrency(r.totalAmount) },
-    { key: "method", label: "Methode", render: (r) => getPaymentMethodLabel(r.method) },
+    {
+      key: "tenantName",
+      label: "Deelnemer",
+      align: "left",
+      render: (r) => r.tenantName,
+    },
+    {
+      key: "paymentType",
+      label: "Betreft",
+      align: "left",
+      render: (r) => getPaymentTypeLabel(r.paymentType),
+    },
+    {
+      key: "totalAmount",
+      label: "Bedrag",
+      align: "right",
+      render: (r) => formatCurrency(r.totalAmount),
+    },
+    {
+      key: "method",
+      label: "Methode",
+      render: (r) => getPaymentMethodLabel(r.method),
+    },
     {
       key: "status",
       label: "Status",
       render: (r) => {
-        const { label, color } = getPaymentAdminStatusInfo(r.status);
-        return <Chip size="small" label={label} color={color} sx={{ minWidth: 120, justifyContent: "center" }} />;
+        const { label, color } = getPaymentAdminStatusInfo(r.status, r.method);
+        return (
+          <Chip
+            size="small"
+            label={label}
+            color={color}
+            sx={{ minWidth: 120, justifyContent: "center" }}
+          />
+        );
       },
     },
-    { key: "createdAt", label: "Datum", render: (r) => formatDate(r.createdAt.toString()), hideOnMobile: true },
+    // {
+    //   key: "reference",
+    //   label: "Referentie",
+    //   render: (r) => r.reference,
+    //   hideOnMobile: true,
+    // },
+    {
+      key: "createdAt",
+      label: "Datum",
+      render: (r) => formatDate(r.createdAt.toString()),
+      hideOnMobile: true,
+    },
   ];
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
-      <AppBreadcrumbs items={[{ label: "CFSB Admin", href: "/admin" }, { label: "Betalingen" }]} />
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+    >
+      <AppBreadcrumbs
+        items={[
+          { label: "CFSB Admin", href: "/admin" },
+          { label: "Betalingen" },
+        ]}
+      />
       <Stack spacing={3}>
         <Typography variant="h4" fontWeight={700}>
           Betalingen
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Laatste 500 CFSB-betalingen (Sentoo), alle deelnemers.
+          Laaste 500 CFSB-betalingen van alle deelnemers
         </Typography>
-        <ResponsiveListTable columns={columns} rows={rows} getRowKey={(r) => r.id} emptyMessage="Nog geen betalingen." />
+        <ResponsiveListTable
+          columns={columns}
+          rows={rows}
+          getRowKey={(r) => r.id}
+          emptyMessage="Nog geen betalingen."
+        />
       </Stack>
     </Container>
   );

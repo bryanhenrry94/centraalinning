@@ -154,7 +154,7 @@ export function ResponsiveListTable<T>({
               {columns.map((col) => (
                 <TableCell
                   key={col.key}
-                  align={col.align ?? "left"}
+                  align={col.align ?? "center"}
                   sx={{
                     ...(headerSx ? { ...HEAD_SX, ...headerSx } : HEAD_SX),
                     ...(col.width ? { width: col.width } : {}),
@@ -177,7 +177,7 @@ export function ResponsiveListTable<T>({
                 {columns.map((col) => (
                   <TableCell
                     key={col.key}
-                    align={col.align ?? "left"}
+                    align={col.align ?? "center"}
                     sx={col.width ? { width: col.width, whiteSpace: "nowrap" } : undefined}
                   >
                     {col.render(row)}

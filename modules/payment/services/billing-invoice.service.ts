@@ -13,19 +13,23 @@ import { ActivationInvoiceInput } from "@/modules/payment/services/invoice.type"
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
 
 export class BillingInvoiceService {
+  // Zelfde reeks/formaat als InvoiceService.generateInvoiceNumber
+  // ("INV-2026-001") — voorheen las deze functie alle cijfers uit het vorige
+  // factuurnummer (replace(/\D/g, "")) en telde daar 1 bij op, wat op een
+  // jaartal + volgnummer zonder scheiding uitkwam (bv. "2026008") zodra het
+  // vorige nummer al het "INV-" prefix miste.
   static async generateInvoiceNumber(): Promise<string> {
-    const lastInvoice = await prisma.billingInvoice.findFirst({
-      orderBy: { created_at: "desc" },
-      select: { invoice_number: true },
+    const year = new Date().getFullYear();
+    const count = await prisma.billingInvoice.count({
+      where: {
+        issue_date: {
+          gte: new Date(`${year}-01-01`),
+          lt: new Date(`${year + 1}-01-01`),
+        },
+      },
     });
 
-    let nextNumber = 1;
-    if (lastInvoice?.invoice_number) {
-      const numeric = parseInt(lastInvoice.invoice_number.replace(/\D/g, ""), 10);
-      if (!isNaN(numeric)) nextNumber = numeric + 1;
-    }
-
-    return nextNumber.toString().padStart(3, "0");
+    return `INV-${year}-${String(count + 1).padStart(3, "0")}`;
   }
 
   static async createCollectionInvoice(params: ActivationInvoiceInput) {
@@ -131,7 +135,9 @@ export class BillingInvoiceService {
   }
 
   static async getAll(): Promise<BillingInvoiceResponse[]> {
-    const invoices = await prisma.billingInvoice.findMany({ include: { details: true } });
+    const invoices = await prisma.billingInvoice.findMany({
+      include: { details: true, tenant: { select: { name: true, legal_name: true } } },
+    });
     return invoices.map(this.mapInvoiceResponse);
   }
 
@@ -149,7 +155,7 @@ export class BillingInvoiceService {
           payment: { reference_number: { startsWith: `gop_${debtClaimId}_` } },
         })),
       },
-      include: { details: true },
+      include: { details: true, tenant: { select: { name: true, legal_name: true } } },
     });
 
     return invoices.map(this.mapInvoiceResponse);
@@ -158,6 +164,7 @@ export class BillingInvoiceService {
   private static mapInvoiceResponse(invoice: any): BillingInvoiceResponse {
     return {
       tenant_id: invoice.tenant_id,
+      tenant_name: invoice.tenant?.name ?? invoice.tenant?.legal_name ?? null,
       id: invoice.id,
       invoice_number: invoice.invoice_number,
       amount: invoice.amount,

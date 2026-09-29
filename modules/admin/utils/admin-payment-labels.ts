@@ -6,16 +6,19 @@ const PAYMENT_TYPE_LABELS: Record<string, string> = {
   CONTRACT_ACTIVATION: "Contractactivering",
   AGREEMENT_INSTALLMENT: "Betalingsregeling termijn",
   DEBT_PAYMENT: "Schuldbetaling",
-  BLOK_CHECK: "Blok-Check",
+  BLOK_CHECK: "BLC",
   FINANCIAL_REPORT: "Financieel verslag",
-  COLLECTION: "Incassokosten",
+  // "Incassokosten" paste niet bij de CFSB-terminologie (feedback sponsor) —
+  // dit is de AOP-registratiekosten (collection-form.tsx), dus consequent
+  // met de andere service-codes hieronder.
+  COLLECTION: "AOP-kosten",
   GOP: "GOP-kosten",
   GOP_ACTIVATION: "GOP-activering",
   GOP_TRANSFER: "GOP-overdracht",
   GOP_LAWYER_FEE: "GOP-advocaatkosten",
   GOP_BAILIFF_FEE: "GOP-deurwaarderskosten",
-  FAR_REGISTRATION: "FAR-registratie",
-  COP_START: "COP",
+  FAR_REGISTRATION: "FAR",
+  COP_START: "COP-kosten",
   DEBTOR_COLLECTION_FEE: "CFSB-kosten",
   OTHER: "Overig",
 };

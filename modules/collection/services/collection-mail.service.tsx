@@ -205,10 +205,10 @@ export const buildSommatiePdfProps = async (
   // Recargo por no responder la aanmaning dentro del plazo (ver
   // CollectionService.applyNoResponseFee). Se modela como
   // DebtClaimObligation (COLLECTION/CFSB), no como ClaimCharge, porque es
-  // una obligación del deudor directamente con CFSB. Se identifica por su
-  // descripción exacta (USD 150 por defecto), nunca por posición en el
-  // array de obligations — este también contiene "AOP-activeringskosten"
-  // y "AOP-kosten" con el mismo type/beneficiary.
+  // una obligación del deudor directamente con CFSB. REMINDER y FINAL_NOTICE
+  // comparten la misma descripción ("Aanv. kosten"), pero esta sommatie se
+  // genera siempre ANTES de que pueda existir un recargo FINAL_NOTICE (su
+  // plazo arranca recién acá) — ver NO_RESPONSE_FEE_DESCRIPTION.
   const additionalCosts = claim.obligations
     .filter(
       (o) =>
@@ -371,17 +371,18 @@ export const buildIngebrekestellingPdfProps = async (
   );
 
   // Suma de los recargos por incumplimiento (aanmaning USD 150 + sommatie
-  // USD 250 sin respuesta), identificados por su descripción exacta —
-  // igual que en sendSommatieEmail, nunca por posición en el array de
-  // obligations (que también contiene "AOP-activeringskosten" y
-  // "AOP-kosten" con el mismo type/beneficiary).
+  // USD 250 sin respuesta) — a esta altura del workflow (ingebrekestelling)
+  // ambos ya pueden existir, así que a diferencia de buildSommatiePdfProps
+  // acá sí interesan los dos, identificados por su descripción exacta
+  // ("Aanv. kosten"), nunca por posición en el array de obligations (que
+  // también incluye "AOP-activering" y "AOP-kosten" con el mismo
+  // type/beneficiary).
   const noResponseFeesTotal = claim.obligations
     .filter(
       (o) =>
         o.type === "COLLECTION" &&
         o.beneficiary === "CFSB" &&
-        (o.description === NO_RESPONSE_FEE_DESCRIPTION.REMINDER ||
-          o.description === NO_RESPONSE_FEE_DESCRIPTION.FINAL_NOTICE),
+        o.description === NO_RESPONSE_FEE_DESCRIPTION.REMINDER,
     )
     .reduce((sum, o) => sum + Number(o.originalAmount), 0);
 

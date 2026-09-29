@@ -105,7 +105,7 @@ export function getObligationStatusInfo(status: string) {
 // Type van een DebtClaimObligation.
 export const OBLIGATION_TYPE_LABELS: Record<string, string> = {
   PRINCIPAL_DEBT: "Hoofdsom",
-  COLLECTION: "Incassokosten",
+  COLLECTION: "CFSB-kosten",
   INTEREST: "Rente",
   LEGAL_COST: "Gerechtelijke kosten",
 };

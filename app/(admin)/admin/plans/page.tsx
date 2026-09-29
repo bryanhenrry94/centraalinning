@@ -6,7 +6,10 @@ import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { notifyError } from "@/shared/ui/notifications";
 import { formatCurrency } from "@/shared/utils/formatters";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 import { getAdminPlans } from "@/modules/admin/actions/admin.actions";
 
 type Row = Awaited<ReturnType<typeof getAdminPlans>>[number];
@@ -25,15 +28,25 @@ export default function AdminPlansPage() {
   if (loading) return <LoadingUI />;
 
   const columns: ListColumn<Row>[] = [
-    { key: "name", label: "Naam", render: (r) => r.name },
+    { key: "name", label: "Naam", align: "left", render: (r) => r.name },
     {
       key: "registration_price",
       label: "Registratie",
       align: "right",
       render: (r) => formatCurrency(r.registration_price),
     },
-    { key: "monthly_price", label: "Maandelijks", align: "right", render: (r) => formatCurrency(r.monthly_price) },
-    { key: "yearly_price", label: "Jaarlijks", align: "right", render: (r) => formatCurrency(r.yearly_price) },
+    {
+      key: "monthly_price",
+      label: "Maandelijks",
+      align: "right",
+      render: (r) => formatCurrency(r.monthly_price),
+    },
+    {
+      key: "yearly_price",
+      label: "Jaarlijks",
+      align: "right",
+      render: (r) => formatCurrency(r.yearly_price),
+    },
     {
       key: "reactivation_price",
       label: "Reactivering",
@@ -44,8 +57,14 @@ export default function AdminPlansPage() {
   ];
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
-      <AppBreadcrumbs items={[{ label: "CFSB Admin", href: "/admin" }, { label: "Plannen" }]} />
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+    >
+      <AppBreadcrumbs
+        items={[{ label: "CFSB Admin", href: "/admin" }, { label: "Plannen" }]}
+      />
       <Stack spacing={3}>
         <Typography variant="h4" fontWeight={700}>
           Plannen

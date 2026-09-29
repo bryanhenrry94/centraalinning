@@ -6,7 +6,10 @@ import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { notifyError } from "@/shared/ui/notifications";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 import { getAdminFinancialAgreements } from "@/modules/admin/actions/admin.actions";
 import { getFarAdminStatusInfo } from "@/modules/admin/utils/admin-status";
 
@@ -26,24 +29,64 @@ export default function AdminFarRegisterPage() {
   if (loading) return <LoadingUI />;
 
   const columns: ListColumn<Row>[] = [
-    { key: "reference", label: "Referentie", render: (r) => r.reference || "-" },
-    { key: "tenantName", label: "Deelnemer", render: (r) => r.tenantName },
-    { key: "debtorName", label: "Debiteur", render: (r) => r.debtorName },
-    { key: "amount", label: "Bedrag", align: "right", render: (r) => formatCurrency(r.amount) },
+    {
+      key: "farNumber",
+      label: "FAR-nummer",
+      render: (r) => r.farNumber || "-",
+    },
+    {
+      key: "tenantName",
+      label: "Partij",
+      align: "left",
+      render: (r) => r.tenantName,
+    },
+    {
+      key: "debtorName",
+      label: "Wederpartij",
+      align: "left",
+      render: (r) => r.debtorName,
+    },
+    {
+      key: "amount",
+      label: "Bedrag",
+      align: "right",
+      render: (r) => formatCurrency(r.amount),
+    },
     {
       key: "status",
       label: "Status",
       render: (r) => {
         const { label, color } = getFarAdminStatusInfo(r.status);
-        return <Chip size="small" label={label} color={color} sx={{ minWidth: 140, justifyContent: "center" }} />;
+        return (
+          <Chip
+            size="small"
+            label={label}
+            color={color}
+            sx={{ minWidth: 140, justifyContent: "center" }}
+          />
+        );
       },
     },
-    { key: "createdAt", label: "Datum", render: (r) => formatDate(r.createdAt.toString()), hideOnMobile: true },
+    {
+      key: "createdAt",
+      label: "Datum",
+      render: (r) => formatDate(r.createdAt.toString()),
+      hideOnMobile: true,
+    },
   ];
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
-      <AppBreadcrumbs items={[{ label: "CFSB Admin", href: "/admin" }, { label: "FAR-register" }]} />
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+    >
+      <AppBreadcrumbs
+        items={[
+          { label: "CFSB Admin", href: "/admin" },
+          { label: "FAR-register" },
+        ]}
+      />
       <Stack spacing={3}>
         <Typography variant="h4" fontWeight={700}>
           FAR-register

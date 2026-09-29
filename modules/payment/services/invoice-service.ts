@@ -74,7 +74,7 @@ export class InvoiceService {
 
       description,
 
-      status: "ISSUED",
+      status: "unpaid",
 
       tenant_id: payment.tenant_id,
 

@@ -5,13 +5,11 @@ import { useSession } from "next-auth/react";
 
 import {
   Box,
-  Button,
   Chip,
   IconButton,
   Menu,
   MenuItem,
   Skeleton,
-  Stack,
   TablePagination,
   Typography,
   useTheme,
@@ -22,10 +20,10 @@ import FirstPageIcon from "@mui/icons-material/FirstPage";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import LastPageIcon from "@mui/icons-material/LastPage";
-import AddIcon from "@mui/icons-material/Add";
 // libs
 import { AlertService } from "@/shared/ui/alerts";
 import { formatCurrency } from "@/shared/utils/formatters";
+import { getBillingInvoiceStatusInfo } from "@/modules/payment/utils/billing-invoice-status";
 // hooks and services
 import { useTenant } from "@/modules/auth/hooks/useTenant";
 import {
@@ -37,7 +35,10 @@ import {
   BillingInvoiceResponse,
 } from "@/modules/payment/services/billing-invoice.validators";
 import { UserRole } from "@/shared/constants/user-role";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 
 interface TablePaginationActionsProps {
   count: number;
@@ -45,7 +46,7 @@ interface TablePaginationActionsProps {
   rowsPerPage: number;
   onPageChange: (
     event: React.MouseEvent<HTMLButtonElement>,
-    newPage: number
+    newPage: number,
   ) => void;
 }
 
@@ -54,25 +55,25 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
   const { count, page, rowsPerPage, onPageChange } = props;
 
   const handleFirstPageButtonClick = (
-    event: React.MouseEvent<HTMLButtonElement>
+    event: React.MouseEvent<HTMLButtonElement>,
   ) => {
     onPageChange(event, 0);
   };
 
   const handleBackButtonClick = (
-    event: React.MouseEvent<HTMLButtonElement>
+    event: React.MouseEvent<HTMLButtonElement>,
   ) => {
     onPageChange(event, page - 1);
   };
 
   const handleNextButtonClick = (
-    event: React.MouseEvent<HTMLButtonElement>
+    event: React.MouseEvent<HTMLButtonElement>,
   ) => {
     onPageChange(event, page + 1);
   };
 
   const handleLastPageButtonClick = (
-    event: React.MouseEvent<HTMLButtonElement>
+    event: React.MouseEvent<HTMLButtonElement>,
   ) => {
     onPageChange(event, Math.max(0, Math.ceil(count / rowsPerPage) - 1));
   };
@@ -149,20 +150,20 @@ const InvoicesPage: React.FC = () => {
 
   const handleChangePage = (
     event: React.MouseEvent<HTMLButtonElement> | null,
-    newPage: number
+    newPage: number,
   ) => {
     setPage(newPage);
   };
 
   const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
   const handleClick = (
     event: React.MouseEvent<HTMLButtonElement>,
-    invoice: BillingInvoiceBase
+    invoice: BillingInvoiceBase,
   ) => {
     setAnchorEl(event.currentTarget);
     setSelectedRow(invoice);
@@ -170,11 +171,6 @@ const InvoicesPage: React.FC = () => {
   const handleClose = () => {
     setAnchorEl(null);
     setSelectedRow(null);
-  };
-
-  const handleCreate = () => {
-    router.push("/dashboard/invoices/new");
-    handleClose();
   };
 
   const handleEdit = (id: string) => {
@@ -197,7 +193,7 @@ const InvoicesPage: React.FC = () => {
       "Weet u het zeker?",
       "Deze actie verwijdert de factuurregistratie.",
       "Ja, verwijderen",
-      "Annuleren"
+      "Annuleren",
     ).then(async (confirmed) => {
       if (confirmed) {
       }
@@ -208,7 +204,9 @@ const InvoicesPage: React.FC = () => {
   const fetchData = async () => {
     if (!tenant) return;
 
-    const invoices = isBailiff ? await getMyGopInvoicesAsBailiff() : await getAllInvoices();
+    const invoices = isBailiff
+      ? await getMyGopInvoicesAsBailiff()
+      : await getAllInvoices();
     setInvoices(invoices);
   };
 
@@ -250,19 +248,6 @@ const InvoicesPage: React.FC = () => {
             OVERZICHT FACTUREN
           </Typography>
         </Box>
-        {!isBailiff && (
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleCreate}
-              startIcon={<AddIcon />}
-              sx={{ textTransform: "none" }}
-            >
-              NIEUWE FACTUUR
-            </Button>
-          </Stack>
-        )}
       </Box>
 
       <Suspense
@@ -270,7 +255,11 @@ const InvoicesPage: React.FC = () => {
       >
         {(() => {
           const columns: ListColumn<BillingInvoiceResponse>[] = [
-            { key: "invoice_number", label: "Factuurnummer", render: (i) => i.invoice_number },
+            {
+              key: "invoice_number",
+              label: "Factuurnummer",
+              render: (i) => i.invoice_number,
+            },
             {
               key: "issue_date",
               label: "Factuurdatum",
@@ -284,19 +273,35 @@ const InvoicesPage: React.FC = () => {
                   : "",
               hideOnMobile: true,
             },
-            { key: "tenant_id", label: "Aan", render: (i) => i.tenant_id, hideOnMobile: true },
+            {
+              key: "tenant_name",
+              label: "Aan",
+              align: "left",
+              render: (i) => i.tenant_name || "-",
+              hideOnMobile: true,
+            },
             {
               key: "subtotal",
               label: "Subtotaal",
               align: "right",
-              render: (i) => formatCurrency(i.invoice_details.map((d) => d.item_total_price).reduce((a, b) => a + b, 0)),
+              render: (i) =>
+                formatCurrency(
+                  i.invoice_details
+                    .map((d) => d.item_total_price)
+                    .reduce((a, b) => a + b, 0),
+                ),
               hideOnMobile: true,
             },
             {
               key: "abb",
               label: "ABB 6%",
               align: "right",
-              render: (i) => formatCurrency(i.invoice_details.map((d) => d.item_tax_amount).reduce((a, b) => a + b, 0)),
+              render: (i) =>
+                formatCurrency(
+                  i.invoice_details
+                    .map((d) => d.item_tax_amount)
+                    .reduce((a, b) => a + b, 0),
+                ),
               hideOnMobile: true,
             },
             {
@@ -304,22 +309,46 @@ const InvoicesPage: React.FC = () => {
               label: "Totaal",
               align: "right",
               render: (i) =>
-                formatCurrency(i.invoice_details.map((d) => d.item_total_with_tax).reduce((a, b) => a + b, 0)),
+                formatCurrency(
+                  i.invoice_details
+                    .map((d) => d.item_total_with_tax)
+                    .reduce((a, b) => a + b, 0),
+                ),
             },
-            { key: "status", label: "Status", render: (i) => <Chip label={i.status} color="default" /> },
+            {
+              key: "status",
+              label: "Status",
+              render: (i) => {
+                const { label, color } = getBillingInvoiceStatusInfo(i.status);
+                return (
+                  <Chip
+                    size="small"
+                    label={label}
+                    color={color}
+                    sx={{ width: 150 }}
+                  />
+                );
+              },
+            },
             {
               key: "actions",
-              label: "",
+              label: "Actie",
               render: (invoice) =>
                 !isBailiff && (
                   <>
                     <IconButton
                       id={`actions-button-${invoice.id}`}
                       aria-controls={
-                        open && selectedRow?.id === invoice.id ? `actions-menus-${invoice.id}` : undefined
+                        open && selectedRow?.id === invoice.id
+                          ? `actions-menus-${invoice.id}`
+                          : undefined
                       }
                       aria-haspopup="true"
-                      aria-expanded={open && selectedRow?.id === invoice.id ? "true" : undefined}
+                      aria-expanded={
+                        open && selectedRow?.id === invoice.id
+                          ? "true"
+                          : undefined
+                      }
                       onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                         e.stopPropagation();
                         handleClick(e, invoice);
@@ -332,7 +361,9 @@ const InvoicesPage: React.FC = () => {
                       anchorEl={anchorEl}
                       open={open && selectedRow?.id === invoice.id}
                       onClose={handleClose}
-                      MenuListProps={{ "aria-labelledby": `actions-button-${invoice.id}` }}
+                      MenuListProps={{
+                        "aria-labelledby": `actions-button-${invoice.id}`,
+                      }}
                     >
                       <MenuItem
                         onClick={() => {
@@ -341,7 +372,7 @@ const InvoicesPage: React.FC = () => {
                         }}
                         disabled={invoice.status !== "overdue"}
                       >
-                        Editar
+                        Bewerken
                       </MenuItem>
                       <MenuItem
                         onClick={() => {
@@ -350,7 +381,7 @@ const InvoicesPage: React.FC = () => {
                         }}
                         disabled={invoice.status !== "unpaid"}
                       >
-                        Aprobar
+                        Bekijken
                       </MenuItem>
                       <MenuItem
                         onClick={() => {
@@ -377,7 +408,12 @@ const InvoicesPage: React.FC = () => {
           ];
 
           const pagedInvoices =
-            rowsPerPage > 0 ? invoices.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) : invoices;
+            rowsPerPage > 0
+              ? invoices.slice(
+                  page * rowsPerPage,
+                  page * rowsPerPage + rowsPerPage,
+                )
+              : invoices;
 
           return (
             <>

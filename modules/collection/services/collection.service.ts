@@ -29,11 +29,21 @@ import { formatAmount } from "@/shared/utils/formatters";
 // Descripciones exactas de las obligaciones COLLECTION/CFSB creadas por
 // applyNoResponseFee — únicas usadas también por collection-mail.service.tsx
 // para identificar el recargo por falta de reacción (nunca por posición en
-// el array de obligations, que también incluye "AOP-activeringskosten" y
+// el array de obligations, que también incluye "AOP-activering" y
 // "AOP-kosten" con el mismo type/beneficiary).
+//
+// REMINDER y FINAL_NOTICE comparten a propósito el mismo texto ("Aanv.
+// kosten", pedido del sponsor para que la tabla quede compacta) — ya no se
+// puede distinguir cuál recargo es por texto. Esto es seguro en
+// collection-mail.service.tsx porque el orden del workflow AOP garantiza que
+// buildSommatiePdfProps (filtra solo por REMINDER) se genera ANTES de que
+// pueda existir un recargo FINAL_NOTICE (su plazo ni siquiera arrancó
+// todavía); ver process_aop_workflow.ts. El único caso no cubierto es
+// regenerar una sommatie ya vieja de un dossier que avanzó más allá de
+// FINAL_NOTICE — ese recargo posterior también se sumaría ahí.
 export const NO_RESPONSE_FEE_DESCRIPTION = {
-  REMINDER: "Aanvullende kosten na aanmaning",
-  FINAL_NOTICE: "Aanvullende kosten na sommatie",
+  REMINDER: "Aanv. kosten",
+  FINAL_NOTICE: "Aanv. kosten",
 } as const;
 
 export class CollectionService {
@@ -274,7 +284,7 @@ export class CollectionService {
           type: "COLLECTION",
           beneficiary: "CFSB",
           payer: "PARTICIPANT",
-          description: "AOP-activeringskosten",
+          description: "AOP-activering",
           originalAmount: cfsbFeeTotal,
           paidAmount: 0,
           balanceAmount: cfsbFeeTotal,
@@ -708,6 +718,20 @@ export class CollectionService {
   ) => {
     if (amount <= 0) return null;
 
+    const claim = await prisma.debtClaim.findUnique({
+      where: { id: debtClaimId },
+      select: { tenantId: true },
+    });
+    if (!claim) return null;
+
+    // Consequent met calculateAmounts/createPending (comisión CFSB): la ABB
+    // se aplica sobre elk CFSB-bedrag, dus ook over dit recargo — antes ging
+    // dit zonder ABB de deur uit, terwijl de AOP-activering/AOP-kosten
+    // wél al ABB meerekenden (feedback sponsor).
+    const parameter = await ParameterService.getParameterForTenant(claim.tenantId);
+    const abbAmount = Number(((amount * parameter.abb_rate) / 100).toFixed(2));
+    const totalWithAbb = Number((amount + abbAmount).toFixed(2));
+
     const stepLabel = step === "REMINDER" ? "de aanmaning" : "de sommatie";
     // Etiqueta que ve el deudor en el diálogo de pago CFSB — debe explicar
     // POR QUÉ surgió el costo, no solo decir "extra kosten N".
@@ -724,9 +748,9 @@ export class CollectionService {
           // AOP).
           payer: "DEBTOR",
           description,
-          originalAmount: amount,
+          originalAmount: totalWithAbb,
           paidAmount: 0,
-          balanceAmount: amount,
+          balanceAmount: totalWithAbb,
           status: "PENDING",
         },
       });
@@ -735,7 +759,7 @@ export class CollectionService {
         data: {
           debtClaimId,
           event: "AOP_STEP_COMPLETED",
-          description: `Administratieve boete van ${formatAmount(amount)} toegevoegd (geen reactie van de debiteur op ${stepLabel}).`,
+          description: `Administratieve boete van ${formatAmount(totalWithAbb)} toegevoegd (geen reactie van de debiteur op ${stepLabel}).`,
         },
       });
 

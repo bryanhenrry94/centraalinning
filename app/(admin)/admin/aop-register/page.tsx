@@ -6,11 +6,16 @@ import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { notifyError } from "@/shared/ui/notifications";
 import { formatDate } from "@/shared/utils/formatters";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 import { getAdminAdministrativeCollections } from "@/modules/admin/actions/admin.actions";
 import { getAopAdminStatusInfo } from "@/modules/admin/utils/admin-status";
 
-type Row = Awaited<ReturnType<typeof getAdminAdministrativeCollections>>[number];
+type Row = Awaited<
+  ReturnType<typeof getAdminAdministrativeCollections>
+>[number];
 
 export default function AdminAopRegisterPage() {
   const [loading, setLoading] = useState(true);
@@ -26,23 +31,58 @@ export default function AdminAopRegisterPage() {
   if (loading) return <LoadingUI />;
 
   const columns: ListColumn<Row>[] = [
-    { key: "reference", label: "Referentie", render: (r) => r.reference || "-" },
-    { key: "tenantName", label: "Deelnemer", render: (r) => r.tenantName },
-    { key: "debtorName", label: "Debiteur", render: (r) => r.debtorName },
+    {
+      key: "reference",
+      label: "AOP-nummer",
+      render: (r) => r.reference || "-",
+    },
+    {
+      key: "tenantName",
+      label: "Deelnemer",
+      align: "left",
+      render: (r) => r.tenantName,
+    },
+    {
+      key: "debtorName",
+      label: "Debiteur",
+      align: "left",
+      render: (r) => r.debtorName,
+    },
     {
       key: "status",
       label: "Status",
       render: (r) => {
         const { label, color } = getAopAdminStatusInfo(r.status);
-        return <Chip size="small" label={label} color={color} sx={{ minWidth: 150, justifyContent: "center" }} />;
+        return (
+          <Chip
+            size="small"
+            label={label}
+            color={color}
+            sx={{ minWidth: 150, justifyContent: "center" }}
+          />
+        );
       },
     },
-    { key: "startedAt", label: "Gestart op", render: (r) => formatDate(r.startedAt.toString()), hideOnMobile: true },
+    {
+      key: "startedAt",
+      label: "Gestart op",
+      render: (r) => formatDate(r.startedAt.toString()),
+      hideOnMobile: true,
+    },
   ];
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
-      <AppBreadcrumbs items={[{ label: "CFSB Admin", href: "/admin" }, { label: "AOP-register" }]} />
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+    >
+      <AppBreadcrumbs
+        items={[
+          { label: "CFSB Admin", href: "/admin" },
+          { label: "AOP-register" },
+        ]}
+      />
       <Stack spacing={3}>
         <Typography variant="h4" fontWeight={700}>
           AOP-register

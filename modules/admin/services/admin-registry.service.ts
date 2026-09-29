@@ -129,7 +129,7 @@ export class AdminRegistryService {
     });
     return items.map((a) => ({
       id: a.id,
-      reference: a.reference,
+      farNumber: a.farNumber,
       tenantName: a.tenant.name,
       debtorName: personName(a.debtor.person),
       amount: Number(a.amount),
@@ -174,11 +174,20 @@ export class AdminRegistryService {
 
   static getAllBlockades = async () => {
     const items = await prisma.blockade.findMany({
-      include: { tenant: { select: { name: true } }, debtor: { include: { person: true } } },
+      include: {
+        tenant: { select: { name: true } },
+        debtor: { include: { person: true } },
+        originDebtClaim: { select: { reference: true } },
+      },
       orderBy: { registeredAt: "desc" },
     });
     return items.map((b) => ({
       id: b.id,
+      // "AOP-2026-001" wanneer de blokkade automatisch volgt uit een
+      // AOP-traject (BLK_NOTIFICATION-stap), "BLK-2026-001" wanneer het een
+      // rechtstreekse blokkaderegistratie is — beide delen dezelfde
+      // DebtClaim-referentiereeks (CollectionService.generateClaimReference).
+      reference: b.originDebtClaim?.reference ?? null,
       tenantName: b.tenant.name,
       debtorName: personName(b.debtor.person),
       reason: b.reason,
@@ -271,6 +280,9 @@ export class AdminRegistryService {
       status: p.status,
       paymentType: p.payment_type,
       method: p.method,
+      // Referentie voor administratie/geschillen — bij voorkeur de
+      // business-referentie (reference_number), anders het eigen Payment-ID.
+      reference: p.reference_number || p.id,
       createdAt: p.created_at,
       paidAt: p.paid_at,
     }));

@@ -85,7 +85,7 @@ export default function AdminJurisdictionsPage() {
   if (loading) return <LoadingUI />;
 
   const columns: ListColumn<Row>[] = [
-    { key: "name", label: "Naam", render: (r) => r.name },
+    { key: "name", label: "Naam", align: "left", render: (r) => r.name },
     { key: "code", label: "Code", render: (r) => r.code },
     {
       key: "rolloutOrder",

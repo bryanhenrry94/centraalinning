@@ -2,11 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Card, CardContent, Chip, Container, Grid, Stack, Typography } from "@mui/material";
+import { Chip, Container, Grid, Stack, Typography } from "@mui/material";
+import ContactPhoneRoundedIcon from "@mui/icons-material/ContactPhoneRounded";
+import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { notifyError } from "@/shared/ui/notifications";
 import { InfoField } from "@/shared/ui/info-field";
+import { InfoSectionCard } from "@/shared/ui/info-section-card";
+import { formatDate, formatDateTime } from "@/shared/utils/formatters";
 import { getAdminBailiffById } from "@/modules/admin/actions/admin.actions";
 import { Bailiff } from "@/modules/bailiff/services/bailiff.validators";
 import { getProfessionalAdminStatusInfo } from "@/modules/admin/utils/admin-status";
@@ -32,6 +36,8 @@ export default function AdminBailiffDetailPage() {
     );
   }
 
+  const statusInfo = getProfessionalAdminStatusInfo(bailiff.status ?? "-");
+
   return (
     <Container maxWidth="md" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
       <AppBreadcrumbs
@@ -46,27 +52,24 @@ export default function AdminBailiffDetailPage() {
           <Typography variant="h4" fontWeight={700}>
             {bailiff.fullname}
           </Typography>
-          <Chip
-            size="small"
-            label={getProfessionalAdminStatusInfo(bailiff.status ?? "-").label}
-            color={getProfessionalAdminStatusInfo(bailiff.status ?? "-").color}
-          />
+          <Chip size="small" label={statusInfo.label} color={statusInfo.color} />
         </Stack>
-        <Card>
-          <CardContent>
-            <Grid container spacing={2.5}>
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField label="E-mail" value={bailiff.email} />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField label="Telefoon" value={bailiff.phone} />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField label="Tenant-ID" value={bailiff.tenant_id} />
-              </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
+
+        <Grid container spacing={2.5}>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <InfoSectionCard icon={<ContactPhoneRoundedIcon fontSize="small" />} title="Contactgegevens">
+              <InfoField label="E-mail" value={bailiff.email} />
+              <InfoField label="Telefoon" value={bailiff.phone} />
+            </InfoSectionCard>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <InfoSectionCard icon={<DescriptionRoundedIcon fontSize="small" />} title="Registratie">
+              <InfoField label="Status" value={statusInfo.label} />
+              <InfoField label="Aangemaakt op" value={formatDate(bailiff.created_at.toString())} />
+              <InfoField label="Laatste wijziging" value={formatDateTime(bailiff.updated_at.toString())} />
+            </InfoSectionCard>
+          </Grid>
+        </Grid>
       </Stack>
     </Container>
   );

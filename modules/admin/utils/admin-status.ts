@@ -13,12 +13,18 @@
 // "en curso / a la espera de algo" — success/error quedan para estados
 // realmente terminales (positivo/negativo), info para estados neutros
 // informativos, default para borrador/inactivo/archivado.
-export type AdminChipColor = "default" | "primary" | "info" | "error" | "success";
+export type AdminChipColor =
+  | "default"
+  | "primary"
+  | "info"
+  | "error"
+  | "success";
 
 export type AdminStatusInfo = { label: string; color: AdminChipColor };
 
 function makeLookup(config: Record<string, AdminStatusInfo>) {
-  return (status: string): AdminStatusInfo => config[status] ?? { label: status, color: "default" };
+  return (status: string): AdminStatusInfo =>
+    config[status] ?? { label: status, color: "default" };
 }
 
 // DebtClaimStatus — Alle dossiers, detail van een dossier.
@@ -55,8 +61,8 @@ export const getFarAdminStatusInfo = makeLookup(FAR_ADMIN_STATUS);
 
 // LegalProcessStatus — GOP-register.
 export const GOP_ADMIN_STATUS: Record<string, AdminStatusInfo> = {
-  GOP_DRAFT: { label: "Concept", color: "default" },
-  GOP_ACTIVE: { label: "Actief", color: "primary" },
+  GOP_DRAFT: { label: "Conceptregistratie", color: "default" },
+  GOP_ACTIVE: { label: "GOP Actief", color: "primary" },
   GOP_INACTIVE: { label: "Inactief", color: "default" },
   CLOSED: { label: "Gesloten", color: "success" },
 };
@@ -67,8 +73,14 @@ export const COP_ADMIN_STATUS: Record<string, AdminStatusInfo> = {
   PENDING_PAYMENT: { label: "Wacht op betaling", color: "primary" },
   ACTIVE: { label: "Actief", color: "primary" },
   AWAITING_DEBTOR_RESPONSE: { label: "Wacht op debiteur", color: "primary" },
-  PAYMENT_AGREEMENT_REQUESTED: { label: "Regeling aangevraagd", color: "primary" },
-  PAYMENT_AGREEMENT_ACCEPTED: { label: "Regeling geaccepteerd", color: "success" },
+  PAYMENT_AGREEMENT_REQUESTED: {
+    label: "Regeling aangevraagd",
+    color: "primary",
+  },
+  PAYMENT_AGREEMENT_ACCEPTED: {
+    label: "Regeling geaccepteerd",
+    color: "success",
+  },
   PAID_IN_FULL: { label: "Volledig betaald", color: "success" },
   TRANSFERRED: { label: "Overgedragen aan GOP", color: "info" },
   CLOSED: { label: "Gesloten", color: "default" },
@@ -78,7 +90,10 @@ export const getCopAdminStatusInfo = makeLookup(COP_ADMIN_STATUS);
 // CaseTransferStatus — Dossieroverdrachten.
 export const TRANSFER_ADMIN_STATUS: Record<string, AdminStatusInfo> = {
   PENDING_PAYMENT: { label: "Wacht op betaling", color: "default" },
-  PENDING_ACCEPTANCE: { label: "In afwachting van acceptatie", color: "primary" },
+  PENDING_ACCEPTANCE: {
+    label: "In afwachting van acceptatie",
+    color: "primary",
+  },
   ACCEPTED: { label: "Overgedragen", color: "success" },
   REJECTED: { label: "Afgewezen", color: "error" },
   WORK_COMPLETED: { label: "Werk afgerond", color: "success" },
@@ -98,7 +113,7 @@ export const getChargeAdminStatusInfo = makeLookup(CHARGE_ADMIN_STATUS);
 
 // DebtClaimObligation.status — Financiële verplichtingen.
 export const OBLIGATION_ADMIN_STATUS: Record<string, AdminStatusInfo> = {
-  PENDING: { label: "In afwachting", color: "primary" },
+  PENDING: { label: "Openstaand", color: "primary" },
   PARTIALLY_PAID: { label: "Gedeeltelijk betaald", color: "primary" },
   PAID: { label: "Betaald", color: "success" },
   CANCELLED: { label: "Geannuleerd", color: "error" },
@@ -111,7 +126,9 @@ export const PROFESSIONAL_ADMIN_STATUS: Record<string, AdminStatusInfo> = {
   INACTIVE: { label: "Inactief", color: "default" },
   SUSPENDED: { label: "Geschorst", color: "error" },
 };
-export const getProfessionalAdminStatusInfo = makeLookup(PROFESSIONAL_ADMIN_STATUS);
+export const getProfessionalAdminStatusInfo = makeLookup(
+  PROFESSIONAL_ADMIN_STATUS,
+);
 
 // BlockadeStatus — BLK-register.
 export const BLOCKADE_ADMIN_STATUS: Record<string, AdminStatusInfo> = {
@@ -127,7 +144,9 @@ export const NETWORK_QUERY_ADMIN_STATUS: Record<string, AdminStatusInfo> = {
   MATCHED: { label: "Werkgever gevonden", color: "success" },
   CLOSED_NO_MATCH: { label: "Geen match", color: "default" },
 };
-export const getNetworkQueryAdminStatusInfo = makeLookup(NETWORK_QUERY_ADMIN_STATUS);
+export const getNetworkQueryAdminStatusInfo = makeLookup(
+  NETWORK_QUERY_ADMIN_STATUS,
+);
 
 // Payment.status ("paid" | "pending" | "failed") — Betalingen.
 export const PAYMENT_ADMIN_STATUS: Record<string, AdminStatusInfo> = {
@@ -135,4 +154,13 @@ export const PAYMENT_ADMIN_STATUS: Record<string, AdminStatusInfo> = {
   pending: { label: "In behandeling", color: "primary" },
   failed: { label: "Mislukt", color: "error" },
 };
-export const getPaymentAdminStatusInfo = makeLookup(PAYMENT_ADMIN_STATUS);
+
+// "Mislukt" past bij een automatische kaart-/online betaling (Sentoo wijst
+// de transactie af) — bij een handmatige TRANSFER (Bankoverschrijving) is er
+// geen "mislukking", enkel geld dat (nog) niet ontvangen is.
+export function getPaymentAdminStatusInfo(status: string, method?: string): AdminStatusInfo {
+  if (status === "failed" && method === "TRANSFER") {
+    return { label: "Niet ontvangen", color: "error" };
+  }
+  return PAYMENT_ADMIN_STATUS[status] ?? { label: status, color: "default" };
+}

@@ -19,7 +19,6 @@ export function InfoField({
         variant="caption"
         color="text.secondary"
         sx={{
-          textTransform: "uppercase",
           letterSpacing: 0.4,
           display: "block",
           wordBreak: "break-word",
@@ -27,7 +26,11 @@ export function InfoField({
       >
         {label}
       </Typography>
-      <Typography variant="body2" fontWeight={600} sx={{ wordBreak: "break-word" }}>
+      <Typography
+        variant="body2"
+        // fontWeight={600}
+        sx={{ wordBreak: "break-word" }}
+      >
         {value ?? "-"}
       </Typography>
     </Box>

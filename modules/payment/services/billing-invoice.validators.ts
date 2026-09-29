@@ -44,6 +44,9 @@ export const BillingInvoiceUpdateSchema = BillingInvoiceBaseSchema.pick({
 export const BillingInvoiceResponseSchema = BillingInvoiceBaseSchema.extend({
   invoice_details: z.array(BillingInvoiceDetailBaseSchema),
   payments: z.array(z.any()).optional(), // Replace z.any() with PaymentSchema if available
+  // Naam van de ontvangende tenant — laat de UI de echte deelnemer tonen
+  // ("Aan") in plaats van de ruwe tenant_id (UUID).
+  tenant_name: z.string().nullable().optional(),
 });
 
 export const BillingInvoiceWithTenantSchema =
