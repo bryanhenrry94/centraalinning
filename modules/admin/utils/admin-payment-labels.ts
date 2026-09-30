@@ -14,6 +14,7 @@ const PAYMENT_TYPE_LABELS: Record<string, string> = {
   COLLECTION: "AOP-kosten",
   GOP: "GOP-kosten",
   GOP_ACTIVATION: "GOP-activering",
+  GOP_BAILIFF_REFERRAL: "GOP-deurwaarder-doorverwijzingstarief",
   GOP_TRANSFER: "GOP-overdracht",
   GOP_LAWYER_FEE: "GOP-advocaatkosten",
   GOP_BAILIFF_FEE: "GOP-deurwaarderskosten",

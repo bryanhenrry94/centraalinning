@@ -183,3 +183,24 @@ export async function requireStaffOrAssignedLawyerOrBailiffForTransfer(caseTrans
   }
   return { session, caseTransfer };
 }
+
+// Vóór acceptatie mag de toegewezen advocaat/deurwaarder alleen weten dát er
+// documenten bestaan (lijst met bestandsnamen via getCaseTransferDocuments,
+// die dit guard niet gebruikt) — de inhoud bekijken of downloaden mag pas na
+// acceptatie. De deelnemer/staff en platform owner blijven altijd toegang
+// houden, dat zijn zij die de documenten beheren (sponsor feedback
+// 2026-09-29, punt 4 GOP-analyse).
+export async function requireDocumentContentAccessForCaseTransfer(caseTransferId: string) {
+  const { session, caseTransfer } = await requireStaffOrAssignedLawyerOrBailiffForTransfer(caseTransferId);
+
+  const isStaffOfTenant =
+    isTenantStaff(session) && session.user.tenant_id === caseTransfer.debtClaim.tenantId;
+
+  if (!isPlatformOwner(session) && !isStaffOfTenant && caseTransfer.status === "PENDING_ACCEPTANCE") {
+    throw new Error(
+      "U kunt de inhoud van dit document pas bekijken nadat u de overdracht heeft geaccepteerd.",
+    );
+  }
+
+  return { session, caseTransfer };
+}

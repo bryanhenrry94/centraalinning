@@ -90,10 +90,22 @@ export const GopExecutionMeasures: React.FC<GopExecutionMeasuresProps> = ({
             <Stack direction="row" spacing={1} alignItems="center">
               <Chip
                 size="small"
-                label={measure.status === "COMPLETED" ? "Voltooid" : "Lopend"}
-                color={measure.status === "COMPLETED" ? "success" : "default"}
+                label={
+                  measure.status === "COMPLETED"
+                    ? "Voltooid"
+                    : measure.status === "PENDING_COMPLETION"
+                      ? "Te beëindigen"
+                      : "Lopend"
+                }
+                color={
+                  measure.status === "COMPLETED"
+                    ? "success"
+                    : measure.status === "PENDING_COMPLETION"
+                      ? "warning"
+                      : "default"
+                }
               />
-              {canManage && measure.status === "IN_PROGRESS" && (
+              {canManage && measure.status !== "COMPLETED" && (
                 <Button size="small" variant="outlined" onClick={() => handleComplete(measure)}>
                   Voltooien
                 </Button>

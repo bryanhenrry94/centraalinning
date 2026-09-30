@@ -44,6 +44,9 @@ export async function processSuccessfulPayment(paymentId: string) {
     case PaymentType.GOP_ACTIVATION:
       return LegalProcessService.processGopActivationPaymentConfirmed(payment.id);
 
+    case PaymentType.GOP_BAILIFF_REFERRAL:
+      return LegalProcessService.processBailiffReferralPaymentConfirmed(payment.id);
+
     case PaymentType.GOP_TRANSFER:
       return CaseTransferService.confirmTransferPayment(payment.id);
 

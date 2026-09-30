@@ -1,4 +1,7 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
+
+type PrismaClientOrTx = typeof prisma | Prisma.TransactionClient;
 
 export class ObligationService {
   // Aplica un monto a UNA obligación puntual — lógica compartida entre
@@ -84,8 +87,9 @@ export class ObligationService {
   static async ensurePrincipalDebtObligation(
     debtClaimId: string,
     fallbackAmount: number,
+    client: PrismaClientOrTx = prisma,
   ) {
-    const existing = await prisma.debtClaimObligation.findFirst({
+    const existing = await client.debtClaimObligation.findFirst({
       where: {
         debtClaimId,
         type: "PRINCIPAL_DEBT",
@@ -98,7 +102,7 @@ export class ObligationService {
       return existing;
     }
 
-    return prisma.debtClaimObligation.create({
+    return client.debtClaimObligation.create({
       data: {
         debtClaimId,
         type: "PRINCIPAL_DEBT",

@@ -14,6 +14,12 @@ import { sendVerdictApprovalEmail } from "@/modules/verdict/services/verdict-mai
 import { AuditLogService } from "@/modules/verdict/services/audit-log.service";
 import { SettingsService } from "@/modules/settings/services/settings/settings.service";
 import { DEFAULT_GOP_FEE_RATE_PERCENT } from "@/modules/legal-process/constants/legal-process-status";
+import { ObligationService } from "@/modules/collection/services/obligation.service";
+import { ClaimTimelineService } from "@/modules/collection/services/claim-timeline.service";
+import { BlockadeService } from "@/modules/blockade/services/blockade.service";
+import { NotificationService } from "@/modules/notification/services/notification.service";
+import { NotificationType } from "@/modules/notification/constants/notification-type";
+import { formatAmount } from "@/shared/utils/formatters";
 
 const mapVerdictResponse = (verdict: any): VerdictResponse => ({
   ...verdict,
@@ -192,7 +198,9 @@ export class VerdictService {
     const verdict = await prisma.verdict.findUnique({
       where: { id: input.verdictId },
       include: {
-        legal_process: { include: { debtClaim: { include: { tenant: true } } } },
+        legal_process: {
+          include: { debtClaim: { include: { tenant: true, debtor: true } }, bailiff: true },
+        },
         verdict_interest: true,
       },
     });
@@ -274,6 +282,96 @@ export class VerdictService {
           newValue: safeNewAmount,
           actorUserId,
         });
+      }
+    }
+
+    // Punto 25 GOP-analyse (sponsor 2026-09-29): la corrección también debe
+    // recalcular la deuda principal del GOP (PRINCIPAL_DEBT/PARTICIPANT,
+    // misma fórmula que processGopActivationPaymentConfirmed) — sin esto,
+    // corregir el vonnis nunca podía generar de nuevo saldo > 0. Si el GOP
+    // ya estaba Afgerond y el nuevo saldo es > 0, se reabre y el BLK se
+    // reactiva; el cambio queda en AuditLog + ClaimTimeline.
+    if (changes.some((c) => c.field === "sentence_amount" || c.field === "procesal_cost")) {
+      const debtClaimId = verdict.legal_process.debtClaimId;
+      const totalInterest = verdict.verdict_interest.reduce((sum, i) => sum + i.total_interest, 0);
+      const newSentenceAmount = input.sentence_amount ?? verdict.sentence_amount;
+      const newProcesalCost = input.procesal_cost ?? verdict.procesal_cost ?? 0;
+      const newPrincipalAmount = newSentenceAmount + totalInterest + newProcesalCost;
+
+      const principalObligation = await ObligationService.ensurePrincipalDebtObligation(
+        debtClaimId,
+        newPrincipalAmount,
+      );
+      const paidAmount = Number(principalObligation.paidAmount);
+      const safeNewPrincipal = Math.max(newPrincipalAmount, paidAmount);
+      const newPrincipalBalance = safeNewPrincipal - paidAmount;
+
+      await prisma.debtClaimObligation.update({
+        where: { id: principalObligation.id },
+        data: {
+          originalAmount: safeNewPrincipal,
+          balanceAmount: newPrincipalBalance,
+          status: newPrincipalBalance <= 0 ? "PAID" : paidAmount > 0 ? "PARTIALLY_PAID" : "PENDING",
+        },
+      });
+
+      await AuditLogService.record({
+        entityType: "DebtClaimObligation",
+        entityId: principalObligation.id,
+        field: "originalAmount",
+        oldValue: Number(principalObligation.originalAmount),
+        newValue: safeNewPrincipal,
+        actorUserId,
+      });
+
+      if (newPrincipalBalance > 0 && verdict.legal_process.status === "CLOSED") {
+        await prisma.legalProcess.update({
+          where: { id: verdict.legal_process.id },
+          data: { status: "GOP_ACTIVE", closedAt: null },
+        });
+
+        const blockade = await prisma.blockade.findFirst({
+          where: { originDebtClaimId: debtClaimId, status: "SUSPENDED" },
+        });
+        if (blockade) {
+          await BlockadeService.reactivate(blockade.id);
+        }
+
+        await ClaimTimelineService.logEvent(
+          debtClaimId,
+          "STATUS_CHANGED",
+          `Correctie op het vonnis verhoogde het openstaand saldo naar ${formatAmount(newPrincipalBalance)}. GOP heropend, BLK opnieuw actief.`,
+          { verdictId: input.verdictId, newBalance: newPrincipalBalance },
+          actorUserId,
+        );
+
+        const tenantId = verdict.legal_process.debtClaim.tenantId;
+        const reference = verdict.legal_process.debtClaim.reference;
+        await NotificationService.notifyTenantStaff(tenantId, {
+          type: NotificationType.GOP_REOPENED,
+          title: "GOP heropend",
+          message: `Dossier ${reference} is heropend na een correctie op het vonnis: nieuw openstaand saldo van ${formatAmount(newPrincipalBalance)}.`,
+          link: `/legal-processes/${verdict.legal_process.id}`,
+          entity_type: "LegalProcess",
+          entity_id: verdict.legal_process.id,
+        });
+
+        const notifyUserIds: string[] = [];
+        if (verdict.legal_process.bailiff?.user_id) notifyUserIds.push(verdict.legal_process.bailiff.user_id);
+        if (verdict.legal_process.debtClaim.debtor.user_id) {
+          notifyUserIds.push(verdict.legal_process.debtClaim.debtor.user_id);
+        }
+        if (notifyUserIds.length) {
+          await NotificationService.createMany(notifyUserIds, {
+            tenant_id: tenantId,
+            type: NotificationType.GOP_REOPENED,
+            title: "GOP heropend",
+            message: `Dossier ${reference} is heropend na een correctie op het vonnis.`,
+            link: `/legal-processes/${verdict.legal_process.id}`,
+            entity_type: "LegalProcess",
+            entity_id: verdict.legal_process.id,
+          });
+        }
       }
     }
 

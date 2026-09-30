@@ -12,6 +12,7 @@ import {
   Alert,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { registerGopBailiffCost } from "@/modules/legal-process/actions/legal-process.actions";
 
@@ -35,13 +36,19 @@ export const BailiffCostDialog: React.FC<BailiffCostDialogProps> = ({
   onRegistered,
 }) => {
   const [form, setForm] = useState(emptyState);
+  const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
   const set = (field: keyof typeof emptyState) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFile(e.target.files?.[0] ?? null);
+  };
+
   const handleClose = () => {
     setForm(emptyState);
+    setFile(null);
     onClose();
   };
 
@@ -53,12 +60,15 @@ export const BailiffCostDialog: React.FC<BailiffCostDialogProps> = ({
 
     setLoading(true);
     try {
-      await registerGopBailiffCost({
-        verdictId,
-        service_invoice_number: form.service_invoice_number,
-        service_type: form.service_type,
-        service_cost: Number(form.service_cost),
-      });
+      await registerGopBailiffCost(
+        {
+          verdictId,
+          service_invoice_number: form.service_invoice_number,
+          service_type: form.service_type,
+          service_cost: Number(form.service_cost),
+        },
+        file ?? undefined,
+      );
       notifySuccess("Deurwaarderskosten geregistreerd en gefactureerd (5%)");
       onRegistered();
       handleClose();
@@ -89,7 +99,8 @@ export const BailiffCostDialog: React.FC<BailiffCostDialogProps> = ({
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Alert severity="info">
-            Bij registratie wordt automatisch 5% van dit bedrag aan de opdrachtgever gefactureerd.
+            De CFSB-commissie (5%) wordt pas berekend bij het afronden van het werk (gezamenlijke
+            factuur), over de som van alle geregistreerde kostenregels.
           </Alert>
           <TextField
             label="Factuurnummer deurwaarder"
@@ -113,6 +124,10 @@ export const BailiffCostDialog: React.FC<BailiffCostDialogProps> = ({
             value={form.service_cost}
             onChange={set("service_cost")}
           />
+          <Button component="label" variant="outlined" startIcon={<UploadFileIcon />}>
+            {file ? file.name : "Document uploaden (optioneel)"}
+            <input type="file" hidden onChange={handleFileChange} />
+          </Button>
         </Stack>
       </DialogContent>
       <DialogActions>

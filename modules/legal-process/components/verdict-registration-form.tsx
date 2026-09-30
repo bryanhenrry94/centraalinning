@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { FormProvider, useForm, Controller, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  Alert,
   Box,
   Button,
   Container,
@@ -86,10 +87,22 @@ export const VerdictRegistrationForm: React.FC<
   const router = useRouter();
   const [bailiffs, setBailiffs] = useState<Bailiff[]>([]);
   // Se setea al registrar el borrador (primer vonnis), para poder navegar
-  // al detalle del GOP una vez PaymentIntent confirma el pago.
+  // al detalle del GOP una vez ambos pagos confirman.
   const [registeredLegalProcessId, setRegisteredLegalProcessId] = useState<
     string | null
   >(null);
+  // Doble gate de activación (punto 10-11 GOP-analyse): el GOP recién queda
+  // activo cuando AMBOS pagos se confirman — el del deelnemer (comisión CFSB
+  // 5%, PaymentIntent de arriba) y el del deurwaarder (tarifa fija por
+  // dossier vía CFSB, segundo PaymentIntent). Si el backend no generó pago
+  // para el deurwaarder (tarifa en 0 para esta isla/tenant), ese lado ya
+  // cuenta como saldado desde el inicio.
+  const [bailiffPayment, setBailiffPayment] = useState<{
+    paymentId: string;
+    paymentUrl: string;
+  } | null>(null);
+  const [participantPaid, setParticipantPaid] = useState(false);
+  const [bailiffPaid, setBailiffPaid] = useState(false);
 
   useEffect(() => {
     getActiveBailiffsDirectory()
@@ -137,7 +150,7 @@ export const VerdictRegistrationForm: React.FC<
 
     const confirmed = await AlertService.showConfirm(
       "Weet je het zeker?",
-      "U staat op het punt een vonnis te registreren als borrador. De GOP-activeringscommissie (5%) wordt berekend over het vonnisbedrag plus de wettelijke rente. Wilt u doorgaan?",
+      "U staat op het punt een vonnis te registreren als borrador. De GOP-activeringscommissie (5%) van de deelnemer wordt berekend over het vonnisbedrag plus de wettelijke rente. Mogelijk wordt hierbij ook een doorverwijzingstarief voor u als deurwaarder aangemaakt — het GOP wordt pas actief zodra beide betalingen bevestigd zijn. Wilt u doorgaan?",
       "Ja, registreren en betalen",
       "Annuleren",
     );
@@ -148,8 +161,20 @@ export const VerdictRegistrationForm: React.FC<
         legalProcessId: string;
         paymentId: string;
         paymentUrl: string;
+        bailiffPaymentId: string | null;
+        bailiffPaymentUrl: string | null;
       };
       setRegisteredLegalProcessId(draft.legalProcessId);
+      if (draft.bailiffPaymentId && draft.bailiffPaymentUrl) {
+        setBailiffPayment({
+          paymentId: draft.bailiffPaymentId,
+          paymentUrl: draft.bailiffPaymentUrl,
+        });
+      } else {
+        // Geen doorverwijzingstarief vereist voor deze isla/tenant — dat
+        // lado del gate ya está saldado de entrada.
+        setBailiffPaid(true);
+      }
       return {
         success: true,
         paymentId: draft.paymentId,
@@ -163,12 +188,41 @@ export const VerdictRegistrationForm: React.FC<
     }
   };
 
-  const handlePaymentConfirmed = async () => {
-    notifySuccess("Betaling bevestigd. GOP is actief.");
-    if (registeredLegalProcessId) {
+  // Segundo PaymentIntent (lado del deurwaarder): el pago ya fue creado por
+  // registerDraftAndPay, acá solo se abre el link/polling correspondiente.
+  const payBailiffReferralFee = async (): Promise<{
+    success: boolean;
+    error?: string;
+    paymentId?: string;
+    paymentUrl?: string;
+  }> => {
+    if (!bailiffPayment) {
+      return { success: false, error: "Er is nog geen betaling beschikbaar." };
+    }
+    return {
+      success: true,
+      paymentId: bailiffPayment.paymentId,
+      paymentUrl: bailiffPayment.paymentUrl,
+    };
+  };
+
+  const handleParticipantPaymentConfirmed = async () => {
+    notifySuccess("Betaling van de deelnemer bevestigd.");
+    setParticipantPaid(true);
+  };
+
+  const handleBailiffPaymentConfirmed = async () => {
+    notifySuccess("Betaling van de deurwaarder bevestigd.");
+    setBailiffPaid(true);
+  };
+
+  // Navega al GOP-dossier recién cuando AMBOS lados del gate confirmaron.
+  useEffect(() => {
+    if (participantPaid && bailiffPaid && registeredLegalProcessId) {
+      notifySuccess("Beide betalingen bevestigd. GOP is actief.");
       router.push(`/legal-processes/${registeredLegalProcessId}`);
     }
-  };
+  }, [participantPaid, bailiffPaid, registeredLegalProcessId, router]);
 
   // Sentencia ADICIONAL sobre un GOP ya activo: sin gate de pago, igual que
   // antes.
@@ -495,10 +549,18 @@ export const VerdictRegistrationForm: React.FC<
               sx={{ minWidth: { sm: 220 } }}
             >
               {caseTransferId ? (
-                <PaymentIntent
-                  onCreateTransaction={registerDraftAndPay}
-                  onPaymentConfirmed={handlePaymentConfirmed}
-                />
+                <>
+                  <PaymentIntent
+                    onCreateTransaction={registerDraftAndPay}
+                    onPaymentConfirmed={handleParticipantPaymentConfirmed}
+                  />
+                  {bailiffPayment && !bailiffPaid && (
+                    <PaymentIntent
+                      onCreateTransaction={payBailiffReferralFee}
+                      onPaymentConfirmed={handleBailiffPaymentConfirmed}
+                    />
+                  )}
+                </>
               ) : (
                 <Button
                   color="primary"
@@ -512,6 +574,18 @@ export const VerdictRegistrationForm: React.FC<
               )}
             </Stack>
           </Box>
+
+          {registeredLegalProcessId && (participantPaid !== true || bailiffPaid !== true) && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Het GOP wordt pas actief zodra{" "}
+              {!participantPaid && !bailiffPaid
+                ? "zowel de deelnemer als de deurwaarder betaald hebben"
+                : !participantPaid
+                  ? "de deelnemer betaald heeft (de deurwaarder betaalde al)"
+                  : "de deurwaarder betaald heeft (de deelnemer betaalde al)"}
+              .
+            </Alert>
+          )}
         </form>
       </FormProvider>
     </Container>

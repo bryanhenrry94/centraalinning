@@ -20,6 +20,7 @@ import {
   requireAuthorizedToCorrectGopPayment,
 } from "@/modules/legal-process/services/legal-process-guards";
 import { requireAssignedBailiffForTransfer } from "@/modules/legal-process/services/case-transfer-guards";
+import { StorageService } from "@/infrastructure/storage/storage.service";
 import { toDocumentRow } from "@/modules/legal-process/utils/legal-process-document";
 import { AgreementService } from "@/modules/agreement/services/agreement.service";
 import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
@@ -155,11 +156,32 @@ export const registerGopInterestUpdate = async (data: RegisterInterestUpdateInpu
   return LegalProcessService.registerInterestUpdate(parsed, session.user.id);
 };
 
-export const registerGopBailiffCost = async (data: RegisterBailiffCostInput) => {
+// Het bewijsdocument per kostenregel is optioneel (punt 19 GOP-analyse): de
+// deurwaarder kiest óf per regel een document, óf later één gezamenlijke
+// Factuur totaal bij submitBailiffFeeInvoice — nooit allebei verplicht.
+export const registerGopBailiffCost = async (data: RegisterBailiffCostInput, file?: File) => {
   const parsed = RegisterBailiffCostSchema.parse(data);
   const { session, legalProcess } = await requireStaffOrAssignedBailiffForVerdict(parsed.verdictId);
+
+  let documentFields: Pick<
+    RegisterBailiffCostInput,
+    "document_storage_key" | "document_original_name" | "document_mime_type" | "document_size"
+  > = {};
+  if (file) {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const sanitizedName = `${crypto.randomUUID()}-${file.name}`.replace(/\s+/g, "-");
+    const folder = `${legalProcess.debtClaim.tenantId}/legal-processes/${legalProcess.id}/bailiff-costs`;
+    const storageKey = await StorageService.uploadFile(folder, sanitizedName, file.type, buffer);
+    documentFields = {
+      document_storage_key: storageKey,
+      document_original_name: file.name,
+      document_mime_type: file.type,
+      document_size: file.size,
+    };
+  }
+
   return LegalProcessService.registerBailiffCost(
-    parsed,
+    { ...parsed, ...documentFields },
     legalProcess.debtClaim.tenantId,
     session.user.id,
   );
@@ -190,20 +212,33 @@ export const getGopBailiffCostsSummary = async (legalProcessId: string) => {
   return LegalProcessService.getBailiffCostsSummary(legalProcessId);
 };
 
+// Tarifa CFSB propia del alguacil (independiente de gop_fee_rate) — para
+// mostrar el "Totaal CFSB-5%" en vivo en FinalizeBailiffWorkDialog.
+export const getGopBailiffFeeRatePercent = async (legalProcessId: string) => {
+  const { legalProcess } = await requireStaffOrAssignedBailiff(legalProcessId);
+  return LegalProcessService.getGopBailiffFeeRatePercent(legalProcess.debtClaim.tenantId);
+};
+
 // El alguacil registra los costos facturados al debiteur y paga la comisión
-// CFSB (5%) sobre ese monto — habilita el cierre del GOP.
-export const submitBailiffFeeInvoice = async (data: SubmitBailiffFeeInvoiceInput, file: File) => {
+// CFSB (5%) sobre ese monto — habilita el cierre del GOP. El bestand is
+// optioneel: zonder gezamenlijke factuur moet elke kostenregel al zijn eigen
+// document hebben (LegalProcessService.submitBailiffFeeInvoice valideert dit).
+export const submitBailiffFeeInvoice = async (data: SubmitBailiffFeeInvoiceInput, file?: File) => {
   const parsed = SubmitBailiffFeeInvoiceSchema.parse(data);
   const { session } = await requireStaffOrAssignedBailiff(parsed.legalProcessId);
-  const buffer = Buffer.from(await file.arrayBuffer());
+  const fileFields = file
+    ? {
+        fileName: file.name,
+        mimeType: file.type,
+        size: file.size,
+        buffer: Buffer.from(await file.arrayBuffer()),
+      }
+    : {};
 
   return LegalProcessService.submitBailiffFeeInvoice(
     {
       ...parsed,
-      fileName: file.name,
-      mimeType: file.type,
-      size: file.size,
-      buffer,
+      ...fileFields,
     },
     session.user.id,
   );

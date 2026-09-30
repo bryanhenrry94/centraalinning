@@ -185,7 +185,12 @@ export const uploadCaseTransferDocument = async (
   });
 };
 
+// Vóór acceptatie mag de toegewezen advocaat/deurwaarder al wél weten dát er
+// documenten zijn (deze lijst met bestandsnamen) — enkel de inhoud openen/
+// downloaden is geblokkeerd, zie requireDocumentContentAccessForCaseTransfer
+// in de download-route.
 export const getCaseTransferDocuments = async (caseTransferId: string) => {
+  await requireStaffOrAssignedLawyerOrBailiffForTransfer(caseTransferId);
   return CaseTransferService.getDocuments(caseTransferId);
 };
 

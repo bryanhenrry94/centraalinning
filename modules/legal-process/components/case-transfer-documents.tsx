@@ -16,6 +16,7 @@ import {
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import DownloadIcon from "@mui/icons-material/Download";
 import DeleteIcon from "@mui/icons-material/Delete";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 
 import {
   deleteCaseTransferDocument,
@@ -38,7 +39,12 @@ type CaseTransferDocument = Awaited<ReturnType<typeof getCaseTransferDocuments>>
 export const CaseTransferDocuments: React.FC<{
   caseTransferId: string;
   canUpload: boolean;
-}> = ({ caseTransferId, canUpload }) => {
+  // Vóór acceptatie mag de toegewezen advocaat/deurwaarder alleen weten dát
+  // er documenten zijn — inhoud bekijken/downloaden pas na acceptatie (zie
+  // requireDocumentContentAccessForCaseTransfer). Standaard true zodat
+  // bestaande aanroepen (staff-only schermen) niet per ongeluk dichtvallen.
+  canViewContent?: boolean;
+}> = ({ caseTransferId, canUpload, canViewContent = true }) => {
   const [documents, setDocuments] = useState<CaseTransferDocument[]>([]);
   const [category, setCategory] = useState(CATEGORY_OPTIONS[0].value);
   const [uploading, setUploading] = useState(false);
@@ -130,14 +136,20 @@ export const CaseTransferDocuments: React.FC<{
                 disablePadding
                 secondaryAction={
                   <Stack direction="row" spacing={1}>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<DownloadIcon />}
-                      href={`/api/legal-processes/transfers/documents/${doc.id}/download`}
-                    >
-                      Downloaden
-                    </Button>
+                    {canViewContent ? (
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<DownloadIcon />}
+                        href={`/api/legal-processes/transfers/documents/${doc.id}/download`}
+                      >
+                        Downloaden
+                      </Button>
+                    ) : (
+                      <Button variant="outlined" size="small" startIcon={<LockOutlinedIcon />} disabled>
+                        Beschikbaar na acceptatie
+                      </Button>
+                    )}
                     {canUpload && (
                       <IconButton
                         size="small"

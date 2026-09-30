@@ -301,6 +301,7 @@ const CaseTransferDetailPage: React.FC = () => {
             <CaseTransferDocuments
               caseTransferId={caseTransfer.id}
               canUpload={isStaff || isBailiffRole || isLawyer}
+              canViewContent={isStaff || caseTransfer.status !== CaseTransferStatus.PENDING_ACCEPTANCE}
             />
           </CardContent>
         </Card>

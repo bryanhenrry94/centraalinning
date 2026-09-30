@@ -11,7 +11,9 @@ export async function GET(
 
   try {
     const invoice = await prisma.bailiffFeeInvoice.findUnique({ where: { id } });
-    if (!invoice) {
+    if (!invoice || !invoice.storageKey || !invoice.mimeType || !invoice.originalName) {
+      // Geen gezamenlijke factuur geüpload — de deurwaarder documenteerde
+      // per kostenregel in plaats daarvan (punt 19 GOP-analyse).
       return NextResponse.json({ error: "Factuur niet gevonden" }, { status: 404 });
     }
 

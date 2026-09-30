@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { StorageService } from "@/infrastructure/storage/storage.service";
-import { requireStaffOrAssignedLawyerOrBailiffForTransfer } from "@/modules/legal-process/services/case-transfer-guards";
+import { requireDocumentContentAccessForCaseTransfer } from "@/modules/legal-process/services/case-transfer-guards";
 
 export async function GET(
   _req: NextRequest,
@@ -15,7 +15,7 @@ export async function GET(
       return NextResponse.json({ error: "Document niet gevonden" }, { status: 404 });
     }
 
-    await requireStaffOrAssignedLawyerOrBailiffForTransfer(document.caseTransferId);
+    await requireDocumentContentAccessForCaseTransfer(document.caseTransferId);
 
     const file = await StorageService.downloadFile(document.storageKey);
 

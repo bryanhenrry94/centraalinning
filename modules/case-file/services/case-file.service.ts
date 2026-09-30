@@ -141,7 +141,12 @@ export class CaseFileService {
         });
       }
 
+      // storageKey/originalName/mimeType/size zijn nullable: de deurwaarder
+      // kan in plaats van een gezamenlijke factuur per kostenregel een eigen
+      // document hebben geüpload (punt 19 GOP-analyse) — zonder gezamenlijk
+      // document is er hier niets te tonen/downloaden.
       for (const invoice of lp.bailiffFeeInvoices) {
+        if (!invoice.originalName || !invoice.mimeType || invoice.size == null) continue;
         items.push({
           id: invoice.id,
           category: CaseFileCategory.BAILIFF_INVOICE,

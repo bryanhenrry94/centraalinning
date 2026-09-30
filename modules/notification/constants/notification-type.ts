@@ -24,6 +24,10 @@ export enum NotificationType {
   GOP_BAILIFF_CHANGED = "GOP_BAILIFF_CHANGED",
   GOP_CANCELLED = "GOP_CANCELLED",
   GOP_CLOSED = "GOP_CLOSED",
+  // Correctie post-cierre (punt 25 GOP-analyse) — GOP_REACTIVATED is voor
+  // GOP_INACTIVE -> GOP_ACTIVE (nieuwe executiemaatregel), dit is voor
+  // CLOSED -> GOP_ACTIVE (correctie veroorzaakt weer een openstaand saldo).
+  GOP_REOPENED = "GOP_REOPENED",
   GOP_PRESCRIPTION_REMINDER = "GOP_PRESCRIPTION_REMINDER",
   GOP_REVIEW_REMINDER = "GOP_REVIEW_REMINDER",
   GOP_LAWYER_WORK_FINALIZED = "GOP_LAWYER_WORK_FINALIZED",

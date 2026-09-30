@@ -49,3 +49,10 @@ export const DEFAULT_GOP_FEE_RATE_PERCENT = 5;
 // LegalProcessService.submitBailiffFeeInvoice). Nunca se mezcla con
 // DEFAULT_GOP_FEE_RATE_PERCENT.
 export const DEFAULT_GOP_BAILIFF_FEE_RATE_PERCENT = 5;
+
+// Fallback para el Setting "gop_bailiff_referral_fee" — tarifa FIJA (USD, no
+// porcentaje) que el deurwaarder paga a CFSB por cada dossier que recibe vía
+// CFSB, para activar el GOP (punto 10-11 GOP-analyse, sponsor 2026-09-29).
+// Independiente de gop_bailiff_fee_rate (esa es % sobre sus propios costos
+// de ejecución, recién al cerrar — acá aún no existen esos costos).
+export const DEFAULT_GOP_BAILIFF_REFERRAL_FEE = 50;

@@ -14,9 +14,11 @@ import {
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CloseIcon from "@mui/icons-material/Close";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
+import { AlertService } from "@/shared/ui/alerts";
 import {
   submitBailiffFeeInvoice,
   getGopBailiffCostsSummary,
+  getGopBailiffFeeRatePercent,
 } from "@/modules/legal-process/actions/legal-process.actions";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 import { formatCurrency } from "@/shared/utils/formatters";
@@ -34,6 +36,8 @@ const emptyState = {
   invoiceDate: "",
 };
 
+type CostsSummary = Awaited<ReturnType<typeof getGopBailiffCostsSummary>>;
+
 export const FinalizeBailiffWorkDialog: React.FC<FinalizeBailiffWorkDialogProps> = ({
   open,
   onClose,
@@ -42,25 +46,41 @@ export const FinalizeBailiffWorkDialog: React.FC<FinalizeBailiffWorkDialogProps>
 }) => {
   const [form, setForm] = useState(emptyState);
   const [file, setFile] = useState<File | null>(null);
-  const [registeredCostsTotal, setRegisteredCostsTotal] = useState<number | null>(null);
+  const [costsSummary, setCostsSummary] = useState<CostsSummary | null>(null);
+  const [bailiffFeeRatePercent, setBailiffFeeRatePercent] = useState<number | null>(null);
 
   useEffect(() => {
     if (!open) return;
     getGopBailiffCostsSummary(legalProcessId)
-      .then(setRegisteredCostsTotal)
-      .catch(() => setRegisteredCostsTotal(null));
+      .then(setCostsSummary)
+      .catch(() => setCostsSummary(null));
+    getGopBailiffFeeRatePercent(legalProcessId)
+      .then(setBailiffFeeRatePercent)
+      .catch(() => setBailiffFeeRatePercent(null));
   }, [open, legalProcessId]);
 
   const set = (field: keyof typeof emptyState) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
+  const registeredCostsTotal = costsSummary?.total ?? null;
+  // Per regel OF gezamenlijk, nooit allebei verplicht (punt 19 GOP-analyse):
+  // als elke geregistreerde kostenregel al zijn eigen document heeft, hoeft
+  // hier geen gezamenlijke factuur meer geüpload te worden.
+  const combinedInvoiceRequired = !costsSummary?.allDocumented;
+
+  const totalAmountNumber = Number(form.totalAmount) || 0;
+  const cfsbFeeTotal =
+    bailiffFeeRatePercent != null && totalAmountNumber > 0
+      ? Math.round(totalAmountNumber * (bailiffFeeRatePercent / 100) * 100) / 100
+      : null;
+
   // No bloqueante: el spec solo pide una advertencia cuando la factura final
   // no calza con la suma de actuaciones ya registradas.
   const mismatchWarning =
     registeredCostsTotal !== null &&
-    Number(form.totalAmount) > 0 &&
-    Math.abs(Number(form.totalAmount) - registeredCostsTotal) > 0.01
-      ? `Let op: het ingevoerde totaalbedrag (${formatCurrency(Number(form.totalAmount))}) komt niet overeen met de som van de geregistreerde actuaties (${formatCurrency(registeredCostsTotal)}).`
+    totalAmountNumber > 0 &&
+    Math.abs(totalAmountNumber - registeredCostsTotal) > 0.01
+      ? `Let op: het ingevoerde totaalbedrag (${formatCurrency(totalAmountNumber)}) komt niet overeen met de som van de geregistreerde actuaties (${formatCurrency(registeredCostsTotal)}).`
       : null;
 
   const handleClose = () => {
@@ -85,8 +105,21 @@ export const FinalizeBailiffWorkDialog: React.FC<FinalizeBailiffWorkDialogProps>
     if (!Number(form.totalAmount)) {
       return { success: false, error: "Voer het totale kostenbedrag in" };
     }
-    if (!file) {
-      return { success: false, error: "Upload uw kostenfactuur" };
+    if (!file && combinedInvoiceRequired) {
+      return {
+        success: false,
+        error: "Upload een gezamenlijke factuur, of registreer eerst een document bij elke kostenregel.",
+      };
+    }
+
+    const confirmed = await AlertService.showConfirm(
+      "Deurwaarderskosten registreren",
+      "Weet u zeker dat u deze deurwaarderskosten wilt registreren?",
+      "Ja, registreren",
+      "Nee",
+    );
+    if (!confirmed) {
+      return { success: false };
     }
 
     try {
@@ -97,7 +130,7 @@ export const FinalizeBailiffWorkDialog: React.FC<FinalizeBailiffWorkDialogProps>
           invoiceNumber: form.invoiceNumber || null,
           invoiceDate: form.invoiceDate ? new Date(form.invoiceDate) : null,
         },
-        file,
+        file ?? undefined,
       );
       return { success: true, paymentId: result.paymentId, paymentUrl: result.paymentUrl };
     } catch (error) {
@@ -143,7 +176,12 @@ export const FinalizeBailiffWorkDialog: React.FC<FinalizeBailiffWorkDialogProps>
           </Alert>
           {registeredCostsTotal !== null && (
             <Alert severity="info" variant="outlined">
-              Som van de geregistreerde deurwaarderskosten: {formatCurrency(registeredCostsTotal)}
+              Totaal deurwaarderskosten: {formatCurrency(registeredCostsTotal)}
+            </Alert>
+          )}
+          {cfsbFeeTotal !== null && (
+            <Alert severity="info" variant="outlined">
+              Totaal CFSB-5%: {formatCurrency(cfsbFeeTotal)}
             </Alert>
           )}
           {mismatchWarning && <Alert severity="warning">{mismatchWarning}</Alert>}
@@ -170,9 +208,15 @@ export const FinalizeBailiffWorkDialog: React.FC<FinalizeBailiffWorkDialogProps>
             onChange={set("invoiceDate")}
           />
           <Button component="label" variant="outlined" startIcon={<UploadFileIcon />}>
-            {file ? file.name : "Kostenfactuur uploaden"}
+            {file ? file.name : combinedInvoiceRequired ? "Gezamenlijke factuur uploaden" : "Gezamenlijke factuur uploaden (optioneel)"}
             <input type="file" hidden onChange={handleFileChange} />
           </Button>
+          {!combinedInvoiceRequired && !file && (
+            <Alert severity="success" variant="outlined">
+              Elke geregistreerde kostenregel heeft al een eigen document — een gezamenlijke
+              factuur is hier niet verplicht.
+            </Alert>
+          )}
         </Stack>
       </DialogContent>
       <DialogActions sx={{ flexDirection: "column", alignItems: "stretch", gap: 1, px: 3, pb: 2 }}>
