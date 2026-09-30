@@ -341,6 +341,12 @@ export class AdminRegistryService {
 
   static getAllUsersWithRoles = async () => {
     const users = await prisma.user.findMany({
+      // Zonder membership heeft een account niets te tonen op dit
+      // organisatie/rol-overzicht — dit filtert o.a. de kale test-fixtures
+      // (test.advocaat@cfsb.test, test.deurwaarder@cfsb.test) die alleen een
+      // Lawyer/Bailiff-record hebben zonder Membership (sponsor feedback
+      // 2026-09-29: "-"/"-" op dit scherm is verwarrend).
+      where: { memberships: { some: {} } },
       include: {
         memberships: {
           include: {

@@ -10,8 +10,39 @@ import {
   ResponsiveListTable,
 } from "@/shared/ui/responsive-list-table";
 import { getAdminUsers } from "@/modules/admin/actions/admin.actions";
+import { getRoleBadgeInfo } from "@/modules/admin/utils/admin-user-roles";
 
-type Row = Awaited<ReturnType<typeof getAdminUsers>>[number];
+type AdminUser = Awaited<ReturnType<typeof getAdminUsers>>[number];
+
+// Eén tabelrij per membership i.p.v. per gebruiker: een gebruiker met 3
+// organisaties krijgt 3 rijen, elk met naam/e-mail herhaald — sponsor
+// feedback 2026-09-29: lege vakken op de vervolgrijen (om herhaling te
+// vermijden) waren juist verwarrender dan gewoon elke rij volledig tonen.
+type Row = {
+  key: string;
+  fullname: string | null;
+  email: string;
+  isActive: boolean;
+  tenantName: string;
+  roles: string[];
+};
+
+function buildRows(users: AdminUser[]): Row[] {
+  const rows: Row[] = [];
+  for (const user of users) {
+    for (const m of user.memberships) {
+      rows.push({
+        key: `${user.id}-${m.tenantId}`,
+        fullname: user.fullname,
+        email: user.email,
+        isActive: user.isActive,
+        tenantName: m.tenantName,
+        roles: m.roles,
+      });
+    }
+  }
+  return rows;
+}
 
 export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
@@ -19,7 +50,7 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     getAdminUsers()
-      .then(setRows)
+      .then((users) => setRows(buildRows(users)))
       .catch(() => notifyError("Kon gebruikers niet laden"))
       .finally(() => setLoading(false));
   }, []);
@@ -35,19 +66,35 @@ export default function AdminUsersPage() {
     },
     { key: "email", label: "E-mail", align: "left", render: (r) => r.email },
     {
-      key: "memberships",
-      label: "Deelnemers & rollen",
+      key: "tenant",
+      label: "Organisatie / Deelnemer",
       align: "left",
-      render: (r) => (
-        <Stack spacing={0.5}>
-          {r.memberships.length === 0 && "-"}
-          {r.memberships.map((m) => (
-            <Typography key={m.tenantId} variant="caption" display="block">
-              {m.tenantName}: {m.roles.join(", ") || "-"}
-            </Typography>
-          ))}
-        </Stack>
-      ),
+      render: (r) => r.tenantName,
+    },
+    {
+      key: "roles",
+      label: "Rol(len)",
+      align: "left",
+      render: (r) =>
+        r.roles.length === 0 ? (
+          "-"
+        ) : (
+          <Stack direction="row" spacing={0.5} flexWrap="wrap" rowGap={0.5}>
+            {r.roles.map((role) => {
+              const badge = getRoleBadgeInfo(role);
+              return (
+                <Chip
+                  key={role}
+                  size="small"
+                  label={badge.label}
+                  color={badge.color}
+                  variant={badge.color === "default" ? "outlined" : "filled"}
+                  sx={{ minWidth: 150 }}
+                />
+              );
+            })}
+          </Stack>
+        ),
     },
     {
       key: "isActive",
@@ -85,7 +132,7 @@ export default function AdminUsersPage() {
         <ResponsiveListTable
           columns={columns}
           rows={rows}
-          getRowKey={(r) => r.id}
+          getRowKey={(r) => r.key}
           emptyMessage="Nog geen gebruikers."
         />
       </Stack>
