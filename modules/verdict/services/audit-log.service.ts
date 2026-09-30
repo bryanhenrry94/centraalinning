@@ -19,8 +19,14 @@ export class AuditLogService {
         entityType: params.entityType,
         entityId: params.entityId,
         field: params.field,
-        oldValue: params.oldValue === undefined || params.oldValue === null ? null : String(params.oldValue),
-        newValue: params.newValue === undefined || params.newValue === null ? null : String(params.newValue),
+        oldValue:
+          params.oldValue === undefined || params.oldValue === null
+            ? null
+            : String(params.oldValue),
+        newValue:
+          params.newValue === undefined || params.newValue === null
+            ? null
+            : String(params.newValue),
         actorUserId: params.actorUserId,
       },
     });
@@ -34,9 +40,13 @@ export class AuditLogService {
     });
   };
 
-  // Visor cross-entity para CFSB Admin (Auditlog) — getForEntity ya
+  // Visor cross-entity para CFSB Admin (Activiteitenlog) — getForEntity ya
   // filtraba por una entidad puntual; acá se pagina sobre todo el log.
-  static getAllPaginated = async (params: { page: number; pageSize: number; entityType?: string }) => {
+  static getAllPaginated = async (params: {
+    page: number;
+    pageSize: number;
+    entityType?: string;
+  }) => {
     const { page, pageSize, entityType } = params;
     const where = entityType ? { entityType } : undefined;
     const [items, total] = await Promise.all([

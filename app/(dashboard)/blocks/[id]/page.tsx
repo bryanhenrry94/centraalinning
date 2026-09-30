@@ -101,18 +101,27 @@ export default async function BlockadeDetailPage({
           <Card>
             <CardContent>
               <Typography variant="h6" fontWeight={600} gutterBottom>
-                Auditlog
+                Activiteitenlog
               </Typography>
 
               <Stack spacing={1.5}>
                 {timeline.map((entry) => (
-                  <Box key={entry.id} sx={{ borderBottom: "1px solid", borderColor: "divider", pb: 1.5 }}>
+                  <Box
+                    key={entry.id}
+                    sx={{
+                      borderBottom: "1px solid",
+                      borderColor: "divider",
+                      pb: 1.5,
+                    }}
+                  >
                     <Typography variant="body2" fontWeight={500}>
                       {entry.description}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       {formatDate(entry.createdAt.toISOString())}
-                      {entry.createdBy?.fullname ? ` — ${entry.createdBy.fullname}` : ""}
+                      {entry.createdBy?.fullname
+                        ? ` — ${entry.createdBy.fullname}`
+                        : ""}
                     </Typography>
                   </Box>
                 ))}
@@ -159,7 +168,10 @@ function InfoRow({ label, value }: InfoRowProps) {
         gap: { xs: 0.25, sm: 2 },
       }}
     >
-      <Typography color="text.secondary" sx={{ minWidth: { xs: "auto", sm: 160 } }}>
+      <Typography
+        color="text.secondary"
+        sx={{ minWidth: { xs: "auto", sm: 160 } }}
+      >
         {label}
       </Typography>
 

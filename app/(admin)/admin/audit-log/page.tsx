@@ -8,7 +8,10 @@ import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { notifyError } from "@/shared/ui/notifications";
 import { formatDateTime } from "@/shared/utils/formatters";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 import { getAdminAuditLog } from "@/modules/admin/actions/admin.actions";
 
 type AuditResult = Awaited<ReturnType<typeof getAdminAuditLog>>;
@@ -32,11 +35,28 @@ export default function AdminAuditLogPage() {
   if (loading || !result) return <LoadingUI />;
 
   const columns: ListColumn<Row>[] = [
-    { key: "createdAt", label: "Datum", render: (r) => formatDateTime(r.createdAt.toString()) },
-    { key: "entityType", label: "Entiteit", render: (r) => `${r.entityType} (${r.entityId.slice(0, 8)}…)` },
+    {
+      key: "createdAt",
+      label: "Datum",
+      render: (r) => formatDateTime(r.createdAt.toString()),
+    },
+    {
+      key: "entityType",
+      label: "Entiteit",
+      render: (r) => `${r.entityType} (${r.entityId.slice(0, 8)}…)`,
+    },
     { key: "field", label: "Veld", render: (r) => r.field },
-    { key: "oldValue", label: "Oude waarde", render: (r) => r.oldValue ?? "-", hideOnMobile: true },
-    { key: "newValue", label: "Nieuwe waarde", render: (r) => r.newValue ?? "-" },
+    {
+      key: "oldValue",
+      label: "Oude waarde",
+      render: (r) => r.oldValue ?? "-",
+      hideOnMobile: true,
+    },
+    {
+      key: "newValue",
+      label: "Nieuwe waarde",
+      render: (r) => r.newValue ?? "-",
+    },
     {
       key: "actor",
       label: "Door",
@@ -47,14 +67,33 @@ export default function AdminAuditLogPage() {
   const totalPages = Math.max(1, Math.ceil(result.total / PAGE_SIZE));
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
-      <AppBreadcrumbs items={[{ label: "CFSB Admin", href: "/admin" }, { label: "Auditlog" }]} />
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+    >
+      <AppBreadcrumbs
+        items={[
+          { label: "CFSB Admin", href: "/admin" },
+          { label: "Activiteitenlog" },
+        ]}
+      />
       <Stack spacing={3}>
         <Typography variant="h4" fontWeight={700}>
-          Auditlog
+          Activiteitenlog
         </Typography>
-        <ResponsiveListTable columns={columns} rows={result.items} getRowKey={(r) => r.id} emptyMessage="Nog geen auditlog-vermeldingen." />
-        <Stack direction="row" spacing={2} alignItems="center" justifyContent="center">
+        <ResponsiveListTable
+          columns={columns}
+          rows={result.items}
+          getRowKey={(r) => r.id}
+          emptyMessage="Nog geen auditlog-vermeldingen."
+        />
+        <Stack
+          direction="row"
+          spacing={2}
+          alignItems="center"
+          justifyContent="center"
+        >
           <Button
             size="small"
             startIcon={<ChevronLeftIcon />}

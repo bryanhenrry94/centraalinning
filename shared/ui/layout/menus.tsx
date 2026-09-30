@@ -22,8 +22,8 @@ import {
   NotificationsOutlined,
   ManageAccountsOutlined,
   HistoryOutlined,
-  ReportProblemOutlined,
   MonitorHeartOutlined,
+  PaidOutlined,
 } from "@mui/icons-material";
 
 export type HeaderMenuItem = {
@@ -241,14 +241,14 @@ export const menuGroups: HeaderMenuGroup[] = [
         icon: <ManageAccountsOutlined fontSize="small" />,
       },
       {
-        label: "Auditlog",
+        label: "Activiteitenlog",
         href: "/admin/audit-log",
         icon: <HistoryOutlined fontSize="small" />,
       },
       {
-        label: "Overtredingen/vergoedingen",
+        label: "CFSB-kosten",
         href: "/admin/administrative-fees",
-        icon: <ReportProblemOutlined fontSize="small" />,
+        icon: <PaidOutlined fontSize="small" />,
       },
       {
         label: "Werkgeverbevestigingen",
@@ -256,7 +256,7 @@ export const menuGroups: HeaderMenuGroup[] = [
         icon: <HandshakeOutlined fontSize="small" />,
       },
       {
-        label: "Systeem-/procescontrole",
+        label: "Systeemprocescontrole",
         href: "/admin/system-control",
         icon: <MonitorHeartOutlined fontSize="small" />,
       },

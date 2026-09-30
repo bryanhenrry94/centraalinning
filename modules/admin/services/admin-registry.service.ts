@@ -330,6 +330,7 @@ export class AdminRegistryService {
       debtorName: personName(c.debtClaim.debtor.person),
       service: c.service,
       concept: c.concept,
+      percentage: c.percentage != null ? Number(c.percentage) : null,
       amount: Number(c.amount),
       status: c.status,
     }));

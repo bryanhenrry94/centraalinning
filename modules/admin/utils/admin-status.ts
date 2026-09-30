@@ -101,9 +101,12 @@ export const TRANSFER_ADMIN_STATUS: Record<string, AdminStatusInfo> = {
 };
 export const getTransferAdminStatusInfo = makeLookup(TRANSFER_ADMIN_STATUS);
 
-// ClaimCharge.status — Overtredingen/vergoedingen.
+// ClaimCharge.status — CFSB-kosten. "In afwachting" is hier bewust niet
+// gebruikt voor PENDING: dat bedrag moet gewoon nog betaald worden, er wordt
+// geen systeemhandeling/verwerking afgewacht (sponsor feedback 2026-09-29,
+// zelfde regel als OBLIGATION_ADMIN_STATUS hieronder).
 export const CHARGE_ADMIN_STATUS: Record<string, AdminStatusInfo> = {
-  PENDING: { label: "In afwachting", color: "primary" },
+  PENDING: { label: "Openstaand", color: "primary" },
   INVOICED: { label: "Gefactureerd", color: "info" },
   PAID: { label: "Betaald", color: "success" },
   WAIVED: { label: "Kwijtgescholden", color: "default" },
