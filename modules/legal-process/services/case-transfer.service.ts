@@ -32,6 +32,14 @@ const caseTransferInclude = {
   lawyer: true,
   bailiff: true,
   legalProcess: { select: { id: true } },
+  // Solo el último, para derivar el werkstatus del abogado ("In behandeling
+  // door advocaat" / "In afwachting van betaling CFSB" / "Afgerond") y para
+  // habilitar "Transferir a deurwaarder" (ver getCaseTransferDisplayStatusInfo).
+  lawyerFeeInvoices: {
+    orderBy: { createdAt: "desc" },
+    take: 1,
+    include: { payment: true },
+  },
 } satisfies Prisma.CaseTransferInclude;
 
 type CaseTransferWithInclude = Prisma.CaseTransferGetPayload<{ include: typeof caseTransferInclude }>;
@@ -45,6 +53,13 @@ function serializeCaseTransfer<T extends CaseTransferWithInclude>(caseTransfer: 
       ...caseTransfer.debtClaim,
       principalAmount: Number(caseTransfer.debtClaim.principalAmount),
     },
+    lawyerFeeInvoices: caseTransfer.lawyerFeeInvoices.map((invoice) => ({
+      ...invoice,
+      totalAmount: Number(invoice.totalAmount),
+      cfsbFeeAmount: Number(invoice.cfsbFeeAmount),
+      taxAmount: Number(invoice.taxAmount),
+      payment: { ...invoice.payment, total_amount: Number(invoice.payment.total_amount) },
+    })),
   };
 }
 
@@ -300,6 +315,20 @@ export class CaseTransferService {
     if (!caseTransfer) throw new Error("Dossier niet gevonden");
     if (caseTransfer.status !== "PENDING_ACCEPTANCE") {
       throw new Error("Het dossier is niet in afwachting van acceptatie");
+    }
+
+    // De advocaat behoudt toegang tot bestaande dossiers, maar mag geen
+    // nieuwe overdracht accepteren zolang er een onbetaalde CFSB-vergoeding
+    // openstaat (feedback sponsor).
+    if (caseTransfer.lawyerId) {
+      const outstandingFee = await prisma.lawyerFeeInvoice.findFirst({
+        where: { status: "PENDING_PAYMENT", caseTransfer: { lawyerId: caseTransfer.lawyerId } },
+      });
+      if (outstandingFee) {
+        throw new Error(
+          "U heeft nog een openstaande CFSB-vergoeding. Betaal deze eerst voordat u een nieuw dossier kunt accepteren.",
+        );
+      }
     }
 
     const acceptedByLawyer = !!caseTransfer.lawyerId;
@@ -658,6 +687,10 @@ export class CaseTransferService {
       mimeType: string;
       size: number;
       buffer: Buffer;
+      verdictFileName?: string;
+      verdictMimeType?: string;
+      verdictSize?: number;
+      verdictBuffer?: Buffer;
     },
     actorUserId?: string,
   ) => {
@@ -669,6 +702,20 @@ export class CaseTransferService {
     if (!caseTransfer.lawyer) throw new Error("Dit dossier heeft geen toegewezen advocaat.");
     if (caseTransfer.status !== "ACCEPTED") {
       throw new Error(`Kan geen honorariumfactuur registreren in de status ${caseTransfer.status}.`);
+    }
+
+    const hasVerdict = params.outcome === "GERECHTELIJK" && params.hasVerdict === true;
+    if (hasVerdict && !params.verdictBuffer) {
+      throw new Error("Upload het vonnisdocument.");
+    }
+
+    const existingPending = await prisma.lawyerFeeInvoice.findFirst({
+      where: { caseTransferId: caseTransfer.id, status: "PENDING_PAYMENT" },
+    });
+    if (existingPending) {
+      throw new Error(
+        "Er is al een honorariumfactuur in afwachting van betaling voor dit dossier.",
+      );
     }
 
     const tenantId = caseTransfer.debtClaim.tenantId;
@@ -744,17 +791,34 @@ export class CaseTransferService {
       await sendInvoiceEmail(caseTransfer.lawyer.email, invoice.id, false);
     }
 
+    if (hasVerdict) {
+      await CaseTransferService.uploadDocument({
+        caseTransferId: caseTransfer.id,
+        tenantId,
+        uploadedById: actorUserId,
+        fileName: params.verdictFileName!,
+        mimeType: params.verdictMimeType!,
+        size: params.verdictSize!,
+        buffer: params.verdictBuffer!,
+        category: "SENTENCIA",
+      });
+    }
+
     await prisma.lawyerFeeInvoice.create({
       data: {
         caseTransferId: caseTransfer.id,
         totalAmount: params.totalAmount,
-        invoiceNumber: params.invoiceNumber,
-        invoiceDate: params.invoiceDate,
+        outcome: params.outcome,
+        hasVerdict: params.outcome === "GERECHTELIJK" ? params.hasVerdict : null,
+        completionDate: params.completionDate,
+        verdictNumber: hasVerdict ? params.verdictNumber : null,
+        verdictDate: hasVerdict ? params.verdictDate : null,
         storageKey,
         originalName: params.fileName,
         mimeType: params.mimeType,
         size: params.size,
         cfsbFeeAmount: fee,
+        taxAmount: tax_amount,
         paymentId: paymentResult.data.paymentId,
       },
     });
@@ -784,12 +848,18 @@ export class CaseTransferService {
       data: { status: "PAID", paidAt: new Date() },
     });
 
-    await prisma.billingInvoice.updateMany({
+    const billingInvoice = await prisma.billingInvoice.update({
       where: { payment_id: paymentId },
       data: { status: "paid" },
     });
 
     const caseTransfer = lawyerFeeInvoice.caseTransfer;
+
+    // Factuur van CFSB (betaald) naar de advocaat — bevestiging dat de
+    // Sentoo-betaling van zijn CFSB-vergoeding is verwerkt.
+    if (caseTransfer.lawyer?.email) {
+      await sendInvoiceEmail(caseTransfer.lawyer.email, billingInvoice.id, true);
+    }
     await prisma.caseTransfer.update({
       where: { id: caseTransfer.id },
       data: { workCompletedAt: new Date(), status: "WORK_COMPLETED" },
@@ -813,6 +883,65 @@ export class CaseTransferService {
         entity_id: caseTransfer.id,
       });
     }
+
+    await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.tenantId, {
+      type: NotificationType.GOP_LAWYER_WORK_FINALIZED,
+      title: "Advocatenfase afgerond",
+      message: `De advocaat heeft dossier ${caseTransfer.debtClaim.reference} afgerond en de CFSB-vergoeding betaald.`,
+      link: `/legal-processes/transfers/${caseTransfer.id}`,
+      entity_type: "CaseTransfer",
+      entity_id: caseTransfer.id,
+    });
+  };
+
+  // Mientras la comisión CFSB (LawyerFeeInvoice) siga PENDING_PAYMENT, el
+  // abogado recibe una herinnering cada ~30 días — además del bloqueo
+  // inmediato que ya aplica cada vez que intenta aceptar una nueva
+  // overdracht (ver acceptTransfer). Llamado por el job programado
+  // check_lawyer_fee_payment_reminders.
+  static sendLawyerFeePaymentReminders = async () => {
+    const REMINDER_INTERVAL_DAYS = 30;
+    const now = new Date();
+    const cutoff = addDays(now, -REMINDER_INTERVAL_DAYS);
+
+    const pendingInvoices = await prisma.lawyerFeeInvoice.findMany({
+      where: { status: "PENDING_PAYMENT" },
+      include: { caseTransfer: { include: { debtClaim: true, lawyer: true } } },
+    });
+
+    let reminders = 0;
+    for (const invoice of pendingInvoices) {
+      const caseTransfer = invoice.caseTransfer;
+      if (!caseTransfer?.lawyer?.userId) continue;
+
+      const lastReminder = await prisma.notification.findFirst({
+        where: {
+          entity_type: "CaseTransfer",
+          entity_id: caseTransfer.id,
+          type: "CASE_TRANSFER_LAWYER_FEE_PAYMENT_REMINDER",
+        },
+        orderBy: { created_at: "desc" },
+      });
+
+      const lastEventAt = lastReminder?.created_at ?? invoice.createdAt;
+      if (lastEventAt > cutoff) continue;
+
+      await NotificationService.create({
+        tenant_id: caseTransfer.debtClaim.tenantId,
+        user_id: caseTransfer.lawyer.userId,
+        type: NotificationType.CASE_TRANSFER_LAWYER_FEE_PAYMENT_REMINDER,
+        title: "Herinnering: openstaande CFSB-vergoeding",
+        message: `U heeft nog een openstaande CFSB-vergoeding voor dossier ${
+          caseTransfer.debtClaim.reference ?? caseTransfer.debtClaimId
+        }. Zolang deze niet betaald is, kunt u geen nieuwe dossieroverdrachten accepteren.`,
+        link: `/legal-processes/transfers/${caseTransfer.id}`,
+        entity_type: "CaseTransfer",
+        entity_id: caseTransfer.id,
+      });
+      reminders++;
+    }
+
+    return { reminders };
   };
 
   // El abogado entrega el expediente al alguacil que va a registrar el

@@ -74,7 +74,7 @@ export const sendBlokkadeMail = async (to: string, caseId: string) => {
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
       to: recipient,
-      subject: "Blokkade",
+      subject: "Economische blokkade",
       react: (
         <BlokkadeEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}

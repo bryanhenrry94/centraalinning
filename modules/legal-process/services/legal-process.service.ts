@@ -1261,12 +1261,18 @@ export class LegalProcessService {
       data: { status: "PAID", paidAt: new Date() },
     });
 
-    await prisma.billingInvoice.updateMany({
+    const billingInvoice = await prisma.billingInvoice.update({
       where: { payment_id: paymentId },
       data: { status: "paid" },
     });
 
     const legalProcess = bailiffFeeInvoice.legalProcess;
+
+    // Factuur van CFSB (betaald) naar de deurwaarder — bevestiging dat de
+    // Sentoo-betaling van zijn CFSB-vergoeding is verwerkt.
+    if (legalProcess.bailiff.email) {
+      await sendInvoiceEmail(legalProcess.bailiff.email, billingInvoice.id, true);
+    }
     await prisma.legalProcess.update({
       where: { id: legalProcess.id },
       data: { gopCompletedGateAt: new Date() },

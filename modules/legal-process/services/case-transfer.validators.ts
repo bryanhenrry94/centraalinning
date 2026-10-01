@@ -33,12 +33,31 @@ export const CancelCaseTransferSchema = z.object({
 });
 export type CancelCaseTransferInput = z.infer<typeof CancelCaseTransferSchema>;
 
-export const SubmitLawyerFeeInvoiceSchema = z.object({
-  caseTransferId: z.string().min(1),
-  totalAmount: z.coerce.number().positive(),
-  invoiceNumber: z.string().nullable().optional(),
-  invoiceDate: z.coerce.date().nullable().optional(),
-});
+export const CaseTransferOutcomeSchema = z.enum(["BUITENGERECHTELIJK", "GERECHTELIJK"]);
+export type CaseTransferOutcome = z.infer<typeof CaseTransferOutcomeSchema>;
+
+export const SubmitLawyerFeeInvoiceSchema = z
+  .object({
+    caseTransferId: z.string().min(1),
+    outcome: CaseTransferOutcomeSchema,
+    hasVerdict: z.boolean().nullable().optional(),
+    completionDate: z.coerce.date(),
+    totalAmount: z.coerce.number().positive(),
+    verdictNumber: z.string().nullable().optional(),
+    verdictDate: z.coerce.date().nullable().optional(),
+  })
+  .refine((data) => data.outcome !== "GERECHTELIJK" || typeof data.hasVerdict === "boolean", {
+    message: "Geef aan of er een vonnis is.",
+    path: ["hasVerdict"],
+  })
+  .refine(
+    (data) => !(data.outcome === "GERECHTELIJK" && data.hasVerdict) || !!data.verdictNumber?.trim(),
+    { message: "Vonnisnummer is verplicht.", path: ["verdictNumber"] },
+  )
+  .refine((data) => !(data.outcome === "GERECHTELIJK" && data.hasVerdict) || !!data.verdictDate, {
+    message: "Datum vonnis is verplicht.",
+    path: ["verdictDate"],
+  });
 export type SubmitLawyerFeeInvoiceInput = z.infer<typeof SubmitLawyerFeeInvoiceSchema>;
 
 export const AssignBailiffForExecutionSchema = z.object({

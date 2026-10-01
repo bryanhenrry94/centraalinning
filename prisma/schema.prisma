@@ -638,9 +638,20 @@ model LawyerFeeInvoice {
   caseTransferId String
   caseTransfer   CaseTransfer @relation(fields: [caseTransferId], references: [id])
 
-  totalAmount   Decimal   @db.Decimal(18, 2) // Honorarios + gastos declarados por el abogado
-  invoiceNumber String?
-  invoiceDate   DateTime?
+  totalAmount Decimal @db.Decimal(18, 2) // Honorarios + gastos declarados por el abogado
+
+  // Uitkomst del "Dossier afronden": "BUITENGERECHTELIJK" | "GERECHTELIJK".
+  // Si GERECHTELIJK, hasVerdict indica si ya hay vonnis — solo entonces son
+  // obligatorios verdictNumber/verdictDate y el documento del vonnis (subido
+  // como CaseTransferDocument category "SENTENCIA", ver
+  // CaseTransferService.submitLawyerFeeInvoice). En ningún caso esto arranca
+  // el GOP: el GOP solo nace cuando el alguacil registra el vonnis (ver
+  // LegalProcessService.registerFirstVerdict).
+  outcome        String
+  hasVerdict     Boolean?
+  completionDate DateTime // "Datum afronding" de la fase del abogado
+  verdictNumber  String?
+  verdictDate    DateTime?
 
   storageKey   String // Factura subida por el abogado
   originalName String
@@ -648,6 +659,7 @@ model LawyerFeeInvoice {
   size         Int
 
   cfsbFeeAmount Decimal @db.Decimal(18, 2) // 5% de totalAmount
+  taxAmount     Decimal @db.Decimal(18, 2) @default(0) // ABB sobre cfsbFeeAmount
 
   paymentId String  @unique
   payment   Payment @relation(fields: [paymentId], references: [id])
@@ -1925,6 +1937,7 @@ enum NotificationType {
   FAR_REGISTERED
   DEBTOR_COLLECTION_FEE_PAID
   CASE_TRANSFER_POWER_OF_ATTORNEY_CHANGED
+  CASE_TRANSFER_LAWYER_FEE_PAYMENT_REMINDER
   GOP_PAYMENT_AWAITING_CONFIRMATION
   GOP_PAYMENT_CONFIRMED
   GOP_PAYMENT_DISPUTED

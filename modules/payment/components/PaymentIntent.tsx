@@ -20,6 +20,11 @@ export interface PaymentIntentProps {
   onPaymentFailed?: (paymentId: string) => Promise<void>;
   pollingInterval?: number;
   timeout?: number;
+  // Retoma un pago Sentoo ya creado (p.ej. una LawyerFeeInvoice que quedó
+  // PENDING_PAYMENT) en vez de crear una transacción nueva — evita duplicar
+  // el Payment/factuur subyacente al reabrir la pantalla.
+  existingPayment?: { paymentId: string; paymentUrl: string };
+  buttonLabel?: string;
 }
 
 export const PaymentIntent: React.FC<PaymentIntentProps> = ({
@@ -28,12 +33,21 @@ export const PaymentIntent: React.FC<PaymentIntentProps> = ({
   onPaymentFailed,
   pollingInterval = 5000,
   timeout = 120000,
+  existingPayment,
+  buttonLabel = "Nu betalen",
 }) => {
   const [open, setOpen] = useState(false);
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handlePayNow = async () => {
+    if (existingPayment) {
+      setPaymentId(existingPayment.paymentId);
+      window.open(existingPayment.paymentUrl, "_blank");
+      setOpen(true);
+      return;
+    }
+
     try {
       setLoading(true);
       const { success, paymentId, paymentUrl, error } =
@@ -117,7 +131,7 @@ export const PaymentIntent: React.FC<PaymentIntentProps> = ({
         }}
         disabled={loading}
       >
-        {loading ? "Verwerken..." : "Nu betalen"}
+        {loading ? "Verwerken..." : buttonLabel}
       </Button>
 
       <Dialog open={open} disableEscapeKeyDown>

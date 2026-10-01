@@ -142,18 +142,27 @@ export const rejectOverdueCaseTransfer = async (caseTransferId: string) => {
   return CaseTransferService.rejectTransfer(caseTransferId, reason, session.user.id);
 };
 
-export const submitLawyerFeeInvoice = async (data: SubmitLawyerFeeInvoiceInput, file: File) => {
+export const submitLawyerFeeInvoice = async (
+  data: SubmitLawyerFeeInvoiceInput,
+  invoiceFile: File,
+  verdictFile?: File | null,
+) => {
   const parsed = SubmitLawyerFeeInvoiceSchema.parse(data);
   const { session } = await requireAssignedLawyer(parsed.caseTransferId);
-  const buffer = Buffer.from(await file.arrayBuffer());
+  const buffer = Buffer.from(await invoiceFile.arrayBuffer());
+  const verdictBuffer = verdictFile ? Buffer.from(await verdictFile.arrayBuffer()) : undefined;
 
   return CaseTransferService.submitLawyerFeeInvoice(
     {
       ...parsed,
-      fileName: file.name,
-      mimeType: file.type,
-      size: file.size,
+      fileName: invoiceFile.name,
+      mimeType: invoiceFile.type,
+      size: invoiceFile.size,
       buffer,
+      verdictFileName: verdictFile?.name,
+      verdictMimeType: verdictFile?.type,
+      verdictSize: verdictFile?.size,
+      verdictBuffer,
     },
     session.user.id,
   );

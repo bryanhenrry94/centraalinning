@@ -40,24 +40,24 @@ type CaseTransferListItem = Awaited<
 >[number];
 
 const QUICK_ACTIONS = [
-  {
-    label: "Nieuwe dossieroverdrachten",
-    description: "Bekijk en accepteer wachtende overdrachten",
-    href: "/legal-processes?tab=pending",
-    icon: <MoveToInboxOutlinedIcon fontSize="small" />,
-  },
+  // {
+  //   label: "Nieuwe dossieroverdrachten",
+  //   description: "Bekijk en accepteer wachtende overdrachten",
+  //   href: "/legal-processes?tab=pending",
+  //   icon: <MoveToInboxOutlinedIcon fontSize="small" />,
+  // },
   {
     label: "Mijn dossiers",
     description: "Overzicht van al uw overgedragen dossiers",
     href: "/legal-processes",
     icon: <GavelOutlinedIcon fontSize="small" />,
   },
-  {
-    label: "Documenten",
-    description: "Bijlagen",
-    href: "/documents",
-    icon: <DescriptionOutlinedIcon fontSize="small" />,
-  },
+  // {
+  //   label: "Documenten",
+  //   description: "Bijlagen",
+  //   href: "/documents",
+  //   icon: <DescriptionOutlinedIcon fontSize="small" />,
+  // },
   {
     label: "Feedback & Ondersteuning",
     description: "Tip, klacht of technisch probleem melden",

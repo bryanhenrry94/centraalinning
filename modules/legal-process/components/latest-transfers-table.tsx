@@ -29,6 +29,7 @@ import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { getMyCaseTransfersAsLawyer } from "@/modules/legal-process/actions/case-transfer.actions";
 import { getCaseTransferStatusInfo } from "@/modules/legal-process/utils/case-transfer-status";
+import { CaseTransferStatus } from "@/modules/legal-process/constants/case-transfer-status";
 import { RejectTransferDialog } from "@/modules/legal-process/components/reject-transfer-dialog";
 import { AcceptTransferDialog } from "@/modules/legal-process/components/accept-transfer-dialog";
 
@@ -58,7 +59,7 @@ export const LatestTransfersTable = ({
   const router = useRouter();
   const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
   const [rejectId, setRejectId] = useState<string | null>(null);
-  const [acceptId, setAcceptId] = useState<string | null>(null);
+  const [acceptItem, setAcceptItem] = useState<CaseTransferListItem | null>(null);
 
   const debtorName = (item: CaseTransferListItem) =>
     item.debtClaim.debtor?.person
@@ -152,7 +153,7 @@ export const LatestTransfersTable = ({
                 <IconButton
                   size="small"
                   color="success"
-                  onClick={() => setAcceptId(item.id)}
+                  onClick={() => setAcceptItem(item)}
                 >
                   <CheckIcon fontSize="small" />
                 </IconButton>
@@ -215,21 +216,23 @@ export const LatestTransfersTable = ({
                     </TableCell>
                     <TableCell align="center">
                       <Stack direction="row" spacing={0.5} justifyContent="center">
-                        <Tooltip title="Bekijken">
-                          <IconButton
-                            size="small"
-                            onClick={() =>
-                              router.push(`/legal-processes/transfers/${item.id}`)
-                            }
-                          >
-                            <VisibilityIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                        {item.status !== CaseTransferStatus.PENDING_ACCEPTANCE && (
+                          <Tooltip title="Bekijken">
+                            <IconButton
+                              size="small"
+                              onClick={() =>
+                                router.push(`/legal-processes/transfers/${item.id}`)
+                              }
+                            >
+                              <VisibilityIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
                         <Tooltip title="Accepteren">
                           <IconButton
                             size="small"
                             color="success"
-                            onClick={() => setAcceptId(item.id)}
+                            onClick={() => setAcceptItem(item)}
                           >
                             <CheckIcon fontSize="small" />
                           </IconButton>
@@ -260,10 +263,21 @@ export const LatestTransfersTable = ({
         onRegistered={onChanged}
       />
       <AcceptTransferDialog
-        open={!!acceptId}
-        onClose={() => setAcceptId(null)}
-        caseTransferId={acceptId ?? ""}
+        open={!!acceptItem}
+        onClose={() => setAcceptItem(null)}
+        caseTransferId={acceptItem?.id ?? ""}
         onRegistered={onChanged}
+        details={
+          acceptItem
+            ? {
+                reference: acceptItem.debtClaim.reference ?? "-",
+                participant: acceptItem.debtClaim.tenant.name,
+                debtor: debtorName(acceptItem),
+                amount: Number(acceptItem.debtClaim.principalAmount) || 0,
+                receivedAt: acceptItem.createdAt,
+              }
+            : undefined
+        }
       />
     </>
   );

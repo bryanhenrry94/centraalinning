@@ -30,7 +30,7 @@ import {
   getCaseTransferAgreements,
   decideCaseTransferAgreement,
 } from "@/modules/legal-process/actions/case-transfer.actions";
-import { getCaseTransferStatusInfo } from "@/modules/legal-process/utils/case-transfer-status";
+import { getCaseTransferDisplayStatusInfo } from "@/modules/legal-process/utils/case-transfer-status";
 import { CaseTransferStatus } from "@/modules/legal-process/constants/case-transfer-status";
 import { GopTimeline } from "@/modules/legal-process/components/gop-timeline";
 import { CaseTransferDocuments } from "@/modules/legal-process/components/case-transfer-documents";
@@ -44,6 +44,7 @@ import { PowerOfAttorneyDialog } from "@/modules/legal-process/components/power-
 import { ProposeCaseTransferAgreementDialog } from "@/modules/legal-process/components/propose-case-transfer-agreement-dialog";
 import { AgreementDecisionDialog } from "@/modules/agreement/components/agreement-decision-dialog";
 import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
+import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 
 type CaseTransferDetail = Awaited<ReturnType<typeof getCaseTransferById>>;
 
@@ -130,7 +131,10 @@ const CaseTransferDetailPage: React.FC = () => {
     );
   }
 
-  const statusInfo = getCaseTransferStatusInfo(caseTransfer.status);
+  const statusInfo = getCaseTransferDisplayStatusInfo(caseTransfer);
+  const latestLawyerFeeInvoice = caseTransfer.lawyerFeeInvoices[0];
+  const pendingLawyerFeeInvoice =
+    latestLawyerFeeInvoice?.status === "PENDING_PAYMENT" ? latestLawyerFeeInvoice : undefined;
   const debtorName = caseTransfer.debtClaim.debtor?.person
     ? `${caseTransfer.debtClaim.debtor.person.first_name ?? ""} ${caseTransfer.debtClaim.debtor.person.last_name ?? ""}`.trim()
     : "-";
@@ -176,13 +180,19 @@ const CaseTransferDetailPage: React.FC = () => {
     isLawyer &&
     isLawyerTrack &&
     caseTransfer.status === CaseTransferStatus.ACCEPTED &&
-    !caseTransfer.workCompletedAt;
+    !caseTransfer.workCompletedAt &&
+    !pendingLawyerFeeInvoice;
 
+  // Solo si el resultado fue "Gerechtelijk behandeld" Y hay un vonnis
+  // registrado — sin vonnis no hay nada que ejecutar, el dossier se queda
+  // cerrado en la fase del abogado (feedback sponsor).
   const showTransferToBailiffButton =
     isLawyer &&
     isLawyerTrack &&
     !!caseTransfer.workCompletedAt &&
-    !caseTransfer.bailiffId;
+    !caseTransfer.bailiffId &&
+    latestLawyerFeeInvoice?.outcome === "GERECHTELIJK" &&
+    latestLawyerFeeInvoice?.hasVerdict === true;
 
   // Solo el participante puede cancelar, y únicamente mientras no exista un
   // GOP real (todavía no se registró ningún vonnis).
@@ -283,28 +293,32 @@ const CaseTransferDetailPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader title="Ontvangen brieven (AOP)" />
-          <Divider />
-          <CardContent>
-            <CaseTransferAopLetters
-              caseTransferId={caseTransfer.id}
-              debtClaimId={caseTransfer.debtClaimId}
-            />
-          </CardContent>
-        </Card>
+        {caseTransfer.status !== CaseTransferStatus.PENDING_ACCEPTANCE && (
+          <Card>
+            <CardHeader title="Ontvangen brieven (AOP)" />
+            <Divider />
+            <CardContent>
+              <CaseTransferAopLetters
+                caseTransferId={caseTransfer.id}
+                debtClaimId={caseTransfer.debtClaimId}
+              />
+            </CardContent>
+          </Card>
+        )}
 
-        <Card>
-          <CardHeader title="Documenten" />
-          <Divider />
-          <CardContent>
-            <CaseTransferDocuments
-              caseTransferId={caseTransfer.id}
-              canUpload={isStaff || isBailiffRole || isLawyer}
-              canViewContent={isStaff || caseTransfer.status !== CaseTransferStatus.PENDING_ACCEPTANCE}
-            />
-          </CardContent>
-        </Card>
+        {caseTransfer.status !== CaseTransferStatus.PENDING_ACCEPTANCE && (
+          <Card>
+            <CardHeader title="Documenten" />
+            <Divider />
+            <CardContent>
+              <CaseTransferDocuments
+                caseTransferId={caseTransfer.id}
+                canUpload={isStaff || isBailiffRole || isLawyer}
+                canViewContent
+              />
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader
@@ -415,27 +429,98 @@ const CaseTransferDetailPage: React.FC = () => {
               {showFinalizeLawyerWorkButton && (
                 <Stack spacing={2} alignItems="flex-start">
                   <Typography variant="body2" color="text.secondary">
-                    Antes de transferir la sentencia al agente judicial, registre sus honorarios,
-                    suba su factura y pague la comisión del CFSB (5%) sobre ese monto.
+                    Registreer de uitkomst, het honorarium en de factuur om deze fase af te
+                    ronden.
                   </Typography>
                   <Button variant="contained" onClick={() => setDialog("finalize-lawyer-work")}>
-                    Finalizar trabajo
+                    Dossier afronden
                   </Button>
                 </Stack>
               )}
               {showTransferToBailiffButton && (
                 <Stack spacing={2} alignItems="flex-start">
-                  <Chip label="Trabajo finalizado" color="success" sx={{ fontWeight: 700 }} />
+                  <Chip label="Vonnis geregistreerd" color="success" sx={{ fontWeight: 700 }} />
                   <Typography variant="body2" color="text.secondary">
-                    Antes de continuar, adjunte el documento del Vonnis en la sección Documenten
-                    (tipo &quot;Vonnis&quot;). Sin ese documento no se puede transferir el
-                    expediente al agente judicial.
+                    Vonnisnummer {latestLawyerFeeInvoice?.verdictNumber} van{" "}
+                    {latestLawyerFeeInvoice?.verdictDate
+                      ? formatDate(latestLawyerFeeInvoice.verdictDate.toString())
+                      : "-"}
+                    . Draag het dossier over aan de deurwaarder voor executie.
                   </Typography>
                   <Button variant="contained" onClick={() => setDialog("transfer-to-bailiff")}>
-                    Transferir sentencia al agente judicial
+                    Overdragen aan deurwaarder
                   </Button>
                 </Stack>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {isLawyer && isLawyerTrack && pendingLawyerFeeInvoice && (
+          <Card>
+            <CardHeader title="Betaling CFSB-vergoeding" />
+            <Divider />
+            <CardContent>
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                CFSB berekent 5% over het geregistreerde honorarium, plus toepasselijke belasting.
+                Betaal de vergoeding via Sentoo zodat de advocatenfase de status &quot;Afgerond&quot;
+                krijgt.
+              </Typography>
+              <Stack spacing={1} sx={{ mb: 2 }}>
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="body2" color="text.secondary">
+                    Totaal honorarium
+                  </Typography>
+                  <Typography variant="body2" fontWeight={600}>
+                    {formatCurrency(pendingLawyerFeeInvoice.totalAmount)}
+                  </Typography>
+                </Stack>
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="body2" color="text.secondary">
+                    CFSB-vergoeding (5%)
+                  </Typography>
+                  <Typography variant="body2" fontWeight={600}>
+                    {formatCurrency(pendingLawyerFeeInvoice.cfsbFeeAmount)}
+                  </Typography>
+                </Stack>
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="body2" color="text.secondary">
+                    Belasting
+                  </Typography>
+                  <Typography variant="body2" fontWeight={600}>
+                    {formatCurrency(pendingLawyerFeeInvoice.taxAmount)}
+                  </Typography>
+                </Stack>
+                <Divider />
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    Totaal te betalen
+                  </Typography>
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    {formatCurrency(
+                      pendingLawyerFeeInvoice.cfsbFeeAmount + pendingLawyerFeeInvoice.taxAmount,
+                    )}
+                  </Typography>
+                </Stack>
+              </Stack>
+              <Chip
+                size="small"
+                color="warning"
+                label="In afwachting van betaling CFSB"
+                sx={{ fontWeight: 700, mb: 2 }}
+              />
+              <PaymentIntent
+                onCreateTransaction={async () => ({ success: false, error: "N/A" })}
+                existingPayment={{
+                  paymentId: pendingLawyerFeeInvoice.payment.id,
+                  paymentUrl: pendingLawyerFeeInvoice.payment.payment_url ?? "",
+                }}
+                onPaymentConfirmed={async () => {
+                  notifySuccess("Betaling bevestigd. Advocatenfase afgerond.");
+                  refresh();
+                }}
+                buttonLabel="Nu betalen via Sentoo"
+              />
             </CardContent>
           </Card>
         )}
@@ -489,6 +574,13 @@ const CaseTransferDetailPage: React.FC = () => {
         onClose={() => setDialog(null)}
         caseTransferId={caseTransfer.id}
         onRegistered={refresh}
+        details={{
+          reference: caseTransfer.debtClaim.reference ?? "-",
+          participant: caseTransfer.debtClaim.tenant.name,
+          debtor: debtorName,
+          amount: Number(caseTransfer.debtClaim.principalAmount) || 0,
+          receivedAt: caseTransfer.createdAt,
+        }}
       />
       <RejectTransferDialog
         open={dialog === "reject"}
