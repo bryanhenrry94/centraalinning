@@ -42,6 +42,10 @@ export interface ListColumn<T> {
   // acciones) que si no quedan estiradas por el auto-layout de <Table>,
   // dejando mucho espacio en blanco. No afecta la card mobile.
   width?: string | number;
+  // Uitlijning van de waarde in de mobile-kaart (los van `align`, dat alleen
+  // de desktop-tabel stuurt). Standaard "right" — bestaand gedrag ongewijzigd
+  // — maar voor een primair identificatieveld (bv. "Naam") leest links beter.
+  valueAlign?: "left" | "right";
 }
 
 interface ResponsiveListTableProps<T> {
@@ -124,7 +128,9 @@ export function ResponsiveListTable<T>({
                   <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
                     {col.label}
                   </Typography>
-                  <Box sx={{ textAlign: "right", minWidth: 0 }}>{col.render(row)}</Box>
+                  <Box sx={{ textAlign: col.valueAlign ?? "right", minWidth: 0 }}>
+                    {col.render(row)}
+                  </Box>
                 </Stack>
               ))}
             </Stack>

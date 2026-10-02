@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Card, CardContent, Container, Grid, Stack, Typography } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  Container,
+  Grid,
+  Stack,
+  Typography,
+} from "@mui/material";
 import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { notifyError } from "@/shared/ui/notifications";
@@ -33,14 +40,21 @@ export default function AdminPersonDetailPage() {
     );
   }
 
-  const name = `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim() || person.business_name || "-";
+  const name =
+    `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim() ||
+    person.business_name ||
+    "-";
 
   return (
-    <Container maxWidth="md" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
+    <Container
+      maxWidth="md"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+    >
       <AppBreadcrumbs
         items={[
           { label: "CFSB Admin", href: "/admin" },
-          { label: "Personenregister", href: "/admin/persons" },
+          { label: "Identiteitenregister", href: "/admin/persons" },
           { label: name },
         ]}
       />
@@ -52,7 +66,10 @@ export default function AdminPersonDetailPage() {
           <CardContent>
             <Grid container spacing={2.5}>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField label="Persoonlijk nummer" value={person.personal_number} />
+                <InfoField
+                  label="Persoonlijk nummer"
+                  value={person.personal_number}
+                />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <InfoField label="Type" value={person.person_type} />
@@ -73,7 +90,10 @@ export default function AdminPersonDetailPage() {
                 <InfoField label="Land/eiland" value={person.country_code} />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField label="Aangemaakt op" value={formatDate(person.created_at.toString())} />
+                <InfoField
+                  label="Aangemaakt op"
+                  value={formatDate(person.created_at.toString())}
+                />
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <InfoField label="Adres" value={person.address} />

@@ -136,7 +136,7 @@ export const menuGroups: HeaderMenuGroup[] = [
         icon: <BusinessOutlined fontSize="small" />,
       },
       {
-        label: "Personenregister",
+        label: "Identiteitenregister",
         href: "/admin/persons",
         icon: <BadgeOutlined fontSize="small" />,
       },

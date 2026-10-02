@@ -56,7 +56,7 @@ export default function AdminTenantDetailPage() {
                 <InfoField label="Subdomein" value={tenant.subdomain} />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField label="Land/eiland" value={tenant.country_code} />
+                <InfoField label="Land/eiland" value={tenant.jurisdiction?.name ?? tenant.country_code} />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <InfoField label="Contact e-mail" value={tenant.contact_email} />

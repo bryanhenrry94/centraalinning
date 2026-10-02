@@ -48,6 +48,17 @@ export class PersonService {
     })) as PersonInput[];
   }
 
+  // Volledige rijen (incl. personal_number/jurisdictie/created_at) voor CFSB
+  // Admin > Identiteitenregister — getAll() hierboven blijft bewust de smalle
+  // PersonInput-vorm teruggeven, want die wordt ook buiten de admin gebruikt
+  // (zie modules/collection/actions/person.actions.ts).
+  static async getAllForAdmin() {
+    return prisma.person.findMany({
+      include: { jurisdiction: true },
+      orderBy: { created_at: "desc" },
+    });
+  }
+
   static async getByIdentificationTypeAndValue(
     identificationType: IdentificationTypeEnum,
     identification: string,

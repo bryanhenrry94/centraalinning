@@ -34,7 +34,7 @@ export const setAdminTenantActive = async (id: string, isActive: boolean) => {
 
 export const getAdminPersons = async () => {
   await requirePlatformOwner();
-  return PersonService.getAll();
+  return PersonService.getAllForAdmin();
 };
 
 export const getAdminPersonById = async (id: string) => {

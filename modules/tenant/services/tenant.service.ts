@@ -8,6 +8,7 @@ export class TenantService {
   static getById = async (tenantId: string) => {
     return await prisma.tenant.findUnique({
       where: { id: tenantId },
+      include: { jurisdiction: true },
     });
   };
 
@@ -82,7 +83,10 @@ export class TenantService {
   // listado que alimenta CFSB Admin > Deelnemers y cualquier selector de
   // "elegir un cliente" (p.ej. facturación).
   static getAll = async () => {
-    return prisma.tenant.findMany({ where: { is_platform_tenant: false } });
+    return prisma.tenant.findMany({
+      where: { is_platform_tenant: false },
+      include: { jurisdiction: true },
+    });
   };
 
   // Tenants activos de la red — usado por el broadcast de red de COP

@@ -114,7 +114,7 @@ export function TenantDetailsDrawer({ open, tenantId, onClose }: TenantDetailsDr
                   <InfoField label="Juridische naam" value={tenant.legal_name} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <InfoField label="Land/eiland" value={tenant.country_code} />
+                  <InfoField label="Land/eiland" value={tenant.jurisdiction?.name ?? tenant.country_code} />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <InfoField label="Contact e-mail" value={tenant.contact_email} />

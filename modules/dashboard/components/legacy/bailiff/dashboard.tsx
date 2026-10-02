@@ -4,15 +4,25 @@ import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Box,
-  Card,
-  CardContent,
+  Container,
   Grid,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Paper,
   Stack,
   Typography,
-  Button,
-  Paper,
 } from "@mui/material";
+import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
+import MoveToInboxOutlinedIcon from "@mui/icons-material/MoveToInboxOutlined";
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
+import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
+import StatCard from "@/modules/dashboard/components/StatCard";
 import { getMyLegalProcessesAsBailiff } from "@/modules/legal-process/actions/legal-process.actions";
 import { getMyCaseTransfersAsBailiff } from "@/modules/legal-process/actions/case-transfer.actions";
 import { OPEN_LEGAL_PROCESS_STATUSES } from "@/modules/legal-process/constants/legal-process-status";
@@ -20,18 +30,34 @@ import { CaseTransferStatus } from "@/modules/legal-process/constants/case-trans
 import { LatestTransfersTable } from "@/modules/legal-process/components/latest-transfers-table";
 import { notifyError } from "@/shared/ui/notifications";
 
-function MetricCard({ title, value }: { title: string; value: number }) {
-  return (
-    <Card>
-      <CardContent>
-        <Typography color="text.secondary">{title}</Typography>
-        <Typography variant="h4" fontWeight={700}>
-          {value}
-        </Typography>
-      </CardContent>
-    </Card>
-  );
-}
+const LATEST_TRANSFERS_LIMIT = 5;
+
+const QUICK_ACTIONS = [
+  {
+    label: "Mijn dossiers",
+    description: "Overzicht van al uw toegewezen dossiers",
+    href: "/legal-processes",
+    icon: <GavelOutlinedIcon fontSize="small" />,
+  },
+  {
+    label: "Vonnissen",
+    description: "Geregistreerde vonnissen en GOP-opvolging",
+    href: "/verdicts",
+    icon: <ArticleOutlinedIcon fontSize="small" />,
+  },
+  {
+    label: "Documenten",
+    description: "Bijlagen en dossierdocumenten",
+    href: "/documents",
+    icon: <DescriptionOutlinedIcon fontSize="small" />,
+  },
+  {
+    label: "Feedback & Ondersteuning",
+    description: "Tip, klacht of technisch probleem melden",
+    href: "/support",
+    icon: <HelpOutlineOutlinedIcon fontSize="small" />,
+  },
+];
 
 export const DashboardBailiff = () => {
   const [legalProcesses, setLegalProcesses] = useState<
@@ -84,74 +110,93 @@ export const DashboardBailiff = () => {
   );
 
   return (
-    <Box p={3}>
-      <Typography variant="h4" fontWeight={700} mb={3}>
-        Dashboard
-      </Typography>
+    <Container maxWidth="xl" sx={{ py: { xs: 1.5, sm: 4 } }}>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" fontWeight={700}>
+          Deurwaarder Dashboard
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Welkom terug. Hieronder een overzicht van uw dossiers.
+        </Typography>
+      </Box>
 
-      <Grid container spacing={3} mb={3}>
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <MetricCard
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <StatCard
             title="Mijn dossiers"
             value={loading ? 0 : pendingCount}
+            subtitle="wachten op actie"
+            color="#E67E22"
+            icon={<MoveToInboxOutlinedIcon />}
+            href="/legal-processes?tab=pending"
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <MetricCard
-            title="Actieve dossiers"
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <StatCard
+            title="Actieve GOP-dossiers"
             value={loading ? 0 : activeCount}
+            subtitle="actieve dossiers"
+            color="#0C284C"
+            icon={<AssignmentOutlinedIcon />}
+            href="/legal-processes"
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <MetricCard
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <StatCard
             title="Totaal toegewezen"
             value={loading ? 0 : totalCount}
+            subtitle="dossiers"
+            color="#00897b"
+            icon={<GavelOutlinedIcon />}
+            href="/legal-processes"
           />
         </Grid>
       </Grid>
 
-      <Paper
-        variant="outlined"
-        sx={{ p: 2.5, borderRadius: 2, bgcolor: "white", mb: 3 }}
-      >
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          sx={{ mb: 1.5 }}
-        >
-          <Typography variant="subtitle1" fontWeight={700}>
-            Mijn dossiers
-          </Typography>
-          <Button
-            component={Link}
-            href="/legal-processes?tab=pending"
-            size="small"
-          >
-            Bekijk alle
-          </Button>
-        </Stack>
-        <LatestTransfersTable items={pendingAcceptanceItems} onChanged={load} />
-      </Paper>
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, md: 8 }}>
+          <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2, bgcolor: "white" }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+              <Typography variant="subtitle1" fontWeight={700}>
+                Nieuwe dossieroverdrachten
+              </Typography>
+            </Stack>
+            <LatestTransfersTable
+              items={pendingAcceptanceItems.slice(0, LATEST_TRANSFERS_LIMIT)}
+              onChanged={load}
+            />
+          </Paper>
+        </Grid>
 
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-        <Button
-          component={Link}
-          href="/legal-processes"
-          variant="contained"
-          size="large"
-        >
-          Mijn dossiers
-        </Button>
-        <Button
-          component={Link}
-          href="/documents"
-          variant="outlined"
-          size="large"
-        >
-          Documenten
-        </Button>
-      </Stack>
-    </Box>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2, bgcolor: "white" }}>
+            <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
+              Snelle acties
+            </Typography>
+            <List disablePadding>
+              {QUICK_ACTIONS.map((action) => (
+                <ListItemButton
+                  key={action.href}
+                  component={Link}
+                  href={action.href}
+                  sx={{ borderRadius: 1.5, mb: 0.5 }}
+                >
+                  <ListItemIcon sx={{ minWidth: 36 }}>{action.icon}</ListItemIcon>
+                  <ListItemText
+                    primary={action.label}
+                    secondary={action.description}
+                    slotProps={{
+                      primary: { variant: "body2", fontWeight: 600 },
+                      secondary: { variant: "caption" },
+                    }}
+                  />
+                  <ChevronRightIcon fontSize="small" color="action" />
+                </ListItemButton>
+              ))}
+            </List>
+          </Paper>
+        </Grid>
+      </Grid>
+    </Container>
   );
 };

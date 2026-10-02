@@ -40,7 +40,7 @@ const QUICK_LINKS = [
     icon: <BusinessOutlined fontSize="small" />,
   },
   {
-    label: "Personenregister",
+    label: "Identiteitenregister",
     href: "/admin/persons",
     icon: <GroupsOutlined fontSize="small" />,
   },
