@@ -653,6 +653,14 @@ model LawyerFeeInvoice {
   verdictNumber  String?
   verdictDate    DateTime?
 
+  // Deurwaarder die de advocaat tijdens "Dossier afronden" selecteerde voor
+  // tenuitvoerlegging (alleen als hasVerdict true is). Wordt pas naar
+  // CaseTransfer.bailiffId gekopieerd en genotificeerd zodra de
+  // CFSB-vergoeding betaald is (zie CaseTransferService.processLawyerFeePaymentConfirmed)
+  // — niet eerder, zodat de deurwaarder het vonnis niet ontvangt vóór betaling.
+  selectedBailiffId String?
+  selectedBailiff   Bailiff? @relation(fields: [selectedBailiffId], references: [id])
+
   storageKey   String // Factura subida por el abogado
   originalName String
   mimeType     String
@@ -1759,8 +1767,9 @@ model Bailiff {
 
   verdicts Verdict[] @relation("BailiffToVerdict")
 
-  legalProcesses LegalProcess[]
-  caseTransfers  CaseTransfer[]
+  legalProcesses    LegalProcess[]
+  caseTransfers     CaseTransfer[]
+  lawyerFeeInvoices LawyerFeeInvoice[]
 
   @@index([status])
   @@map("bailiff")

@@ -45,6 +45,10 @@ export const SubmitLawyerFeeInvoiceSchema = z
     totalAmount: z.coerce.number().positive(),
     verdictNumber: z.string().nullable().optional(),
     verdictDate: z.coerce.date().nullable().optional(),
+    // Deurwaarder voor tenuitvoerlegging — alleen verplicht/relevant als er een
+    // vonnis is. Wordt pas aan CaseTransfer.bailiffId gekoppeld en genotificeerd
+    // nadat de CFSB-vergoeding betaald is (zie CaseTransferService).
+    bailiffId: z.string().nullable().optional(),
   })
   .refine((data) => data.outcome !== "GERECHTELIJK" || typeof data.hasVerdict === "boolean", {
     message: "Geef aan of er een vonnis is.",
@@ -57,11 +61,9 @@ export const SubmitLawyerFeeInvoiceSchema = z
   .refine((data) => !(data.outcome === "GERECHTELIJK" && data.hasVerdict) || !!data.verdictDate, {
     message: "Datum vonnis is verplicht.",
     path: ["verdictDate"],
+  })
+  .refine((data) => !(data.outcome === "GERECHTELIJK" && data.hasVerdict) || !!data.bailiffId, {
+    message: "Selecteer de deurwaarder voor tenuitvoerlegging.",
+    path: ["bailiffId"],
   });
 export type SubmitLawyerFeeInvoiceInput = z.infer<typeof SubmitLawyerFeeInvoiceSchema>;
-
-export const AssignBailiffForExecutionSchema = z.object({
-  caseTransferId: z.string().min(1),
-  bailiffId: z.string().min(1),
-});
-export type AssignBailiffForExecutionInput = z.infer<typeof AssignBailiffForExecutionSchema>;

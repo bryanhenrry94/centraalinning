@@ -4,7 +4,6 @@ import { addDays, startOfDay } from "date-fns";
 import {
   TransferToLawyerInput,
   SubmitLawyerFeeInvoiceInput,
-  AssignBailiffForExecutionInput,
 } from "@/modules/legal-process/services/case-transfer.validators";
 import { DEFAULT_GOP_FEE_RATE_PERCENT } from "@/modules/legal-process/constants/legal-process-status";
 import { ClaimTimelineService } from "@/modules/collection/services/claim-timeline.service";
@@ -349,6 +348,26 @@ export class CaseTransferService {
       undefined,
       actorUserId,
     );
+
+    // Zodra de overdracht is geaccepteerd, stopt de actieve AOP-opvolging
+    // door CFSB (sponsor-flow punt 2) — anders blijft het aanmaning/sommatie-
+    // schema (process_aop_workflow) doorlopen terwijl de advocaat/deurwaarder
+    // het dossier al inhoudelijk behandelt. Alleen relevant als de AOP nog
+    // ACTIVE was (p.ej. de overdracht kwam via een losstaande actieve
+    // Blokkade, niet via een AOP die al BLK_NOTIFICATION bereikte).
+    const closedAop = await prisma.administrativeCollection.updateMany({
+      where: { debtClaimId: caseTransfer.debtClaimId, status: "ACTIVE" },
+      data: { status: "CLOSED", finishedAt: new Date() },
+    });
+    if (closedAop.count > 0) {
+      await ClaimTimelineService.logEvent(
+        caseTransfer.debtClaimId,
+        "STATUS_CHANGED",
+        "De actieve AOP-opvolging is stopgezet nu het dossier is overgedragen aan de advocaat/deurwaarder.",
+        undefined,
+        actorUserId,
+      );
+    }
 
     await NotificationService.notifyTenantStaff(
       caseTransfer.debtClaim.tenantId,
@@ -708,6 +727,13 @@ export class CaseTransferService {
     if (hasVerdict && !params.verdictBuffer) {
       throw new Error("Upload het vonnisdocument.");
     }
+    if (hasVerdict && !params.bailiffId) {
+      throw new Error("Selecteer de deurwaarder voor tenuitvoerlegging.");
+    }
+    if (hasVerdict && params.bailiffId) {
+      const selectedBailiff = await prisma.bailiff.findUnique({ where: { id: params.bailiffId } });
+      if (!selectedBailiff) throw new Error("Deurwaarder niet gevonden");
+    }
 
     const existingPending = await prisma.lawyerFeeInvoice.findFirst({
       where: { caseTransferId: caseTransfer.id, status: "PENDING_PAYMENT" },
@@ -813,6 +839,7 @@ export class CaseTransferService {
         completionDate: params.completionDate,
         verdictNumber: hasVerdict ? params.verdictNumber : null,
         verdictDate: hasVerdict ? params.verdictDate : null,
+        selectedBailiffId: hasVerdict ? params.bailiffId : null,
         storageKey,
         originalName: params.fileName,
         mimeType: params.mimeType,
@@ -839,7 +866,10 @@ export class CaseTransferService {
   static processLawyerFeePaymentConfirmed = async (paymentId: string) => {
     const lawyerFeeInvoice = await prisma.lawyerFeeInvoice.findUnique({
       where: { paymentId },
-      include: { caseTransfer: { include: { debtClaim: true, lawyer: true } } },
+      include: {
+        caseTransfer: { include: { debtClaim: true, lawyer: true } },
+        selectedBailiff: true,
+      },
     });
     if (!lawyerFeeInvoice || lawyerFeeInvoice.status === "PAID" || !lawyerFeeInvoice.caseTransfer) return;
 
@@ -854,6 +884,7 @@ export class CaseTransferService {
     });
 
     const caseTransfer = lawyerFeeInvoice.caseTransfer;
+    const bailiff = lawyerFeeInvoice.selectedBailiff;
 
     // Factuur van CFSB (betaald) naar de advocaat — bevestiging dat de
     // Sentoo-betaling van zijn CFSB-vergoeding is verwerkt.
@@ -862,7 +893,13 @@ export class CaseTransferService {
     }
     await prisma.caseTransfer.update({
       where: { id: caseTransfer.id },
-      data: { workCompletedAt: new Date(), status: "WORK_COMPLETED" },
+      data: {
+        workCompletedAt: new Date(),
+        status: "WORK_COMPLETED",
+        // De tijdens "Dossier afronden" geselecteerde deurwaarder wordt pas nu
+        // effectief gekoppeld — nooit vóór de betaling van de CFSB-vergoeding.
+        ...(bailiff ? { bailiffId: bailiff.id } : {}),
+      },
     });
 
     await ClaimTimelineService.logEvent(
@@ -877,7 +914,9 @@ export class CaseTransferService {
         user_id: caseTransfer.lawyer.userId,
         type: NotificationType.GOP_LAWYER_WORK_FINALIZED,
         title: "Werk afgerond",
-        message: `De betaling van de CFSB-commissie voor dossier ${caseTransfer.debtClaim.reference} werd bevestigd. Het vonnis kan nu overgedragen worden aan de deurwaarder.`,
+        message: bailiff
+          ? `De betaling van de CFSB-commissie voor dossier ${caseTransfer.debtClaim.reference} werd bevestigd. Het vonnis is overgedragen aan deurwaarder ${bailiff.fullname}.`
+          : `De betaling van de CFSB-commissie voor dossier ${caseTransfer.debtClaim.reference} werd bevestigd.`,
         link: `/legal-processes/transfers/${caseTransfer.id}`,
         entity_type: "CaseTransfer",
         entity_id: caseTransfer.id,
@@ -892,6 +931,32 @@ export class CaseTransferService {
       entity_type: "CaseTransfer",
       entity_id: caseTransfer.id,
     });
+
+    // Het vonnis wordt, zoals gevraagd ("Daarna wordt het vonnis via CFSB
+    // beschikbaar gesteld aan die deurwaarder"), automatisch en zonder extra
+    // handeling van de advocaat overgedragen aan de tijdens "Dossier
+    // afronden" geselecteerde deurwaarder.
+    if (bailiff) {
+      await ClaimTimelineService.logEvent(
+        caseTransfer.debtClaimId,
+        "BAILIFF_ASSIGNED",
+        `Het vonnis werd overgedragen aan deurwaarder ${bailiff.fullname} voor executie.`,
+        { bailiffId: bailiff.id },
+      );
+
+      if (bailiff.user_id) {
+        await NotificationService.create({
+          tenant_id: caseTransfer.debtClaim.tenantId,
+          user_id: bailiff.user_id,
+          type: NotificationType.GOP_TRANSFERRED_TO_BAILIFF,
+          title: "Nieuw dossier voor executie",
+          message: `Dossier ${caseTransfer.debtClaim.reference} werd aan je overgedragen voor executie.`,
+          link: `/legal-processes/transfers/${caseTransfer.id}`,
+          entity_type: "CaseTransfer",
+          entity_id: caseTransfer.id,
+        });
+      }
+    }
   };
 
   // Mientras la comisión CFSB (LawyerFeeInvoice) siga PENDING_PAYMENT, el
@@ -942,66 +1007,6 @@ export class CaseTransferService {
     }
 
     return { reminders };
-  };
-
-  // El abogado entrega el expediente al alguacil que va a registrar el
-  // vonnis. Requiere trabajo finalizado (honorarios + comisión CFSB pagada)
-  // y el documento del Vonnis ya adjunto.
-  static assignBailiffForExecution = async (
-    data: AssignBailiffForExecutionInput,
-    actorUserId?: string,
-  ) => {
-    const caseTransfer = await prisma.caseTransfer.findUnique({
-      where: { id: data.caseTransferId },
-      include: { debtClaim: true, lawyer: true },
-    });
-    if (!caseTransfer) throw new Error("Dossier niet gevonden");
-
-    if (!caseTransfer.workCompletedAt) {
-      throw new Error(
-        "U dient eerst uw werk af te ronden (honorariumfactuur en betaling van de CFSB-commissie) voordat u het dossier kunt overdragen.",
-      );
-    }
-
-    const vonnisDocument = await prisma.caseTransferDocument.findFirst({
-      where: { caseTransferId: caseTransfer.id, category: "SENTENCIA" },
-    });
-    if (!vonnisDocument) {
-      throw new Error(
-        "U dient het vonnisdocument bij te voegen voordat u het dossier kunt overdragen aan de deurwaarder.",
-      );
-    }
-
-    const bailiff = await prisma.bailiff.findUnique({ where: { id: data.bailiffId } });
-    if (!bailiff) throw new Error("Deurwaarder niet gevonden");
-
-    const updated = await prisma.caseTransfer.update({
-      where: { id: caseTransfer.id },
-      data: { bailiffId: data.bailiffId },
-    });
-
-    await ClaimTimelineService.logEvent(
-      caseTransfer.debtClaimId,
-      "BAILIFF_ASSIGNED",
-      `De advocaat heeft het vonnis overgedragen aan deurwaarder ${bailiff.fullname} voor executie.`,
-      { bailiffId: data.bailiffId },
-      actorUserId,
-    );
-
-    if (bailiff.user_id) {
-      await NotificationService.create({
-        tenant_id: caseTransfer.debtClaim.tenantId,
-        user_id: bailiff.user_id,
-        type: NotificationType.GOP_TRANSFERRED_TO_BAILIFF,
-        title: "Nieuw dossier voor executie",
-        message: `Dossier ${caseTransfer.debtClaim.reference} werd aan je overgedragen voor executie.`,
-        link: `/legal-processes/transfers/${updated.id}`,
-        entity_type: "CaseTransfer",
-        entity_id: updated.id,
-      });
-    }
-
-    return updated;
   };
 
   // ---------------------------------------------------------------------

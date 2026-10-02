@@ -39,7 +39,6 @@ import { RejectTransferDialog } from "@/modules/legal-process/components/reject-
 import { AcceptTransferDialog } from "@/modules/legal-process/components/accept-transfer-dialog";
 import { CancelTransferDialog } from "@/modules/legal-process/components/cancel-transfer-dialog";
 import { FinalizeLawyerWorkDialog } from "@/modules/legal-process/components/finalize-lawyer-work-dialog";
-import { TransferToBailiffDialog } from "@/modules/legal-process/components/transfer-to-bailiff-dialog";
 import { PowerOfAttorneyDialog } from "@/modules/legal-process/components/power-of-attorney-dialog";
 import { ProposeCaseTransferAgreementDialog } from "@/modules/legal-process/components/propose-case-transfer-agreement-dialog";
 import { AgreementDecisionDialog } from "@/modules/agreement/components/agreement-decision-dialog";
@@ -90,7 +89,6 @@ const CaseTransferDetailPage: React.FC = () => {
     | "reject"
     | "cancel"
     | "finalize-lawyer-work"
-    | "transfer-to-bailiff"
     | "power-of-attorney"
     | "propose-agreement"
     | "decide-agreement"
@@ -182,17 +180,6 @@ const CaseTransferDetailPage: React.FC = () => {
     caseTransfer.status === CaseTransferStatus.ACCEPTED &&
     !caseTransfer.workCompletedAt &&
     !pendingLawyerFeeInvoice;
-
-  // Solo si el resultado fue "Gerechtelijk behandeld" Y hay un vonnis
-  // registrado — sin vonnis no hay nada que ejecutar, el dossier se queda
-  // cerrado en la fase del abogado (feedback sponsor).
-  const showTransferToBailiffButton =
-    isLawyer &&
-    isLawyerTrack &&
-    !!caseTransfer.workCompletedAt &&
-    !caseTransfer.bailiffId &&
-    latestLawyerFeeInvoice?.outcome === "GERECHTELIJK" &&
-    latestLawyerFeeInvoice?.hasVerdict === true;
 
   // Solo el participante puede cancelar, y únicamente mientras no exista un
   // GOP real (todavía no se registró ningún vonnis).
@@ -421,37 +408,21 @@ const CaseTransferDetailPage: React.FC = () => {
           </Card>
         )}
 
-        {(showFinalizeLawyerWorkButton || showTransferToBailiffButton) && (
+        {showFinalizeLawyerWorkButton && (
           <Card>
             <CardHeader title="Afronding van het werk van de advocaat" />
             <Divider />
             <CardContent>
-              {showFinalizeLawyerWorkButton && (
-                <Stack spacing={2} alignItems="flex-start">
-                  <Typography variant="body2" color="text.secondary">
-                    Registreer de uitkomst, het honorarium en de factuur om deze fase af te
-                    ronden.
-                  </Typography>
-                  <Button variant="contained" onClick={() => setDialog("finalize-lawyer-work")}>
-                    Dossier afronden
-                  </Button>
-                </Stack>
-              )}
-              {showTransferToBailiffButton && (
-                <Stack spacing={2} alignItems="flex-start">
-                  <Chip label="Vonnis geregistreerd" color="success" sx={{ fontWeight: 700 }} />
-                  <Typography variant="body2" color="text.secondary">
-                    Vonnisnummer {latestLawyerFeeInvoice?.verdictNumber} van{" "}
-                    {latestLawyerFeeInvoice?.verdictDate
-                      ? formatDate(latestLawyerFeeInvoice.verdictDate.toString())
-                      : "-"}
-                    . Draag het dossier over aan de deurwaarder voor executie.
-                  </Typography>
-                  <Button variant="contained" onClick={() => setDialog("transfer-to-bailiff")}>
-                    Overdragen aan deurwaarder
-                  </Button>
-                </Stack>
-              )}
+              <Stack spacing={2} alignItems="flex-start">
+                <Typography variant="body2" color="text.secondary">
+                  Registreer de uitkomst, het honorarium en de factuur om deze fase af te ronden.
+                  Is er een vonnis, selecteer dan ook de deurwaarder voor tenuitvoerlegging — na
+                  betaling van de CFSB-vergoeding wordt het vonnis automatisch aan hem overgedragen.
+                </Typography>
+                <Button variant="contained" onClick={() => setDialog("finalize-lawyer-work")}>
+                  Dossier afronden
+                </Button>
+              </Stack>
             </CardContent>
           </Card>
         )}
@@ -599,12 +570,6 @@ const CaseTransferDetailPage: React.FC = () => {
         onClose={() => setDialog(null)}
         caseTransferId={caseTransfer.id}
         onFinalized={refresh}
-      />
-      <TransferToBailiffDialog
-        open={dialog === "transfer-to-bailiff"}
-        onClose={() => setDialog(null)}
-        caseTransferId={caseTransfer.id}
-        onTransferred={refresh}
       />
       <PowerOfAttorneyDialog
         open={dialog === "power-of-attorney"}

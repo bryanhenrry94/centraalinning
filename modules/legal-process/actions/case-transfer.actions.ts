@@ -26,8 +26,6 @@ import {
   CancelCaseTransferSchema,
   SubmitLawyerFeeInvoiceInput,
   SubmitLawyerFeeInvoiceSchema,
-  AssignBailiffForExecutionInput,
-  AssignBailiffForExecutionSchema,
 } from "@/modules/legal-process/services/case-transfer.validators";
 
 type ProposeAgreementInput = {
@@ -166,12 +164,6 @@ export const submitLawyerFeeInvoice = async (
     },
     session.user.id,
   );
-};
-
-export const assignBailiffForExecution = async (data: AssignBailiffForExecutionInput) => {
-  const parsed = AssignBailiffForExecutionSchema.parse(data);
-  const { session } = await requireAssignedLawyer(parsed.caseTransferId);
-  return CaseTransferService.assignBailiffForExecution(parsed, session.user.id);
 };
 
 export const uploadCaseTransferDocument = async (
