@@ -51,6 +51,7 @@ export async function processSuccessfulPayment(paymentId: string) {
       return CaseTransferService.confirmTransferPayment(payment.id);
 
     case PaymentType.GOP_LAWYER_FEE:
+    case PaymentType.GOP_BAILIFF_OUTCOME_FEE:
       return CaseTransferService.processLawyerFeePaymentConfirmed(payment.id);
 
     case PaymentType.GOP_BAILIFF_FEE:

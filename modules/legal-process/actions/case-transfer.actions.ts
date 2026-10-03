@@ -10,6 +10,7 @@ import {
   requireTenantStaffForCaseTransfer,
   requireAssignedLawyerOrBailiff,
   requireAssignedLawyer,
+  requireAssignedBailiffDirect,
   requireStaffOrAssignedLawyerOrBailiffForTransfer,
   requireStaffOrAssignedLawyerOrBailiffForAgreementProposal,
   requireAuthorizedToDecideCaseTransferAgreement,
@@ -26,6 +27,8 @@ import {
   CancelCaseTransferSchema,
   SubmitLawyerFeeInvoiceInput,
   SubmitLawyerFeeInvoiceSchema,
+  SubmitBailiffOutcomeInvoiceInput,
+  SubmitBailiffOutcomeInvoiceSchema,
 } from "@/modules/legal-process/services/case-transfer.validators";
 
 type ProposeAgreementInput = {
@@ -161,6 +164,33 @@ export const submitLawyerFeeInvoice = async (
       verdictMimeType: verdictFile?.type,
       verdictSize: verdictFile?.size,
       verdictBuffer,
+    },
+    session.user.id,
+  );
+};
+
+// "Uitkomst registreren" voor de rechtstreekse route (geen advocaat): enkel
+// de "Geen vonnis"-afronding — is er wél een vonnis, dan gebruikt de
+// deurwaarder rechtstreeks registerGopVerdict.
+export const submitBailiffOutcomeInvoice = async (
+  data: SubmitBailiffOutcomeInvoiceInput,
+  invoiceFile: File,
+) => {
+  const parsed = SubmitBailiffOutcomeInvoiceSchema.parse(data);
+  const { session } = await requireAssignedBailiffDirect(parsed.caseTransferId);
+  const buffer = Buffer.from(await invoiceFile.arrayBuffer());
+
+  return CaseTransferService.submitLawyerFeeInvoice(
+    {
+      ...parsed,
+      hasVerdict: null,
+      verdictNumber: null,
+      verdictDate: null,
+      bailiffId: null,
+      fileName: invoiceFile.name,
+      mimeType: invoiceFile.type,
+      size: invoiceFile.size,
+      buffer,
     },
     session.user.id,
   );

@@ -316,12 +316,25 @@ export class CaseTransferService {
       throw new Error("Het dossier is niet in afwachting van acceptatie");
     }
 
-    // De advocaat behoudt toegang tot bestaande dossiers, maar mag geen
-    // nieuwe overdracht accepteren zolang er een onbetaalde CFSB-vergoeding
-    // openstaat (feedback sponsor).
+    // De advocaat, of de deurwaarder in de rechtstreekse route, behoudt
+    // toegang tot bestaande dossiers, maar mag geen nieuwe overdracht
+    // accepteren zolang er een onbetaalde CFSB-vergoeding openstaat (feedback
+    // sponsor).
     if (caseTransfer.lawyerId) {
       const outstandingFee = await prisma.lawyerFeeInvoice.findFirst({
         where: { status: "PENDING_PAYMENT", caseTransfer: { lawyerId: caseTransfer.lawyerId } },
+      });
+      if (outstandingFee) {
+        throw new Error(
+          "U heeft nog een openstaande CFSB-vergoeding. Betaal deze eerst voordat u een nieuw dossier kunt accepteren.",
+        );
+      }
+    } else if (caseTransfer.bailiffId) {
+      const outstandingFee = await prisma.lawyerFeeInvoice.findFirst({
+        where: {
+          status: "PENDING_PAYMENT",
+          caseTransfer: { bailiffId: caseTransfer.bailiffId, lawyerId: null },
+        },
       });
       if (outstandingFee) {
         throw new Error(
@@ -715,15 +728,32 @@ export class CaseTransferService {
   ) => {
     const caseTransfer = await prisma.caseTransfer.findUnique({
       where: { id: params.caseTransferId },
-      include: { debtClaim: true, lawyer: true },
+      include: { debtClaim: true, lawyer: true, bailiff: true },
     });
     if (!caseTransfer) throw new Error("Dossier niet gevonden");
-    if (!caseTransfer.lawyer) throw new Error("Dit dossier heeft geen toegewezen advocaat.");
     if (caseTransfer.status !== "ACCEPTED") {
-      throw new Error(`Kan geen honorariumfactuur registreren in de status ${caseTransfer.status}.`);
+      throw new Error(`Kan geen kostenfactuur registreren in de status ${caseTransfer.status}.`);
     }
 
-    const hasVerdict = params.outcome === "GERECHTELIJK" && params.hasVerdict === true;
+    // Rechtstreekse route naar de deurwaarder (geen advocaat): enkel de "Geen
+    // vonnis"-afronding gebruikt dit formulier — is er wél een vonnis, dan
+    // registreert de deurwaarder dat rechtstreeks via "Vonnis registreren"
+    // (zie CaseTransferService.registerFirstVerdict), zonder kostenfactuur
+    // hier.
+    const isDirectBailiffPath = !caseTransfer.lawyer;
+    if (isDirectBailiffPath) {
+      if (!caseTransfer.bailiff) throw new Error("Dit dossier heeft geen toegewezen deurwaarder.");
+      if (params.outcome === "GERECHTELIJK" && params.hasVerdict === true) {
+        throw new Error(
+          "Is er een vonnis, registreer dit dan via 'Vonnis registreren' — niet via deze uitkomstregistratie.",
+        );
+      }
+      if (params.bailiffId) {
+        throw new Error("Er is al een deurwaarder toegewezen aan dit dossier.");
+      }
+    }
+
+    const hasVerdict = !isDirectBailiffPath && params.outcome === "GERECHTELIJK" && params.hasVerdict === true;
     if (hasVerdict && !params.verdictBuffer) {
       throw new Error("Upload het vonnisdocument.");
     }
@@ -739,9 +769,7 @@ export class CaseTransferService {
       where: { caseTransferId: caseTransfer.id, status: "PENDING_PAYMENT" },
     });
     if (existingPending) {
-      throw new Error(
-        "Er is al een honorariumfactuur in afwachting van betaling voor dit dossier.",
-      );
+      throw new Error("Er is al een kostenfactuur in afwachting van betaling voor dit dossier.");
     }
 
     const tenantId = caseTransfer.debtClaim.tenantId;
@@ -771,16 +799,16 @@ export class CaseTransferService {
     const tax_amount = Math.round(((fee * tax_rate) / 100) * 100) / 100;
     const total_with_tax = fee + tax_amount;
 
-    const concept = `CFSB-commissie (5%) op advocaatkosten — dossier ${
-      caseTransfer.debtClaim.reference ?? caseTransfer.debtClaimId
-    }`;
+    const concept = `CFSB-commissie (5%) op ${
+      isDirectBailiffPath ? "deurwaarderskosten" : "advocaatkosten"
+    } — dossier ${caseTransfer.debtClaim.reference ?? caseTransfer.debtClaimId}`;
 
     const paymentResult = await PaymentService.create(tenantId, {
       amount: total_with_tax,
       currency: "USD",
       description: concept,
-      reference: `gop_lawyer_fee_${caseTransfer.id}_${Date.now()}`,
-      payment_type: PaymentType.GOP_LAWYER_FEE,
+      reference: `gop_${isDirectBailiffPath ? "bailiff_outcome" : "lawyer"}_fee_${caseTransfer.id}_${Date.now()}`,
+      payment_type: isDirectBailiffPath ? PaymentType.GOP_BAILIFF_OUTCOME_FEE : PaymentType.GOP_LAWYER_FEE,
     });
     if (!paymentResult.success || !paymentResult.data) {
       throw new Error(paymentResult.message || "Kon geen Sentoo-betaling aanmaken");
@@ -813,8 +841,11 @@ export class CaseTransferService {
       paymentResult.data.paymentId,
     );
 
-    if (caseTransfer.lawyer.email) {
-      await sendInvoiceEmail(caseTransfer.lawyer.email, invoice.id, false);
+    const invoiceEmailRecipient = isDirectBailiffPath
+      ? caseTransfer.bailiff?.email
+      : caseTransfer.lawyer?.email;
+    if (invoiceEmailRecipient) {
+      await sendInvoiceEmail(invoiceEmailRecipient, invoice.id, false);
     }
 
     if (hasVerdict) {
@@ -853,7 +884,9 @@ export class CaseTransferService {
     await ClaimTimelineService.logEvent(
       caseTransfer.debtClaimId,
       "STATUS_CHANGED",
-      `De advocaat registreerde zijn honorariumfactuur (${formatAmount(params.totalAmount)}). CFSB-commissie van ${formatAmount(total_with_tax)} in behandeling.`,
+      isDirectBailiffPath
+        ? `De deurwaarder registreerde de uitkomst en zijn kostenfactuur (${formatAmount(params.totalAmount)}). CFSB-commissie van ${formatAmount(total_with_tax)} in behandeling.`
+        : `De advocaat registreerde zijn honorariumfactuur (${formatAmount(params.totalAmount)}). CFSB-commissie van ${formatAmount(total_with_tax)} in behandeling.`,
       { totalAmount: params.totalAmount, cfsbFee: total_with_tax },
       actorUserId,
     );
@@ -861,13 +894,13 @@ export class CaseTransferService {
     return { paymentId: paymentResult.data.paymentId, paymentUrl: paymentResult.data.paymentUrl };
   };
 
-  // Se llama desde el webhook de Sentoo cuando el Payment GOP_LAWYER_FEE se
-  // confirma como pagado.
+  // Se llama desde el webhook de Sentoo cuando el Payment GOP_LAWYER_FEE o
+  // GOP_BAILIFF_OUTCOME_FEE se confirma como pagado.
   static processLawyerFeePaymentConfirmed = async (paymentId: string) => {
     const lawyerFeeInvoice = await prisma.lawyerFeeInvoice.findUnique({
       where: { paymentId },
       include: {
-        caseTransfer: { include: { debtClaim: true, lawyer: true } },
+        caseTransfer: { include: { debtClaim: true, lawyer: true, bailiff: true } },
         selectedBailiff: true,
       },
     });
@@ -884,12 +917,19 @@ export class CaseTransferService {
     });
 
     const caseTransfer = lawyerFeeInvoice.caseTransfer;
+    // selectedBailiff solo existe en la ruta abogado-con-vonnis (a quién se
+    // transfiere); en la ruta directa el alguacil ya es caseTransfer.bailiff.
     const bailiff = lawyerFeeInvoice.selectedBailiff;
+    const isDirectBailiffPath = !caseTransfer.lawyer;
 
-    // Factuur van CFSB (betaald) naar de advocaat — bevestiging dat de
-    // Sentoo-betaling van zijn CFSB-vergoeding is verwerkt.
-    if (caseTransfer.lawyer?.email) {
-      await sendInvoiceEmail(caseTransfer.lawyer.email, billingInvoice.id, true);
+    // Factuur van CFSB (betaald) naar de advocaat, of naar de deurwaarder in
+    // de rechtstreekse route — bevestiging dat de Sentoo-betaling van de
+    // CFSB-vergoeding is verwerkt.
+    const paidInvoiceEmailRecipient = isDirectBailiffPath
+      ? caseTransfer.bailiff?.email
+      : caseTransfer.lawyer?.email;
+    if (paidInvoiceEmailRecipient) {
+      await sendInvoiceEmail(paidInvoiceEmailRecipient, billingInvoice.id, true);
     }
     await prisma.caseTransfer.update({
       where: { id: caseTransfer.id },
@@ -898,6 +938,8 @@ export class CaseTransferService {
         status: "WORK_COMPLETED",
         // De tijdens "Dossier afronden" geselecteerde deurwaarder wordt pas nu
         // effectief gekoppeld — nooit vóór de betaling van de CFSB-vergoeding.
+        // In de rechtstreekse route is er geen selectedBailiff: de deurwaarder
+        // was al toegewezen, dus deze spread is dan een no-op.
         ...(bailiff ? { bailiffId: bailiff.id } : {}),
       },
     });
@@ -905,8 +947,36 @@ export class CaseTransferService {
     await ClaimTimelineService.logEvent(
       caseTransfer.debtClaimId,
       "STATUS_CHANGED",
-      "De advocaat heeft zijn werk afgerond: honorariumfactuur en CFSB-commissie betaald.",
+      isDirectBailiffPath
+        ? "De deurwaarder heeft deze route afgerond zonder vonnis: kostenfactuur en CFSB-commissie betaald. Er ontstaat geen GOP."
+        : "De advocaat heeft zijn werk afgerond: honorariumfactuur en CFSB-commissie betaald.",
     );
+
+    if (isDirectBailiffPath) {
+      if (caseTransfer.bailiff?.user_id) {
+        await NotificationService.create({
+          tenant_id: caseTransfer.debtClaim.tenantId,
+          user_id: caseTransfer.bailiff.user_id,
+          type: NotificationType.GOP_BAILIFF_WORK_FINALIZED,
+          title: "Uitkomst afgerond",
+          message: `De betaling van de CFSB-commissie voor dossier ${caseTransfer.debtClaim.reference} werd bevestigd. Deze route is afgesloten — er is geen GOP.`,
+          link: `/legal-processes/transfers/${caseTransfer.id}`,
+          entity_type: "CaseTransfer",
+          entity_id: caseTransfer.id,
+        });
+      }
+
+      await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.tenantId, {
+        type: NotificationType.GOP_BAILIFF_WORK_FINALIZED,
+        title: "Dossier afgerond zonder vonnis",
+        message: `De deurwaarder heeft dossier ${caseTransfer.debtClaim.reference} afgerond zonder vonnis en de CFSB-vergoeding betaald.`,
+        link: `/legal-processes/transfers/${caseTransfer.id}`,
+        entity_type: "CaseTransfer",
+        entity_id: caseTransfer.id,
+      });
+
+      return;
+    }
 
     if (caseTransfer.lawyer?.userId) {
       await NotificationService.create({
@@ -960,10 +1030,10 @@ export class CaseTransferService {
   };
 
   // Mientras la comisión CFSB (LawyerFeeInvoice) siga PENDING_PAYMENT, el
-  // abogado recibe una herinnering cada ~30 días — además del bloqueo
-  // inmediato que ya aplica cada vez que intenta aceptar una nueva
-  // overdracht (ver acceptTransfer). Llamado por el job programado
-  // check_lawyer_fee_payment_reminders.
+  // abogado — o, en la ruta directa, el alguacil — recibe una herinnering
+  // cada ~30 días — además del bloqueo inmediato que ya aplica cada vez que
+  // intenta aceptar una nueva overdracht (ver acceptTransfer). Llamado por
+  // el job programado check_lawyer_fee_payment_reminders.
   static sendLawyerFeePaymentReminders = async () => {
     const REMINDER_INTERVAL_DAYS = 30;
     const now = new Date();
@@ -971,13 +1041,14 @@ export class CaseTransferService {
 
     const pendingInvoices = await prisma.lawyerFeeInvoice.findMany({
       where: { status: "PENDING_PAYMENT" },
-      include: { caseTransfer: { include: { debtClaim: true, lawyer: true } } },
+      include: { caseTransfer: { include: { debtClaim: true, lawyer: true, bailiff: true } } },
     });
 
     let reminders = 0;
     for (const invoice of pendingInvoices) {
       const caseTransfer = invoice.caseTransfer;
-      if (!caseTransfer?.lawyer?.userId) continue;
+      const recipientUserId = caseTransfer?.lawyer?.userId ?? caseTransfer?.bailiff?.user_id;
+      if (!caseTransfer || !recipientUserId) continue;
 
       const lastReminder = await prisma.notification.findFirst({
         where: {
@@ -993,7 +1064,7 @@ export class CaseTransferService {
 
       await NotificationService.create({
         tenant_id: caseTransfer.debtClaim.tenantId,
-        user_id: caseTransfer.lawyer.userId,
+        user_id: recipientUserId,
         type: NotificationType.CASE_TRANSFER_LAWYER_FEE_PAYMENT_REMINDER,
         title: "Herinnering: openstaande CFSB-vergoeding",
         message: `U heeft nog een openstaande CFSB-vergoeding voor dossier ${

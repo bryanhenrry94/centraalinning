@@ -67,3 +67,15 @@ export const SubmitLawyerFeeInvoiceSchema = z
     path: ["bailiffId"],
   });
 export type SubmitLawyerFeeInvoiceInput = z.infer<typeof SubmitLawyerFeeInvoiceSchema>;
+
+// "Uitkomst registreren" voor de rechtstreekse deurwaarder-route (geen
+// advocaat): enkel de "Geen vonnis"-afronding — als er wél een vonnis is,
+// gebruikt de deurwaarder rechtstreeks "Vonnis registreren", niet dit
+// formulier (zie CaseTransferService.submitLawyerFeeInvoice).
+export const SubmitBailiffOutcomeInvoiceSchema = z.object({
+  caseTransferId: z.string().min(1),
+  outcome: CaseTransferOutcomeSchema,
+  completionDate: z.coerce.date(),
+  totalAmount: z.coerce.number().positive(),
+});
+export type SubmitBailiffOutcomeInvoiceInput = z.infer<typeof SubmitBailiffOutcomeInvoiceSchema>;

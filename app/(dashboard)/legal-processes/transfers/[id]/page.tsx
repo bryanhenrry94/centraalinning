@@ -39,6 +39,7 @@ import { RejectTransferDialog } from "@/modules/legal-process/components/reject-
 import { AcceptTransferDialog } from "@/modules/legal-process/components/accept-transfer-dialog";
 import { CancelTransferDialog } from "@/modules/legal-process/components/cancel-transfer-dialog";
 import { FinalizeLawyerWorkDialog } from "@/modules/legal-process/components/finalize-lawyer-work-dialog";
+import { RegisterBailiffOutcomeDialog } from "@/modules/legal-process/components/register-bailiff-outcome-dialog";
 import { PowerOfAttorneyDialog } from "@/modules/legal-process/components/power-of-attorney-dialog";
 import { ProposeCaseTransferAgreementDialog } from "@/modules/legal-process/components/propose-case-transfer-agreement-dialog";
 import { AgreementDecisionDialog } from "@/modules/agreement/components/agreement-decision-dialog";
@@ -89,6 +90,7 @@ const CaseTransferDetailPage: React.FC = () => {
     | "reject"
     | "cancel"
     | "finalize-lawyer-work"
+    | "register-bailiff-outcome"
     | "power-of-attorney"
     | "propose-agreement"
     | "decide-agreement"
@@ -179,6 +181,16 @@ const CaseTransferDetailPage: React.FC = () => {
     isLawyerTrack &&
     caseTransfer.status === CaseTransferStatus.ACCEPTED &&
     !caseTransfer.workCompletedAt &&
+    !pendingLawyerFeeInvoice;
+
+  // Rechtstreekse route (geen advocaat): de toegewezen deurwaarder registreert
+  // de uitkomst zonder vonnis vóór er ooit een GOP bestaat.
+  const showRegisterBailiffOutcomeButton =
+    isBailiffRole &&
+    !isLawyerTrack &&
+    !!caseTransfer.bailiffId &&
+    caseTransfer.status === CaseTransferStatus.ACCEPTED &&
+    !caseTransfer.legalProcess &&
     !pendingLawyerFeeInvoice;
 
   // Solo el participante puede cancelar, y únicamente mientras no exista un
@@ -427,20 +439,39 @@ const CaseTransferDetailPage: React.FC = () => {
           </Card>
         )}
 
-        {isLawyer && isLawyerTrack && pendingLawyerFeeInvoice && (
+        {showRegisterBailiffOutcomeButton && (
+          <Card>
+            <CardHeader title="Uitkomst registreren" />
+            <Divider />
+            <CardContent>
+              <Stack spacing={2} alignItems="flex-start">
+                <Typography variant="body2" color="text.secondary">
+                  Is dit dossier buitengerechtelijk opgelost, of gerechtelijk behandeld zonder
+                  vonnis, registreer dan hier de uitkomst en de kostenfactuur. Is er wél een
+                  vonnis, gebruik dan rechtstreeks &quot;Vonnis registreren&quot; hieronder.
+                </Typography>
+                <Button variant="contained" onClick={() => setDialog("register-bailiff-outcome")}>
+                  Uitkomst registreren
+                </Button>
+              </Stack>
+            </CardContent>
+          </Card>
+        )}
+
+        {((isLawyer && isLawyerTrack) || (isBailiffRole && !isLawyerTrack)) && pendingLawyerFeeInvoice && (
           <Card>
             <CardHeader title="Betaling CFSB-vergoeding" />
             <Divider />
             <CardContent>
               <Typography variant="body2" color="text.secondary" mb={2}>
-                CFSB berekent 5% over het geregistreerde honorarium, plus toepasselijke belasting.
-                Betaal de vergoeding via Sentoo zodat de advocatenfase de status &quot;Afgerond&quot;
-                krijgt.
+                CFSB berekent 5% over het geregistreerde {isLawyerTrack ? "honorarium" : "kostenbedrag"},
+                plus toepasselijke belasting. Betaal de vergoeding via Sentoo zodat deze fase de
+                status &quot;Afgerond&quot; krijgt.
               </Typography>
               <Stack spacing={1} sx={{ mb: 2 }}>
                 <Stack direction="row" justifyContent="space-between">
                   <Typography variant="body2" color="text.secondary">
-                    Totaal honorarium
+                    {isLawyerTrack ? "Totaal honorarium" : "Totaal kostenbedrag"}
                   </Typography>
                   <Typography variant="body2" fontWeight={600}>
                     {formatCurrency(pendingLawyerFeeInvoice.totalAmount)}
@@ -487,7 +518,11 @@ const CaseTransferDetailPage: React.FC = () => {
                   paymentUrl: pendingLawyerFeeInvoice.payment.payment_url ?? "",
                 }}
                 onPaymentConfirmed={async () => {
-                  notifySuccess("Betaling bevestigd. Advocatenfase afgerond.");
+                  notifySuccess(
+                    isLawyerTrack
+                      ? "Betaling bevestigd. Advocatenfase afgerond."
+                      : "Betaling bevestigd. Deze route is afgerond — er is geen GOP.",
+                  );
                   refresh();
                 }}
                 buttonLabel="Nu betalen via Sentoo"
@@ -567,6 +602,12 @@ const CaseTransferDetailPage: React.FC = () => {
       />
       <FinalizeLawyerWorkDialog
         open={dialog === "finalize-lawyer-work"}
+        onClose={() => setDialog(null)}
+        caseTransferId={caseTransfer.id}
+        onFinalized={refresh}
+      />
+      <RegisterBailiffOutcomeDialog
+        open={dialog === "register-bailiff-outcome"}
         onClose={() => setDialog(null)}
         caseTransferId={caseTransfer.id}
         onFinalized={refresh}

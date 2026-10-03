@@ -97,6 +97,33 @@ export async function requireAssignedLawyer(caseTransferId: string) {
   return { session, caseTransfer };
 }
 
+// Registrar la "Uitkomst" sin vonnis (honorarium + comisión CFSB) en la ruta
+// directa al alguacil (sin abogado) es un acto exclusivo del alguacil
+// asignado — y solo tiene sentido cuando nunca hubo abogado en esta
+// transferencia (si lo hubo, es el abogado quien registra esa uitkomst vía
+// requireAssignedLawyer).
+export async function requireAssignedBailiffDirect(caseTransferId: string) {
+  const session = await getSessionOrThrow();
+
+  const caseTransfer = await prisma.caseTransfer.findUnique({
+    where: { id: caseTransferId },
+    include: { debtClaim: true, lawyer: true, bailiff: true },
+  });
+  if (!caseTransfer) throw new Error("Dossier niet gevonden.");
+
+  if (isPlatformOwner(session)) return { session, caseTransfer };
+
+  if (caseTransfer.lawyer) {
+    throw new Error("Dit dossier heeft een toegewezen advocaat — gebruik de advocatenfase.");
+  }
+
+  const isAssignedBailiff = caseTransfer.bailiff?.user_id === session.user.id;
+  if (!isAssignedBailiff) {
+    throw new Error("Alleen de toegewezen deurwaarder kan deze actie uitvoeren.");
+  }
+  return { session, caseTransfer };
+}
+
 // Registrar el vonnis (primera sentencia, la que crea el LegalProcess) es un
 // acto exclusivo del alguacil asignado a la transferencia.
 export async function requireAssignedBailiffForTransfer(caseTransferId: string) {

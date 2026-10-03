@@ -633,6 +633,11 @@ model GopPaymentConfirmation {
   @@map("gop_payment_confirmation")
 }
 
+// Ondanks de naam dekt dit ook de rechtstreekse deurwaarder-route zonder
+// advocaat: als caseTransfer.lawyerId null is, registreert de reeds
+// toegewezen deurwaarder hier zijn eigen kostenfactuur voor een "Geen
+// vonnis"-afronding (Buitengerechtelijk opgelost / Gerechtelijk zonder
+// vonnis) — zie CaseTransferService.submitLawyerFeeInvoice.
 model LawyerFeeInvoice {
   id             String       @id @default(cuid())
   caseTransferId String
@@ -2182,6 +2187,7 @@ enum PaymentType {
   GOP_TRANSFER
   GOP_LAWYER_FEE
   GOP_BAILIFF_FEE
+  GOP_BAILIFF_OUTCOME_FEE
   FAR_REGISTRATION
   COP_START
   DEBTOR_COLLECTION_FEE
