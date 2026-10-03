@@ -39,18 +39,18 @@ const QUICK_ACTIONS = [
     href: "/legal-processes",
     icon: <GavelOutlinedIcon fontSize="small" />,
   },
-  {
-    label: "Vonnissen",
-    description: "Geregistreerde vonnissen en GOP-opvolging",
-    href: "/verdicts",
-    icon: <ArticleOutlinedIcon fontSize="small" />,
-  },
-  {
-    label: "Documenten",
-    description: "Bijlagen en dossierdocumenten",
-    href: "/documents",
-    icon: <DescriptionOutlinedIcon fontSize="small" />,
-  },
+  // {
+  //   label: "Vonnissen",
+  //   description: "Geregistreerde vonnissen en GOP-opvolging",
+  //   href: "/verdicts",
+  //   icon: <ArticleOutlinedIcon fontSize="small" />,
+  // },
+  // {
+  //   label: "Documenten",
+  //   description: "Bijlagen en dossierdocumenten",
+  //   href: "/documents",
+  //   icon: <DescriptionOutlinedIcon fontSize="small" />,
+  // },
   {
     label: "Feedback & Ondersteuning",
     description: "Tip, klacht of technisch probleem melden",
@@ -155,8 +155,16 @@ export const DashboardBailiff = () => {
 
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 8 }}>
-          <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2, bgcolor: "white" }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+          <Paper
+            variant="outlined"
+            sx={{ p: 2.5, borderRadius: 2, bgcolor: "white" }}
+          >
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              sx={{ mb: 1.5 }}
+            >
               <Typography variant="subtitle1" fontWeight={700}>
                 Nieuwe dossieroverdrachten
               </Typography>
@@ -169,7 +177,10 @@ export const DashboardBailiff = () => {
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
-          <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2, bgcolor: "white" }}>
+          <Paper
+            variant="outlined"
+            sx={{ p: 2.5, borderRadius: 2, bgcolor: "white" }}
+          >
             <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
               Snelle acties
             </Typography>
@@ -181,7 +192,9 @@ export const DashboardBailiff = () => {
                   href={action.href}
                   sx={{ borderRadius: 1.5, mb: 0.5 }}
                 >
-                  <ListItemIcon sx={{ minWidth: 36 }}>{action.icon}</ListItemIcon>
+                  <ListItemIcon sx={{ minWidth: 36 }}>
+                    {action.icon}
+                  </ListItemIcon>
                   <ListItemText
                     primary={action.label}
                     secondary={action.description}

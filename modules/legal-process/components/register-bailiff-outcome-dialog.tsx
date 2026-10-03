@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogTitle,
@@ -38,7 +39,10 @@ const emptyState = {
   totalAmount: "",
 };
 
-const FieldLabel: React.FC<{ label: string; required?: boolean }> = ({ label, required }) => (
+const FieldLabel: React.FC<{ label: string; required?: boolean }> = ({
+  label,
+  required,
+}) => (
   <Typography variant="body2" fontWeight={700} sx={{ mb: 0.5 }}>
     {label}
     {required && (
@@ -60,7 +64,12 @@ const FileUploadField: React.FC<{
         direction="row"
         alignItems="center"
         spacing={1.5}
-        sx={{ border: "1px solid", borderColor: "divider", borderRadius: 1, p: 1 }}
+        sx={{
+          border: "1px solid",
+          borderColor: "divider",
+          borderRadius: 1,
+          p: 1,
+        }}
       >
         <Box
           sx={{
@@ -87,7 +96,11 @@ const FileUploadField: React.FC<{
             {(file.size / (1024 * 1024)).toFixed(1)} MB
           </Typography>
         </Box>
-        <IconButton size="small" onClick={() => onSelect(null)} aria-label="Verwijderen">
+        <IconButton
+          size="small"
+          onClick={() => onSelect(null)}
+          aria-label="Verwijderen"
+        >
           <CloseIcon fontSize="small" />
         </IconButton>
       </Stack>
@@ -95,23 +108,32 @@ const FileUploadField: React.FC<{
   }
 
   return (
-    <Button component="label" variant="outlined" fullWidth startIcon={<UploadFileIcon />} sx={{ justifyContent: "flex-start" }}>
+    <Button
+      component="label"
+      variant="outlined"
+      fullWidth
+      startIcon={<UploadFileIcon />}
+      sx={{ justifyContent: "flex-start" }}
+    >
       {placeholder}
-      <input type="file" hidden onChange={(e) => onSelect(e.target.files?.[0] ?? null)} />
+      <input
+        type="file"
+        hidden
+        onChange={(e) => onSelect(e.target.files?.[0] ?? null)}
+      />
     </Button>
   );
 };
 
 // "Uitkomst registreren" voor de rechtstreekse deurwaarder-route (geen
-// advocaat). Is er wél een vonnis, dan registreert de deurwaarder dat
-// rechtstreeks via de bestaande "Vonnis registreren"-actie — dit formulier
-// toont in dat geval enkel een verwijzing en verstuurt niets.
-export const RegisterBailiffOutcomeDialog: React.FC<RegisterBailiffOutcomeDialogProps> = ({
-  open,
-  onClose,
-  caseTransferId,
-  onFinalized,
-}) => {
+// advocaat). Is er wél een vonnis, dan rondt dit formulier de overdrachtsfase
+// NIET af en verstuurt het niets: de hoofdknop wordt "Doorgaan naar vonnis
+// registreren" en leidt rechtstreeks naar de bestaande "Vonnis registreren"
+// -route, waar vonnisnummer/datum/document één keer worden ingevuld.
+export const RegisterBailiffOutcomeDialog: React.FC<
+  RegisterBailiffOutcomeDialogProps
+> = ({ open, onClose, caseTransferId, onFinalized }) => {
+  const router = useRouter();
   const [form, setForm] = useState(emptyState);
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
 
@@ -122,12 +144,23 @@ export const RegisterBailiffOutcomeDialog: React.FC<RegisterBailiffOutcomeDialog
 
   const isGerechtelijk = form.outcome === "GERECHTELIJK";
   const hasVerdict = isGerechtelijk && form.hasVerdict === "true";
-  const canSubmitOutcome = form.outcome === "BUITENGERECHTELIJK" || (isGerechtelijk && form.hasVerdict === "false");
+  const canSubmitOutcome =
+    form.outcome === "BUITENGERECHTELIJK" ||
+    (isGerechtelijk && form.hasVerdict === "false");
 
   const handleClose = () => {
     setForm(emptyState);
     setInvoiceFile(null);
     onClose();
+  };
+
+  // "Ja, er is een vonnis": de overdrachtsfase rondt hier NIET af — enkel de
+  // normale transferfase stopt, en het dossier gaat door naar de bestaande
+  // "Vonnis registreren"-route (vonnisnummer/datum/document worden daar pas
+  // één keer ingevuld, niet hier).
+  const handleContinueToVerdict = () => {
+    handleClose();
+    router.push(`/verdicts/new?caseTransferId=${caseTransferId}`);
   };
 
   const handleCreateTransaction = async (): Promise<{
@@ -145,7 +178,8 @@ export const RegisterBailiffOutcomeDialog: React.FC<RegisterBailiffOutcomeDialog
     if (!canSubmitOutcome) {
       return {
         success: false,
-        error: "Is er een vonnis, gebruik dan 'Vonnis registreren' in plaats van deze uitkomstregistratie.",
+        error:
+          "Is er een vonnis, gebruik dan 'Vonnis registreren' in plaats van deze uitkomstregistratie.",
       };
     }
     if (!form.completionDate) {
@@ -168,14 +202,23 @@ export const RegisterBailiffOutcomeDialog: React.FC<RegisterBailiffOutcomeDialog
         },
         invoiceFile,
       );
-      return { success: true, paymentId: result.paymentId, paymentUrl: result.paymentUrl };
+      return {
+        success: true,
+        paymentId: result.paymentId,
+        paymentUrl: result.paymentUrl,
+      };
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : "Registratie mislukt" };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Registratie mislukt",
+      };
     }
   };
 
   const handlePaymentConfirmed = async () => {
-    notifySuccess("Betaling bevestigd. Deze route is afgerond — er is geen GOP.");
+    notifySuccess(
+      "Betaling bevestigd. Deze route is afgerond — er is geen GOP.",
+    );
     onFinalized();
     handleClose();
   };
@@ -196,21 +239,22 @@ export const RegisterBailiffOutcomeDialog: React.FC<RegisterBailiffOutcomeDialog
           fontWeight: 700,
         }}
       >
-        Uitkomst registreren
+        Dossier afronden
         <IconButton onClick={handleClose} sx={{ color: "white" }}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent sx={{ pt: 2.5 }}>
+      <DialogContent sx={{ pt: 2.5, mt: 2 }}>
         <Stack spacing={2}>
-          <Alert severity="info" sx={{ textAlign: "justify" }}>
-            Dit formulier is enkel voor een afronding zonder vonnis. CFSB berekent automatisch 5%
-            plus de toepasselijke belasting over het geregistreerde kostenbedrag. Na betaling wordt
-            deze route afgesloten — er ontstaat geen GOP.
-          </Alert>
+          {/* <Alert severity="info" sx={{ textAlign: "justify" }}>
+            Dit formulier is enkel voor een afronding zonder vonnis. CFSB
+            berekent automatisch 5% plus de toepasselijke belasting over het
+            geregistreerde kostenbedrag. Na betaling wordt deze route afgesloten
+            — er ontstaat geen GOP.
+          </Alert> */}
 
           <Box>
-            <FieldLabel label="Uitkomst" required />
+            <FieldLabel label="Afronding in" required />
             <RadioGroup
               value={form.outcome}
               onChange={(e) =>
@@ -221,8 +265,16 @@ export const RegisterBailiffOutcomeDialog: React.FC<RegisterBailiffOutcomeDialog
                 }))
               }
             >
-              <FormControlLabel value="BUITENGERECHTELIJK" control={<Radio size="small" />} label="Buitengerechtelijk opgelost" />
-              <FormControlLabel value="GERECHTELIJK" control={<Radio size="small" />} label="Gerechtelijk behandeld" />
+              <FormControlLabel
+                value="BUITENGERECHTELIJK"
+                control={<Radio size="small" />}
+                label="Buitengerechtelijk fase"
+              />
+              <FormControlLabel
+                value="GERECHTELIJK"
+                control={<Radio size="small" />}
+                label="Gerechtelijke fase"
+              />
             </RadioGroup>
           </Box>
 
@@ -232,27 +284,47 @@ export const RegisterBailiffOutcomeDialog: React.FC<RegisterBailiffOutcomeDialog
               <RadioGroup
                 row
                 value={form.hasVerdict}
-                onChange={(e) => setForm((prev) => ({ ...prev, hasVerdict: e.target.value as "true" | "false" }))}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    hasVerdict: e.target.value as "true" | "false",
+                  }))
+                }
               >
-                <FormControlLabel value="true" control={<Radio size="small" />} label="Ja" />
-                <FormControlLabel value="false" control={<Radio size="small" />} label="Nee" />
+                <FormControlLabel
+                  value="true"
+                  control={<Radio size="small" />}
+                  label="Ja"
+                />
+                <FormControlLabel
+                  value="false"
+                  control={<Radio size="small" />}
+                  label="Nee"
+                />
               </RadioGroup>
             </Box>
           )}
 
-          {hasVerdict && (
-            <Alert severity="warning">
-              Is er een vonnis, registreer dit dan via de actie &quot;Vonnis registreren&quot; op het
-              dossier — dit formulier is enkel voor afronding zonder vonnis.
+          {/* {hasVerdict && (
+            <Alert severity="info">
+              De overdrachtsfase rondt hier niet af. Vonnisnummer, datum en het
+              vonnisdocument vult u in één keer in bij &quot;Vonnis
+              registreren&quot; — niet hier.
             </Alert>
-          )}
+          )} */}
 
           {canSubmitOutcome && (
             <>
               <Grid container spacing={1.5}>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <FieldLabel label="Datum afronding" required />
-                  <TextField fullWidth type="date" size="small" value={form.completionDate} onChange={set("completionDate")} />
+                  <TextField
+                    fullWidth
+                    type="date"
+                    size="small"
+                    value={form.completionDate}
+                    onChange={set("completionDate")}
+                  />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <FieldLabel label="Totaal kostenbedrag (USD)" required />
@@ -269,13 +341,25 @@ export const RegisterBailiffOutcomeDialog: React.FC<RegisterBailiffOutcomeDialog
 
               <Box>
                 <FieldLabel label="Kostenfactuur" required />
-                <FileUploadField file={invoiceFile} onSelect={setInvoiceFile} placeholder="Factuur uploaden" />
+                <FileUploadField
+                  file={invoiceFile}
+                  onSelect={setInvoiceFile}
+                  placeholder="Factuur uploaden"
+                />
               </Box>
             </>
           )}
         </Stack>
       </DialogContent>
-      <DialogActions sx={{ flexDirection: "column", alignItems: "stretch", gap: 1, px: 3, pb: 2 }}>
+      <DialogActions
+        sx={{
+          flexDirection: "column",
+          alignItems: "stretch",
+          gap: 1,
+          px: 3,
+          pb: 2,
+        }}
+      >
         {canSubmitOutcome ? (
           <PaymentIntent
             onCreateTransaction={handleCreateTransaction}
@@ -283,6 +367,10 @@ export const RegisterBailiffOutcomeDialog: React.FC<RegisterBailiffOutcomeDialog
             onPaymentFailed={handlePaymentFailed}
             buttonLabel="Afronden en verzenden"
           />
+        ) : hasVerdict ? (
+          <Button variant="contained" onClick={handleContinueToVerdict}>
+            Doorgaan naar vonnis registreren
+          </Button>
         ) : (
           <Button variant="contained" disabled>
             Afronden en verzenden

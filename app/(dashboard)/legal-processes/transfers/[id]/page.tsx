@@ -48,13 +48,23 @@ import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 
 type CaseTransferDetail = Awaited<ReturnType<typeof getCaseTransferById>>;
 
-function InfoField({ label, value }: { label: string; value?: React.ReactNode }) {
+function InfoField({
+  label,
+  value,
+}: {
+  label: string;
+  value?: React.ReactNode;
+}) {
   return (
     <Box>
       <Typography
         variant="caption"
         color="text.secondary"
-        sx={{ textTransform: "uppercase", letterSpacing: 0.4, display: "block" }}
+        sx={{
+          textTransform: "uppercase",
+          letterSpacing: 0.4,
+          display: "block",
+        }}
       >
         {label}
       </Typography>
@@ -71,17 +81,23 @@ const CaseTransferDetailPage: React.FC = () => {
   const { data: session } = useSession();
   const roles = (session?.user?.roles as string[] | undefined) ?? [];
   const isStaff = roles.some((r) =>
-    [UserRole.TENANT_ADMIN, UserRole.AGENT, UserRole.EMPLOYEE, UserRole.PLATFORM_OWNER].includes(
-      r as UserRole,
-    ),
+    [
+      UserRole.TENANT_ADMIN,
+      UserRole.AGENT,
+      UserRole.EMPLOYEE,
+      UserRole.PLATFORM_OWNER,
+    ].includes(r as UserRole),
   );
   const isLawyer = roles.includes(UserRole.LAWYER);
   const isBailiffRole = roles.includes(UserRole.BAILIFF);
 
   const [loading, setLoading] = useState(true);
-  const [caseTransfer, setCaseTransfer] = useState<CaseTransferDetail | null>(null);
+  const [caseTransfer, setCaseTransfer] = useState<CaseTransferDetail | null>(
+    null,
+  );
   const [agreements, setAgreements] = useState<AgreementResponse[]>([]);
-  const [selectedAgreement, setSelectedAgreement] = useState<AgreementResponse | null>(null);
+  const [selectedAgreement, setSelectedAgreement] =
+    useState<AgreementResponse | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [dialog, setDialog] = useState<
@@ -134,7 +150,9 @@ const CaseTransferDetailPage: React.FC = () => {
   const statusInfo = getCaseTransferDisplayStatusInfo(caseTransfer);
   const latestLawyerFeeInvoice = caseTransfer.lawyerFeeInvoices[0];
   const pendingLawyerFeeInvoice =
-    latestLawyerFeeInvoice?.status === "PENDING_PAYMENT" ? latestLawyerFeeInvoice : undefined;
+    latestLawyerFeeInvoice?.status === "PENDING_PAYMENT"
+      ? latestLawyerFeeInvoice
+      : undefined;
   const debtorName = caseTransfer.debtClaim.debtor?.person
     ? `${caseTransfer.debtClaim.debtor.person.first_name ?? ""} ${caseTransfer.debtClaim.debtor.person.last_name ?? ""}`.trim()
     : "-";
@@ -152,7 +170,9 @@ const CaseTransferDetailPage: React.FC = () => {
   const handleRejectOverdue = async () => {
     try {
       await rejectOverdueCaseTransfer(caseTransfer.id);
-      notifySuccess("Dossier afgewezen. U kunt nu een andere advocaat/deurwaarder selecteren.");
+      notifySuccess(
+        "Dossier afgewezen. U kunt nu een andere advocaat/deurwaarder selecteren.",
+      );
       router.push(`/collections/${caseTransfer.debtClaimId}`);
     } catch (error) {
       notifyError(error instanceof Error ? error.message : "Actie mislukt");
@@ -200,7 +220,8 @@ const CaseTransferDetailPage: React.FC = () => {
     CaseTransferStatus.ACCEPTED,
     CaseTransferStatus.WORK_COMPLETED,
   ];
-  const showCancelButton = isStaff && CANCELLABLE_STATUSES.includes(caseTransfer.status);
+  const showCancelButton =
+    isStaff && CANCELLABLE_STATUSES.includes(caseTransfer.status);
 
   // Día 7: el plazo de aceptación venció sin respuesta — el participante
   // decide (nunca vence ni se rechaza automáticamente). Ver
@@ -215,29 +236,53 @@ const CaseTransferDetailPage: React.FC = () => {
 
   // Propuestas de acuerdo de pago: el participante, el abogado o el
   // alguacil asignado pueden proponer mientras el expediente esté aceptado.
-  const isAssignedProfessional = (isLawyer && isLawyerTrack) || (isBailiffRole && !!caseTransfer.bailiffId);
+  const isAssignedProfessional =
+    (isLawyer && isLawyerTrack) || (isBailiffRole && !!caseTransfer.bailiffId);
   const canProposeAgreement =
-    (isStaff || isAssignedProfessional) && caseTransfer.status === CaseTransferStatus.ACCEPTED;
+    (isStaff || isAssignedProfessional) &&
+    caseTransfer.status === CaseTransferStatus.ACCEPTED;
   // Decidir (aceptar, modificar o rechazar) es del participante, salvo que
   // exista volmacht (power of attorney) otorgada al profesional asignado.
-  const canDecideAgreements = isStaff || (isAssignedProfessional && caseTransfer.hasPowerOfAttorney);
+  const canDecideAgreements =
+    isStaff || (isAssignedProfessional && caseTransfer.hasPowerOfAttorney);
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+    >
       <AppBreadcrumbs
-        items={[{ label: "Dossieroverdracht", href: "/legal-processes" }, { label: "Overdracht" }]}
+        items={[
+          { label: "Dossieroverdracht", href: "/legal-processes" },
+          { label: "Overdracht" },
+        ]}
       />
 
       <Stack spacing={3}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          flexWrap="wrap"
+          gap={1}
+        >
           <Typography variant="h4" fontWeight={700}>
             {caseTransfer.debtClaim.reference}
           </Typography>
           <Stack direction="row" spacing={1}>
             {caseTransfer.isEmergencyTransfer && (
-              <Chip label="Noodoverdracht" color="error" sx={{ fontWeight: 700 }} />
+              <Chip
+                label="Noodoverdracht"
+                color="error"
+                sx={{ fontWeight: 700 }}
+              />
             )}
-            <Chip label={statusInfo.label} color={statusInfo.color} sx={{ fontWeight: 700 }} />
+            <Chip
+              label={statusInfo.label}
+              color={statusInfo.color}
+              sx={{ fontWeight: 700 }}
+            />
           </Stack>
         </Stack>
 
@@ -249,12 +294,17 @@ const CaseTransferDetailPage: React.FC = () => {
                 <InfoField label="Debiteur" value={debtorName} />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField label="Vordering" value={caseTransfer.debtClaim.reference} />
+                <InfoField
+                  label="Vordering"
+                  value={caseTransfer.debtClaim.reference}
+                />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <InfoField
                   label="Bedrag"
-                  value={formatCurrency(Number(caseTransfer.debtClaim.principalAmount) || 0)}
+                  value={formatCurrency(
+                    Number(caseTransfer.debtClaim.principalAmount) || 0,
+                  )}
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
@@ -268,24 +318,39 @@ const CaseTransferDetailPage: React.FC = () => {
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField label="Deurwaarder" value={caseTransfer.bailiff?.fullname ?? "-"} />
+                <InfoField
+                  label="Deurwaarder"
+                  value={caseTransfer.bailiff?.fullname ?? "-"}
+                />
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <InfoField label="Gestart op" value={formatDate(caseTransfer.createdAt.toString())} />
+                <InfoField
+                  label="Gestart op"
+                  value={formatDate(caseTransfer.createdAt.toString())}
+                />
               </Grid>
               {caseTransfer.isEmergencyTransfer && (
                 <Grid size={{ xs: 12 }}>
-                  <InfoField label="Reden noodoverdracht" value={caseTransfer.emergencyReason ?? "-"} />
+                  <InfoField
+                    label="Reden noodoverdracht"
+                    value={caseTransfer.emergencyReason ?? "-"}
+                  />
                 </Grid>
               )}
               {caseTransfer.status === CaseTransferStatus.REJECTED && (
                 <Grid size={{ xs: 12 }}>
-                  <InfoField label="Reden afwijzing" value={caseTransfer.rejectionReason ?? "-"} />
+                  <InfoField
+                    label="Reden afwijzing"
+                    value={caseTransfer.rejectionReason ?? "-"}
+                  />
                 </Grid>
               )}
               {caseTransfer.status === CaseTransferStatus.CANCELLED && (
                 <Grid size={{ xs: 12 }}>
-                  <InfoField label="Reden annulering" value={caseTransfer.cancelReason ?? "-"} />
+                  <InfoField
+                    label="Reden annulering"
+                    value={caseTransfer.cancelReason ?? "-"}
+                  />
                 </Grid>
               )}
             </Grid>
@@ -325,7 +390,10 @@ const CaseTransferDetailPage: React.FC = () => {
             action={
               <Stack direction="row" spacing={1}>
                 {isStaff && (
-                  <Button size="small" onClick={() => setDialog("power-of-attorney")}>
+                  <Button
+                    size="small"
+                    onClick={() => setDialog("power-of-attorney")}
+                  >
                     Volmacht beheren
                   </Button>
                 )}
@@ -378,7 +446,8 @@ const CaseTransferDetailPage: React.FC = () => {
                     }}
                   >
                     <Typography variant="body2">
-                      {formatCurrency(agreement.total_amount)} — {agreement.installments_count} termijnen
+                      {formatCurrency(agreement.total_amount)} —{" "}
+                      {agreement.installments_count} termijnen
                     </Typography>
                     <Chip size="small" label={agreement.status} />
                   </Box>
@@ -392,11 +461,14 @@ const CaseTransferDetailPage: React.FC = () => {
           <CardHeader title="Audit trail" />
           <Divider />
           <CardContent>
-            <GopTimeline debtClaimId={caseTransfer.debtClaimId} refreshKey={refreshKey} />
+            <GopTimeline
+              debtClaimId={caseTransfer.debtClaimId}
+              refreshKey={refreshKey}
+            />
           </CardContent>
         </Card>
 
-        {hasActionsCard && (
+        {/* {hasActionsCard && (
           <Card>
             <CardHeader title="Acties" />
             <Divider />
@@ -418,20 +490,23 @@ const CaseTransferDetailPage: React.FC = () => {
               </Stack>
             </CardContent>
           </Card>
-        )}
+        )} */}
 
         {showFinalizeLawyerWorkButton && (
           <Card>
-            <CardHeader title="Afronding van het werk van de advocaat" />
+            <CardHeader title="Dossier afronden" />
             <Divider />
             <CardContent>
               <Stack spacing={2} alignItems="flex-start">
                 <Typography variant="body2" color="text.secondary">
-                  Registreer de uitkomst, het honorarium en de factuur om deze fase af te ronden.
-                  Is er een vonnis, selecteer dan ook de deurwaarder voor tenuitvoerlegging — na
-                  betaling van de CFSB-vergoeding wordt het vonnis automatisch aan hem overgedragen.
+                  Leg vast hoe het dossier is afgerond, het honorarium en de
+                  factuur. Is er een vonnis, selecteer dan ook de deurwaarder
+                  voor tenuitvoerlegging.
                 </Typography>
-                <Button variant="contained" onClick={() => setDialog("finalize-lawyer-work")}>
+                <Button
+                  variant="contained"
+                  onClick={() => setDialog("finalize-lawyer-work")}
+                >
                   Dossier afronden
                 </Button>
               </Stack>
@@ -441,95 +516,105 @@ const CaseTransferDetailPage: React.FC = () => {
 
         {showRegisterBailiffOutcomeButton && (
           <Card>
-            <CardHeader title="Uitkomst registreren" />
+            <CardHeader title="Dossier afronden" />
             <Divider />
             <CardContent>
               <Stack spacing={2} alignItems="flex-start">
                 <Typography variant="body2" color="text.secondary">
-                  Is dit dossier buitengerechtelijk opgelost, of gerechtelijk behandeld zonder
-                  vonnis, registreer dan hier de uitkomst en de kostenfactuur. Is er wél een
-                  vonnis, gebruik dan rechtstreeks &quot;Vonnis registreren&quot; hieronder.
+                  Leg vast hoe de dossier is afgerond.
                 </Typography>
-                <Button variant="contained" onClick={() => setDialog("register-bailiff-outcome")}>
-                  Uitkomst registreren
+                <Button
+                  variant="contained"
+                  onClick={() => setDialog("register-bailiff-outcome")}
+                >
+                  Dossier afronden
                 </Button>
               </Stack>
             </CardContent>
           </Card>
         )}
 
-        {((isLawyer && isLawyerTrack) || (isBailiffRole && !isLawyerTrack)) && pendingLawyerFeeInvoice && (
-          <Card>
-            <CardHeader title="Betaling CFSB-vergoeding" />
-            <Divider />
-            <CardContent>
-              <Typography variant="body2" color="text.secondary" mb={2}>
-                CFSB berekent 5% over het geregistreerde {isLawyerTrack ? "honorarium" : "kostenbedrag"},
-                plus toepasselijke belasting. Betaal de vergoeding via Sentoo zodat deze fase de
-                status &quot;Afgerond&quot; krijgt.
-              </Typography>
-              <Stack spacing={1} sx={{ mb: 2 }}>
-                <Stack direction="row" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">
-                    {isLawyerTrack ? "Totaal honorarium" : "Totaal kostenbedrag"}
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {formatCurrency(pendingLawyerFeeInvoice.totalAmount)}
-                  </Typography>
+        {((isLawyer && isLawyerTrack) || (isBailiffRole && !isLawyerTrack)) &&
+          pendingLawyerFeeInvoice && (
+            <Card>
+              <CardHeader title="Betaling CFSB-vergoeding" />
+              <Divider />
+              <CardContent>
+                <Typography variant="body2" color="text.secondary" mb={2}>
+                  CFSB berekent 5% over het geregistreerde{" "}
+                  {isLawyerTrack ? "honorarium" : "kostenbedrag"}, plus
+                  toepasselijke belasting. Betaal de vergoeding via Sentoo zodat
+                  deze fase de status &quot;Afgerond&quot; krijgt.
+                </Typography>
+                <Stack spacing={1} sx={{ mb: 2 }}>
+                  <Stack direction="row" justifyContent="space-between">
+                    <Typography variant="body2" color="text.secondary">
+                      {isLawyerTrack
+                        ? "Totaal honorarium"
+                        : "Totaal kostenbedrag"}
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {formatCurrency(pendingLawyerFeeInvoice.totalAmount)}
+                    </Typography>
+                  </Stack>
+                  <Stack direction="row" justifyContent="space-between">
+                    <Typography variant="body2" color="text.secondary">
+                      CFSB-vergoeding (5%)
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {formatCurrency(pendingLawyerFeeInvoice.cfsbFeeAmount)}
+                    </Typography>
+                  </Stack>
+                  <Stack direction="row" justifyContent="space-between">
+                    <Typography variant="body2" color="text.secondary">
+                      Belasting
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {formatCurrency(pendingLawyerFeeInvoice.taxAmount)}
+                    </Typography>
+                  </Stack>
+                  <Divider />
+                  <Stack direction="row" justifyContent="space-between">
+                    <Typography variant="subtitle2" fontWeight={700}>
+                      Totaal te betalen
+                    </Typography>
+                    <Typography variant="subtitle2" fontWeight={700}>
+                      {formatCurrency(
+                        pendingLawyerFeeInvoice.cfsbFeeAmount +
+                          pendingLawyerFeeInvoice.taxAmount,
+                      )}
+                    </Typography>
+                  </Stack>
                 </Stack>
-                <Stack direction="row" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">
-                    CFSB-vergoeding (5%)
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {formatCurrency(pendingLawyerFeeInvoice.cfsbFeeAmount)}
-                  </Typography>
-                </Stack>
-                <Stack direction="row" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">
-                    Belasting
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {formatCurrency(pendingLawyerFeeInvoice.taxAmount)}
-                  </Typography>
-                </Stack>
-                <Divider />
-                <Stack direction="row" justifyContent="space-between">
-                  <Typography variant="subtitle2" fontWeight={700}>
-                    Totaal te betalen
-                  </Typography>
-                  <Typography variant="subtitle2" fontWeight={700}>
-                    {formatCurrency(
-                      pendingLawyerFeeInvoice.cfsbFeeAmount + pendingLawyerFeeInvoice.taxAmount,
-                    )}
-                  </Typography>
-                </Stack>
-              </Stack>
-              <Chip
-                size="small"
-                color="warning"
-                label="In afwachting van betaling CFSB"
-                sx={{ fontWeight: 700, mb: 2 }}
-              />
-              <PaymentIntent
-                onCreateTransaction={async () => ({ success: false, error: "N/A" })}
-                existingPayment={{
-                  paymentId: pendingLawyerFeeInvoice.payment.id,
-                  paymentUrl: pendingLawyerFeeInvoice.payment.payment_url ?? "",
-                }}
-                onPaymentConfirmed={async () => {
-                  notifySuccess(
-                    isLawyerTrack
-                      ? "Betaling bevestigd. Advocatenfase afgerond."
-                      : "Betaling bevestigd. Deze route is afgerond — er is geen GOP.",
-                  );
-                  refresh();
-                }}
-                buttonLabel="Nu betalen via Sentoo"
-              />
-            </CardContent>
-          </Card>
-        )}
+                <Chip
+                  size="small"
+                  color="warning"
+                  label="In afwachting van betaling CFSB"
+                  sx={{ fontWeight: 700, mb: 2 }}
+                />
+                <PaymentIntent
+                  onCreateTransaction={async () => ({
+                    success: false,
+                    error: "N/A",
+                  })}
+                  existingPayment={{
+                    paymentId: pendingLawyerFeeInvoice.payment.id,
+                    paymentUrl:
+                      pendingLawyerFeeInvoice.payment.payment_url ?? "",
+                  }}
+                  onPaymentConfirmed={async () => {
+                    notifySuccess(
+                      isLawyerTrack
+                        ? "Betaling bevestigd. Advocatenfase afgerond."
+                        : "Betaling bevestigd. Deze route is afgerond — er is geen GOP.",
+                    );
+                    refresh();
+                  }}
+                  buttonLabel="Nu betalen via Sentoo"
+                />
+              </CardContent>
+            </Card>
+          )}
 
         {showAcceptanceDeadlineDecision && (
           <Card>
@@ -537,15 +622,20 @@ const CaseTransferDetailPage: React.FC = () => {
             <Divider />
             <CardContent>
               <Typography variant="body2" color="text.secondary" mb={2}>
-                De termijn van 7 dagen om het dossier te accepteren of af te wijzen is verstreken
-                zonder reactie. Beslis of u 7 dagen extra toekent of een andere professional
-                selecteert. Het dossier wordt niet automatisch gesloten of afgewezen.
+                De termijn van 7 dagen om het dossier te accepteren of af te
+                wijzen is verstreken zonder reactie. Beslis of u 7 dagen extra
+                toekent of een andere professional selecteert. Het dossier wordt
+                niet automatisch gesloten of afgewezen.
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 <Button variant="contained" onClick={handleExtendDeadline}>
                   7 dagen extra toekennen
                 </Button>
-                <Button variant="outlined" color="error" onClick={handleRejectOverdue}>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={handleRejectOverdue}
+                >
                   Andere professional kiezen
                 </Button>
               </Stack>
@@ -559,14 +649,18 @@ const CaseTransferDetailPage: React.FC = () => {
             <Divider />
             <CardContent>
               <Typography variant="body2" color="text.secondary" mb={2}>
-                Bekijk alle informatie hierboven en beslis vervolgens of u dit dossier accepteert of
-                afwijst.
+                Bekijk alle informatie hierboven en beslis vervolgens of u dit
+                dossier accepteert of afwijst.
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 <Button variant="contained" onClick={() => setDialog("accept")}>
                   Dossier accepteren
                 </Button>
-                <Button variant="outlined" color="error" onClick={() => setDialog("reject")}>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={() => setDialog("reject")}
+                >
                   Dossier afwijzen
                 </Button>
               </Stack>
