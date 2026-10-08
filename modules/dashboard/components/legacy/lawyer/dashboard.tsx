@@ -16,6 +16,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
 import MoveToInboxOutlinedIcon from "@mui/icons-material/MoveToInboxOutlined";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
@@ -48,7 +49,7 @@ const QUICK_ACTIONS = [
   // },
   {
     label: "Mijn dossiers",
-    description: "Overzicht van al uw overgedragen dossiers",
+    description: "Overzicht van al uw toegewezen dossiers",
     href: "/legal-processes",
     icon: <GavelOutlinedIcon fontSize="small" />,
   },
@@ -67,6 +68,7 @@ const QUICK_ACTIONS = [
 ];
 
 export const DashboardLawyer = () => {
+  const theme = useTheme();
   const [items, setItems] = useState<CaseTransferListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -107,30 +109,30 @@ export const DashboardLawyer = () => {
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <StatCard
-            title="Mijn dossiers"
+            title="In afwachting van acceptatie"
             value={loading ? 0 : pendingItems.length}
-            subtitle="wachten op actie"
-            color="#E67E22"
+            subtitle="dossiers"
+            color={theme.palette.warning.main}
             icon={<MoveToInboxOutlinedIcon />}
             href="/legal-processes?tab=pending"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <StatCard
-            title="In behandeling door advocaat"
+            title="In behandeling"
             value={loading ? 0 : activeCount}
             subtitle="actieve dossiers"
-            color="#0C284C"
+            color={theme.palette.success.main}
             icon={<AssignmentOutlinedIcon />}
             href="/legal-processes"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <StatCard
-            title="Totaal toegewezen"
+            title="Afgerond"
             value={loading ? 0 : items.length}
             subtitle="dossiers"
-            color="#00897b"
+            color={theme.palette.success.main}
             icon={<GavelOutlinedIcon />}
             href="/legal-processes"
           />

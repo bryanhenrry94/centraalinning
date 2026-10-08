@@ -25,7 +25,7 @@ const PAYMENT_STATUS_LABELS: Record<
   pending: { label: "In behandeling", color: "warning" },
   paid: { label: "Betaald", color: "success" },
   failed: { label: "Afgewezen", color: "error" },
-  expired: { label: "Verlopen", color: "default" },
+  expired: { label: "Verlopen", color: "error" },
   reversed: { label: "Teruggedraaid", color: "error" },
 };
 

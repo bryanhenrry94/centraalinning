@@ -144,7 +144,7 @@ const SupportPage: React.FC = () => {
                 Mijn berichten
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Hier vindt u een overzicht van uw eerder verstuurde berichten.
+                Overzicht van uw eerder verstuurde berichten.
               </Typography>
             </Box>
             <TextField

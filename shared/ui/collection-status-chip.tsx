@@ -14,11 +14,11 @@ const CollectionStatusChip = ({ status }: { status: string }) => {
   switch (status) {
     case "PENDING":
       label = "Te betalen";
-      color = "primary";
+      color = "warning";
       break;
     case "IN_PROGRESS":
       label = "Gedeeltelijk betaald";
-      color = "info";
+      color = "warning";
       break;
     case "OVERDUE":
       label = "Verlopen";
@@ -30,7 +30,9 @@ const CollectionStatusChip = ({ status }: { status: string }) => {
       break;
     case "CANCELLED":
       label = "Geannuleerd";
-      color = "secondary";
+      // CCP: "secondary" (navy) is voor structuur/headers, geen statuskleur;
+      // geannuleerd is geen afwijzing/fout → grijs (default), niet rood.
+      color = "default";
       break;
   }
 

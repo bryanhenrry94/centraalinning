@@ -7,12 +7,15 @@ import {
   ListItem,
   ListItemText,
 } from "@mui/material";
+import { alpha, useTheme } from "@mui/material/styles";
 
 interface FormErrorsProps {
   errors: Record<string, any>;
 }
 
 const FormErrors: React.FC<FormErrorsProps> = ({ errors }) => {
+  const theme = useTheme();
+
   if (Object.keys(errors).length === 0) return null;
 
   const renderErrorList = (errs: Record<string, any>) => {
@@ -52,7 +55,8 @@ const FormErrors: React.FC<FormErrorsProps> = ({ errors }) => {
 
   return (
     <Box mt={2} mb={2}>
-      <Paper elevation={0} sx={{ backgroundColor: "#fff3e0", p: 2 }}>
+      {/* CCP: rood = fout — amber/geel ("in afwachting") hoort hier niet. */}
+      <Paper elevation={0} sx={{ backgroundColor: alpha(theme.palette.error.main, 0.08), p: 2 }}>
         <Typography variant="subtitle2" color="error" gutterBottom>
           Corrige los siguientes errores:
         </Typography>

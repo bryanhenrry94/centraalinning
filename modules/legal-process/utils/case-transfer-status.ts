@@ -6,12 +6,19 @@ type StatusColor = "default" | "info" | "warning" | "success" | "error";
 // overbodig op het scherm van de toegewezen deurwaarder/advocaat zelf — die
 // weet al dat het dossier aan hem overgedragen is.
 const CASE_TRANSFER_STATUS_CONFIG: Record<string, { label: string; color: StatusColor }> = {
-  PENDING_PAYMENT: { label: "Wacht op betaling", color: "default" },
-  PENDING_ACCEPTANCE: { label: "Wacht op acceptatie", color: "default" },
-  ACCEPTED: { label: "Overgedragen", color: "info" },
+  // CCP-kleurenregel: geel/amber = "in afwachting, concept of lopend
+  // proces" (incl. "betaling in afwachting"); groen = "actief, geaccepteerd,
+  // betaald of succesvol afgerond"; rood = "blokkade, afwijzing, fout of
+  // kritieke waarschuwing"; grijs = "secundaire informatie, niet-actieve
+  // onderdelen" — dezelfde kleur moet overal dezelfde betekenis houden.
+  PENDING_PAYMENT: { label: "Wacht op betaling", color: "warning" },
+  PENDING_ACCEPTANCE: { label: "In afwachting van acceptatie", color: "warning" },
+  ACCEPTED: { label: "In behandeling", color: "success" },
   REJECTED: { label: "Afgewezen", color: "error" },
   WORK_COMPLETED: { label: "Afgerond", color: "success" },
-  CANCELLED: { label: "Geannuleerd", color: "error" },
+  // Geannuleerd is geen afwijzing/fout — de deelnemer heeft de overdracht
+  // zelf ingetrokken, een niet-actieve eindstatus (CCP: grijs).
+  CANCELLED: { label: "Geannuleerd", color: "default" },
 };
 
 export function getCaseTransferStatusInfo(status: string) {
@@ -41,7 +48,7 @@ export function getCaseTransferDisplayStatusInfo(caseTransfer: CaseTransferForWo
     if (pendingInvoice) {
       return { label: "In afwachting van betaling CFSB", color: "warning" as StatusColor };
     }
-    return { label: "In behandeling door advocaat", color: "info" as StatusColor };
+    return { label: "In behandeling door advocaat", color: "success" as StatusColor };
   }
   return getCaseTransferStatusInfo(caseTransfer.status);
 }

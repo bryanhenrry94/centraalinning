@@ -5,10 +5,10 @@ export { FinancialAgreementStatus };
 type StatusColor = "default" | "info" | "warning" | "success" | "error";
 
 const FINANCIAL_AGREEMENT_STATUS_CONFIG: Record<string, { label: string; color: StatusColor }> = {
-  PENDING_PAYMENT: { label: "Wacht op betaling", color: "default" },
+  PENDING_PAYMENT: { label: "Wacht op betaling", color: "warning" },
   REGISTERED: { label: "Geregistreerd", color: "success" },
   ESCALATED: { label: "Geëscaleerd naar AOP", color: "warning" },
-  CANCELLED: { label: "Geannuleerd", color: "error" },
+  CANCELLED: { label: "Geannuleerd", color: "default" },
 };
 
 export function getFinancialAgreementStatusInfo(status: string) {

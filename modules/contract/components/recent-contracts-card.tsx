@@ -32,14 +32,16 @@ export default function RecentContractsCard({
 
   const getStatusColor = (
     status: Contract["status"],
-  ): "default" | "success" | "warning" => {
+  ): "default" | "success" => {
     switch (status) {
       case "PAID":
         return "success";
       case "REGISTERED":
         return "success";
+      // DRAFT: concept zonder "wacht op"-element — CCP grijs, zelfde als
+      // getContractStatusColor in modules/contract/utils/contract-status.ts.
       default:
-        return "warning";
+        return "default";
     }
   };
 

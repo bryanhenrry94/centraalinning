@@ -27,7 +27,7 @@ import { SUPPORT_MESSAGE_TYPE_OPTIONS } from "@/modules/support/utils/support-st
 import { SupportMessageType } from "@/modules/support/constants/support-message";
 
 const defaultValues: CreateSupportMessageInput = {
-  type: SupportMessageType.SUGGESTION,
+  type: "" as unknown as SupportMessageType,
   subject: "",
   message: "",
 };
@@ -106,7 +106,7 @@ export const SupportMessageForm: React.FC<SupportMessageFormProps> = ({
                     <TextField
                       {...field}
                       label="Onderwerp"
-                      placeholder="Vul het onderwerp in"
+                      placeholder="Onderwerp *"
                       required
                       fullWidth
                       size="small"
@@ -128,8 +128,14 @@ export const SupportMessageForm: React.FC<SupportMessageFormProps> = ({
                       required
                       fullWidth
                       size="small"
+                      defaultValue={"SUGGESTION"}
                       error={!!errors.type}
                       helperText={errors.type?.message}
+                      slotProps={{
+                        select: {
+                          displayEmpty: true,
+                        },
+                      }}
                     >
                       {SUPPORT_MESSAGE_TYPE_OPTIONS.map((option) => (
                         <MenuItem key={option.value} value={option.value}>
@@ -150,7 +156,7 @@ export const SupportMessageForm: React.FC<SupportMessageFormProps> = ({
                   <TextField
                     {...field}
                     label="Uw bericht"
-                    placeholder="Typ hier uw bericht..."
+                    placeholder="Uw bericht *"
                     required
                     fullWidth
                     multiline
@@ -181,7 +187,9 @@ export const SupportMessageForm: React.FC<SupportMessageFormProps> = ({
                 <input
                   type="file"
                   hidden
-                  onChange={(e) => handleFileSelected(e.target.files?.[0] ?? null)}
+                  onChange={(e) =>
+                    handleFileSelected(e.target.files?.[0] ?? null)
+                  }
                 />
               </Button>
               {file && (

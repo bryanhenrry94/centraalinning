@@ -22,7 +22,9 @@ export function getContractStatusColor(
       return "default";
 
     case "REGISTERED":
-      return "info";
+      // CCP: groen = actief/geaccepteerd/succesvol afgerond — zelfde
+      // betekenis als FinancialAgreementStatus.REGISTERED.
+      return "success";
 
     default:
       return "default";

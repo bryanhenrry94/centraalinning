@@ -8,15 +8,20 @@ export type ChipColor =
   | "error"
   | "success";
 
+// CCP-kleurenregel (systeembreed): geel/amber = in afwachting/concept/lopend
+// proces; groen = actief, geaccepteerd, betaald of succesvol afgerond; rood =
+// blokkade, afwijzing, fout of kritieke waarschuwing; grijs = secundaire
+// informatie/niet-actieve onderdelen (incl. vrijwillig geannuleerd — dat is
+// geen afwijzing/fout, dus geen rood).
 export const DEBT_CLAIM_STATUS_CONFIG: Record<
   string,
   { label: string; color: ChipColor }
 > = {
-  OPEN: { label: "Wacht op betaling", color: "primary" },
-  IN_PROGRESS: { label: "In behandeling", color: "info" },
+  OPEN: { label: "Wacht op betaling", color: "warning" },
+  IN_PROGRESS: { label: "In behandeling", color: "warning" },
   SETTLED: { label: "Vereffend", color: "success" },
   CLOSED: { label: "Gesloten", color: "default" },
-  CANCELLED: { label: "Geannuleerd", color: "error" },
+  CANCELLED: { label: "Geannuleerd", color: "default" },
 };
 
 export const AOP_STEP_CONFIG: Record<
@@ -52,10 +57,10 @@ export const WORKFLOW_STATUS_CONFIG: Record<
   string,
   { label: string; color: ChipColor }
 > = {
-  PENDING: { label: "In afwachting", color: "default" },
-  IN_PROGRESS: { label: "In behandeling", color: "info" },
+  PENDING: { label: "In afwachting", color: "warning" },
+  IN_PROGRESS: { label: "In behandeling", color: "warning" },
   COMPLETED: { label: "Voltooid", color: "success" },
-  CANCELLED: { label: "Geannuleerd", color: "error" },
+  CANCELLED: { label: "Geannuleerd", color: "default" },
 };
 
 export function getWorkflowStatusInfo(status: string) {
@@ -69,11 +74,11 @@ export const CHARGE_STATUS_CONFIG: Record<
   string,
   { label: string; color: ChipColor }
 > = {
-  PENDING: { label: "In afwachting", color: "default" },
+  PENDING: { label: "In afwachting", color: "warning" },
   INVOICED: { label: "Gefactureerd", color: "info" },
   PAID: { label: "Betaald", color: "success" },
   WAIVED: { label: "Kwijtgescholden", color: "default" },
-  CANCELLED: { label: "Geannuleerd", color: "error" },
+  CANCELLED: { label: "Geannuleerd", color: "default" },
 };
 
 export function getChargeStatusInfo(status: string) {
@@ -87,10 +92,10 @@ export const OBLIGATION_STATUS_CONFIG: Record<
   string,
   { label: string; color: ChipColor }
 > = {
-  PENDING: { label: "In afwachting", color: "default" },
+  PENDING: { label: "In afwachting", color: "warning" },
   PARTIALLY_PAID: { label: "Gedeeltelijk betaald", color: "warning" },
   PAID: { label: "Betaald", color: "success" },
-  CANCELLED: { label: "Geannuleerd", color: "error" },
+  CANCELLED: { label: "Geannuleerd", color: "default" },
 };
 
 export function getObligationStatusInfo(status: string) {

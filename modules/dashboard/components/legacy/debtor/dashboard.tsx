@@ -607,22 +607,14 @@ const DashboardDebtor = () => {
                   }
                   color={
                     isAgreementApproved(debt.agreement_status)
-                      ? "info"
+                      ? "success"
                       : hasOpenAgreement(debt.agreement_status)
-                        ? undefined
+                        ? "warning"
                         : "default"
                   }
                   size="small"
                   variant="outlined"
-                  sx={{
-                    width: 150,
-                    ...(hasOpenAgreement(debt.agreement_status) &&
-                      !isAgreementApproved(debt.agreement_status) && {
-                        color: "#F97316",
-                        borderColor: "#F97316",
-                        "& .MuiChip-icon": { color: "#F97316" },
-                      }),
-                  }}
+                  sx={{ width: 150 }}
                 />
               ),
             },

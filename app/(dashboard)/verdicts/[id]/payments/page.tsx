@@ -56,7 +56,7 @@ const sampleData = [
 // Componente para chip de estado
 const StatusChip = ({ status }: { status: string }) => {
   const colors: Record<string, "default" | "success" | "error" | "warning"> = {
-    pending: "default",
+    pending: "warning",
     partially_paid: "warning",
     paid: "success",
     late: "error",

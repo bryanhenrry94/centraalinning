@@ -12,9 +12,11 @@ export const COMPLETED_LEGAL_PROCESS_STATUSES = [LegalProcessStatus.CLOSED] as c
 // GOP_INACTIVE staat voor "In onderzoek naar executiemogelijkheden": geen
 // actuele beslagmogelijkheid sluit het dossier nooit vanzelf — zie
 // LegalProcessService.markInactive.
+// CCP-kleurenregel: geel/amber = in afwachting/lopend proces; groen = actief
+// of succesvol afgerond; rood/grijs n.v.t. hier.
 const LEGAL_PROCESS_STATUS_CONFIG: Record<string, { label: string; color: StatusColor }> = {
-  GOP_DRAFT: { label: "Wacht op betaling", color: "default" },
-  GOP_ACTIVE: { label: "GOP actief", color: "info" },
+  GOP_DRAFT: { label: "Wacht op betaling", color: "warning" },
+  GOP_ACTIVE: { label: "GOP actief", color: "success" },
   GOP_INACTIVE: { label: "In onderzoek naar executiemogelijkheden", color: "warning" },
   CLOSED: { label: "Afgesloten", color: "success" },
 };

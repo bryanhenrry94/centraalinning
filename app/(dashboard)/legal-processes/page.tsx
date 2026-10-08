@@ -3,13 +3,33 @@
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Container, Typography, Chip, Stack, Tabs, Tab, Button } from "@mui/material";
+import {
+  Box,
+  Container,
+  Typography,
+  Chip,
+  Stack,
+  Tabs,
+  Tab,
+  Button,
+  Card,
+  TextField,
+  MenuItem,
+  Select,
+  InputAdornment,
+  IconButton,
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import FilterAltOutlinedIcon from "@mui/icons-material/FilterAltOutlined";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
 import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { notifyError } from "@/shared/ui/notifications";
 import { useTenant } from "@/modules/auth/hooks/useTenant";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 import { UserRole } from "@/shared/constants/user-role";
 import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 
@@ -34,6 +54,18 @@ const VERDICT_ELIGIBLE_STATUSES: CaseTransferStatus[] = [
   CaseTransferStatus.WORK_COMPLETED,
 ];
 
+// Estados que un abogado puede filtrar desde "Mijn dossiers" — PENDING_PAYMENT
+// queda fuera: es un status legacy de antes de que de overdracht gratis werd
+// (zie CaseTransferService.requestTransfer), geen nieuwe rij krijgt dat nog.
+const LAWYER_FILTERABLE_STATUSES: CaseTransferStatus[] = [
+  CaseTransferStatus.PENDING_ACCEPTANCE,
+  CaseTransferStatus.ACCEPTED,
+  CaseTransferStatus.WORK_COMPLETED,
+  CaseTransferStatus.REJECTED,
+  CaseTransferStatus.CANCELLED,
+];
+
+const LAWYER_PAGE_SIZE = 10;
 
 type CaseTransferListItem = Awaited<
   ReturnType<typeof getAllCaseTransfersForTenant>
@@ -49,6 +81,7 @@ type Row = {
   kind: "transfer" | "gop";
   href: string;
   reference: string;
+  tenantName: string;
   debtorName: string;
   lawyerName: string;
   bailiffName: string;
@@ -82,6 +115,7 @@ function toTransferRow(item: CaseTransferListItem): Row {
     kind: "transfer",
     href: `/legal-processes/transfers/${item.id}`,
     reference: item.debtClaim.reference || "-",
+    tenantName: item.debtClaim.tenant?.name ?? "-",
     debtorName: debtorNameOf(item),
     lawyerName: item.lawyer
       ? `${item.lawyer.firstName} ${item.lawyer.lastName}`
@@ -103,6 +137,7 @@ function toLegalProcessRow(item: LegalProcessListItem): Row {
     kind: "gop",
     href: `/legal-processes/${item.id}`,
     reference: item.referenceNumber || item.debtClaim.reference || "-",
+    tenantName: item.debtClaim.tenant?.name ?? "-",
     debtorName: debtorNameOf(item),
     lawyerName: item.caseTransfer?.lawyer
       ? `${item.caseTransfer.lawyer.firstName} ${item.caseTransfer.lawyer.lastName}`
@@ -133,6 +168,16 @@ const LegalProcessesListPageContent: React.FC = () => {
   const [tab, setTab] = useState<"pending" | "all">(
     searchParams.get("tab") === "pending" ? "pending" : "all",
   );
+
+  // Filtros propios van het "Mijn dossiers"-scherm voor de advocaat (zie
+  // mockup): zoeken, status en datumbereik, met paginering — vervangt daar
+  // de pending/all tabs van bailiff/tenant-admin.
+  const [lawyerSearch, setLawyerSearch] = useState("");
+  const [lawyerStatus, setLawyerStatus] = useState<string>("ALL");
+  const [lawyerDateFrom, setLawyerDateFrom] = useState("");
+  const [lawyerDateTo, setLawyerDateTo] = useState("");
+  const [lawyerPage, setLawyerPage] = useState(1);
+  const debouncedLawyerSearch = useDebounce(lawyerSearch, 400);
 
   useEffect(() => {
     const load = async () => {
@@ -170,8 +215,7 @@ const LegalProcessesListPageContent: React.FC = () => {
   const filteredRows = useMemo(() => {
     const pendingTransfers = transferRows.filter(
       (row) =>
-        row.statusLabel ===
-        getCaseTransferStatusInfo(CaseTransferStatus.PENDING_ACCEPTANCE).label,
+        row.status === CaseTransferStatus.PENDING_ACCEPTANCE,
     );
 
     if (!showPendingTabs) {
@@ -190,7 +234,229 @@ const LegalProcessesListPageContent: React.FC = () => {
     );
   }, [transferRows, legalProcessRows, showPendingTabs, tab]);
 
+  // "Mijn dossiers" voor de advocaat toont altijd alle eigen overdrachten
+  // (geen tabs) en past zoeken/status/datum lokaal toe.
+  const lawyerFilteredRows = useMemo(() => {
+    const query = debouncedLawyerSearch.trim().toLowerCase();
+    const from = lawyerDateFrom ? new Date(lawyerDateFrom) : null;
+    const to = lawyerDateTo ? new Date(lawyerDateTo) : null;
+
+    return [...transferRows]
+      .filter((row) => {
+        if (lawyerStatus !== "ALL" && row.status !== lawyerStatus) return false;
+        if (from && row.date < from) return false;
+        if (to) {
+          const inclusiveTo = new Date(to);
+          inclusiveTo.setHours(23, 59, 59, 999);
+          if (row.date > inclusiveTo) return false;
+        }
+        if (query) {
+          const haystack = `${row.reference} ${row.debtorName} ${row.tenantName}`.toLowerCase();
+          if (!haystack.includes(query)) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => b.date.valueOf() - a.date.valueOf());
+  }, [transferRows, lawyerStatus, lawyerDateFrom, lawyerDateTo, debouncedLawyerSearch]);
+
+  useEffect(() => {
+    setLawyerPage(1);
+  }, [lawyerStatus, lawyerDateFrom, lawyerDateTo, debouncedLawyerSearch]);
+
+  const lawyerTotalPages = Math.max(
+    1,
+    Math.ceil(lawyerFilteredRows.length / LAWYER_PAGE_SIZE),
+  );
+  const lawyerPagedRows = lawyerFilteredRows.slice(
+    (lawyerPage - 1) * LAWYER_PAGE_SIZE,
+    lawyerPage * LAWYER_PAGE_SIZE,
+  );
+  const lawyerRangeStart =
+    lawyerFilteredRows.length === 0 ? 0 : (lawyerPage - 1) * LAWYER_PAGE_SIZE + 1;
+  const lawyerRangeEnd = Math.min(
+    lawyerPage * LAWYER_PAGE_SIZE,
+    lawyerFilteredRows.length,
+  );
+
+  const clearLawyerFilters = () => {
+    setLawyerSearch("");
+    setLawyerStatus("ALL");
+    setLawyerDateFrom("");
+    setLawyerDateTo("");
+  };
+
   if (loading) return <LoadingUI />;
+
+  if (isLawyer) {
+    const columns: ListColumn<Row>[] = [
+      { key: "reference", label: "Dossiernummer", render: (row) => row.reference },
+      { key: "tenantName", label: "Deelnemer / Schuldeiser", render: (row) => row.tenantName },
+      { key: "debtorName", label: "Debiteur / Gedaagde", render: (row) => row.debtorName },
+      { key: "amount", label: "Bedrag (USD)", align: "right", render: (row) => formatCurrency(row.amount) },
+      {
+        key: "status",
+        label: "Status",
+        render: (row) => (
+          <Chip size="small" label={row.statusLabel} color={row.statusColor} sx={{ minWidth: 150 }} />
+        ),
+      },
+      {
+        key: "date",
+        label: "Geregistreerd op",
+        render: (row) => formatDate(row.date.toString()),
+        hideOnMobile: true,
+      },
+    ];
+
+    return (
+      <Container
+        maxWidth="lg"
+        disableGutters
+        sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      >
+        <AppBreadcrumbs
+          items={[
+            { label: "Mijn dossiers", href: "/legal-processes" },
+            { label: "Dossier overzicht" },
+          ]}
+        />
+
+        <Stack spacing={3}>
+          <Box>
+            <Typography variant="h4" fontWeight={700}>
+              Mijn dossiers
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Overzicht van alle aan u overgedragen dossiers.
+            </Typography>
+          </Box>
+
+          <Card sx={{ p: { xs: 1.5, sm: 3 } }}>
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              spacing={2}
+              mb={3}
+              alignItems={{ md: "flex-end" }}
+            >
+              <Stack sx={{ flex: 2 }} spacing={0.5}>
+                <Typography variant="caption" fontWeight={600} color="text.secondary">
+                  Zoeken
+                </Typography>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Dossiernummer, debiteur of bedrijfsnaam..."
+                  value={lawyerSearch}
+                  onChange={(e) => setLawyerSearch(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Stack>
+
+              <Stack sx={{ flex: 1 }} spacing={0.5}>
+                <Typography variant="caption" fontWeight={600} color="text.secondary">
+                  Status
+                </Typography>
+                <Select
+                  fullWidth
+                  size="small"
+                  value={lawyerStatus}
+                  onChange={(e) => setLawyerStatus(e.target.value)}
+                >
+                  <MenuItem value="ALL">Alle statussen</MenuItem>
+                  {LAWYER_FILTERABLE_STATUSES.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {getCaseTransferStatusInfo(status).label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </Stack>
+
+              <Stack sx={{ flex: 1 }} spacing={0.5}>
+                <Typography variant="caption" fontWeight={600} color="text.secondary">
+                  Datum
+                </Typography>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <TextField
+                    size="small"
+                    type="date"
+                    value={lawyerDateFrom}
+                    onChange={(e) => setLawyerDateFrom(e.target.value)}
+                    slotProps={{ inputLabel: { shrink: true } }}
+                  />
+                  <Typography color="text.secondary">-</Typography>
+                  <TextField
+                    size="small"
+                    type="date"
+                    value={lawyerDateTo}
+                    onChange={(e) => setLawyerDateTo(e.target.value)}
+                    slotProps={{ inputLabel: { shrink: true } }}
+                  />
+                </Stack>
+              </Stack>
+
+              <Button
+                variant="outlined"
+                startIcon={<FilterAltOutlinedIcon />}
+                onClick={clearLawyerFilters}
+                sx={{ textTransform: "none", height: 40 }}
+              >
+                Filters
+              </Button>
+            </Stack>
+
+            <ResponsiveListTable
+              columns={columns}
+              rows={lawyerPagedRows}
+              getRowKey={(row) => `${row.kind}-${row.id}`}
+              getRowHref={(row) => row.href}
+              emptyMessage="Nog geen dossiers."
+            />
+
+            <Box
+              mt={3}
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <Typography variant="body2" color="text.secondary">
+                Toont {lawyerRangeStart} - {lawyerRangeEnd} van {lawyerFilteredRows.length} dossiers
+              </Typography>
+
+              <Stack direction="row" spacing={1} alignItems="center">
+                <IconButton
+                  size="small"
+                  disabled={lawyerPage <= 1}
+                  onClick={() => setLawyerPage((p) => Math.max(1, p - 1))}
+                >
+                  <ChevronLeftIcon fontSize="small" />
+                </IconButton>
+                <Button
+                  size="small"
+                  variant="contained"
+                  sx={{ minWidth: 36, textTransform: "none" }}
+                >
+                  {lawyerPage}
+                </Button>
+                <IconButton
+                  size="small"
+                  disabled={lawyerPage >= lawyerTotalPages}
+                  onClick={() => setLawyerPage((p) => Math.min(lawyerTotalPages, p + 1))}
+                >
+                  <ChevronRightIcon fontSize="small" />
+                </IconButton>
+              </Stack>
+            </Box>
+          </Card>
+        </Stack>
+      </Container>
+    );
+  }
 
   return (
     <Container
@@ -204,6 +470,13 @@ const LegalProcessesListPageContent: React.FC = () => {
         <Typography variant="h4" fontWeight={700}>
           Mijn dossiers
         </Typography>
+
+        {showPendingTabs && (
+          <Tabs value={tab} onChange={(_, value) => setTab(value)}>
+            <Tab value="all" label="Alle dossiers" />
+            <Tab value="pending" label="Wachten op acceptatie" />
+          </Tabs>
+        )}
 
         {(() => {
           const columns: ListColumn<Row>[] = [

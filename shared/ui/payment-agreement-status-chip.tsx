@@ -19,11 +19,11 @@ const PaymentAgreementStatusChip = ({
   switch (status) {
     case AgreementStatus.PENDING:
       label = "Open";
-      color = "primary";
+      color = "warning";
       break;
     case AgreementStatus.IN_NEGOTIATION:
       label = "In Onderhandeling";
-      color = "info";
+      color = "warning";
       break;
     case AgreementStatus.COUNTEROFFER:
       label = "Tegenbod";
@@ -39,7 +39,7 @@ const PaymentAgreementStatusChip = ({
       break;
     case AgreementStatus.CANCELLED:
       label = "Geannuleerd";
-      color = "error";
+      color = "default";
       break;
     case AgreementStatus.CLOSED:
       label = "Gesloten";
