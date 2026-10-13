@@ -15,6 +15,9 @@ import {
   Card,
   TextField,
   MenuItem,
+  Menu,
+  ListItemIcon,
+  ListItemText,
   Select,
   InputAdornment,
   IconButton,
@@ -23,6 +26,9 @@ import SearchIcon from "@mui/icons-material/Search";
 import FilterAltOutlinedIcon from "@mui/icons-material/FilterAltOutlined";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import DescriptionIcon from "@mui/icons-material/Description";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
 
 import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
@@ -32,6 +38,7 @@ import { useTenant } from "@/modules/auth/hooks/useTenant";
 import { useDebounce } from "@/shared/hooks/useDebounce";
 import { UserRole } from "@/shared/constants/user-role";
 import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import { RegisterBailiffOutcomeDialog } from "@/modules/legal-process/components/register-bailiff-outcome-dialog";
 
 import {
   getAllLegalProcessesForTenant,
@@ -90,8 +97,11 @@ type Row = {
   statusColor: ReturnType<typeof getCaseTransferStatusInfo>["color"];
   date: Date;
   // Solo relevante para kind: "transfer" — permite mostrar "Vonnis
-  // registreren" directo en la tabla sin pasar por el detalle.
+  // registreren"/"Dossier afronden" directo en la tabla sin pasar por el
+  // detalle. "Dossier afronden" (RegisterBailiffOutcomeDialog) solo aplica a
+  // la ruta directa deurwaarder (sin advocaat) — ver lawyerId.
   bailiffId: string | null;
+  lawyerId: string | null;
   status: string;
 };
 
@@ -126,6 +136,7 @@ function toTransferRow(item: CaseTransferListItem): Row {
     statusColor: statusInfo.color,
     date: item.createdAt,
     bailiffId: item.bailiffId,
+    lawyerId: item.lawyerId,
     status: item.status,
   };
 }
@@ -148,6 +159,7 @@ function toLegalProcessRow(item: LegalProcessListItem): Row {
     statusColor: statusInfo.color,
     date: item.startedAt,
     bailiffId: null,
+    lawyerId: null,
     status: item.status,
   };
 }
@@ -178,6 +190,19 @@ const LegalProcessesListPageContent: React.FC = () => {
   const [lawyerDateTo, setLawyerDateTo] = useState("");
   const [lawyerPage, setLawyerPage] = useState(1);
   const debouncedLawyerSearch = useDebounce(lawyerSearch, 400);
+
+  // Menú de acciones (3 puntos) de la columna "Acties" del deurwaarder —
+  // mismo patrón que financial-agreements/page.tsx.
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [selectedRow, setSelectedRow] = useState<Row | null>(null);
+  const menuOpen = Boolean(anchorEl);
+  const [outcomeDialogOpen, setOutcomeDialogOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedRow(null);
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -210,7 +235,7 @@ const LegalProcessesListPageContent: React.FC = () => {
     };
 
     if (session) load();
-  }, [tenant?.id, session, isLawyer, isBailiffRole]);
+  }, [tenant?.id, session, isLawyer, isBailiffRole, refreshKey]);
 
   const filteredRows = useMemo(() => {
     const pendingTransfers = transferRows.filter(
@@ -503,22 +528,34 @@ const LegalProcessesListPageContent: React.FC = () => {
                   {
                     key: "actions",
                     label: "Acties",
-                    render: (row: Row) =>
-                      row.kind === "transfer" &&
-                      !!row.bailiffId &&
-                      VERDICT_ELIGIBLE_STATUSES.includes(row.status as CaseTransferStatus) ? (
-                        <Button
+                    render: (row: Row) => {
+                      const canRegisterVerdict =
+                        row.kind === "transfer" &&
+                        !!row.bailiffId &&
+                        VERDICT_ELIGIBLE_STATUSES.includes(row.status as CaseTransferStatus);
+                      const canFinalize =
+                        row.kind === "transfer" &&
+                        !!row.bailiffId &&
+                        !row.lawyerId &&
+                        row.status === CaseTransferStatus.ACCEPTED;
+
+                      if (!canRegisterVerdict && !canFinalize) return null;
+
+                      return (
+                        <IconButton
+                          aria-label="Acties"
+                          aria-haspopup="true"
                           size="small"
-                          variant="contained"
-                          sx={{ textTransform: "none", lineHeight: 1.2, minWidth: "auto" }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            router.push(`/verdicts/new?caseTransferId=${row.id}`);
+                            setAnchorEl(e.currentTarget);
+                            setSelectedRow(row);
                           }}
                         >
-                          Vonnis registreren
-                        </Button>
-                      ) : null,
+                          <MoreVertIcon fontSize="small" />
+                        </IconButton>
+                      );
+                    },
                   } satisfies ListColumn<Row>,
                 ]
               : []),
@@ -535,6 +572,62 @@ const LegalProcessesListPageContent: React.FC = () => {
           );
         })()}
       </Stack>
+
+      <Menu anchorEl={anchorEl} open={menuOpen} onClose={handleMenuClose}>
+        <MenuItem
+          onClick={() => {
+            if (!selectedRow) return;
+            handleMenuClose();
+            router.push(`/verdicts/new?caseTransferId=${selectedRow.id}`);
+          }}
+          disabled={
+            !selectedRow ||
+            !selectedRow.bailiffId ||
+            !VERDICT_ELIGIBLE_STATUSES.includes(selectedRow.status as CaseTransferStatus)
+          }
+        >
+          <ListItemIcon>
+            <DescriptionIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Vonnis registreren</ListItemText>
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            // No limpiar selectedRow acá: RegisterBailiffOutcomeDialog lo
+            // necesita mientras está abierto (ver onFinalized/onClose abajo,
+            // que sí lo limpian al cerrar el diálogo).
+            setAnchorEl(null);
+            setOutcomeDialogOpen(true);
+          }}
+          disabled={
+            !selectedRow ||
+            !selectedRow.bailiffId ||
+            !!selectedRow.lawyerId ||
+            selectedRow.status !== CaseTransferStatus.ACCEPTED
+          }
+        >
+          <ListItemIcon>
+            <TaskAltIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Dossier afronden</ListItemText>
+        </MenuItem>
+      </Menu>
+
+      {selectedRow && (
+        <RegisterBailiffOutcomeDialog
+          open={outcomeDialogOpen}
+          onClose={() => {
+            setOutcomeDialogOpen(false);
+            setSelectedRow(null);
+          }}
+          caseTransferId={selectedRow.id}
+          onFinalized={() => {
+            setOutcomeDialogOpen(false);
+            setSelectedRow(null);
+            setRefreshKey((k) => k + 1);
+          }}
+        />
+      )}
     </Container>
   );
 };

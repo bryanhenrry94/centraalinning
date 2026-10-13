@@ -391,7 +391,7 @@ const CaseTransferDetailPage: React.FC = () => {
           </Card>
         )}
 
-        <Card>
+        {/* <Card>
           <CardHeader
             title="Betalingsregeling"
             action={
@@ -462,9 +462,9 @@ const CaseTransferDetailPage: React.FC = () => {
               </Stack>
             )}
           </CardContent>
-        </Card>
+        </Card> */}
 
-        <Card>
+        {/* <Card>
           <CardHeader title="Audit trail" />
           <Divider />
           <CardContent>
@@ -473,7 +473,7 @@ const CaseTransferDetailPage: React.FC = () => {
               refreshKey={refreshKey}
             />
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* {hasActionsCard && (
           <Card>
