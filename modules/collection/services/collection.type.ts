@@ -13,7 +13,7 @@ export type DebtClaimFilter = {
   // BLK (y otros servicios) usan DebtClaim como registro compartido, pero
   // no pertenecen al listado de AOP (seguimiento administrativo) — la
   // página de AOP filtra explícitamente ese origen con esto.
-  excludeOrigin?: ("FAR" | "MANUAL" | "IMPORT" | "API" | "BLK")[];
+  excludeOrigin?: ("FAR" | "MANUAL" | "IMPORT" | "API" | "BLK" | "COP" | "GOP")[];
 };
 
 export type DebtClaim = z.infer<typeof DebtClaimSchema>;

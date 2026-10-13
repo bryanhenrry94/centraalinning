@@ -29,6 +29,8 @@ import {
   SubmitLawyerFeeInvoiceSchema,
   SubmitBailiffOutcomeInvoiceInput,
   SubmitBailiffOutcomeInvoiceSchema,
+  CreateDirectGopTransferInput,
+  DirectGopTransferSchema,
 } from "@/modules/legal-process/services/case-transfer.validators";
 
 type ProposeAgreementInput = {
@@ -98,6 +100,28 @@ export const transferToLawyer = async (input: TransferToLawyerInput) => {
   }
 
   return CaseTransferService.requestTransfer(parsed, session.user.id);
+};
+
+// Directe GOP (CCP-document "Directe COP en Directe GOP"): crea su propio
+// DebtClaim/CaseTransfer a partir del vonnis externo que ingresa el
+// participante — no requiere un debtClaimId existente, a diferencia de
+// transferToLawyer.
+export const createDirectGopTransferAction = async (input: CreateDirectGopTransferInput) => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id || !session.user.tenant_id) {
+    throw new Error("U bent niet ingelogd.");
+  }
+
+  const membership = session.user.memberships?.find(
+    (m) => m.tenantId === session.user.tenant_id,
+  );
+  const permission = canUseFeature(membership ?? null, AppAction.TRANSFER_TO_LAWYER);
+  if (!permission.allowed) {
+    throw new Error(permission.reason ?? "Deze actie is niet toegestaan.");
+  }
+
+  const parsed = DirectGopTransferSchema.parse(input);
+  return CaseTransferService.requestDirectGopTransfer(parsed, session.user.tenant_id, session.user.id);
 };
 
 export const acceptCaseTransfer = async (caseTransferId: string) => {

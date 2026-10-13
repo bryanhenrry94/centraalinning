@@ -136,6 +136,13 @@ model DebtClaim {
   caseTransfers                 CaseTransfer[]
   originatingFinancialAgreement FinancialAgreement?
 
+  // Bewijsstukken van eerdere administratieve opvolging (aanmaning/
+  // sommatie/ingebrekestelling), opgeladen bij een Directe COP-registratie
+  // — vóór dat de CollectiveCollection bestaat (die ontstaat pas in
+  // CollectiveCollectionService.requestStart), daarom hier aan de
+  // DebtClaim gekoppeld. Zie CollectiveCollectionService.createDirect.
+  collectiveCollectionDocuments CollectiveCollectionDocument[]
+
   @@map("debt_claim")
 }
 
@@ -219,6 +226,32 @@ model FinancialAgreementDocument {
   @@map("financial_agreement_document")
 }
 
+// Bewijs van eerdere administratieve opvolging (aanmaning/sommatie/
+// ingebrekestelling/andere correspondentie) bij een Directe COP — mismo
+// patrón que FinancialAgreementDocument/BlockadeDocument. Zie
+// CollectiveCollectionService.createDirect.
+model CollectiveCollectionDocument {
+  id String @id @default(cuid())
+
+  debtClaimId String
+  debtClaim   DebtClaim @relation(fields: [debtClaimId], references: [id], onDelete: Cascade)
+
+  fileName     String
+  originalName String
+
+  mimeType String
+  size     Int
+
+  storageKey String
+
+  uploadedById String?
+
+  createdAt DateTime @default(now())
+
+  @@index([debtClaimId])
+  @@map("collective_collection_document")
+}
+
 model DebtClaimObligation {
   id String @id @default(cuid())
 
@@ -244,6 +277,13 @@ model DebtClaimObligation {
   // CollectionService.createPending / applyNoResponseFee.
   description String?
 
+  // Acuerdo de pago (betalingsregeling) cuyo incumplimiento originó esta
+  // obligación — solo se llena para la boete de 93,50 de
+  // CollectionService.applyAgreementBreachFee; null para el resto (p.ej.
+  // applyNoResponseFee, que no proviene de un acuerdo incumplido).
+  relatedAgreementId String?
+  relatedAgreement    Agreement? @relation(fields: [relatedAgreementId], references: [id])
+
   originalAmount Decimal
   paidAmount     Decimal @default(0)
   balanceAmount  Decimal
@@ -259,6 +299,7 @@ model DebtClaimObligation {
   allocations PaymentAllocation[]
 
   @@index([debtClaimId])
+  @@index([relatedAgreementId])
   @@map("debt_claim_obligation")
 }
 
@@ -728,6 +769,20 @@ model CaseTransfer {
   powerOfAttorneyGrantedAt DateTime?
   powerOfAttorneyNote      String?   @db.Text
 
+  // Directe GOP (CCP-document "Directe COP en Directe GOP", §7-13): de
+  // deelnemer beschikt al over een extern vonnis en registreert het hier
+  // als borrador vóórdat de deurwaarder accepteert — geen advocaat, geen
+  // voorafgaande CFSB-AOP. Bij acceptatie wordt dit scherm 1 (Vonnis
+  // registreren) voorgevuld in plaats van dat de deurwaarder alles opnieuw
+  // intypt. Null/false voor de normale overdracht (AOP -> advocaat/
+  // deurwaarder), waar het vonnis nog niet bestaat op het moment van
+  // overdracht.
+  isDirectGopRequest     Boolean   @default(false)
+  directVerdictNumber    String?
+  directVerdictDate      DateTime?
+  directSentenceAmount   Decimal?  @db.Decimal(18, 2)
+  directLegalInterest    Decimal?  @db.Decimal(18, 2)
+
   cancelledAt  DateTime?
   cancelReason String?   @db.Text
 
@@ -1147,6 +1202,11 @@ enum DebtClaimOrigin {
   IMPORT
   API
   BLK
+  // Directe COP/GOP (CCP-document "Directe COP en Directe GOP"): el
+  // DebtClaim no nace de FAR/AOP sino directamente de ese registro, mismo
+  // patrón que BLK.
+  COP
+  GOP
 }
 
 enum DebtClaimStatus {
@@ -1910,9 +1970,10 @@ model Agreement {
   updated_at         DateTime        @updatedAt
 
   //                 Relaciones
-  debtor       Debtor?                @relation(fields: [debtor_id], references: [id])
-  installments AgreementInstallment[]
-  payment      Payment[]
+  debtor               Debtor?                @relation(fields: [debtor_id], references: [id])
+  installments         AgreementInstallment[]
+  payment              Payment[]
+  breachFeeObligations DebtClaimObligation[]
 
   @@map("agreement")
 }

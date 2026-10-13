@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { Agreement, CreateAgreement, AgreementResponse } from "@/modules/agreement/services/agreement.validators";
 import { AgreementStatus } from "@/modules/agreement/constants/agreement-status";
 import { InstallmentStatus } from "@/modules/agreement/constants/installment-status";
@@ -544,6 +545,21 @@ export class AgreementService {
     }
   }
 
+  // Id del acuerdo ACCEPTED vigente para este dossier (como mucho uno, ver
+  // validación en `create`) — permite trazar una multa de incumplimiento
+  // (CollectionService.applyAgreementBreachFee) hasta el acuerdo exacto que
+  // la originó, en vez de solo saber que "había alguno".
+  static async getAcceptedId(
+    debtClaim_id: string,
+    client: Prisma.TransactionClient | typeof prisma = prisma,
+  ): Promise<string | null> {
+    const a = await client.agreement.findFirst({
+      where: { debtClaim_id, status: AgreementStatus.ACCEPTED },
+      select: { id: true },
+    });
+    return a?.id ?? null;
+  }
+
   static async hasPaymentsUpToDate(debtClaim_id: string): Promise<boolean> {
     try {
       const a = await prisma.agreement.findFirst({
@@ -563,8 +579,11 @@ export class AgreementService {
     }
   }
 
-  static async cancelByClaim(debtClaim_id: string) {
-    return prisma.agreement.updateMany({
+  static async cancelByClaim(
+    debtClaim_id: string,
+    client: Prisma.TransactionClient | typeof prisma = prisma,
+  ) {
+    return client.agreement.updateMany({
       where: { debtClaim_id, status: AgreementStatus.ACCEPTED },
       data: { status: AgreementStatus.CANCELLED },
     });

@@ -11,7 +11,7 @@ export const DebtClaimSchema = z.object({
   description: z.string().optional().nullable(),
   principalAmount: z.number(),
   currency: z.string(),
-  origin: z.enum(["FAR", "MANUAL", "IMPORT", "API", "BLK"]),
+  origin: z.enum(["FAR", "MANUAL", "IMPORT", "API", "BLK", "COP", "GOP"]),
   status: z.enum(["OPEN", "IN_PROGRESS", "SETTLED", "CLOSED", "CANCELLED"]),
   createdAt: z.date(),
   updatedAt: z.date(),

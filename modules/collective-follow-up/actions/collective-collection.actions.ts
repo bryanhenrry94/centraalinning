@@ -22,6 +22,8 @@ import {
   CloseCollectiveCollectionSchema,
   SetAutoContinueSchema,
   SubmitNetworkResponseSchema,
+  DirectCopSchema,
+  CreateDirectCopInput,
 } from "@/modules/collective-follow-up/services/collective-collection.validators";
 import { TransferToLawyerSchema, TransferToLawyerInput } from "@/modules/legal-process/services/case-transfer.validators";
 
@@ -148,6 +150,33 @@ export const requestStartCollectiveCollection = async (input: { debtClaimId: str
   }
 
   return CollectiveCollectionService.requestStart(parsed.debtClaimId, session.user.id);
+};
+
+// Directe COP (CCP-document "Directe COP en Directe GOP"): crea el
+// DebtClaim/Blockade propios del debiteur ingresado en el formulario — no
+// requiere un dossier existente, a diferencia del resto de esta clase de
+// acciones (que sí exige requireTenantStaffForDebtClaim/Collection sobre un
+// id ya existente).
+export const createDirectCopAction = async (input: CreateDirectCopInput) => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id || !session.user.tenant_id) {
+    throw new Error("U bent niet ingelogd.");
+  }
+
+  const membership = session.user.memberships?.find(
+    (m) => m.tenantId === session.user.tenant_id,
+  );
+  const permission = canUseFeature(membership ?? null, AppAction.START_COP);
+  if (!permission.allowed) {
+    throw new Error(permission.reason ?? "Deze actie is niet toegestaan.");
+  }
+
+  const parsed = DirectCopSchema.parse(input);
+  return CollectiveCollectionService.createDirect(
+    parsed,
+    session.user.tenant_id,
+    session.user.id,
+  );
 };
 
 export const resumeCollectiveCollectionStartPayment = async (collectionId: string) => {

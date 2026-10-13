@@ -24,22 +24,6 @@ export const updateDebtClaim = async (id: string, data: Partial<DebtClaim>) => {
   return CollectionService.update(id, data);
 };
 
-export const advanceAOPStep = async (debtClaimId: string) => {
-  return CollectionService.advanceAOPStep(debtClaimId);
-};
-
-export const applyAopNoResponseFee = async (
-  debtClaimId: string,
-  step: "REMINDER" | "FINAL_NOTICE",
-  amount: number,
-) => {
-  return CollectionService.applyNoResponseFee(debtClaimId, step, amount);
-};
-
-export const hasPrincipalPayment = async (debtClaimId: string): Promise<boolean> => {
-  return CollectionService.hasPrincipalPayment(debtClaimId);
-};
-
 export async function getDebtClaimsAction(params: DebtClaimFilter) {
   return CollectionService.getAll(params);
 }

@@ -1,12 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import {
-  advanceAOPStep,
-  applyAopNoResponseFee,
-  getDebtClaimsAction,
-  hasPrincipalPayment,
-} from "@/modules/collection/actions/debt-claim.actions";
-import { applyCharge, countChargesForClaim } from "@/modules/collection/actions/debt-fine.actions";
-import { hasAgreement, hasPaymentsUpToDate, cancelAgreementsByCliam } from "@/modules/agreement/actions/agreement.actions";
+import { CollectionService } from "@/modules/collection/services/collection.service";
+import { AgreementService } from "@/modules/agreement/services/agreement.service";
 import { CollectionNotificationService } from "@/modules/collection/services/collection-notification.service";
 import { PersonType } from "@/shared/constants/person-type";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
@@ -20,6 +14,7 @@ type AOPStep = "REMINDER" | "FINAL_NOTICE" | "DEFAULT_NOTICE" | "BLK_NOTIFICATIO
 // sommatie_no_response_fee (punto 9 del análisis CFSB), sin tocar código.
 const DEFAULT_AANMANING_NO_RESPONSE_FEE = 150;
 const DEFAULT_SOMMATIE_NO_RESPONSE_FEE = 250;
+const DEFAULT_AGREEMENT_BREACH_FEE = 93.5;
 
 const STEP_SEQUENCE: AOPStep[] = [
   "REMINDER",
@@ -79,6 +74,7 @@ export async function processAopWorkflow() {
 
     const currentStep = aop.steps[0] as (typeof aop.steps)[0] | undefined;
     const currentStepType = (currentStep?.step ?? null) as AOPStep | null;
+    const currentStepId = currentStep?.id ?? null;
 
     const personType =
       (aop.debtClaim.debtor.person?.person_type as PersonType) ||
@@ -111,41 +107,15 @@ export async function processAopWorkflow() {
     }
 
     const debtClaimId = aop.debtClaim.id;
+    const tenant = aop.debtClaim.tenant;
 
     // Check for active payment agreement
-    const hasActiveAgreement = await hasAgreement(debtClaimId);
+    const acceptedAgreementId = await AgreementService.getAcceptedId(debtClaimId);
+    const hasActiveAgreement = !!acceptedAgreementId;
+
     if (hasActiveAgreement) {
-      const paymentsOk = await hasPaymentsUpToDate(debtClaimId);
-      if (!paymentsOk) {
-        const penaltyMap: Record<string, number> = {
-          REMINDER:
-            personType === PersonType.COMPANY
-              ? Number(parameter?.company_aanmaning_penalty ?? 0)
-              : Number(parameter?.natural_aanmaning_penalty ?? 0),
-          FINAL_NOTICE:
-            personType === PersonType.COMPANY
-              ? Number(parameter?.company_sommatie_penalty ?? 0)
-              : Number(parameter?.natural_sommatie_penalty ?? 0),
-        };
-
-        const penaltyAmount = currentStepType
-          ? (penaltyMap[currentStepType] ?? 0)
-          : 0;
-
-        if (penaltyAmount > 0) {
-          await applyCharge(
-            debtClaimId,
-            penaltyAmount,
-            `Boete voor achterstallige betaling in stap ${currentStepType}`,
-            "AOP",
-          );
-        }
-
-        await cancelAgreementsByCliam(debtClaimId);
-        // El acuerdo se acaba de cancelar por incumplimiento: cae al
-        // avance normal de paso más abajo, igual que si nunca hubiera
-        // existido un acuerdo.
-      } else {
+      const paymentsOk = await AgreementService.hasPaymentsUpToDate(debtClaimId);
+      if (paymentsOk) {
         // Ruta Inteligente CFSB (punto 5): existe un acuerdo de pago
         // ACCEPTED y el deudor está al día con las cuotas — el AOP no debe
         // seguir escalando pasos mientras el acuerdo se cumple. Antes este
@@ -154,53 +124,114 @@ export async function processAopWorkflow() {
         // esta corrida.
         continue;
       }
-    } else if (
-      (currentStepType === "REMINDER" || currentStepType === "FINAL_NOTICE") &&
-      !(await hasPrincipalPayment(debtClaimId))
-    ) {
-      // Sin acuerdo de pago vigente NI pago directo registrado (transferencia
-      // verificada sin Agreement formal — antes solo se chequeaba
-      // hasAgreement, así que un deudor que pagó directo sin acuerdo igual
-      // recibía el recargo): el deudor no reaccionó dentro del plazo de la
-      // aanmaning o la sommatie. CFSB cobra un recargo administrativo fijo,
-      // configurable por isla/tenant — es una obligación del deudor CON
-      // CFSB, separada de la comisión de cobranza que ya paga el
-      // participante (punto 9 del análisis CFSB).
-      const tenant = aop.debtClaim.tenant;
-      const feeKey =
-        currentStepType === "REMINDER"
-          ? "aanmaning_no_response_fee"
-          : "sommatie_no_response_fee";
-      const defaultFee =
-        currentStepType === "REMINDER"
-          ? DEFAULT_AANMANING_NO_RESPONSE_FEE
-          : DEFAULT_SOMMATIE_NO_RESPONSE_FEE;
-
-      const noResponseFee = await SettingsService.resolveNumber(
-        feeKey,
-        { tenantId: tenant.id, jurisdictionId: tenant.jurisdictionId },
-        defaultFee,
-      );
-
-      await applyAopNoResponseFee(debtClaimId, currentStepType, noResponseFee);
     }
 
-    const { nextStep } = await advanceAOPStep(debtClaimId);
-    await CollectionNotificationService.sendNotification(debtClaimId);
-    sent++;
+    // A partir de acá solo quedan escrituras: multa (si corresponde),
+    // cancelación del acuerdo incumplido (si corresponde) y avance de paso.
+    // Van todas en una sola transacción para que no puedan quedar a medias
+    // ni duplicarse si el job llegara a correr dos veces sobre el mismo
+    // expediente en paralelo — el guard de abajo reconfirma que el paso
+    // actual sigue IN_PROGRESS antes de tocar nada.
+    await prisma.$transaction(
+      async (tx) => {
+        if (currentStepId) {
+          const freshStep = await tx.administrativeCollectionStep.findUnique({
+            where: { id: currentStepId },
+            select: { status: true },
+          });
+          if (!freshStep || freshStep.status !== "IN_PROGRESS") {
+            // Otra corrida ya completó este paso — no repetir la multa ni
+            // el avance.
+            return;
+          }
+        }
 
-    if (nextStep === "BLK_NOTIFICATION") {
-      try {
-        const collectionId = await CollectiveCollectionService.tryAutoContinueFromAop(
-          debtClaimId,
-          aop.debtClaim.tenant.id,
-          aop.debtClaim.tenant.jurisdictionId,
-        );
-        if (collectionId) copAutoContinued++;
-      } catch (error) {
-        console.error("Error auto-continuing COP from AOP:", error);
+        if (hasActiveAgreement) {
+          // Acuerdo incumplido durante aanmaning/sommatie: boete vaste van
+          // USD 93,50 (Setting `agreement_breach_fee`), nooit samen con la
+          // no-response-boete van 150/250 van hetzelfde evento — dezelfde
+          // registratie als applyNoResponseFee (obligación DEBTOR -> CFSB),
+          // zodat de deudor dit later aan CFSB moet betalen. Se asocia al
+          // acuerdo exacto que se incumplió (relatedAgreementId) para
+          // trazabilidad.
+          if (currentStepType === "REMINDER" || currentStepType === "FINAL_NOTICE") {
+            const breachFee = await SettingsService.resolveNumber(
+              "agreement_breach_fee",
+              { tenantId: tenant.id, jurisdictionId: tenant.jurisdictionId },
+              DEFAULT_AGREEMENT_BREACH_FEE,
+            );
+
+            await CollectionService.applyAgreementBreachFee(
+              debtClaimId,
+              currentStepType,
+              breachFee,
+              acceptedAgreementId,
+              tx,
+            );
+          }
+
+          await AgreementService.cancelByClaim(debtClaimId, tx);
+          // El acuerdo se acaba de cancelar por incumplimiento: cae al
+          // avance normal de paso más abajo, igual que si nunca hubiera
+          // existido un acuerdo.
+        } else if (
+          (currentStepType === "REMINDER" || currentStepType === "FINAL_NOTICE") &&
+          !(await CollectionService.hasPrincipalPayment(debtClaimId))
+        ) {
+          // Sin acuerdo de pago vigente NI pago directo registrado
+          // (transferencia verificada sin Agreement formal — antes solo se
+          // chequeaba hasAgreement, así que un deudor que pagó directo sin
+          // acuerdo igual recibía el recargo): el deudor no reaccionó dentro
+          // del plazo de la aanmaning o la sommatie. CFSB cobra un recargo
+          // administrativo fijo, configurable por isla/tenant — es una
+          // obligación del deudor CON CFSB, separada de la comisión de
+          // cobranza que ya paga el participante (punto 9 del análisis CFSB).
+          const feeKey =
+            currentStepType === "REMINDER"
+              ? "aanmaning_no_response_fee"
+              : "sommatie_no_response_fee";
+          const defaultFee =
+            currentStepType === "REMINDER"
+              ? DEFAULT_AANMANING_NO_RESPONSE_FEE
+              : DEFAULT_SOMMATIE_NO_RESPONSE_FEE;
+
+          const noResponseFee = await SettingsService.resolveNumber(
+            feeKey,
+            { tenantId: tenant.id, jurisdictionId: tenant.jurisdictionId },
+            defaultFee,
+          );
+
+          await CollectionService.applyNoResponseFee(
+            debtClaimId,
+            currentStepType,
+            noResponseFee,
+            tx,
+          );
+        }
+
+        const { nextStep } = await CollectionService.advanceAOPStep(debtClaimId, tx);
+        return nextStep;
+      },
+      { timeout: 20000, maxWait: 10000 },
+    ).then(async (nextStep) => {
+      if (nextStep === undefined) return; // guard activado, no se avanzó nada
+
+      await CollectionNotificationService.sendNotification(debtClaimId);
+      sent++;
+
+      if (nextStep === "BLK_NOTIFICATION") {
+        try {
+          const collectionId = await CollectiveCollectionService.tryAutoContinueFromAop(
+            debtClaimId,
+            tenant.id,
+            tenant.jurisdictionId,
+          );
+          if (collectionId) copAutoContinued++;
+        } catch (error) {
+          console.error("Error auto-continuing COP from AOP:", error);
+        }
       }
-    }
+    });
   }
 
   return { message: "Notificaties succesvol verzonden", sent, copAutoContinued };

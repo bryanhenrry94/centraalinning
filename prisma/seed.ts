@@ -424,6 +424,15 @@ async function seedJurisdictionSettings() {
         categoryId: "cat-percentages",
         value: "250",
       },
+      // Vaste boete wanneer een geaccepteerde betalingsregeling tijdens de
+      // aanmaning of sommatie niet wordt nagekomen — vervangt de boete
+      // hierboven voor datzelfde evento (nooit beide tegelijk).
+      {
+        key: "agreement_breach_fee",
+        name: "Boete niet-nakoming betalingsregeling (aanmaning/sommatie)",
+        categoryId: "cat-percentages",
+        value: "93.5",
+      },
       // Herinneringsfrequentie — nuevas claves, antes constantes hardcodeadas
       // en lib/jobs/check_gop_deadlines.ts y check_case_transfer_deadlines.ts.
       {

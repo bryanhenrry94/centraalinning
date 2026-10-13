@@ -4,7 +4,10 @@ import { addDays, startOfDay } from "date-fns";
 import {
   TransferToLawyerInput,
   SubmitLawyerFeeInvoiceInput,
+  CreateDirectGopTransferInput,
 } from "@/modules/legal-process/services/case-transfer.validators";
+import { CollectionService } from "@/modules/collection/services/collection.service";
+import { DebtorService } from "@/modules/collection/services/debtor.service";
 import { DEFAULT_GOP_FEE_RATE_PERCENT } from "@/modules/legal-process/constants/legal-process-status";
 import { ClaimTimelineService } from "@/modules/collection/services/claim-timeline.service";
 import { NotificationService } from "@/modules/notification/services/notification.service";
@@ -48,6 +51,12 @@ type CaseTransferWithInclude = Prisma.CaseTransferGetPayload<{ include: typeof c
 function serializeCaseTransfer<T extends CaseTransferWithInclude>(caseTransfer: T) {
   return {
     ...caseTransfer,
+    // Borrador de vonnis de la ruta Directe GOP — Decimal no cruza de un
+    // Server Action a un Client Component, mismo patrón que principalAmount.
+    directSentenceAmount:
+      caseTransfer.directSentenceAmount != null ? Number(caseTransfer.directSentenceAmount) : null,
+    directLegalInterest:
+      caseTransfer.directLegalInterest != null ? Number(caseTransfer.directLegalInterest) : null,
     debtClaim: {
       ...caseTransfer.debtClaim,
       principalAmount: Number(caseTransfer.debtClaim.principalAmount),
@@ -114,6 +123,128 @@ export class CaseTransferService {
   // ---------------------------------------------------------------------
   // Solicitud de transferencia (sin costo)
   // ---------------------------------------------------------------------
+
+  // Directe GOP (CCP-document "Directe COP en Directe GOP", §7-9): el
+  // deelnemer ya tiene un vonnis externo, nunca pasó por CFSB-AOP/COP, así
+  // que no existe ningún DebtClaim/Blockade ni gereed-gate (BLK_NOTIFICATION)
+  // como el que exige `requestTransfer` para la ruta normal. Este método crea
+  // su propio DebtClaim (origin GOP) y una CaseTransfer directa hacia el
+  // deurwaarder elegido, con el borrador del vonnis guardado para precargar
+  // la pantalla "Vonnis registreren" una vez aceptado — ver
+  // verdict-registration-form.tsx. Sin pago en este momento (§9: "nog geen
+  // CFSB-activeringsfactuur definitief verschuldigd"); el doble pago
+  // (deelnemer + deurwaarder) solo se genera al aceptar y registrar el
+  // vonnis, igual que la ruta normal.
+  static requestDirectGopTransfer = async (
+    input: CreateDirectGopTransferInput,
+    tenantId: string,
+    actorUserId: string,
+  ): Promise<{ success: boolean; message?: string; caseTransferId?: string }> => {
+    let debtorId = input.debtorId;
+
+    if (!debtorId && input.newDebtor) {
+      const { debtor: foundOrCreatedDebtor } = await DebtorService.findOrCreate(
+        {
+          person_type: input.newDebtor.person_type,
+          identification_type: input.newDebtor.identification_type,
+          identification: input.newDebtor.identification,
+          fullname: input.newDebtor.fullname,
+          email: input.newDebtor.email,
+          phone: input.newDebtor.phone,
+          address: input.newDebtor.address,
+        },
+        tenantId,
+      );
+      debtorId = foundOrCreatedDebtor.id;
+    }
+
+    if (!debtorId) {
+      return { success: false, message: "Debiteurgegevens ontbreken" };
+    }
+
+    const [debtor, bailiff] = await Promise.all([
+      prisma.debtor.findUnique({ where: { id: debtorId } }),
+      prisma.bailiff.findUnique({ where: { id: input.bailiffId } }),
+    ]);
+    if (!debtor) return { success: false, message: "Debiteur niet gevonden" };
+    if (!bailiff) return { success: false, message: "Deurwaarder niet gevonden" };
+
+    const caseTransfer = await prisma.$transaction(async (tx) => {
+      const reference = await CollectionService.generateClaimReference(tx, {
+        prefix: "GOP",
+        origin: "GOP",
+      });
+
+      const debtClaim = await tx.debtClaim.create({
+        data: {
+          tenantId,
+          debtorId: debtorId!,
+          reference,
+          principalAmount: input.sentenceAmount,
+          currency: "USD",
+          origin: "GOP",
+          status: "OPEN",
+        },
+      });
+
+      const createdTransfer = await tx.caseTransfer.create({
+        data: {
+          debtClaimId: debtClaim.id,
+          bailiffId: input.bailiffId,
+          status: "PENDING_ACCEPTANCE",
+          acceptanceDeadline: addDays(new Date(), ACCEPTANCE_WINDOW_DAYS),
+          isDirectGopRequest: true,
+          directVerdictNumber: input.verdictNumber,
+          directVerdictDate: input.verdictDate,
+          directSentenceAmount: input.sentenceAmount,
+          directLegalInterest: input.legalInterest ?? null,
+        },
+      });
+
+      await ClaimTimelineService.logEvent(
+        debtClaim.id,
+        "GOP_STARTED",
+        `Directe Gerechtelijke Opvolging geregistreerd met extern vonnis ${input.verdictNumber} — in afwachting van acceptatie door deurwaarder ${bailiff.fullname}.`,
+        { bailiffId: input.bailiffId },
+        actorUserId,
+      );
+
+      return createdTransfer;
+    });
+
+    const arrayBuffer = await input.verdictDocument.file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const key = `${tenantId}/case-transfers/${caseTransfer.id}/${crypto.randomUUID()}-${input.verdictDocument.fileName}`;
+    await StorageService.uploadFile(key, input.verdictDocument.fileName, input.verdictDocument.mimeType, buffer);
+
+    await prisma.caseTransferDocument.create({
+      data: {
+        caseTransferId: caseTransfer.id,
+        fileName: input.verdictDocument.fileName,
+        originalName: input.verdictDocument.originalName,
+        mimeType: input.verdictDocument.mimeType,
+        size: input.verdictDocument.size,
+        storageKey: key,
+        category: "VONNIS",
+        uploadedById: actorUserId,
+      },
+    });
+
+    if (bailiff.user_id) {
+      await NotificationService.create({
+        tenant_id: tenantId,
+        user_id: bailiff.user_id,
+        type: NotificationType.LEGAL_PROCESS_TRANSFER_REQUEST,
+        title: "Nieuw GOP-concept — directe registratie",
+        message: `Een deelnemer registreerde rechtstreeks een extern vonnis (${input.verdictNumber}) en vraagt u als deurwaarder te accepteren.`,
+        link: `/legal-processes/transfers/${caseTransfer.id}`,
+        entity_type: "CaseTransfer",
+        entity_id: caseTransfer.id,
+      });
+    }
+
+    return { success: true, caseTransferId: caseTransfer.id };
+  };
 
   // La transferencia a un abogado/alguacil ya no genera ningún costo CFSB
   // (pedido del sponsor, ver docs): no se genera Payment/BillingInvoice ni

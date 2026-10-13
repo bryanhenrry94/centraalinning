@@ -38,20 +38,31 @@ interface VerdictRegistrationFormProps {
   debtorName: string;
   defaultBailiffId?: string | null;
   gopFeeRatePercent: number;
+  // Directe GOP (CCP-document "Directe COP en Directe GOP", §13): borrador
+  // que el deelnemer ya ingresó antes de que el deurwaarder aceptara — se
+  // precarga acá en vez de que el deurwaarder lo vuelva a escribir desde
+  // cero. Undefined/null para la ruta normal (AOP -> advocaat/deurwaarder).
+  directVerdictNumber?: string | null;
+  directVerdictDate?: Date | null;
+  directSentenceAmount?: number | null;
+  directLegalInterest?: number | null;
 }
 
 const buildDefaultValues = (
   caseTransferId?: string | null,
   legalProcessId?: string | null,
   defaultBailiffId?: string | null,
+  directVerdictNumber?: string | null,
+  directVerdictDate?: Date | null,
+  directSentenceAmount?: number | null,
 ): RegisterVerdictInput => ({
   caseTransferId: caseTransferId || null,
   legalProcessId: legalProcessId || null,
   invoice_number: "",
   creditor_name: "",
-  registration_number: "",
-  sentence_amount: 0,
-  sentence_date: new Date(),
+  registration_number: directVerdictNumber || "",
+  sentence_amount: directSentenceAmount || 0,
+  sentence_date: directVerdictDate || new Date(),
   court: "",
   notification_date: null,
   prescription_term_months: null,
@@ -83,6 +94,10 @@ export const VerdictRegistrationForm: React.FC<
   debtorName,
   defaultBailiffId,
   gopFeeRatePercent,
+  directVerdictNumber,
+  directVerdictDate,
+  directSentenceAmount,
+  directLegalInterest,
 }) => {
   const router = useRouter();
   const [bailiffs, setBailiffs] = useState<Bailiff[]>([]);
@@ -111,8 +126,16 @@ export const VerdictRegistrationForm: React.FC<
   }, []);
 
   const defaultValues = useMemo(
-    () => buildDefaultValues(caseTransferId, legalProcessId, defaultBailiffId),
-    [caseTransferId, legalProcessId, defaultBailiffId],
+    () =>
+      buildDefaultValues(
+        caseTransferId,
+        legalProcessId,
+        defaultBailiffId,
+        directVerdictNumber,
+        directVerdictDate,
+        directSentenceAmount,
+      ),
+    [caseTransferId, legalProcessId, defaultBailiffId, directVerdictNumber, directVerdictDate, directSentenceAmount],
   );
 
   const methods = useForm<RegisterVerdictInput>({
@@ -267,6 +290,15 @@ export const VerdictRegistrationForm: React.FC<
             handleSubmit(onSubmitAdditional)(e);
           }}
         >
+          {directVerdictNumber && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Directe GOP: de deelnemer registreerde dit vonnis zelf vóór uw acceptatie. Vonnisnummer, datum en
+              veroordelingsbedrag hieronder zijn al voorgevuld — controleer en corrigeer indien nodig.
+              {directLegalInterest
+                ? ` De deelnemer gaf ook een wettelijke rente van ${directLegalInterest} door — voeg de bijbehorende renteberekening(en) hieronder toe.`
+                : ""}
+            </Alert>
+          )}
           <Paper
             component="section"
             sx={{ borderRadius: 1, overflow: "hidden", mb: 2 }}

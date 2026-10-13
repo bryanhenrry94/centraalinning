@@ -23,6 +23,10 @@ const VerdictNewPage: React.FC = () => {
   const [debtorName, setDebtorName] = useState("");
   const [defaultBailiffId, setDefaultBailiffId] = useState<string | null>(null);
   const [gopFeeRatePercent, setGopFeeRatePercent] = useState(5);
+  const [directVerdictNumber, setDirectVerdictNumber] = useState<string | null>(null);
+  const [directVerdictDate, setDirectVerdictDate] = useState<Date | null>(null);
+  const [directSentenceAmount, setDirectSentenceAmount] = useState<number | null>(null);
+  const [directLegalInterest, setDirectLegalInterest] = useState<number | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -38,6 +42,12 @@ const VerdictNewPage: React.FC = () => {
           if (!caseTransfer) throw new Error("Overdracht niet gevonden");
           setDebtorName(formatDebtorName(caseTransfer.debtClaim?.debtor?.person));
           setDefaultBailiffId(caseTransfer.bailiffId ?? null);
+          if (caseTransfer.isDirectGopRequest) {
+            setDirectVerdictNumber(caseTransfer.directVerdictNumber ?? null);
+            setDirectVerdictDate(caseTransfer.directVerdictDate ?? null);
+            setDirectSentenceAmount(caseTransfer.directSentenceAmount ?? null);
+            setDirectLegalInterest(caseTransfer.directLegalInterest ?? null);
+          }
         } else if (legalProcessId) {
           const legalProcess = await getLegalProcessById(legalProcessId);
           if (!legalProcess) throw new Error("GOP-dossier niet gevonden");
@@ -72,6 +82,10 @@ const VerdictNewPage: React.FC = () => {
       debtorName={debtorName}
       defaultBailiffId={defaultBailiffId}
       gopFeeRatePercent={gopFeeRatePercent}
+      directVerdictNumber={directVerdictNumber}
+      directVerdictDate={directVerdictDate}
+      directSentenceAmount={directSentenceAmount}
+      directLegalInterest={directLegalInterest}
     />
   );
 };

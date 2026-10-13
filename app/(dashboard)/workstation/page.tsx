@@ -34,23 +34,20 @@ export default function WorkstationPage() {
     router.push(link);
   };
 
-  // Solo estos 4 son servicios que el participante inicia por su cuenta.
-  // COP y la transferencia de expediente ya no son "servicios" de esta
-  // pantalla: son acciones de seguimiento sobre un expediente existente que
-  // CFSB ofrece automáticamente cuando AOP/BLK no dio solución (ver el botón
-  // "Collectieve Opvolging starten"/"Dossieroverdracht" en
-  // app/(dashboard)/collections/[id]/page.tsx, ya gateado server-side por
-  // CollectiveCollectionService.canStart / CaseTransferService.requestTransfer).
-  // GOP tampoco pertenece acá: solo se activa cuando un deurwaarder registra
-  // un vonnis, nunca por elección directa del participante.
+  // Las 6 diensten CFSB, elegibles directamente desde acá (CCP-documento
+  // "Directe COP en Directe GOP"): además de la ruta ya existente (COP desde
+  // un AOP bloqueado, GOP desde un vonnis registrado por el deurwaarder),
+  // COP y GOP también tienen su propia ruta directa — CollectiveCollectionService
+  // .createDirect / CaseTransferService.requestDirectGopTransfer — para el
+  // participante que nunca pasó por CFSB-AOP.
   const services = [
     {
       id: 1,
-      title: "Afspraak registreren (FAR)",
-      description: "Registreer financiële afspraken centraal.",
+      title: "Financiële Afspraken Registreren (FAR)",
+      description: "Registreer financiële afspraken centraal om de nakoming ervan te bevorderen.",
       bgColor: "#E8F5E9",
       buttonColor: "#2E7D32",
-      buttonText: "Start FAR",
+      buttonText: "Registreren",
       linkList: "/financial-agreements",
       newLink: "/financial-agreements/new",
     },
@@ -61,14 +58,14 @@ export default function WorkstationPage() {
         "Controleer vooraf of een persoon of onderneming geregistreerd staat met een economische blokkade.",
       bgColor: "#FFF4E5",
       buttonColor: "primary.main",
-      buttonText: "Start BLC",
+      buttonText: "Controleren",
       linkList: "/block-check",
       newLink: "/block-check",
     },
     {
       id: 3,
       title: "Administratieve Opvolging (AOP)",
-      description: "Start administratieve opvolging.",
+      description: "Start administratieve opvolging bij niet-nakoming van een financiële afspraak.",
       bgColor: "#EAF2FE",
       buttonColor: "#1450C4",
       buttonText: "Start AOP",
@@ -78,7 +75,7 @@ export default function WorkstationPage() {
     {
       id: 4,
       title: "Blokkade (BLK)",
-      description: "Registreer een economische blokkade",
+      description: "Start per direct een economische blokkade.",
       bgColor: "#FDECEC",
       buttonColor: "#D32F2F",
       buttonText: "Start BLK",
@@ -87,6 +84,27 @@ export default function WorkstationPage() {
       // gebruiker via een knop alsnog naar het overzicht (/blocks), in
       // plaats van dat de dienst je eerst naar het overzicht stuurt.
       newLink: "/blocks/new",
+    },
+    {
+      id: 5,
+      title: "Collectieve Opvolging (COP)",
+      description:
+        "Start een collectieve opvolging binnen de samenwerking om een gerechtelijke procedure te voorkomen.",
+      bgColor: "#FFF8E1",
+      buttonColor: "#F59E0B",
+      buttonText: "Start COP",
+      linkList: "/collective-follow-up",
+      newLink: "/collective-follow-up/new",
+    },
+    {
+      id: 6,
+      title: "Gerechtelijke Opvolging (GOP)",
+      description: "Registreer uw vonnis voor verdere opvolging.",
+      bgColor: "#E3EAF2",
+      buttonColor: "#1E3A5F",
+      buttonText: "Registreren",
+      linkList: "/legal-processes",
+      newLink: "/legal-processes/new",
     },
   ];
 
@@ -116,7 +134,7 @@ export default function WorkstationPage() {
               variant="subtitle1"
               sx={{ color: "#666", fontSize: "16px" }}
             >
-              Selecteer de diensten waarmee u wilt beginnen.
+              Selecteer de dienst die past bij uw situatie.
             </Typography>
           </Box>
         </Box>
@@ -125,7 +143,7 @@ export default function WorkstationPage() {
         <Grid container spacing={3} mb={3}>
           {services.map((service) => {
             return (
-              <Grid size={{ xs: 12, md: 6, lg: 3 }} key={service.id}>
+              <Grid size={{ xs: 12, md: 6, lg: 4 }} key={service.id}>
                 <Card
                   elevation={0}
                   onClick={() => handleServiceClick(service.newLink || "#")}

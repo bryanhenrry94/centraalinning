@@ -46,6 +46,11 @@ export const NO_RESPONSE_FEE_DESCRIPTION = {
   FINAL_NOTICE: "Aanv. kosten",
 } as const;
 
+export const AGREEMENT_BREACH_FEE_DESCRIPTION = {
+  REMINDER: "Boete niet-nakoming betalingsregeling",
+  FINAL_NOTICE: "Boete niet-nakoming betalingsregeling",
+} as const;
+
 export class CollectionService {
   /**
    * Crea un DebtClaim en estado OPEN (pre-pago) a partir de un Contract
@@ -578,8 +583,11 @@ export class CollectionService {
     return prisma.debtClaim.update({ where: { id }, data: filtered });
   };
 
-  static advanceAOPStep = async (debtClaimId: string) => {
-    const aop = await prisma.administrativeCollection.findUnique({
+  static advanceAOPStep = async (
+    debtClaimId: string,
+    client: Prisma.TransactionClient | typeof prisma = prisma,
+  ) => {
+    const aop = await client.administrativeCollection.findUnique({
       where: { debtClaimId },
       include: {
         steps: { orderBy: { id: "desc" }, take: 1 },
@@ -603,7 +611,7 @@ export class CollectionService {
 
     const nextStep = currentStep ? nextStepMap[currentStep.step] : "REMINDER";
 
-    await prisma.$transaction(async (tx) => {
+    const run = async (tx: Prisma.TransactionClient | typeof prisma) => {
       if (currentStep) {
         await tx.administrativeCollectionStep.update({
           where: { id: currentStep.id },
@@ -676,12 +684,29 @@ export class CollectionService {
             : "AOP-proces afgerond",
         },
       });
+    };
+
+    // Si `client` ya es un Prisma.TransactionClient (el caller — p.ej.
+    // process_aop_workflow.ts — nos lo pasó para que la multa, la
+    // cancelación del acuerdo y este avance de paso sean una sola
+    // transacción atómica), corremos directo sobre él: Prisma no permite
+    // abrir una transacción anidada dentro de otra. Si no, abrimos la
+    // nuestra con el timeout extendido de siempre.
+    const isTopLevelClient = typeof (client as typeof prisma).$transaction === "function";
+
+    if (isTopLevelClient) {
       // Timeout explícito: el paso DEFAULT_NOTICE -> BLK_NOTIFICATION suma
       // pasos extra (Blockade + ClaimService) a esta misma transacción, y
       // contra la DB remota el default de Prisma (5000ms) a veces no alcanza
       // ("Transaction already closed" / "expired transaction") — mismo
       // ajuste que ya usan otras transacciones largas (ver legal-process.service.ts).
-    }, { timeout: 20000, maxWait: 10000 });
+      await (client as typeof prisma).$transaction((tx) => run(tx), {
+        timeout: 20000,
+        maxWait: 10000,
+      });
+    } else {
+      await run(client as Prisma.TransactionClient);
+    }
 
     return { nextStep };
   };
@@ -715,10 +740,11 @@ export class CollectionService {
     debtClaimId: string,
     step: "REMINDER" | "FINAL_NOTICE",
     amount: number,
+    client: Prisma.TransactionClient | typeof prisma = prisma,
   ) => {
     if (amount <= 0) return null;
 
-    const claim = await prisma.debtClaim.findUnique({
+    const claim = await client.debtClaim.findUnique({
       where: { id: debtClaimId },
       select: { tenantId: true },
     });
@@ -737,7 +763,7 @@ export class CollectionService {
     // POR QUÉ surgió el costo, no solo decir "extra kosten N".
     const description = NO_RESPONSE_FEE_DESCRIPTION[step];
 
-    return prisma.$transaction(async (tx) => {
+    const run = async (tx: Prisma.TransactionClient | typeof prisma) => {
       const obligation = await tx.debtClaimObligation.create({
         data: {
           debtClaimId,
@@ -764,7 +790,77 @@ export class CollectionService {
       });
 
       return obligation;
+    };
+
+    const isTopLevelClient = typeof (client as typeof prisma).$transaction === "function";
+    return isTopLevelClient
+      ? (client as typeof prisma).$transaction((tx) => run(tx))
+      : run(client as Prisma.TransactionClient);
+  };
+
+  // Vaste boete (standaard USD 93,50, Setting `agreement_breach_fee`) voor
+  // een betalingsregeling die tijdens de aanmaning of sommatie werd
+  // geaccepteerd en vervolgens niet werd nagekomen — vervangt de recargo
+  // 150/250 voor datzelfde evento (nooit beide tegelijk, caller cobra alleen
+  // uno o el otro según haya acuerdo o no). Mismo mecanismo que
+  // `applyNoResponseFee`: obligación DEBTOR -> CFSB, para que het bedrag
+  // alleen bij CFSB terechtkomt (nooit bij de deelnemer).
+  static applyAgreementBreachFee = async (
+    debtClaimId: string,
+    step: "REMINDER" | "FINAL_NOTICE",
+    amount: number,
+    // Acuerdo cuyo incumplimiento origina esta boete — se guarda en la
+    // obligación (DebtClaimObligation.relatedAgreementId) para trazabilidad;
+    // null solo si por algún motivo no se pudo determinar cuál era.
+    relatedAgreementId: string | null,
+    client: Prisma.TransactionClient | typeof prisma = prisma,
+  ) => {
+    if (amount <= 0) return null;
+
+    const claim = await client.debtClaim.findUnique({
+      where: { id: debtClaimId },
+      select: { tenantId: true },
     });
+    if (!claim) return null;
+
+    const parameter = await ParameterService.getParameterForTenant(claim.tenantId);
+    const abbAmount = Number(((amount * parameter.abb_rate) / 100).toFixed(2));
+    const totalWithAbb = Number((amount + abbAmount).toFixed(2));
+
+    const stepLabel = step === "REMINDER" ? "de aanmaning" : "de sommatie";
+    const description = AGREEMENT_BREACH_FEE_DESCRIPTION[step];
+
+    const run = async (tx: Prisma.TransactionClient | typeof prisma) => {
+      const obligation = await tx.debtClaimObligation.create({
+        data: {
+          debtClaimId,
+          type: "COLLECTION",
+          beneficiary: "CFSB",
+          payer: "DEBTOR",
+          description,
+          relatedAgreementId,
+          originalAmount: totalWithAbb,
+          paidAmount: 0,
+          balanceAmount: totalWithAbb,
+          status: "PENDING",
+        },
+      });
+
+      await tx.claimTimeline.create({
+        data: {
+          debtClaimId,
+          event: "AOP_STEP_COMPLETED",
+          description: `Administratieve boete van ${formatAmount(totalWithAbb)} toegevoegd (niet-nakoming van de betalingsregeling tijdens ${stepLabel}).`,
+        },
+      });
+
+      return obligation;
+    };
+
+    const isTopLevelClient = typeof (client as typeof prisma).$transaction === "function";
+    return isTopLevelClient
+      ? (client as typeof prisma).$transaction((tx) => run(tx))
+      : run(client as Prisma.TransactionClient);
   };
 
   static getAll = async (

@@ -271,6 +271,13 @@ const CaseTransferDetailPage: React.FC = () => {
             {caseTransfer.debtClaim.reference}
           </Typography>
           <Stack direction="row" spacing={1}>
+            {caseTransfer.isDirectGopRequest && (
+              <Chip
+                label="Directe GOP — extern vonnis"
+                color="info"
+                sx={{ fontWeight: 700 }}
+              />
+            )}
             {caseTransfer.isEmergencyTransfer && (
               <Chip
                 label="Noodoverdracht"

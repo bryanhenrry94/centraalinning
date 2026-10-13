@@ -1,4 +1,54 @@
 import { z } from "zod";
+import { PersonType } from "@/shared/constants/person-type";
+import { IdentificationType } from "@/shared/constants/identification-type";
+
+// Directe GOP (CCP-document "Directe COP en Directe GOP", §7-9): de
+// deelnemer beschikt al over een extern vonnis (buiten CFSB), geen
+// voorafgaand CFSB-AOP/COP nodig. Mismo patrón que NewBlockadeDebtorSchema.
+export const NewDirectGopDebtorSchema = z.object({
+  person_type: z.enum(PersonType),
+  identification_type: z.enum(IdentificationType),
+  identification: z.string().min(1, "Het identificatienummer is verplicht"),
+  fullname: z.string().min(1, "De naam is verplicht"),
+  email: z.email({ message: "Het e-mailadres is niet geldig." }),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+});
+
+export const DirectGopDocumentSchema = z.object({
+  file: z.instanceof(File),
+  fileName: z.string().min(1),
+  originalName: z.string().min(1),
+  mimeType: z.string().min(1),
+  size: z.number().positive(),
+});
+
+export const DirectGopTransferSchema = z
+  .object({
+    debtorId: z.string().optional(),
+    newDebtor: NewDirectGopDebtorSchema.optional(),
+
+    verdictNumber: z.string().min(1, "Het vonnisnummer/zaaknummer is verplicht"),
+    verdictDate: z.date({ error: "De datum van het vonnis is verplicht" }),
+    sentenceAmount: z.number().positive("Het veroordelingsbedrag moet een positief getal zijn"),
+    legalInterest: z.number().nonnegative().nullable().optional(),
+
+    bailiffId: z.string().min(1, "Selecteer een aangesloten deurwaarder"),
+
+    verdictDocument: DirectGopDocumentSchema,
+
+    confirmed: z.boolean(),
+  })
+  .refine((data) => data.confirmed === true, {
+    message: "U moet bevestigen dat de gegevens juist zijn voordat u doorgaat.",
+    path: ["confirmed"],
+  })
+  .refine((data) => !!data.debtorId || !!data.newDebtor, {
+    message: "Selecteer een bestaande debiteur of vul de gegevens van een nieuwe debiteur in.",
+    path: ["debtorId"],
+  });
+export type CreateDirectGopTransferInput = z.infer<typeof DirectGopTransferSchema>;
+export type DirectGopDocument = z.infer<typeof DirectGopDocumentSchema>;
 
 // El participante transfiere siempre a UNA sola parte: un abogado o un
 // alguacil, nunca ambos a la vez ni ninguno.

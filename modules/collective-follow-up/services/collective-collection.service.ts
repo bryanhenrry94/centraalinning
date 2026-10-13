@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { ClaimTimelineService } from "@/modules/collection/services/claim-timeline.service";
+import { CollectionService } from "@/modules/collection/services/collection.service";
+import { DebtorService } from "@/modules/collection/services/debtor.service";
+import { StorageService } from "@/infrastructure/storage/storage.service";
+import { CreateDirectCopInput } from "@/modules/collective-follow-up/services/collective-collection.validators";
 import { NotificationService } from "@/modules/notification/services/notification.service";
 import { NotificationType } from "@/modules/notification/constants/notification-type";
 import { BlockadeService } from "@/modules/blockade/services/blockade.service";
@@ -158,6 +162,140 @@ export class CollectiveCollectionService {
       acceptedAmount: n.acceptedAmount != null ? Number(n.acceptedAmount) : null,
       installmentAmount: n.installmentAmount != null ? Number(n.installmentAmount) : null,
     }));
+  };
+
+  // Directe COP (CCP-document "Directe COP en Directe GOP", §2-3): el
+  // participante nunca pasó por CFSB-AOP, así que no existe Blockade activa
+  // previa que satisfaga `canStart`. En vez de debilitar ese gate, este
+  // registro crea su propio DebtClaim + Blockade ACTIVE (reason
+  // EXTERNAL_PROCEDURE_COMPLETED, sin cobrar la tarifa de BLK directo — el
+  // bloqueo acá es un efecto automático, igual que el que ya dispara
+  // CollectionService.advanceAOPStep al llegar a BLK_NOTIFICATION, no un
+  // nuevo servicio BLK facturado) y deja el COP en estado "concept" (sin
+  // CollectiveCollection todavía). El llamador (acción/UI) sigue con
+  // `requestStart` sobre el debtClaimId devuelto — mismo flujo/diálogo de
+  // pago del 5% que ya usa "COP vanuit AOP".
+  static createDirect = async (
+    input: CreateDirectCopInput,
+    tenantId: string,
+    actorUserId?: string,
+  ): Promise<{
+    success: boolean;
+    message?: string;
+    debtClaimId?: string;
+    principalAmount?: number;
+  }> => {
+    let debtorId = input.debtorId;
+
+    if (!debtorId && input.newDebtor) {
+      const { debtor: foundOrCreatedDebtor } = await DebtorService.findOrCreate(
+        {
+          person_type: input.newDebtor.person_type,
+          identification_type: input.newDebtor.identification_type,
+          identification: input.newDebtor.identification,
+          fullname: input.newDebtor.fullname,
+          email: input.newDebtor.email,
+          phone: input.newDebtor.phone,
+          address: input.newDebtor.address,
+        },
+        tenantId,
+      );
+      debtorId = foundOrCreatedDebtor.id;
+    }
+
+    if (!debtorId) {
+      return { success: false, message: "Debiteurgegevens ontbreken" };
+    }
+
+    const debtor = await prisma.debtor.findUnique({ where: { id: debtorId } });
+    if (!debtor) {
+      return { success: false, message: "Debiteur niet gevonden" };
+    }
+
+    const debtClaim = await prisma.$transaction(async (tx) => {
+      const reference = await CollectionService.generateClaimReference(tx, {
+        prefix: "COP",
+        origin: "COP",
+      });
+
+      const createdClaim = await tx.debtClaim.create({
+        data: {
+          tenantId,
+          debtorId: debtorId!,
+          reference,
+          description: input.description,
+          principalAmount: input.outstandingAmount,
+          currency: "USD",
+          origin: "COP",
+          status: "OPEN",
+        },
+      });
+
+      await tx.blockade.create({
+        data: {
+          tenantId,
+          debtorId: debtorId!,
+          reason: "EXTERNAL_PROCEDURE_COMPLETED",
+          reasonNote: input.description,
+          registeredAt: new Date(),
+          status: "ACTIVE",
+          originDebtClaimId: createdClaim.id,
+        },
+      });
+
+      await tx.claimService.create({
+        data: {
+          debtClaimId: createdClaim.id,
+          service: "BLK",
+          status: "IN_PROGRESS",
+          startedAt: new Date(),
+          startedById: actorUserId,
+        },
+      });
+
+      await tx.claimTimeline.create({
+        data: {
+          debtClaimId: createdClaim.id,
+          event: "COL_STARTED",
+          description: `Directe Collectieve Opvolging geregistreerd — openstaand saldo van eerdere administratieve opvolging (buiten CFSB), ${input.documents.length} bewijsstuk(ken) bijgevoegd. Economische blokkade automatisch geactiveerd.`,
+          metadata: {
+            originalObligationDate: input.originalObligationDate.toISOString(),
+            documentsCount: input.documents.length,
+          },
+          createdById: actorUserId,
+        },
+      });
+
+      return createdClaim;
+    });
+
+    const uploadedDocs = await Promise.all(
+      input.documents.map(async (doc) => {
+        const arrayBuffer = await doc.file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const key = `${tenantId}/collective-collections/${debtClaim.id}/${crypto.randomUUID()}-${doc.fileName}`;
+
+        await StorageService.uploadFile(key, doc.fileName, doc.mimeType, buffer);
+
+        return {
+          debtClaimId: debtClaim.id,
+          fileName: doc.fileName,
+          originalName: doc.originalName,
+          mimeType: doc.mimeType,
+          size: doc.size,
+          storageKey: key,
+          uploadedById: actorUserId,
+        };
+      }),
+    );
+
+    await prisma.collectiveCollectionDocument.createMany({ data: uploadedDocs });
+
+    return {
+      success: true,
+      debtClaimId: debtClaim.id,
+      principalAmount: Number(debtClaim.principalAmount),
+    };
   };
 
   static canStart = async (
