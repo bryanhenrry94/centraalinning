@@ -680,7 +680,7 @@ const CaseTransferDetailPage: React.FC = () => {
         open={dialog === "accept"}
         onClose={() => setDialog(null)}
         caseTransferId={caseTransfer.id}
-        onRegistered={refresh}
+        onRegistered={() => router.push("/legal-processes")}
         details={{
           reference: caseTransfer.debtClaim.reference ?? "-",
           participant: caseTransfer.debtClaim.tenant.name,

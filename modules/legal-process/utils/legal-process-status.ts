@@ -15,10 +15,14 @@ export const COMPLETED_LEGAL_PROCESS_STATUSES = [LegalProcessStatus.CLOSED] as c
 // CCP-kleurenregel: geel/amber = in afwachting/lopend proces; groen = actief
 // of succesvol afgerond; rood/grijs n.v.t. hier.
 const LEGAL_PROCESS_STATUS_CONFIG: Record<string, { label: string; color: StatusColor }> = {
-  GOP_DRAFT: { label: "Wacht op betaling", color: "warning" },
+  // Label explica exactamente qué falta (CCP-beslissing): de deurwaarder ya
+  // completó la registratie, solo faltan los pagos que liberan GOP_ACTIVE.
+  // Nunca hay un número GOP oficial en este estado (ver
+  // LegalProcessService.generateReferenceNumber).
+  GOP_DRAFT: { label: "Conceptregistratie – betaling in afwachting", color: "warning" },
   GOP_ACTIVE: { label: "GOP actief", color: "success" },
   GOP_INACTIVE: { label: "In onderzoek naar executiemogelijkheden", color: "warning" },
-  CLOSED: { label: "Afgesloten", color: "success" },
+  CLOSED: { label: "GOP afgerond", color: "success" },
 };
 
 export function getLegalProcessStatusInfo(status: string) {

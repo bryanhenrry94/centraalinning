@@ -29,6 +29,8 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import DescriptionIcon from "@mui/icons-material/Description";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
@@ -37,7 +39,10 @@ import { notifyError } from "@/shared/ui/notifications";
 import { useTenant } from "@/modules/auth/hooks/useTenant";
 import { useDebounce } from "@/shared/hooks/useDebounce";
 import { UserRole } from "@/shared/constants/user-role";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 import { RegisterBailiffOutcomeDialog } from "@/modules/legal-process/components/register-bailiff-outcome-dialog";
 
 import {
@@ -73,6 +78,39 @@ const LAWYER_FILTERABLE_STATUSES: CaseTransferStatus[] = [
 ];
 
 const LAWYER_PAGE_SIZE = 10;
+const LIST_PAGE_SIZE = 10;
+
+const PERIOD_OPTIONS = [
+  { value: "ALL", label: "Alle" },
+  { value: "7D", label: "Laatste 7 dagen" },
+  { value: "30D", label: "Laatste 30 dagen" },
+  { value: "90D", label: "Laatste 90 dagen" },
+  { value: "YEAR", label: "Dit jaar" },
+] as const;
+type PeriodFilter = (typeof PERIOD_OPTIONS)[number]["value"];
+
+function isWithinPeriod(date: Date, period: PeriodFilter): boolean {
+  if (period === "ALL") return true;
+  const now = new Date();
+  if (period === "YEAR") return date.getFullYear() === now.getFullYear();
+  const days = period === "7D" ? 7 : period === "30D" ? 30 : 90;
+  const cutoff = new Date(now);
+  cutoff.setDate(cutoff.getDate() - days);
+  return date >= cutoff;
+}
+
+function downloadCsv(filename: string, rows: string[][]) {
+  const csv = rows
+    .map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
 type CaseTransferListItem = Awaited<
   ReturnType<typeof getAllCaseTransfersForTenant>
@@ -103,6 +141,7 @@ type Row = {
   bailiffId: string | null;
   lawyerId: string | null;
   status: string;
+  updatedAt: Date;
 };
 
 function debtorNameOf(item: {
@@ -138,6 +177,7 @@ function toTransferRow(item: CaseTransferListItem): Row {
     bailiffId: item.bailiffId,
     lawyerId: item.lawyerId,
     status: item.status,
+    updatedAt: item.updatedAt,
   };
 }
 
@@ -161,6 +201,9 @@ function toLegalProcessRow(item: LegalProcessListItem): Row {
     bailiffId: null,
     lawyerId: null,
     status: item.status,
+    // LegalProcess no tiene updatedAt propio — closedAt es la señal de
+    // cambio más reciente disponible; si sigue abierto, cae a startedAt.
+    updatedAt: item.closedAt ?? item.startedAt,
   };
 }
 
@@ -198,6 +241,15 @@ const LegalProcessesListPageContent: React.FC = () => {
   const menuOpen = Boolean(anchorEl);
   const [outcomeDialogOpen, setOutcomeDialogOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Zoeken/status/periode + paginering voor het deurwaarder/tenant-admin
+  // "Mijn dossiers"-scherm (mockup sponsor) — los filtros propios de het
+  // advocaat-scherm (lawyerSearch/...) quedan separados arriba.
+  const [listSearch, setListSearch] = useState("");
+  const [listStatus, setListStatus] = useState("ALL");
+  const [listPeriod, setListPeriod] = useState<PeriodFilter>("ALL");
+  const [listPage, setListPage] = useState(1);
+  const debouncedListSearch = useDebounce(listSearch, 400);
 
   const handleMenuClose = () => {
     setAnchorEl(null);
@@ -239,8 +291,7 @@ const LegalProcessesListPageContent: React.FC = () => {
 
   const filteredRows = useMemo(() => {
     const pendingTransfers = transferRows.filter(
-      (row) =>
-        row.status === CaseTransferStatus.PENDING_ACCEPTANCE,
+      (row) => row.status === CaseTransferStatus.PENDING_ACCEPTANCE,
     );
 
     if (!showPendingTabs) {
@@ -259,6 +310,72 @@ const LegalProcessesListPageContent: React.FC = () => {
     );
   }, [transferRows, legalProcessRows, showPendingTabs, tab]);
 
+  const listStatusOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    filteredRows.forEach((row) => {
+      if (!seen.has(row.status)) seen.set(row.status, row.statusLabel);
+    });
+    return Array.from(seen.entries());
+  }, [filteredRows]);
+
+  const listFilteredRows = useMemo(() => {
+    const query = debouncedListSearch.trim().toLowerCase();
+    return filteredRows.filter((row) => {
+      if (listStatus !== "ALL" && row.status !== listStatus) return false;
+      if (!isWithinPeriod(row.date, listPeriod)) return false;
+      if (query) {
+        const haystack =
+          `${row.reference} ${row.debtorName} ${row.tenantName}`.toLowerCase();
+        if (!haystack.includes(query)) return false;
+      }
+      return true;
+    });
+  }, [filteredRows, listStatus, listPeriod, debouncedListSearch]);
+
+  useEffect(() => {
+    setListPage(1);
+  }, [listStatus, listPeriod, debouncedListSearch, tab]);
+
+  const listTotalPages = Math.max(
+    1,
+    Math.ceil(listFilteredRows.length / LIST_PAGE_SIZE),
+  );
+  const listPagedRows = listFilteredRows.slice(
+    (listPage - 1) * LIST_PAGE_SIZE,
+    listPage * LIST_PAGE_SIZE,
+  );
+  const listRangeStart =
+    listFilteredRows.length === 0 ? 0 : (listPage - 1) * LIST_PAGE_SIZE + 1;
+  const listRangeEnd = Math.min(
+    listPage * LIST_PAGE_SIZE,
+    listFilteredRows.length,
+  );
+
+  const handleExportList = () => {
+    const header = [
+      "Dossiernummer",
+      "Deelnemer / Schuldeiser",
+      "Debiteur / Gedaagde",
+      "Bedrag (USD)",
+      "Status",
+      "Overgedragen op",
+      "Laatste update",
+    ];
+    const rows = listFilteredRows.map((row) => [
+      row.reference,
+      row.tenantName,
+      row.debtorName,
+      formatCurrency(row.amount),
+      row.statusLabel,
+      formatDate(row.date.toString()),
+      formatDate(row.updatedAt.toString()),
+    ]);
+    downloadCsv(`dossiers-${new Date().toISOString().slice(0, 10)}.csv`, [
+      header,
+      ...rows,
+    ]);
+  };
+
   // "Mijn dossiers" voor de advocaat toont altijd alle eigen overdrachten
   // (geen tabs) en past zoeken/status/datum lokaal toe.
   const lawyerFilteredRows = useMemo(() => {
@@ -276,13 +393,20 @@ const LegalProcessesListPageContent: React.FC = () => {
           if (row.date > inclusiveTo) return false;
         }
         if (query) {
-          const haystack = `${row.reference} ${row.debtorName} ${row.tenantName}`.toLowerCase();
+          const haystack =
+            `${row.reference} ${row.debtorName} ${row.tenantName}`.toLowerCase();
           if (!haystack.includes(query)) return false;
         }
         return true;
       })
       .sort((a, b) => b.date.valueOf() - a.date.valueOf());
-  }, [transferRows, lawyerStatus, lawyerDateFrom, lawyerDateTo, debouncedLawyerSearch]);
+  }, [
+    transferRows,
+    lawyerStatus,
+    lawyerDateFrom,
+    lawyerDateTo,
+    debouncedLawyerSearch,
+  ]);
 
   useEffect(() => {
     setLawyerPage(1);
@@ -297,7 +421,9 @@ const LegalProcessesListPageContent: React.FC = () => {
     lawyerPage * LAWYER_PAGE_SIZE,
   );
   const lawyerRangeStart =
-    lawyerFilteredRows.length === 0 ? 0 : (lawyerPage - 1) * LAWYER_PAGE_SIZE + 1;
+    lawyerFilteredRows.length === 0
+      ? 0
+      : (lawyerPage - 1) * LAWYER_PAGE_SIZE + 1;
   const lawyerRangeEnd = Math.min(
     lawyerPage * LAWYER_PAGE_SIZE,
     lawyerFilteredRows.length,
@@ -314,15 +440,37 @@ const LegalProcessesListPageContent: React.FC = () => {
 
   if (isLawyer) {
     const columns: ListColumn<Row>[] = [
-      { key: "reference", label: "Dossiernummer", render: (row) => row.reference },
-      { key: "tenantName", label: "Deelnemer / Schuldeiser", render: (row) => row.tenantName },
-      { key: "debtorName", label: "Debiteur / Gedaagde", render: (row) => row.debtorName },
-      { key: "amount", label: "Bedrag (USD)", align: "right", render: (row) => formatCurrency(row.amount) },
+      {
+        key: "reference",
+        label: "Dossiernummer",
+        render: (row) => row.reference,
+      },
+      {
+        key: "tenantName",
+        label: "Deelnemer / Schuldeiser",
+        render: (row) => row.tenantName,
+      },
+      {
+        key: "debtorName",
+        label: "Debiteur / Gedaagde",
+        render: (row) => row.debtorName,
+      },
+      {
+        key: "amount",
+        label: "Bedrag (USD)",
+        align: "right",
+        render: (row) => formatCurrency(row.amount),
+      },
       {
         key: "status",
         label: "Status",
         render: (row) => (
-          <Chip size="small" label={row.statusLabel} color={row.statusColor} sx={{ minWidth: 150 }} />
+          <Chip
+            size="small"
+            label={row.statusLabel}
+            color={row.statusColor}
+            sx={{ minWidth: 150 }}
+          />
         ),
       },
       {
@@ -364,7 +512,11 @@ const LegalProcessesListPageContent: React.FC = () => {
               alignItems={{ md: "flex-end" }}
             >
               <Stack sx={{ flex: 2 }} spacing={0.5}>
-                <Typography variant="caption" fontWeight={600} color="text.secondary">
+                <Typography
+                  variant="caption"
+                  fontWeight={600}
+                  color="text.secondary"
+                >
                   Zoeken
                 </Typography>
                 <TextField
@@ -384,7 +536,11 @@ const LegalProcessesListPageContent: React.FC = () => {
               </Stack>
 
               <Stack sx={{ flex: 1 }} spacing={0.5}>
-                <Typography variant="caption" fontWeight={600} color="text.secondary">
+                <Typography
+                  variant="caption"
+                  fontWeight={600}
+                  color="text.secondary"
+                >
                   Status
                 </Typography>
                 <Select
@@ -403,7 +559,11 @@ const LegalProcessesListPageContent: React.FC = () => {
               </Stack>
 
               <Stack sx={{ flex: 1 }} spacing={0.5}>
-                <Typography variant="caption" fontWeight={600} color="text.secondary">
+                <Typography
+                  variant="caption"
+                  fontWeight={600}
+                  color="text.secondary"
+                >
                   Datum
                 </Typography>
                 <Stack direction="row" spacing={1} alignItems="center">
@@ -450,7 +610,8 @@ const LegalProcessesListPageContent: React.FC = () => {
               alignItems="center"
             >
               <Typography variant="body2" color="text.secondary">
-                Toont {lawyerRangeStart} - {lawyerRangeEnd} van {lawyerFilteredRows.length} dossiers
+                Toont {lawyerRangeStart} - {lawyerRangeEnd} van{" "}
+                {lawyerFilteredRows.length} dossiers
               </Typography>
 
               <Stack direction="row" spacing={1} alignItems="center">
@@ -471,7 +632,9 @@ const LegalProcessesListPageContent: React.FC = () => {
                 <IconButton
                   size="small"
                   disabled={lawyerPage >= lawyerTotalPages}
-                  onClick={() => setLawyerPage((p) => Math.min(lawyerTotalPages, p + 1))}
+                  onClick={() =>
+                    setLawyerPage((p) => Math.min(lawyerTotalPages, p + 1))
+                  }
                 >
                   <ChevronRightIcon fontSize="small" />
                 </IconButton>
@@ -485,7 +648,7 @@ const LegalProcessesListPageContent: React.FC = () => {
 
   return (
     <Container
-      maxWidth="lg"
+      maxWidth="xl"
       disableGutters
       sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
     >
@@ -503,77 +666,250 @@ const LegalProcessesListPageContent: React.FC = () => {
           </Tabs>
         )}
 
-        {(() => {
-          const columns: ListColumn<Row>[] = [
-            { key: "reference", label: "Referentie", render: (row) => row.reference },
-            { key: "debtorName", label: "Debiteur", render: (row) => row.debtorName },
-            { key: "lawyerName", label: "Advocaat", render: (row) => row.lawyerName, hideOnMobile: true },
-            { key: "bailiffName", label: "Deurwaarder", render: (row) => row.bailiffName, hideOnMobile: true },
-            { key: "amount", label: "Bedrag", align: "right", render: (row) => formatCurrency(row.amount) },
-            {
-              key: "status",
-              label: "Status",
-              render: (row) => (
-                <Chip size="small" label={row.statusLabel} color={row.statusColor} sx={{ minWidth: 150 }} />
-              ),
-            },
-            {
-              key: "date",
-              label: "Gestart op",
-              render: (row) => formatDate(row.date.toString()),
-              hideOnMobile: true,
-            },
-            ...(isBailiffRole
-              ? [
-                  {
-                    key: "actions",
-                    label: "Acties",
-                    render: (row: Row) => {
-                      const canRegisterVerdict =
-                        row.kind === "transfer" &&
-                        !!row.bailiffId &&
-                        VERDICT_ELIGIBLE_STATUSES.includes(row.status as CaseTransferStatus);
-                      const canFinalize =
-                        row.kind === "transfer" &&
-                        !!row.bailiffId &&
-                        !row.lawyerId &&
-                        row.status === CaseTransferStatus.ACCEPTED;
+        <Card sx={{ p: { xs: 1.5, sm: 3 } }}>
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            spacing={2}
+            mb={3}
+            alignItems={{ md: "flex-end" }}
+          >
+            <Stack sx={{ flex: 2 }} spacing={0.5}>
+              <Typography
+                variant="caption"
+                fontWeight={600}
+                color="text.secondary"
+              >
+                Zoeken
+              </Typography>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Zoek op dossiernummer, debiteur of deelnemer..."
+                value={listSearch}
+                onChange={(e) => setListSearch(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon fontSize="small" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Stack>
 
-                      if (!canRegisterVerdict && !canFinalize) return null;
+            <Stack sx={{ flex: 1, minWidth: 160 }} spacing={0.5}>
+              <Typography
+                variant="caption"
+                fontWeight={600}
+                color="text.secondary"
+              >
+                Status
+              </Typography>
+              <Select
+                fullWidth
+                size="small"
+                value={listStatus}
+                onChange={(e) => setListStatus(e.target.value)}
+              >
+                <MenuItem value="ALL">Alle</MenuItem>
+                {listStatusOptions.map(([value, label]) => (
+                  <MenuItem key={value} value={value}>
+                    {label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Stack>
 
-                      return (
-                        <IconButton
-                          aria-label="Acties"
-                          aria-haspopup="true"
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setAnchorEl(e.currentTarget);
-                            setSelectedRow(row);
-                          }}
-                        >
-                          <MoreVertIcon fontSize="small" />
-                        </IconButton>
-                      );
-                    },
-                  } satisfies ListColumn<Row>,
-                ]
-              : []),
-          ];
+            <Stack sx={{ flex: 1, minWidth: 160 }} spacing={0.5}>
+              <Typography
+                variant="caption"
+                fontWeight={600}
+                color="text.secondary"
+              >
+                Periode
+              </Typography>
+              <Select
+                fullWidth
+                size="small"
+                value={listPeriod}
+                onChange={(e) => setListPeriod(e.target.value as PeriodFilter)}
+              >
+                {PERIOD_OPTIONS.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Stack>
 
-          return (
-            <ResponsiveListTable
-              columns={columns}
-              rows={filteredRows}
-              getRowKey={(row) => `${row.kind}-${row.id}`}
-              getRowHref={(row) => row.href}
-              emptyMessage="Nog geen dossiers."
-            />
-          );
-        })()}
+            <Button
+              variant="outlined"
+              startIcon={<FileDownloadOutlinedIcon />}
+              onClick={handleExportList}
+              sx={{ textTransform: "none", height: 40, whiteSpace: "nowrap" }}
+            >
+              Exporteren
+            </Button>
+          </Stack>
+
+          {(() => {
+            const columns: ListColumn<Row>[] = [
+              {
+                key: "reference",
+                label: "Dossiernummer",
+                render: (row) => row.reference,
+              },
+              {
+                key: "tenantName",
+                label: "Deelnemer / Schuldeiser",
+                align: "left",
+                render: (row) => row.tenantName,
+              },
+              {
+                key: "debtorName",
+                label: "Debiteur / Gedaagde",
+                render: (row) => row.debtorName,
+              },
+              ...(!isBailiffRole
+                ? [
+                    {
+                      key: "lawyerName",
+                      label: "Advocaat",
+                      render: (row: Row) => row.lawyerName,
+                      hideOnMobile: true,
+                    } satisfies ListColumn<Row>,
+                    {
+                      key: "bailiffName",
+                      label: "Deurwaarder",
+                      render: (row: Row) => row.bailiffName,
+                      hideOnMobile: true,
+                    } satisfies ListColumn<Row>,
+                  ]
+                : []),
+              {
+                key: "amount",
+                label: "Bedrag (USD)",
+                align: "right",
+                render: (row) => formatCurrency(row.amount),
+              },
+              {
+                key: "status",
+                label: "Status",
+                render: (row) => (
+                  <Chip
+                    size="small"
+                    label={row.statusLabel}
+                    color={row.statusColor}
+                    sx={{ minWidth: 150 }}
+                  />
+                ),
+              },
+              {
+                key: "date",
+                label: "Overgedragen op",
+                render: (row) => formatDate(row.date.toString()),
+                hideOnMobile: true,
+              },
+              {
+                key: "updatedAt",
+                label: "Laatste update",
+                render: (row) => formatDate(row.updatedAt.toString()),
+                hideOnMobile: true,
+              },
+              ...(isBailiffRole
+                ? [
+                    {
+                      key: "actions",
+                      label: "Acties",
+                      render: (row: Row) => {
+                        // "Details bekijken" siempre está disponible — el
+                        // menú ya no se oculta solo porque Vonnis
+                        // registreren/Dossier afronden no apliquen a esta fila.
+                        return (
+                          <IconButton
+                            aria-label="Acties"
+                            aria-haspopup="true"
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setAnchorEl(e.currentTarget);
+                              setSelectedRow(row);
+                            }}
+                          >
+                            <MoreVertIcon fontSize="small" />
+                          </IconButton>
+                        );
+                      },
+                    } satisfies ListColumn<Row>,
+                  ]
+                : []),
+            ];
+
+            return (
+              <ResponsiveListTable
+                columns={columns}
+                rows={listPagedRows}
+                getRowKey={(row) => `${row.kind}-${row.id}`}
+                getRowHref={(row) => row.href}
+                emptyMessage="Nog geen dossiers."
+              />
+            );
+          })()}
+
+          <Box
+            mt={3}
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Typography variant="body2" color="text.secondary">
+              Toont {listRangeStart} - {listRangeEnd} van{" "}
+              {listFilteredRows.length} dossiers
+            </Typography>
+
+            <Stack direction="row" spacing={1} alignItems="center">
+              <IconButton
+                size="small"
+                disabled={listPage <= 1}
+                onClick={() => setListPage((p) => Math.max(1, p - 1))}
+              >
+                <ChevronLeftIcon fontSize="small" />
+              </IconButton>
+              <Button
+                size="small"
+                variant="contained"
+                sx={{ minWidth: 36, textTransform: "none" }}
+              >
+                {listPage}
+              </Button>
+              <IconButton
+                size="small"
+                disabled={listPage >= listTotalPages}
+                onClick={() =>
+                  setListPage((p) => Math.min(listTotalPages, p + 1))
+                }
+              >
+                <ChevronRightIcon fontSize="small" />
+              </IconButton>
+            </Stack>
+          </Box>
+        </Card>
       </Stack>
 
       <Menu anchorEl={anchorEl} open={menuOpen} onClose={handleMenuClose}>
+        <MenuItem
+          onClick={() => {
+            if (!selectedRow) return;
+            handleMenuClose();
+            router.push(selectedRow.href);
+          }}
+          disabled={!selectedRow}
+        >
+          <ListItemIcon>
+            <VisibilityIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Details bekijken</ListItemText>
+        </MenuItem>
         <MenuItem
           onClick={() => {
             if (!selectedRow) return;
@@ -583,7 +919,9 @@ const LegalProcessesListPageContent: React.FC = () => {
           disabled={
             !selectedRow ||
             !selectedRow.bailiffId ||
-            !VERDICT_ELIGIBLE_STATUSES.includes(selectedRow.status as CaseTransferStatus)
+            !VERDICT_ELIGIBLE_STATUSES.includes(
+              selectedRow.status as CaseTransferStatus,
+            )
           }
         >
           <ListItemIcon>

@@ -101,7 +101,9 @@ export const TRANSFER_ADMIN_STATUS: Record<string, AdminStatusInfo> = {
   },
   ACCEPTED: { label: "Overgedragen", color: "success" },
   REJECTED: { label: "Afgewezen", color: "error" },
-  WORK_COMPLETED: { label: "Werk afgerond", color: "success" },
+  // Kleur uitgelijnd met CaseTransferStatus.WORK_COMPLETED (CCP-beslissing):
+  // geen eindstatus van het dossier, enkel deze behandelfase is klaar.
+  WORK_COMPLETED: { label: "Werk afgerond", color: "warning" },
   CANCELLED: { label: "Geannuleerd", color: "default" },
 };
 export const getTransferAdminStatusInfo = makeLookup(TRANSFER_ADMIN_STATUS);

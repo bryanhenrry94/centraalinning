@@ -57,9 +57,17 @@ function serializeLegalProcess<T extends LegalProcessWithInclude>(legalProcess: 
 }
 
 export class LegalProcessService {
-  static generateReferenceNumber = async () => {
+  // Regla CCP (sponsor): un número GOP oficial solo nace cuando
+  // LegalProcessStatus pasa a GOP_ACTIVE — nunca antes (GOP_DRAFT no tiene
+  // número). Por eso acepta un client opcional: tryActivateGop lo llama con
+  // `tx` para generarlo dentro de la misma transacción que fija el status.
+  static generateReferenceNumber = async (
+    client: Prisma.TransactionClient | typeof prisma = prisma,
+  ) => {
     const year = new Date().getFullYear();
-    const total = await prisma.legalProcess.count();
+    const total = await client.legalProcess.count({
+      where: { status: { not: LegalProcessStatus.GOP_DRAFT } },
+    });
     return `GOP-${year}-${String(total + 1).padStart(3, "0")}`;
   };
 
@@ -271,7 +279,8 @@ export class LegalProcessService {
       throw new Error("Dit dossier heeft nog geen toegewezen deurwaarder.");
     }
 
-    const referenceNumber = await this.generateReferenceNumber();
+    // Sin referenceNumber acá: el número GOP oficial solo se genera en
+    // tryActivateGop, cuando el status realmente pasa a GOP_ACTIVE.
     const totalInterest = data.verdict_interest.reduce((sum, i) => sum + i.total_interest, 0);
 
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
@@ -353,7 +362,6 @@ export class LegalProcessService {
           status: LegalProcessStatus.GOP_DRAFT,
           gopActivationPaymentId: paymentResult.data!.paymentId,
           bailiffReferralPaymentId: bailiffReferralPayment?.paymentId,
-          referenceNumber,
           startedAt: new Date(),
         },
       });
@@ -427,9 +435,9 @@ export class LegalProcessService {
         data: {
           debtClaimId: caseTransfer.debtClaimId,
           event: "STATUS_CHANGED",
-          description: `Vonnis ${data.registration_number} geregistreerd als borrador (${referenceNumber}). In afwachting van de betaling(en) die de GOP-activering vrijgeven${
+          description: `Vonnis ${data.registration_number} geregistreerd als conceptregistratie. In afwachting van de betaling(en) die de GOP-activering vrijgeven${
             bailiffReferralPayment ? " (deelnemer + deurwaarder)" : " (deelnemer)"
-          }.`,
+          }. Er wordt pas een officieel GOP-nummer toegekend zodra het GOP wordt geactiveerd.`,
           metadata: { verdictId: newVerdict.id, sentence_amount: data.sentence_amount, totalInterest },
           createdById: actorUserId,
         },
@@ -676,7 +684,7 @@ export class LegalProcessService {
     const verdict = legalProcess.verdicts[0];
     const activationPaymentId = legalProcess.gopActivationPaymentId!;
 
-    const { principalAuditChange } = await prisma.$transaction(async (tx) => {
+    const { principalAuditChange, referenceNumber } = await prisma.$transaction(async (tx) => {
       let principalAuditChange: { obligationId: string; oldValue: number; newValue: number } | null = null;
 
       // Monto CFSB que el participante pagó para activar el GOP — se lee de
@@ -687,9 +695,13 @@ export class LegalProcessService {
       });
       const activationCost = Number(activationInvoice?.amount ?? 0);
 
+      // Regla CCP: el número GOP oficial nace recién acá, en la misma
+      // transacción que fija GOP_ACTIVE — nunca antes (ver generateReferenceNumber).
+      const referenceNumber = await this.generateReferenceNumber(tx);
+
       await tx.legalProcess.update({
         where: { id: legalProcess.id },
-        data: { status: LegalProcessStatus.GOP_ACTIVE },
+        data: { status: LegalProcessStatus.GOP_ACTIVE, referenceNumber },
       });
 
       if (verdict) {
@@ -809,11 +821,11 @@ export class LegalProcessService {
           event: "VERDICT_REGISTERED",
           description: `Beide activeringsbetalingen (deelnemer + deurwaarder) bevestigd. Vonnis ${
             verdict?.registration_number ?? ""
-          } definitief geregistreerd. GOP geactiveerd (${legalProcess.referenceNumber}).`,
+          } definitief geregistreerd. GOP geactiveerd (${referenceNumber}).`,
         },
       });
 
-      return { principalAuditChange };
+      return { principalAuditChange, referenceNumber };
     }, { timeout: 20000, maxWait: 10000 });
 
     if (principalAuditChange) {

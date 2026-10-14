@@ -266,7 +266,7 @@ export const LatestTransfersTable = ({
         open={!!acceptItem}
         onClose={() => setAcceptItem(null)}
         caseTransferId={acceptItem?.id ?? ""}
-        onRegistered={onChanged}
+        onRegistered={() => router.push("/legal-processes")}
         details={
           acceptItem
             ? {

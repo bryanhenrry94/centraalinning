@@ -201,16 +201,21 @@ export class CaseTransferService {
         },
       });
 
-      await ClaimTimelineService.logEvent(
-        debtClaim.id,
-        "GOP_STARTED",
-        `Directe Gerechtelijke Opvolging geregistreerd met extern vonnis ${input.verdictNumber} — in afwachting van acceptatie door deurwaarder ${bailiff.fullname}.`,
-        { bailiffId: input.bailiffId },
-        actorUserId,
-      );
-
       return createdTransfer;
     });
+
+    // Fuera de la transacción: ClaimTimelineService.logEvent usa el cliente
+    // prisma global (no acepta un tx), así que llamarlo dentro del
+    // $transaction intentaba leer el debtClaim recién creado desde otra
+    // conexión antes de que el commit lo hiciera visible — eso disparaba
+    // "Foreign key constraint violated" en claimTimeline.debtClaimId.
+    await ClaimTimelineService.logEvent(
+      caseTransfer.debtClaimId,
+      "GOP_STARTED",
+      `Directe Gerechtelijke Opvolging geregistreerd met extern vonnis ${input.verdictNumber} — in afwachting van acceptatie door deurwaarder ${bailiff.fullname}.`,
+      { bailiffId: input.bailiffId },
+      actorUserId,
+    );
 
     const arrayBuffer = await input.verdictDocument.file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
