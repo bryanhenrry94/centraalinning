@@ -26,4 +26,22 @@ export class InterestTypeService {
   static async delete(id: string) {
     return prisma.interestType.delete({ where: { id } });
   }
+
+  // Rentetarief-geschiedenis (InterestDetail): de enige manier om een wettelijk
+  // tarief te actualiseren was tot nu toe prisma/seed.ts opnieuw draaien — dit
+  // maakt het beheerbaar vanuit CFSB Admin (ajuste sponsor, sectie Wettelijke
+  // rente: "poder ajustar las tasas").
+  static async createDetail(interestTypeId: string, data: { date: string; rate: number }) {
+    return prisma.interestDetail.create({
+      data: { interest_type_id: interestTypeId, date: data.date, rate: data.rate },
+    });
+  }
+
+  static async updateDetail(id: string, data: { date: string; rate: number }) {
+    return prisma.interestDetail.update({ where: { id }, data });
+  }
+
+  static async deleteDetail(id: string) {
+    return prisma.interestDetail.delete({ where: { id } });
+  }
 }

@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { InterestType } from "@/modules/settings/services/interest-type.validators";
 import { VerdictInterestDetailCreate } from "@/modules/verdict/services/verdict-interest-details.validators";
 import {
+  Alert,
   Box,
   Button,
   IconButton,
@@ -24,6 +25,7 @@ import { formatCurrency } from "@/shared/utils/formatters";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import InterestCell from "../interest-cell";
 import TotalCell from "../total-cell";
 import TotalInterest from "../total-interest";
@@ -36,10 +38,15 @@ const StatutoryInterestSection: React.FC = () => {
   >([]);
 
   const [open, setOpen] = React.useState<boolean>(false);
-  const handleClose = () => setOpen(false);
+  const [openIndex, setOpenIndex] = React.useState<number | null>(null);
+  const handleClose = () => {
+    setOpen(false);
+    setOpenIndex(null);
+  };
 
   const {
     control,
+    setValue,
     formState: { errors },
   } = useFormContext<{
     verdict_interest: IVerdictInterestCreate[];
@@ -63,12 +70,43 @@ const StatutoryInterestSection: React.FC = () => {
     fetchInterestTypes();
   }, []);
 
-  const handleShowDetail = (item: IVerdictInterestCreate) => {
+  const [detailInterestTypeName, setDetailInterestTypeName] = React.useState<string>("");
+
+  const handleShowDetail = (item: IVerdictInterestCreate, index: number) => {
+    setDetailInterestTypeName(
+      interesTipos.find((tipo) => tipo.id === item.interest_type)?.name ?? ""
+    );
+    setRowsInterest(item.details ?? []);
+    setOpenIndex(index);
     setOpen(true);
-    setRowsInterest(item.details);
   };
 
-  const CalculatedInterestCell = ({
+  // De rechtbank kan een ander rentepercentage vaststellen dan het systeemtarief;
+  // de alguacil past het dan hier per tranche aan en de totalen herberekenen mee.
+  const handleTrancheRateChange = (period: string, rateInput: string) => {
+    const newRate = Number(rateInput);
+    if (openIndex === null || rateInput === "" || Number.isNaN(newRate)) return;
+
+    const updated = rowsInterest.map((row) => {
+      if (row.period !== period) return row;
+      const proportional_rate = (newRate / 365) * row.days;
+      const interest =
+        Math.round(row.base_amount * (proportional_rate / 100) * 100) / 100;
+      const total = Math.round((row.base_amount + interest) * 100) / 100;
+      return { ...row, annual_rate: newRate, proportional_rate, interest, total };
+    });
+
+    const newTotalInterest =
+      Math.round(updated.reduce((acc, row) => acc + row.interest, 0) * 100) / 100;
+
+    setRowsInterest(updated);
+    setValue(`verdict_interest.${openIndex}.details`, updated, { shouldDirty: true });
+    setValue(`verdict_interest.${openIndex}.total_interest`, newTotalInterest, {
+      shouldDirty: true,
+    });
+  };
+
+  const ViewCalculationButton = ({
     control,
     index,
   }: {
@@ -77,44 +115,22 @@ const StatutoryInterestSection: React.FC = () => {
   }) => {
     const item = useWatch({
       control,
-      name: `verdictInterest.${index}`,
+      name: `verdict_interest.${index}`,
     });
 
+    const hasDetails = Array.isArray(item?.details) && item.details.length > 0;
+
     return (
-      <>
-        {interesTipos.find((tipo) => tipo.id === item.interest_type)
-          ?.calculation_type === "FIXED" ? (
-          <Controller
-            name={`verdict_interest.${index}.calculated_interest`}
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                size="small"
-                fullWidth
-                type="number"
-                placeholder="0.00"
-                inputProps={{ step: "any" }}
-                error={!!errors.verdict_interest?.[index]?.calculated_interest}
-                helperText={
-                  errors.verdict_interest?.[index]?.calculated_interest?.message
-                }
-              />
-            )}
-          />
-        ) : (
-          <IconButton
-            aria-label="edit"
-            color="secondary"
-            size="small"
-            onClick={() => {
-              handleShowDetail(item);
-            }}
-          >
-            <VisibilityIcon />
-          </IconButton>
-        )}
-      </>
+      <Button
+        size="small"
+        variant="text"
+        startIcon={<VisibilityIcon fontSize="small" />}
+        disabled={!hasDetails}
+        onClick={() => handleShowDetail(item, index)}
+        sx={{ textTransform: "none", whiteSpace: "nowrap" }}
+      >
+        Bekijk berekening
+      </Button>
     );
   };
 
@@ -260,6 +276,14 @@ const StatutoryInterestSection: React.FC = () => {
       render: ({ index }) => <TotalCell control={control} index={index} />,
     },
     {
+      key: "calculation",
+      label: "Berekening",
+      align: "center",
+      render: ({ index }) => (
+        <ViewCalculationButton control={control} index={index} />
+      ),
+    },
+    {
       key: "actions",
       label: "Acties",
       align: "center",
@@ -320,6 +344,20 @@ const StatutoryInterestSection: React.FC = () => {
       </Box>
       <Box sx={{ p: 2 }}>
         <Box>
+          <Alert
+            icon={<InfoOutlinedIcon fontSize="inherit" />}
+            severity="info"
+            sx={{ mb: 2 }}
+          >
+            De rente wordt automatisch berekend volgens de formule{" "}
+            <strong>(jaartarief ÷ 365) × aantal dagen</strong>, toegepast op de
+            hoofdsom per periode. Wanneer het tarief binnen de gekozen periode
+            wijzigt, splitst het systeem de berekening automatisch in meerdere
+            tranches op basis van de geldende tariefgeschiedenis. Gebruik
+            &quot;Bekijk berekening&quot; per rij om de volledige, tranche-voor-tranche
+            opbouw te controleren. Tarieven worden centraal beheerd (CFSB
+            Beheer &gt; Instellingen &gt; Rentetarieven).
+          </Alert>
           <ResponsiveListTable
             columns={columns}
             rows={fields.map((field, index) => ({ id: field.id, index }))}
@@ -414,7 +452,8 @@ const StatutoryInterestSection: React.FC = () => {
                   component="h2"
                   sx={{ fontWeight: 600, color: "#f5f5f5" }}
                 >
-                  Detalle de Interés
+                  Berekening wettelijke rente
+                  {detailInterestTypeName ? ` — ${detailInterestTypeName}` : ""}
                 </Typography>
                 <IconButton
                   onClick={handleClose}
@@ -423,63 +462,79 @@ const StatutoryInterestSection: React.FC = () => {
                     backgroundColor: "#f5f5f5",
                     "&:hover": { backgroundColor: "#e0e0e0" },
                   }}
-                  aria-label="Cerrar"
+                  aria-label="Sluiten"
                 >
                   <CloseIcon />
                 </IconButton>
               </Box>
+              <Box sx={{ px: 2, pt: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Elke tranche hieronder komt overeen met een periode waarin één
+                  tarief gold. Het systeem berekent per tranche:{" "}
+                  <strong>rente = hoofdsom × (tarief ÷ 365 × dagen)</strong>, en
+                  telt alle tranches op tot het totaal hierboven.
+                </Typography>
+                <Alert severity="info" sx={{ mt: 1.5 }}>
+                  Heeft de rechtbank een ander percentage vastgesteld dan het
+                  systeemtarief? Pas het <strong>Jaartarief</strong> per tranche
+                  hieronder aan — de rente en totalen worden dan automatisch
+                  herberekend.
+                </Alert>
+              </Box>
               {(() => {
                 const detailColumns: ListColumn<VerdictInterestDetailCreate>[] = [
-                  { key: "period", label: "Tramo", align: "center", render: (row) => row.period },
+                  { key: "period", label: "Tranche", align: "center", render: (row) => row.period },
                   {
                     key: "period_start",
-                    label: "Fecha Ini.",
+                    label: "Vanaf",
                     align: "center",
-                    render: (row) => row.period_start.toLocaleDateString("es-ES"),
+                    render: (row) => row.period_start.toLocaleDateString("nl-NL"),
                   },
                   {
                     key: "period_end",
-                    label: "Fecha Fin",
+                    label: "Tot en met",
                     align: "center",
-                    render: (row) => row.period_end.toLocaleDateString("es-ES"),
+                    render: (row) => row.period_end.toLocaleDateString("nl-NL"),
                   },
-                  { key: "days", label: "Dias", align: "center", render: (row) => row.days },
+                  { key: "days", label: "Dagen", align: "center", render: (row) => row.days },
                   {
                     key: "annual_rate",
-                    label: "Tasa Anual",
+                    label: "Jaartarief (%)",
                     align: "center",
                     render: (row) => (
                       <TextField
                         type="number"
-                        value={Number(row.annual_rate).toFixed(2)}
                         size="small"
-                        fullWidth
-                        disabled
+                        defaultValue={Number(row.annual_rate)}
                         inputProps={{ step: "any" }}
+                        onBlur={(e) =>
+                          handleTrancheRateChange(row.period, e.target.value)
+                        }
+                        sx={{ width: 100 }}
                       />
                     ),
                   },
                   {
                     key: "proportional_rate",
-                    label: "Proporcional",
+                    label: "Proportioneel",
                     align: "center",
-                    render: (row) => Number(row.proportional_rate).toFixed(8),
+                    render: (row) => `${Number(row.proportional_rate).toFixed(8)}%`,
                   },
                   {
                     key: "base_amount",
-                    label: "Monto",
+                    label: "Hoofdsom",
                     align: "right",
                     render: (row) => formatCurrency(Number(row.base_amount)),
                   },
                   {
                     key: "interest",
-                    label: "Interes",
+                    label: "Rente",
                     align: "right",
                     render: (row) => formatCurrency(Number(row.interest)),
                   },
                   {
                     key: "total",
-                    label: "Total",
+                    label: "Totaal",
                     align: "right",
                     render: (row) => formatCurrency(Number(row.total)),
                   },
@@ -499,7 +554,7 @@ const StatutoryInterestSection: React.FC = () => {
                   color="primary"
                   onClick={handleClose}
                 >
-                  Cerrar
+                  Sluiten
                 </Button>
               </Box>
             </Box>

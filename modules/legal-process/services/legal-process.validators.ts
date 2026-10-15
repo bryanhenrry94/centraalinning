@@ -26,12 +26,28 @@ export const RegisterVerdictObjectSchema = z.object({
   sentence_amount: z.coerce.number().positive(),
   sentence_date: z.coerce.date(),
   court: z.string().nullable().optional(),
+  case_type: z.string().nullable().optional(),
+  short_description: z.string().nullable().optional(),
   notification_date: z.coerce.date().nullable().optional(),
   prescription_term_months: z.coerce.number().int().positive().nullable().optional(),
   prescription_due_date: z.coerce.date().nullable().optional(),
   procesal_cost: z.coerce.number().nonnegative().optional(),
   notes: z.string().nullable().optional(),
   bailiff_id: z.string().min(1),
+  // Documenten-stap (CCP-scherm Documenten): vonnisdocument verplicht, de
+  // betekening en overige documenten optioneel.
+  verdict_document_storage_key: z.string().min(1, "Het vonnisdocument is verplicht"),
+  verdict_document_original_name: z.string().nullable().optional(),
+  verdict_document_mime_type: z.string().nullable().optional(),
+  verdict_document_size: z.coerce.number().nullable().optional(),
+  service_document_storage_key: z.string().nullable().optional(),
+  service_document_original_name: z.string().nullable().optional(),
+  service_document_mime_type: z.string().nullable().optional(),
+  service_document_size: z.coerce.number().nullable().optional(),
+  other_document_storage_key: z.string().nullable().optional(),
+  other_document_original_name: z.string().nullable().optional(),
+  other_document_mime_type: z.string().nullable().optional(),
+  other_document_size: z.coerce.number().nullable().optional(),
   verdict_interest: z.array(VerdictInterestInputSchema).default([]),
   // Punto 1 del análisis CFSB: la pantalla única de registro de sentencia
   // debe poder cargar embargos y costos del alguacil en el mismo paso que

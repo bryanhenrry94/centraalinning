@@ -211,6 +211,11 @@ export const menuGroups: HeaderMenuGroup[] = [
         icon: <TuneOutlined fontSize="small" />,
       },
       {
+        label: "Rentetarieven",
+        href: "/admin/settings/interest-rates",
+        icon: <TuneOutlined fontSize="small" />,
+      },
+      {
         label: "Plannen",
         href: "/admin/plans",
         icon: <AssignmentOutlined fontSize="small" />,

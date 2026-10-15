@@ -21,6 +21,7 @@ const VerdictNewPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [debtorName, setDebtorName] = useState("");
+  const [dossierReference, setDossierReference] = useState<string | null>(null);
   const [defaultBailiffId, setDefaultBailiffId] = useState<string | null>(null);
   const [gopFeeRatePercent, setGopFeeRatePercent] = useState(5);
   const [directVerdictNumber, setDirectVerdictNumber] = useState<string | null>(null);
@@ -41,6 +42,7 @@ const VerdictNewPage: React.FC = () => {
           const caseTransfer = await getCaseTransferById(caseTransferId);
           if (!caseTransfer) throw new Error("Overdracht niet gevonden");
           setDebtorName(formatDebtorName(caseTransfer.debtClaim?.debtor?.person));
+          setDossierReference(caseTransfer.gopNumber ?? caseTransfer.debtClaim?.reference ?? null);
           setDefaultBailiffId(caseTransfer.bailiffId ?? null);
           if (caseTransfer.isDirectGopRequest) {
             setDirectVerdictNumber(caseTransfer.directVerdictNumber ?? null);
@@ -52,6 +54,7 @@ const VerdictNewPage: React.FC = () => {
           const legalProcess = await getLegalProcessById(legalProcessId);
           if (!legalProcess) throw new Error("GOP-dossier niet gevonden");
           setDebtorName(formatDebtorName(legalProcess.debtClaim?.debtor?.person));
+          setDossierReference(legalProcess.referenceNumber ?? legalProcess.debtClaim?.reference ?? null);
           setDefaultBailiffId(legalProcess.bailiffId ?? null);
         }
         setGopFeeRatePercent(await getGopFeeRatePercent({ caseTransferId, legalProcessId }));
@@ -80,6 +83,7 @@ const VerdictNewPage: React.FC = () => {
       caseTransferId={caseTransferId}
       legalProcessId={legalProcessId}
       debtorName={debtorName}
+      dossierReference={dossierReference}
       defaultBailiffId={defaultBailiffId}
       gopFeeRatePercent={gopFeeRatePercent}
       directVerdictNumber={directVerdictNumber}

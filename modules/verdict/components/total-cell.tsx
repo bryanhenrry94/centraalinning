@@ -12,9 +12,9 @@ const TotalCell = ({ control, index }: { control: any; index: number }) => {
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    const total = Number(item.base_amount ?? 0) + Number(item.interest ?? 0);
+    const total = Number(item?.base_amount ?? 0) + Number(item?.total_interest ?? 0);
     setTotal(total);
-  }, [item.base_amount, item.interest]);
+  }, [item?.base_amount, item?.total_interest]);
 
   return (
     <TextField

@@ -24,3 +24,15 @@ export async function updateInterestType(id: string, data: any) {
 export async function deleteInterestType(id: string) {
   return InterestTypeService.delete(id);
 }
+
+export async function createInterestDetail(interestTypeId: string, data: { date: string; rate: number }) {
+  return InterestTypeService.createDetail(interestTypeId, data);
+}
+
+export async function updateInterestDetail(id: string, data: { date: string; rate: number }) {
+  return InterestTypeService.updateDetail(id, data);
+}
+
+export async function deleteInterestDetail(id: string) {
+  return InterestTypeService.deleteDetail(id);
+}
