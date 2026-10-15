@@ -11,6 +11,7 @@ import { LatestDocumentsTable } from "./LatestDocumentsTable";
 import { DashboardResponse } from "../types/dashboard.types";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import dayjs from "dayjs";
 
 interface DashboardContentProps {
@@ -23,6 +24,7 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
   );
   const [endDate, setEndDate] = useState<dayjs.Dayjs | null>(dayjs());
   const router = useRouter();
+  const { data: session } = useSession();
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
   const [mounted, setMounted] = useState(false);
@@ -34,7 +36,7 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
   return (
     <Box sx={{ pt: { xs: 1.5, sm: 4 } }}>
       <DashboardHeader
-        title="Dashboard"
+        title={`Welkom, ${session?.user?.fullname ?? ""}`}
         subtitle="Overzicht van uw overeenkomsten en activiteiten."
         actions={
           <DashboardFilters

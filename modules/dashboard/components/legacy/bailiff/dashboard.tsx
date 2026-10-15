@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import {
   Box,
   Container,
@@ -66,6 +67,7 @@ const QUICK_ACTIONS = [
 
 export const DashboardBailiff = () => {
   const theme = useTheme();
+  const { data: session } = useSession();
   const [legalProcesses, setLegalProcesses] = useState<
     Awaited<ReturnType<typeof getMyLegalProcessesAsBailiff>>
   >([]);
@@ -105,8 +107,14 @@ export const DashboardBailiff = () => {
   const verdictEligibleCount = caseTransfers.filter((item) =>
     VERDICT_ELIGIBLE_STATUSES.includes(item.status),
   ).length;
-  const activeCount = legalProcesses.filter((item) =>
-    (OPEN_LEGAL_PROCESS_STATUSES as string[]).includes(item.status),
+  // "In uitvoering" incluye GOP_DRAFT (vonnis ya registrado, conceptregistratie
+  // con pago pendiente) además de GOP_ACTIVE/GOP_INACTIVE — sin esto, un
+  // dossier en GOP_DRAFT no caía en ninguna de las 5 tarjetas y la suma no
+  // cuadraba con el total (bug reportado por el sponsor).
+  const activeCount = legalProcesses.filter(
+    (item) =>
+      item.status === LegalProcessStatus.GOP_DRAFT ||
+      (OPEN_LEGAL_PROCESS_STATUSES as string[]).includes(item.status),
   ).length;
   const completedCount = legalProcesses.filter(
     (item) => item.status === LegalProcessStatus.CLOSED,
@@ -124,10 +132,10 @@ export const DashboardBailiff = () => {
     <Container maxWidth="xl" sx={{ py: { xs: 1.5, sm: 4 } }}>
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" fontWeight={700}>
-          Deurwaarder Dashboard
+          Welkom, {session?.user?.fullname}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Welkom terug. Hieronder een overzicht van uw dossiers.
+          Beheer uw dossiers en gerechtelijke opvolgingen.
         </Typography>
       </Box>
 
@@ -144,7 +152,7 @@ export const DashboardBailiff = () => {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2.4 }}>
           <StatCard
-            title="In afwachting van acceptatie"
+            title="Te accepteren"
             value={loading ? 0 : pendingAcceptanceItems.length}
             subtitle="dossiers"
             color={theme.palette.warning.main}

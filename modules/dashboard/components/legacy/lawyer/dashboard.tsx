@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import {
   Alert,
   Box,
@@ -69,6 +70,7 @@ const QUICK_ACTIONS = [
 
 export const DashboardLawyer = () => {
   const theme = useTheme();
+  const { data: session } = useSession();
   const [items, setItems] = useState<CaseTransferListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -99,17 +101,17 @@ export const DashboardLawyer = () => {
     <Container maxWidth="xl" sx={{ py: { xs: 1.5, sm: 4 } }}>
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" fontWeight={700}>
-          Advocaat Dashboard
+          Welkom, {session?.user?.fullname}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Welkom terug. Hieronder een overzicht van uw dossiers.
+          Beheer uw dossiers en gerechtelijke opvolgingen.
         </Typography>
       </Box>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <StatCard
-            title="In afwachting van acceptatie"
+            title="Te accepteren"
             value={loading ? 0 : pendingItems.length}
             subtitle="dossiers"
             color={theme.palette.warning.main}

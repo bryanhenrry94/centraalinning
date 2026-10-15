@@ -9,8 +9,6 @@ import {
   Typography,
   Chip,
   Stack,
-  Tabs,
-  Tab,
   Button,
   Card,
   TextField,
@@ -163,7 +161,12 @@ function toTransferRow(item: CaseTransferListItem): Row {
     id: item.id,
     kind: "transfer",
     href: `/legal-processes/transfers/${item.id}`,
-    reference: item.debtClaim.reference || "-",
+    // El número GOP (secuencia única, ver CaseTransferService.generateGopNumber)
+    // ya existe desde que el dossier queda destinado a un deurwaarder, antes
+    // incluso de que exista el LegalProcess — preferirlo sobre la referencia
+    // interna del DebtClaim para que el mismo dossier muestre siempre el
+    // mismo número en toda su evolución.
+    reference: item.gopNumber || item.debtClaim.reference || "-",
     tenantName: item.debtClaim.tenant?.name ?? "-",
     debtorName: debtorNameOf(item),
     lawyerName: item.lawyer
@@ -215,14 +218,10 @@ const LegalProcessesListPageContent: React.FC = () => {
   const roles = (session?.user?.roles as string[] | undefined) ?? [];
   const isLawyer = roles.includes(UserRole.LAWYER);
   const isBailiffRole = roles.includes(UserRole.BAILIFF);
-  const showPendingTabs = isLawyer || isBailiffRole;
 
   const [loading, setLoading] = useState(true);
   const [transferRows, setTransferRows] = useState<Row[]>([]);
   const [legalProcessRows, setLegalProcessRows] = useState<Row[]>([]);
-  const [tab, setTab] = useState<"pending" | "all">(
-    searchParams.get("tab") === "pending" ? "pending" : "all",
-  );
 
   // Filtros propios van het "Mijn dossiers"-scherm voor de advocaat (zie
   // mockup): zoeken, status en datumbereik, met paginering — vervangt daar
@@ -246,7 +245,12 @@ const LegalProcessesListPageContent: React.FC = () => {
   // "Mijn dossiers"-scherm (mockup sponsor) — los filtros propios de het
   // advocaat-scherm (lawyerSearch/...) quedan separados arriba.
   const [listSearch, setListSearch] = useState("");
-  const [listStatus, setListStatus] = useState("ALL");
+  // "?tab=pending" venía de los links existentes en los dashboards legacy
+  // de abogado/alguacil ("Wachten op acceptatie") — ya no hay pestañas, pero
+  // esos links siguen funcionando como un filtro de Status preseleccionado.
+  const [listStatus, setListStatus] = useState(
+    searchParams.get("tab") === "pending" ? CaseTransferStatus.PENDING_ACCEPTANCE : "ALL",
+  );
   const [listPeriod, setListPeriod] = useState<PeriodFilter>("ALL");
   const [listPage, setListPage] = useState(1);
   const debouncedListSearch = useDebounce(listSearch, 400);
@@ -289,26 +293,14 @@ const LegalProcessesListPageContent: React.FC = () => {
     if (session) load();
   }, [tenant?.id, session, isLawyer, isBailiffRole, refreshKey]);
 
+  // "Todos los archivos" muestra siempre los 9 (incluidos los pendientes de
+  // acceptatie) — ya no hay pestañas que excluyan filas; si el usuario
+  // quiere ver solo los pendientes, filtra por Status (listStatus más abajo).
   const filteredRows = useMemo(() => {
-    const pendingTransfers = transferRows.filter(
-      (row) => row.status === CaseTransferStatus.PENDING_ACCEPTANCE,
-    );
-
-    if (!showPendingTabs) {
-      return [...transferRows, ...legalProcessRows].sort(
-        (a, b) => b.date.valueOf() - a.date.valueOf(),
-      );
-    }
-
-    if (tab === "pending") return pendingTransfers;
-
-    const nonPendingTransfers = transferRows.filter(
-      (row) => !pendingTransfers.includes(row),
-    );
-    return [...nonPendingTransfers, ...legalProcessRows].sort(
+    return [...transferRows, ...legalProcessRows].sort(
       (a, b) => b.date.valueOf() - a.date.valueOf(),
     );
-  }, [transferRows, legalProcessRows, showPendingTabs, tab]);
+  }, [transferRows, legalProcessRows]);
 
   const listStatusOptions = useMemo(() => {
     const seen = new Map<string, string>();
@@ -334,7 +326,7 @@ const LegalProcessesListPageContent: React.FC = () => {
 
   useEffect(() => {
     setListPage(1);
-  }, [listStatus, listPeriod, debouncedListSearch, tab]);
+  }, [listStatus, listPeriod, debouncedListSearch]);
 
   const listTotalPages = Math.max(
     1,
@@ -359,7 +351,7 @@ const LegalProcessesListPageContent: React.FC = () => {
       "Bedrag (USD)",
       "Status",
       "Overgedragen op",
-      "Laatste update",
+      "Laatst bijgewerkt",
     ];
     const rows = listFilteredRows.map((row) => [
       row.reference,
@@ -659,13 +651,6 @@ const LegalProcessesListPageContent: React.FC = () => {
           Mijn dossiers
         </Typography>
 
-        {showPendingTabs && (
-          <Tabs value={tab} onChange={(_, value) => setTab(value)}>
-            <Tab value="all" label="Alle dossiers" />
-            <Tab value="pending" label="Wachten op acceptatie" />
-          </Tabs>
-        )}
-
         <Card sx={{ p: { xs: 1.5, sm: 3 } }}>
           <Stack
             direction={{ xs: "column", md: "row" }}
@@ -812,7 +797,7 @@ const LegalProcessesListPageContent: React.FC = () => {
               },
               {
                 key: "updatedAt",
-                label: "Laatste update",
+                label: "Laatst bijgewerkt",
                 render: (row) => formatDate(row.updatedAt.toString()),
                 hideOnMobile: true,
               },

@@ -24,9 +24,11 @@ export default function DashboardHeader({
           {title}
         </Typography>
 
-        {/* <Typography color="text.secondary">
-          {"Wlokm terug, DAZZSOFT SAS"}
-        </Typography> */}
+        {subtitle && (
+          <Typography variant="body2" color="text.secondary">
+            {subtitle}
+          </Typography>
+        )}
       </Box>
 
       {actions}

@@ -783,6 +783,18 @@ model CaseTransfer {
   directSentenceAmount   Decimal?  @db.Decimal(18, 2)
   directLegalInterest    Decimal?  @db.Decimal(18, 2)
 
+  // Regla CCP (sponsor, definitiva): una sola secuencia consecutiva de
+  // números GOP para todo el sistema, sin importar la ruta de entrada
+  // (AOP -> advocaat/deurwaarder o Directe GOP) — nunca una numeración
+  // separada por ruta. Se asigna en el momento en que este CaseTransfer
+  // queda destinado a ejecución judicial (bailiffId conocido: ya sea desde
+  // la creación —ruta directa al deurwaarder o Directe GOP— o más tarde,
+  // cuando el advocaat termina su trabajo y transfiere al deurwaarder). No
+  // se regenera nunca más — LegalProcess.referenceNumber copia este mismo
+  // valor al crearse, nunca genera uno propio. Ver
+  // CaseTransferService.generateGopNumber.
+  gopNumber String? @unique
+
   cancelledAt  DateTime?
   cancelReason String?   @db.Text
 

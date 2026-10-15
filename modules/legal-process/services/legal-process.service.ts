@@ -57,20 +57,6 @@ function serializeLegalProcess<T extends LegalProcessWithInclude>(legalProcess: 
 }
 
 export class LegalProcessService {
-  // Regla CCP (sponsor): un número GOP oficial solo nace cuando
-  // LegalProcessStatus pasa a GOP_ACTIVE — nunca antes (GOP_DRAFT no tiene
-  // número). Por eso acepta un client opcional: tryActivateGop lo llama con
-  // `tx` para generarlo dentro de la misma transacción que fija el status.
-  static generateReferenceNumber = async (
-    client: Prisma.TransactionClient | typeof prisma = prisma,
-  ) => {
-    const year = new Date().getFullYear();
-    const total = await client.legalProcess.count({
-      where: { status: { not: LegalProcessStatus.GOP_DRAFT } },
-    });
-    return `GOP-${year}-${String(total + 1).padStart(3, "0")}`;
-  };
-
   static getById = async (id: string) => {
     const legalProcess = await prisma.legalProcess.findUnique({
       where: { id },
@@ -278,9 +264,14 @@ export class LegalProcessService {
     if (!caseTransfer.bailiffId) {
       throw new Error("Dit dossier heeft nog geen toegewezen deurwaarder.");
     }
+    // Regla CCP: el número GOP oficial es único y se asigna una sola vez,
+    // al momento en que este CaseTransfer quedó destinado a un deurwaarder
+    // (ver requestTransfer/requestDirectGopTransfer/
+    // processLawyerFeePaymentConfirmed) — nunca se regenera acá.
+    if (!caseTransfer.gopNumber) {
+      throw new Error("Dit dossier heeft nog geen GOP-nummer toegewezen.");
+    }
 
-    // Sin referenceNumber acá: el número GOP oficial solo se genera en
-    // tryActivateGop, cuando el status realmente pasa a GOP_ACTIVE.
     const totalInterest = data.verdict_interest.reduce((sum, i) => sum + i.total_interest, 0);
 
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
@@ -360,6 +351,10 @@ export class LegalProcessService {
           caseTransferId: caseTransfer.id,
           bailiffId: caseTransfer.bailiffId!,
           status: LegalProcessStatus.GOP_DRAFT,
+          // Copia el mismo gopNumber del CaseTransfer — nunca genera uno
+          // propio, para que sea un único número estable durante todo el
+          // ciclo de vida (secuencia central, regla CCP).
+          referenceNumber: caseTransfer.gopNumber,
           gopActivationPaymentId: paymentResult.data!.paymentId,
           bailiffReferralPaymentId: bailiffReferralPayment?.paymentId,
           startedAt: new Date(),
@@ -435,9 +430,9 @@ export class LegalProcessService {
         data: {
           debtClaimId: caseTransfer.debtClaimId,
           event: "STATUS_CHANGED",
-          description: `Vonnis ${data.registration_number} geregistreerd als conceptregistratie. In afwachting van de betaling(en) die de GOP-activering vrijgeven${
+          description: `Vonnis ${data.registration_number} geregistreerd als conceptregistratie (${caseTransfer.gopNumber}). In afwachting van de betaling(en) die de GOP-activering vrijgeven${
             bailiffReferralPayment ? " (deelnemer + deurwaarder)" : " (deelnemer)"
-          }. Er wordt pas een officieel GOP-nummer toegekend zodra het GOP wordt geactiveerd.`,
+          }.`,
           metadata: { verdictId: newVerdict.id, sentence_amount: data.sentence_amount, totalInterest },
           createdById: actorUserId,
         },
@@ -684,7 +679,12 @@ export class LegalProcessService {
     const verdict = legalProcess.verdicts[0];
     const activationPaymentId = legalProcess.gopActivationPaymentId!;
 
-    const { principalAuditChange, referenceNumber } = await prisma.$transaction(async (tx) => {
+    // Regla CCP: el número GOP ya existe desde que el CaseTransfer quedó
+    // destinado al deurwaarder (ver registerFirstVerdict) — acá solo cambia
+    // el status, el número nunca se regenera ni se reasigna.
+    const referenceNumber = legalProcess.referenceNumber;
+
+    const { principalAuditChange } = await prisma.$transaction(async (tx) => {
       let principalAuditChange: { obligationId: string; oldValue: number; newValue: number } | null = null;
 
       // Monto CFSB que el participante pagó para activar el GOP — se lee de
@@ -695,13 +695,9 @@ export class LegalProcessService {
       });
       const activationCost = Number(activationInvoice?.amount ?? 0);
 
-      // Regla CCP: el número GOP oficial nace recién acá, en la misma
-      // transacción que fija GOP_ACTIVE — nunca antes (ver generateReferenceNumber).
-      const referenceNumber = await this.generateReferenceNumber(tx);
-
       await tx.legalProcess.update({
         where: { id: legalProcess.id },
-        data: { status: LegalProcessStatus.GOP_ACTIVE, referenceNumber },
+        data: { status: LegalProcessStatus.GOP_ACTIVE },
       });
 
       if (verdict) {
@@ -825,7 +821,7 @@ export class LegalProcessService {
         },
       });
 
-      return { principalAuditChange, referenceNumber };
+      return { principalAuditChange };
     }, { timeout: 20000, maxWait: 10000 });
 
     if (principalAuditChange) {

@@ -267,9 +267,16 @@ const CaseTransferDetailPage: React.FC = () => {
           flexWrap="wrap"
           gap={1}
         >
-          <Typography variant="h4" fontWeight={700}>
-            {caseTransfer.debtClaim.reference}
-          </Typography>
+          <Box>
+            <Typography variant="h4" fontWeight={700}>
+              {caseTransfer.debtClaim.reference}
+            </Typography>
+            {caseTransfer.gopNumber && (
+              <Typography variant="body2" color="text.secondary">
+                Gekoppeld GOP-nummer: {caseTransfer.gopNumber}
+              </Typography>
+            )}
+          </Box>
           <Stack direction="row" spacing={1}>
             {caseTransfer.isDirectGopRequest && (
               <Chip

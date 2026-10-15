@@ -120,6 +120,74 @@ export class CaseTransferService {
     return count > 0;
   };
 
+  // Regla CCP (sponsor): una sola secuencia GOP consecutiva para todo el
+  // sistema, sin importar si el expediente viene de la ruta normal
+  // (AOP -> advocaat/deurwaarder) o de Directe GOP — nunca numeraciones
+  // separadas por ruta. Un número nunca se reutiliza, incluso si el
+  // CaseTransfer termina rechazado/cancelado (queda "quemado" en el
+  // historial). Cuenta sobre CaseTransfer.gopNumber (no sobre
+  // LegalProcess) porque el número se asigna ANTES de que el LegalProcess
+  // exista — ver requestTransfer/requestDirectGopTransfer/
+  // processLawyerFeePaymentConfirmed, los tres únicos lugares que lo asignan.
+  // Mismo patrón anti-race que PersonService.generatePersonalNumber: un
+  // count()-then-insert ingenuo permite que dos llamadas concurrentes lean
+  // el mismo total antes de que ninguna haya confirmado su CaseTransfer,
+  // produciendo el mismo "GOP-2026-00X" dos veces (bug reportado por el
+  // sponsor). Reusa la tabla genérica person_identity_sequence con un
+  // prefijo propio ("GOP") — es solo un contador con lock de fila, no tiene
+  // nada de específico a Person pese al nombre de la tabla.
+  static generateGopNumber = async (
+    client: Prisma.TransactionClient | typeof prisma = prisma,
+  ): Promise<string> => {
+    const year = new Date().getFullYear();
+    const sequenceKey = "GOP";
+
+    // Alta de la fila del contador FUERA de la transacción de bloqueo (ver
+    // comentario equivalente en generatePersonalNumber): mezclar el INSERT
+    // IGNORE y el SELECT ... FOR UPDATE en la misma transacción puede
+    // reportar un deadlock (1213) bajo alta concurrencia.
+    await prisma.$executeRaw`
+      INSERT IGNORE INTO person_identity_sequence (id, prefix, lastValue, updatedAt)
+      VALUES (${crypto.randomUUID()}, ${sequenceKey}, 0, NOW())
+    `;
+
+    const runLocked = async (tx: Prisma.TransactionClient): Promise<number> => {
+      const rows = await tx.$queryRaw<{ lastValue: number }[]>`
+        SELECT lastValue FROM person_identity_sequence
+        WHERE prefix = ${sequenceKey}
+        FOR UPDATE
+      `;
+      const next = (rows[0]?.lastValue ?? 0) + 1;
+
+      await tx.$executeRaw`
+        UPDATE person_identity_sequence SET lastValue = ${next}, updatedAt = NOW()
+        WHERE prefix = ${sequenceKey}
+      `;
+
+      return next;
+    };
+
+    const isTopLevelClient = typeof (client as typeof prisma).$transaction === "function";
+
+    const MAX_ATTEMPTS = 5;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        const next = isTopLevelClient
+          ? await (client as typeof prisma).$transaction((tx) => runLocked(tx))
+          : await runLocked(client as Prisma.TransactionClient);
+
+        return `GOP-${year}-${String(next).padStart(3, "0")}`;
+      } catch (error) {
+        const isDeadlock =
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          (error.meta as { code?: string } | undefined)?.code === "1213";
+        if (!isDeadlock || attempt === MAX_ATTEMPTS) throw error;
+        await new Promise((resolve) => setTimeout(resolve, 25 * attempt));
+      }
+    }
+    throw new Error("Kon geen GOP-nummer genereren");
+  };
+
   // ---------------------------------------------------------------------
   // Solicitud de transferencia (sin costo)
   // ---------------------------------------------------------------------
@@ -170,8 +238,12 @@ export class CaseTransferService {
     if (!bailiff) return { success: false, message: "Deurwaarder niet gevonden" };
 
     const caseTransfer = await prisma.$transaction(async (tx) => {
+      // Prefijo "DGOP-" (no "GOP-"): esta es solo la referencia técnica
+      // interna del DebtClaim, nunca el número GOP oficial — ese es
+      // gopNumber más abajo, de la secuencia única. Usar el mismo prefijo
+      // para ambos causaba el bug de números GOP duplicados en pantalla.
       const reference = await CollectionService.generateClaimReference(tx, {
-        prefix: "GOP",
+        prefix: "DGOP",
         origin: "GOP",
       });
 
@@ -187,10 +259,16 @@ export class CaseTransferService {
         },
       });
 
+      // El bailiffId ya se conoce desde el inicio en la ruta directa, así
+      // que el número GOP oficial se asigna de una — mismo momento que en
+      // requestTransfer cuando ya hay deurwaarder directo.
+      const gopNumber = await this.generateGopNumber(tx);
+
       const createdTransfer = await tx.caseTransfer.create({
         data: {
           debtClaimId: debtClaim.id,
           bailiffId: input.bailiffId,
+          gopNumber,
           status: "PENDING_ACCEPTANCE",
           acceptanceDeadline: addDays(new Date(), ACCEPTANCE_WINDOW_DAYS),
           isDirectGopRequest: true,
@@ -309,11 +387,19 @@ export class CaseTransferService {
     });
     if (existing) return { caseTransferId: existing.id };
 
+    // El número GOP oficial (secuencia única, ver generateGopNumber) ya se
+    // conoce acá cuando la transferencia va directo al deurwaarder; si va a
+    // un advocaat primero, se asigna más tarde en
+    // processLawyerFeePaymentConfirmed, cuando recién ahí se sabe que
+    // seguirá a ejecución judicial.
+    const gopNumber = input.bailiffId ? await this.generateGopNumber() : null;
+
     const caseTransfer = await prisma.caseTransfer.create({
       data: {
         debtClaimId: input.debtClaimId,
         lawyerId: input.lawyerId ?? null,
         bailiffId: input.bailiffId ?? null,
+        gopNumber,
         status: "PENDING_ACCEPTANCE",
         acceptanceDeadline: new Date(Date.now() + ACCEPTANCE_WINDOW_DAYS * 24 * 60 * 60 * 1000),
         isEmergencyTransfer: input.isEmergencyTransfer ?? false,
@@ -1067,6 +1153,13 @@ export class CaseTransferService {
     if (paidInvoiceEmailRecipient) {
       await sendInvoiceEmail(paidInvoiceEmailRecipient, billingInvoice.id, true);
     }
+    // Ruta advocaat: recién acá se sabe con certeza que habrá ejecución
+    // judicial (se transfiere a un deurwaarder con vonnis), así que el
+    // número GOP oficial de la secuencia única se asigna en este momento
+    // (nunca antes — mientras el advocaat trabajaba, podía terminar
+    // buitengerechtelijk y jamás necesitar uno).
+    const gopNumber = bailiff && !caseTransfer.gopNumber ? await this.generateGopNumber() : undefined;
+
     await prisma.caseTransfer.update({
       where: { id: caseTransfer.id },
       data: {
@@ -1077,6 +1170,7 @@ export class CaseTransferService {
         // In de rechtstreekse route is er geen selectedBailiff: de deurwaarder
         // was al toegewezen, dus deze spread is dan een no-op.
         ...(bailiff ? { bailiffId: bailiff.id } : {}),
+        ...(gopNumber ? { gopNumber } : {}),
       },
     });
 

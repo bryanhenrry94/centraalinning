@@ -247,7 +247,7 @@ const LegalProcessDetailPage: React.FC = () => {
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 4 }}>
                 <InfoField
-                  label="Vordering"
+                  label="Oorspronkelijke dossierreferentie"
                   value={legalProcess.debtClaim.reference}
                 />
               </Grid>

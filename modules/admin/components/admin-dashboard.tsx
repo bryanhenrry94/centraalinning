@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import BusinessOutlined from "@mui/icons-material/BusinessOutlined";
 import GroupsOutlined from "@mui/icons-material/GroupsOutlined";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
@@ -79,6 +80,7 @@ const QUICK_LINKS = [
 export const AdminDashboard = () => {
   const theme = useTheme();
   const router = useRouter();
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<Stats | null>(null);
 
@@ -100,7 +102,7 @@ export const AdminDashboard = () => {
       <Stack spacing={3}>
         <Box>
           <Typography variant="h4" fontWeight={700}>
-            CFSB Admin
+            Welkom, {session?.user?.fullname}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Overzicht van het volledige platform, alle deelnemers.
