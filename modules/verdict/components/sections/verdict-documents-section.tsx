@@ -1,8 +1,19 @@
 "use client";
-import React from "react";
-import { Box, Divider, IconButton, Paper, Stack, Tooltip, Typography } from "@mui/material";
-import { Controller, useFormContext } from "react-hook-form";
-import AttachFileIcon from "@mui/icons-material/AttachFile";
+import React, { useState } from "react";
+import {
+  Box,
+  Button,
+  Divider,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  Paper,
+  Typography,
+} from "@mui/material";
+import { useFieldArray, useFormContext } from "react-hook-form";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { notifyError } from "@/shared/ui/notifications";
 import { uploadVerdictSupportingDocument } from "@/modules/legal-process/actions/legal-process.actions";
 
@@ -10,45 +21,42 @@ interface VerdictDocumentsSectionProps {
   uploadContext?: { caseTransferId?: string | null; legalProcessId?: string | null };
 }
 
-type DocumentFieldPrefix = "verdict_document" | "service_document" | "other_document";
-
-interface SlotConfig {
-  prefix: DocumentFieldPrefix;
-  label: string;
-  required?: boolean;
-}
-
-const SLOTS: SlotConfig[] = [
-  { prefix: "verdict_document", label: "Vonnisdocument", required: true },
-  { prefix: "service_document", label: "Betekening vonnis (optioneel)" },
-  { prefix: "other_document", label: "Overige documenten (optioneel)" },
-];
-
-// Documenten-stap (CCP-scherm): 3 vaste slots, cada uno un solo documento.
-// Reusa exactamente el mismo mecanismo de upload-antes-de-que-exista-la-fila
-// que ya usan AttachmentSection/ServiceCostsSection por renglón.
+// Documenten-stap (CCP-scherm): lijst met vrije documenten (geen vaste
+// slots meer) — net als LegalProcessDocuments op het GOP-detailscherm:
+// uploaden, tonen in een lijst, verwijderen bij vergissing.
 const VerdictDocumentsSection: React.FC<VerdictDocumentsSectionProps> = ({ uploadContext }) => {
   const {
     control,
-    setValue,
     formState: { errors },
   } = useFormContext<Record<string, any>>();
+  const [uploading, setUploading] = useState(false);
 
-  const handleUpload = async (prefix: DocumentFieldPrefix, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const { fields, append, remove } = useFieldArray({ control, name: "documents" });
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
     e.target.value = "";
-    if (!file || !uploadContext) return;
+    if (!files.length || !uploadContext) return;
 
+    setUploading(true);
     try {
-      const metadata = await uploadVerdictSupportingDocument(uploadContext, file);
-      setValue(`${prefix}_storage_key`, metadata.document_storage_key, { shouldValidate: true });
-      setValue(`${prefix}_original_name`, metadata.document_original_name);
-      setValue(`${prefix}_mime_type`, metadata.document_mime_type);
-      setValue(`${prefix}_size`, metadata.document_size);
+      for (const file of files) {
+        const metadata = await uploadVerdictSupportingDocument(uploadContext, file);
+        append({
+          storage_key: metadata.document_storage_key,
+          original_name: metadata.document_original_name,
+          mime_type: metadata.document_mime_type,
+          size: metadata.document_size,
+        });
+      }
     } catch (error) {
       notifyError(error instanceof Error ? error.message : "Uploaden mislukt");
+    } finally {
+      setUploading(false);
     }
   };
+
+  const arrayErrorMessage = (errors as any)?.documents?.message as string | undefined;
 
   return (
     <Paper component="section" sx={{ elevation: 1, borderRadius: 1, overflow: "hidden", mb: 2 }}>
@@ -67,74 +75,70 @@ const VerdictDocumentsSection: React.FC<VerdictDocumentsSectionProps> = ({ uploa
           DOCUMENTEN
         </Typography>
       </Box>
-      <Box sx={{ px: 2, pb: 1 }}>
-        <Stack divider={<Divider flexItem />}>
-          {SLOTS.map((slot) => (
-            <Controller
-              key={slot.prefix}
-              name={`${slot.prefix}_original_name`}
-              control={control}
-              render={({ field }) => {
-                const hasFile = Boolean(field.value);
-                const errorMessage = slot.required
-                  ? (errors as any)[`${slot.prefix}_storage_key`]?.message
-                  : undefined;
+      <Box sx={{ p: 2 }}>
+        <Button
+          component="label"
+          variant="outlined"
+          size="small"
+          startIcon={<UploadFileIcon />}
+          disabled={!uploadContext || uploading}
+          sx={{ textTransform: "none" }}
+        >
+          Document toevoegen
+          <input
+            type="file"
+            hidden
+            multiple
+            accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+            onChange={handleUpload}
+          />
+        </Button>
 
-                return (
-                  <Stack direction="row" spacing={1.5} alignItems="center" sx={{ py: 1.5 }}>
-                    <Tooltip title={hasFile ? "Bestand vervangen" : "Bestand kiezen"}>
-                      <span>
-                        <IconButton
-                          component="label"
-                          size="small"
-                          disabled={!uploadContext}
-                          color={hasFile ? "success" : errorMessage ? "error" : "default"}
-                          sx={{
-                            border: "1px solid",
-                            borderColor: hasFile
-                              ? "success.main"
-                              : errorMessage
-                                ? "error.main"
-                                : "divider",
-                          }}
-                        >
-                          <AttachFileIcon fontSize="small" />
-                          <input
-                            type="file"
-                            hidden
-                            accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                            onChange={(e) => handleUpload(slot.prefix, e)}
-                          />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                    <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                      <Typography variant="body2" fontWeight={600}>
-                        {slot.label}
-                        {slot.required && (
-                          <Box component="span" sx={{ color: "error.main" }}>
-                            {" "}
-                            *
-                          </Box>
-                        )}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        color={errorMessage ? "error.main" : "text.secondary"}
-                        noWrap
-                        sx={{ display: "block" }}
+        {arrayErrorMessage && (
+          <Typography variant="caption" color="error.main" sx={{ display: "block", mt: 1 }}>
+            {arrayErrorMessage}
+          </Typography>
+        )}
+
+        {fields.length === 0 ? (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+            Nog geen documenten toegevoegd.
+          </Typography>
+        ) : (
+          <List disablePadding sx={{ mt: 1 }}>
+            {fields.map((field, index) => {
+              const doc = field as unknown as {
+                original_name: string;
+                size?: number | null;
+              };
+              return (
+                <Box key={field.id}>
+                  <ListItem
+                    disablePadding
+                    secondaryAction={
+                      <IconButton
+                        size="small"
+                        color="error"
+                        aria-label="Verwijderen"
+                        onClick={() => remove(index)}
                       >
-                        {errorMessage
-                          ? String(errorMessage)
-                          : field.value || "Geen bestand geselecteerd"}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                );
-              }}
-            />
-          ))}
-        </Stack>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    }
+                  >
+                    <ListItemText
+                      primary={doc.original_name}
+                      secondary={
+                        doc.size ? `${(doc.size / 1024).toFixed(0)} KB` : undefined
+                      }
+                    />
+                  </ListItem>
+                  {index < fields.length - 1 && <Divider />}
+                </Box>
+              );
+            })}
+          </List>
+        )}
       </Box>
     </Paper>
   );

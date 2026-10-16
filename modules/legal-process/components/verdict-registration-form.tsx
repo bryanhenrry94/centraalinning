@@ -9,6 +9,7 @@ import {
   useWatch,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { NumericFormat } from "react-number-format";
 import {
   Alert,
   Box,
@@ -107,18 +108,7 @@ const buildDefaultValues = (
   procesal_cost: 0,
   notes: "",
   bailiff_id: defaultBailiffId || "",
-  verdict_document_storage_key: "",
-  verdict_document_original_name: null,
-  verdict_document_mime_type: null,
-  verdict_document_size: null,
-  service_document_storage_key: null,
-  service_document_original_name: null,
-  service_document_mime_type: null,
-  service_document_size: null,
-  other_document_storage_key: null,
-  other_document_original_name: null,
-  other_document_mime_type: null,
-  other_document_size: null,
+  documents: [],
   verdict_interest: [],
   verdict_embargo: [],
   bailiff_services: [],
@@ -132,7 +122,7 @@ const STEP_FIELDS: (keyof RegisterVerdictInput)[][] = [
     "sentence_date",
     "sentence_amount",
     "procesal_cost",
-    "verdict_document_storage_key",
+    "documents",
   ],
   [],
 ];
@@ -619,13 +609,21 @@ export const VerdictRegistrationForm: React.FC<
                       name="sentence_amount"
                       control={control}
                       render={({ field }) => (
-                        <TextField
-                          {...field}
+                        <NumericFormat
+                          customInput={TextField}
                           label="Veroordelingsbedrag"
-                          type="number"
                           size="small"
                           fullWidth
                           required
+                          value={field.value ?? ""}
+                          thousandSeparator
+                          decimalScale={2}
+                          fixedDecimalScale
+                          allowNegative={false}
+                          prefix="$ "
+                          onValueChange={(values) =>
+                            field.onChange(Number(values.value) || 0)
+                          }
                           error={!!errors.sentence_amount}
                           helperText={errors.sentence_amount?.message}
                         />
@@ -637,13 +635,20 @@ export const VerdictRegistrationForm: React.FC<
                       name="procesal_cost"
                       control={control}
                       render={({ field }) => (
-                        <TextField
-                          {...field}
-                          value={field.value ?? 0}
+                        <NumericFormat
+                          customInput={TextField}
                           label="Overige proceskosten"
-                          type="number"
                           size="small"
                           fullWidth
+                          value={field.value ?? ""}
+                          thousandSeparator
+                          decimalScale={2}
+                          fixedDecimalScale
+                          allowNegative={false}
+                          prefix="$ "
+                          onValueChange={(values) =>
+                            field.onChange(Number(values.value) || 0)
+                          }
                         />
                       )}
                     />

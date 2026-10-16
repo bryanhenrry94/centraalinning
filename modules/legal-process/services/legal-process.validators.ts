@@ -15,6 +15,16 @@ export const VerdictInterestInputSchema = z.object({
 });
 export type VerdictInterestInput = z.infer<typeof VerdictInterestInputSchema>;
 
+// Een vrij document in de lijst (geen vaste slots meer) — opgeslagen als
+// LegalProcessDocument zodra het GOP-dossier bestaat (ver legal-process.service.ts).
+export const RegisterVerdictDocumentSchema = z.object({
+  storage_key: z.string().min(1),
+  original_name: z.string().min(1),
+  mime_type: z.string().nullable().optional(),
+  size: z.coerce.number().nullable().optional(),
+});
+export type RegisterVerdictDocumentInput = z.infer<typeof RegisterVerdictDocumentSchema>;
+
 // Base sin el refine, para poder usar .omit()/.extend() en formularios (los
 // ZodEffects que devuelve .refine() no exponen esos métodos).
 export const RegisterVerdictObjectSchema = z.object({
@@ -34,20 +44,9 @@ export const RegisterVerdictObjectSchema = z.object({
   procesal_cost: z.coerce.number().nonnegative().optional(),
   notes: z.string().nullable().optional(),
   bailiff_id: z.string().min(1),
-  // Documenten-stap (CCP-scherm Documenten): vonnisdocument verplicht, de
-  // betekening en overige documenten optioneel.
-  verdict_document_storage_key: z.string().min(1, "Het vonnisdocument is verplicht"),
-  verdict_document_original_name: z.string().nullable().optional(),
-  verdict_document_mime_type: z.string().nullable().optional(),
-  verdict_document_size: z.coerce.number().nullable().optional(),
-  service_document_storage_key: z.string().nullable().optional(),
-  service_document_original_name: z.string().nullable().optional(),
-  service_document_mime_type: z.string().nullable().optional(),
-  service_document_size: z.coerce.number().nullable().optional(),
-  other_document_storage_key: z.string().nullable().optional(),
-  other_document_original_name: z.string().nullable().optional(),
-  other_document_mime_type: z.string().nullable().optional(),
-  other_document_size: z.coerce.number().nullable().optional(),
+  // Documenten-stap (CCP-scherm Documenten): lijst met vrije documenten, geen
+  // vaste slots meer — minstens één document is verplicht.
+  documents: z.array(RegisterVerdictDocumentSchema).min(1, "Voeg minstens één document toe"),
   verdict_interest: z.array(VerdictInterestInputSchema).default([]),
   // Punto 1 del análisis CFSB: la pantalla única de registro de sentencia
   // debe poder cargar embargos y costos del alguacil en el mismo paso que

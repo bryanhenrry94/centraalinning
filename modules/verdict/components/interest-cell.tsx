@@ -31,7 +31,9 @@ const InterestCell: React.FC<InterestCellProps> = ({ control, index }) => {
     // overschrijven bij deze eerste mount — alleen herberekenen zodra de
     // gebruiker nadien zelf bedrag/periode/rentetype wijzigt.
     const skipInitialRecalculation =
-      !didInitRef.current && Array.isArray(item?.details) && item.details.length > 0;
+      !didInitRef.current &&
+      Array.isArray(item?.details) &&
+      item.details.length > 0;
     didInitRef.current = true;
     if (skipInitialRecalculation) return;
 
@@ -50,7 +52,7 @@ const InterestCell: React.FC<InterestCellProps> = ({ control, index }) => {
         item.base_amount,
         item.calculated_interest,
         item.calculation_start,
-        item.calculation_end
+        item.calculation_end,
       );
 
       const total = details?.reduce((acc, curr) => acc + curr.interest, 0) || 0;
@@ -90,6 +92,7 @@ const InterestCell: React.FC<InterestCellProps> = ({ control, index }) => {
             readOnly: true,
           }}
           disabled
+          // sx={{ "& .MuiInputBase-input": { fontSize: "1rem", fontWeight: 600 } }}
         />
       )}
     />

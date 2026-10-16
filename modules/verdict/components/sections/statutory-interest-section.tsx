@@ -19,6 +19,7 @@ import {
   useFormContext,
   useWatch,
 } from "react-hook-form";
+import { NumericFormat } from "react-number-format";
 import { IVerdictInterestCreate } from "@/modules/verdict/services/verdict-interest.validators";
 import { getAllInterestTypes } from "@/modules/settings/actions/interest-type.actions";
 import { formatCurrency } from "@/shared/utils/formatters";
@@ -29,7 +30,10 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import InterestCell from "../interest-cell";
 import TotalCell from "../total-cell";
 import TotalInterest from "../total-interest";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 
 const StatutoryInterestSection: React.FC = () => {
   const [interesTipos, setInteresTipos] = React.useState<InterestType[]>([]);
@@ -70,11 +74,23 @@ const StatutoryInterestSection: React.FC = () => {
     fetchInterestTypes();
   }, []);
 
-  const [detailInterestTypeName, setDetailInterestTypeName] = React.useState<string>("");
+  const [detailInterestTypeName, setDetailInterestTypeName] =
+    React.useState<string>("");
+
+  // "Soort rente" toont enkel het relevante onderscheid (consument/bedrijf)
+  // in plaats van de volledige wettelijke naam — die blijft wel zichtbaar in
+  // CFSB Admin (Wettelijke rente-instellingen).
+  const shortInterestTypeLabel = (name: string) => {
+    const lower = name.toLowerCase();
+    if (lower.includes("consument")) return "Consument";
+    if (lower.includes("bedrijf") || lower.includes("handelstransacties"))
+      return "Bedrijf";
+    return name;
+  };
 
   const handleShowDetail = (item: IVerdictInterestCreate, index: number) => {
     setDetailInterestTypeName(
-      interesTipos.find((tipo) => tipo.id === item.interest_type)?.name ?? ""
+      interesTipos.find((tipo) => tipo.id === item.interest_type)?.name ?? "",
     );
     setRowsInterest(item.details ?? []);
     setOpenIndex(index);
@@ -93,14 +109,23 @@ const StatutoryInterestSection: React.FC = () => {
       const interest =
         Math.round(row.base_amount * (proportional_rate / 100) * 100) / 100;
       const total = Math.round((row.base_amount + interest) * 100) / 100;
-      return { ...row, annual_rate: newRate, proportional_rate, interest, total };
+      return {
+        ...row,
+        annual_rate: newRate,
+        proportional_rate,
+        interest,
+        total,
+      };
     });
 
     const newTotalInterest =
-      Math.round(updated.reduce((acc, row) => acc + row.interest, 0) * 100) / 100;
+      Math.round(updated.reduce((acc, row) => acc + row.interest, 0) * 100) /
+      100;
 
     setRowsInterest(updated);
-    setValue(`verdict_interest.${openIndex}.details`, updated, { shouldDirty: true });
+    setValue(`verdict_interest.${openIndex}.details`, updated, {
+      shouldDirty: true,
+    });
     setValue(`verdict_interest.${openIndex}.total_interest`, newTotalInterest, {
       shouldDirty: true,
     });
@@ -121,16 +146,14 @@ const StatutoryInterestSection: React.FC = () => {
     const hasDetails = Array.isArray(item?.details) && item.details.length > 0;
 
     return (
-      <Button
+      <IconButton
+        aria-label="Bekijk berekening"
         size="small"
-        variant="text"
-        startIcon={<VisibilityIcon fontSize="small" />}
         disabled={!hasDetails}
         onClick={() => handleShowDetail(item, index)}
-        sx={{ textTransform: "none", whiteSpace: "nowrap" }}
       >
-        Bekijk berekening
-      </Button>
+        <VisibilityIcon fontSize="small" />
+      </IconButton>
     );
   };
 
@@ -138,6 +161,7 @@ const StatutoryInterestSection: React.FC = () => {
     {
       key: "interest_type",
       label: "Soort rente",
+      width: 140,
       render: ({ index }) => (
         <Controller
           name={`verdict_interest.${index}.interest_type`}
@@ -157,7 +181,7 @@ const StatutoryInterestSection: React.FC = () => {
             >
               {interesTipos.map((option) => (
                 <MenuItem key={option.id} value={option.id}>
-                  {option.name}
+                  {shortInterestTypeLabel(option.name)}
                 </MenuItem>
               ))}
             </TextField>
@@ -169,6 +193,7 @@ const StatutoryInterestSection: React.FC = () => {
       key: "calculation_start",
       label: "Berekenen vanaf",
       align: "center",
+      width: 150,
       render: ({ index }) => (
         <Controller
           name={`verdict_interest.${index}.calculation_start`}
@@ -191,7 +216,7 @@ const StatutoryInterestSection: React.FC = () => {
               }
               onChange={(e) => {
                 field.onChange(
-                  e.target.value ? new Date(e.target.value) : null
+                  e.target.value ? new Date(e.target.value) : null,
                 );
               }}
             />
@@ -203,6 +228,7 @@ const StatutoryInterestSection: React.FC = () => {
       key: "calculation_end",
       label: "Berekenen tot en met",
       align: "center",
+      width: 160,
       render: ({ index }) => (
         <Controller
           name={`verdict_interest.${index}.calculation_end`}
@@ -225,7 +251,7 @@ const StatutoryInterestSection: React.FC = () => {
               }
               onChange={(e) => {
                 field.onChange(
-                  e.target.value ? new Date(e.target.value) : null
+                  e.target.value ? new Date(e.target.value) : null,
                 );
               }}
             />
@@ -237,27 +263,32 @@ const StatutoryInterestSection: React.FC = () => {
       key: "base_amount",
       label: "Hoofdsom",
       align: "center",
+      width: 160,
       render: ({ index }) => (
         <Controller
           name={`verdict_interest.${index}.base_amount`}
           control={control}
           render={({ field }) => (
-            <TextField
-              {...field}
+            <NumericFormat
+              customInput={TextField}
               size="small"
               fullWidth
-              type="number"
-              placeholder="0.00"
-              inputProps={{ step: "any" }}
+              value={field.value ?? ""}
+              thousandSeparator
+              decimalScale={2}
+              fixedDecimalScale
+              allowNegative={false}
+              prefix="$ "
+              onValueChange={(values) =>
+                field.onChange(
+                  values.value === "" ? null : Number(values.value),
+                )
+              }
               error={!!errors.verdict_interest?.[index]?.base_amount}
               helperText={
                 errors.verdict_interest?.[index]?.base_amount?.message
               }
-              value={field.value ?? ""} // si es null/undefined → ""
-              onChange={(e) => {
-                const val = e.target.value;
-                field.onChange(val === "" ? null : parseFloat(val));
-              }}
+              // sx={{ "& .MuiInputBase-input": { fontSize: "1rem", fontWeight: 600 } }}
             />
           )}
         />
@@ -267,28 +298,24 @@ const StatutoryInterestSection: React.FC = () => {
       key: "total_interest",
       label: "Rente",
       align: "center",
+      width: 140,
       render: ({ index }) => <InterestCell control={control} index={index} />,
     },
     {
       key: "total",
       label: "Totaal",
       align: "center",
+      width: 140,
       render: ({ index }) => <TotalCell control={control} index={index} />,
-    },
-    {
-      key: "calculation",
-      label: "Berekening",
-      align: "center",
-      render: ({ index }) => (
-        <ViewCalculationButton control={control} index={index} />
-      ),
     },
     {
       key: "actions",
       label: "Acties",
       align: "center",
+      width: 100,
       render: ({ index }) => (
         <Stack direction="row" spacing={1} justifyContent="center">
+          <ViewCalculationButton control={control} index={index} />
           <IconButton
             aria-label="delete"
             color="error"
@@ -344,20 +371,6 @@ const StatutoryInterestSection: React.FC = () => {
       </Box>
       <Box sx={{ p: 2 }}>
         <Box>
-          <Alert
-            icon={<InfoOutlinedIcon fontSize="inherit" />}
-            severity="info"
-            sx={{ mb: 2 }}
-          >
-            De rente wordt automatisch berekend volgens de formule{" "}
-            <strong>(jaartarief ÷ 365) × aantal dagen</strong>, toegepast op de
-            hoofdsom per periode. Wanneer het tarief binnen de gekozen periode
-            wijzigt, splitst het systeem de berekening automatisch in meerdere
-            tranches op basis van de geldende tariefgeschiedenis. Gebruik
-            &quot;Bekijk berekening&quot; per rij om de volledige, tranche-voor-tranche
-            opbouw te controleren. Tarieven worden centraal beheerd (CFSB
-            Beheer &gt; Instellingen &gt; Rentetarieven).
-          </Alert>
           <ResponsiveListTable
             columns={columns}
             rows={fields.map((field, index) => ({ id: field.id, index }))}
@@ -426,14 +439,15 @@ const StatutoryInterestSection: React.FC = () => {
                 top: "50%",
                 left: "50%",
                 transform: "translate(-50%, -50%)",
-                width: { xs: "calc(100vw - 32px)", sm: "90vw", md: 1000 },
+                width: { xs: "calc(100vw - 32px)", sm: "95vw" },
                 maxWidth: 1000,
                 bgcolor: "background.paper",
                 boxShadow: 24,
                 borderRadius: 1,
-                p: 2,
+                overflow: "hidden",
                 maxHeight: "90vh",
-                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
               }}
             >
               <Box
@@ -441,104 +455,111 @@ const StatutoryInterestSection: React.FC = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  padding: "12px 20px",
-                  borderBottom: "1px solid #e0e0e0",
-                  backgroundColor: "secondary.light",
+                  px: 2,
+                  py: 1.5,
+                  bgcolor: "secondary.main",
+                  color: "white",
                 }}
               >
                 <Typography
                   id="modal-modal-title"
                   variant="h6"
                   component="h2"
-                  sx={{ fontWeight: 600, color: "#f5f5f5" }}
+                  sx={{ fontWeight: 600 }}
                 >
                   Berekening wettelijke rente
                   {detailInterestTypeName ? ` — ${detailInterestTypeName}` : ""}
                 </Typography>
                 <IconButton
                   onClick={handleClose}
-                  color="primary"
-                  sx={{
-                    backgroundColor: "#f5f5f5",
-                    "&:hover": { backgroundColor: "#e0e0e0" },
-                  }}
+                  sx={{ color: "white" }}
                   aria-label="Sluiten"
                 >
                   <CloseIcon />
                 </IconButton>
               </Box>
-              <Box sx={{ px: 2, pt: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Elke tranche hieronder komt overeen met een periode waarin één
-                  tarief gold. Het systeem berekent per tranche:{" "}
-                  <strong>rente = hoofdsom × (tarief ÷ 365 × dagen)</strong>, en
-                  telt alle tranches op tot het totaal hierboven.
-                </Typography>
-                <Alert severity="info" sx={{ mt: 1.5 }}>
-                  Heeft de rechtbank een ander percentage vastgesteld dan het
-                  systeemtarief? Pas het <strong>Jaartarief</strong> per tranche
-                  hieronder aan — de rente en totalen worden dan automatisch
-                  herberekend.
-                </Alert>
-              </Box>
+              <Box sx={{ p: 2, overflowY: "auto" }}>
               {(() => {
-                const detailColumns: ListColumn<VerdictInterestDetailCreate>[] = [
-                  { key: "period", label: "Tranche", align: "center", render: (row) => row.period },
-                  {
-                    key: "period_start",
-                    label: "Vanaf",
-                    align: "center",
-                    render: (row) => row.period_start.toLocaleDateString("nl-NL"),
-                  },
-                  {
-                    key: "period_end",
-                    label: "Tot en met",
-                    align: "center",
-                    render: (row) => row.period_end.toLocaleDateString("nl-NL"),
-                  },
-                  { key: "days", label: "Dagen", align: "center", render: (row) => row.days },
-                  {
-                    key: "annual_rate",
-                    label: "Jaartarief (%)",
-                    align: "center",
-                    render: (row) => (
-                      <TextField
-                        type="number"
-                        size="small"
-                        defaultValue={Number(row.annual_rate)}
-                        inputProps={{ step: "any" }}
-                        onBlur={(e) =>
-                          handleTrancheRateChange(row.period, e.target.value)
-                        }
-                        sx={{ width: 100 }}
-                      />
-                    ),
-                  },
-                  {
-                    key: "proportional_rate",
-                    label: "Proportioneel",
-                    align: "center",
-                    render: (row) => `${Number(row.proportional_rate).toFixed(8)}%`,
-                  },
-                  {
-                    key: "base_amount",
-                    label: "Hoofdsom",
-                    align: "right",
-                    render: (row) => formatCurrency(Number(row.base_amount)),
-                  },
-                  {
-                    key: "interest",
-                    label: "Rente",
-                    align: "right",
-                    render: (row) => formatCurrency(Number(row.interest)),
-                  },
-                  {
-                    key: "total",
-                    label: "Totaal",
-                    align: "right",
-                    render: (row) => formatCurrency(Number(row.total)),
-                  },
-                ];
+                const detailColumns: ListColumn<VerdictInterestDetailCreate>[] =
+                  [
+                    {
+                      key: "period",
+                      label: "Tranche",
+                      align: "center",
+                      width: 90,
+                      render: (row) => row.period,
+                    },
+                    {
+                      key: "period_start",
+                      label: "Vanaf",
+                      align: "center",
+                      width: 120,
+                      render: (row) =>
+                        row.period_start.toLocaleDateString("nl-NL"),
+                    },
+                    {
+                      key: "period_end",
+                      label: "Tot en met",
+                      align: "center",
+                      width: 120,
+                      render: (row) =>
+                        row.period_end.toLocaleDateString("nl-NL"),
+                    },
+                    {
+                      key: "days",
+                      label: "Dagen",
+                      align: "center",
+                      width: 90,
+                      render: (row) => row.days,
+                    },
+                    {
+                      key: "annual_rate",
+                      label: "Jaartarief (%)",
+                      align: "center",
+                      width: 150,
+                      render: (row) => (
+                        <TextField
+                          type="number"
+                          size="small"
+                          defaultValue={Number(row.annual_rate)}
+                          inputProps={{ step: "any" }}
+                          onBlur={(e) =>
+                            handleTrancheRateChange(row.period, e.target.value)
+                          }
+                          sx={{ width: 100 }}
+                        />
+                      ),
+                    },
+                    {
+                      key: "proportional_rate",
+                      label: "Proportioneel",
+                      align: "center",
+                      width: 160,
+                      render: (row) =>
+                        `${Number(row.proportional_rate).toFixed(8)}%`,
+                    },
+                    {
+                      key: "base_amount",
+                      label: "Hoofdsom",
+                      align: "right",
+                      width: 150,
+                      render: (row) => formatCurrency(Number(row.base_amount)),
+                    },
+                    {
+                      key: "interest",
+                      label: "Rente",
+                      align: "right",
+                      width: 150,
+                      render: (row) => formatCurrency(Number(row.interest)),
+                    },
+                    {
+                      key: "total",
+                      label: "Totaal",
+                      align: "right",
+                      width: 150,
+                      render: (row) => formatCurrency(Number(row.total)),
+                    },
+                  ];
 
                 return (
                   <ResponsiveListTable
@@ -556,6 +577,7 @@ const StatutoryInterestSection: React.FC = () => {
                 >
                   Sluiten
                 </Button>
+              </Box>
               </Box>
             </Box>
           </Modal>

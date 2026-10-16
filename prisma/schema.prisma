@@ -1586,23 +1586,6 @@ model Verdict {
   bailiff_id    String
   bailiff       Bailiff? @relation("BailiffToVerdict", fields: [bailiff_id], references: [id])
 
-  // Documenten-stap: 3 slots vaste velden (zelfde patrón als de documenten
-  // per embargo/bailiff_services-regel) — vonnisdocument is verplicht, de
-  // andere twee optioneel. Geen generieke VerdictAttachment-array hier
-  // omdat elk slot zijn eigen betekenis heeft (CCP-scherm Documenten).
-  verdict_document_storage_key    String?
-  verdict_document_original_name  String?
-  verdict_document_mime_type      String?
-  verdict_document_size           Int?
-  service_document_storage_key    String?
-  service_document_original_name  String?
-  service_document_mime_type      String?
-  service_document_size           Int?
-  other_document_storage_key      String?
-  other_document_original_name    String?
-  other_document_mime_type        String?
-  other_document_size             Int?
-
   status VerdictStatus @default(DRAFT)
 
   created_at DateTime @default(now())

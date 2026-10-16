@@ -380,21 +380,23 @@ export class LegalProcessService {
           procesal_cost: data.procesal_cost ?? 0,
           notes: data.notes,
           bailiff_id: data.bailiff_id,
-          verdict_document_storage_key: data.verdict_document_storage_key,
-          verdict_document_original_name: data.verdict_document_original_name,
-          verdict_document_mime_type: data.verdict_document_mime_type,
-          verdict_document_size: data.verdict_document_size,
-          service_document_storage_key: data.service_document_storage_key,
-          service_document_original_name: data.service_document_original_name,
-          service_document_mime_type: data.service_document_mime_type,
-          service_document_size: data.service_document_size,
-          other_document_storage_key: data.other_document_storage_key,
-          other_document_original_name: data.other_document_original_name,
-          other_document_mime_type: data.other_document_mime_type,
-          other_document_size: data.other_document_size,
           status: "DRAFT",
         },
       });
+
+      if (data.documents.length) {
+        await tx.legalProcessDocument.createMany({
+          data: data.documents.map((doc) => ({
+            legalProcessId: newLegalProcess.id,
+            fileName: doc.storage_key.split("/").pop() ?? doc.original_name,
+            originalName: doc.original_name,
+            mimeType: doc.mime_type ?? "application/octet-stream",
+            size: doc.size ?? 0,
+            storageKey: doc.storage_key,
+            uploadedById: actorUserId,
+          })),
+        });
+      }
 
       for (const item of data.verdict_interest) {
         const verdictInterest = await tx.verdictInterest.create({
@@ -897,21 +899,23 @@ export class LegalProcessService {
           procesal_cost: data.procesal_cost ?? 0,
           notes: data.notes,
           bailiff_id: data.bailiff_id,
-          verdict_document_storage_key: data.verdict_document_storage_key,
-          verdict_document_original_name: data.verdict_document_original_name,
-          verdict_document_mime_type: data.verdict_document_mime_type,
-          verdict_document_size: data.verdict_document_size,
-          service_document_storage_key: data.service_document_storage_key,
-          service_document_original_name: data.service_document_original_name,
-          service_document_mime_type: data.service_document_mime_type,
-          service_document_size: data.service_document_size,
-          other_document_storage_key: data.other_document_storage_key,
-          other_document_original_name: data.other_document_original_name,
-          other_document_mime_type: data.other_document_mime_type,
-          other_document_size: data.other_document_size,
           status: "APPROVED",
         },
       });
+
+      if (data.documents.length) {
+        await tx.legalProcessDocument.createMany({
+          data: data.documents.map((doc) => ({
+            legalProcessId: legalProcess.id,
+            fileName: doc.storage_key.split("/").pop() ?? doc.original_name,
+            originalName: doc.original_name,
+            mimeType: doc.mime_type ?? "application/octet-stream",
+            size: doc.size ?? 0,
+            storageKey: doc.storage_key,
+            uploadedById: actorUserId,
+          })),
+        });
+      }
 
       for (const item of data.verdict_interest) {
         const verdictInterest = await tx.verdictInterest.create({

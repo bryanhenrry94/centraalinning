@@ -5,9 +5,14 @@ import { Alert, Container } from "@mui/material";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { VerdictRegistrationForm } from "@/modules/legal-process/components/verdict-registration-form";
 import { getCaseTransferById } from "@/modules/legal-process/actions/case-transfer.actions";
-import { getLegalProcessById, getGopFeeRatePercent } from "@/modules/legal-process/actions/legal-process.actions";
+import {
+  getLegalProcessById,
+  getGopFeeRatePercent,
+} from "@/modules/legal-process/actions/legal-process.actions";
 
-const formatDebtorName = (person?: { first_name?: string | null; last_name?: string | null } | null) =>
+const formatDebtorName = (
+  person?: { first_name?: string | null; last_name?: string | null } | null,
+) =>
   person ? `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim() : "";
 
 // Un vonnis solo puede registrarse en el contexto de una transferencia
@@ -24,15 +29,23 @@ const VerdictNewPage: React.FC = () => {
   const [dossierReference, setDossierReference] = useState<string | null>(null);
   const [defaultBailiffId, setDefaultBailiffId] = useState<string | null>(null);
   const [gopFeeRatePercent, setGopFeeRatePercent] = useState(5);
-  const [directVerdictNumber, setDirectVerdictNumber] = useState<string | null>(null);
+  const [directVerdictNumber, setDirectVerdictNumber] = useState<string | null>(
+    null,
+  );
   const [directVerdictDate, setDirectVerdictDate] = useState<Date | null>(null);
-  const [directSentenceAmount, setDirectSentenceAmount] = useState<number | null>(null);
-  const [directLegalInterest, setDirectLegalInterest] = useState<number | null>(null);
+  const [directSentenceAmount, setDirectSentenceAmount] = useState<
+    number | null
+  >(null);
+  const [directLegalInterest, setDirectLegalInterest] = useState<number | null>(
+    null,
+  );
 
   useEffect(() => {
     const load = async () => {
       if (!caseTransferId && !legalProcessId) {
-        setError("Geen dossier opgegeven. Start het registreren van een vonnis vanuit een overdracht of GOP-dossier.");
+        setError(
+          "Geen dossier opgegeven. Start het registreren van een vonnis vanuit een overdracht of GOP-dossier.",
+        );
         setLoading(false);
         return;
       }
@@ -41,8 +54,12 @@ const VerdictNewPage: React.FC = () => {
         if (caseTransferId) {
           const caseTransfer = await getCaseTransferById(caseTransferId);
           if (!caseTransfer) throw new Error("Overdracht niet gevonden");
-          setDebtorName(formatDebtorName(caseTransfer.debtClaim?.debtor?.person));
-          setDossierReference(caseTransfer.gopNumber ?? caseTransfer.debtClaim?.reference ?? null);
+          setDebtorName(
+            formatDebtorName(caseTransfer.debtClaim?.debtor?.person),
+          );
+          setDossierReference(
+            caseTransfer.gopNumber ?? caseTransfer.debtClaim?.reference ?? null,
+          );
           setDefaultBailiffId(caseTransfer.bailiffId ?? null);
           if (caseTransfer.isDirectGopRequest) {
             setDirectVerdictNumber(caseTransfer.directVerdictNumber ?? null);
@@ -53,11 +70,19 @@ const VerdictNewPage: React.FC = () => {
         } else if (legalProcessId) {
           const legalProcess = await getLegalProcessById(legalProcessId);
           if (!legalProcess) throw new Error("GOP-dossier niet gevonden");
-          setDebtorName(formatDebtorName(legalProcess.debtClaim?.debtor?.person));
-          setDossierReference(legalProcess.referenceNumber ?? legalProcess.debtClaim?.reference ?? null);
+          setDebtorName(
+            formatDebtorName(legalProcess.debtClaim?.debtor?.person),
+          );
+          setDossierReference(
+            legalProcess.referenceNumber ??
+              legalProcess.debtClaim?.reference ??
+              null,
+          );
           setDefaultBailiffId(legalProcess.bailiffId ?? null);
         }
-        setGopFeeRatePercent(await getGopFeeRatePercent({ caseTransferId, legalProcessId }));
+        setGopFeeRatePercent(
+          await getGopFeeRatePercent({ caseTransferId, legalProcessId }),
+        );
       } catch (err) {
         setError(err instanceof Error ? err.message : "Kon dossier niet laden");
       } finally {
