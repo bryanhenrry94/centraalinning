@@ -29,7 +29,6 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import AddIcon from "@mui/icons-material/Add";
 
 import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
@@ -648,30 +647,15 @@ const LegalProcessesListPageContent: React.FC = () => {
       <AppBreadcrumbs items={[{ label: "Mijn dossiers" }]} />
 
       <Stack spacing={3}>
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          justifyContent="space-between"
-          alignItems={{ xs: "flex-start", sm: "center" }}
-          spacing={1.5}
-        >
-          <Box>
-            <Typography variant="h4" fontWeight={700}>
-              Mijn dossiers
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Overzicht van uw toegewezen dossiers en gerechtelijke
-              opvolgingen.
-            </Typography>
-          </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => router.push("/legal-processes/new")}
-            sx={{ textTransform: "none", whiteSpace: "nowrap" }}
-          >
-            GOP starten
-          </Button>
-        </Stack>
+        <Box>
+          <Typography variant="h4" fontWeight={700}>
+            Mijn dossiers
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Overzicht van uw toegewezen dossiers en gerechtelijke
+            opvolgingen.
+          </Typography>
+        </Box>
 
         <Card sx={{ p: { xs: 1.5, sm: 3 } }}>
           <Stack

@@ -240,7 +240,6 @@ export const VerdictRegistrationForm: React.FC<
   const uploadContext = { caseTransferId, legalProcessId };
 
   const sentenceAmount = useWatch({ control, name: "sentence_amount" });
-  const sentenceDate = useWatch({ control, name: "sentence_date" });
   const verdictInterest = useWatch({ control, name: "verdict_interest" });
   const bailiffServices = useWatch({ control, name: "bailiff_services" });
 
@@ -252,6 +251,26 @@ export const VerdictRegistrationForm: React.FC<
       ),
     [verdictInterest],
   );
+  // Rango completo del cálculo (desde el inicio más temprano hasta el fin
+  // más tardío entre todas las renteberekeningen) para mostrar ambas fechas
+  // junto al total — antes solo se mostraba la fecha del vonnis, que no es
+  // necesariamente la fecha de cálculo de la rente.
+  const interestDateRange = useMemo(() => {
+    const items = verdictInterest ?? [];
+    const starts = items
+      .map((item) => item?.calculation_start)
+      .filter((date): date is Date => !!date)
+      .map((date) => new Date(date));
+    const ends = items
+      .map((item) => item?.calculation_end)
+      .filter((date): date is Date => !!date)
+      .map((date) => new Date(date));
+    if (!starts.length || !ends.length) return null;
+    return {
+      start: new Date(Math.min(...starts.map((date) => date.getTime()))),
+      end: new Date(Math.max(...ends.map((date) => date.getTime()))),
+    };
+  }, [verdictInterest]);
   const totalBailiffCost = useMemo(
     () =>
       (bailiffServices ?? []).reduce(
@@ -710,7 +729,7 @@ export const VerdictRegistrationForm: React.FC<
                   value={formatCurrency(Number(sentenceAmount) || 0)}
                 />
                 <FinancialSummaryRow
-                  label={`Wettelijke rente${sentenceDate ? ` (t/m ${formatDate(new Date(sentenceDate).toString())})` : ""}`}
+                  label={`Wettelijke rente${interestDateRange ? ` (${formatDate(interestDateRange.start.toString())} t/m ${formatDate(interestDateRange.end.toString())})` : ""}`}
                   value={formatCurrency(totalInterest)}
                 />
                 <Divider sx={{ my: 1 }} />
