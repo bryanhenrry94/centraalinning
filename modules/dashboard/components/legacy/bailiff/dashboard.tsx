@@ -162,7 +162,7 @@ export const DashboardBailiff = () => {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2.4 }}>
           <StatCard
-            title="Vonnis registreren"
+            title="Geregistreerde vonnissen"
             value={loading ? 0 : verdictEligibleCount}
             subtitle="dossiers"
             color={theme.palette.primary.main}
@@ -172,7 +172,7 @@ export const DashboardBailiff = () => {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2.4 }}>
           <StatCard
-            title="In uitvoering"
+            title="In behandeling"
             value={loading ? 0 : activeCount}
             subtitle="dossiers"
             color={theme.palette.success.main}

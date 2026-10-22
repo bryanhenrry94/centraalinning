@@ -22,7 +22,7 @@ const LEGAL_PROCESS_STATUS_CONFIG: Record<string, { label: string; color: Status
   GOP_DRAFT: { label: "Wacht op betaling", color: "warning" },
   GOP_ACTIVE: { label: "GOP actief", color: "success" },
   GOP_INACTIVE: { label: "In onderzoek naar executiemogelijkheden", color: "warning" },
-  CLOSED: { label: "GOP afgerond", color: "success" },
+  CLOSED: { label: "Afgerond", color: "success" },
 };
 
 export function getLegalProcessStatusInfo(status: string) {

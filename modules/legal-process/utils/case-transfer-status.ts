@@ -20,7 +20,7 @@ const CASE_TRANSFER_STATUS_CONFIG: Record<
   // identiek label delen (CCP-beslissing).
   PENDING_PAYMENT: { label: "Wacht op overdrachtsbetaling", color: "warning" },
   PENDING_ACCEPTANCE: {
-    label: "In afwachting van acceptatie",
+    label: "In afwachting",
     color: "warning",
   },
   ACCEPTED: { label: "In behandeling", color: "warning" },

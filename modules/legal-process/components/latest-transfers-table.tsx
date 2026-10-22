@@ -59,7 +59,9 @@ export const LatestTransfersTable = ({
   const router = useRouter();
   const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
   const [rejectId, setRejectId] = useState<string | null>(null);
-  const [acceptItem, setAcceptItem] = useState<CaseTransferListItem | null>(null);
+  const [acceptItem, setAcceptItem] = useState<CaseTransferListItem | null>(
+    null,
+  );
 
   const debtorName = (item: CaseTransferListItem) =>
     item.debtClaim.debtor?.person
@@ -176,17 +178,26 @@ export const LatestTransfersTable = ({
             <TableHead>
               <TableRow>
                 <TableCell sx={HEAD_SX}>Datum</TableCell>
-                <TableCell sx={HEAD_SX}>Referentie</TableCell>
-                <TableCell sx={{ ...HEAD_SX, minWidth: 150 }}>Debiteur</TableCell>
-                <TableCell sx={{ ...HEAD_SX, textAlign: "right" }}>Bedrag</TableCell>
-                <TableCell sx={{ ...HEAD_SX, textAlign: "center" }}>Status</TableCell>
-                <TableCell sx={{ ...HEAD_SX, textAlign: "center" }}>Acties</TableCell>
+                <TableCell sx={HEAD_SX}>Dossiernummer</TableCell>
+                <TableCell sx={{ ...HEAD_SX, minWidth: 150 }}>
+                  Debiteur
+                </TableCell>
+                {/* <TableCell sx={{ ...HEAD_SX, minWidth: 150 }}>Schuldeiser</TableCell> */}
+                <TableCell sx={{ ...HEAD_SX, textAlign: "right" }}>
+                  Openstaand saldo
+                </TableCell>
+                <TableCell sx={{ ...HEAD_SX, textAlign: "center" }}>
+                  Status
+                </TableCell>
+                <TableCell sx={{ ...HEAD_SX, textAlign: "center" }}>
+                  Acties
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {items.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
                     <Typography variant="body2" color="text.secondary">
                       Geen nieuwe dossieroverdrachten.
                     </Typography>
@@ -202,8 +213,11 @@ export const LatestTransfersTable = ({
                     </TableCell>
                     <TableCell>{item.debtClaim.reference}</TableCell>
                     <TableCell>{debtorName(item)}</TableCell>
+                    {/* <TableCell>{item.debtClaim.tenant.name}</TableCell> */}
                     <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-                      {formatCurrency(Number(item.debtClaim.principalAmount) || 0)}
+                      {formatCurrency(
+                        Number(item.debtClaim.principalAmount) || 0,
+                      )}
                     </TableCell>
                     <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
                       <Chip
@@ -215,13 +229,20 @@ export const LatestTransfersTable = ({
                       />
                     </TableCell>
                     <TableCell align="center">
-                      <Stack direction="row" spacing={0.5} justifyContent="center">
-                        {item.status !== CaseTransferStatus.PENDING_ACCEPTANCE && (
+                      <Stack
+                        direction="row"
+                        spacing={0.5}
+                        justifyContent="center"
+                      >
+                        {item.status !==
+                          CaseTransferStatus.PENDING_ACCEPTANCE && (
                           <Tooltip title="Bekijken">
                             <IconButton
                               size="small"
                               onClick={() =>
-                                router.push(`/legal-processes/transfers/${item.id}`)
+                                router.push(
+                                  `/legal-processes/transfers/${item.id}`,
+                                )
                               }
                             >
                               <VisibilityIcon fontSize="small" />

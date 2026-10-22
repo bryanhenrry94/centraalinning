@@ -96,7 +96,7 @@ export const getCopAdminStatusInfo = makeLookup(COP_ADMIN_STATUS);
 export const TRANSFER_ADMIN_STATUS: Record<string, AdminStatusInfo> = {
   PENDING_PAYMENT: { label: "Wacht op betaling", color: "warning" },
   PENDING_ACCEPTANCE: {
-    label: "In afwachting van acceptatie",
+    label: "In afwachting",
     color: "warning",
   },
   ACCEPTED: { label: "Overgedragen", color: "success" },
@@ -170,7 +170,10 @@ export const PAYMENT_ADMIN_STATUS: Record<string, AdminStatusInfo> = {
 // de transactie af) — bij een handmatige TRANSFER (Bankoverschrijving) is er
 // geen "mislukking", enkel geld dat (nog) niet ontvangen is: dat is "in
 // afwachting" (CCP: geel/amber), geen fout (rood).
-export function getPaymentAdminStatusInfo(status: string, method?: string): AdminStatusInfo {
+export function getPaymentAdminStatusInfo(
+  status: string,
+  method?: string,
+): AdminStatusInfo {
   if (status === "failed" && method === "TRANSFER") {
     return { label: "Niet ontvangen", color: "warning" };
   }
