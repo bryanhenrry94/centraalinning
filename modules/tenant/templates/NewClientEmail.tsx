@@ -105,7 +105,7 @@ export default function NewClientEmail({
               color: "#1a1a1a",
             }}
           >
-            <strong>CFSBB-nummer:</strong> {tenantCode}
+            <strong>CFSB-nummer:</strong> {tenantCode}
           </Text>
           <Text style={{ margin: 0, fontSize: "15px", color: "#1a1a1a" }}>
             <strong>Geregistreerd op:</strong> {registeredAt}

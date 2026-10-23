@@ -15,8 +15,10 @@ import {
   Box,
   Button,
   Chip,
+  CircularProgress,
   Container,
-  Divider,
+  Dialog,
+  DialogContent,
   Grid,
   MenuItem,
   Paper,
@@ -28,11 +30,12 @@ import {
   Typography,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
+import LockIcon from "@mui/icons-material/Lock";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { AlertService } from "@/shared/ui/alerts";
-import { formatCurrency, formatDate } from "@/shared/utils/formatters";
+import { formatCurrency } from "@/shared/utils/formatters";
 
 import {
   RegisterVerdictInput,
@@ -42,7 +45,6 @@ import { registerGopVerdict } from "@/modules/legal-process/actions/legal-proces
 import StatutoryInterestSection from "@/modules/verdict/components/sections/statutory-interest-section";
 import VerdictDocumentsSection from "@/modules/verdict/components/sections/verdict-documents-section";
 import ServiceCostsSection from "@/modules/verdict/components/sections/service-costs-section";
-import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 
 interface VerdictRegistrationFormProps {
   caseTransferId?: string | null;
@@ -77,11 +79,10 @@ const ZAAKTYPE_OPTIONS = [
 ];
 
 // CCP-scherm (ajuste sponsor): 2 pasos, no 5 — paso 1 "Vonnis registreren"
-// agrupa vonnisgegevens + wettelijke rente + documenten + financiële
-// specificatie deelnemer (todo junto, sin sub-navegación); paso 2
-// "Deurwaarderskosten" agrupa deurwaarderskosten + specificatie deurwaarder
-// + status betalingen.
-const STEP_LABELS = ["Vonnis registreren", "Deurwaarderskosten"];
+// agrupa vonnisgegevens + wettelijke rente + documenten (todo junto, sin
+// sub-navegación); paso 2 "Deurwaarderskosten" agrupa deurwaarderskosten +
+// specificatie deurwaarder + el botón único "Betalen en registreren".
+const STEP_LABELS = ["Vonnis registreren", "Executie en kosten"];
 const FIRST_SCREEN_LAST_STEP = 0;
 
 const buildDefaultValues = (
@@ -109,7 +110,21 @@ const buildDefaultValues = (
   notes: "",
   bailiff_id: defaultBailiffId || "",
   documents: [],
-  verdict_interest: [],
+  // Alt. a que el alguacil tenga que hacer clic en "Nieuwe renteberekening
+  // toevoegen" antes de poder ingresar nada — la mayoría de los vonnissen
+  // llevan al menos un tramo de rente, así que se deja una fila en blanco
+  // lista para completar.
+  verdict_interest: [
+    {
+      interest_type: "",
+      base_amount: 0,
+      calculated_interest: 0,
+      calculation_start: new Date(),
+      calculation_end: new Date(),
+      total_interest: 0,
+      details: [],
+    },
+  ],
   verdict_embargo: [],
   bailiff_services: [],
 });
@@ -155,14 +170,16 @@ function FinancialSummaryRow({
 }
 
 // Pantalla partida en 2 pasos (CCP-scherm, ajuste sponsor): paso 1 "Vonnis
-// registreren" agrupa vonnisgegevens + wettelijke rente + documenten +
-// financiële specificatie deelnemer (sin sub-navegación entre ellas, todo
-// visible junto); paso 2 "Deurwaarderskosten" agrupa deurwaarderskosten +
-// specificatie deurwaarder + status betalingen. Si es el PRIMER vonnis
-// (caseTransferId), el paso 2 registra el borrador (GOP_DRAFT) y genera los
-// dos pagos CFSB (deelnemer + deurwaarder, ver
-// LegalProcessService.registerFirstVerdict); el GOP recién queda activo
-// cuando AMBOS se confirman. Si es una sentencia ADICIONAL sobre un GOP ya
+// registreren" agrupa vonnisgegevens + wettelijke rente + documenten (sin
+// sub-navegación entre ellas, todo visible junto); paso 2
+// "Deurwaarderskosten" agrupa deurwaarderskosten + specificatie deurwaarder
+// + el botón "Betalen en registreren". Si es el PRIMER vonnis
+// (caseTransferId), ese botón registra el borrador (GOP_DRAFT) y cobra EN
+// PANTALLA solo el tarifa propio del deurwaarder — el deelnemer no interactúa
+// con esta pantalla; recibe su link de pago por correo recién cuando ese
+// tarifa se confirma (ver LegalProcessService.registerFirstVerdict /
+// processBailiffReferralPaymentConfirmed). El GOP recién queda activo cuando
+// AMBOS pagos se confirman. Si es una sentencia ADICIONAL sobre un GOP ya
 // activo (legalProcessId), sigue sin gate de pago.
 export const VerdictRegistrationForm: React.FC<
   VerdictRegistrationFormProps
@@ -181,26 +198,24 @@ export const VerdictRegistrationForm: React.FC<
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
   // Se setea al registrar el borrador (primer vonnis), para poder navegar
-  // al detalle del GOP una vez ambos pagos confirman.
+  // al detalle del GOP una vez el alguacil pagó su propio tarifa.
   const [registeredLegalProcessId, setRegisteredLegalProcessId] = useState<
     string | null
   >(null);
-  // Doble gate de activación (punto 10-11 GOP-analyse): el GOP recién queda
-  // activo cuando AMBOS pagos se confirman — el del deelnemer (comisión CFSB
-  // 5%, PaymentIntent de arriba) y el del deurwaarder (tarifa fija por
-  // dossier vía CFSB, segundo PaymentIntent). Si el backend no generó pago
-  // para el deurwaarder (tarifa en 0 para esta isla/tenant), ese lado ya
-  // cuenta como saldado desde el inicio.
-  const [participantPayment, setParticipantPayment] = useState<{
-    paymentId: string;
-    paymentUrl: string;
-  } | null>(null);
+  // Acá solo se cobra/espera el lado del DEURWAARDER (su propio tarifa CFSB,
+  // in-app). El lado del deelnemer (comisión CFSB 5%) ya no se muestra ni se
+  // paga desde esta pantalla — una vez confirmado el pago del deurwaarder, el
+  // backend le envía el link de pago por correo (ver
+  // LegalProcessService.processBailiffReferralPaymentConfirmed). El GOP sigue
+  // en GOP_DRAFT ("Wacht op betaling") hasta que el deelnemer también pague.
   const [bailiffPayment, setBailiffPayment] = useState<{
     paymentId: string;
     paymentUrl: string;
   } | null>(null);
-  const [participantPaid, setParticipantPaid] = useState(false);
   const [bailiffPaid, setBailiffPaid] = useState(false);
+  const [payingAndRegistering, setPayingAndRegistering] = useState(false);
+  const [waitingBailiffConfirmation, setWaitingBailiffConfirmation] =
+    useState(false);
 
   const defaultValues = useMemo(
     () =>
@@ -239,38 +254,8 @@ export const VerdictRegistrationForm: React.FC<
 
   const uploadContext = { caseTransferId, legalProcessId };
 
-  const sentenceAmount = useWatch({ control, name: "sentence_amount" });
-  const verdictInterest = useWatch({ control, name: "verdict_interest" });
   const bailiffServices = useWatch({ control, name: "bailiff_services" });
 
-  const totalInterest = useMemo(
-    () =>
-      (verdictInterest ?? []).reduce(
-        (sum, item) => sum + (Number(item?.total_interest) || 0),
-        0,
-      ),
-    [verdictInterest],
-  );
-  // Rango completo del cálculo (desde el inicio más temprano hasta el fin
-  // más tardío entre todas las renteberekeningen) para mostrar ambas fechas
-  // junto al total — antes solo se mostraba la fecha del vonnis, que no es
-  // necesariamente la fecha de cálculo de la rente.
-  const interestDateRange = useMemo(() => {
-    const items = verdictInterest ?? [];
-    const starts = items
-      .map((item) => item?.calculation_start)
-      .filter((date): date is Date => !!date)
-      .map((date) => new Date(date));
-    const ends = items
-      .map((item) => item?.calculation_end)
-      .filter((date): date is Date => !!date)
-      .map((date) => new Date(date));
-    if (!starts.length || !ends.length) return null;
-    return {
-      start: new Date(Math.min(...starts.map((date) => date.getTime()))),
-      end: new Date(Math.max(...ends.map((date) => date.getTime()))),
-    };
-  }, [verdictInterest]);
   const totalBailiffCost = useMemo(
     () =>
       (bailiffServices ?? []).reduce(
@@ -279,8 +264,6 @@ export const VerdictRegistrationForm: React.FC<
       ),
     [bailiffServices],
   );
-  const participantClaimTotal = (Number(sentenceAmount) || 0) + totalInterest;
-  const participantCfsbCost = participantClaimTotal * (gopFeeRatePercent / 100);
   const bailiffCfsbCost = totalBailiffCost * (gopFeeRatePercent / 100);
 
   const handleNext = async () => {
@@ -296,101 +279,105 @@ export const VerdictRegistrationForm: React.FC<
   };
   const handleBack = () => setActiveStep((step) => Math.max(step - 1, 0));
 
-  // Primer vonnis: se registra como borrador y el pago se hace en el momento
-  // vía PaymentIntent (botón "Nu betalen" con polling propio) — el GOP recién
-  // queda activo cuando ese pago se confirma (ver
-  // LegalProcessService.registerFirstVerdict / processGopActivationPaymentConfirmed).
-  const registerDraftAndPay = async (): Promise<{
-    success: boolean;
-    error?: string;
-    paymentId?: string;
-    paymentUrl?: string;
-  }> => {
+  // Primer vonnis: registra el borrador (GOP_DRAFT) y, en el mismo clic,
+  // cobra el tarifa propio del deurwaarder vía Sentoo — el deelnemer no
+  // interactúa con esta pantalla; recibe su link de pago por correo recién
+  // cuando ese tarifa se confirma (ver
+  // LegalProcessService.registerFirstVerdict /
+  // processBailiffReferralPaymentConfirmed). Als er voor deze isla/tenant
+  // geen doorverwijzingstarief geldt, is dat lado van entrada saldado.
+  const handlePayAndRegister = async () => {
     const valid = await trigger();
     if (!valid) {
       notifyError("Controleer de invoer voordat u doorgaat.");
-      return { success: false };
+      return;
     }
 
     const confirmed = await AlertService.showConfirm(
       "Weet je het zeker?",
-      "U staat op het punt een vonnis te registreren als conceptregistratie. De GOP-activeringscommissie (5%) van de deelnemer wordt berekend over het vonnisbedrag plus de wettelijke rente. Mogelijk wordt hierbij ook een doorverwijzingstarief voor u als deurwaarder aangemaakt — het GOP wordt pas actief zodra beide betalingen bevestigd zijn. Wilt u doorgaan?",
-      "Ja, registreren en betalen",
+      "U staat op het punt het vonnis als concept te registreren. Na bevestiging van de betaling ontvangt de deelnemer een betaalverzoek voor de GOP-activering, die ingaat zodra de vereiste activeringsbetaling is bevestigd.",
+      "Ja, betalen en registreren",
       "Annuleren",
     );
-    if (!confirmed) return { success: false };
+    if (!confirmed) return;
 
+    setPayingAndRegistering(true);
     try {
       const draft = (await registerGopVerdict(getValues())) as {
         legalProcessId: string;
-        paymentId: string;
-        paymentUrl: string;
         bailiffPaymentId: string | null;
         bailiffPaymentUrl: string | null;
       };
       setRegisteredLegalProcessId(draft.legalProcessId);
-      setParticipantPayment({
-        paymentId: draft.paymentId,
-        paymentUrl: draft.paymentUrl,
-      });
+
       if (draft.bailiffPaymentId && draft.bailiffPaymentUrl) {
         setBailiffPayment({
           paymentId: draft.bailiffPaymentId,
           paymentUrl: draft.bailiffPaymentUrl,
         });
+        window.open(draft.bailiffPaymentUrl, "_blank");
+        setWaitingBailiffConfirmation(true);
       } else {
         // Geen doorverwijzingstarief vereist voor deze isla/tenant — dat
         // lado del gate ya está saldado de entrada.
+        notifySuccess(
+          "Vonnis geregistreerd. Er is voor dit dossier geen deurwaarderstarief vereist.",
+        );
         setBailiffPaid(true);
       }
-      return {
-        success: true,
-        paymentId: draft.paymentId,
-        paymentUrl: draft.paymentUrl,
-      };
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Registratie mislukt";
-      notifyError(message);
-      return { success: false, error: message };
+      notifyError(
+        error instanceof Error ? error.message : "Registratie mislukt",
+      );
+    } finally {
+      setPayingAndRegistering(false);
     }
   };
 
-  // Segundo PaymentIntent (lado del deurwaarder): el pago ya fue creado por
-  // registerDraftAndPay, acá solo se abre el link/polling correspondiente.
-  const payBailiffReferralFee = async (): Promise<{
-    success: boolean;
-    error?: string;
-    paymentId?: string;
-    paymentUrl?: string;
-  }> => {
-    if (!bailiffPayment) {
-      return { success: false, error: "Er is nog geen betaling beschikbaar." };
-    }
-    return {
-      success: true,
-      paymentId: bailiffPayment.paymentId,
-      paymentUrl: bailiffPayment.paymentUrl,
-    };
-  };
-
-  const handleParticipantPaymentConfirmed = async () => {
-    notifySuccess("Betaling van de deelnemer bevestigd.");
-    setParticipantPaid(true);
-  };
-
-  const handleBailiffPaymentConfirmed = async () => {
-    notifySuccess("Betaling van de deurwaarder bevestigd.");
+  const handleBailiffPaymentConfirmed = () => {
+    setWaitingBailiffConfirmation(false);
+    notifySuccess(
+      "Betaling van de deurwaarderskosten bevestigd. De deelnemer ontvangt nu de betalingslink per e-mail.",
+    );
     setBailiffPaid(true);
   };
 
-  // Navega al GOP-dossier recién cuando AMBOS lados del gate confirmaron.
+  // Polling propio del pago del deurwaarder (mismo patrón que
+  // PaymentIntent, pero sin su botón: el link ya se abrió en
+  // handlePayAndRegister).
   useEffect(() => {
-    if (participantPaid && bailiffPaid && registeredLegalProcessId) {
-      notifySuccess("Beide betalingen bevestigd. GOP is actief.");
+    if (!waitingBailiffConfirmation || !bailiffPayment) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(
+          `/api/payments/${bailiffPayment.paymentId}/status`,
+        );
+        const data = await res.json();
+        if (data.status === "paid") {
+          clearInterval(interval);
+          handleBailiffPaymentConfirmed();
+        } else if (data.status === "failed") {
+          clearInterval(interval);
+          setWaitingBailiffConfirmation(false);
+          notifyError("De betaling van de deurwaarderskosten is mislukt.");
+        }
+      } catch (err) {
+        console.error("Error en polling de pago", err);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [waitingBailiffConfirmation, bailiffPayment]);
+
+  // Navega al GOP-dossier una vez el lado del deurwaarder quedó resuelto
+  // (pagado, o sin tarifa requerida) — el GOP sigue en GOP_DRAFT hasta que
+  // el deelnemer también pague, desde el link que recibió por correo.
+  useEffect(() => {
+    if (registeredLegalProcessId && bailiffPaid) {
       router.push(`/legal-processes/${registeredLegalProcessId}`);
     }
-  }, [participantPaid, bailiffPaid, registeredLegalProcessId, router]);
+  }, [registeredLegalProcessId, bailiffPaid, router]);
 
   // Sentencia ADICIONAL sobre un GOP ya activo: sin gate de pago, igual que
   // antes.
@@ -428,7 +415,7 @@ export const VerdictRegistrationForm: React.FC<
         <form
           onSubmit={(e) => {
             // El registro del primer vonnis se dispara únicamente con el
-            // botón de PaymentIntent (registra + paga), nunca con
+            // botón "Betalen en registreren" (registra + paga), nunca con
             // Enter/submit nativo del formulario.
             if (caseTransferId) {
               e.preventDefault();
@@ -446,7 +433,7 @@ export const VerdictRegistrationForm: React.FC<
           >
             <Box>
               <Typography variant="h4" fontWeight={700}>
-                {onScreen1 ? "Vonnis registreren" : "Deurwaarderskosten"}
+                {onScreen1 ? "Vonnis registreren" : "Executie en kosten"}
               </Typography>
               {dossierReference && (
                 <Typography variant="body2" color="text.secondary">
@@ -701,70 +688,6 @@ export const VerdictRegistrationForm: React.FC<
             <VerdictDocumentsSection uploadContext={uploadContext} />
           )}
 
-          {/* Financiële specificatie deelnemer — agrupado dentro del paso 1 */}
-          {activeStep === 0 && (
-            <Paper
-              component="section"
-              sx={{ borderRadius: 1, overflow: "hidden", mb: 2 }}
-            >
-              <Box
-                sx={{
-                  bgcolor: "secondary.main",
-                  color: "white",
-                  px: 2,
-                  py: 1.5,
-                }}
-              >
-                <Typography
-                  variant="h6"
-                  component="h3"
-                  sx={{ fontWeight: 600 }}
-                >
-                  FINANCIËLE SPECIFICATIE DEELNEMER
-                </Typography>
-              </Box>
-              <Box sx={{ p: 2 }}>
-                <FinancialSummaryRow
-                  label="Veroordelingsbedrag (hoofdsom)"
-                  value={formatCurrency(Number(sentenceAmount) || 0)}
-                />
-                <FinancialSummaryRow
-                  label={`Wettelijke rente${interestDateRange ? ` (${formatDate(interestDateRange.start.toString())} t/m ${formatDate(interestDateRange.end.toString())})` : ""}`}
-                  value={formatCurrency(totalInterest)}
-                />
-                <Divider sx={{ my: 1 }} />
-                <FinancialSummaryRow
-                  label="Totaal (vordering + rente)"
-                  value={formatCurrency(participantClaimTotal)}
-                  bold
-                />
-                <Box sx={{ mt: 2, p: 2, bgcolor: "#EAF2FE", borderRadius: 1 }}>
-                  <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center"
-                  >
-                    <Box>
-                      <Typography variant="body2" fontWeight={700}>
-                        CFSB-kosten deelnemer
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Totaalbedrag (inclusief ABB)
-                      </Typography>
-                    </Box>
-                    <Typography
-                      variant="h6"
-                      fontWeight={700}
-                      color="primary.main"
-                    >
-                      {formatCurrency(participantCfsbCost)}
-                    </Typography>
-                  </Stack>
-                </Box>
-              </Box>
-            </Paper>
-          )}
-
           {/* Paso 2 / Scherm 2: Deurwaarderskosten */}
           {activeStep === 1 && (
             <>
@@ -841,113 +764,11 @@ export const VerdictRegistrationForm: React.FC<
                       component="h3"
                       sx={{ fontWeight: 600 }}
                     >
-                      STATUS BETALINGEN
+                      BETALEN EN REGISTREREN
                     </Typography>
                   </Box>
                   <Box sx={{ p: 2 }}>
-                    <Stack spacing={2}>
-                      <Stack
-                        direction={{ xs: "column", sm: "row" }}
-                        justifyContent="space-between"
-                        alignItems={{ sm: "center" }}
-                        spacing={1}
-                      >
-                        <Typography variant="body2" fontWeight={600}>
-                          Deelnemer — CFSB-kosten
-                        </Typography>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Chip
-                            size="small"
-                            label={
-                              participantPaid ? "Betaald" : "In afwachting"
-                            }
-                            color={participantPaid ? "success" : "warning"}
-                          />
-                          {!registeredLegalProcessId ? (
-                            <PaymentIntent
-                              onCreateTransaction={registerDraftAndPay}
-                              onPaymentConfirmed={
-                                handleParticipantPaymentConfirmed
-                              }
-                              buttonLabel="Betaal via Sentoo"
-                            />
-                          ) : !participantPaid && participantPayment ? (
-                            <PaymentIntent
-                              onCreateTransaction={async () => ({
-                                success: true,
-                                paymentId: participantPayment.paymentId,
-                                paymentUrl: participantPayment.paymentUrl,
-                              })}
-                              onPaymentConfirmed={
-                                handleParticipantPaymentConfirmed
-                              }
-                              existingPayment={participantPayment}
-                              buttonLabel="Betaal via Sentoo"
-                            />
-                          ) : participantPaid && participantPayment ? (
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              sx={{ textTransform: "none" }}
-                              onClick={() =>
-                                window.open(
-                                  participantPayment.paymentUrl,
-                                  "_blank",
-                                )
-                              }
-                            >
-                              Bekijk betaling
-                            </Button>
-                          ) : null}
-                        </Stack>
-                      </Stack>
-
-                      <Stack
-                        direction={{ xs: "column", sm: "row" }}
-                        justifyContent="space-between"
-                        alignItems={{ sm: "center" }}
-                        spacing={1}
-                      >
-                        <Typography variant="body2" fontWeight={600}>
-                          Deurwaarder — CFSB-kosten
-                        </Typography>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Chip
-                            size="small"
-                            label={bailiffPaid ? "Betaald" : "In afwachting"}
-                            color={bailiffPaid ? "success" : "warning"}
-                          />
-                          {bailiffPayment && !bailiffPaid && (
-                            <PaymentIntent
-                              onCreateTransaction={payBailiffReferralFee}
-                              onPaymentConfirmed={handleBailiffPaymentConfirmed}
-                              existingPayment={bailiffPayment}
-                              buttonLabel="Betaal via Sentoo"
-                            />
-                          )}
-                          {bailiffPayment && bailiffPaid && (
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              sx={{ textTransform: "none" }}
-                              onClick={() =>
-                                window.open(bailiffPayment.paymentUrl, "_blank")
-                              }
-                            >
-                              Bekijk betaling
-                            </Button>
-                          )}
-                        </Stack>
-                      </Stack>
-                    </Stack>
-
-                    <Alert severity="info" sx={{ mt: 2 }}>
-                      Het vonnis is als conceptregistratie geregistreerd. De GOP
-                      wordt geactiveerd zodra beide CFSB-betalingen zijn
-                      ontvangen.
-                    </Alert>
-
-                    <Box sx={{ mt: 2 }}>
+                    <Box sx={{ mb: 2 }}>
                       <Controller
                         name="notes"
                         control={control}
@@ -964,11 +785,51 @@ export const VerdictRegistrationForm: React.FC<
                         )}
                       />
                     </Box>
+
+                    {!registeredLegalProcessId ? (
+                      <Button
+                        type="button"
+                        variant="contained"
+                        color="primary"
+                        onClick={handlePayAndRegister}
+                        startIcon={<LockIcon />}
+                        fullWidth
+                        disabled={payingAndRegistering}
+                        sx={{
+                          textTransform: "none",
+                          fontSize: "1rem",
+                          fontWeight: 700,
+                          bgcolor: "#F97316",
+                          "&:hover": { bgcolor: "#EA580C" },
+                        }}
+                      >
+                        {payingAndRegistering
+                          ? "Verwerken..."
+                          : "Betalen en registreren"}
+                      </Button>
+                    ) : (
+                      <Alert severity="info">
+                        Het vonnis is als conceptregistratie geregistreerd. De
+                        GOP blijft in afwachting van betaling tot ook de
+                        deelnemer de CFSB-activeringscommissie betaalt — die
+                        ontvangt de betalingslink per e-mail zodra uw eigen
+                        deurwaarderstarief bevestigd is.
+                      </Alert>
+                    )}
                   </Box>
                 </Paper>
               )}
             </>
           )}
+
+          <Dialog open={waitingBailiffConfirmation} disableEscapeKeyDown>
+            <DialogContent sx={{ textAlign: "center", p: 4 }}>
+              <CircularProgress size={48} sx={{ mt: 2 }} />
+              <Typography variant="body2" sx={{ mt: 2 }}>
+                ⏳ Wachten op bevestiging van de deurwaarderskosten...
+              </Typography>
+            </DialogContent>
+          </Dialog>
 
           <Box
             sx={{
@@ -1019,19 +880,6 @@ export const VerdictRegistrationForm: React.FC<
               )
             )}
           </Box>
-
-          {registeredLegalProcessId &&
-            (participantPaid !== true || bailiffPaid !== true) && (
-              <Alert severity="info" sx={{ mb: 2 }}>
-                Het GOP wordt pas actief zodra{" "}
-                {!participantPaid && !bailiffPaid
-                  ? "zowel de deelnemer als de deurwaarder betaald hebben"
-                  : !participantPaid
-                    ? "de deelnemer betaald heeft (de deurwaarder betaalde al)"
-                    : "de deurwaarder betaald heeft (de deelnemer betaalde al)"}
-                .
-              </Alert>
-            )}
         </form>
       </FormProvider>
     </Container>

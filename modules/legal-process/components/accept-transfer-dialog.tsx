@@ -137,7 +137,7 @@ export const AcceptTransferDialog: React.FC<AcceptTransferDialogProps> = ({
               <DetailRow label="Deelnemer" value={details.participant} />
               <DetailRow label="Debiteur" value={details.debtor} />
               <DetailRow
-                label="Hoofdsom"
+                label="Openstaand saldo"
                 value={formatCurrency(details.amount)}
               />
               <DetailRow

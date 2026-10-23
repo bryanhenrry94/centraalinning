@@ -8,6 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import TotalBailiff from "../total-bailiff";
+import { NumericFormat } from "react-number-format";
 import { Controller, useFieldArray, useFormContext } from "react-hook-form";
 import { Verdict } from "@/modules/verdict/services/verdict.validators";
 import { VerdictBailiffServices } from "@/modules/verdict/services/verdict-bailiff-services.validators";
@@ -16,16 +17,24 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { notifyError } from "@/shared/ui/notifications";
 import { uploadVerdictSupportingDocument } from "@/modules/legal-process/actions/legal-process.actions";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 
 interface ServiceCostsSectionProps {
   // Solo se puede subir un documento de respaldo por actuación cuando la
   // sección corre dentro de la pantalla única de registro de sentencia (que
   // conoce el caseTransferId/legalProcessId). En modo edición no aplica.
-  uploadContext?: { caseTransferId?: string | null; legalProcessId?: string | null };
+  uploadContext?: {
+    caseTransferId?: string | null;
+    legalProcessId?: string | null;
+  };
 }
 
-const ServiceCostsSection: React.FC<ServiceCostsSectionProps> = ({ uploadContext }) => {
+const ServiceCostsSection: React.FC<ServiceCostsSectionProps> = ({
+  uploadContext,
+}) => {
   const {
     control,
     setValue,
@@ -44,7 +53,7 @@ const ServiceCostsSection: React.FC<ServiceCostsSectionProps> = ({ uploadContext
       "Weet je het zeker?",
       "Weet u zeker dat u wilt verwijderen?",
       "Ja, verwijderen",
-      "Annuleren"
+      "Annuleren",
     ).then(async (confirmed) => {
       if (confirmed) {
         remove(index);
@@ -61,11 +70,26 @@ const ServiceCostsSection: React.FC<ServiceCostsSectionProps> = ({ uploadContext
     if (!file || !uploadContext) return;
 
     try {
-      const metadata = await uploadVerdictSupportingDocument(uploadContext, file);
-      setValue(`bailiff_services.${index}.document_storage_key`, metadata.document_storage_key);
-      setValue(`bailiff_services.${index}.document_original_name`, metadata.document_original_name);
-      setValue(`bailiff_services.${index}.document_mime_type`, metadata.document_mime_type);
-      setValue(`bailiff_services.${index}.document_size`, metadata.document_size);
+      const metadata = await uploadVerdictSupportingDocument(
+        uploadContext,
+        file,
+      );
+      setValue(
+        `bailiff_services.${index}.document_storage_key`,
+        metadata.document_storage_key,
+      );
+      setValue(
+        `bailiff_services.${index}.document_original_name`,
+        metadata.document_original_name,
+      );
+      setValue(
+        `bailiff_services.${index}.document_mime_type`,
+        metadata.document_mime_type,
+      );
+      setValue(
+        `bailiff_services.${index}.document_size`,
+        metadata.document_size,
+      );
     } catch (error) {
       notifyError(error instanceof Error ? error.message : "Uploaden mislukt");
     }
@@ -86,35 +110,10 @@ const ServiceCostsSection: React.FC<ServiceCostsSectionProps> = ({ uploadContext
               fullWidth
               type="text"
               placeholder="Voorbeeld: INV-12345"
-              error={
-                !!errors.bailiff_services?.[index]?.service_invoice_number
-              }
+              error={!!errors.bailiff_services?.[index]?.service_invoice_number}
               helperText={
                 errors.bailiff_services?.[index]?.service_invoice_number
                   ?.message
-              }
-            />
-          )}
-        />
-      ),
-    },
-    {
-      key: "service_type",
-      label: "Type actuatie",
-      render: ({ index }) => (
-        <Controller
-          name={`bailiff_services.${index}.service_type`}
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              size="small"
-              fullWidth
-              type="text"
-              placeholder="Voorbeeld: Betekening Vonnis"
-              error={!!errors.bailiff_services?.[index]?.service_type}
-              helperText={
-                errors.bailiff_services?.[index]?.service_type?.message
               }
             />
           )}
@@ -157,9 +156,13 @@ const ServiceCostsSection: React.FC<ServiceCostsSectionProps> = ({ uploadContext
               fullWidth
               slotProps={{ inputLabel: { shrink: true } }}
               value={
-                field.value ? new Date(field.value).toISOString().slice(0, 10) : ""
+                field.value
+                  ? new Date(field.value).toISOString().slice(0, 10)
+                  : ""
               }
-              onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+              onChange={(e) =>
+                field.onChange(e.target.value ? new Date(e.target.value) : null)
+              }
             />
           )}
         />
@@ -174,12 +177,19 @@ const ServiceCostsSection: React.FC<ServiceCostsSectionProps> = ({ uploadContext
           name={`bailiff_services.${index}.service_cost`}
           control={control}
           render={({ field }) => (
-            <TextField
-              {...field}
-              type="number"
+            <NumericFormat
+              customInput={TextField}
               fullWidth
               size="small"
-              placeholder="Ej: $45.00"
+              value={field.value ?? ""}
+              thousandSeparator
+              decimalScale={2}
+              fixedDecimalScale
+              allowNegative={false}
+              prefix="$ "
+              onValueChange={(values) =>
+                field.onChange(Number(values.value) || 0)
+              }
               error={!!errors.bailiff_services?.[index]?.service_cost}
               helperText={
                 errors.bailiff_services?.[index]?.service_cost?.message
@@ -268,7 +278,7 @@ const ServiceCostsSection: React.FC<ServiceCostsSectionProps> = ({ uploadContext
           }}
         >
           <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
-            Betekeningskosten
+            Executie en kosten
           </Typography>
 
           <Box sx={{ mr: 2 }}>

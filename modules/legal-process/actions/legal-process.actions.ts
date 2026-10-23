@@ -436,6 +436,14 @@ export const adjustVerdictAmounts = async (data: VerdictAdjustAmountsInput) => {
   return VerdictService.adjustAmounts(parsed, session.user.id);
 };
 
+// Reenvía (regenerando el link si el anterior ya no es pagable) el/los pago(s)
+// de activación GOP pendientes por correo a quien corresponda — participante
+// y/o deurwaarder. Útil cuando el link de Sentoo se cerró sin completarse.
+export const retryGopActivationPayment = async (legalProcessId: string) => {
+  const { legalProcess } = await requireStaffOrAssignedBailiff(legalProcessId);
+  return LegalProcessService.retryGopActivationPayment(legalProcessId, legalProcess.debtClaim.tenantId);
+};
+
 export const getVerdictAuditLog = async (verdictId: string) => {
   await requireStaffOrAssignedBailiffForVerdict(verdictId);
 

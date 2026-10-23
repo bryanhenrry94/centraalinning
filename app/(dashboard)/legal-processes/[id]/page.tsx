@@ -18,7 +18,10 @@ import {
 } from "@mui/material";
 
 import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
-import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
+import {
+  ListColumn,
+  ResponsiveListTable,
+} from "@/shared/ui/responsive-list-table";
 import LoadingUI from "@/shared/ui/loading-ui";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
@@ -31,6 +34,7 @@ import {
   getGopAgreements,
   getGopPrincipalObligation,
   decideGopAgreement,
+  retryGopActivationPayment,
 } from "@/modules/legal-process/actions/legal-process.actions";
 import {
   getLegalProcessStatusInfo,
@@ -110,6 +114,7 @@ const LegalProcessDetailPage: React.FC = () => {
   const [selectedAgreement, setSelectedAgreement] =
     useState<AgreementResponse | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [retryingPayment, setRetryingPayment] = useState(false);
 
   const [dialog, setDialog] = useState<
     | null
@@ -189,6 +194,23 @@ const LegalProcessDetailPage: React.FC = () => {
       notifyError(error instanceof Error ? error.message : "Actie mislukt");
     }
   };
+
+  const handleRetryPayment = async () => {
+    try {
+      setRetryingPayment(true);
+      await retryGopActivationPayment(legalProcess.id);
+      notifySuccess("Betalingslink(en) opnieuw verzonden per e-mail");
+      refresh();
+    } catch (error) {
+      notifyError(error instanceof Error ? error.message : "Actie mislukt");
+    } finally {
+      setRetryingPayment(false);
+    }
+  };
+
+  const canRetryActivationPayment =
+    (isStaff || isBailiffRole) &&
+    legalProcess.status === LegalProcessStatus.GOP_DRAFT;
 
   const canManageOperations =
     (isStaff || isBailiffRole) &&
@@ -326,9 +348,20 @@ const LegalProcessDetailPage: React.FC = () => {
             <CardHeader title="Vonnissen" />
             <CardContent>
               {(() => {
-                const columns: ListColumn<(typeof legalProcess.verdicts)[number]>[] = [
-                  { key: "registration_number", label: "Vonnisnummer", render: (v) => v.registration_number },
-                  { key: "court", label: "Rechtbank", render: (v) => v.court || "-", hideOnMobile: true },
+                const columns: ListColumn<
+                  (typeof legalProcess.verdicts)[number]
+                >[] = [
+                  {
+                    key: "registration_number",
+                    label: "Vonnisnummer",
+                    render: (v) => v.registration_number,
+                  },
+                  {
+                    key: "court",
+                    label: "Rechtbank",
+                    render: (v) => v.court || "-",
+                    hideOnMobile: true,
+                  },
                   {
                     key: "sentence_date",
                     label: "Datum",
@@ -343,12 +376,19 @@ const LegalProcessDetailPage: React.FC = () => {
                   {
                     key: "prescription_due_date",
                     label: "Verjaringsdatum",
-                    render: (v) => (v.prescription_due_date ? formatDate(v.prescription_due_date.toString()) : "-"),
+                    render: (v) =>
+                      v.prescription_due_date
+                        ? formatDate(v.prescription_due_date.toString())
+                        : "-",
                     hideOnMobile: true,
                   },
                 ];
                 return (
-                  <ResponsiveListTable columns={columns} rows={legalProcess.verdicts} getRowKey={(v) => v.id} />
+                  <ResponsiveListTable
+                    columns={columns}
+                    rows={legalProcess.verdicts}
+                    getRowKey={(v) => v.id}
+                  />
                 );
               })()}
             </CardContent>
@@ -386,8 +426,17 @@ const LegalProcessDetailPage: React.FC = () => {
             {agreements.length > 0 &&
               (() => {
                 const columns: ListColumn<(typeof agreements)[number]>[] = [
-                  { key: "total_amount", label: "Bedrag", align: "right", render: (a) => formatCurrency(a.total_amount) },
-                  { key: "installments_count", label: "Termijnen", render: (a) => a.installments_count },
+                  {
+                    key: "total_amount",
+                    label: "Bedrag",
+                    align: "right",
+                    render: (a) => formatCurrency(a.total_amount),
+                  },
+                  {
+                    key: "installments_count",
+                    label: "Termijnen",
+                    render: (a) => a.installments_count,
+                  },
                   { key: "status", label: "Status", render: (a) => a.status },
                   {
                     key: "rejection_reason",
@@ -459,6 +508,30 @@ const LegalProcessDetailPage: React.FC = () => {
           </CardContent>
         </Card>
 
+        {canRetryActivationPayment && (
+          <Card>
+            <CardHeader title="Acties" />
+            <Divider />
+            <CardContent>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                <Button
+                  variant="outlined"
+                  disabled={retryingPayment}
+                  onClick={handleRetryPayment}
+                >
+                  Betalingslink opnieuw versturen
+                </Button>
+              </Stack>
+              <Typography variant="body2" color="text.secondary" mt={1.5}>
+                Verstuurt de openstaande betalingslink(en) van de
+                GOP-activeringscommissie opnieuw per e-mail naar de deelnemer
+                en/of de deurwaarder (en genereert een nieuwe link als de vorige
+                niet meer betaalbaar is).
+              </Typography>
+            </CardContent>
+          </Card>
+        )}
+
         {canManageOperations && (
           <Card>
             <CardHeader title="Acties" />
@@ -491,7 +564,7 @@ const LegalProcessDetailPage: React.FC = () => {
                   variant="outlined"
                   onClick={() => setDialog("bailiff-cost")}
                 >
-                  Deurwaarderskosten
+                  Executie en kosten
                 </Button>
                 <Button
                   variant="outlined"

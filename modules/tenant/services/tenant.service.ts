@@ -108,11 +108,12 @@ export class TenantService {
     return !!tenant;
   };
 
-  // Numeración general de empresas (CFSB-B-001, etc.) — ya no por isla.
-  // Reemplaza el esquema anterior CFSB-<islandCode>-001.
+  // Numeración general de empresas (CFSB-001, etc.) — ya no por isla.
+  // Reemplaza el esquema anterior CFSB-<islandCode>-001, y antes de eso
+  // CFSB-B-001 (sin la "B" intermedia, a pedido del dueño del sistema).
   static generateCode = async (): Promise<string> => {
     const last_sequence = await prisma.tenant.count();
     const new_sequence = last_sequence + 1;
-    return `CFSB-B-${new_sequence.toString().padStart(3, "0")}`;
+    return `CFSB-${new_sequence.toString().padStart(3, "0")}`;
   };
 }

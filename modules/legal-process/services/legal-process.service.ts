@@ -27,6 +27,7 @@ import { NotificationService } from "@/modules/notification/services/notificatio
 import { NotificationType } from "@/modules/notification/constants/notification-type";
 import { BillingInvoiceService } from "@/modules/payment/services/billing-invoice.service";
 import { sendInvoiceEmail } from "@/modules/payment/services/payment-mail.service";
+import { MailService } from "@/infrastructure/mail/mail.service";
 import { PaymentService } from "@/modules/payment/services/payment.service";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { ParameterService } from "@/modules/settings/services/parameter/parameter.service";
@@ -152,7 +153,6 @@ export class LegalProcessService {
     jurisdictionId: string | null;
     debtClaimId: string;
     registrationNumber: string;
-    bailiffEmail: string | null;
   }) => {
     const referralFee = await SettingsService.resolveNumber(
       "gop_bailiff_referral_fee",
@@ -174,7 +174,9 @@ export class LegalProcessService {
     }
 
     const invoice_number = await BillingInvoiceService.generateInvoiceNumber();
-    const invoice = await BillingInvoiceService.create(
+    // De factuur wordt pas verstuurd nadat de betaling bevestigd is (zie
+    // processBailiffReferralPaymentConfirmed) — hier alleen aanmaken.
+    await BillingInvoiceService.create(
       {
         invoice_number,
         issue_date: new Date(),
@@ -199,12 +201,11 @@ export class LegalProcessService {
       params.tenantId,
       paymentResult.data.paymentId,
     );
-
-    if (params.bailiffEmail) {
-      await sendInvoiceEmail(params.bailiffEmail, invoice.id, false);
-    }
-
-    return { paymentId: paymentResult.data.paymentId, paymentUrl: paymentResult.data.paymentUrl };
+    return {
+      paymentId: paymentResult.data.paymentId,
+      paymentUrl: paymentResult.data.paymentUrl,
+      amount: referralFee,
+    };
   };
 
   private static registerFirstVerdict = async (
@@ -341,7 +342,6 @@ export class LegalProcessService {
       jurisdictionId: tenant.jurisdictionId,
       debtClaimId: caseTransfer.debtClaimId,
       registrationNumber: data.registration_number,
-      bailiffEmail: caseTransfer.bailiff?.email ?? null,
     });
 
     const { legalProcess, verdict } = await prisma.$transaction(async (tx) => {
@@ -457,6 +457,32 @@ export class LegalProcessService {
       return { legalProcess: newLegalProcess, verdict: newVerdict };
     }, { timeout: 20000, maxWait: 10000 });
 
+    // Si hay tarifa de deurwaarder, ese lado se paga EN PANTALLA (ver
+    // verdict-registration-form) y el deelnemer recién recibe su link por
+    // correo cuando ese pago se confirma (ver
+    // processBailiffReferralPaymentConfirmed) — no antes. Si no hay tarifa
+    // (isla/tenant sin doorverwijzingstarief), no hay nada que esperar: se le
+    // notifica al deelnemer de inmediato.
+    await this.notifyGopActivationPayment({
+      referenceNumber: caseTransfer.gopNumber!,
+      participant: bailiffReferralPayment
+        ? null
+        : {
+            email: tenant.contact_email,
+            fullname: tenant.legal_name ?? tenant.name,
+            paymentUrl: paymentResult.data.paymentUrl,
+            amount: total_with_tax,
+          },
+      bailiff: bailiffReferralPayment
+        ? {
+            email: caseTransfer.bailiff!.email,
+            fullname: caseTransfer.bailiff!.fullname,
+            paymentUrl: bailiffReferralPayment.paymentUrl,
+            amount: bailiffReferralPayment.amount,
+          }
+        : null,
+    });
+
     return {
       legalProcessId: legalProcess.id,
       verdictId: verdict.id,
@@ -467,11 +493,40 @@ export class LegalProcessService {
     };
   };
 
+  // Envía el link de pago vigente (recién creado o reutilizado) directo a
+  // cada lado del gate de activación GOP, por correo — así ni el
+  // participante ni el deurwaarder dependen de que el otro haga clic en su
+  // nombre desde la pantalla de registro de sentencia.
+  private static notifyGopActivationPayment = async (params: {
+    referenceNumber: string | null;
+    participant?: { email: string | null; fullname: string; paymentUrl: string; amount: number } | null;
+    bailiff?: { email: string | null; fullname: string; paymentUrl: string; amount: number } | null;
+  }) => {
+    if (params.participant?.email) {
+      await MailService.sendPaymentLinkEmail(
+        params.participant.email,
+        params.participant.fullname,
+        params.participant.paymentUrl,
+        params.participant.amount,
+        params.referenceNumber ?? undefined,
+      );
+    }
+    if (params.bailiff?.email) {
+      await MailService.sendPaymentLinkEmail(
+        params.bailiff.email,
+        params.bailiff.fullname,
+        params.bailiff.paymentUrl,
+        params.bailiff.amount,
+        params.referenceNumber ?? undefined,
+      );
+    }
+  };
+
   // El borrador (LegalProcess/Verdict) ya existe pero su pago de activación
   // anterior no llegó a buen puerto (mislukt/geannuleerd/verlopen) — genera
   // un Payment/BillingInvoice nuevo para el mismo borrador, calculado sobre
   // las facturas del alguacil ya registradas, sin duplicar LegalProcess/Verdict.
-  private static retryGopActivationPayment = async (legalProcessId: string, tenantId: string) => {
+  static retryGopActivationPayment = async (legalProcessId: string, tenantId: string) => {
     const legalProcess = await prisma.legalProcess.findUnique({
       where: { id: legalProcessId },
       include: {
@@ -494,6 +549,9 @@ export class LegalProcessService {
     // otro lado puede ser el que falló) — nunca duplicar un pago ya pagable.
     let participantPaymentId = legalProcess.gopActivationPaymentId!;
     let participantPaymentUrl = legalProcess.gopActivationPayment?.payment_url ?? null;
+    let participantAmount = legalProcess.gopActivationPayment
+      ? Number(legalProcess.gopActivationPayment.total_amount)
+      : 0;
     const participantNeedsRetry =
       !legalProcess.gopActivationPaidAt &&
       (legalProcess.gopActivationPayment?.status !== "pending" || !participantPaymentUrl);
@@ -557,6 +615,7 @@ export class LegalProcessService {
       });
       participantPaymentId = paymentResult.data.paymentId;
       participantPaymentUrl = paymentResult.data.paymentUrl;
+      participantAmount = total_with_tax;
     }
 
     // Lado del deurwaarder: solo regenerar si tenía un pago pendiente que ya
@@ -564,6 +623,9 @@ export class LegalProcessService {
     // pagado, no se toca.
     let bailiffPaymentId = legalProcess.bailiffReferralPaymentId ?? null;
     let bailiffPaymentUrl = legalProcess.bailiffReferralPayment?.payment_url ?? null;
+    let bailiffAmount = legalProcess.bailiffReferralPayment
+      ? Number(legalProcess.bailiffReferralPayment.total_amount)
+      : 0;
     const bailiffNeedsRetry =
       !!legalProcess.bailiffReferralPaymentId &&
       !legalProcess.bailiffReferralPaidAt &&
@@ -575,7 +637,6 @@ export class LegalProcessService {
         jurisdictionId: tenant.jurisdictionId,
         debtClaimId: legalProcess.debtClaimId,
         registrationNumber: verdict.registration_number,
-        bailiffEmail: legalProcess.bailiff.email,
       });
       if (retried) {
         await prisma.legalProcess.update({
@@ -584,8 +645,38 @@ export class LegalProcessService {
         });
         bailiffPaymentId = retried.paymentId;
         bailiffPaymentUrl = retried.paymentUrl;
+        bailiffAmount = retried.amount;
       }
     }
+
+    // El deelnemer solo se notifica una vez el lado del deurwaarder está
+    // resuelto (pagado, o sin tarifa requerida) — mismo orden que
+    // registerFirstVerdict / processBailiffReferralPaymentConfirmed, para no
+    // adelantarle el link antes de que corresponda.
+    const bailiffResolved =
+      !legalProcess.bailiffReferralPaymentId || !!legalProcess.bailiffReferralPaidAt;
+
+    await this.notifyGopActivationPayment({
+      referenceNumber: legalProcess.referenceNumber,
+      participant:
+        !legalProcess.gopActivationPaidAt && bailiffResolved
+          ? {
+              email: tenant.contact_email,
+              fullname: tenant.legal_name ?? tenant.name,
+              paymentUrl: participantPaymentUrl!,
+              amount: participantAmount,
+            }
+          : null,
+      bailiff:
+        bailiffPaymentId && !legalProcess.bailiffReferralPaidAt
+          ? {
+              email: legalProcess.bailiff.email,
+              fullname: legalProcess.bailiff.fullname,
+              paymentUrl: bailiffPaymentUrl!,
+              amount: bailiffAmount,
+            }
+          : null,
+    });
 
     return {
       legalProcessId: legalProcess.id,
@@ -644,6 +735,11 @@ export class LegalProcessService {
   static processBailiffReferralPaymentConfirmed = async (paymentId: string) => {
     const legalProcess = await prisma.legalProcess.findUnique({
       where: { bailiffReferralPaymentId: paymentId },
+      include: {
+        bailiff: true,
+        debtClaim: { include: { tenant: true } },
+        gopActivationPayment: true,
+      },
     });
     if (
       !legalProcess ||
@@ -661,6 +757,30 @@ export class LegalProcessService {
       where: { payment_id: paymentId },
       data: { status: "paid" },
     });
+
+    // El deurwaarder es quien pagó el doorverwijzingstarief — recién con el
+    // pago confirmado se le envía la factura correspondiente (análogo al
+    // lado del participante en processGopActivationPaymentConfirmed).
+    const invoice = await prisma.billingInvoice.findFirst({ where: { payment_id: paymentId } });
+    if (invoice && legalProcess.bailiff.email) {
+      await sendInvoiceEmail(legalProcess.bailiff.email, invoice.id, false);
+    }
+
+    // El tarifa del deurwaarder se pagó EN PANTALLA; el deelnemer no
+    // interactuó todavía — recién ahora se le envía por correo el link de
+    // su propia GOP-activeringscommissie (ver registerFirstVerdict, que
+    // deliberadamente no lo notificó antes).
+    if (!legalProcess.gopActivationPaidAt && legalProcess.gopActivationPayment?.payment_url) {
+      await this.notifyGopActivationPayment({
+        referenceNumber: legalProcess.referenceNumber,
+        participant: {
+          email: legalProcess.debtClaim.tenant.contact_email,
+          fullname: legalProcess.debtClaim.tenant.legal_name ?? legalProcess.debtClaim.tenant.name,
+          paymentUrl: legalProcess.gopActivationPayment.payment_url,
+          amount: Number(legalProcess.gopActivationPayment.total_amount),
+        },
+      });
+    }
 
     const activated = await this.tryActivateGop(legalProcess.id);
     if (!activated) {
