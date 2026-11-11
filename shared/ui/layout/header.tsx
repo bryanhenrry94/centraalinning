@@ -27,6 +27,7 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import AppsIcon from "@mui/icons-material/Apps";
 import MenuIcon from "@mui/icons-material/Menu";
 import CheckIcon from "@mui/icons-material/Check";
+import FolderOutlined from "@mui/icons-material/FolderOutlined";
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -265,6 +266,19 @@ export default function Header() {
                 </Button>
               )}
 
+              {canAccessWorkstation && (
+                <Button
+                  color="inherit"
+                  onClick={() => router.push("/dossiers")}
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 500,
+                  }}
+                >
+                  Mijn dossiers
+                </Button>
+              )}
+
               {isBailiffRole && (
                 <Button
                   color="inherit"
@@ -498,6 +512,19 @@ export default function Header() {
                 <AppsIcon sx={{ mr: 2 }} />
 
                 <ListItemText primary="Diensten" />
+              </ListItemButton>
+            )}
+
+            {canAccessWorkstation && (
+              <ListItemButton
+                onClick={() => {
+                  router.push("/dossiers");
+                  setMobileOpen(false);
+                }}
+              >
+                <FolderOutlined sx={{ mr: 2 }} />
+
+                <ListItemText primary="Mijn dossiers" />
               </ListItemButton>
             )}
 

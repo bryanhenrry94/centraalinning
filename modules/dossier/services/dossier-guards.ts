@@ -2,10 +2,15 @@ import { getServerSession, Session } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { UserRole } from "@/shared/constants/user-role";
 
-// Zelfde rol als de "dossiers"-menugroep in shared/ui/layout/menus.tsx
-// (TENANT_ADMIN) — geen uitbreiding naar AGENT/EMPLOYEE/BANK als bijeffect
-// van dit scherm.
-const ALLOWED_ROLES: UserRole[] = [UserRole.TENANT_ADMIN];
+// Zelfde doelgroep als de vaste "Diensten"-knop (canAccessWorkstation in
+// header.tsx) — "Mijn dossiers" is het navigatie-tegenhanger van diezelfde
+// 6 diensten, dus geen reden om hier een smallere rolset te hanteren.
+const ALLOWED_ROLES: UserRole[] = [
+  UserRole.TENANT_ADMIN,
+  UserRole.AGENT,
+  UserRole.EMPLOYEE,
+  UserRole.BANK,
+];
 
 export async function requireTenantStaff(): Promise<Session> {
   const session = await getServerSession(authOptions);
