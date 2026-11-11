@@ -1,9 +1,14 @@
 import { z } from "zod";
+import { UserRole } from "@/shared/constants/user-role";
 
 export const planSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1),
   description: z.string().optional(),
+  // Rol de cuenta que otorga este plan (Deelnemer/Advocaat/Deurwaarder/Bank)
+  // — usado para filtrar los planes por tipo de registro elegido (ver
+  // RegistrationTypeStep/PlanStep en modules/auth/components/signup).
+  target_role: z.nativeEnum(UserRole),
   registration_price: z.preprocess(
     (val) => (typeof val === "string" ? Number(val) : val),
     z.number(),

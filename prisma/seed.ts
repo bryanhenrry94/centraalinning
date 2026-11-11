@@ -9,6 +9,7 @@ const ADMIN_USER_EMAIL = "bryanhenrry94@gmail.com";
 const PLAN_DEELNEMER_ID = "plan-klant-001";
 const PLAN_ADVOCAAT_ID = "plan-advocaat-001";
 const PLAN_DEURWAARDER_ID = "plan-deurwaarder-001";
+const PLAN_BANK_ID = "plan-bank-001";
 
 // Orden de implementación acordado: Bonaire (activa) → Curaçao → Aruba
 // (preparadas, isActive=false). Los nombres de isla viven acá como datos,
@@ -518,6 +519,7 @@ const FEATURE_DOCUMENTS_MANAGE = "Documenten beheren";
 const FEATURE_VERDICTS_REGISTER =
   "Vonnissen en rechterlijke beslissingen registreren";
 const FEATURE_EXECUTION_MANAGE = "Executietraject beheren";
+const FEATURE_CREDIT_CHECK = "Kredietwaardigheid van cliënten controleren";
 
 async function seedPlans() {
   const plans = [
@@ -573,6 +575,22 @@ async function seedPlans() {
         FEATURE_EXECUTION_MANAGE,
         FEATURE_CASE_HISTORY,
         FEATURE_DOCUMENTS_MANAGE,
+      ],
+    },
+    {
+      id: PLAN_BANK_ID,
+      name: "Bank",
+      description: "Voor banken die de kredietwaardigheid van cliënten controleren",
+      registration_price: 500,
+      monthly_price: 500,
+      yearly_price: 6000,
+      reactivation_price: 250,
+      order: 4,
+      target_role: "BANK" as const,
+      features: [
+        FEATURE_CREDIT_CHECK,
+        FEATURE_BLC_EXECUTE,
+        FEATURE_CASE_HISTORY,
       ],
     },
   ];

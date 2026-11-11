@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Box, Button, Chip, Grid, Switch, Typography } from "@mui/material";
-import { Person, Balance, Gavel } from "@mui/icons-material";
+import { Person, Balance, Gavel, AccountBalance } from "@mui/icons-material";
 import { Plan } from "@/modules/settings/services/plan.validators";
 import { getPlans } from "@/modules/settings/actions/plan.actions";
 import { PlanCard } from "./plan-card";
@@ -11,6 +11,9 @@ import { STEP_HEADER_GAP, STEP_SECTION_GAP } from "./layout.constants";
 const PRIMARY = "#0A3D91";
 
 interface PlanStepProps {
+  // Rol elegido en RegistrationTypeStep — filtra los planes a los que
+  // coinciden con Plan.target_role.
+  role: string;
   billingCycle: "MONTHLY" | "YEARLY";
   onChangeBillingCycle: (cycle: "MONTHLY" | "YEARLY") => void;
   onSelect: (planId: string, planName: string) => void;
@@ -21,9 +24,11 @@ const iconMap: Record<string, React.ReactNode> = {
   deelnemer: <Person sx={{ fontSize: 28 }} />,
   advocaat: <Balance sx={{ fontSize: 28 }} />,
   deurwaarder: <Gavel sx={{ fontSize: 28 }} />,
+  bank: <AccountBalance sx={{ fontSize: 28 }} />,
 };
 
 export const PlanStep = ({
+  role,
   billingCycle,
   onChangeBillingCycle,
   onSelect,
@@ -43,6 +48,8 @@ export const PlanStep = ({
 
     fetchPlans();
   }, []);
+
+  const availablePlans = plans.filter((plan) => plan.target_role === role);
 
   const recurringLabel =
     billingCycle === "MONTHLY"
@@ -112,7 +119,7 @@ export const PlanStep = ({
       </Box>
 
       <Grid container spacing={3}>
-        {plans.map((plan) => {
+        {availablePlans.map((plan) => {
           const planNameLower = plan.name.toLowerCase();
           const icon = iconMap[planNameLower] || (
             <Person sx={{ fontSize: 28 }} />

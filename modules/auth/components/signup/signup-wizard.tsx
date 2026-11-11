@@ -5,6 +5,7 @@ import { Box, Paper } from "@mui/material";
 import LogoComponent from "@/shared/ui/logo-app";
 import useClientRouter from "@/shared/hooks/useNavigations";
 import { IslandStep } from "./island-step";
+import { RegistrationTypeStep } from "./registration-type-step";
 import { PlanStep } from "./plan-step";
 import { DetailsStep } from "./details-step";
 import { SuccessStep } from "./success-step";
@@ -12,13 +13,14 @@ import { SignupStepper } from "./signup-stepper";
 import { STEP_SECTION_GAP } from "./layout.constants";
 import { getActiveJurisdictions } from "@/modules/jurisdiction/actions/jurisdiction.actions";
 
-const steps = ["Eiland", "Plan", "Gegevens"];
+const steps = ["Eiland", "Registratierol", "Plan", "Gegevens"];
 
 export const SignupWizard = () => {
   const { redirectToLoginCompany } = useClientRouter();
   const [activeStep, setActiveStep] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [country, setCountry] = useState("");
+  const [registrationRole, setRegistrationRole] = useState("");
   const [planId, setPlanId] = useState("");
   const [planName, setPlanName] = useState("");
   const [billingCycle, setBillingCycle] = useState<"MONTHLY" | "YEARLY">(
@@ -35,10 +37,15 @@ export const SignupWizard = () => {
     getActiveJurisdictions().then(setJurisdictions);
   }, []);
 
+  const handleSelectRegistrationType = (role: string) => {
+    setRegistrationRole(role);
+    setActiveStep(2);
+  };
+
   const handleSelectPlan = (id: string, name: string) => {
     setPlanId(id);
     setPlanName(name);
-    setActiveStep(2);
+    setActiveStep(3);
   };
 
   return (
@@ -86,22 +93,31 @@ export const SignupWizard = () => {
           )}
 
           {!isCompleted && activeStep === 1 && (
-            <PlanStep
-              billingCycle={billingCycle}
-              onChangeBillingCycle={setBillingCycle}
-              onSelect={handleSelectPlan}
+            <RegistrationTypeStep
+              value={registrationRole}
+              onSelect={handleSelectRegistrationType}
               onBack={() => setActiveStep(0)}
             />
           )}
 
           {!isCompleted && activeStep === 2 && (
+            <PlanStep
+              role={registrationRole}
+              billingCycle={billingCycle}
+              onChangeBillingCycle={setBillingCycle}
+              onSelect={handleSelectPlan}
+              onBack={() => setActiveStep(1)}
+            />
+          )}
+
+          {!isCompleted && activeStep === 3 && (
             <DetailsStep
               country={country}
               jurisdictions={jurisdictions}
               planId={planId}
               planName={planName}
               billingCycle={billingCycle}
-              onBack={() => setActiveStep(1)}
+              onBack={() => setActiveStep(2)}
               onSuccess={() => setIsCompleted(true)}
             />
           )}
