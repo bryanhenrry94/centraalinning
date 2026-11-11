@@ -50,14 +50,16 @@ export const menuGroups: HeaderMenuGroup[] = [
     roles: [UserRole.TENANT_ADMIN],
     items: [
       {
-        label: "Blok-Check",
-        href: "/block-check",
-        icon: <ShieldOutlined fontSize="small" />,
-      },
-      {
-        label: "FAR — Financiële Afspraken Registreren",
-        href: "/financial-agreements",
-        icon: <DescriptionOutlined fontSize="small" />,
+        // Vervangt de losse links naar Blok-Check/FAR/Administratieve
+        // opvolging/Blokkade: één scherm dat alle zes diensten (FAR, BLC,
+        // AOP, BLK, COP, GOP) consolideert, met per-dossier de
+        // vervolgacties die daar al bestonden (zie modules/dossier). De
+        // onderliggende routes blijven bestaan en zijn nog steeds
+        // rechtstreeks bereikbaar via "Details"/de dienst-snelkoppelingen
+        // op dat scherm.
+        label: "Mijn dossiers",
+        href: "/dossiers",
+        icon: <FolderOutlined fontSize="small" />,
       },
       {
         // Antes etiquetado como "Financiële afspraak registreren" — ese
@@ -66,16 +68,6 @@ export const menuGroups: HeaderMenuGroup[] = [
         label: "Overeenkomst registreren",
         href: "/contracts",
         icon: <DescriptionOutlined fontSize="small" />,
-      },
-      {
-        label: "Administratieve opvolging",
-        href: "/collections",
-        icon: <ReceiptOutlined fontSize="small" />,
-      },
-      {
-        label: "Blokkade",
-        href: "/blocks",
-        icon: <ShieldOutlined fontSize="small" />,
       },
       // Ruta Inteligente CFSB (punto 2/7): "Collectieve opvolging" (COP) en
       // "Dossieroverdracht" (GOP) zijn geen zelfstandige diensten — ze

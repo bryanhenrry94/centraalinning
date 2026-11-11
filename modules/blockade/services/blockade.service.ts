@@ -153,6 +153,23 @@ export class BlockadeService {
     });
   };
 
+  // Blokkades die rechtstreeks geregistreerd zijn (geen originDebtClaimId) —
+  // d.w.z. niet voortgekomen uit een AOP-dossier, dat al als DebtClaim-rij
+  // getoond wordt op het "Mijn dossiers"-scherm (zie modules/dossier).
+  static getStandaloneForTenant = async (tenantId: string) => {
+    return prisma.blockade.findMany({
+      where: { tenantId, originDebtClaimId: null },
+      include: {
+        debtor: {
+          include: {
+            person: true,
+          },
+        },
+      },
+      orderBy: { registeredAt: "desc" },
+    });
+  };
+
   static createFull = async (
     input: CreateBlockadeInput,
     tenantId: string,

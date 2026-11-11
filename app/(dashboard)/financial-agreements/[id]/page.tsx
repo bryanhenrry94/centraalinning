@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   Container,
   Typography,
@@ -62,6 +62,7 @@ function InfoField({ label, value }: { label: string; value?: React.ReactNode })
 const FinancialAgreementDetailPage: React.FC = () => {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [loading, setLoading] = useState(true);
   const [financialAgreement, setFinancialAgreement] = useState<FinancialAgreementDetail | null>(null);
@@ -104,6 +105,21 @@ const FinancialAgreementDetailPage: React.FC = () => {
       setStarting(false);
     }
   };
+
+  // Deep-link desde "Mijn dossiers" (modules/dossier): ?action=vervolgen abre
+  // meteen de Vervolgen-flow in plaats van dat de gebruiker hier nogmaals op
+  // de knop moet klikken. Puur additief — dezelfde handler, dezelfde
+  // voorwaarde als de zichtbare knop hieronder.
+  const autoStartTriggered = useRef(false);
+  useEffect(() => {
+    if (autoStartTriggered.current) return;
+    if (searchParams.get("action") !== "vervolgen") return;
+    if (!financialAgreement) return;
+    if (financialAgreement.status !== "REGISTERED" || financialAgreement.escalatedToDebtClaimId)
+      return;
+    autoStartTriggered.current = true;
+    handleStartFollowUp();
+  }, [searchParams, financialAgreement]);
 
   const closeAopPaymentDialog = () => setAopPaymentDialog({ open: false, obligationId: null, amount: 0 });
 
