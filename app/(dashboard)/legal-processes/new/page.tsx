@@ -55,8 +55,8 @@ function SectionHeader({ title }: { title: string }) {
   return (
     <Box
       sx={{
-        bgcolor: "secondary.main",
-        color: "white",
+        bgcolor: "grey.200",
+        color: "text.primary",
         px: 2,
         py: 1.5,
         borderTopLeftRadius: 8,
@@ -93,11 +93,14 @@ export default function DirectGopCreatePage() {
   // verstuurt nog niets — pas de knop "Verzenden" in het overzichtscherm
   // roept createDirectGopTransferAction aan.
   const [overzichtOpen, setOverzichtOpen] = useState(false);
-  const [pendingData, setPendingData] = useState<CreateDirectGopTransferInput | null>(null);
+  const [pendingData, setPendingData] =
+    useState<CreateDirectGopTransferInput | null>(null);
   const [sending, setSending] = useState(false);
 
   const [debtorSearchQuery, setDebtorSearchQuery] = useState("");
-  const [debtorSearchResults, setDebtorSearchResults] = useState<DebtorResponse[]>([]);
+  const [debtorSearchResults, setDebtorSearchResults] = useState<
+    DebtorResponse[]
+  >([]);
   const [searchingDebtor, setSearchingDebtor] = useState(false);
   const [debtorSearchOpen, setDebtorSearchOpen] = useState(false);
 
@@ -139,18 +142,25 @@ export default function DirectGopCreatePage() {
   const identificationTypeOptions =
     selectedPersonType === PersonType.COMPANY
       ? [IdentificationType.KVK]
-      : Object.values(IdentificationType).filter((type) => type !== IdentificationType.KVK);
+      : Object.values(IdentificationType).filter(
+          (type) => type !== IdentificationType.KVK,
+        );
 
   useEffect(() => {
     const current = watch("newDebtor.identification_type");
     if (!current || !identificationTypeOptions.includes(current)) {
-      setValue("newDebtor.identification_type", identificationTypeOptions[0] as IdentificationType);
+      setValue(
+        "newDebtor.identification_type",
+        identificationTypeOptions[0] as IdentificationType,
+      );
     }
   }, [selectedPersonType]);
 
   const handleSearchPersons = async (query: string) => {
     if (!tenant?.id) return [];
-    const response = await fetch(`/api/debtors/search?q=${encodeURIComponent(query)}`);
+    const response = await fetch(
+      `/api/debtors/search?q=${encodeURIComponent(query)}`,
+    );
     const data = await response.json();
     return data.data;
   };
@@ -175,10 +185,14 @@ export default function DirectGopCreatePage() {
   const handleSelectExistingDebtor = (found: DebtorResponse) => {
     setDebtor(found);
     setValue("debtorId", found.id, { shouldValidate: true });
-    setValue("newDebtor.person_type", (found.person?.person_type as PersonType) || PersonType.INDIVIDUAL);
+    setValue(
+      "newDebtor.person_type",
+      (found.person?.person_type as PersonType) || PersonType.INDIVIDUAL,
+    );
     setValue(
       "newDebtor.identification_type",
-      (found.person?.identification_type as IdentificationType) || IdentificationType.CEDULA,
+      (found.person?.identification_type as IdentificationType) ||
+        IdentificationType.CEDULA,
     );
     setValue("newDebtor.identification", found.person?.identification || "");
     setValue("newDebtor.fullname", getDebtorFullName(found));
@@ -199,7 +213,10 @@ export default function DirectGopCreatePage() {
     const identification = watch("newDebtor.identification");
     if (!identificationType || !identification) return;
 
-    const personInfo = await getInfoPersonAction(identificationType, identification);
+    const personInfo = await getInfoPersonAction(
+      identificationType,
+      identification,
+    );
     if (!personInfo) return;
 
     if (!watch("newDebtor.fullname")) {
@@ -210,9 +227,12 @@ export default function DirectGopCreatePage() {
           : `${personInfo.first_name ?? ""} ${personInfo.last_name ?? ""}`.trim(),
       );
     }
-    if (!watch("newDebtor.email") && personInfo.email) setValue("newDebtor.email", personInfo.email);
-    if (!watch("newDebtor.phone") && personInfo.phone) setValue("newDebtor.phone", personInfo.phone);
-    if (!watch("newDebtor.address") && personInfo.address) setValue("newDebtor.address", personInfo.address);
+    if (!watch("newDebtor.email") && personInfo.email)
+      setValue("newDebtor.email", personInfo.email);
+    if (!watch("newDebtor.phone") && personInfo.phone)
+      setValue("newDebtor.phone", personInfo.phone);
+    if (!watch("newDebtor.address") && personInfo.address)
+      setValue("newDebtor.address", personInfo.address);
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -221,14 +241,22 @@ export default function DirectGopCreatePage() {
     if (!file) return;
 
     if (!ALLOWED_TYPES.includes(file.type)) {
-      notifyError("Alleen PDF, Word of een afbeelding is toegestaan voor het vonnis.");
+      notifyError(
+        "Alleen PDF, Word of een afbeelding is toegestaan voor het vonnis.",
+      );
       return;
     }
 
     setVerdictFile(file);
     setValue(
       "verdictDocument",
-      { file, fileName: file.name, originalName: file.name, mimeType: file.type, size: file.size },
+      {
+        file,
+        fileName: file.name,
+        originalName: file.name,
+        mimeType: file.type,
+        size: file.size,
+      },
       { shouldValidate: true, shouldDirty: true },
     );
   };
@@ -252,7 +280,9 @@ export default function DirectGopCreatePage() {
       setSending(true);
       const result = await createDirectGopTransferAction(pendingData);
       if (!result.success) {
-        notifyError(result.message || "Fout bij het registreren van het vonnis.");
+        notifyError(
+          result.message || "Fout bij het registreren van het vonnis.",
+        );
         return;
       }
       setOverzichtOpen(false);
@@ -267,10 +297,15 @@ export default function DirectGopCreatePage() {
     }
   };
 
-  const selectedBailiffName = bailiffs.find((b) => b.id === pendingData?.bailiffId)?.fullname ?? "-";
+  const selectedBailiffName =
+    bailiffs.find((b) => b.id === pendingData?.bailiffId)?.fullname ?? "-";
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+    >
       <Box
         sx={{
           display: "flex",
@@ -301,16 +336,28 @@ export default function DirectGopCreatePage() {
         </Button>
       </Box>
 
-      <Alert icon={<InfoOutlinedIcon fontSize="inherit" />} severity="info" sx={{ mb: 3 }}>
-        Gebruik dit formulier als u al over een gerechtelijk vonnis beschikt uit een procedure die buiten CFSB
-        heeft plaatsgevonden. U betaalt nog niet nu — eerst moet de gekozen deurwaarder het dossier accepteren.
-        Pas wanneer zowel u als de deurwaarder de CFSB-kosten betaald hebben, wordt het GOP officieel actief.
+      <Alert
+        icon={<InfoOutlinedIcon fontSize="inherit" />}
+        severity="info"
+        sx={{ mb: 3 }}
+      >
+        Gebruik dit formulier als u al over een gerechtelijk vonnis beschikt uit
+        een procedure die buiten CFSB heeft plaatsgevonden. U betaalt nog niet
+        nu — eerst moet de gekozen deurwaarder het dossier accepteren. Pas
+        wanneer zowel u als de deurwaarder de CFSB-kosten betaald hebben, wordt
+        het GOP officieel actief.
       </Alert>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Stack spacing={3} sx={{ pt: { xs: 0.5, sm: 1 }, pb: { xs: 2, sm: 6 } }}>
+        <Stack
+          spacing={3}
+          sx={{ pt: { xs: 0.5, sm: 1 }, pb: { xs: 2, sm: 6 } }}
+        >
           {/* 1. Debiteur informatie */}
-          <Paper component="section" sx={{ elevation: 1, borderRadius: 1, mb: 2, overflow: "hidden" }}>
+          <Paper
+            component="section"
+            sx={{ elevation: 1, borderRadius: 1, mb: 2, overflow: "hidden" }}
+          >
             <SectionHeader title="1. DEBITEUR" />
             <Box sx={{ p: 2, mb: 2 }}>
               <Typography variant="subtitle2" fontWeight={600} gutterBottom>
@@ -387,13 +434,11 @@ export default function DirectGopCreatePage() {
                 )}
               </Stack>
 
-              <Alert icon={<InfoOutlinedIcon fontSize="inherit" />} severity="info" sx={{ mt: 2, mb: 2 }}>
-                Zoek een bestaande debiteur of voeg een nieuwe debiteur toe. Een bestaande registratie wordt
-                automatisch gekoppeld.
-              </Alert>
-
               {errors.debtorId && (
-                <Typography variant="caption" sx={{ color: "error.main", display: "block", mt: 0.5 }}>
+                <Typography
+                  variant="caption"
+                  sx={{ color: "error.main", display: "block", mt: 0.5 }}
+                >
                   {errors.debtorId.message}
                 </Typography>
               )}
@@ -571,7 +616,10 @@ export default function DirectGopCreatePage() {
           </Paper>
 
           {/* 2. Vonnisgegevens */}
-          <Paper component="section" sx={{ elevation: 1, borderRadius: 1, mb: 2, overflow: "hidden" }}>
+          <Paper
+            component="section"
+            sx={{ elevation: 1, borderRadius: 1, mb: 2, overflow: "hidden" }}
+          >
             <SectionHeader title="2. VONNISGEGEVENS" />
             <Box sx={{ p: 2 }}>
               <Grid container spacing={2}>
@@ -606,9 +654,17 @@ export default function DirectGopCreatePage() {
                         size="small"
                         label="Datum vonnis"
                         InputLabelProps={{ shrink: true }}
-                        value={field.value ? field.value.toISOString().slice(0, 10) : ""}
+                        value={
+                          field.value
+                            ? field.value.toISOString().slice(0, 10)
+                            : ""
+                        }
                         onChange={(e) =>
-                          field.onChange(e.target.value ? new Date(e.target.value) : undefined)
+                          field.onChange(
+                            e.target.value
+                              ? new Date(e.target.value)
+                              : undefined,
+                          )
                         }
                         error={!!fieldState.error}
                         helperText={fieldState.error?.message}
@@ -634,7 +690,9 @@ export default function DirectGopCreatePage() {
                         allowNegative={false}
                         prefix="$ "
                         size="small"
-                        onValueChange={(values) => field.onChange(Number(values.value) || 0)}
+                        onValueChange={(values) =>
+                          field.onChange(Number(values.value) || 0)
+                        }
                         error={!!fieldState.error}
                         helperText={fieldState.error?.message}
                       />
@@ -658,9 +716,15 @@ export default function DirectGopCreatePage() {
                         allowNegative={false}
                         prefix="$ "
                         size="small"
-                        onValueChange={(values) => field.onChange(values.value ? Number(values.value) : undefined)}
+                        onValueChange={(values) =>
+                          field.onChange(
+                            values.value ? Number(values.value) : undefined,
+                          )
+                        }
                         error={!!fieldState.error}
-                        helperText={fieldState.error?.message ?? "Indien van toepassing."}
+                        helperText={
+                          fieldState.error?.message ?? "Indien van toepassing."
+                        }
                       />
                     )}
                   />
@@ -670,7 +734,10 @@ export default function DirectGopCreatePage() {
           </Paper>
 
           {/* 3. Deurwaarder selecteren */}
-          <Paper component="section" sx={{ elevation: 1, borderRadius: 1, mb: 2, overflow: "hidden" }}>
+          <Paper
+            component="section"
+            sx={{ elevation: 1, borderRadius: 1, mb: 2, overflow: "hidden" }}
+          >
             <SectionHeader title="3. DEURWAARDER SELECTEREN" />
             <Box sx={{ p: 2 }}>
               <Controller
@@ -696,19 +763,31 @@ export default function DirectGopCreatePage() {
                 )}
               />
 
-              <Alert icon={<InfoOutlinedIcon fontSize="inherit" />} severity="info" sx={{ mt: 2 }}>
-                De gekozen deurwaarder ontvangt uw verzoek en controleert het vonnis voordat de registratie wordt
-                geëffectueerd.
+              <Alert
+                icon={<InfoOutlinedIcon fontSize="inherit" />}
+                severity="info"
+                sx={{ mt: 2 }}
+              >
+                De gekozen deurwaarder ontvangt uw verzoek en controleert het
+                vonnis voordat de registratie wordt geëffectueerd.
               </Alert>
             </Box>
           </Paper>
 
           {/* 4. Documenten */}
-          <Paper component="section" sx={{ elevation: 1, borderRadius: 1, mb: 2, overflow: "hidden" }}>
+          <Paper
+            component="section"
+            sx={{ elevation: 1, borderRadius: 1, mb: 2, overflow: "hidden" }}
+          >
             <SectionHeader title="4. DOCUMENTEN" />
             <Box sx={{ p: 2 }}>
-              <Alert icon={<InfoOutlinedIcon fontSize="inherit" />} severity="info" sx={{ mb: 2 }}>
-                Upload het gerechtelijke vonnis (verplicht) en eventueel aanvullende documenten.
+              <Alert
+                icon={<InfoOutlinedIcon fontSize="inherit" />}
+                severity="info"
+                sx={{ mb: 2 }}
+              >
+                Upload het gerechtelijke vonnis (verplicht) en eventueel
+                aanvullende documenten.
               </Alert>
 
               <Button
@@ -719,7 +798,12 @@ export default function DirectGopCreatePage() {
                 sx={{ textTransform: "none" }}
               >
                 Document(en) toevoegen
-                <input type="file" hidden accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" onChange={handleFileChange} />
+                <input
+                  type="file"
+                  hidden
+                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                  onChange={handleFileChange}
+                />
               </Button>
 
               {verdictFile && (
@@ -747,7 +831,9 @@ export default function DirectGopCreatePage() {
                     type="button"
                     onClick={() => {
                       setVerdictFile(null);
-                      setValue("verdictDocument", undefined as any, { shouldValidate: true });
+                      setValue("verdictDocument", undefined as any, {
+                        shouldValidate: true,
+                      });
                     }}
                   >
                     <DeleteIcon fontSize="small" />
@@ -756,7 +842,11 @@ export default function DirectGopCreatePage() {
               )}
 
               {errors.verdictDocument && (
-                <Typography color="error" variant="caption" sx={{ mt: 1, display: "block" }}>
+                <Typography
+                  color="error"
+                  variant="caption"
+                  sx={{ mt: 1, display: "block" }}
+                >
                   Het gerechtelijk vonnis is verplicht.
                 </Typography>
               )}
@@ -764,7 +854,10 @@ export default function DirectGopCreatePage() {
           </Paper>
 
           {/* 5. Bevestiging */}
-          <Paper component="section" sx={{ elevation: 1, borderRadius: 1, mb: 2, overflow: "hidden" }}>
+          <Paper
+            component="section"
+            sx={{ elevation: 1, borderRadius: 1, mb: 2, overflow: "hidden" }}
+          >
             <SectionHeader title="5. BEVESTIGING" />
             <Box sx={{ p: 2 }}>
               <Controller
@@ -772,20 +865,37 @@ export default function DirectGopCreatePage() {
                 control={control}
                 render={({ field }) => (
                   <FormControlLabel
-                    control={<Checkbox checked={field.value} onChange={(e) => field.onChange(e.target.checked)} />}
+                    control={
+                      <Checkbox
+                        checked={field.value}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                      />
+                    }
                     label="Ik bevestig dat de bovenstaande gegevens en documenten juist zijn en dat er een geldig gerechtelijk vonnis bestaat."
                   />
                 )}
               />
               {errors.confirmed && (
-                <Typography color="error" variant="caption" sx={{ display: "block", mt: 0.5 }}>
+                <Typography
+                  color="error"
+                  variant="caption"
+                  sx={{ display: "block", mt: 0.5 }}
+                >
                   {errors.confirmed.message}
                 </Typography>
               )}
             </Box>
           </Paper>
 
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, mt: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 2,
+              mt: 2,
+            }}
+          >
             <Button
               type="button"
               color="inherit"
@@ -811,7 +921,12 @@ export default function DirectGopCreatePage() {
 
       {/* Overzicht — pas hier wordt daadwerkelijk verzonden (sponsor-flow:
           bevestigen -> overzicht -> verzenden -> GOP-concept). */}
-      <Dialog open={overzichtOpen} onClose={() => setOverzichtOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={overzichtOpen}
+        onClose={() => setOverzichtOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle
           sx={{
             bgcolor: "secondary.main",
@@ -823,25 +938,34 @@ export default function DirectGopCreatePage() {
           }}
         >
           Overzicht
-          <IconButton onClick={() => setOverzichtOpen(false)} sx={{ color: "white" }}>
+          <IconButton
+            onClick={() => setOverzichtOpen(false)}
+            sx={{ color: "white" }}
+          >
             <CloseIcon fontSize="small" />
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ pt: 3 }}>
           {pendingData && (
             <Stack spacing={2}>
-              <Alert icon={<InfoOutlinedIcon fontSize="inherit" />} severity="info">
-                Controleer de gegevens voordat u verzendt. U betaalt nog niet — eerst moet de gekozen deurwaarder
-                het dossier accepteren.
+              <Alert
+                icon={<InfoOutlinedIcon fontSize="inherit" />}
+                severity="info"
+              >
+                Controleer de gegevens voordat u verzendt. U betaalt nog niet —
+                eerst moet de gekozen deurwaarder het dossier accepteren.
               </Alert>
 
               <Box>
                 <Typography variant="subtitle2" fontWeight={700} gutterBottom>
                   Debiteur
                 </Typography>
-                <Typography variant="body2">{pendingData.newDebtor?.fullname}</Typography>
+                <Typography variant="body2">
+                  {pendingData.newDebtor?.fullname}
+                </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {pendingData.newDebtor?.identification} · {pendingData.newDebtor?.email}
+                  {pendingData.newDebtor?.identification} ·{" "}
+                  {pendingData.newDebtor?.email}
                 </Typography>
               </Box>
 
@@ -851,15 +975,24 @@ export default function DirectGopCreatePage() {
                 <Typography variant="subtitle2" fontWeight={700} gutterBottom>
                   Vonnisgegevens
                 </Typography>
-                <Typography variant="body2">Vonnisnummer / Zaaknummer: {pendingData.verdictNumber}</Typography>
                 <Typography variant="body2">
-                  Datum vonnis: {pendingData.verdictDate ? pendingData.verdictDate.toLocaleDateString("nl-NL") : "-"}
+                  Vonnisnummer / Zaaknummer: {pendingData.verdictNumber}
                 </Typography>
                 <Typography variant="body2">
-                  Veroordelingsbedrag: {formatCurrency(pendingData.sentenceAmount)}
+                  Datum vonnis:{" "}
+                  {pendingData.verdictDate
+                    ? pendingData.verdictDate.toLocaleDateString("nl-NL")
+                    : "-"}
                 </Typography>
                 <Typography variant="body2">
-                  Wettelijke rente: {pendingData.legalInterest ? formatCurrency(pendingData.legalInterest) : "-"}
+                  Veroordelingsbedrag:{" "}
+                  {formatCurrency(pendingData.sentenceAmount)}
+                </Typography>
+                <Typography variant="body2">
+                  Wettelijke rente:{" "}
+                  {pendingData.legalInterest
+                    ? formatCurrency(pendingData.legalInterest)
+                    : "-"}
                 </Typography>
               </Box>
 
@@ -881,7 +1014,12 @@ export default function DirectGopCreatePage() {
                 <Typography variant="body2">{verdictFile?.name}</Typography>
               </Box>
 
-              <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ pt: 1 }}>
+              <Stack
+                direction="row"
+                spacing={2}
+                justifyContent="flex-end"
+                sx={{ pt: 1 }}
+              >
                 <Button
                   variant="outlined"
                   color="inherit"

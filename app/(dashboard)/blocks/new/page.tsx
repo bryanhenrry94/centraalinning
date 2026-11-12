@@ -55,17 +55,16 @@ import { useRouter } from "next/navigation";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { getParameterForTenantAction } from "@/modules/settings/actions/parameter.actions";
 
-// Herbruikte sectiekop (donkerblauwe balk) voor de vier genummerde
-// stappen van het formulier — zelfde stijl als voorheen alleen op
-// "BLOKKADE INFORMATIE" stond, nu consistent op alle vier.
+// Herbruikte sectiekop (zachtgrijze balk) voor de vier genummerde stappen
+// van het formulier.
 function SectionHeader({ title }: { title: string }) {
   return (
     <Box
       sx={{
-        bgcolor: "secondary.main",
-        color: "white",
-        px: 2,
-        py: 1.5,
+        bgcolor: "grey.200",
+        color: "text.primary",
+        px: 1.5,
+        py: 0.75,
         borderTopLeftRadius: 8,
         borderTopRightRadius: 8,
         borderBottom: "1px solid #e0e0e0",
@@ -73,7 +72,7 @@ function SectionHeader({ title }: { title: string }) {
         alignItems: "center",
       }}
     >
-      <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
+      <Typography variant="subtitle2" component="h3" sx={{ fontWeight: 600 }}>
         {title}
       </Typography>
     </Box>
@@ -602,15 +601,6 @@ export default function BlockCreatePage() {
                 )}
               </Stack>
 
-              <Alert
-                icon={<InfoOutlinedIcon fontSize="inherit" />}
-                severity="info"
-                sx={{ mt: 2, mb: 2 }}
-              >
-                Zoek een bestaande debiteur of vul de gegevens in. CFSB koppelt
-                of registreert de debiteur automatisch.
-              </Alert>
-
               {errors.debtorId && (
                 <Typography
                   variant="caption"
@@ -627,7 +617,7 @@ export default function BlockCreatePage() {
                 </Alert>
               )}
 
-              <Grid container spacing={2} sx={{ mt: 0.5 }}>
+              <Grid container spacing={2} sx={{ mt: 3 }}>
                 <Grid size={{ xs: 12 }}>
                   <Controller
                     name="newDebtor.person_type"

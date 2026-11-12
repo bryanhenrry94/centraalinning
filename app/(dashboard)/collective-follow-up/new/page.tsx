@@ -48,8 +48,8 @@ function SectionHeader({ title }: { title: string }) {
   return (
     <Box
       sx={{
-        bgcolor: "secondary.main",
-        color: "white",
+        bgcolor: "grey.200",
+        color: "text.primary",
         px: 2,
         py: 1.5,
         borderTopLeftRadius: 8,
@@ -86,12 +86,16 @@ export default function DirectCopCreatePage() {
   const [debtor, setDebtor] = React.useState<DebtorResponse | null>(null);
 
   const [debtorSearchQuery, setDebtorSearchQuery] = useState("");
-  const [debtorSearchResults, setDebtorSearchResults] = useState<DebtorResponse[]>([]);
+  const [debtorSearchResults, setDebtorSearchResults] = useState<
+    DebtorResponse[]
+  >([]);
   const [searchingDebtor, setSearchingDebtor] = useState(false);
   const [debtorSearchOpen, setDebtorSearchOpen] = useState(false);
 
   const [startDialogOpen, setStartDialogOpen] = useState(false);
-  const [createdDebtClaimId, setCreatedDebtClaimId] = useState<string | null>(null);
+  const [createdDebtClaimId, setCreatedDebtClaimId] = useState<string | null>(
+    null,
+  );
   const [createdPrincipalAmount, setCreatedPrincipalAmount] = useState(0);
 
   const {
@@ -125,18 +129,25 @@ export default function DirectCopCreatePage() {
   const identificationTypeOptions =
     selectedPersonType === PersonType.COMPANY
       ? [IdentificationType.KVK]
-      : Object.values(IdentificationType).filter((type) => type !== IdentificationType.KVK);
+      : Object.values(IdentificationType).filter(
+          (type) => type !== IdentificationType.KVK,
+        );
 
   React.useEffect(() => {
     const current = watch("newDebtor.identification_type");
     if (!current || !identificationTypeOptions.includes(current)) {
-      setValue("newDebtor.identification_type", identificationTypeOptions[0] as IdentificationType);
+      setValue(
+        "newDebtor.identification_type",
+        identificationTypeOptions[0] as IdentificationType,
+      );
     }
   }, [selectedPersonType]);
 
   const handleSearchPersons = async (query: string) => {
     if (!tenant?.id) return [];
-    const response = await fetch(`/api/debtors/search?q=${encodeURIComponent(query)}`);
+    const response = await fetch(
+      `/api/debtors/search?q=${encodeURIComponent(query)}`,
+    );
     const data = await response.json();
     return data.data;
   };
@@ -161,10 +172,14 @@ export default function DirectCopCreatePage() {
   const handleSelectExistingDebtor = (found: DebtorResponse) => {
     setDebtor(found);
     setValue("debtorId", found.id, { shouldValidate: true });
-    setValue("newDebtor.person_type", (found.person?.person_type as PersonType) || PersonType.INDIVIDUAL);
+    setValue(
+      "newDebtor.person_type",
+      (found.person?.person_type as PersonType) || PersonType.INDIVIDUAL,
+    );
     setValue(
       "newDebtor.identification_type",
-      (found.person?.identification_type as IdentificationType) || IdentificationType.CEDULA,
+      (found.person?.identification_type as IdentificationType) ||
+        IdentificationType.CEDULA,
     );
     setValue("newDebtor.identification", found.person?.identification || "");
     setValue("newDebtor.fullname", getDebtorFullName(found));
@@ -185,7 +200,10 @@ export default function DirectCopCreatePage() {
     const identification = watch("newDebtor.identification");
     if (!identificationType || !identification) return;
 
-    const personInfo = await getInfoPersonAction(identificationType, identification);
+    const personInfo = await getInfoPersonAction(
+      identificationType,
+      identification,
+    );
     if (!personInfo) return;
 
     if (!watch("newDebtor.fullname")) {
@@ -196,9 +214,12 @@ export default function DirectCopCreatePage() {
           : `${personInfo.first_name ?? ""} ${personInfo.last_name ?? ""}`.trim(),
       );
     }
-    if (!watch("newDebtor.email") && personInfo.email) setValue("newDebtor.email", personInfo.email);
-    if (!watch("newDebtor.phone") && personInfo.phone) setValue("newDebtor.phone", personInfo.phone);
-    if (!watch("newDebtor.address") && personInfo.address) setValue("newDebtor.address", personInfo.address);
+    if (!watch("newDebtor.email") && personInfo.email)
+      setValue("newDebtor.email", personInfo.email);
+    if (!watch("newDebtor.phone") && personInfo.phone)
+      setValue("newDebtor.phone", personInfo.phone);
+    if (!watch("newDebtor.address") && personInfo.address)
+      setValue("newDebtor.address", personInfo.address);
   };
 
   const mapFileToDocument = (file: File): DirectCopDocument => ({
@@ -211,11 +232,17 @@ export default function DirectCopCreatePage() {
 
   const processFiles = (fileList: FileList | null) => {
     const files = Array.from(fileList ?? []);
-    const validFiles = files.filter((file) => ALLOWED_TYPES.includes(file.type));
-    const invalidFiles = files.filter((file) => !ALLOWED_TYPES.includes(file.type));
+    const validFiles = files.filter((file) =>
+      ALLOWED_TYPES.includes(file.type),
+    );
+    const invalidFiles = files.filter(
+      (file) => !ALLOWED_TYPES.includes(file.type),
+    );
 
     if (invalidFiles.length > 0) {
-      notifyError("Alleen PDF-, Word-, Excel-bestanden en afbeeldingen zijn toegestaan.");
+      notifyError(
+        "Alleen PDF-, Word-, Excel-bestanden en afbeeldingen zijn toegestaan.",
+      );
     }
     if (validFiles.length === 0) return;
 
@@ -255,7 +282,10 @@ export default function DirectCopCreatePage() {
     try {
       const result = await createDirectCopAction(data);
       if (!result.success || !result.debtClaimId) {
-        notifyError(result.message || "Fout bij het registreren van de Collectieve Opvolging.");
+        notifyError(
+          result.message ||
+            "Fout bij het registreren van de Collectieve Opvolging.",
+        );
         return;
       }
       setCreatedDebtClaimId(result.debtClaimId);
@@ -267,7 +297,11 @@ export default function DirectCopCreatePage() {
   };
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+    >
       <Box
         sx={{
           display: "flex",
@@ -283,7 +317,8 @@ export default function DirectCopCreatePage() {
             Directe Collectieve Opvolging (COP)
           </Typography>
           <Typography color="text.secondary">
-            Start een collectieve opvolging binnen de samenwerking om een gerechtelijke procedure te voorkomen.
+            Start een collectieve opvolging binnen de samenwerking om een
+            gerechtelijke procedure te voorkomen.
           </Typography>
         </Box>
 
@@ -299,9 +334,15 @@ export default function DirectCopCreatePage() {
       </Box>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Stack spacing={3} sx={{ pt: { xs: 0.5, sm: 1 }, pb: { xs: 2, sm: 6 } }}>
+        <Stack
+          spacing={3}
+          sx={{ pt: { xs: 0.5, sm: 1 }, pb: { xs: 2, sm: 6 } }}
+        >
           {/* 1. Debiteur informatie */}
-          <Paper component="section" sx={{ elevation: 1, borderRadius: 1, mb: 2, overflow: "hidden" }}>
+          <Paper
+            component="section"
+            sx={{ elevation: 1, borderRadius: 1, mb: 2, overflow: "hidden" }}
+          >
             <SectionHeader title="1. DEBITEUR INFORMATIE" />
             <Box sx={{ p: 2, mb: 2 }}>
               <Typography variant="subtitle2" fontWeight={600} gutterBottom>
@@ -378,13 +419,11 @@ export default function DirectCopCreatePage() {
                 )}
               </Stack>
 
-              <Alert icon={<InfoOutlinedIcon fontSize="inherit" />} severity="info" sx={{ mt: 2, mb: 2 }}>
-                Zoek een bestaande debiteur of vul de gegevens in. Een bestaande registratie wordt automatisch
-                gekoppeld.
-              </Alert>
-
               {errors.debtorId && (
-                <Typography variant="caption" sx={{ color: "error.main", display: "block", mt: 0.5 }}>
+                <Typography
+                  variant="caption"
+                  sx={{ color: "error.main", display: "block", mt: 0.5 }}
+                >
                   {errors.debtorId.message}
                 </Typography>
               )}
@@ -567,7 +606,10 @@ export default function DirectCopCreatePage() {
           </Paper>
 
           {/* 2. Vordering informatie */}
-          <Paper component="section" sx={{ elevation: 1, borderRadius: 1, mb: 2, overflow: "hidden" }}>
+          <Paper
+            component="section"
+            sx={{ elevation: 1, borderRadius: 1, mb: 2, overflow: "hidden" }}
+          >
             <SectionHeader title="2. VORDERING INFORMATIE" />
             <Box sx={{ p: 2 }}>
               <Grid container spacing={2}>
@@ -588,7 +630,9 @@ export default function DirectCopCreatePage() {
                         allowNegative={false}
                         prefix="$ "
                         size="small"
-                        onValueChange={(values) => field.onChange(Number(values.value) || 0)}
+                        onValueChange={(values) =>
+                          field.onChange(Number(values.value) || 0)
+                        }
                         error={!!fieldState.error}
                         helperText={fieldState.error?.message}
                       />
@@ -608,9 +652,17 @@ export default function DirectCopCreatePage() {
                         size="small"
                         label="Datum oorspronkelijke betalingsverplichting"
                         InputLabelProps={{ shrink: true }}
-                        value={field.value ? field.value.toISOString().slice(0, 10) : ""}
+                        value={
+                          field.value
+                            ? field.value.toISOString().slice(0, 10)
+                            : ""
+                        }
                         onChange={(e) =>
-                          field.onChange(e.target.value ? new Date(e.target.value) : undefined)
+                          field.onChange(
+                            e.target.value
+                              ? new Date(e.target.value)
+                              : undefined,
+                          )
                         }
                         error={!!fieldState.error}
                         helperText={fieldState.error?.message}
@@ -644,15 +696,12 @@ export default function DirectCopCreatePage() {
           </Paper>
 
           {/* 3. Bewijsstukken */}
-          <Paper component="section" sx={{ elevation: 1, borderRadius: 1, mb: 2, overflow: "hidden" }}>
+          <Paper
+            component="section"
+            sx={{ elevation: 1, borderRadius: 1, mb: 2, overflow: "hidden" }}
+          >
             <SectionHeader title="3. BEWIJS VAN EERDERE ADMINISTRATIEVE OPVOLGING" />
             <Box sx={{ p: 2 }}>
-              <Alert icon={<InfoOutlinedIcon fontSize="inherit" />} severity="info" sx={{ mb: 2 }}>
-                Voeg minimaal één document toe waaruit blijkt dat deze betalingsachterstand eerder administratief
-                is opgevolgd, bijvoorbeeld een aanmaning, sommatie, ingebrekestelling of andere relevante
-                correspondentie.
-              </Alert>
-
               <Button
                 variant="outlined"
                 component="label"
@@ -691,7 +740,12 @@ export default function DirectCopCreatePage() {
                           {formatFileSize(file.size)}
                         </Typography>
                       </Box>
-                      <IconButton size="small" color="error" type="button" onClick={() => removeDocument(index)}>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        type="button"
+                        onClick={() => removeDocument(index)}
+                      >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     </Box>
@@ -700,7 +754,11 @@ export default function DirectCopCreatePage() {
               )}
 
               {errors.documents && (
-                <Typography color="error" variant="caption" sx={{ mt: 1, display: "block" }}>
+                <Typography
+                  color="error"
+                  variant="caption"
+                  sx={{ mt: 1, display: "block" }}
+                >
                   {errors.documents.message}
                 </Typography>
               )}
@@ -708,7 +766,10 @@ export default function DirectCopCreatePage() {
           </Paper>
 
           {/* 4. Bevestiging */}
-          <Paper component="section" sx={{ elevation: 1, borderRadius: 1, mb: 2, overflow: "hidden" }}>
+          <Paper
+            component="section"
+            sx={{ elevation: 1, borderRadius: 1, mb: 2, overflow: "hidden" }}
+          >
             <SectionHeader title="4. BEVESTIGING" />
             <Box sx={{ p: 2 }}>
               <Controller
@@ -716,20 +777,37 @@ export default function DirectCopCreatePage() {
                 control={control}
                 render={({ field }) => (
                   <FormControlLabel
-                    control={<Checkbox checked={field.value} onChange={(e) => field.onChange(e.target.checked)} />}
+                    control={
+                      <Checkbox
+                        checked={field.value}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                      />
+                    }
                     label="Ik bevestig dat de bovenstaande gegevens en bewijsstukken juist zijn en dat de vordering eerder administratief is opgevolgd."
                   />
                 )}
               />
               {errors.confirmed && (
-                <Typography color="error" variant="caption" sx={{ display: "block", mt: 0.5 }}>
+                <Typography
+                  color="error"
+                  variant="caption"
+                  sx={{ display: "block", mt: 0.5 }}
+                >
                   {errors.confirmed.message}
                 </Typography>
               )}
             </Box>
           </Paper>
 
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2, mt: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 2,
+              mt: 2,
+            }}
+          >
             <Button
               type="button"
               color="inherit"
@@ -759,7 +837,9 @@ export default function DirectCopCreatePage() {
           onClose={() => setStartDialogOpen(false)}
           debtClaimId={createdDebtClaimId}
           principalAmount={createdPrincipalAmount}
-          onStarted={(collectionId) => router.push(`/collective-follow-up/${collectionId}`)}
+          onStarted={(collectionId) =>
+            router.push(`/collective-follow-up/${collectionId}`)
+          }
         />
       )}
     </Container>
