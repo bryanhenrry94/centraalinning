@@ -18,7 +18,7 @@ export async function createContract(
   try {
     const input = ContractSchema.parse(data);
     const contract = await ContractService.create(tenantId, input);
-    revalidatePath("/workstation");
+    revalidatePath("/dossiers");
     return { success: true, data: contract };
   } catch (error) {
     console.error("[CREATE_CONTRACT]", error);

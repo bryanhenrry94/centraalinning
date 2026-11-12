@@ -117,10 +117,10 @@ export async function middleware(req: NextRequest) {
   // ========================================
 
   if (token && isAuthDomain && (pathname === "/login" || pathname === "/")) {
-    // El cliente (TENANT_ADMIN) aterriza directo en Diensten (/workstation);
+    // El cliente (TENANT_ADMIN) aterriza directo en Mijn dossiers (/dossiers);
     // los demás roles conservan el dashboard como antes.
     const landingPath = (token.roles || []).includes(UserRole.TENANT_ADMIN)
-      ? "/workstation"
+      ? "/dossiers"
       : "/dashboard";
 
     return NextResponse.redirect(

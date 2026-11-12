@@ -31,7 +31,7 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
-  const { redirectToSignUp, redirectToDashboard, redirectToWorkstation } =
+  const { redirectToSignUp, redirectToDashboard, redirectToDossiers } =
     useClientRouter();
 
   const [formData, setFormData] = useState<LoginFormData>({
@@ -86,9 +86,9 @@ export default function LoginForm() {
         }
 
         // El cliente (TENANT_ADMIN) aterriza directo en la pantalla de
-        // Diensten; los demás roles conservan el dashboard como antes.
+        // Mijn dossiers; los demás roles conservan el dashboard como antes.
         if (roles.includes(UserRole.TENANT_ADMIN)) {
-          redirectToWorkstation(subdomain);
+          redirectToDossiers(subdomain);
         } else {
           redirectToDashboard(subdomain);
         }

@@ -65,9 +65,15 @@ export const DossiersPage = () => {
     const toDate = filters.dateTo ? new Date(filters.dateTo) : null;
 
     return rows.filter((row) => {
-      if (filters.serviceType !== "ALL" && row.serviceType !== filters.serviceType)
+      if (
+        filters.serviceType !== "ALL" &&
+        row.serviceType !== filters.serviceType
+      )
         return false;
-      if (filters.statusLabel !== "ALL" && row.statusLabel !== filters.statusLabel)
+      if (
+        filters.statusLabel !== "ALL" &&
+        row.statusLabel !== filters.statusLabel
+      )
         return false;
       if (fromDate && row.date < fromDate) return false;
       if (toDate && row.date > toDate) return false;
@@ -84,30 +90,12 @@ export const DossiersPage = () => {
   if (loading) return <LoadingUI />;
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+    >
       <Stack spacing={3}>
-        <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
-          {DOSSIER_SERVICE_SHORTCUTS.map((shortcut) => (
-            <Button
-              key={shortcut.type}
-              component="a"
-              href={shortcut.href}
-              variant="contained"
-              size="small"
-              sx={{
-                bgcolor: SHORTCUT_COLORS[shortcut.type],
-                fontWeight: 700,
-                textTransform: "none",
-                borderRadius: "999px",
-                px: 2.5,
-                "&:hover": { bgcolor: SHORTCUT_COLORS[shortcut.type], opacity: 0.9 },
-              }}
-            >
-              {shortcut.label}
-            </Button>
-          ))}
-        </Stack>
-
         <Box>
           <Typography variant="h4" fontWeight={700}>
             Mijn dossiers
@@ -115,6 +103,53 @@ export const DossiersPage = () => {
           <Typography variant="body2" color="text.secondary">
             Hier vindt u een overzicht van al uw dossiers en de status.
           </Typography>
+
+          <Stack
+            direction="row"
+            spacing={1.5}
+            alignItems="center"
+            flexWrap="wrap"
+            useFlexGap
+            sx={{ mt: 2.5 }}
+          >
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: 0.6,
+                color: "text.secondary",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Selecteert een dienst
+            </Typography>
+
+            <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+              {DOSSIER_SERVICE_SHORTCUTS.map((shortcut) => (
+                <Button
+                  key={shortcut.type}
+                  component="a"
+                  href={shortcut.href}
+                  variant="contained"
+                  size="small"
+                  sx={{
+                    bgcolor: SHORTCUT_COLORS[shortcut.type],
+                    fontWeight: 700,
+                    textTransform: "none",
+                    // borderRadius: "999px",
+                    px: 2.5,
+                    "&:hover": {
+                      bgcolor: SHORTCUT_COLORS[shortcut.type],
+                      opacity: 0.9,
+                    },
+                  }}
+                >
+                  {shortcut.label}
+                </Button>
+              ))}
+            </Stack>
+          </Stack>
         </Box>
 
         <DossierFilters

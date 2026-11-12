@@ -111,7 +111,7 @@ export default function Header() {
     group.roles.some((role) => userRoles.includes(role)),
   );
 
-  // "dossiers" (Diensten) ya tiene su propio botón fijo hacia /workstation, y
+  // "dossiers" (Diensten) ya tiene su propio botón fijo hacia /dossiers, y
   // "deurwaarder" (Mijn dossiers) el suyo hacia /legal-processes — acá sólo
   // mostramos los demás grupos (p.ej. el del deudor) como dropdown. El
   // advocaat no tiene ningún dropdown: su único punto de entrada es el botón
@@ -252,19 +252,6 @@ export default function Header() {
                     ? "Mijn dossiers"
                     : "Dashboard"}
               </Button>
-
-              {canAccessWorkstation && (
-                <Button
-                  color="inherit"
-                  onClick={() => router.push("/workstation")}
-                  sx={{
-                    textTransform: "none",
-                    fontWeight: 500,
-                  }}
-                >
-                  Diensten
-                </Button>
-              )}
 
               {canAccessWorkstation && (
                 <Button
@@ -501,19 +488,6 @@ export default function Header() {
                 }
               />
             </ListItemButton>
-
-            {canAccessWorkstation && (
-              <ListItemButton
-                onClick={() => {
-                  router.push("/workstation");
-                  setMobileOpen(false);
-                }}
-              >
-                <AppsIcon sx={{ mr: 2 }} />
-
-                <ListItemText primary="Diensten" />
-              </ListItemButton>
-            )}
 
             {canAccessWorkstation && (
               <ListItemButton

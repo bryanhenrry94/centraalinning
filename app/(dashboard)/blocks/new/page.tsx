@@ -395,10 +395,10 @@ export default function BlockCreatePage() {
     setShowCostDialog(false);
     notifyInfo("Betaling bevestigd. Blokkade wordt geregistreerd...");
 
-    // espera 3 segundos antes de redirigir a Diensten para que el usuario
+    // espera 3 segundos antes de redirigir a Mijn dossiers para que el usuario
     // pueda ver la notificación.
     setTimeout(() => {
-      router.push("/workstation");
+      router.push("/dossiers");
     }, 3000);
   };
 

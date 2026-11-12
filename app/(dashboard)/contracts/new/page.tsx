@@ -496,7 +496,7 @@ const OvereenkomstenRegistrerenPage = () => {
 
     // wait a few seconds before redirecting to ensure the user sees the notification
     setTimeout(() => {
-      router.push("/workstation");
+      router.push("/dossiers");
     }, 3000);
   };
 

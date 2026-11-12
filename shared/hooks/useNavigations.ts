@@ -17,8 +17,8 @@ const useClientRouter = () => {
     router.push(`${protocol}://${slug}.${rootDomain}/dashboard`);
   };
 
-  const redirectToWorkstation = (slug: string) => {
-    router.push(`${protocol}://${slug}.${rootDomain}/workstation`);
+  const redirectToDossiers = (slug: string) => {
+    router.push(`${protocol}://${slug}.${rootDomain}/dossiers`);
   };
 
   const redirectToLoginCompany = () => {
@@ -70,7 +70,7 @@ const useClientRouter = () => {
     redirectToSignUp,
     redirectToDashboardByRole,
     redirectToDashboard,
-    redirectToWorkstation,
+    redirectToDossiers,
   };
 };
 

@@ -232,7 +232,7 @@ export const FarRegistrationWizard: React.FC = () => {
   // acá alcanza con avisar y redirigir a servicios, sin pantalla intermedia.
   const handlePaymentConfirmed = async () => {
     notifySuccess("FAR geregistreerd. De betaling is bevestigd.");
-    router.push("/workstation");
+    router.push("/dossiers");
   };
 
   const handlePaymentFailed = async () => {

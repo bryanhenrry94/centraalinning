@@ -789,7 +789,7 @@ export default function DirectGopCreatePage() {
             <Button
               type="button"
               color="inherit"
-              onClick={() => router.push("/workstation")}
+              onClick={() => router.push("/dossiers")}
               sx={{ textTransform: "none" }}
             >
               Annuleren

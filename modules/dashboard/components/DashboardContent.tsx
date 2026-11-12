@@ -44,8 +44,8 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
             endDate={endDate}
             onStartDateChange={(date) => setStartDate(date)}
             onEndDateChange={(date) => setEndDate(date)}
-            onCreate={() => router.push("/workstation")}
-            createLabel="Diensten"
+            onCreate={() => router.push("/dossiers")}
+            createLabel="Mijn dossiers"
           />
         }
       />

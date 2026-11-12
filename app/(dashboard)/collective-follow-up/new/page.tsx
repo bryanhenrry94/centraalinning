@@ -733,7 +733,7 @@ export default function DirectCopCreatePage() {
             <Button
               type="button"
               color="inherit"
-              onClick={() => router.push("/workstation")}
+              onClick={() => router.push("/dossiers")}
               sx={{ textTransform: "none" }}
             >
               Annuleren
