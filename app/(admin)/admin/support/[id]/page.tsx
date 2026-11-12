@@ -35,7 +35,7 @@ const AdminSupportDetailPage: React.FC = () => {
   if (!message) return null;
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4, mb: 4, px: { xs: 2, sm: 3, md: 4 } }}>
+    <Container maxWidth="md" sx={{ mt: 2, mb: 2, px: { xs: 2, sm: 3, md: 4 } }}>
       <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>
         Feedback &amp; Ondersteuning — CFSB
       </Typography>

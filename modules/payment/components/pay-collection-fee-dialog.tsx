@@ -90,21 +90,21 @@ export const PayCollectionFeeDialog: React.FC<PayCollectionFeeDialogProps> = ({
         sx={{
           bgcolor: "secondary.main",
           color: "white",
-          px: 3,
-          py: 2,
+          px: 1.5,
+          py: 0.75,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
         }}
       >
-        <Typography variant="h6" component="h3" sx={{ fontWeight: 700 }}>
+        <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700 }}>
           CFSB-kosten
         </Typography>
         <IconButton onClick={onClose} sx={{ color: "white" }}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
-      <DialogContent sx={{ pt: 4 }}>
+      <DialogContent sx={{ pt: 2 }}>
         {loading ? (
           <Box display="flex" justifyContent="center" py={3}>
             <CircularProgress size={28} />
@@ -123,15 +123,15 @@ export const PayCollectionFeeDialog: React.FC<PayCollectionFeeDialogProps> = ({
               sx={{
                 bgcolor: "secondary.light",
                 borderRadius: "50%",
-                width: 80,
-                height: 80,
+                width: 64,
+                height: 64,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
               <RequestQuoteOutlinedIcon
-                sx={{ fontSize: 36, color: "secondary.main" }}
+                sx={{ fontSize: 28, color: "secondary.main" }}
               />
             </Box>
 
@@ -139,7 +139,7 @@ export const PayCollectionFeeDialog: React.FC<PayCollectionFeeDialogProps> = ({
               Te betalen CFSB-kosten
             </Typography>
 
-            <Typography variant="h4" fontWeight={700} sx={{ color: "#F97316" }}>
+            <Typography variant="h5" fontWeight={700} sx={{ color: "#F97316" }}>
               {formatCurrency(total)}
             </Typography>
 

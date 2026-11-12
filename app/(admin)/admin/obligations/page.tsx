@@ -104,7 +104,7 @@ export default function AdminObligationsPage() {
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       <AppBreadcrumbs
         items={[
@@ -112,8 +112,8 @@ export default function AdminObligationsPage() {
           { label: "Financiële verplichtingen" },
         ]}
       />
-      <Stack spacing={3}>
-        <Typography variant="h4" fontWeight={700}>
+      <Stack spacing={1.5}>
+        <Typography variant="h5" fontWeight={700}>
           Financiële verplichtingen
         </Typography>
         <Typography variant="body2" color="text.secondary">
@@ -125,6 +125,7 @@ export default function AdminObligationsPage() {
           getRowKey={(r) => r.id}
           getRowHref={(r) => `/admin/case-files/${r.debtClaimId}`}
           emptyMessage="Nog geen verplichtingen."
+          dense
         />
       </Stack>
     </Container>

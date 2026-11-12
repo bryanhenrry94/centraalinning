@@ -37,7 +37,7 @@ export default function StatCard({
       sx={{
         border: `1px solid ${theme.palette.divider}`,
         height: "100%",
-        padding: 2,
+        padding: 1.5,
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
@@ -52,14 +52,14 @@ export default function StatCard({
         }),
       }}
     >
-      <Stack direction="row" spacing={2} alignItems="flex-start">
+      <Stack direction="row" spacing={1.5} alignItems="flex-start">
         <Avatar
           sx={{
-            width: 56,
-            height: 56,
+            width: 44,
+            height: 44,
             bgcolor: alpha(cardColor, 0.15),
             color: cardColor,
-            fontSize: "1.5rem",
+            fontSize: "1.25rem",
             flexShrink: 0,
           }}
         >

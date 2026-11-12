@@ -107,9 +107,9 @@ export default function InterestRatesPage() {
   };
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
+    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1, sm: 2 } }}>
       <Stack spacing={1} sx={{ mb: 3 }}>
-        <Typography variant="h4" fontWeight={700}>
+        <Typography variant="h5" fontWeight={700}>
           Rentetarieven
         </Typography>
         <Typography variant="body2" color="text.secondary">
@@ -119,7 +119,7 @@ export default function InterestRatesPage() {
         </Typography>
       </Stack>
 
-      <Stack spacing={3}>
+      <Stack spacing={1.5}>
         {interestTypes.map((type) => {
           const sortedDetails = [...type.details].sort((a, b) => a.date.localeCompare(b.date));
           const columns: ListColumn<DetailRow>[] = [
@@ -205,6 +205,7 @@ export default function InterestRatesPage() {
                   rows={sortedDetails}
                   getRowKey={(row) => row.id}
                   emptyMessage="Nog geen tarieven geregistreerd."
+                  dense
                 />
 
                 <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }}>

@@ -83,7 +83,7 @@ export default function AccountsPage() {
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       <ActionToolbar
         title="Raadplegen"
@@ -92,10 +92,10 @@ export default function AccountsPage() {
           { title: "Vonnis", href: "/dashboard/verdicts" },
         ]}
       />
-      <Box sx={{ mt: 2 }}>
+      <Box sx={{ mt: 1 }}>
         {/* Header */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" fontWeight="bold" gutterBottom>
+        <Box sx={{ mb: 1.5 }}>
+          <Typography variant="h5" fontWeight="bold" gutterBottom>
             Beheer van Vorderingen
           </Typography>
           <Typography variant="body1" color="text.secondary">
@@ -156,7 +156,14 @@ export default function AccountsPage() {
               { key: "due_date", label: "Vervaldatum", render: (row) => row.due_date, hideOnMobile: true },
               { key: "status", label: "Status", render: (row) => <StatusChip status={row.status} /> },
             ];
-            return <ResponsiveListTable columns={columns} rows={sampleData} getRowKey={(row) => row.id} />;
+            return (
+              <ResponsiveListTable
+                columns={columns}
+                rows={sampleData}
+                getRowKey={(row) => row.id}
+                dense
+              />
+            );
           })()}
         </Paper>
       </Box>

@@ -49,7 +49,7 @@ export function TenantDetailsDrawer({ open, tenantId, onClose }: TenantDetailsDr
   return (
     <Drawer anchor="right" open={open} onClose={onClose}>
       <Box sx={{ width: { xs: "100vw", sm: 420 }, display: "flex", flexDirection: "column", height: "100%" }}>
-        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ p: 3, pb: 1 }}>
+        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ p: 2, pb: 1 }}>
           <Box>
             <Typography variant="h5" fontWeight={700}>
               Deelnemer details
@@ -65,7 +65,7 @@ export function TenantDetailsDrawer({ open, tenantId, onClose }: TenantDetailsDr
 
         <Divider />
 
-        <Box sx={{ flex: 1, overflowY: "auto", p: 3 }}>
+        <Box sx={{ flex: 1, overflowY: "auto", p: 2 }}>
           {loading || !tenant ? (
             <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
               <CircularProgress size={28} />

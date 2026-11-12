@@ -182,7 +182,7 @@ const BlokCheckPage = () => {
       maxWidth="md"
       disableGutters
       sx={{
-        py: { xs: 3, sm: 4 },
+        py: { xs: 1, sm: 2 },
         px: { xs: 1, sm: 3 },
       }}
     >
@@ -192,11 +192,11 @@ const BlokCheckPage = () => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: { xs: 2, sm: 4 },
+          mb: { xs: 1.5, sm: 2 },
         }}
       >
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>
             Blok-Check uitvoeren
           </Typography>
           <Typography variant="body2" color="textSecondary">

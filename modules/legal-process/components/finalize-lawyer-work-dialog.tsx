@@ -260,7 +260,7 @@ export const FinalizeLawyerWorkDialog: React.FC<
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent sx={{ pt: 2.5 }}>
+      <DialogContent sx={{ pt: 2 }}>
         <Stack spacing={2}>
           <Alert severity="info" sx={{ textAlign: "justify" }}>
             CFSB berekent automatisch 5% plus de toepasselijke belasting over

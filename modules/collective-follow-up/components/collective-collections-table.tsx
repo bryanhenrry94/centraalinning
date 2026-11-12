@@ -55,6 +55,7 @@ export const CollectiveCollectionsTable: React.FC<CollectiveCollectionsTableProp
       getRowKey={(c) => c.id}
       getRowHref={(c) => `/collective-follow-up/${c.id}`}
       emptyMessage="Geen dossiers gevonden."
+      dense
     />
   );
 };

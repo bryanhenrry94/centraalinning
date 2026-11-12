@@ -79,7 +79,7 @@ export default function AdminGopRegisterPage() {
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       <AppBreadcrumbs
         items={[
@@ -87,8 +87,8 @@ export default function AdminGopRegisterPage() {
           { label: "GOP-register" },
         ]}
       />
-      <Stack spacing={3}>
-        <Typography variant="h4" fontWeight={700}>
+      <Stack spacing={1.5}>
+        <Typography variant="h5" fontWeight={700}>
           GOP-register
         </Typography>
         <ResponsiveListTable
@@ -97,6 +97,7 @@ export default function AdminGopRegisterPage() {
           getRowKey={(r) => r.id}
           getRowHref={(r) => `/admin/case-files/${r.debtClaimId}`}
           emptyMessage="Nog geen GOP-dossiers."
+          dense
         />
       </Stack>
     </Container>

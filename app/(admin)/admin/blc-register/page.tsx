@@ -70,7 +70,7 @@ export default function AdminBlcRegisterPage() {
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       <AppBreadcrumbs
         items={[
@@ -78,8 +78,8 @@ export default function AdminBlcRegisterPage() {
           { label: "BLC-register" },
         ]}
       />
-      <Stack spacing={3}>
-        <Typography variant="h4" fontWeight={700}>
+      <Stack spacing={1.5}>
+        <Typography variant="h5" fontWeight={700}>
           BLC-register
         </Typography>
         <ResponsiveListTable
@@ -87,6 +87,7 @@ export default function AdminBlcRegisterPage() {
           rows={rows}
           getRowKey={(r) => r.id}
           emptyMessage="Nog geen BLC-controles."
+          dense
         />
       </Stack>
     </Container>

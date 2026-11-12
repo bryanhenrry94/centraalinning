@@ -23,29 +23,32 @@ export const ModuleOverview = ({ modules }: ModuleOverviewProps) => {
       sx={{
         border: `1px solid ${theme.palette.divider}`,
         height: "100%",
-        padding: 2,
+        maxHeight: 268,
+        padding: 1.5,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
         bgcolor: "white",
+        overflow: "hidden",
       }}
     >
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="subtitle1" fontWeight={700} gutterBottom>
         Module overzicht
       </Typography>
-      {modules.map((module) => (
-        <Box key={module.name} sx={{ mb: 2 }}>
-          <Stack direction="row" justifyContent="space-between">
-            <Typography>{module.name}</Typography>
-            <Typography>{module.value}</Typography>
-          </Stack>
-          <LinearProgress
-            variant="determinate"
-            value={Math.min(module.value, 100)}
-            color="primary"
-          />
-        </Box>
-      ))}
+      <Box sx={{ overflowY: "auto" }}>
+        {modules.map((module) => (
+          <Box key={module.name} sx={{ mb: 1 }}>
+            <Stack direction="row" justifyContent="space-between">
+              <Typography variant="body2">{module.name}</Typography>
+              <Typography variant="body2">{module.value}</Typography>
+            </Stack>
+            <LinearProgress
+              variant="determinate"
+              value={Math.min(module.value, 100)}
+              color="primary"
+            />
+          </Box>
+        ))}
+      </Box>
     </Paper>
   );
 };

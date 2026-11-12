@@ -218,7 +218,7 @@ const VerdictsPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ m: { xs: 1.5, sm: 4 } }}>
+    <Box sx={{ m: { xs: 1.5, sm: 2 } }}>
       {/* <ActionToolbar
         title="Vonnis"
         navigation={[{ title: "Dashboard", href: "/" }]}
@@ -233,11 +233,11 @@ const VerdictsPage: React.FC = () => {
           alignItems: { xs: "stretch", sm: "center" },
           gap: 2,
         }}
-        mb={2}
+        mb={1.5}
       >
         <Box>
           <Typography
-            variant="h4"
+            variant="h5"
             component="h2"
             gutterBottom
             sx={{ textAlign: "left", fontWeight: 700 }}
@@ -375,6 +375,7 @@ const VerdictsPage: React.FC = () => {
                 rows={pagedVerdicts}
                 getRowKey={(v) => v.id}
                 emptyMessage="Nog geen vonnissen geregistreerd."
+                dense
               />
               <TablePagination
                 component="div"

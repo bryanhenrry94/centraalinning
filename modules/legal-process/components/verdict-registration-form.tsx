@@ -409,7 +409,7 @@ export const VerdictRegistrationForm: React.FC<
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       <FormProvider {...methods}>
         <form
@@ -429,10 +429,10 @@ export const VerdictRegistrationForm: React.FC<
             justifyContent="space-between"
             alignItems={{ sm: "center" }}
             spacing={1}
-            sx={{ mb: 2 }}
+            sx={{ mb: 1.5 }}
           >
             <Box>
-              <Typography variant="h4" fontWeight={700}>
+              <Typography variant="h5" fontWeight={700}>
                 {onScreen1 ? "Vonnis registreren" : "Executie en kosten"}
               </Typography>
               {dossierReference && (
@@ -450,7 +450,14 @@ export const VerdictRegistrationForm: React.FC<
             )}
           </Stack>
 
-          <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 3 }}>
+          <Stepper
+            activeStep={activeStep}
+            sx={{
+              mb: 1.5,
+              "& .MuiStepIcon-root": { fontSize: "1.5rem" },
+              "& .MuiStepLabel-label": { fontSize: "0.8125rem" },
+            }}
+          >
             {STEP_LABELS.map((label) => (
               <Step key={label}>
                 <StepLabel>{label}</StepLabel>
@@ -479,12 +486,12 @@ export const VerdictRegistrationForm: React.FC<
                 sx={{
                   bgcolor: "secondary.main",
                   color: "white",
-                  px: 2,
-                  py: 1.5,
+                  px: 1.5,
+                  py: 0.75,
                 }}
               >
                 <Typography
-                  variant="h6"
+                  variant="subtitle1"
                   component="h3"
                   sx={{ fontWeight: 600 }}
                 >
@@ -701,12 +708,12 @@ export const VerdictRegistrationForm: React.FC<
                   sx={{
                     bgcolor: "secondary.main",
                     color: "white",
-                    px: 2,
-                    py: 1.5,
+                    px: 1.5,
+                    py: 0.75,
                   }}
                 >
                   <Typography
-                    variant="h6"
+                    variant="subtitle1"
                     component="h3"
                     sx={{ fontWeight: 600 }}
                   >
@@ -755,12 +762,12 @@ export const VerdictRegistrationForm: React.FC<
                     sx={{
                       bgcolor: "secondary.main",
                       color: "white",
-                      px: 2,
-                      py: 1.5,
+                      px: 1.5,
+                      py: 0.75,
                     }}
                   >
                     <Typography
-                      variant="h6"
+                      variant="subtitle1"
                       component="h3"
                       sx={{ fontWeight: 600 }}
                     >

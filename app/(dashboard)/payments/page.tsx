@@ -149,18 +149,18 @@ const PaymentsPage = () => {
     <Container
       maxWidth="xl"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       <Stack
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        mb={3}
+        mb={1.5}
         gap={6}
         flexWrap="wrap"
       >
         <Box>
-          <Typography variant="h4" fontWeight={700}>
+          <Typography variant="h5" fontWeight={700}>
             Betalen
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -245,6 +245,7 @@ const PaymentsPage = () => {
             rows={outstandingDebts}
             getRowKey={(debt) => debt.id}
             emptyMessage="Geen openstaande bedragen."
+            dense
           />
         );
       })()}

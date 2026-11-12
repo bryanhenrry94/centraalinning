@@ -61,8 +61,8 @@ export const AgreementDialog: React.FC<AgreementDialogProps> = ({
           sx={{
             bgcolor: "secondary.main",
             color: "white",
-            px: 2,
-            py: 1.5,
+            px: 1.5,
+            py: 0.75,
             borderTopLeftRadius: 8,
             borderTopRightRadius: 8,
             borderBottom: "1px solid #e0e0e0",
@@ -71,7 +71,7 @@ export const AgreementDialog: React.FC<AgreementDialogProps> = ({
             justifyContent: "space-between",
           }}
         >
-          <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
+          <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 600 }}>
             Betalingsregeling geaccepteerd
           </Typography>
           <IconButton sx={{ color: "white" }}>

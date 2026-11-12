@@ -76,11 +76,10 @@ const StaffCollectiveFollowUpView = () => {
   const buckets = [active, awaitingResponse, agreements, paid, transferred];
 
   return (
-    <Box sx={{ m: { xs: 1.5, sm: 4 } }}>
+    <Box sx={{ m: { xs: 1.5, sm: 2 } }}>
       <Box
         sx={{
           width: "100%",
-          mt: 2,
           display: "flex",
           flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
@@ -88,7 +87,7 @@ const StaffCollectiveFollowUpView = () => {
           gap: 1,
         }}
       >
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
+        <Typography variant="h5" gutterBottom sx={{ fontWeight: 700 }}>
           COLLECTIEVE OPVOLGING
         </Typography>
         <Tabs

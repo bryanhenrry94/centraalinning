@@ -60,13 +60,13 @@ export default function AdminPlansPage() {
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       <AppBreadcrumbs
         items={[{ label: "CFSB Admin", href: "/admin" }, { label: "Plannen" }]}
       />
-      <Stack spacing={3}>
-        <Typography variant="h4" fontWeight={700}>
+      <Stack spacing={1.5}>
+        <Typography variant="h5" fontWeight={700}>
           Plannen
         </Typography>
         <ResponsiveListTable
@@ -75,6 +75,7 @@ export default function AdminPlansPage() {
           getRowKey={(r) => r.id}
           getRowHref={(r) => `/admin/plans/${r.id}`}
           emptyMessage="Nog geen plannen geregistreerd."
+          dense
         />
       </Stack>
     </Container>

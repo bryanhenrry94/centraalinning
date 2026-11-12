@@ -46,7 +46,7 @@ export default async function ContractDetailPage({
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       <AppBreadcrumbs
         items={[
@@ -60,7 +60,7 @@ export default async function ContractDetailPage({
         ]}
       />
 
-      <Stack spacing={3}>
+      <Stack spacing={1.5}>
         {/* Header */}
         <Box>
           <Stack
@@ -71,7 +71,7 @@ export default async function ContractDetailPage({
             gap={1}
           >
             <Box>
-              <Typography variant="h4" fontWeight={700}>
+              <Typography variant="h5" fontWeight={700}>
                 {contract.reference_number}
               </Typography>
             </Box>

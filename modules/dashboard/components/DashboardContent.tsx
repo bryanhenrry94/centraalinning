@@ -34,7 +34,7 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
   }, []);
 
   return (
-    <Box sx={{ pt: { xs: 1.5, sm: 4 } }}>
+    <Box sx={{ pt: { xs: 1, sm: 2 } }}>
       <DashboardHeader
         title={`Welkom, ${session?.user?.fullname ?? ""}`}
         subtitle="Overzicht van uw overeenkomsten en activiteiten."
@@ -50,11 +50,11 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
         }
       />
 
-      <Box sx={{ mt: 6 }}>
+      <Box sx={{ mt: 2 }}>
         <DashboardStats stats={dashboard.stats} pendingActions={dashboard.pendingActions} />
       </Box>
 
-      <Grid container spacing={3} mt={3}>
+      <Grid container spacing={2} mt={0.5}>
         <Grid size={{ xs: 12, md: 6 }}>
           <StatusChart data={dashboard.status} />
         </Grid>
@@ -65,7 +65,7 @@ export default function DashboardContent({ dashboard }: DashboardContentProps) {
       </Grid>
 
       {mounted && isDesktop && (
-        <Box mt={3}>
+        <Box mt={2}>
           <LatestDocumentsTable rows={dashboard.documents} />
         </Box>
       )}

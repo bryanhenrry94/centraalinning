@@ -102,7 +102,7 @@ export const AcceptTransferDialog: React.FC<AcceptTransferDialogProps> = ({
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent sx={{ pt: 3 }}>
+      <DialogContent sx={{ pt: 2 }}>
         <Stack
           spacing={2}
           alignItems="center"

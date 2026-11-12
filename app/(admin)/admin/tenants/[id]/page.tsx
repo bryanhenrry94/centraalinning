@@ -34,7 +34,7 @@ export default function AdminTenantDetailPage() {
   }
 
   return (
-    <Container maxWidth="md" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
+    <Container maxWidth="md" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}>
       <AppBreadcrumbs
         items={[
           { label: "CFSB Admin", href: "/admin" },
@@ -42,8 +42,8 @@ export default function AdminTenantDetailPage() {
           { label: tenant.name },
         ]}
       />
-      <Stack spacing={3}>
-        <Typography variant="h4" fontWeight={700}>
+      <Stack spacing={1.5}>
+        <Typography variant="h5" fontWeight={700}>
           {tenant.name}
         </Typography>
         <Card>

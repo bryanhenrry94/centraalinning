@@ -86,7 +86,7 @@ export default function AdminAdministrativeFeesPage() {
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       <AppBreadcrumbs
         items={[
@@ -94,8 +94,8 @@ export default function AdminAdministrativeFeesPage() {
           { label: "CFSB-kosten" },
         ]}
       />
-      <Stack spacing={3}>
-        <Typography variant="h4" fontWeight={700}>
+      <Stack spacing={1.5}>
+        <Typography variant="h5" fontWeight={700}>
           CFSB-kosten
         </Typography>
         <Typography variant="body2" color="text.secondary">
@@ -107,6 +107,7 @@ export default function AdminAdministrativeFeesPage() {
           getRowKey={(r) => r.id}
           getRowHref={(r) => `/admin/case-files/${r.debtClaimId}`}
           emptyMessage="Nog geen kosten geregistreerd."
+          dense
         />
       </Stack>
     </Container>

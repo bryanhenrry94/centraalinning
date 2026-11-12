@@ -70,7 +70,7 @@ export const RejectTransferDialog: React.FC<RejectTransferDialogProps> = ({
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent sx={{ mt: 2 }}>
+      <DialogContent>
         <TextField
           label="Reden van afwijzing"
           required

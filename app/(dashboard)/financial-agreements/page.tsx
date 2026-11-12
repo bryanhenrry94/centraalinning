@@ -176,7 +176,7 @@ const FinancialAgreementsPage: React.FC = () => {
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       {/* <AppBreadcrumbs
         items={[{ label: "FAR — Financiële Afspraken Registreren" }]}
@@ -186,12 +186,12 @@ const FinancialAgreementsPage: React.FC = () => {
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        mb={3}
+        mb={1.5}
         gap={6}
         flexWrap="wrap"
       >
         <Box>
-          <Typography variant="h4" fontWeight={700}>
+          <Typography variant="h5" fontWeight={700}>
             FAR — Financiële Afspraken Registreren
           </Typography>
         </Box>
@@ -277,6 +277,7 @@ const FinancialAgreementsPage: React.FC = () => {
             getRowKey={(item) => item.id}
             getRowHref={(item) => `/financial-agreements/${item.id}`}
             emptyMessage="Nog geen financiële afspraken geregistreerd."
+            dense
           />
         );
       })()}

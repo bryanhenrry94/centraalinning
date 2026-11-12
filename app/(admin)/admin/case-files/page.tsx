@@ -66,16 +66,16 @@ export default function AdminCaseFilesPage() {
   ];
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
+    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}>
       <AppBreadcrumbs items={[{ label: "CFSB Admin", href: "/admin" }, { label: "Alle dossiers" }]} />
-      <Stack spacing={3}>
+      <Stack spacing={1.5}>
         <Stack
           direction={{ xs: "column", sm: "row" }}
           alignItems={{ xs: "flex-start", sm: "center" }}
           justifyContent="space-between"
           spacing={2}
         >
-          <Typography variant="h4" fontWeight={700}>
+          <Typography variant="h5" fontWeight={700}>
             Alle dossiers
           </Typography>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ width: { xs: "100%", sm: "auto" } }}>
@@ -117,6 +117,7 @@ export default function AdminCaseFilesPage() {
           getRowKey={(r) => r.id}
           getRowHref={(r) => `/admin/case-files/${r.id}`}
           emptyMessage="Geen dossiers gevonden."
+          dense
         />
       </Stack>
     </Container>

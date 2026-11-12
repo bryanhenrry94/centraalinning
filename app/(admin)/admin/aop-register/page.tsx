@@ -75,7 +75,7 @@ export default function AdminAopRegisterPage() {
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       <AppBreadcrumbs
         items={[
@@ -83,8 +83,8 @@ export default function AdminAopRegisterPage() {
           { label: "AOP-register" },
         ]}
       />
-      <Stack spacing={3}>
-        <Typography variant="h4" fontWeight={700}>
+      <Stack spacing={1.5}>
+        <Typography variant="h5" fontWeight={700}>
           AOP-register
         </Typography>
         <ResponsiveListTable
@@ -93,6 +93,7 @@ export default function AdminAopRegisterPage() {
           getRowKey={(r) => r.id}
           getRowHref={(r) => `/admin/case-files/${r.debtClaimId}`}
           emptyMessage="Nog geen AOP-dossiers."
+          dense
         />
       </Stack>
     </Container>

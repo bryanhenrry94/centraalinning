@@ -97,11 +97,11 @@ export const AdminDashboard = () => {
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
-      <Stack spacing={3}>
+      <Stack spacing={1.5}>
         <Box>
-          <Typography variant="h4" fontWeight={700}>
+          <Typography variant="h5" fontWeight={700}>
             Welkom, {session?.user?.fullname}
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -109,7 +109,7 @@ export const AdminDashboard = () => {
           </Typography>
         </Box>
 
-        <Grid container spacing={2.5}>
+        <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <StatCard
               title="Deelnemers"

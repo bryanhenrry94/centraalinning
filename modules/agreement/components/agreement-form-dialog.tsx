@@ -32,13 +32,13 @@ export const AgreementFormDialog: React.FC<AgreementFormDialogProps> = ({
         sx={{
           bgcolor: "secondary.main",
           color: "white",
-          px: 2,
-          py: 1.5,
+          px: 1.5,
+          py: 0.75,
           display: "flex",
           justifyContent: "space-between",
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
           {title}
         </Typography>
 

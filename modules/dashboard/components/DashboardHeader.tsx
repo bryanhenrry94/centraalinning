@@ -17,10 +17,10 @@ export default function DashboardHeader({
       justifyContent="space-between"
       alignItems="center"
       gap={1}
-      mb={3}
+      mb={1.5}
     >
       <Box>
-        <Typography variant="h4" fontWeight={700}>
+        <Typography variant="h5" fontWeight={700}>
           {title}
         </Typography>
 

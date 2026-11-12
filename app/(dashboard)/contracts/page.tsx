@@ -314,7 +314,7 @@ export default function ContractsPage() {
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       {/* Header */}
       <Box
@@ -324,11 +324,11 @@ export default function ContractsPage() {
           justifyContent: "space-between",
           alignItems: { xs: "stretch", sm: "center" },
           gap: 2,
-          mb: { xs: 2, sm: 4 },
+          mb: { xs: 1.5, sm: 2 },
         }}
       >
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>
             Overeenkomst registreren
           </Typography>
           <Typography
@@ -353,14 +353,14 @@ export default function ContractsPage() {
         </Button>
       </Box>
 
-      <Card sx={{ p: { xs: 1.5, sm: 3 } }}>
+      <Card sx={{ p: { xs: 1.5, sm: 2 } }}>
         <Stack
           direction={{
             xs: "column",
             md: "row",
           }}
           spacing={2}
-          mb={3}
+          mb={1.5}
         >
           <TextField
             fullWidth
@@ -457,6 +457,7 @@ export default function ContractsPage() {
               rows={contracts}
               getRowKey={(c) => c.id}
               emptyMessage="Nog geen overeenkomsten geregistreerd."
+              dense
             />
           );
         })()}

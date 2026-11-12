@@ -23,13 +23,13 @@ const ParametersPageContent = () => {
   const router = useRouter();
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4, px: { xs: 2, sm: 3, md: 4 } }}>
+    <Container maxWidth="xl" sx={{ mt: 2, mb: 2, px: { xs: 2, sm: 3, md: 4 } }}>
       <Stack
         direction={{ xs: "column", sm: "row" }}
         justifyContent="space-between"
         alignItems={{ xs: "flex-start", sm: "center" }}
         spacing={2}
-        sx={{ mb: 3 }}
+        sx={{ mb: 1.5 }}
       >
         <Typography variant="h5" sx={{ fontWeight: 600 }}>
           Parameters

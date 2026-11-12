@@ -49,10 +49,10 @@ export default function CollectionsPage() {
   return (
     <Box
       sx={{
-        m: { xs: 1.5, sm: 4 },
+        m: { xs: 1.5, sm: 2 },
         display: "flex",
         flexDirection: "column",
-        gap: 2,
+        gap: 1.5,
       }}
     >
       <CollectionHeader onRefresh={handleRefresh} />

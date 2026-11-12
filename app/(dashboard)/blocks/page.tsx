@@ -89,7 +89,7 @@ export default function BlocksPage() {
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       {/* Header */}
       <Box
@@ -99,11 +99,11 @@ export default function BlocksPage() {
           justifyContent: "space-between",
           alignItems: { xs: "stretch", sm: "center" },
           gap: 2,
-          mb: { xs: 2, sm: 4 },
+          mb: { xs: 1.5, sm: 2 },
         }}
       >
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>
             Blokkades
           </Typography>
           <Typography variant="body2" color="textSecondary">
@@ -123,14 +123,14 @@ export default function BlocksPage() {
         </Button>
       </Box>
 
-      <Card sx={{ p: { xs: 1.5, sm: 3 } }}>
+      <Card sx={{ p: { xs: 1.5, sm: 2 } }}>
         <Stack
           direction={{
             xs: "column",
             md: "row",
           }}
           spacing={2}
-          mb={3}
+          mb={1.5}
         >
           <TextField
             fullWidth
@@ -181,6 +181,7 @@ export default function BlocksPage() {
               getRowKey={(b) => b.id}
               getRowHref={(b) => `/blocks/${b.id}`}
               emptyMessage="Geen blokkades gevonden."
+              dense
             />
           );
         })()}

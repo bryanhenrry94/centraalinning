@@ -233,7 +233,7 @@ const LegalProcessDetailPage: React.FC = () => {
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       <AppBreadcrumbs
         items={[
@@ -242,7 +242,7 @@ const LegalProcessDetailPage: React.FC = () => {
         ]}
       />
 
-      <Stack spacing={3}>
+      <Stack spacing={1.5}>
         <Stack
           direction="row"
           justifyContent="space-between"
@@ -250,7 +250,7 @@ const LegalProcessDetailPage: React.FC = () => {
           flexWrap="wrap"
           gap={1}
         >
-          <Typography variant="h4" fontWeight={700}>
+          <Typography variant="h5" fontWeight={700}>
             {legalProcess.referenceNumber || legalProcess.debtClaim.reference}
           </Typography>
           <Chip
@@ -388,6 +388,7 @@ const LegalProcessDetailPage: React.FC = () => {
                     columns={columns}
                     rows={legalProcess.verdicts}
                     getRowKey={(v) => v.id}
+                    dense
                   />
                 );
               })()}
@@ -454,6 +455,7 @@ const LegalProcessDetailPage: React.FC = () => {
                       setSelectedAgreement(a);
                       setDialog("decide-agreement");
                     }}
+                    dense
                   />
                 );
               })()}

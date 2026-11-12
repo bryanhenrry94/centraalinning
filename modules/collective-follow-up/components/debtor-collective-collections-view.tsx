@@ -206,6 +206,7 @@ export const DebtorCollectiveCollectionsView = () => {
             getRowKey={(row) => row.id}
             getRowHref={(row) => `/collective-follow-up/${row.id}`}
             emptyMessage="Geen dossiers gevonden."
+            dense
           />
         );
       })()}

@@ -79,7 +79,7 @@ export const AdminLayout = ({ children }: { children?: ReactNode }) => {
         component="main"
         sx={{
           flexGrow: 1,
-          padding: { xs: 1, sm: 3 },
+          padding: { xs: 1, sm: 2 },
           backgroundColor: "grey.50",
           overflowY: "auto",
           height: "100%",
@@ -91,15 +91,17 @@ export const AdminLayout = ({ children }: { children?: ReactNode }) => {
       <Box
         component="footer"
         sx={{
-          padding: 2,
+          px: 2,
+          py: 0.5,
           textAlign: "center",
           backgroundColor: "secondary.main",
           display: "flex",
           flexDirection: "row",
           justifyContent: "center",
+          flexShrink: 0,
         }}
       >
-        <Typography variant="body2" color="white">
+        <Typography variant="caption" color="white">
           {isPureDebtor && `Uw persoonlijk CFSB-nummer`}
           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{footerCode ?? user.code}
         </Typography>

@@ -18,7 +18,7 @@ const InvoicePageEdit: React.FC = () => {
   }, [id]);
 
   return (
-    <Box sx={{ m: { xs: 1.5, sm: 4 } }}>
+    <Box sx={{ m: { xs: 1.5, sm: 2 } }}>
       {/* <ActionToolbar
         title="Bewerk Factuur"
         navigation={[

@@ -40,10 +40,10 @@ export default function AdminLawyersPage() {
   ];
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
+    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}>
       <AppBreadcrumbs items={[{ label: "CFSB Admin", href: "/admin" }, { label: "Advocaten" }]} />
-      <Stack spacing={3}>
-        <Typography variant="h4" fontWeight={700}>
+      <Stack spacing={1.5}>
+        <Typography variant="h5" fontWeight={700}>
           Advocaten
         </Typography>
         <ResponsiveListTable
@@ -52,6 +52,7 @@ export default function AdminLawyersPage() {
           getRowKey={(r) => r.id}
           getRowHref={(r) => `/admin/lawyers/${r.id}`}
           emptyMessage="Nog geen advocaten geregistreerd."
+          dense
         />
       </Stack>
     </Container>

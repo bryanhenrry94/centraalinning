@@ -41,7 +41,7 @@ export default function AdminLawyerDetailPage() {
   const statusInfo = getProfessionalAdminStatusInfo(lawyer.status);
 
   return (
-    <Container maxWidth="md" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
+    <Container maxWidth="md" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}>
       <AppBreadcrumbs
         items={[
           { label: "CFSB Admin", href: "/admin" },
@@ -49,9 +49,9 @@ export default function AdminLawyerDetailPage() {
           { label: name },
         ]}
       />
-      <Stack spacing={3}>
+      <Stack spacing={1.5}>
         <Stack direction="row" alignItems="center" spacing={1.5}>
-          <Typography variant="h4" fontWeight={700}>
+          <Typography variant="h5" fontWeight={700}>
             {name}
           </Typography>
           <Chip size="small" label={statusInfo.label} color={statusInfo.color} />

@@ -244,7 +244,7 @@ export const RegisterBailiffOutcomeDialog: React.FC<
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent sx={{ pt: 2.5, mt: 2 }}>
+      <DialogContent sx={{ pt: 2 }}>
         <Stack spacing={2}>
           {/* <Alert severity="info" sx={{ textAlign: "justify" }}>
             Dit formulier is enkel voor een afronding zonder vonnis. CFSB

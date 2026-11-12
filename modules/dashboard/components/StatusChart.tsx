@@ -36,14 +36,14 @@ export const StatusChart = ({
       sx={{
         border: `1px solid ${theme.palette.divider}`,
         height: "100%",
-        padding: 2,
+        padding: 1.5,
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
         bgcolor: "white",
       }}
     >
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="subtitle1" fontWeight={700} gutterBottom>
         Status verdeling
       </Typography>
 
@@ -52,7 +52,7 @@ export const StatusChart = ({
         series={series}
         type="donut"
         width="100%"
-        height="100%"
+        height={220}
       />
     </Paper>
   );

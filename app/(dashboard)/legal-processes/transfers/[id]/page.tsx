@@ -250,7 +250,7 @@ const CaseTransferDetailPage: React.FC = () => {
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       <AppBreadcrumbs
         items={[
@@ -259,7 +259,7 @@ const CaseTransferDetailPage: React.FC = () => {
         ]}
       />
 
-      <Stack spacing={3}>
+      <Stack spacing={1.5}>
         <Stack
           direction="row"
           justifyContent="space-between"
@@ -268,7 +268,7 @@ const CaseTransferDetailPage: React.FC = () => {
           gap={1}
         >
           <Box>
-            <Typography variant="h4" fontWeight={700}>
+            <Typography variant="h5" fontWeight={700}>
               {caseTransfer.debtClaim.reference}
             </Typography>
             {caseTransfer.gopNumber && (

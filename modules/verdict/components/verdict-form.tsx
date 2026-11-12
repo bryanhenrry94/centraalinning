@@ -153,15 +153,15 @@ const VerdictFormPage: React.FC<VerdictFormPageProps> = ({ id, defaultValues }) 
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)}>
           {/* Action Buttons */}
           <Box
             sx={{
-              mb: 2,
-              mt: 2,
+              mb: 1.5,
+              mt: 1,
               display: "flex",
               flexDirection: { xs: "column", sm: "row" },
               justifyContent: "space-between",

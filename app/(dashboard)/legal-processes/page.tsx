@@ -477,7 +477,7 @@ const LegalProcessesListPageContent: React.FC = () => {
       <Container
         maxWidth="lg"
         disableGutters
-        sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+        sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
       >
         <AppBreadcrumbs
           items={[
@@ -486,9 +486,9 @@ const LegalProcessesListPageContent: React.FC = () => {
           ]}
         />
 
-        <Stack spacing={3}>
+        <Stack spacing={1.5}>
           <Box>
-            <Typography variant="h4" fontWeight={700}>
+            <Typography variant="h5" fontWeight={700}>
               Mijn dossiers
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -496,11 +496,11 @@ const LegalProcessesListPageContent: React.FC = () => {
             </Typography>
           </Box>
 
-          <Card sx={{ p: { xs: 1.5, sm: 3 } }}>
+          <Card sx={{ p: { xs: 1.5, sm: 2 } }}>
             <Stack
               direction={{ xs: "column", md: "row" }}
               spacing={2}
-              mb={3}
+              mb={1.5}
               alignItems={{ md: "flex-end" }}
             >
               <Stack sx={{ flex: 2 }} spacing={0.5}>
@@ -593,6 +593,7 @@ const LegalProcessesListPageContent: React.FC = () => {
               getRowKey={(row) => `${row.kind}-${row.id}`}
               getRowHref={(row) => row.href}
               emptyMessage="Nog geen dossiers."
+              dense
             />
 
             <Box
@@ -642,13 +643,13 @@ const LegalProcessesListPageContent: React.FC = () => {
     <Container
       maxWidth="xl"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       <AppBreadcrumbs items={[{ label: "Mijn dossiers" }]} />
 
-      <Stack spacing={3}>
+      <Stack spacing={1.5}>
         <Box>
-          <Typography variant="h4" fontWeight={700}>
+          <Typography variant="h5" fontWeight={700}>
             Mijn dossiers
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -657,11 +658,11 @@ const LegalProcessesListPageContent: React.FC = () => {
           </Typography>
         </Box>
 
-        <Card sx={{ p: { xs: 1.5, sm: 3 } }}>
+        <Card sx={{ p: { xs: 1.5, sm: 2 } }}>
           <Stack
             direction={{ xs: "column", md: "row" }}
             spacing={2}
-            mb={3}
+            mb={1.5}
             alignItems={{ md: "flex-end" }}
           >
             <Stack sx={{ flex: 2 }} spacing={0.5}>
@@ -843,6 +844,7 @@ const LegalProcessesListPageContent: React.FC = () => {
                 getRowKey={(row) => `${row.kind}-${row.id}`}
                 getRowHref={(row) => row.href}
                 emptyMessage="Nog geen dossiers."
+                dense
               />
             );
           })()}

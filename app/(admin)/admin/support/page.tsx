@@ -29,8 +29,8 @@ const AdminSupportPage: React.FC = () => {
   if (loading) return <LoadingUI />;
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4, px: { xs: 2, sm: 3, md: 4 } }}>
-      <Stack sx={{ mb: 3 }}>
+    <Container maxWidth="lg" sx={{ mt: 2, mb: 2, px: { xs: 2, sm: 3, md: 4 } }}>
+      <Stack sx={{ mb: 1.5 }}>
         <Typography variant="h5" sx={{ fontWeight: 600 }}>
           Feedback &amp; Ondersteuning — CFSB
         </Typography>

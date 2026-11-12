@@ -114,7 +114,7 @@ export default function AdminUsersPage() {
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       <AppBreadcrumbs
         items={[
@@ -122,8 +122,8 @@ export default function AdminUsersPage() {
           { label: "Gebruikers & rollen" },
         ]}
       />
-      <Stack spacing={3}>
-        <Typography variant="h4" fontWeight={700}>
+      <Stack spacing={1.5}>
+        <Typography variant="h5" fontWeight={700}>
           Gebruikers & rollen
         </Typography>
         <Typography variant="body2" color="text.secondary">
@@ -134,6 +134,7 @@ export default function AdminUsersPage() {
           rows={rows}
           getRowKey={(r) => r.key}
           emptyMessage="Nog geen gebruikers."
+          dense
         />
       </Stack>
     </Container>

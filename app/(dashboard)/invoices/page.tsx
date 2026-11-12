@@ -221,7 +221,7 @@ const InvoicesPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ m: { xs: 1.5, sm: 4 } }}>
+    <Box sx={{ m: { xs: 1.5, sm: 2 } }}>
       {/* <ActionToolbar
         title="Overzicht Facturen"
         navigation={[{ title: "Dashboard", href: "/" }]}
@@ -236,11 +236,11 @@ const InvoicesPage: React.FC = () => {
           alignItems: { xs: "stretch", sm: "center" },
           gap: 2,
         }}
-        mb={2}
+        mb={1.5}
       >
         <Box>
           <Typography
-            variant="h4"
+            variant="h5"
             component="h2"
             gutterBottom
             sx={{ textAlign: "left", fontWeight: 700 }}
@@ -422,6 +422,7 @@ const InvoicesPage: React.FC = () => {
                 rows={pagedInvoices}
                 getRowKey={(i) => i.id}
                 emptyMessage="Nog geen facturen geregistreerd."
+                dense
               />
               <TablePagination
                 component="div"

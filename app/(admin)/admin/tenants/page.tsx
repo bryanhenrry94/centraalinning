@@ -152,7 +152,7 @@ export default function AdminTenantsPage() {
     <Container
       maxWidth="lg"
       disableGutters
-      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
     >
       <AppBreadcrumbs
         items={[
@@ -160,8 +160,8 @@ export default function AdminTenantsPage() {
           { label: "Deelnemers" },
         ]}
       />
-      <Stack spacing={3}>
-        <Typography variant="h4" fontWeight={700}>
+      <Stack spacing={1.5}>
+        <Typography variant="h5" fontWeight={700}>
           Deelnemers
         </Typography>
 
@@ -226,6 +226,7 @@ export default function AdminTenantsPage() {
             selectedRowKey={selectedId ?? undefined}
             emptyMessage="Nog geen deelnemers geregistreerd."
             containerSx={{ border: "none", borderRadius: 0 }}
+            dense
           />
 
           <Stack

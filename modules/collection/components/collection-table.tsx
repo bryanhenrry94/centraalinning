@@ -164,6 +164,7 @@ const CollectionTable = ({
             rows={paginatedData}
             getRowKey={(row) => row.id}
             emptyMessage="Geen vorderingen gevonden."
+            dense
           />
         );
       })()}

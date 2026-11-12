@@ -248,14 +248,14 @@ const CollectiveCollectionDetailPage: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}>
-      <Stack spacing={3}>
+    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}>
+      <Stack spacing={1.5}>
         <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1}>
           <Box>
             <Typography variant="body2" fontWeight={700} color="text.secondary" sx={{ mb: 0.5 }}>
               Collectieve Opvolging – Overzicht
             </Typography>
-            <Typography variant="h4" fontWeight={700}>
+            <Typography variant="h5" fontWeight={700}>
               {collection.debtClaim.reference || "Collectieve Opvolging"}
             </Typography>
           </Box>
