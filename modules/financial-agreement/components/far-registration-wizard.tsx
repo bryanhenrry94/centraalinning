@@ -18,7 +18,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { formatCurrency } from "@/shared/utils/formatters";
-import { notifyError, notifySuccess, notifyWarning } from "@/shared/ui/notifications";
+import {
+  notifyError,
+  notifySuccess,
+  notifyWarning,
+} from "@/shared/ui/notifications";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 import { getParameterForTenantAction } from "@/modules/settings/actions/parameter.actions";
 import { createFinancialAgreementWithDebtor } from "@/modules/financial-agreement/actions/financial-agreement.actions";
@@ -71,17 +75,20 @@ export const FarRegistrationWizard: React.FC = () => {
   const [abbRate, setAbbRate] = useState(0);
   const [registrationFee, setRegistrationFee] = useState(FAR_REGISTRATION_FEE);
 
-  const { control, trigger, watch, getValues, setValue } = useForm<FarWizardFormValues>({
-    resolver: zodResolver(FarWizardSchema),
-    mode: "onBlur",
-    defaultValues: FAR_WIZARD_DEFAULT_VALUES,
-  });
+  const { control, trigger, watch, getValues, setValue } =
+    useForm<FarWizardFormValues>({
+      resolver: zodResolver(FarWizardSchema),
+      mode: "onBlur",
+      defaultValues: FAR_WIZARD_DEFAULT_VALUES,
+    });
 
   useEffect(() => {
     getParameterForTenantAction()
       .then((parameter) => {
         setAbbRate(parameter?.abb_rate ?? 0);
-        setRegistrationFee(parameter?.far_registration_fee ?? FAR_REGISTRATION_FEE);
+        setRegistrationFee(
+          parameter?.far_registration_fee ?? FAR_REGISTRATION_FEE,
+        );
       })
       .catch(() => {
         setAbbRate(0);
@@ -240,40 +247,33 @@ export const FarRegistrationWizard: React.FC = () => {
   };
 
   return (
-    <Stack spacing={3}>
-      <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-        <Button
-          variant="contained"
-          onClick={() => router.push("/financial-agreements")}
-        >
-          FAR - Overzicht
-        </Button>
-      </Box>
-
+    <Stack spacing={2}>
       {activeStep < 4 && (
-        <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2.5 } }}>
+        <Paper variant="outlined" sx={{ p: { xs: 1, sm: 1.5 } }}>
           <Box
             sx={{
               display: "flex",
               flexDirection: { xs: "column", sm: "row" },
               alignItems: { xs: "flex-start", sm: "center" },
               justifyContent: "space-between",
-              gap: 1.5,
-              mb: 2.5,
+              gap: 1,
+              mb: 1,
             }}
           >
-            <Typography variant="h6" fontWeight={700}>
+            <Typography variant="subtitle1" fontWeight={700}>
               FAR – Financiële Afspraken Registreren
             </Typography>
           </Box>
           <Stepper
             activeStep={activeStep}
-            alternativeLabel
             sx={{
-              "& .MuiStepIcon-root": { color: "grey.300", fontSize: "2rem" },
+              "& .MuiStepIcon-root": { color: "grey.300", fontSize: "1.5rem" },
               "& .MuiStepIcon-root.Mui-active": { color: "secondary.main" },
               "& .MuiStepIcon-root.Mui-completed": { color: "secondary.main" },
-              "& .MuiStepLabel-label": { color: "text.disabled" },
+              "& .MuiStepLabel-label": {
+                color: "text.disabled",
+                fontSize: "0.8125rem",
+              },
               "& .MuiStepLabel-label.Mui-active": {
                 color: "text.primary",
                 fontWeight: 700,
