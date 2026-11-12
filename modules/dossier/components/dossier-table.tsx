@@ -107,14 +107,30 @@ export const DossierTable = ({
   );
 
   const columns: ListColumn<DossierRow>[] = [
-    { key: "date", label: "Datum", render: (r) => formatDate(r.date.toString()) },
-    { key: "reference", label: "Referentie", hideOnMobile: true, render: (r) => r.reference },
-    { key: "debtor", label: "Debiteur", render: (r) => r.debtorName },
+    {
+      key: "date",
+      label: "Datum",
+      render: (r) => formatDate(r.date.toString()),
+    },
+    {
+      key: "reference",
+      label: "Referentie",
+      align: "left",
+      hideOnMobile: true,
+      render: (r) => r.reference,
+    },
+    {
+      key: "debtor",
+      label: "Debiteur",
+      align: "left",
+      render: (r) => r.debtorName,
+    },
     {
       key: "claimed",
       label: "Vordering",
       align: "right",
-      render: (r) => (r.claimed !== undefined ? formatCurrency(r.claimed) : "-"),
+      render: (r) =>
+        r.claimed !== undefined ? formatCurrency(r.claimed) : "-",
     },
     {
       key: "paid",
@@ -207,7 +223,9 @@ export const DossierTable = ({
         onRowsPerPageChange={handleRowsPerPageChange}
         rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
         labelRowsPerPage={isMobile ? "" : "Rijen per pagina:"}
-        labelDisplayedRows={({ from, to, count }) => `${from}–${to} van ${count}`}
+        labelDisplayedRows={({ from, to, count }) =>
+          `${from}–${to} van ${count}`
+        }
       />
 
       {blcRow && (
