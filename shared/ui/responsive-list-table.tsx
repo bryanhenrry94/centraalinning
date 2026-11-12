@@ -66,6 +66,10 @@ interface ResponsiveListTableProps<T> {
   // Deelnemer details) — zelfde rowKey als getRowKey. Optioneel: zonder dit
   // gedraagt de tabel zich exact als voorheen.
   selectedRowKey?: string;
+  // Compactere celpadding voor tabellen met veel kolommen/rijen (bv.
+  // dossiers). Optioneel en standaard uit — bestaande tabellen blijven
+  // ongewijzigd.
+  dense?: boolean;
 }
 
 export function ResponsiveListTable<T>({
@@ -78,6 +82,7 @@ export function ResponsiveListTable<T>({
   headerSx,
   containerSx,
   selectedRowKey,
+  dense = false,
 }: ResponsiveListTableProps<T>) {
   const router = useRouter();
 
@@ -164,6 +169,7 @@ export function ResponsiveListTable<T>({
                   sx={{
                     ...(headerSx ? { ...HEAD_SX, ...headerSx } : HEAD_SX),
                     ...(col.width ? { width: col.width } : {}),
+                    ...(dense ? { py: 0.75 } : {}),
                   }}
                 >
                   {col.label}
@@ -184,7 +190,10 @@ export function ResponsiveListTable<T>({
                   <TableCell
                     key={col.key}
                     align={col.align ?? "center"}
-                    sx={col.width ? { width: col.width, whiteSpace: "nowrap" } : undefined}
+                    sx={{
+                      ...(col.width ? { width: col.width, whiteSpace: "nowrap" } : {}),
+                      ...(dense ? { py: 0.5 } : {}),
+                    }}
                   >
                     {col.render(row)}
                   </TableCell>

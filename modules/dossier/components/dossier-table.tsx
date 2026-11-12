@@ -23,14 +23,6 @@ import { DossierRow } from "@/modules/dossier/types/dossier.types";
 import { BlcResultDialog } from "@/modules/dossier/components/blc-result-dialog";
 
 const ROWS_PER_PAGE_OPTIONS = [10, 25, 50];
-const SERVICE_TYPE_COLOR: Record<string, "default" | "primary" | "secondary"> = {
-  FAR: "secondary",
-  BLC: "default",
-  AOP: "primary",
-  BLK: "default",
-  COP: "secondary",
-  GOP: "primary",
-};
 
 interface RowActionItem {
   label: string;
@@ -148,20 +140,7 @@ export const DossierTable = ({
           label={r.statusLabel}
           color={r.statusColor}
           size="small"
-          sx={{ minWidth: 150 }}
-        />
-      ),
-    },
-    {
-      key: "service",
-      label: "Dienst",
-      align: "center",
-      render: (r) => (
-        <Chip
-          label={r.serviceType}
-          color={SERVICE_TYPE_COLOR[r.serviceType] ?? "default"}
-          size="small"
-          variant="outlined"
+          sx={{ minWidth: 150, borderRadius: 1 }}
         />
       ),
     },
@@ -217,6 +196,7 @@ export const DossierTable = ({
         rows={paginatedRows}
         getRowKey={(r) => `${r.serviceType}-${r.id}`}
         emptyMessage="Geen dossiers gevonden."
+        dense
       />
       <TablePagination
         component="div"
