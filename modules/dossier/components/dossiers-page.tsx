@@ -87,8 +87,6 @@ export const DossiersPage = () => {
     });
   }, [rows, filters]);
 
-  if (loading) return <LoadingUI />;
-
   return (
     <Container
       maxWidth="lg"
@@ -151,21 +149,29 @@ export const DossiersPage = () => {
         </Stack>
       </Box>
 
-      <Box sx={{ mt: 6 }}>
-        <DossierFilters
-          value={filters}
-          onChange={setFilters}
-          statusOptions={statusOptions}
-        />
-      </Box>
+      {loading ? (
+        <Box sx={{ mt: 6 }}>
+          <LoadingUI />
+        </Box>
+      ) : (
+        <>
+          <Box sx={{ mt: 6 }}>
+            <DossierFilters
+              value={filters}
+              onChange={setFilters}
+              statusOptions={statusOptions}
+            />
+          </Box>
 
-      <Box sx={{ mt: 2 }}>
-        <DossierTable
-          rows={filteredRows}
-          onReviewAgreement={setAgreementClaimId}
-          onRefresh={load}
-        />
-      </Box>
+          <Box sx={{ mt: 2 }}>
+            <DossierTable
+              rows={filteredRows}
+              onReviewAgreement={setAgreementClaimId}
+              onRefresh={load}
+            />
+          </Box>
+        </>
+      )}
 
       <AgreementReviewDialog
         open={!!agreementClaimId}
