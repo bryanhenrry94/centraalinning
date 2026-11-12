@@ -50,8 +50,8 @@ function SectionHeader({ title }: { title: string }) {
       sx={{
         bgcolor: "grey.200",
         color: "text.primary",
-        px: 2,
-        py: 1.5,
+        px: 1.5,
+        py: 0.75,
         borderTopLeftRadius: 8,
         borderTopRightRadius: 8,
         borderBottom: "1px solid #e0e0e0",
@@ -59,7 +59,7 @@ function SectionHeader({ title }: { title: string }) {
         alignItems: "center",
       }}
     >
-      <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
+      <Typography variant="subtitle2" component="h3" sx={{ fontWeight: 600 }}>
         {title}
       </Typography>
     </Box>
@@ -428,7 +428,7 @@ export default function DirectCopCreatePage() {
                 </Typography>
               )}
 
-              <Grid container spacing={2} sx={{ mt: 0.5 }}>
+              <Grid container spacing={2} sx={{ mt: 3 }}>
                 <Grid size={{ xs: 12 }}>
                   <Controller
                     name="newDebtor.person_type"
