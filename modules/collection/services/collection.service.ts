@@ -899,8 +899,8 @@ export class CollectionService {
           orderBy: { created_at: "desc" },
           select: { status: true },
         },
-        legalProcess: { select: { id: true } },
-        collectiveCollection: { select: { id: true } },
+        legalProcess: { select: { id: true, status: true } },
+        collectiveCollection: { select: { id: true, status: true } },
       },
     });
 
@@ -958,6 +958,9 @@ export class CollectionService {
         agreementStatus,
         legalProcessId: c.legalProcess?.id ?? null,
         collectiveCollectionId: c.collectiveCollection?.id ?? null,
+        legalProcessStatus: c.legalProcess?.status ?? null,
+        collectiveCollectionStatus: c.collectiveCollection?.status ?? null,
+        administrativeCollectionId: c.administrativeCollection?.id ?? null,
       };
     });
   };

@@ -7,7 +7,6 @@ import {
   Box,
   Container,
   Typography,
-  Chip,
   Stack,
   Button,
   Card,
@@ -32,6 +31,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 
 import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
+import { StatusChip } from "@/shared/ui/status-chip";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { notifyError } from "@/shared/ui/notifications";
 import { useTenant } from "@/modules/auth/hooks/useTenant";
@@ -130,7 +130,9 @@ type Row = {
   bailiffName: string;
   amount: number;
   statusLabel: string;
-  statusColor: ReturnType<typeof getCaseTransferStatusInfo>["color"];
+  // Kan een MUI-semantische kleur zijn (CaseTransfer-status) of een hex uit
+  // de CFSB-paleta (LegalProcess-status) — zie StatusChip.
+  statusColor: string;
   date: Date;
   // Solo relevante para kind: "transfer" — permite mostrar "Vonnis
   // registreren"/"Dossier afronden" directo en la tabla sin pasar por el
@@ -457,7 +459,7 @@ const LegalProcessesListPageContent: React.FC = () => {
         key: "status",
         label: "Status",
         render: (row) => (
-          <Chip
+          <StatusChip
             size="small"
             label={row.statusLabel}
             color={row.statusColor}
@@ -788,7 +790,7 @@ const LegalProcessesListPageContent: React.FC = () => {
                 key: "status",
                 label: "Status",
                 render: (row) => (
-                  <Chip
+                  <StatusChip
                     size="small"
                     label={row.statusLabel}
                     color={row.statusColor}

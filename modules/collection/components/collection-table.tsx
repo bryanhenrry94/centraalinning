@@ -1,18 +1,18 @@
 "use client";
 
 import React, { useMemo, useCallback } from "react";
-import { Box, Chip, useMediaQuery, useTheme } from "@mui/material";
+import { Box, useMediaQuery, useTheme } from "@mui/material";
 import TablePagination from "@mui/material/TablePagination";
 import {
   ListColumn,
   ResponsiveListTable,
 } from "@/shared/ui/responsive-list-table";
+import { StatusChip } from "@/shared/ui/status-chip";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { DebtClaimResponse } from "@/modules/collection/services/collection.type";
 import {
   DEBT_CLAIM_STATUS_CONFIG as STATUS_CONFIG,
   AOP_STEP_CONFIG,
-  ChipColor,
 } from "@/modules/collection/utils/debt-claim-status";
 import { DebtClaimActionsMenu } from "@/modules/collection/components/debt-claim-actions-menu";
 
@@ -112,11 +112,11 @@ const CollectionTable = ({
             render: (row) => {
               const statusInfo = STATUS_CONFIG[row.status] ?? {
                 label: row.status,
-                color: "default" as ChipColor,
+                color: "default",
               };
 
               return (
-                <Chip
+                <StatusChip
                   label={statusInfo.label}
                   color={statusInfo.color}
                   size="small"
@@ -133,7 +133,7 @@ const CollectionTable = ({
               const aopInfo = row.aopStep ? AOP_STEP_CONFIG[row.aopStep] : null;
 
               return aopInfo ? (
-                <Chip
+                <StatusChip
                   label={aopInfo.label}
                   color={aopInfo.color}
                   size="small"

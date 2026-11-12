@@ -1,6 +1,5 @@
 import { LegalProcessStatus } from "@/modules/legal-process/constants/legal-process-status";
-
-type StatusColor = "default" | "info" | "warning" | "success" | "error";
+import { STATUS_HEX } from "@/shared/constants/status-colors";
 
 export const OPEN_LEGAL_PROCESS_STATUSES = [
   LegalProcessStatus.GOP_ACTIVE,
@@ -12,24 +11,27 @@ export const COMPLETED_LEGAL_PROCESS_STATUSES = [LegalProcessStatus.CLOSED] as c
 // GOP_INACTIVE staat voor "In onderzoek naar executiemogelijkheden": geen
 // actuele beslagmogelijkheid sluit het dossier nooit vanzelf — zie
 // LegalProcessService.markInactive.
-// CCP-kleurenregel: geel/amber = in afwachting/lopend proces; groen = actief
-// of succesvol afgerond; rood/grijs n.v.t. hier.
-const LEGAL_PROCESS_STATUS_CONFIG: Record<string, { label: string; color: StatusColor }> = {
+// Paleta CFSB aprobada (zie shared/constants/status-colors.ts): blauw =
+// lopend/in afwachting, oranje = aandacht/actie vereist, groen = afgerond.
+const LEGAL_PROCESS_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   // Label corto (CCP-beslissing, ajuste sponsor): de deurwaarder ya completó
   // la registratie, solo faltan los pagos que liberan GOP_ACTIVE. El número
   // GOP (secuencia única, ver CaseTransferService.generateGopNumber) ya
   // existe desde antes — nunca se reasigna ni se oculta en este estado.
-  GOP_DRAFT: { label: "Wacht op betaling", color: "warning" },
-  GOP_ACTIVE: { label: "GOP actief", color: "success" },
-  GOP_INACTIVE: { label: "In onderzoek naar executiemogelijkheden", color: "warning" },
-  CLOSED: { label: "Afgerond", color: "success" },
+  GOP_DRAFT: { label: "Wacht op betaling", color: STATUS_HEX.blue },
+  GOP_ACTIVE: { label: "GOP actief", color: STATUS_HEX.blue },
+  GOP_INACTIVE: {
+    label: "In onderzoek naar executiemogelijkheden",
+    color: STATUS_HEX.orange,
+  },
+  CLOSED: { label: "Afgerond", color: STATUS_HEX.green },
 };
 
 export function getLegalProcessStatusInfo(status: string) {
   return (
     LEGAL_PROCESS_STATUS_CONFIG[status] ?? {
       label: status,
-      color: "default" as StatusColor,
+      color: STATUS_HEX.grey,
     }
   );
 }

@@ -12,6 +12,7 @@ import { getFinancialAgreementStatusInfo } from "@/modules/financial-agreement/u
 import { getBlockadeStatusInfo } from "@/modules/blockade/utils/blockade-status";
 import { DebtClaimResponse } from "@/modules/collection/services/collection.type";
 import { DossierRow } from "@/modules/dossier/types/dossier.types";
+import { STATUS_HEX } from "@/shared/constants/status-colors";
 
 function personDisplayName(
   person?: {
@@ -30,16 +31,45 @@ function personDisplayName(
 // het ontwerpdocument: dit is één rij per DebtClaim, nooit drie.
 function resolveDebtClaimPhase(row: DebtClaimResponse) {
   if (row.legalProcessId) {
-    const info = getLegalProcessStatusInfo(row.status);
+    const info = getLegalProcessStatusInfo(row.legalProcessStatus ?? row.status);
     return { serviceType: "GOP" as const, ...info };
   }
   if (row.collectiveCollectionId) {
-    const info = getCollectiveCollectionStatusInfo(row.status);
+    const info = getCollectiveCollectionStatusInfo(
+      row.collectiveCollectionStatus ?? row.status,
+    );
     return { serviceType: "COP" as const, ...info };
+  }
+  // Vanaf hier is het altijd een AOP-rij — de volgorde hieronder bepaalt
+  // welke van de 7 "Mijn dossiers"-statussen wint, van meest naar minst
+  // specifiek: volledig betaald (terminaal) > betalingsregeling actief
+  // (pauzeert de meldingenketen) > laatst verzonden melding (AANMANING/
+  // SOMMATIE/INGEBREKESTELLING/BLOKKADE) > AOP gestart zonder melding nog >
+  // kale DebtClaimStatus als er zelfs geen AdministrativeCollection is.
+  if (row.status === "SETTLED") {
+    return {
+      serviceType: "AOP" as const,
+      label: "Volledig betaald",
+      color: STATUS_HEX.green,
+    };
+  }
+  if (row.agreementStatus === "ACCEPTED") {
+    return {
+      serviceType: "AOP" as const,
+      label: "Betalingsregeling actief",
+      color: STATUS_HEX.blue,
+    };
   }
   if (row.aopStep) {
     const info = AOP_STEP_CONFIG[row.aopStep];
     return { serviceType: "AOP" as const, ...info };
+  }
+  if (row.administrativeCollectionId) {
+    return {
+      serviceType: "AOP" as const,
+      label: "AOP gestart",
+      color: STATUS_HEX.blue,
+    };
   }
   const info = getDebtClaimStatusInfo(row.status);
   return { serviceType: "AOP" as const, ...info };

@@ -4,7 +4,6 @@ import React, { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Box,
-  Chip,
   IconButton,
   Menu,
   MenuItem,
@@ -17,6 +16,7 @@ import {
   ListColumn,
   ResponsiveListTable,
 } from "@/shared/ui/responsive-list-table";
+import { StatusChip } from "@/shared/ui/status-chip";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { DebtClaimActionsMenu } from "@/modules/collection/components/debt-claim-actions-menu";
 import { DossierRow } from "@/modules/dossier/types/dossier.types";
@@ -152,7 +152,7 @@ export const DossierTable = ({
       label: "Status",
       align: "center",
       render: (r) => (
-        <Chip
+        <StatusChip
           label={r.statusLabel}
           color={r.statusColor}
           size="small"

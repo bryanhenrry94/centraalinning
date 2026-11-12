@@ -1,4 +1,5 @@
 import { AopStep } from "@/modules/collection/services/collection.validators";
+import { STATUS_HEX } from "@/shared/constants/status-colors";
 
 export type ChipColor =
   | "default"
@@ -8,34 +9,31 @@ export type ChipColor =
   | "error"
   | "success";
 
-// CCP-kleurenregel (systeembreed): geel/amber = in afwachting/concept/lopend
-// proces; groen = actief, geaccepteerd, betaald of succesvol afgerond; rood =
-// blokkade, afwijzing, fout of kritieke waarschuwing; grijs = secundaire
-// informatie/niet-actieve onderdelen (incl. vrijwillig geannuleerd — dat is
-// geen afwijzing/fout, dus geen rood).
+// Paleta CFSB aprobada (zie shared/constants/status-colors.ts) — hex exacto,
+// no los colores semánticos por defecto de MUI.
 export const DEBT_CLAIM_STATUS_CONFIG: Record<
   string,
-  { label: string; color: ChipColor }
+  { label: string; color: string }
 > = {
-  OPEN: { label: "Wacht op betaling", color: "warning" },
-  IN_PROGRESS: { label: "In behandeling", color: "warning" },
-  SETTLED: { label: "Vereffend", color: "success" },
-  CLOSED: { label: "Gesloten", color: "default" },
-  CANCELLED: { label: "Geannuleerd", color: "default" },
+  OPEN: { label: "Wacht op betaling", color: STATUS_HEX.blue },
+  IN_PROGRESS: { label: "In behandeling", color: STATUS_HEX.blue },
+  SETTLED: { label: "Volledig betaald", color: STATUS_HEX.green },
+  CLOSED: { label: "Gesloten", color: STATUS_HEX.grey },
+  CANCELLED: { label: "Geannuleerd", color: STATUS_HEX.grey },
 };
 
-export const AOP_STEP_CONFIG: Record<
-  AopStep,
-  { label: string; color: ChipColor }
-> = {
-  REMINDER: { label: "Aanmaning", color: "info" },
-  FINAL_NOTICE: { label: "Sommatie", color: "warning" },
-  DEFAULT_NOTICE: { label: "Ingebrekestelling", color: "error" },
-  BLK_NOTIFICATION: { label: "Blokkade", color: "error" },
+// Labels/kleuren van de AOP-meldingenketen (AANMANING → SOMMATIE →
+// INGEBREKESTELLING → BLOKKADE) — dit zijn de statussen die de gebruiker
+// effectief herkent, niet de kale DebtClaimStatus (OPEN/IN_PROGRESS/...).
+export const AOP_STEP_CONFIG: Record<AopStep, { label: string; color: string }> = {
+  REMINDER: { label: "Aanmaning verzonden", color: STATUS_HEX.blue },
+  FINAL_NOTICE: { label: "Sommatie verzonden", color: STATUS_HEX.blue },
+  DEFAULT_NOTICE: { label: "Ingebrekestelling verzonden", color: STATUS_HEX.red },
+  BLK_NOTIFICATION: { label: "Economische blokkade", color: STATUS_HEX.red },
 };
 
 export function getDebtClaimStatusInfo(status: string) {
-  return DEBT_CLAIM_STATUS_CONFIG[status] ?? { label: status, color: "default" as ChipColor };
+  return DEBT_CLAIM_STATUS_CONFIG[status] ?? { label: status, color: STATUS_HEX.grey };
 }
 
 export function getAopStepInfo(step: AopStep) {
@@ -48,7 +46,7 @@ export function getAopStepInfo(step: AopStep) {
 export function getSourceStatusInfo(status: string) {
   return (
     AOP_STEP_CONFIG[status as AopStep] ??
-    DEBT_CLAIM_STATUS_CONFIG[status] ?? { label: status, color: "default" as ChipColor }
+    DEBT_CLAIM_STATUS_CONFIG[status] ?? { label: status, color: STATUS_HEX.grey }
   );
 }
 

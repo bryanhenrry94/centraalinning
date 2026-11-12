@@ -21,6 +21,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { formatCurrency } from "@/shared/utils/formatters";
 import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
 import { notifyError } from "@/shared/ui/notifications";
+import { StatusChip } from "@/shared/ui/status-chip";
 import {
   getDebtorByUserId,
   getDebts,
@@ -177,7 +178,7 @@ const PaymentsPage = () => {
             key: "status",
             label: "Status",
             render: (debt) => (
-              <Chip
+              <StatusChip
                 label={getSourceStatusInfo(debt.source_status).label}
                 color={getSourceStatusInfo(debt.source_status).color}
                 size="small"

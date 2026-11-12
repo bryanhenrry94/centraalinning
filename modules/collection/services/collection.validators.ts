@@ -87,6 +87,19 @@ export const DebtClaimResponseSchema = DebtClaimSchema.extend({
   agreementStatus: z.string().nullable().optional(),
   legalProcessId: z.string().nullable().optional(),
   collectiveCollectionId: z.string().nullable().optional(),
+  // Status van het gekoppelde LegalProcess/CollectiveCollection-record zelf
+  // (LegalProcessStatus/CollectiveCollectionStatus) — niet te verwarren met
+  // `status` hierboven, dat altijd de kale DebtClaimStatus is. Nodig om de
+  // juiste label te tonen in overzichten die GOP/COP-dossiers meenemen (zie
+  // DossierService.resolveDebtClaimPhase).
+  legalProcessStatus: z.string().nullable().optional(),
+  collectiveCollectionStatus: z.string().nullable().optional(),
+  // Aanwezigheid van het AdministrativeCollection-record zelf (AOP gestart)
+  // — los van `aopStep`, dat pas gevuld is zodra de eerste stap (AANMANING)
+  // daadwerkelijk is aangemaakt. Nodig om "AOP gestart, wacht op eerste
+  // stap" te onderscheiden van een DebtClaim die nog helemaal niet in AOP
+  // zit (zie DossierService.resolveDebtClaimPhase).
+  administrativeCollectionId: z.string().nullable().optional(),
 });
 
 export type DebtClaim = z.infer<typeof DebtClaimSchema>;

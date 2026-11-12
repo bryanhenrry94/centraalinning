@@ -1,7 +1,8 @@
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Box, Button, Chip, Container, Typography } from "@mui/material";
+import { Box, Button, Container, Typography } from "@mui/material";
+import { StatusChip } from "@/shared/ui/status-chip";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 
@@ -148,7 +149,7 @@ export const DebtorCollectiveCollectionsView = () => {
             label: "Status",
             render: (row) => {
               const statusInfo = getCollectiveCollectionStatusInfo(row.status);
-              return <Chip label={statusInfo.label} color={statusInfo.color} size="small" />;
+              return <StatusChip label={statusInfo.label} color={statusInfo.color} size="small" />;
             },
           },
           {

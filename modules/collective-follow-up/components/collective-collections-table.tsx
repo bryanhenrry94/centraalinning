@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Chip } from "@mui/material";
+import { StatusChip } from "@/shared/ui/status-chip";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { getCollectiveCollectionStatusInfo } from "@/modules/collective-follow-up/utils/collective-collection-status";
 import { ListColumn, ResponsiveListTable } from "@/shared/ui/responsive-list-table";
@@ -42,7 +42,7 @@ export const CollectiveCollectionsTable: React.FC<CollectiveCollectionsTableProp
       label: "Status",
       render: (c) => {
         const statusInfo = getCollectiveCollectionStatusInfo(c.status);
-        return <Chip size="small" label={statusInfo.label} color={statusInfo.color} />;
+        return <StatusChip size="small" label={statusInfo.label} color={statusInfo.color} />;
       },
     },
     { key: "startedAt", label: "Gestart op", render: (c) => formatDate(c.startedAt.toString()), hideOnMobile: true },

@@ -36,6 +36,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
 import { notifyError } from "@/shared/ui/notifications";
+import { StatusChip } from "@/shared/ui/status-chip";
 
 import { getAgreementsByDebtClaimId } from "@/modules/agreement/actions/agreement.actions";
 import {
@@ -570,7 +571,7 @@ const DashboardDebtor = () => {
               render: (debt) => {
                 const status = getSourceStatusInfo(debt.source_status);
                 return (
-                  <Chip
+                  <StatusChip
                     label={status.label}
                     color={status.color}
                     size="small"

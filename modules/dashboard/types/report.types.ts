@@ -6,13 +6,9 @@ export interface TableSummaryResponse {
   name: string;
   amount: number;
   status: string;
-  statusColor:
-    | "default"
-    | "primary"
-    | "secondary"
-    | "error"
-    | "info"
-    | "success"
-    | "warning";
+  // Kan een MUI-semantische kleur zijn ("default"/"warning"/...) of een hex
+  // uit de CFSB-paleta (zie shared/constants/status-colors.ts) — zie
+  // StatusChip voor hoe dit gerenderd wordt.
+  statusColor: string;
   href: string;
 }

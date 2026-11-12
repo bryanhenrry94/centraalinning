@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
-import { Box, Button, Chip } from "@mui/material";
+import { Box, Button } from "@mui/material";
+import { StatusChip } from "@/shared/ui/status-chip";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 
 import { formatCurrency } from "@/shared/utils/formatters";
@@ -43,7 +44,7 @@ export const EmployerCollectiveCollectionsTable: React.FC<
       label: "Status",
       render: (row) => {
         const statusInfo = getCollectiveCollectionStatusInfo(row.status);
-        return <Chip label={statusInfo.label} color={statusInfo.color} size="small" />;
+        return <StatusChip label={statusInfo.label} color={statusInfo.color} size="small" />;
       },
     },
     {

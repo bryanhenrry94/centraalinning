@@ -1,4 +1,3 @@
-import { ChipColor } from "@/modules/collection/utils/debt-claim-status";
 import { DebtClaimResponse } from "@/modules/collection/services/collection.type";
 
 // Seis diensten CFSB: FAR/BLC son pre-claim (nog geen DebtClaim); AOP/COP/GOP
@@ -17,7 +16,7 @@ export interface DossierRow {
   paid?: number;
   outstanding?: number;
   statusLabel: string;
-  statusColor: ChipColor;
+  statusColor: string;
   detailHref: string;
   // Alleen aanwezig voor serviceType AOP/COP/GOP — de rij-actiemenu
   // (DebtClaimActionsMenu) hergebruikt de volledige DebtClaimResponse.

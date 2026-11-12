@@ -35,6 +35,7 @@ import { getAopStepsForClaim } from "@/modules/collection/actions/collection-not
 import { AOPStepNotification } from "@/modules/notification/services/notification.validators";
 import AppBreadcrumbs from "@/shared/ui/common/AppBreadcrumbs";
 import LoadingUI from "@/shared/ui/loading-ui";
+import { StatusChip } from "@/shared/ui/status-chip";
 import {
   getDebtClaimStatusInfo,
   getAopStepInfo,
@@ -182,13 +183,13 @@ const CollectionViewPage: React.FC = () => {
             </Box>
 
             <Stack direction="row" spacing={1} alignItems="center">
-              <Chip
+              <StatusChip
                 label={statusInfo.label}
                 color={statusInfo.color}
                 sx={{ fontWeight: 700 }}
               />
               {aopInfo && (
-                <Chip
+                <StatusChip
                   variant="outlined"
                   label={aopInfo.label}
                   color={aopInfo.color}

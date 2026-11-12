@@ -7,7 +7,6 @@ import {
   Box,
   Card,
   CardActionArea,
-  Chip,
   IconButton,
   Pagination,
   Paper,
@@ -19,6 +18,7 @@ import {
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import { useRouter } from "next/navigation";
+import { StatusChip } from "@/shared/ui/status-chip";
 
 type DocumentRow = {
   id: string;
@@ -28,14 +28,9 @@ type DocumentRow = {
   name: string;
   amount: number;
   status: string;
-  statusColor:
-    | "default"
-    | "primary"
-    | "secondary"
-    | "error"
-    | "info"
-    | "success"
-    | "warning";
+  // Kan een MUI-semantische kleur zijn of een hex uit de CFSB-paleta — zie
+  // StatusChip.
+  statusColor: string;
   href: string;
 };
 
@@ -103,7 +98,7 @@ export const LatestDocumentsTable = ({
       headerAlign: "center" as const,
       renderCell: (params) => {
         return (
-          <Chip
+          <StatusChip
             label={params.value}
             color={params.row.statusColor}
             variant="filled"
@@ -194,7 +189,7 @@ export const LatestDocumentsTable = ({
                       {row.name}
                     </Typography>
                   </Box>
-                  <Chip
+                  <StatusChip
                     label={row.status}
                     color={row.statusColor}
                     size="small"

@@ -23,6 +23,7 @@ import {
   ResponsiveListTable,
 } from "@/shared/ui/responsive-list-table";
 import LoadingUI from "@/shared/ui/loading-ui";
+import { StatusChip } from "@/shared/ui/status-chip";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { UserRole } from "@/shared/constants/user-role";
@@ -253,7 +254,7 @@ const LegalProcessDetailPage: React.FC = () => {
           <Typography variant="h5" fontWeight={700}>
             {legalProcess.referenceNumber || legalProcess.debtClaim.reference}
           </Typography>
-          <Chip
+          <StatusChip
             label={statusInfo.label}
             color={statusInfo.color}
             sx={{ fontWeight: 700 }}
