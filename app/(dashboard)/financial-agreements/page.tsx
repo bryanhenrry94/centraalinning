@@ -220,8 +220,8 @@ const FinancialAgreementsPage: React.FC = () => {
             key: "debtor",
             label: "Debiteur",
             render: (item) =>
-              item.debtor?.person
-                ? `${item.debtor.person.first_name ?? ""} ${item.debtor.person.last_name ?? ""}`.trim()
+              item.dossier.debtor?.person
+                ? `${item.dossier.debtor.person.first_name ?? ""} ${item.dossier.debtor.person.last_name ?? ""}`.trim()
                 : "-",
           },
           {

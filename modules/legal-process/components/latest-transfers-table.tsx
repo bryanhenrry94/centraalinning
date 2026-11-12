@@ -64,8 +64,8 @@ export const LatestTransfersTable = ({
   );
 
   const debtorName = (item: CaseTransferListItem) =>
-    item.debtClaim.debtor?.person
-      ? `${item.debtClaim.debtor.person.first_name ?? ""} ${item.debtClaim.debtor.person.last_name ?? ""}`.trim()
+    item.debtClaim.dossier.debtor?.person
+      ? `${item.debtClaim.dossier.debtor.person.first_name ?? ""} ${item.debtClaim.dossier.debtor.person.last_name ?? ""}`.trim()
       : "-";
 
   return (
@@ -292,7 +292,7 @@ export const LatestTransfersTable = ({
           acceptItem
             ? {
                 reference: acceptItem.debtClaim.reference ?? "-",
-                participant: acceptItem.debtClaim.tenant.name,
+                participant: acceptItem.debtClaim.dossier.tenant.name,
                 debtor: debtorName(acceptItem),
                 amount: Number(acceptItem.debtClaim.principalAmount) || 0,
                 receivedAt: acceptItem.createdAt,

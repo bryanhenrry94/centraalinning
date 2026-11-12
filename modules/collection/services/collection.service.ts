@@ -263,8 +263,6 @@ export class CollectionService {
       const claim = await tx.debtClaim.create({
         data: {
           id: dossier.id,
-          tenantId,
-          debtorId: parsedData.debtorId,
           reference,
           externalReference: parsedData.externalReference ?? null,
           description: parsedData.description,
@@ -336,7 +334,7 @@ export class CollectionService {
   static async activate(claimId: string): Promise<void> {
     const claim = await prisma.debtClaim.findUnique({
       where: { id: claimId },
-      include: { debtor: { include: { person: true } }, tenant: true },
+      include: { dossier: { include: { debtor: { include: { person: true } }, tenant: true } } },
     });
 
     if (!claim) throw new Error(`DebtClaim ${claimId} not found`);
@@ -350,17 +348,17 @@ export class CollectionService {
 
     // Plazos y tarifas AOP por isla/jurisdicción del tenant (punto 13 del
     // análisis CFSB).
-    const parameter = await ParameterService.getParameterForTenant(claim.tenantId);
+    const parameter = await ParameterService.getParameterForTenant(claim.dossier.tenantId);
     if (!parameter) throw new Error("Parameter not found");
 
     const personType =
-      (claim.debtor.person?.person_type as PersonType) || PersonType.INDIVIDUAL;
+      (claim.dossier.debtor!.person?.person_type as PersonType) || PersonType.INDIVIDUAL;
     const calculations = this.calculateAmounts(
       Number(claim.principalAmount),
       parameter,
     );
     const startedAt = new Date();
-    const deadline = await this.calculateDeadline(personType, startedAt, claim.tenantId);
+    const deadline = await this.calculateDeadline(personType, startedAt, claim.dossier.tenantId);
     const reference = claim.reference ?? claimId;
 
     await prisma.$transaction(async (tx) => {
@@ -417,12 +415,12 @@ export class CollectionService {
 
       await tx.chatRoom.create({
         data: {
-          tenant_id: claim.tenantId,
+          tenant_id: claim.dossier.tenantId,
           debtClaimId: claimId,
           name: this.buildChatRoomName(
-            claim.debtor.person?.first_name || "",
-            claim.debtor.person?.last_name || "",
-            claim.debtor.person?.business_name || "",
+            claim.dossier.debtor!.person?.first_name || "",
+            claim.dossier.debtor!.person?.last_name || "",
+            claim.dossier.debtor!.person?.business_name || "",
             reference,
           ),
         },
@@ -483,6 +481,7 @@ export class CollectionService {
 
     const claim = await prisma.debtClaim.findUnique({
       where: { id: pendingResult.claimId },
+      include: { dossier: true },
     });
 
     if (!claim) {
@@ -493,8 +492,8 @@ export class CollectionService {
       success: true,
       collection: {
         id: claim.id,
-        tenantId: claim.tenantId,
-        debtorId: claim.debtorId,
+        tenantId: claim.dossier.tenantId,
+        debtorId: claim.dossier.debtorId!,
         reference: claim.reference,
         externalReference: claim.externalReference,
         description: claim.description,
@@ -510,12 +509,15 @@ export class CollectionService {
   }
 
   static getById = async (id: string): Promise<DebtClaim> => {
-    const claim = await prisma.debtClaim.findUnique({ where: { id } });
+    const claim = await prisma.debtClaim.findUnique({
+      where: { id },
+      include: { dossier: true },
+    });
     if (!claim) throw new Error("DebtClaim not found");
     return {
       id: claim.id,
-      tenantId: claim.tenantId,
-      debtorId: claim.debtorId,
+      tenantId: claim.dossier.tenantId,
+      debtorId: claim.dossier.debtorId!,
       reference: claim.reference,
       externalReference: claim.externalReference,
       description: claim.description,
@@ -533,7 +535,7 @@ export class CollectionService {
     const claim = await prisma.debtClaim.findUnique({
       where: { id },
       include: {
-        debtor: { include: { person: true } },
+        dossier: { include: { debtor: { include: { person: true } } } },
         charges: { orderBy: { id: "desc" } },
         obligations: { orderBy: { createdAt: "desc" } },
       },
@@ -541,8 +543,8 @@ export class CollectionService {
     if (!claim) throw new Error("DebtClaim not found");
     return {
       id: claim.id,
-      tenantId: claim.tenantId,
-      debtorId: claim.debtorId,
+      tenantId: claim.dossier.tenantId,
+      debtorId: claim.dossier.debtorId!,
       reference: claim.reference,
       externalReference: claim.externalReference,
       description: claim.description,
@@ -554,12 +556,12 @@ export class CollectionService {
       updatedAt: claim.updatedAt,
       closedAt: claim.closedAt,
       debtor: {
-        id: claim.debtor.id,
+        id: claim.dossier.debtor!.id,
         fullname:
-          `${claim.debtor.person?.first_name ?? ""} ${claim.debtor.person?.last_name ?? ""}`.trim() ||
-          claim.debtor.person?.business_name ||
+          `${claim.dossier.debtor!.person?.first_name ?? ""} ${claim.dossier.debtor!.person?.last_name ?? ""}`.trim() ||
+          claim.dossier.debtor!.person?.business_name ||
           "",
-        email: claim.debtor.email ?? "",
+        email: claim.dossier.debtor!.email ?? "",
       },
       charges: claim.charges.map((c) => ({
         id: c.id,
@@ -600,7 +602,7 @@ export class CollectionService {
       where: { debtClaimId },
       include: {
         steps: { orderBy: { id: "desc" }, take: 1 },
-        debtClaim: { include: { debtor: { include: { person: true } } } },
+        debtClaim: { include: { dossier: { include: { debtor: { include: { person: true } } } } } },
       },
     });
 
@@ -658,16 +660,14 @@ export class CollectionService {
 
         if (!existingBlockade) {
           const blockadeDossier = await DossierRecordService.create(tx, {
-            tenantId: aop.debtClaim.tenantId,
-            debtorId: aop.debtClaim.debtorId,
+            tenantId: aop.debtClaim.dossier.tenantId,
+            debtorId: aop.debtClaim.dossier.debtorId,
             serviceType: "BLK",
           });
 
           await tx.blockade.create({
             data: {
               id: blockadeDossier.id,
-              tenantId: aop.debtClaim.tenantId,
-              debtorId: aop.debtClaim.debtorId,
               reason: "UNPAID_PAYMENT",
               registeredAt: new Date(),
               status: "ACTIVE",
@@ -762,7 +762,7 @@ export class CollectionService {
 
     const claim = await client.debtClaim.findUnique({
       where: { id: debtClaimId },
-      select: { tenantId: true },
+      select: { dossier: { select: { tenantId: true } } },
     });
     if (!claim) return null;
 
@@ -770,7 +770,7 @@ export class CollectionService {
     // se aplica sobre elk CFSB-bedrag, dus ook over dit recargo — antes ging
     // dit zonder ABB de deur uit, terwijl de AOP-activering/AOP-kosten
     // wél al ABB meerekenden (feedback sponsor).
-    const parameter = await ParameterService.getParameterForTenant(claim.tenantId);
+    const parameter = await ParameterService.getParameterForTenant(claim.dossier.tenantId);
     const abbAmount = Number(((amount * parameter.abb_rate) / 100).toFixed(2));
     const totalWithAbb = Number((amount + abbAmount).toFixed(2));
 
@@ -835,11 +835,11 @@ export class CollectionService {
 
     const claim = await client.debtClaim.findUnique({
       where: { id: debtClaimId },
-      select: { tenantId: true },
+      select: { dossier: { select: { tenantId: true } } },
     });
     if (!claim) return null;
 
-    const parameter = await ParameterService.getParameterForTenant(claim.tenantId);
+    const parameter = await ParameterService.getParameterForTenant(claim.dossier.tenantId);
     const abbAmount = Number(((amount * parameter.abb_rate) / 100).toFixed(2));
     const totalWithAbb = Number((amount + abbAmount).toFixed(2));
 
@@ -882,16 +882,17 @@ export class CollectionService {
   static getAll = async (
     params: DebtClaimFilter,
   ): Promise<DebtClaimResponse[]> => {
-    const { excludeOrigin, ...filters } = params;
+    const { excludeOrigin, tenantId, debtorId, ...filters } = params;
 
     const claims = await prisma.debtClaim.findMany({
       where: {
         ...filters,
+        dossier: { tenantId, ...(debtorId ? { debtorId } : {}) },
         ...(excludeOrigin?.length ? { origin: { notIn: excludeOrigin } } : {}),
       },
       orderBy: { createdAt: "desc" },
       include: {
-        debtor: { include: { person: true } },
+        dossier: { include: { debtor: { include: { person: true } } } },
         administrativeCollection: {
           include: {
             steps: { orderBy: { id: "desc" }, take: 1 },
@@ -947,8 +948,8 @@ export class CollectionService {
 
       return {
         id: c.id,
-        tenantId: c.tenantId,
-        debtorId: c.debtorId,
+        tenantId: c.dossier.tenantId,
+        debtorId: c.dossier.debtorId,
         reference: c.reference,
         externalReference: c.externalReference,
         description: c.description,
@@ -960,13 +961,13 @@ export class CollectionService {
         updatedAt: c.updatedAt,
         closedAt: c.closedAt,
         debtor: {
-          id: c.debtor.id,
+          id: c.dossier.debtor.id,
           fullname:
-            `${c.debtor.person?.first_name ?? ""} ${c.debtor.person?.last_name ?? ""}`.trim() ||
-            c.debtor.person?.business_name ||
+            `${c.dossier.debtor.person?.first_name ?? ""} ${c.dossier.debtor.person?.last_name ?? ""}`.trim() ||
+            c.dossier.debtor.person?.business_name ||
             "",
-          email: c.debtor.email ?? "",
-          total_income: c.debtor.total_income ?? 0,
+          email: c.dossier.debtor.email ?? "",
+          total_income: c.dossier.debtor.total_income ?? 0,
         },
         aopStep: c.administrativeCollection?.steps[0]?.step ?? null,
         paymentLink: cfsbPendingObligation?.payments[0]?.payment_url ?? null,
@@ -1052,10 +1053,10 @@ export class CollectionService {
   ) => {
     const debtClaim = await prisma.debtClaim.findUnique({
       where: { id: debtClaimId },
-      include: { debtor: true, tenant: true },
+      include: { dossier: { include: { debtor: true, tenant: true } } },
     });
     if (!debtClaim) throw new Error("Dossier niet gevonden.");
-    if (debtClaim.debtor.user_id !== actorUserId) {
+    if (debtClaim.dossier.debtor!.user_id !== actorUserId) {
       throw new Error("Alleen de debiteur zelf kan deze actie uitvoeren.");
     }
     await CollectiveCollectionService.assertDebtorPaymentAllowed(debtClaimId);
@@ -1077,7 +1078,7 @@ export class CollectionService {
       obligations.reduce((sum, o) => sum + Number(o.balanceAmount), 0).toFixed(2),
     );
 
-    const paymentResult = await PaymentService.create(debtClaim.tenantId, {
+    const paymentResult = await PaymentService.create(debtClaim.dossier.tenantId, {
       amount: totalAmount,
       currency: debtClaim.currency,
       description: `CFSB-kosten — dossier ${debtClaim.reference ?? debtClaimId}`,
@@ -1112,7 +1113,11 @@ export class CollectionService {
 export const processDebtorCollectionFeePayment = async (paymentId: string) => {
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
-    include: { allocations: { include: { obligation: { include: { debtClaim: true } } } } },
+    include: {
+      allocations: {
+        include: { obligation: { include: { debtClaim: { include: { dossier: true } } } } },
+      },
+    },
   });
   if (!payment) throw new Error("Payment not found");
   if (payment.allocations.length === 0) {
@@ -1130,7 +1135,7 @@ export const processDebtorCollectionFeePayment = async (paymentId: string) => {
   );
 
   try {
-    await NotificationService.notifyTenantStaff(debtClaim.tenantId, {
+    await NotificationService.notifyTenantStaff(debtClaim.dossier.tenantId, {
       type: NotificationType.DEBTOR_COLLECTION_FEE_PAID,
       title: "Debiteur betaalde CFSB-kosten",
       message: `De debiteur van dossier ${debtClaim.reference ?? debtClaim.id} heeft de CFSB-kosten rechtstreeks betaald.`,
@@ -1151,7 +1156,7 @@ export const processCollectionPayment = async (paymentId: string) => {
         include: {
           debtClaim: {
             include: {
-              tenant: true,
+              dossier: { include: { tenant: true } },
             },
           },
         },
@@ -1178,15 +1183,15 @@ export const processCollectionPayment = async (paymentId: string) => {
     const invoiceData = await InvoiceService.generateInvoiceData(payment.id);
     const invoice = await InvoiceService.createInvoice(invoiceData);
 
-    if (payment.obligation.debtClaim.tenant.contact_email) {
+    if (payment.obligation.debtClaim.dossier.tenant.contact_email) {
       await sendInvoiceEmail(
-        payment.obligation.debtClaim.tenant.contact_email,
+        payment.obligation.debtClaim.dossier.tenant.contact_email,
         invoice.id,
         true,
       );
     } else {
       console.warn(
-        `Tenant ${payment.obligation.debtClaim.tenantId} has no contact email`,
+        `Tenant ${payment.obligation.debtClaim.dossier.tenantId} has no contact email`,
       );
     }
   }

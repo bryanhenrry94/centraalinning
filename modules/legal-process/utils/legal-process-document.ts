@@ -8,7 +8,7 @@ type LegalProcessForBailiff = Awaited<
 
 export function toDocumentRow(legalProcess: LegalProcessForBailiff): TableSummaryResponse {
   const statusInfo = getLegalProcessStatusInfo(legalProcess.status);
-  const person = legalProcess.debtClaim.debtor?.person;
+  const person = legalProcess.debtClaim.dossier.debtor?.person;
 
   return {
     id: legalProcess.id,

@@ -85,7 +85,7 @@ export class BlockCheckService {
     // A blockade registered by any tenant makes the person blocked globally.
     const activeBlockade = await prisma.blockade.findFirst({
       where: {
-        debtor: { person_id: person.id },
+        dossier: { debtor: { person_id: person.id } },
         releasedAt: null,
       },
     });
@@ -107,9 +107,7 @@ export class BlockCheckService {
       return tx.blockCheck.create({
         data: {
           id: dossier.id,
-          tenantId: context.tenantId,
           personId: person.id,
-          debtorId: debtor?.id ?? null,
           blockadeFound: has_blockade,
           price: new Prisma.Decimal(context.price),
           checkedById: context.userId,
@@ -137,8 +135,11 @@ export class BlockCheckService {
   // tenant-brede lijstmethode.
   static getAllForTenant = async (tenantId: string) => {
     return prisma.blockCheck.findMany({
-      where: { tenantId },
-      include: { person: true, debtor: { include: { person: true } } },
+      where: { dossier: { tenantId } },
+      include: {
+        person: true,
+        dossier: { include: { debtor: { include: { person: true } } } },
+      },
       orderBy: { checkedAt: "desc" },
     });
   };
@@ -153,9 +154,9 @@ export class BlockCheckService {
   ): Promise<{ success: boolean; error?: string }> => {
     const blockCheck = await prisma.blockCheck.findUnique({
       where: { id: blockCheckId },
-      include: { person: true, tenant: true },
+      include: { person: true, dossier: { include: { tenant: true } } },
     });
-    if (!blockCheck || blockCheck.tenantId !== context.tenantId) {
+    if (!blockCheck || blockCheck.dossier.tenantId !== context.tenantId) {
       return { success: false, error: "Blok-Check niet gevonden." };
     }
     if (!blockCheck.blockadeFound) {
@@ -179,8 +180,8 @@ export class BlockCheckService {
     await sendFinancialDeclarationInvitationMail(
       blockCheck.person.email,
       this.buildFullName(blockCheck.person) || blockCheck.person.business_name || blockCheck.person.email,
-      blockCheck.tenant.name,
-      blockCheck.tenant.subdomain,
+      blockCheck.dossier.tenant.name,
+      blockCheck.dossier.tenant.subdomain,
     );
 
     return { success: true };

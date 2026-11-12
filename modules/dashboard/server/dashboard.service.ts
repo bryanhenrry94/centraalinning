@@ -24,7 +24,7 @@ async function getPendingActions(tenantId: string): Promise<PendingAction[]> {
       orderBy: { created_at: "desc" },
     }),
     prisma.cOLNegotiation.findMany({
-      where: { status: "OPEN", collection: { debtClaim: { tenantId } } },
+      where: { status: "OPEN", collection: { debtClaim: { dossier: { tenantId } } } },
       include: { collection: { include: { debtClaim: { select: { reference: true } } } } },
     }),
   ]);
@@ -79,33 +79,33 @@ export async function getDashboard(): Promise<DashboardResponse> {
     ReportService.getOpenDocuments(tenantId),
     ReportService.getCompletedDocuments(tenantId),
     prisma.debtClaim.aggregate({
-      where: { tenantId, status: { in: [...OPEN_DEBT_CLAIM_STATUSES] } },
+      where: { dossier: { tenantId }, status: { in: [...OPEN_DEBT_CLAIM_STATUSES] } },
       _sum: { principalAmount: true },
     }),
-    prisma.blockade.count({ where: { tenantId, status: "ACTIVE" } }),
-    prisma.debtClaim.count({ where: { tenantId, status: "OPEN" } }),
-    prisma.debtClaim.count({ where: { tenantId, status: "IN_PROGRESS" } }),
+    prisma.blockade.count({ where: { dossier: { tenantId }, status: "ACTIVE" } }),
+    prisma.debtClaim.count({ where: { dossier: { tenantId }, status: "OPEN" } }),
+    prisma.debtClaim.count({ where: { dossier: { tenantId }, status: "IN_PROGRESS" } }),
     prisma.debtClaim.count({
-      where: { tenantId, status: { in: [...COMPLETED_DEBT_CLAIM_STATUSES] } },
+      where: { dossier: { tenantId }, status: { in: [...COMPLETED_DEBT_CLAIM_STATUSES] } },
     }),
     ReportService.getTableSummary(tenantId),
-    prisma.blockCheck.count({ where: { tenantId } }),
+    prisma.blockCheck.count({ where: { dossier: { tenantId } } }),
     prisma.contract.count({ where: { tenant_id: tenantId } }),
     prisma.administrativeCollection.count({
-      where: { debtClaim: { tenantId } },
+      where: { debtClaim: { dossier: { tenantId } } },
     }),
-    prisma.blockade.count({ where: { tenantId } }),
+    prisma.blockade.count({ where: { dossier: { tenantId } } }),
     prisma.collectiveCollection.count({
-      where: { debtClaim: { tenantId } },
+      where: { debtClaim: { dossier: { tenantId } } },
     }),
-    prisma.legalProcess.count({ where: { debtClaim: { tenantId } } }),
+    prisma.legalProcess.count({ where: { debtClaim: { dossier: { tenantId } } } }),
     getPendingActions(tenantId),
   ]);
 
   return {
     stats: {
       total: openDocuments.length,
-      active: Number(outstandingAmount._sum.principalAmount ?? 0),
+      active: Number(outstandingAmount._sum?.principalAmount ?? 0),
       completed: completedDocuments.length,
       blocked: activeBlockadesCount,
     },

@@ -142,7 +142,7 @@ export const sendFinancialReportMail = async (financial_report_id: string) => {
   // activación por block-check, así que puede quedar desactualizado.
   const activeBlockade = await prisma.blockade.findFirst({
     where: {
-      debtor: { person_id: financial_report.person_id },
+      dossier: { debtor: { person_id: financial_report.person_id } },
       releasedAt: null,
     },
   });

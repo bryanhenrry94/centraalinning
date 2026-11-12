@@ -18,7 +18,7 @@ import { PersonType } from "@/shared/constants/person-type";
 import { DossierRecordService } from "@/modules/dossier/services/dossier-record.service";
 
 const financialAgreementInclude = {
-  debtor: { include: { person: true } },
+  dossier: { include: { debtor: { include: { person: true } } } },
   contract: true,
   documents: true,
   // Necesario para que la UI (lista y detalle) pueda decidir si "Vervolgen"
@@ -69,7 +69,7 @@ export class FinancialAgreementService {
 
   static getAllForTenant = async (tenantId: string) => {
     const items = await prisma.financialAgreement.findMany({
-      where: { tenantId },
+      where: { dossier: { tenantId } },
       include: financialAgreementInclude,
       orderBy: { createdAt: "desc" },
     });
@@ -147,8 +147,6 @@ export class FinancialAgreementService {
           return tx.financialAgreement.create({
             data: {
               id: dossier.id,
-              tenantId,
-              debtorId: input.debtorId,
               contractId: input.contractId ?? null,
               farNumber,
               reference: input.reference,
@@ -305,8 +303,7 @@ export class FinancialAgreementService {
     const financialAgreement = await prisma.financialAgreement.findUnique({
       where: { registrationFeePaymentId: paymentId },
       include: {
-        debtor: { include: { person: true } },
-        tenant: true,
+        dossier: { include: { debtor: { include: { person: true } }, tenant: true } },
         documents: true,
       },
     });
@@ -325,7 +322,7 @@ export class FinancialAgreementService {
     // pago si el envío falla (mismo criterio que uploadDocument en
     // createWithDebtor).
     const registeredAt = formatDate(updated.registeredAt!.toISOString());
-    const person = financialAgreement.debtor.person;
+    const person = financialAgreement.dossier.debtor!.person;
     const debtorName =
       `${person?.first_name ?? ""} ${person?.last_name ?? ""}`.trim() ||
       person?.business_name ||
@@ -335,7 +332,7 @@ export class FinancialAgreementService {
       ? `${IDENTIFICATION_TYPE_LABELS[person.identification_type]} — ${person.identification}`
       : "-";
 
-    const tenant = financialAgreement.tenant;
+    const tenant = financialAgreement.dossier.tenant;
     const clientAddress = [tenant.address, tenant.city].filter(Boolean).join(", ");
 
     const mailDetails = {
@@ -352,7 +349,7 @@ export class FinancialAgreementService {
       debtorIdentification,
       debtorAddress: person?.address || "-",
       debtorPhone: person?.phone || "-",
-      debtorEmail: financialAgreement.debtor.email,
+      debtorEmail: financialAgreement.dossier.debtor!.email,
       agreementDescription: financialAgreement.description || "-",
       agreementReference: financialAgreement.reference || "-",
       agreementInvoiceDate: financialAgreement.invoiceDate
@@ -366,9 +363,9 @@ export class FinancialAgreementService {
     };
 
     try {
-      if (financialAgreement.debtor.email) {
+      if (financialAgreement.dossier.debtor!.email) {
         await sendFarRegisteredMail({
-          to: financialAgreement.debtor.email,
+          to: financialAgreement.dossier.debtor!.email,
           ...mailDetails,
         });
       }
@@ -399,6 +396,7 @@ export class FinancialAgreementService {
   ): Promise<{ claimId: string; obligationId: string; amount: number }> => {
     const financialAgreement = await prisma.financialAgreement.findUnique({
       where: { id: financialAgreementId },
+      include: { dossier: true },
     });
     if (!financialAgreement) throw new Error("FAR niet gevonden.");
 
@@ -436,9 +434,9 @@ export class FinancialAgreementService {
       {
         amount: financialAgreement.amount,
         reference: financialAgreement.reference,
-        tenantId: financialAgreement.tenantId,
+        tenantId: financialAgreement.dossier.tenantId,
       },
-      financialAgreement.debtorId,
+      financialAgreement.dossier.debtorId!,
     );
 
     if (!pending.success || !pending.claimId || !pending.obligationId) {

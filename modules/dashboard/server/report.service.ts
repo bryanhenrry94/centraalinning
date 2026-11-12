@@ -84,7 +84,7 @@ export class ReportService {
 
       prisma.debtClaim.findMany({
         where: {
-          tenantId,
+          dossier: { tenantId },
           ...debtClaimStatusFilter,
         },
         select: {
@@ -93,12 +93,16 @@ export class ReportService {
           reference: true,
           status: true,
           principalAmount: true,
-          debtor: {
+          dossier: {
             select: {
-              person: {
+              debtor: {
                 select: {
-                  first_name: true,
-                  last_name: true,
+                  person: {
+                    select: {
+                      first_name: true,
+                      last_name: true,
+                    },
+                  },
                 },
               },
             },
@@ -108,7 +112,7 @@ export class ReportService {
 
       prisma.legalProcess.findMany({
         where: {
-          debtClaim: { tenantId },
+          debtClaim: { dossier: { tenantId } },
           ...legalProcessStatusFilter,
         },
         select: {
@@ -120,12 +124,16 @@ export class ReportService {
               id: true,
               reference: true,
               principalAmount: true,
-              debtor: {
+              dossier: {
                 select: {
-                  person: {
+                  debtor: {
                     select: {
-                      first_name: true,
-                      last_name: true,
+                      person: {
+                        select: {
+                          first_name: true,
+                          last_name: true,
+                        },
+                      },
                     },
                   },
                 },
@@ -159,7 +167,7 @@ export class ReportService {
           source: "AOP - Administrative opvolging",
           date: collection.createdAt,
           reference_number: collection.reference || "",
-          name: `${collection.debtor.person.first_name} ${collection.debtor.person.last_name}`,
+          name: `${collection.dossier.debtor.person.first_name} ${collection.dossier.debtor.person.last_name}`,
           amount: Number(collection.principalAmount),
           status: statusInfo.label,
           statusColor: statusInfo.color,
@@ -177,7 +185,7 @@ export class ReportService {
           source: "GOP - Gerechtelijke opvolging",
           date: legalProcess.startedAt,
           reference_number: legalProcess.debtClaim?.reference || "",
-          name: `${legalProcess.debtClaim.debtor.person.first_name} ${legalProcess.debtClaim.debtor.person.last_name}`,
+          name: `${legalProcess.debtClaim.dossier.debtor.person.first_name} ${legalProcess.debtClaim.dossier.debtor.person.last_name}`,
           amount: Number(legalProcess.debtClaim?.principalAmount ?? 0),
           status: statusInfo.label,
           statusColor: statusInfo.color,

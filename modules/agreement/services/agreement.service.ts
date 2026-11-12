@@ -64,18 +64,18 @@ export class AgreementService {
   ) {
     const debtClaim = await prisma.debtClaim.findUnique({
       where: { id: data.debtClaim_id },
-      include: { debtor: true },
+      include: { dossier: { include: { debtor: true } } },
     });
 
-    if (!debtClaim || debtClaim.tenantId !== tenant_id) {
+    if (!debtClaim || debtClaim.dossier.tenantId !== tenant_id) {
       throw new Error("Dossier niet gevonden voor deze organisatie");
     }
 
-    if (requestingUserId && debtClaim.debtor.user_id !== requestingUserId) {
+    if (requestingUserId && debtClaim.dossier.debtor!.user_id !== requestingUserId) {
       throw new Error("U heeft geen toestemming om een betalingsregeling voor deze schuld aan te vragen");
     }
 
-    if (data.debtor_id && data.debtor_id !== debtClaim.debtorId) {
+    if (data.debtor_id && data.debtor_id !== debtClaim.dossier.debtorId) {
       throw new Error("De debiteur komt niet overeen met de opgegeven schuld");
     }
 

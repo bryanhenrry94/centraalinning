@@ -33,6 +33,7 @@ export async function requireAuthorizedForCaseFile(debtClaimId: string) {
   const debtClaim = await prisma.debtClaim.findUnique({
     where: { id: debtClaimId },
     include: {
+      dossier: true,
       caseTransfers: { include: { lawyer: true, bailiff: true } },
       legalProcess: { include: { bailiff: true } },
     },
@@ -41,7 +42,8 @@ export async function requireAuthorizedForCaseFile(debtClaimId: string) {
 
   if (isPlatformOwner(session)) return { session, debtClaim };
 
-  const isStaffOfTenant = isTenantStaff(session) && session.user.tenant_id === debtClaim.tenantId;
+  const isStaffOfTenant =
+    isTenantStaff(session) && session.user.tenant_id === debtClaim.dossier.tenantId;
   const isAssignedProfessional =
     debtClaim.caseTransfers.some(
       (t) => t.lawyer?.userId === session.user.id || t.bailiff?.user_id === session.user.id,

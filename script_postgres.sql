@@ -134,9 +134,9 @@ verdict_summary AS (
 SELECT
     dc.id,
     'DEBT_CLAIM'         AS type,
-    dc."tenantId"        AS tenant_id,
+    dos."tenantId"       AS tenant_id,
     t.name               AS tenant_name,
-    dc."debtorId"        AS debtor_id,
+    dos."debtorId"       AS debtor_id,
     deb.person_id        AS person_id,
     dc.origin            AS source_type,
     COALESCE(aop.collection_id, dc.id) AS source_id,
@@ -190,8 +190,9 @@ SELECT
     agre.status                AS agreement_status
 
 FROM debt_claim dc
-JOIN tenant t  ON t.id = dc."tenantId"
-JOIN debtor deb ON deb.id = dc."debtorId"
+JOIN dossier dos ON dos.id = dc.id
+JOIN tenant t  ON t.id = dos."tenantId"
+JOIN debtor deb ON deb.id = dos."debtorId"
 LEFT JOIN payments_summary pay  ON pay.debtClaim_id    = dc.id
 LEFT JOIN charges_summary ch    ON ch."debtClaimId"    = dc.id
 LEFT JOIN obligations_summary obl ON obl.debtClaim_id  = dc.id

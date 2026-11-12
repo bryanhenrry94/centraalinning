@@ -153,8 +153,8 @@ const CaseTransferDetailPage: React.FC = () => {
     latestLawyerFeeInvoice?.status === "PENDING_PAYMENT"
       ? latestLawyerFeeInvoice
       : undefined;
-  const debtorName = caseTransfer.debtClaim.debtor?.person
-    ? `${caseTransfer.debtClaim.debtor.person.first_name ?? ""} ${caseTransfer.debtClaim.debtor.person.last_name ?? ""}`.trim()
+  const debtorName = caseTransfer.debtClaim.dossier.debtor?.person
+    ? `${caseTransfer.debtClaim.dossier.debtor.person.first_name ?? ""} ${caseTransfer.debtClaim.dossier.debtor.person.last_name ?? ""}`.trim()
     : "-";
 
   const handleExtendDeadline = async () => {
@@ -690,7 +690,7 @@ const CaseTransferDetailPage: React.FC = () => {
         onRegistered={() => router.push("/legal-processes")}
         details={{
           reference: caseTransfer.debtClaim.reference ?? "-",
-          participant: caseTransfer.debtClaim.tenant.name,
+          participant: caseTransfer.debtClaim.dossier.tenant.name,
           debtor: debtorName,
           amount: Number(caseTransfer.debtClaim.principalAmount) || 0,
           receivedAt: caseTransfer.createdAt,

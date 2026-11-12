@@ -19,8 +19,8 @@ export async function checkBlockadeReactivation() {
 
   for (const blockade of suspended) {
     const agreements = await getPaymentAgreements({
-      tenant_id: blockade.tenantId,
-      debtor_id: blockade.debtorId,
+      tenant_id: blockade.dossier.tenantId,
+      debtor_id: blockade.dossier.debtorId!,
       status: AgreementStatus.ACCEPTED,
     });
     const agreement = agreements[0];
@@ -34,10 +34,10 @@ export async function checkBlockadeReactivation() {
     reactivated++;
 
     try {
-      const debtor = await prisma.debtor.findUnique({ where: { id: blockade.debtorId } });
+      const debtor = await prisma.debtor.findUnique({ where: { id: blockade.dossier.debtorId! } });
       if (debtor?.user_id) {
         await NotificationService.create({
-          tenant_id: blockade.tenantId,
+          tenant_id: blockade.dossier.tenantId,
           user_id: debtor.user_id,
           type: NotificationType.BLOCKADE_REACTIVATED,
           title: "Economische blokkade opnieuw geactiveerd",

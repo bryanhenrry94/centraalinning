@@ -37,13 +37,13 @@ async function main() {
 
   const debtClaim = await prisma.debtClaim.findUnique({
     where: { id: debtClaimId },
-    include: { debtor: { include: { person: true } } },
+    include: { dossier: { include: { debtor: { include: { person: true } } } } },
   });
   if (!debtClaim) throw new Error(`DebtClaim ${debtClaimId} no encontrado`);
 
-  const parameter = await ParameterService.getParameterForTenant(debtClaim.tenantId);
+  const parameter = await ParameterService.getParameterForTenant(debtClaim.dossier.tenantId);
 
-  const isCompany = debtClaim.debtor.person?.person_type === "COMPANY";
+  const isCompany = debtClaim.dossier.debtor!.person?.person_type === "COMPANY";
   const daysMap: Record<string, number> = {
     REMINDER: isCompany
       ? parameter.company_aanmaning_term_days
@@ -80,7 +80,10 @@ async function main() {
 
     if (currentStep.step === "BLK_NOTIFICATION") {
       const blockade = await prisma.blockade.findFirst({
-        where: { debtorId: debtClaim.debtorId, tenantId: debtClaim.tenantId, status: "ACTIVE" },
+        where: {
+          dossier: { debtorId: debtClaim.dossier.debtorId, tenantId: debtClaim.dossier.tenantId },
+          status: "ACTIVE",
+        },
       });
       console.log(
         blockade

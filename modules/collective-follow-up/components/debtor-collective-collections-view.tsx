@@ -136,7 +136,7 @@ export const DebtorCollectiveCollectionsView = () => {
 
       {(() => {
         const columns: ListColumn<CollectiveCollectionRow>[] = [
-          { key: "tenant", label: "Deelnemer", render: (row) => row.debtClaim.tenant.name },
+          { key: "tenant", label: "Deelnemer", render: (row) => row.debtClaim.dossier.tenant.name },
           { key: "reference", label: "Referentie", render: (row) => row.debtClaim.reference || "-" },
           {
             key: "amount",

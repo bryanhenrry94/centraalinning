@@ -47,8 +47,9 @@ export const buildAanmaningPdfProps = async (
   const claim = await prisma.debtClaim.findUnique({
     where: { id: caseId },
     include: {
-      tenant: true,
-      debtor: { include: { person: true } },
+      dossier: {
+        include: { tenant: true, debtor: { include: { person: true } } },
+      },
       charges: true,
     },
   });
@@ -57,16 +58,18 @@ export const buildAanmaningPdfProps = async (
     throw new Error("Debt claim not found");
   }
 
-  const parameter = await ParameterService.getParameterForTenant(claim.tenantId);
-  const bankAccount = await getPrimaryBankAccount(claim.tenantId);
+  const parameter = await ParameterService.getParameterForTenant(
+    claim.dossier.tenantId,
+  );
+  const bankAccount = await getPrimaryBankAccount(claim.dossier.tenantId);
 
-  const island = getNameCountry(claim.tenant.country_code);
+  const island = getNameCountry(claim.dossier.tenant.country_code);
 
   const debtorName =
-    `${claim.debtor.person?.first_name} ${claim.debtor.person?.last_name}`.trim() ||
-    claim.debtor.person?.business_name;
+    `${claim.dossier.debtor!.person?.first_name} ${claim.dossier.debtor!.person?.last_name}`.trim() ||
+    claim.dossier.debtor!.person?.business_name;
 
-  const debtorAddress = claim.debtor.person?.address || "";
+  const debtorAddress = claim.dossier.debtor!.person?.address || "";
 
   const feeCharge = claim.charges.find(
     (c) => c.concept === "Honorarios de cobranza",
@@ -94,7 +97,7 @@ export const buildAanmaningPdfProps = async (
     amount_original: Number(claim.principalAmount).toFixed(2),
     extraCosts: feeCharge ? Number(feeCharge.amount).toFixed(2) : "0.00",
     calculatedABB: abbCharge ? Number(abbCharge.amount).toFixed(2) : "0.00",
-    tenantName: claim.tenant.name || "Organisatie",
+    tenantName: claim.dossier.tenant.name || "Organisatie",
   };
 };
 
@@ -112,7 +115,11 @@ export const sendAanmaningEmail = async (
   try {
     const claim = await prisma.debtClaim.findUnique({
       where: { id: caseId },
-      include: { tenant: true, debtor: { include: { person: true } } },
+      include: {
+        dossier: {
+          include: { tenant: true, debtor: { include: { person: true } } },
+        },
+      },
     });
 
     if (!claim) {
@@ -120,8 +127,8 @@ export const sendAanmaningEmail = async (
     }
 
     const debtorName =
-      `${claim.debtor.person?.first_name} ${claim.debtor.person?.last_name}`.trim() ||
-      claim.debtor.person?.business_name;
+      `${claim.dossier.debtor!.person?.first_name} ${claim.dossier.debtor!.person?.last_name}`.trim() ||
+      claim.dossier.debtor!.person?.business_name;
 
     const pdfBuffer = await generateAanmaningPdfBuffer(caseId);
     const pdfBase64 = pdfBuffer.toString("base64");
@@ -136,14 +143,14 @@ export const sendAanmaningEmail = async (
     // replyTo.
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
-      replyTo: claim.tenant.contact_email,
+      replyTo: claim.dossier.tenant.contact_email,
       to: recipient,
       subject: "Aanmaning",
       react: (
         <AanmanningEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
           fullname={debtorName || "Debtor"}
-          tenantName={claim.tenant.name}
+          tenantName={claim.dossier.tenant.name}
           invitationLink={
             invitationLink ? invitationLink : "https://centraalinning.com/"
           }
@@ -170,8 +177,9 @@ export const buildSommatiePdfProps = async (
   const claim = await prisma.debtClaim.findUnique({
     where: { id: caseId },
     include: {
-      tenant: true,
-      debtor: { include: { person: true } },
+      dossier: {
+        include: { tenant: true, debtor: { include: { person: true } } },
+      },
       charges: true,
       obligations: { orderBy: { createdAt: "asc" } },
       administrativeCollection: { include: { steps: true } },
@@ -183,17 +191,17 @@ export const buildSommatiePdfProps = async (
   }
 
   const parameter = await ParameterService.getParameterForTenant(
-    claim.tenantId,
+    claim.dossier.tenantId,
   );
-  const bankAccount = await getPrimaryBankAccount(claim.tenantId);
+  const bankAccount = await getPrimaryBankAccount(claim.dossier.tenantId);
 
-  const island = getNameCountry(claim.tenant.country_code);
+  const island = getNameCountry(claim.dossier.tenant.country_code);
 
   const debtorName =
-    `${claim.debtor.person?.first_name} ${claim.debtor.person?.last_name}`.trim() ||
-    claim.debtor.person?.business_name;
+    `${claim.dossier.debtor!.person?.first_name} ${claim.dossier.debtor!.person?.last_name}`.trim() ||
+    claim.dossier.debtor!.person?.business_name;
 
-  const debtorAddress = claim.debtor.person?.address || "";
+  const debtorAddress = claim.dossier.debtor!.person?.address || "";
 
   const feeCharge = claim.charges.find(
     (c) => c.concept === "Honorarios de cobranza",
@@ -223,7 +231,7 @@ export const buildSommatiePdfProps = async (
   )?.sentAt;
 
   const personType =
-    (claim.debtor.person?.person_type as PersonType) ||
+    (claim.dossier.debtor!.person?.person_type as PersonType) ||
     PersonType.INDIVIDUAL;
   const sommatieTermDays =
     personType === PersonType.INDIVIDUAL
@@ -257,7 +265,7 @@ export const buildSommatiePdfProps = async (
     total_amount: totalAmount.toFixed(2),
     amount_original: Number(claim.principalAmount).toFixed(2),
     calculatedABB: calculatedABBAmount.toFixed(2),
-    tenantName: claim.tenant.name || "Organisatie",
+    tenantName: claim.dossier.tenant.name || "Organisatie",
     bankName: bankAccount?.bank_name || parameter.bank_name || "Bank Name",
     accountNumber:
       bankAccount?.account_number ||
@@ -278,7 +286,11 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
   try {
     const claim = await prisma.debtClaim.findUnique({
       where: { id: caseId },
-      include: { tenant: true, debtor: { include: { person: true } } },
+      include: {
+        dossier: {
+          include: { tenant: true, debtor: { include: { person: true } } },
+        },
+      },
     });
 
     if (!claim) {
@@ -286,8 +298,8 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
     }
 
     const debtorName =
-      `${claim.debtor.person?.first_name} ${claim.debtor.person?.last_name}`.trim() ||
-      claim.debtor.person?.business_name;
+      `${claim.dossier.debtor!.person?.first_name} ${claim.dossier.debtor!.person?.last_name}`.trim() ||
+      claim.dossier.debtor!.person?.business_name;
 
     const pdfBuffer = await generateSommatiePdfBuffer(caseId);
     const pdfBase64 = pdfBuffer.toString("base64");
@@ -298,14 +310,14 @@ export const sendSommatieEmail = async (to: string, caseId: string) => {
 
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
-      replyTo: claim.tenant.contact_email,
+      replyTo: claim.dossier.tenant.contact_email,
       to: recipient,
       subject: "Sommatie",
       react: (
         <SommatieMail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
           fullname={debtorName || "Debtor"}
-          tenantName={claim.tenant.name}
+          tenantName={claim.dossier.tenant.name}
         />
       ),
       attachments,
@@ -328,8 +340,9 @@ export const buildIngebrekestellingPdfProps = async (
   const claim = await prisma.debtClaim.findUnique({
     where: { id: caseId },
     include: {
-      tenant: true,
-      debtor: { include: { person: true } },
+      dossier: {
+        include: { tenant: true, debtor: { include: { person: true } } },
+      },
       administrativeCollection: { include: { steps: true } },
       charges: true,
       obligations: { orderBy: { createdAt: "asc" } },
@@ -341,17 +354,17 @@ export const buildIngebrekestellingPdfProps = async (
   }
 
   const parameter = await ParameterService.getParameterForTenant(
-    claim.tenantId,
+    claim.dossier.tenantId,
   );
-  const bankAccount = await getPrimaryBankAccount(claim.tenantId);
+  const bankAccount = await getPrimaryBankAccount(claim.dossier.tenantId);
 
-  const island = getNameCountry(claim.tenant.country_code);
+  const island = getNameCountry(claim.dossier.tenant.country_code);
 
   const debtorName =
-    `${claim.debtor.person?.first_name} ${claim.debtor.person?.last_name}`.trim() ||
-    claim.debtor.person?.business_name;
+    `${claim.dossier.debtor!.person?.first_name} ${claim.dossier.debtor!.person?.last_name}`.trim() ||
+    claim.dossier.debtor!.person?.business_name;
 
-  const debtorAddress = claim.debtor.person?.address || "";
+  const debtorAddress = claim.dossier.debtor!.person?.address || "";
 
   const aopSteps = claim.administrativeCollection?.steps ?? [];
   const firstReminderStep = aopSteps.find((s) => s.step === "REMINDER");
@@ -404,7 +417,7 @@ export const buildIngebrekestellingPdfProps = async (
     debtorAddress: debtorAddress || "",
     island: island || "Bonaire",
     referenceNumber: claim.reference || "",
-    tenantName: claim.tenant.name || "Organisatie",
+    tenantName: claim.dossier.tenant.name || "Organisatie",
     bankName: bankAccount?.bank_name || parameter.bank_name || "Bank Name",
     accountNumber:
       bankAccount?.account_number ||
@@ -424,7 +437,11 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
   try {
     const claim = await prisma.debtClaim.findUnique({
       where: { id: caseId },
-      include: { tenant: true, debtor: { include: { person: true } } },
+      include: {
+        dossier: {
+          include: { tenant: true, debtor: { include: { person: true } } },
+        },
+      },
     });
 
     if (!claim) {
@@ -432,8 +449,8 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
     }
 
     const debtorName =
-      `${claim.debtor.person?.first_name} ${claim.debtor.person?.last_name}`.trim() ||
-      claim.debtor.person?.business_name;
+      `${claim.dossier.debtor!.person?.first_name} ${claim.dossier.debtor!.person?.last_name}`.trim() ||
+      claim.dossier.debtor!.person?.business_name;
 
     const pdfBuffer = await generateIngebrekestellingPdfBuffer(caseId);
     const pdfBase64 = pdfBuffer.toString("base64");
@@ -446,14 +463,14 @@ export const sendIngebrekestellingMail = async (to: string, caseId: string) => {
 
     const { data, error } = await resend.emails.send({
       from: `${process.env.EMAIL_SENDER_NAME} <${process.env.EMAIL_FROM}>`,
-      replyTo: claim.tenant.contact_email,
+      replyTo: claim.dossier.tenant.contact_email,
       to: recipient,
       subject: "Ingebrekestelling",
       react: (
         <IngebrekestellingEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
           fullname={debtorName || "Debtor"}
-          tenantName={claim.tenant.name}
+          tenantName={claim.dossier.tenant.name}
         />
       ),
       attachments,

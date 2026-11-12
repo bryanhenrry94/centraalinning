@@ -26,13 +26,16 @@ const isTenantStaff = (session: Session) =>
   !!session.user.roles?.some((role) => (TENANT_STAFF_ROLES as string[]).includes(role));
 
 export async function requireTenantStaffForDebtClaim(debtClaimId: string) {
-  const debtClaim = await prisma.debtClaim.findUnique({ where: { id: debtClaimId } });
+  const debtClaim = await prisma.debtClaim.findUnique({
+    where: { id: debtClaimId },
+    include: { dossier: true },
+  });
   if (!debtClaim) throw new Error("Dossier niet gevonden.");
 
   const session = await getSessionOrThrow();
   if (isPlatformOwner(session)) return { session, debtClaim };
 
-  if (!isTenantStaff(session) || session.user.tenant_id !== debtClaim.tenantId) {
+  if (!isTenantStaff(session) || session.user.tenant_id !== debtClaim.dossier.tenantId) {
     throw new Error("Alleen medewerkers van deze organisatie kunnen deze actie uitvoeren.");
   }
   return { session, debtClaim };
@@ -41,14 +44,14 @@ export async function requireTenantStaffForDebtClaim(debtClaimId: string) {
 export async function requireTenantStaffForCaseTransfer(caseTransferId: string) {
   const caseTransfer = await prisma.caseTransfer.findUnique({
     where: { id: caseTransferId },
-    include: { debtClaim: true },
+    include: { debtClaim: { include: { dossier: true } } },
   });
   if (!caseTransfer) throw new Error("Dossier niet gevonden.");
 
   const session = await getSessionOrThrow();
   if (isPlatformOwner(session)) return { session, caseTransfer };
 
-  if (!isTenantStaff(session) || session.user.tenant_id !== caseTransfer.debtClaim.tenantId) {
+  if (!isTenantStaff(session) || session.user.tenant_id !== caseTransfer.debtClaim.dossier.tenantId) {
     throw new Error("Alleen medewerkers van deze organisatie kunnen deze actie uitvoeren.");
   }
   return { session, caseTransfer };
@@ -62,7 +65,7 @@ export async function requireAssignedLawyerOrBailiff(caseTransferId: string) {
 
   const caseTransfer = await prisma.caseTransfer.findUnique({
     where: { id: caseTransferId },
-    include: { lawyer: true, bailiff: true, debtClaim: true },
+    include: { lawyer: true, bailiff: true, debtClaim: { include: { dossier: true } } },
   });
   if (!caseTransfer) throw new Error("Dossier niet gevonden.");
 
@@ -84,7 +87,7 @@ export async function requireAssignedLawyer(caseTransferId: string) {
 
   const caseTransfer = await prisma.caseTransfer.findUnique({
     where: { id: caseTransferId },
-    include: { debtClaim: true, lawyer: true },
+    include: { debtClaim: { include: { dossier: true } }, lawyer: true },
   });
   if (!caseTransfer) throw new Error("Dossier niet gevonden.");
 
@@ -107,7 +110,7 @@ export async function requireAssignedBailiffDirect(caseTransferId: string) {
 
   const caseTransfer = await prisma.caseTransfer.findUnique({
     where: { id: caseTransferId },
-    include: { debtClaim: true, lawyer: true, bailiff: true },
+    include: { debtClaim: { include: { dossier: true } }, lawyer: true, bailiff: true },
   });
   if (!caseTransfer) throw new Error("Dossier niet gevonden.");
 
@@ -131,7 +134,7 @@ export async function requireAssignedBailiffForTransfer(caseTransferId: string) 
 
   const caseTransfer = await prisma.caseTransfer.findUnique({
     where: { id: caseTransferId },
-    include: { debtClaim: true, bailiff: true },
+    include: { debtClaim: { include: { dossier: true } }, bailiff: true },
   });
   if (!caseTransfer) throw new Error("Dossier niet gevonden.");
 
@@ -162,7 +165,7 @@ export async function requireAuthorizedToDecideCaseTransferAgreement(caseTransfe
 
   const caseTransfer = await prisma.caseTransfer.findUnique({
     where: { id: caseTransferId },
-    include: { debtClaim: true, lawyer: true, bailiff: true },
+    include: { debtClaim: { include: { dossier: true } }, lawyer: true, bailiff: true },
   });
   if (!caseTransfer) throw new Error("Dossier niet gevonden.");
 
@@ -171,7 +174,7 @@ export async function requireAuthorizedToDecideCaseTransferAgreement(caseTransfe
   }
 
   const isStaffOfTenant =
-    isTenantStaff(session) && session.user.tenant_id === caseTransfer.debtClaim.tenantId;
+    isTenantStaff(session) && session.user.tenant_id === caseTransfer.debtClaim.dossier.tenantId;
   const isAssignedProfessional =
     caseTransfer.lawyer?.userId === session.user.id ||
     caseTransfer.bailiff?.user_id === session.user.id;
@@ -192,14 +195,14 @@ export async function requireStaffOrAssignedLawyerOrBailiffForTransfer(caseTrans
 
   const caseTransfer = await prisma.caseTransfer.findUnique({
     where: { id: caseTransferId },
-    include: { debtClaim: true, lawyer: true, bailiff: true },
+    include: { debtClaim: { include: { dossier: true } }, lawyer: true, bailiff: true },
   });
   if (!caseTransfer) throw new Error("Dossier niet gevonden.");
 
   if (isPlatformOwner(session)) return { session, caseTransfer };
 
   const isStaffOfTenant =
-    isTenantStaff(session) && session.user.tenant_id === caseTransfer.debtClaim.tenantId;
+    isTenantStaff(session) && session.user.tenant_id === caseTransfer.debtClaim.dossier.tenantId;
   const isAssignedLawyer = caseTransfer.lawyer?.userId === session.user.id;
   const isAssignedBailiff = caseTransfer.bailiff?.user_id === session.user.id;
 
@@ -221,7 +224,7 @@ export async function requireDocumentContentAccessForCaseTransfer(caseTransferId
   const { session, caseTransfer } = await requireStaffOrAssignedLawyerOrBailiffForTransfer(caseTransferId);
 
   const isStaffOfTenant =
-    isTenantStaff(session) && session.user.tenant_id === caseTransfer.debtClaim.tenantId;
+    isTenantStaff(session) && session.user.tenant_id === caseTransfer.debtClaim.dossier.tenantId;
 
   if (!isPlatformOwner(session) && !isStaffOfTenant && caseTransfer.status === "PENDING_ACCEPTANCE") {
     throw new Error(

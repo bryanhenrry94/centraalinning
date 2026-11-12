@@ -39,13 +39,15 @@ export async function checkGopDeadlines() {
       legal_process: { status: LegalProcessStatus.GOP_ACTIVE },
     },
     include: {
-      legal_process: { include: { debtClaim: { include: { tenant: true } }, bailiff: true } },
+      legal_process: {
+        include: { debtClaim: { include: { dossier: { include: { tenant: true } } } }, bailiff: true },
+      },
     },
   });
 
   for (const verdict of verdictsAtRisk) {
     const legalProcess = verdict.legal_process;
-    const tenant = legalProcess.debtClaim.tenant;
+    const tenant = legalProcess.debtClaim.dossier.tenant;
     const prescriptionReminderDays = await SettingsService.resolveNumber(
       "gop_prescription_reminder_days",
       { tenantId: tenant.id, jurisdictionId: tenant.jurisdictionId },
@@ -62,7 +64,7 @@ export async function checkGopDeadlines() {
 
     if (legalProcess.bailiff?.user_id) {
       await NotificationService.create({
-        tenant_id: legalProcess.debtClaim.tenantId,
+        tenant_id: legalProcess.debtClaim.dossier.tenantId,
         user_id: legalProcess.bailiff.user_id,
         type: NotificationType.GOP_PRESCRIPTION_REMINDER,
         title: "Verjaringstermijn verstrijkt binnenkort",
@@ -73,7 +75,7 @@ export async function checkGopDeadlines() {
       });
     }
 
-    await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
+    await NotificationService.notifyTenantStaff(legalProcess.debtClaim.dossier.tenantId, {
       type: NotificationType.GOP_PRESCRIPTION_REMINDER,
       title: "Verjaringstermijn verstrijkt binnenkort",
       message,
@@ -99,11 +101,11 @@ export async function checkGopDeadlines() {
       status: LegalProcessStatus.GOP_INACTIVE,
       reviewDate: { not: null },
     },
-    include: { debtClaim: { include: { tenant: true } }, bailiff: true },
+    include: { debtClaim: { include: { dossier: { include: { tenant: true } } } }, bailiff: true },
   });
 
   for (const legalProcess of inactiveDue) {
-    const tenant = legalProcess.debtClaim.tenant;
+    const tenant = legalProcess.debtClaim.dossier.tenant;
     const reviewReminderDays = await SettingsService.resolveNumber(
       "gop_review_reminder_days",
       { tenantId: tenant.id, jurisdictionId: tenant.jurisdictionId },
@@ -120,7 +122,7 @@ export async function checkGopDeadlines() {
 
     if (legalProcess.bailiff?.user_id) {
       await NotificationService.create({
-        tenant_id: legalProcess.debtClaim.tenantId,
+        tenant_id: legalProcess.debtClaim.dossier.tenantId,
         user_id: legalProcess.bailiff.user_id,
         type: NotificationType.GOP_REVIEW_REMINDER,
         title: "Beoordeling van Inactief GOP vereist",
@@ -131,7 +133,7 @@ export async function checkGopDeadlines() {
       });
     }
 
-    await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
+    await NotificationService.notifyTenantStaff(legalProcess.debtClaim.dossier.tenantId, {
       type: NotificationType.GOP_REVIEW_REMINDER,
       title: "Beoordeling van Inactief GOP vereist",
       message,

@@ -35,8 +35,7 @@ export async function processAopWorkflow() {
       steps: { orderBy: { id: "desc" } },
       debtClaim: {
         include: {
-          debtor: { include: { person: true } },
-          tenant: true,
+          dossier: { include: { debtor: { include: { person: true } }, tenant: true } },
         },
       },
     },
@@ -70,14 +69,14 @@ export async function processAopWorkflow() {
     // Plazos/multas por tenant (isla), no el Parameter global — así los
     // cambios que el Superadministrador hace en Settings por isla sí
     // afectan al AOP en curso.
-    const parameter = await getParameterForTenantCached(aop.debtClaim.tenant.id);
+    const parameter = await getParameterForTenantCached(aop.debtClaim.dossier.tenant.id);
 
     const currentStep = aop.steps[0] as (typeof aop.steps)[0] | undefined;
     const currentStepType = (currentStep?.step ?? null) as AOPStep | null;
     const currentStepId = currentStep?.id ?? null;
 
     const personType =
-      (aop.debtClaim.debtor.person?.person_type as PersonType) ||
+      (aop.debtClaim.dossier.debtor!.person?.person_type as PersonType) ||
       PersonType.INDIVIDUAL;
 
     const daysMap: Record<AOPStep, number> = {
@@ -107,7 +106,7 @@ export async function processAopWorkflow() {
     }
 
     const debtClaimId = aop.debtClaim.id;
-    const tenant = aop.debtClaim.tenant;
+    const tenant = aop.debtClaim.dossier.tenant;
 
     // Check for active payment agreement
     const acceptedAgreementId = await AgreementService.getAcceptedId(debtClaimId);

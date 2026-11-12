@@ -146,12 +146,14 @@ type Row = {
 
 function debtorNameOf(item: {
   debtClaim: {
-    debtor?: {
-      person?: { first_name?: string | null; last_name?: string | null } | null;
-    } | null;
+    dossier: {
+      debtor?: {
+        person?: { first_name?: string | null; last_name?: string | null } | null;
+      } | null;
+    };
   };
 }) {
-  const person = item.debtClaim.debtor?.person;
+  const person = item.debtClaim.dossier.debtor?.person;
   return person
     ? `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim()
     : "-";
@@ -169,7 +171,7 @@ function toTransferRow(item: CaseTransferListItem): Row {
     // interna del DebtClaim para que el mismo dossier muestre siempre el
     // mismo número en toda su evolución.
     reference: item.gopNumber || item.debtClaim.reference || "-",
-    tenantName: item.debtClaim.tenant?.name ?? "-",
+    tenantName: item.debtClaim.dossier.tenant?.name ?? "-",
     debtorName: debtorNameOf(item),
     lawyerName: item.lawyer
       ? `${item.lawyer.firstName} ${item.lawyer.lastName}`
@@ -193,7 +195,7 @@ function toLegalProcessRow(item: LegalProcessListItem): Row {
     kind: "gop",
     href: `/legal-processes/${item.id}`,
     reference: item.referenceNumber || item.debtClaim.reference || "-",
-    tenantName: item.debtClaim.tenant?.name ?? "-",
+    tenantName: item.debtClaim.dossier.tenant?.name ?? "-",
     debtorName: debtorNameOf(item),
     lawyerName: item.caseTransfer?.lawyer
       ? `${item.caseTransfer.lawyer.firstName} ${item.caseTransfer.lawyer.lastName}`

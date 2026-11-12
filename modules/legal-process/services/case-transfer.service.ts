@@ -31,7 +31,11 @@ const ACCEPTANCE_WINDOW_DAYS = 7;
 const DEFAULT_ACCEPTANCE_REMINDER_DAYS_BEFORE = 2;
 
 const caseTransferInclude = {
-  debtClaim: { include: { debtor: { include: { person: true } }, tenant: true } },
+  debtClaim: {
+    include: {
+      dossier: { include: { debtor: { include: { person: true } }, tenant: true } },
+    },
+  },
   lawyer: true,
   bailiff: true,
   legalProcess: { select: { id: true } },
@@ -105,7 +109,7 @@ export class CaseTransferService {
 
   static getAllForTenant = async (tenantId: string) => {
     const items = await prisma.caseTransfer.findMany({
-      where: { debtClaim: { tenantId }, legalProcess: null },
+      where: { debtClaim: { dossier: { tenantId } }, legalProcess: null },
       include: caseTransferInclude,
       orderBy: { createdAt: "desc" },
     });
@@ -263,8 +267,6 @@ export class CaseTransferService {
       const debtClaim = await tx.debtClaim.create({
         data: {
           id: dossier.id,
-          tenantId,
-          debtorId: debtorId!,
           reference,
           principalAmount: input.sentenceAmount,
           currency: "USD",
@@ -351,7 +353,10 @@ export class CaseTransferService {
   // transferencia en sí NO activa el GOP — el GOP solo nace al registrar la
   // sentencia (ver LegalProcessService.registerFirstVerdict).
   static requestTransfer = async (input: TransferToLawyerInput, actorUserId: string) => {
-    const debtClaim = await prisma.debtClaim.findUnique({ where: { id: input.debtClaimId } });
+    const debtClaim = await prisma.debtClaim.findUnique({
+      where: { id: input.debtClaimId },
+      include: { dossier: true },
+    });
     if (!debtClaim) throw new Error("Dossier (DebtClaim) niet gevonden");
 
     // El GOP es el último escalón: se habilita cuando la fase del AOP llegó
@@ -439,7 +444,7 @@ export class CaseTransferService {
     const assignedUserId = lawyer?.userId ?? bailiff?.user_id;
     if (assignedUserId) {
       await NotificationService.create({
-        tenant_id: debtClaim.tenantId,
+        tenant_id: debtClaim.dossier.tenantId,
         user_id: assignedUserId,
         type: NotificationType.LEGAL_PROCESS_TRANSFER_REQUEST,
         title: input.isEmergencyTransfer ? "Nieuw spoeddossier overgedragen" : "Nieuw dossier overgedragen",
@@ -496,7 +501,7 @@ export class CaseTransferService {
     const assignedUserId = updated.lawyer?.userId ?? updated.bailiff?.user_id;
     if (assignedUserId) {
       await NotificationService.create({
-        tenant_id: updated.debtClaim.tenantId,
+        tenant_id: updated.debtClaim.dossier.tenantId,
         user_id: assignedUserId,
         type: NotificationType.LEGAL_PROCESS_TRANSFER_REQUEST,
         title: updated.isEmergencyTransfer ? "Nieuw spoeddossier overgedragen" : "Nieuw dossier overgedragen",
@@ -521,10 +526,10 @@ export class CaseTransferService {
         data: { status: "TRANSFERRED", finishedAt: new Date() },
       });
 
-      if (updated.debtClaim.debtor.user_id) {
+      if (updated.debtClaim.dossier.debtor!.user_id) {
         await NotificationService.create({
-          tenant_id: updated.debtClaim.tenantId,
-          user_id: updated.debtClaim.debtor.user_id,
+          tenant_id: updated.debtClaim.dossier.tenantId,
+          user_id: updated.debtClaim.dossier.debtor!.user_id,
           type: NotificationType.COL_TRANSFERRED_TO_GOP,
           title: "Dossier overgedragen aan advocaat/deurwaarder",
           message: `Dossier ${updated.debtClaim.reference ?? updated.debtClaimId} werd overgedragen aan een advocaat/deurwaarder voor verdere behandeling.`,
@@ -545,7 +550,7 @@ export class CaseTransferService {
   static acceptTransfer = async (caseTransferId: string, actorUserId?: string) => {
     const caseTransfer = await prisma.caseTransfer.findUnique({
       where: { id: caseTransferId },
-      include: { debtClaim: true },
+      include: { debtClaim: { include: { dossier: true } } },
     });
     if (!caseTransfer) throw new Error("Dossier niet gevonden");
     if (caseTransfer.status !== "PENDING_ACCEPTANCE") {
@@ -619,7 +624,7 @@ export class CaseTransferService {
     }
 
     await NotificationService.notifyTenantStaff(
-      caseTransfer.debtClaim.tenantId,
+      caseTransfer.debtClaim.dossier.tenantId,
       {
         type: NotificationType.LEGAL_PROCESS_ACCEPTED,
         title: "Dossier geaccepteerd",
@@ -637,7 +642,7 @@ export class CaseTransferService {
   static rejectTransfer = async (caseTransferId: string, reason: string, actorUserId?: string) => {
     const caseTransfer = await prisma.caseTransfer.findUnique({
       where: { id: caseTransferId },
-      include: { debtClaim: true },
+      include: { debtClaim: { include: { dossier: true } } },
     });
     if (!caseTransfer) throw new Error("Dossier niet gevonden");
     if (caseTransfer.status !== "PENDING_ACCEPTANCE") {
@@ -675,7 +680,7 @@ export class CaseTransferService {
       console.error("Error reopening COP after transfer rejection:", error);
     }
 
-    await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.tenantId, {
+    await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.dossier.tenantId, {
       type: NotificationType.LEGAL_PROCESS_REJECTED,
       title: "Dossier afgewezen",
       message: reopenedCollectiveCollectionId
@@ -708,7 +713,11 @@ export class CaseTransferService {
 
     const pending = await prisma.caseTransfer.findMany({
       where: { status: "PENDING_ACCEPTANCE", acceptanceDeadline: { not: null } },
-      include: { debtClaim: { include: { tenant: true } }, lawyer: true, bailiff: true },
+      include: {
+        debtClaim: { include: { dossier: { include: { tenant: true } } } },
+        lawyer: true,
+        bailiff: true,
+      },
     });
 
     for (const caseTransfer of pending) {
@@ -717,7 +726,7 @@ export class CaseTransferService {
       const assignedLabel = caseTransfer.lawyer
         ? `advocaat ${caseTransfer.lawyer.firstName} ${caseTransfer.lawyer.lastName}`
         : `deurwaarder ${caseTransfer.bailiff!.fullname}`;
-      const tenant = caseTransfer.debtClaim.tenant;
+      const tenant = caseTransfer.debtClaim.dossier.tenant;
       const reminderDaysBefore = await SettingsService.resolveNumber(
         "case_transfer_acceptance_reminder_days_before",
         { tenantId: tenant.id, jurisdictionId: tenant.jurisdictionId },
@@ -742,7 +751,7 @@ export class CaseTransferService {
         !(await alreadyNotifiedToday(NotificationType.CASE_TRANSFER_ACCEPTANCE_REMINDER))
       ) {
         await NotificationService.create({
-          tenant_id: caseTransfer.debtClaim.tenantId,
+          tenant_id: caseTransfer.debtClaim.dossier.tenantId,
           user_id: assignedUserId,
           type: NotificationType.CASE_TRANSFER_ACCEPTANCE_REMINDER,
           title: "Herinnering: dossier wacht op acceptatie",
@@ -761,7 +770,7 @@ export class CaseTransferService {
         deadline <= now &&
         !(await alreadyNotifiedToday(NotificationType.CASE_TRANSFER_ACCEPTANCE_DEADLINE_REACHED))
       ) {
-        await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.tenantId, {
+        await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.dossier.tenantId, {
           type: NotificationType.CASE_TRANSFER_ACCEPTANCE_DEADLINE_REACHED,
           title: "Beslissing vereist: acceptatietermijn verstreken",
           message: `De ${assignedLabel} heeft niet binnen de termijn gereageerd op dossier ${caseTransfer.debtClaim.reference}. Beslis of je 7 dagen extra toekent of een andere professional selecteert.`,
@@ -780,7 +789,7 @@ export class CaseTransferService {
   static extendAcceptanceDeadline = async (caseTransferId: string, actorUserId?: string) => {
     const caseTransfer = await prisma.caseTransfer.findUnique({
       where: { id: caseTransferId },
-      include: { debtClaim: true, lawyer: true, bailiff: true },
+      include: { debtClaim: { include: { dossier: true } }, lawyer: true, bailiff: true },
     });
     if (!caseTransfer) throw new Error("Dossier niet gevonden");
     if (caseTransfer.status !== "PENDING_ACCEPTANCE") {
@@ -808,7 +817,7 @@ export class CaseTransferService {
     const assignedUserId = caseTransfer.lawyer?.userId ?? caseTransfer.bailiff?.user_id;
     if (assignedUserId) {
       await NotificationService.create({
-        tenant_id: caseTransfer.debtClaim.tenantId,
+        tenant_id: caseTransfer.debtClaim.dossier.tenantId,
         user_id: assignedUserId,
         type: NotificationType.CASE_TRANSFER_ACCEPTANCE_EXTENDED,
         title: "Je acceptatietermijn is verlengd",
@@ -838,7 +847,7 @@ export class CaseTransferService {
   ) => {
     const caseTransfer = await prisma.caseTransfer.findUnique({
       where: { id: caseTransferId },
-      include: { debtClaim: true, lawyer: true, bailiff: true },
+      include: { debtClaim: { include: { dossier: true } }, lawyer: true, bailiff: true },
     });
     if (!caseTransfer) throw new Error("Dossier niet gevonden");
 
@@ -870,7 +879,7 @@ export class CaseTransferService {
     const assignedUserId = caseTransfer.lawyer?.userId ?? caseTransfer.bailiff?.user_id;
     if (assignedUserId) {
       await NotificationService.create({
-        tenant_id: caseTransfer.debtClaim.tenantId,
+        tenant_id: caseTransfer.debtClaim.dossier.tenantId,
         user_id: assignedUserId,
         type: NotificationType.CASE_TRANSFER_POWER_OF_ATTORNEY_CHANGED,
         title: granted ? "Volmacht verleend" : "Volmacht ingetrokken",
@@ -891,7 +900,12 @@ export class CaseTransferService {
   static cancelTransfer = async (caseTransferId: string, reason: string, actorUserId?: string) => {
     const caseTransfer = await prisma.caseTransfer.findUnique({
       where: { id: caseTransferId },
-      include: { debtClaim: true, bailiff: true, lawyer: true, legalProcess: true },
+      include: {
+        debtClaim: { include: { dossier: true } },
+        bailiff: true,
+        lawyer: true,
+        legalProcess: true,
+      },
     });
     if (!caseTransfer) throw new Error("Dossier niet gevonden.");
     if (["REJECTED", "CANCELLED"].includes(caseTransfer.status)) {
@@ -919,7 +933,7 @@ export class CaseTransferService {
       actorUserId,
     );
 
-    await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.tenantId, {
+    await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.dossier.tenantId, {
       type: NotificationType.GOP_CANCELLED,
       title: "Overdracht geannuleerd",
       message: `Dossier ${caseTransfer.debtClaim.reference} werd geannuleerd: ${reason}`,
@@ -931,7 +945,7 @@ export class CaseTransferService {
     const assignedUserId = caseTransfer.lawyer?.userId ?? caseTransfer.bailiff?.user_id;
     if (assignedUserId) {
       await NotificationService.create({
-        tenant_id: caseTransfer.debtClaim.tenantId,
+        tenant_id: caseTransfer.debtClaim.dossier.tenantId,
         user_id: assignedUserId,
         type: NotificationType.GOP_CANCELLED,
         title: "Overdracht geannuleerd",
@@ -964,7 +978,7 @@ export class CaseTransferService {
   ) => {
     const caseTransfer = await prisma.caseTransfer.findUnique({
       where: { id: params.caseTransferId },
-      include: { debtClaim: true, lawyer: true, bailiff: true },
+      include: { debtClaim: { include: { dossier: true } }, lawyer: true, bailiff: true },
     });
     if (!caseTransfer) throw new Error("Dossier niet gevonden");
     if (caseTransfer.status !== "ACCEPTED") {
@@ -1008,7 +1022,7 @@ export class CaseTransferService {
       throw new Error("Er is al een kostenfactuur in afwachting van betaling voor dit dossier.");
     }
 
-    const tenantId = caseTransfer.debtClaim.tenantId;
+    const tenantId = caseTransfer.debtClaim.dossier.tenantId;
     const sanitizedName = `${crypto.randomUUID()}-${params.fileName}`.replace(/\s+/g, "-");
     const folder = `${tenantId}/case-transfers/${caseTransfer.id}/lawyer-fee-invoices`;
     const storageKey = await StorageService.uploadFile(
@@ -1136,7 +1150,9 @@ export class CaseTransferService {
     const lawyerFeeInvoice = await prisma.lawyerFeeInvoice.findUnique({
       where: { paymentId },
       include: {
-        caseTransfer: { include: { debtClaim: true, lawyer: true, bailiff: true } },
+        caseTransfer: {
+          include: { debtClaim: { include: { dossier: true } }, lawyer: true, bailiff: true },
+        },
         selectedBailiff: true,
       },
     });
@@ -1199,7 +1215,7 @@ export class CaseTransferService {
     if (isDirectBailiffPath) {
       if (caseTransfer.bailiff?.user_id) {
         await NotificationService.create({
-          tenant_id: caseTransfer.debtClaim.tenantId,
+          tenant_id: caseTransfer.debtClaim.dossier.tenantId,
           user_id: caseTransfer.bailiff.user_id,
           type: NotificationType.GOP_BAILIFF_WORK_FINALIZED,
           title: "Uitkomst afgerond",
@@ -1210,7 +1226,7 @@ export class CaseTransferService {
         });
       }
 
-      await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.tenantId, {
+      await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.dossier.tenantId, {
         type: NotificationType.GOP_BAILIFF_WORK_FINALIZED,
         title: "Dossier afgerond zonder vonnis",
         message: `De deurwaarder heeft dossier ${caseTransfer.debtClaim.reference} afgerond zonder vonnis en de CFSB-vergoeding betaald.`,
@@ -1224,7 +1240,7 @@ export class CaseTransferService {
 
     if (caseTransfer.lawyer?.userId) {
       await NotificationService.create({
-        tenant_id: caseTransfer.debtClaim.tenantId,
+        tenant_id: caseTransfer.debtClaim.dossier.tenantId,
         user_id: caseTransfer.lawyer.userId,
         type: NotificationType.GOP_LAWYER_WORK_FINALIZED,
         title: "Werk afgerond",
@@ -1237,7 +1253,7 @@ export class CaseTransferService {
       });
     }
 
-    await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.tenantId, {
+    await NotificationService.notifyTenantStaff(caseTransfer.debtClaim.dossier.tenantId, {
       type: NotificationType.GOP_LAWYER_WORK_FINALIZED,
       title: "Advocatenfase afgerond",
       message: `De advocaat heeft dossier ${caseTransfer.debtClaim.reference} afgerond en de CFSB-vergoeding betaald.`,
@@ -1260,7 +1276,7 @@ export class CaseTransferService {
 
       if (bailiff.user_id) {
         await NotificationService.create({
-          tenant_id: caseTransfer.debtClaim.tenantId,
+          tenant_id: caseTransfer.debtClaim.dossier.tenantId,
           user_id: bailiff.user_id,
           type: NotificationType.GOP_TRANSFERRED_TO_BAILIFF,
           title: "Nieuw dossier voor executie",
@@ -1285,7 +1301,11 @@ export class CaseTransferService {
 
     const pendingInvoices = await prisma.lawyerFeeInvoice.findMany({
       where: { status: "PENDING_PAYMENT" },
-      include: { caseTransfer: { include: { debtClaim: true, lawyer: true, bailiff: true } } },
+      include: {
+        caseTransfer: {
+          include: { debtClaim: { include: { dossier: true } }, lawyer: true, bailiff: true },
+        },
+      },
     });
 
     let reminders = 0;
@@ -1307,7 +1327,7 @@ export class CaseTransferService {
       if (lastEventAt > cutoff) continue;
 
       await NotificationService.create({
-        tenant_id: caseTransfer.debtClaim.tenantId,
+        tenant_id: caseTransfer.debtClaim.dossier.tenantId,
         user_id: recipientUserId,
         type: NotificationType.CASE_TRANSFER_LAWYER_FEE_PAYMENT_REMINDER,
         title: "Herinnering: openstaande CFSB-vergoeding",

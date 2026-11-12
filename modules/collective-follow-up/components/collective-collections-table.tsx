@@ -12,8 +12,10 @@ type CollectiveCollectionRow = {
   debtClaim: {
     reference: string | null;
     principalAmount: number;
-    debtor: {
-      person?: { first_name: string | null; last_name: string | null; business_name: string | null } | null;
+    dossier: {
+      debtor: {
+        person?: { first_name: string | null; last_name: string | null; business_name: string | null } | null;
+      } | null;
     };
   };
 };
@@ -23,7 +25,7 @@ interface CollectiveCollectionsTableProps {
 }
 
 const debtorName = (row: CollectiveCollectionRow) => {
-  const person = row.debtClaim.debtor.person;
+  const person = row.debtClaim.dossier.debtor?.person;
   if (!person) return "-";
   return (
     `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim() || person.business_name || "-"

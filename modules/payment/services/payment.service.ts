@@ -228,7 +228,7 @@ export class PaymentService {
 
   static getByDebtorId = async (debtor_id: string): Promise<Payment[]> => {
     const payments = await prisma.payment.findMany({
-      where: { obligation: { debtClaim: { debtorId: debtor_id } } },
+      where: { obligation: { debtClaim: { dossier: { debtorId: debtor_id } } } },
       orderBy: { created_at: "desc" },
     });
     return payments.map(this.mapPayment);

@@ -38,13 +38,14 @@ export async function requireTenantStaffForTenant(tenantId: string) {
 export async function requireTenantStaffForFinancialAgreement(financialAgreementId: string) {
   const financialAgreement = await prisma.financialAgreement.findUnique({
     where: { id: financialAgreementId },
+    include: { dossier: true },
   });
   if (!financialAgreement) throw new Error("Financiële afspraak niet gevonden.");
 
   const session = await getSessionOrThrow();
   if (isPlatformOwner(session)) return { session, financialAgreement };
 
-  if (!isTenantStaff(session) || session.user.tenant_id !== financialAgreement.tenantId) {
+  if (!isTenantStaff(session) || session.user.tenant_id !== financialAgreement.dossier.tenantId) {
     throw new Error("Alleen medewerkers van deze organisatie kunnen deze actie uitvoeren.");
   }
   return { session, financialAgreement };

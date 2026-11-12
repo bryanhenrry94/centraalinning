@@ -18,12 +18,12 @@ export async function GET(
 
     const document = await prisma.blockadeDocument.findUnique({
       where: { id },
-      include: { blockade: true },
+      include: { blockade: { include: { dossier: true } } },
     });
     if (!document) {
       return NextResponse.json({ error: "Document niet gevonden" }, { status: 404 });
     }
-    if (document.blockade.tenantId !== session.user.tenant_id) {
+    if (document.blockade.dossier.tenantId !== session.user.tenant_id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 

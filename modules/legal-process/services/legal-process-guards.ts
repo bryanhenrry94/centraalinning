@@ -40,11 +40,11 @@ export async function requireTenantStaffForTenant(tenantId: string) {
 export async function requireTenantStaffForLegalProcess(legalProcessId: string) {
   const legalProcess = await prisma.legalProcess.findUnique({
     where: { id: legalProcessId },
-    include: { debtClaim: true },
+    include: { debtClaim: { include: { dossier: true } } },
   });
   if (!legalProcess) throw new Error("Dossier niet gevonden.");
 
-  const session = await requireTenantStaffForTenant(legalProcess.debtClaim.tenantId);
+  const session = await requireTenantStaffForTenant(legalProcess.debtClaim.dossier.tenantId);
   return { session, legalProcess };
 }
 
@@ -58,14 +58,14 @@ export async function requireStaffOrAssignedBailiff(legalProcessId: string) {
 
   const legalProcess = await prisma.legalProcess.findUnique({
     where: { id: legalProcessId },
-    include: { debtClaim: true, bailiff: true },
+    include: { debtClaim: { include: { dossier: true } }, bailiff: true },
   });
   if (!legalProcess) throw new Error("Dossier niet gevonden.");
 
   if (isPlatformOwner(session)) return { session, legalProcess };
 
   const isStaffOfTenant =
-    isTenantStaff(session) && session.user.tenant_id === legalProcess.debtClaim.tenantId;
+    isTenantStaff(session) && session.user.tenant_id === legalProcess.debtClaim.dossier.tenantId;
   const isAssignedBailiff = legalProcess.bailiff?.user_id === session.user.id;
 
   if (!isStaffOfTenant && !isAssignedBailiff) {
@@ -83,7 +83,7 @@ export async function requireAssignedBailiff(legalProcessId: string) {
 
   const legalProcess = await prisma.legalProcess.findUnique({
     where: { id: legalProcessId },
-    include: { debtClaim: true, bailiff: true },
+    include: { debtClaim: { include: { dossier: true } }, bailiff: true },
   });
   if (!legalProcess) throw new Error("Dossier niet gevonden.");
 
@@ -111,7 +111,7 @@ export async function requireAuthorizedToDecideGopAgreement(legalProcessId: stri
 
   const legalProcess = await prisma.legalProcess.findUnique({
     where: { id: legalProcessId },
-    include: { debtClaim: true, bailiff: true, caseTransfer: true },
+    include: { debtClaim: { include: { dossier: true } }, bailiff: true, caseTransfer: true },
   });
   if (!legalProcess) throw new Error("Dossier niet gevonden.");
 
@@ -126,7 +126,7 @@ export async function requireAuthorizedToDecideGopAgreement(legalProcessId: stri
   }
 
   const isStaffOfTenant =
-    isTenantStaff(session) && session.user.tenant_id === legalProcess.debtClaim.tenantId;
+    isTenantStaff(session) && session.user.tenant_id === legalProcess.debtClaim.dossier.tenantId;
   const isAssignedProfessional = legalProcess.bailiff?.user_id === session.user.id;
 
   if (!isStaffOfTenant && !isAssignedProfessional) {
@@ -163,7 +163,7 @@ export async function requireAuthorizedToConfirmGopPayment(confirmationId: strin
 
   const confirmation = await prisma.gopPaymentConfirmation.findUnique({
     where: { id: confirmationId },
-    include: { legalProcess: { include: { debtClaim: true, bailiff: true } } },
+    include: { legalProcess: { include: { debtClaim: { include: { dossier: true } }, bailiff: true } } },
   });
   if (!confirmation) throw new Error("Betalingsregistratie niet gevonden.");
 
@@ -172,7 +172,7 @@ export async function requireAuthorizedToConfirmGopPayment(confirmationId: strin
   if (isPlatformOwner(session)) return { session, confirmation };
 
   const isStaffOfTenant =
-    isTenantStaff(session) && session.user.tenant_id === legalProcess.debtClaim.tenantId;
+    isTenantStaff(session) && session.user.tenant_id === legalProcess.debtClaim.dossier.tenantId;
   const isAssignedBailiff = legalProcess.bailiff?.user_id === session.user.id;
 
   const isAuthorized = confirmation.receivedBy === "BAILIFF" ? isStaffOfTenant : isAssignedBailiff;
@@ -195,7 +195,7 @@ export async function requireAuthorizedToCorrectGopPayment(confirmationId: strin
 
   const confirmation = await prisma.gopPaymentConfirmation.findUnique({
     where: { id: confirmationId },
-    include: { legalProcess: { include: { debtClaim: true } } },
+    include: { legalProcess: { include: { debtClaim: { include: { dossier: true } } } } },
   });
   if (!confirmation) throw new Error("Betalingsregistratie niet gevonden.");
 

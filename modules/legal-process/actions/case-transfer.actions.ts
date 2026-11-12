@@ -230,7 +230,7 @@ export const uploadCaseTransferDocument = async (
 
   return CaseTransferService.uploadDocument({
     caseTransferId,
-    tenantId: caseTransfer.debtClaim.tenantId,
+    tenantId: caseTransfer.debtClaim.dossier.tenantId,
     uploadedById: session.user.id,
     fileName: file.name,
     mimeType: file.type,
@@ -279,11 +279,11 @@ export const proposeCaseTransferAgreement = async (
     await requireStaffOrAssignedLawyerOrBailiffForAgreementProposal(caseTransferId);
 
   return AgreementService.create(
-    caseTransfer.debtClaim.tenantId,
+    caseTransfer.debtClaim.dossier.tenantId,
     {
       debtClaim_id: caseTransfer.debtClaimId,
       caseTransferId,
-      debtor_id: caseTransfer.debtClaim.debtorId,
+      debtor_id: caseTransfer.debtClaim.dossier.debtorId!,
       total_amount: data.total_amount,
       installment_amount: data.installment_amount,
       installments_count: data.installments_count,

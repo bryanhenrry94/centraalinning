@@ -37,7 +37,11 @@ import { formatAmount } from "@/shared/utils/formatters";
 import { DossierRecordService } from "@/modules/dossier/services/dossier-record.service";
 
 const legalProcessInclude = {
-  debtClaim: { include: { debtor: { include: { person: true } }, tenant: true } },
+  debtClaim: {
+    include: {
+      dossier: { include: { debtor: { include: { person: true } }, tenant: true } },
+    },
+  },
   caseTransfer: { include: { lawyer: true } },
   bailiff: true,
   verdicts: true,
@@ -86,7 +90,7 @@ export class LegalProcessService {
 
   static getAllForTenant = async (tenantId: string) => {
     const legalProcesses = await prisma.legalProcess.findMany({
-      where: { debtClaim: { tenantId } },
+      where: { debtClaim: { dossier: { tenantId } } },
       include: legalProcessInclude,
       orderBy: { startedAt: "desc" },
     });
@@ -218,7 +222,7 @@ export class LegalProcessService {
     const caseTransfer = await prisma.caseTransfer.findUnique({
       where: { id: caseTransferId },
       include: {
-        debtClaim: true,
+        debtClaim: { include: { dossier: true } },
         bailiff: true,
         legalProcess: { include: { gopActivationPayment: true, bailiffReferralPayment: true } },
       },
@@ -365,7 +369,7 @@ export class LegalProcessService {
       const newVerdict = await tx.verdict.create({
         data: {
           tenant_id: tenantId,
-          debtor_id: caseTransfer.debtClaim.debtorId,
+          debtor_id: caseTransfer.debtClaim.dossier.debtorId!,
           legal_process_id: newLegalProcess.id,
           invoice_number: data.invoice_number,
           creditor_name: data.creditor_name,
@@ -697,7 +701,7 @@ export class LegalProcessService {
   static processGopActivationPaymentConfirmed = async (paymentId: string) => {
     const legalProcess = await prisma.legalProcess.findUnique({
       where: { gopActivationPaymentId: paymentId },
-      include: { debtClaim: { include: { tenant: true } } },
+      include: { debtClaim: { include: { dossier: { include: { tenant: true } } } } },
     });
     if (!legalProcess || legalProcess.status !== LegalProcessStatus.GOP_DRAFT || legalProcess.gopActivationPaidAt) {
       return;
@@ -716,8 +720,8 @@ export class LegalProcessService {
     // confirmado se le envía la factura correspondiente, independiente de si
     // el lado del deurwaarder ya está saldado.
     const invoice = await prisma.billingInvoice.findFirst({ where: { payment_id: paymentId } });
-    if (invoice && legalProcess.debtClaim.tenant.contact_email) {
-      await sendInvoiceEmail(legalProcess.debtClaim.tenant.contact_email, invoice.id, false);
+    if (invoice && legalProcess.debtClaim.dossier.tenant.contact_email) {
+      await sendInvoiceEmail(legalProcess.debtClaim.dossier.tenant.contact_email, invoice.id, false);
     }
 
     const activated = await this.tryActivateGop(legalProcess.id);
@@ -738,7 +742,7 @@ export class LegalProcessService {
       where: { bailiffReferralPaymentId: paymentId },
       include: {
         bailiff: true,
-        debtClaim: { include: { tenant: true } },
+        debtClaim: { include: { dossier: { include: { tenant: true } } } },
         gopActivationPayment: true,
       },
     });
@@ -775,8 +779,10 @@ export class LegalProcessService {
       await this.notifyGopActivationPayment({
         referenceNumber: legalProcess.referenceNumber,
         participant: {
-          email: legalProcess.debtClaim.tenant.contact_email,
-          fullname: legalProcess.debtClaim.tenant.legal_name ?? legalProcess.debtClaim.tenant.name,
+          email: legalProcess.debtClaim.dossier.tenant.contact_email,
+          fullname:
+            legalProcess.debtClaim.dossier.tenant.legal_name ??
+            legalProcess.debtClaim.dossier.tenant.name,
           paymentUrl: legalProcess.gopActivationPayment.payment_url,
           amount: Number(legalProcess.gopActivationPayment.total_amount),
         },
@@ -800,7 +806,7 @@ export class LegalProcessService {
     const legalProcess = await prisma.legalProcess.findUnique({
       where: { id: legalProcessId },
       include: {
-        debtClaim: { include: { tenant: true } },
+        debtClaim: { include: { dossier: { include: { tenant: true } } } },
         verdicts: { include: { verdict_interest: true } },
         bailiff: true,
       },
@@ -853,16 +859,14 @@ export class LegalProcessService {
       });
       if (!existingBlockade) {
         const blockadeDossier = await DossierRecordService.create(tx, {
-          tenantId: legalProcess.debtClaim.tenantId,
-          debtorId: legalProcess.debtClaim.debtorId,
+          tenantId: legalProcess.debtClaim.dossier.tenantId,
+          debtorId: legalProcess.debtClaim.dossier.debtorId,
           serviceType: "BLK",
         });
 
         await tx.blockade.create({
           data: {
             id: blockadeDossier.id,
-            tenantId: legalProcess.debtClaim.tenantId,
-            debtorId: legalProcess.debtClaim.debtorId,
             reason: "UNPAID_PAYMENT",
             registeredAt: new Date(),
             status: "ACTIVE",
@@ -978,7 +982,7 @@ export class LegalProcessService {
       });
     }
 
-    await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
+    await NotificationService.notifyTenantStaff(legalProcess.debtClaim.dossier.tenantId, {
       type: NotificationType.GOP_ACTIVATED,
       title: "GOP geactiveerd",
       message: `Het vonnis van dossier ${legalProcess.debtClaim.reference} werd geregistreerd. Het GOP is actief.`,
@@ -998,7 +1002,7 @@ export class LegalProcessService {
   ) => {
     const legalProcess = await prisma.legalProcess.findUnique({
       where: { id: legalProcessId },
-      include: { debtClaim: true },
+      include: { debtClaim: { include: { dossier: true } } },
     });
     if (!legalProcess) throw new Error("GOP-dossier niet gevonden");
     if (!VERDICT_REGISTRABLE_STATUSES.includes(legalProcess.status as LegalProcessStatus)) {
@@ -1011,7 +1015,7 @@ export class LegalProcessService {
       const newVerdict = await tx.verdict.create({
         data: {
           tenant_id: tenantId,
-          debtor_id: legalProcess.debtClaim.debtorId,
+          debtor_id: legalProcess.debtClaim.dossier.debtorId!,
           legal_process_id: legalProcess.id,
           invoice_number: data.invoice_number,
           creditor_name: data.creditor_name,
@@ -1294,7 +1298,7 @@ export class LegalProcessService {
   ) => {
     const legalProcess = await prisma.legalProcess.findUnique({
       where: { id: params.legalProcessId },
-      include: { debtClaim: true, bailiff: true },
+      include: { debtClaim: { include: { dossier: true } }, bailiff: true },
     });
     if (!legalProcess) throw new Error("GOP-dossier niet gevonden");
     if (!GOP_OPERABLE_STATUSES.includes(legalProcess.status as LegalProcessStatus)) {
@@ -1316,7 +1320,7 @@ export class LegalProcessService {
       }
     }
 
-    const tenantId = legalProcess.debtClaim.tenantId;
+    const tenantId = legalProcess.debtClaim.dossier.tenantId;
     let storageKey: string | undefined;
     if (params.buffer && params.fileName && params.mimeType) {
       const sanitizedName = `${crypto.randomUUID()}-${params.fileName}`.replace(/\s+/g, "-");
@@ -1420,7 +1424,9 @@ export class LegalProcessService {
   static processBailiffFeePaymentConfirmed = async (paymentId: string) => {
     const bailiffFeeInvoice = await prisma.bailiffFeeInvoice.findUnique({
       where: { paymentId },
-      include: { legalProcess: { include: { debtClaim: true, bailiff: true } } },
+      include: {
+        legalProcess: { include: { debtClaim: { include: { dossier: true } }, bailiff: true } },
+      },
     });
     if (!bailiffFeeInvoice || bailiffFeeInvoice.status === "PAID") return;
 
@@ -1452,7 +1458,7 @@ export class LegalProcessService {
       "De deurwaarder heeft zijn werk afgerond: kostenfactuur en CFSB-commissie betaald. GOP kan gesloten worden.",
     );
 
-    await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
+    await NotificationService.notifyTenantStaff(legalProcess.debtClaim.dossier.tenantId, {
       type: NotificationType.GOP_BAILIFF_WORK_FINALIZED,
       title: "Werk van de deurwaarder afgerond",
       message: `De betaling van de CFSB-commissie voor dossier ${legalProcess.debtClaim.reference} werd bevestigd. Het GOP kan nu gesloten worden.`,
@@ -1473,7 +1479,7 @@ export class LegalProcessService {
   static markInactive = async (data: MarkInactiveInput, actorUserId?: string) => {
     const legalProcess = await prisma.legalProcess.findUnique({
       where: { id: data.legalProcessId },
-      include: { debtClaim: true },
+      include: { debtClaim: { include: { dossier: true } } },
     });
     if (!legalProcess) throw new Error("GOP-dossier niet gevonden");
     if (legalProcess.status !== LegalProcessStatus.GOP_ACTIVE) {
@@ -1499,7 +1505,7 @@ export class LegalProcessService {
       actorUserId,
     );
 
-    await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
+    await NotificationService.notifyTenantStaff(legalProcess.debtClaim.dossier.tenantId, {
       type: NotificationType.GOP_INACTIVE,
       title: "In onderzoek naar executiemogelijkheden",
       message: `Dossier ${legalProcess.debtClaim.reference} heeft momenteel geen executiemogelijkheid. De sentencia blijft geregistreerd en de blokkade actief. Volgende controle: ${data.reviewDate.toLocaleDateString()}.`,
@@ -1514,7 +1520,7 @@ export class LegalProcessService {
   static reactivate = async (legalProcessId: string, actorUserId?: string) => {
     const legalProcess = await prisma.legalProcess.findUnique({
       where: { id: legalProcessId },
-      include: { debtClaim: true },
+      include: { debtClaim: { include: { dossier: true } } },
     });
     if (!legalProcess || legalProcess.status !== LegalProcessStatus.GOP_INACTIVE) return null;
 
@@ -1537,7 +1543,7 @@ export class LegalProcessService {
       actorUserId,
     );
 
-    await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
+    await NotificationService.notifyTenantStaff(legalProcess.debtClaim.dossier.tenantId, {
       type: NotificationType.GOP_REACTIVATED,
       title: "GOP heractiveerd",
       message: `Dossier ${legalProcess.debtClaim.reference} is weer Actief.`,
@@ -1563,7 +1569,7 @@ export class LegalProcessService {
   static changeBailiff = async (data: ChangeBailiffInput, actorUserId?: string) => {
     const legalProcess = await prisma.legalProcess.findUnique({
       where: { id: data.legalProcessId },
-      include: { debtClaim: true },
+      include: { debtClaim: { include: { dossier: true } } },
     });
     if (!legalProcess) throw new Error("GOP-dossier niet gevonden");
     if (legalProcess.status === LegalProcessStatus.CLOSED) {
@@ -1596,7 +1602,7 @@ export class LegalProcessService {
     }
     if (notifyUserIds.length) {
       await NotificationService.createMany(notifyUserIds, {
-        tenant_id: legalProcess.debtClaim.tenantId,
+        tenant_id: legalProcess.debtClaim.dossier.tenantId,
         type: NotificationType.GOP_BAILIFF_CHANGED,
         title: "Deurwaarder gewijzigd",
         message: `Dossier ${legalProcess.debtClaim.reference} heeft een nieuwe deurwaarder gekregen.`,
@@ -1606,7 +1612,7 @@ export class LegalProcessService {
       });
     }
 
-    await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
+    await NotificationService.notifyTenantStaff(legalProcess.debtClaim.dossier.tenantId, {
       type: NotificationType.GOP_BAILIFF_CHANGED,
       title: "Deurwaarder gewijzigd",
       message: `Dossier ${legalProcess.debtClaim.reference} is nu toegewezen aan ${newBailiff.fullname}.`,
@@ -1630,7 +1636,7 @@ export class LegalProcessService {
     const legalProcess = await prisma.legalProcess.findUnique({
       where: { id: legalProcessId },
       include: {
-        debtClaim: { include: { debtor: true } },
+        debtClaim: { include: { dossier: { include: { debtor: true } } } },
         bailiff: true,
         agreements: true,
         verdicts: { include: { bailiff_services: true, verdict_embargo: true } },
@@ -1735,8 +1741,8 @@ export class LegalProcessService {
 
     await BlockadeService.releaseForSettledDebtClaim(
       legalProcess.debtClaimId,
-      legalProcess.debtClaim.debtorId,
-      legalProcess.debtClaim.tenantId,
+      legalProcess.debtClaim.dossier.debtorId!,
+      legalProcess.debtClaim.dossier.tenantId,
       actorUserId,
     );
 
@@ -1748,7 +1754,7 @@ export class LegalProcessService {
       actorUserId,
     );
 
-    await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, {
+    await NotificationService.notifyTenantStaff(legalProcess.debtClaim.dossier.tenantId, {
       type: NotificationType.GOP_CLOSED,
       title: "GOP gesloten",
       message: `Dossier ${legalProcess.debtClaim.reference} is gesloten: het vonnis werd volledig voldaan.`,
@@ -1759,10 +1765,11 @@ export class LegalProcessService {
 
     const notifyUserIds: string[] = [];
     if (legalProcess.bailiff?.user_id) notifyUserIds.push(legalProcess.bailiff.user_id);
-    if (legalProcess.debtClaim.debtor.user_id) notifyUserIds.push(legalProcess.debtClaim.debtor.user_id);
+    if (legalProcess.debtClaim.dossier.debtor!.user_id)
+      notifyUserIds.push(legalProcess.debtClaim.dossier.debtor!.user_id);
     if (notifyUserIds.length) {
       await NotificationService.createMany(notifyUserIds, {
-        tenant_id: legalProcess.debtClaim.tenantId,
+        tenant_id: legalProcess.debtClaim.dossier.tenantId,
         type: NotificationType.GOP_CLOSED,
         title: "GOP gesloten",
         message: `Dossier ${legalProcess.debtClaim.reference} is gesloten: vonnis volledig voldaan.`,
@@ -2041,7 +2048,7 @@ export class LegalProcessService {
 
   private static paymentConfirmationInclude = {
     payment: true,
-    legalProcess: { include: { debtClaim: true, bailiff: true } },
+    legalProcess: { include: { debtClaim: { include: { dossier: true } }, bailiff: true } },
   } satisfies Prisma.GopPaymentConfirmationInclude;
 
   static registerGopPayment = async (
@@ -2058,7 +2065,7 @@ export class LegalProcessService {
   ) => {
     const legalProcess = await prisma.legalProcess.findUnique({
       where: { id: legalProcessId },
-      include: { debtClaim: true, bailiff: true },
+      include: { debtClaim: { include: { dossier: true } }, bailiff: true },
     });
     if (!legalProcess) throw new Error("GOP-dossier niet gevonden");
 
@@ -2067,7 +2074,7 @@ export class LegalProcessService {
       Number(legalProcess.debtClaim.principalAmount),
     );
 
-    const tenantId = legalProcess.debtClaim.tenantId;
+    const tenantId = legalProcess.debtClaim.dossier.tenantId;
     const sanitizedName = `${crypto.randomUUID()}-${data.fileName}`.replace(/\s+/g, "-");
     const folder = `${tenantId}/legal-processes/${legalProcessId}/payment-proofs`;
     const storageKey = await StorageService.uploadFile(folder, sanitizedName, data.mimeType, data.buffer);
@@ -2190,7 +2197,7 @@ export class LegalProcessService {
     const recordedUserId = confirmation.recordedById;
     if (recordedUserId) {
       await NotificationService.create({
-        tenant_id: legalProcess.debtClaim.tenantId,
+        tenant_id: legalProcess.debtClaim.dossier.tenantId,
         user_id: recordedUserId,
         type: NotificationType.GOP_PAYMENT_CONFIRMED,
         title: "Betaling bevestigd",
@@ -2240,7 +2247,7 @@ export class LegalProcessService {
     const recordedUserId = confirmation.recordedById;
     if (recordedUserId) {
       await NotificationService.create({
-        tenant_id: legalProcess.debtClaim.tenantId,
+        tenant_id: legalProcess.debtClaim.dossier.tenantId,
         user_id: recordedUserId,
         type: NotificationType.GOP_PAYMENT_DISPUTED,
         title: "Betaling betwist",
@@ -2291,7 +2298,7 @@ export class LegalProcessService {
     if (data.fileName && data.buffer && data.mimeType && data.size) {
       const legalProcess = confirmation.legalProcess;
       const sanitizedName = `${crypto.randomUUID()}-${data.fileName}`.replace(/\s+/g, "-");
-      const folder = `${legalProcess.debtClaim.tenantId}/legal-processes/${legalProcess.id}/payment-proofs`;
+      const folder = `${legalProcess.debtClaim.dossier.tenantId}/legal-processes/${legalProcess.id}/payment-proofs`;
       const storageKey = await StorageService.uploadFile(folder, sanitizedName, data.mimeType, data.buffer);
       proofUpdate = {
         proofStorageKey: storageKey,
@@ -2333,13 +2340,13 @@ export class LegalProcessService {
     if (confirmation.receivedBy === "PARTICIPANT") {
       if (legalProcess.bailiff.user_id) {
         await NotificationService.create({
-          tenant_id: legalProcess.debtClaim.tenantId,
+          tenant_id: legalProcess.debtClaim.dossier.tenantId,
           user_id: legalProcess.bailiff.user_id,
           ...counterpartNotification,
         });
       }
     } else {
-      await NotificationService.notifyTenantStaff(legalProcess.debtClaim.tenantId, counterpartNotification);
+      await NotificationService.notifyTenantStaff(legalProcess.debtClaim.dossier.tenantId, counterpartNotification);
     }
 
     return updated;

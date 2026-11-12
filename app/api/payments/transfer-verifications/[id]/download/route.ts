@@ -18,12 +18,16 @@ export async function GET(
 
     const verification = await prisma.paymentTransferVerification.findUnique({
       where: { id },
-      include: { payment: { include: { obligation: { include: { debtClaim: true } } } } },
+      include: {
+        payment: {
+          include: { obligation: { include: { debtClaim: { include: { dossier: true } } } } },
+        },
+      },
     });
     if (!verification) {
       return NextResponse.json({ error: "Bewijsstuk niet gevonden" }, { status: 404 });
     }
-    if (verification.payment.obligation?.debtClaim.tenantId !== session.user.tenant_id) {
+    if (verification.payment.obligation?.debtClaim.dossier.tenantId !== session.user.tenant_id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 

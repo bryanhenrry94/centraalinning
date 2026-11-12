@@ -30,7 +30,11 @@ import {
 } from "@/modules/collective-follow-up/constants/collective-collection-status";
 
 const collectiveCollectionInclude = {
-  debtClaim: { include: { debtor: { include: { person: true } }, tenant: true } },
+  debtClaim: {
+    include: {
+      dossier: { include: { debtor: { include: { person: true } }, tenant: true } },
+    },
+  },
   employerTenant: { select: { id: true, name: true } },
 } satisfies Prisma.CollectiveCollectionInclude;
 
@@ -76,7 +80,7 @@ export class CollectiveCollectionService {
     filter?: { status?: CollectiveCollectionStatus },
   ) => {
     const items = await prisma.collectiveCollection.findMany({
-      where: { debtClaim: { tenantId }, ...(filter?.status ? { status: filter.status } : {}) },
+      where: { debtClaim: { dossier: { tenantId } }, ...(filter?.status ? { status: filter.status } : {}) },
       include: collectiveCollectionInclude,
       orderBy: { startedAt: "desc" },
     });
@@ -99,7 +103,7 @@ export class CollectiveCollectionService {
 
   static getForDebtor = async (debtorId: string) => {
     const items = await prisma.collectiveCollection.findMany({
-      where: { debtClaim: { debtorId } },
+      where: { debtClaim: { dossier: { debtorId } } },
       include: collectiveCollectionInclude,
       orderBy: { startedAt: "desc" },
     });
@@ -229,8 +233,6 @@ export class CollectiveCollectionService {
       const createdClaim = await tx.debtClaim.create({
         data: {
           id: claimDossier.id,
-          tenantId,
-          debtorId: debtorId!,
           reference,
           description: input.description,
           principalAmount: input.outstandingAmount,
@@ -249,8 +251,6 @@ export class CollectiveCollectionService {
       await tx.blockade.create({
         data: {
           id: blockadeDossier.id,
-          tenantId,
-          debtorId: debtorId!,
           reason: "EXTERNAL_PROCEDURE_COMPLETED",
           reasonNote: input.description,
           registeredAt: new Date(),
@@ -367,7 +367,7 @@ export class CollectiveCollectionService {
 
     const debtClaim = await prisma.debtClaim.findUnique({
       where: { id: debtClaimId },
-      include: { tenant: true },
+      include: { dossier: { select: { tenantId: true } } },
     });
     if (!debtClaim) throw new Error("Dossier niet gevonden.");
 
@@ -378,12 +378,12 @@ export class CollectiveCollectionService {
     // start betaalt en ziet altijd vergoeding + ABB bovenop, nooit ABB die
     // uit het totaal wordt teruggerekend (zelfde regel als BLC/Financieel
     // Rapport, sponsor-eis 2026-09-02).
-    const parameter = await ParameterService.getParameterForTenant(debtClaim.tenantId);
+    const parameter = await ParameterService.getParameterForTenant(debtClaim.dossier.tenantId);
     const abbRate = parameter?.abb_rate ?? 0;
     const abbAmount = Number(((feeAmount * abbRate) / 100).toFixed(2));
     const totalWithAbb = Number((feeAmount + abbAmount).toFixed(2));
 
-    const paymentResult = await PaymentService.create(debtClaim.tenantId, {
+    const paymentResult = await PaymentService.create(debtClaim.dossier.tenantId, {
       amount: totalWithAbb,
       currency: debtClaim.currency,
       description: `CFSB-startvergoeding (5%) voor start Collectieve Opvolging, incl. ${abbRate}% ABB — dossier ${
@@ -502,7 +502,11 @@ export class CollectiveCollectionService {
   static processStartPaymentConfirmed = async (paymentId: string) => {
     const collection = await prisma.collectiveCollection.findUnique({
       where: { startFeePaymentId: paymentId },
-      include: { debtClaim: { include: { tenant: true, debtor: { include: { person: true } } } } },
+      include: {
+        debtClaim: {
+          include: { dossier: { include: { tenant: true, debtor: { include: { person: true } } } } },
+        },
+      },
     });
     if (!collection || collection.status !== CollectiveCollectionStatus.PENDING_PAYMENT) {
       return;
@@ -544,8 +548,8 @@ export class CollectiveCollectionService {
       const invoiceData = await InvoiceService.generateInvoiceData(paymentId);
       const invoice = await InvoiceService.createInvoice(invoiceData);
 
-      if (debtClaim.tenant.contact_email) {
-        await sendInvoiceEmail(debtClaim.tenant.contact_email, invoice.id, true);
+      if (debtClaim.dossier.tenant.contact_email) {
+        await sendInvoiceEmail(debtClaim.dossier.tenant.contact_email, invoice.id, true);
       }
     } catch (error) {
       console.error("Error generating COP start fee invoice:", error);
@@ -554,7 +558,7 @@ export class CollectiveCollectionService {
     // Best-effort: el COP ya está confirmado y activo, estos pasos no
     // deben poder revertirlo si fallan.
     try {
-      await NotificationService.notifyTenantStaff(debtClaim.tenantId, {
+      await NotificationService.notifyTenantStaff(debtClaim.dossier.tenantId, {
         type: NotificationType.COL_STARTED,
         title: "Collectieve Opvolging actief",
         message: `De betaling werd bevestigd. Er is een collectieve opvolging actief voor dossier ${
@@ -572,7 +576,7 @@ export class CollectiveCollectionService {
       // Punto 3 del proceso COP: si ya se conoce el empleador de este
       // deudor (confirmado en un COP anterior), se usa directamente en vez
       // de volver a preguntarle a toda la red.
-      const knownEmployerTenantId = debtClaim.debtor.person?.confirmedEmployerTenantId;
+      const knownEmployerTenantId = debtClaim.dossier.debtor!.person?.confirmedEmployerTenantId;
       if (knownEmployerTenantId) {
         await this.applyEmployerMatch(collection.id, knownEmployerTenantId);
       } else {
@@ -590,7 +594,7 @@ export class CollectiveCollectionService {
 
     const gracePeriodDays = await SettingsService.resolveNumber(
       "col_debtor_grace_period_days",
-      { tenantId: debtClaim.tenantId },
+      { tenantId: debtClaim.dossier.tenantId },
       2,
     );
     const debtorGracePeriodDeadline = new Date();
@@ -614,7 +618,10 @@ export class CollectiveCollectionService {
       where: { id: collectionId },
       include: {
         debtClaim: {
-          include: { debtor: { include: { person: true } }, tenant: true, obligations: true },
+          include: {
+            dossier: { include: { debtor: { include: { person: true } }, tenant: true } },
+            obligations: true,
+          },
         },
       },
     });
@@ -628,9 +635,9 @@ export class CollectiveCollectionService {
     // Cachea el empleador confirmado a nivel de Person (no de este COP en
     // particular) — así un COP futuro para el mismo deudor puede saltarse
     // el broadcast de red (ver processStartPaymentConfirmed).
-    if (collection.debtClaim.debtor.person) {
+    if (collection.debtClaim.dossier.debtor!.person) {
       await prisma.person.update({
-        where: { id: collection.debtClaim.debtor.person.id },
+        where: { id: collection.debtClaim.dossier.debtor!.person.id },
         data: { confirmedEmployerTenantId: employerTenantId, confirmedEmployerConfirmedAt: new Date() },
       });
     }
@@ -670,7 +677,7 @@ export class CollectiveCollectionService {
     // A diferencia de la notificación al empleador, acá sí se comparte con
     // el propio deudor dónde trabaja según nuestros registros — es su
     // información, y necesita saber qué pasa si no reacciona a tiempo.
-    const person = collection.debtClaim.debtor.person;
+    const person = collection.debtClaim.dossier.debtor!.person;
     if (person?.email) {
       const employerTenant = await TenantService.getById(employerTenantId);
       const fullname =
@@ -699,7 +706,7 @@ export class CollectiveCollectionService {
           fullname,
           letterDate: formatDate(now.toISOString()),
           debtClaimReference: collection.debtClaim.reference ?? collection.debtClaimId,
-          creditorName: collection.debtClaim.tenant.name,
+          creditorName: collection.debtClaim.dossier.tenant.name,
           employerName,
           gracePeriodDays,
           outstandingAmount: formatCurrency(payableBalance),
@@ -724,12 +731,16 @@ export class CollectiveCollectionService {
     const collection = await prisma.collectiveCollection.findUnique({
       where: { id: collectionId },
       include: {
-        debtClaim: { include: { debtor: { include: { person: true } }, tenant: true } },
+        debtClaim: {
+          include: {
+            dossier: { include: { debtor: { include: { person: true } }, tenant: true } },
+          },
+        },
       },
     });
     if (!collection || collection.employerTenantId) return null;
 
-    const person = collection.debtClaim.debtor.person;
+    const person = collection.debtClaim.dossier.debtor!.person;
     if (!person) return null;
 
     const personalNumber = await PersonService.ensurePersonalNumber(
@@ -743,7 +754,7 @@ export class CollectiveCollectionService {
 
     const responseWindowDays = await SettingsService.resolveNumber(
       "col_debtor_grace_period_days",
-      { tenantId: collection.debtClaim.tenantId },
+      { tenantId: collection.debtClaim.dossier.tenantId },
       2,
     );
     const responseDeadline = new Date();
@@ -752,7 +763,7 @@ export class CollectiveCollectionService {
     const participants = await TenantService.getActiveParticipants();
     const targetTenantIds = participants
       .map((t) => t.id)
-      .filter((id) => id !== collection.debtClaim.tenantId);
+      .filter((id) => id !== collection.debtClaim.dossier.tenantId);
     if (targetTenantIds.length === 0) return null;
 
     const query = await prisma.cOLNetworkQuery.create({
@@ -865,7 +876,7 @@ export class CollectiveCollectionService {
   static notifyDebtorStarted = async (collectionId: string) => {
     const collection = await prisma.collectiveCollection.findUnique({
       where: { id: collectionId },
-      include: { debtClaim: { include: { debtor: true } } },
+      include: { debtClaim: { include: { dossier: { include: { debtor: true } } } } },
     });
     if (!collection) return;
 
@@ -875,10 +886,10 @@ export class CollectiveCollectionService {
       `Debiteur geïnformeerd over de collectieve opvolging voor dossier ${collection.debtClaim.reference ?? collection.debtClaimId}.`,
     );
 
-    if (collection.debtClaim.debtor.user_id) {
+    if (collection.debtClaim.dossier.debtor!.user_id) {
       await NotificationService.create({
-        tenant_id: collection.debtClaim.tenantId,
-        user_id: collection.debtClaim.debtor.user_id,
+        tenant_id: collection.debtClaim.dossier.tenantId,
+        user_id: collection.debtClaim.dossier.debtor!.user_id,
         type: NotificationType.COL_DEBTOR_NOTIFIED,
         title: "Collectieve Opvolging actief",
         message: `Er is een collectieve opvolging actief voor dossier ${collection.debtClaim.reference ?? collection.debtClaimId}. U kunt nog betalen of een betalingsregeling aanvragen om een gerechtelijke procedure te voorkomen.`,
@@ -911,7 +922,7 @@ export class CollectiveCollectionService {
   ) => {
     const collection = await prisma.collectiveCollection.findUnique({
       where: { id: collectionId },
-      include: { debtClaim: { include: { debtor: true, obligations: true } } },
+      include: { debtClaim: { include: { dossier: { include: { debtor: true } }, obligations: true } } },
     });
     if (!collection) throw new Error("Dossier niet gevonden.");
 
@@ -982,7 +993,7 @@ export class CollectiveCollectionService {
     });
 
     await NotificationService.notifyTenantStaff(
-      collection.debtClaim.tenantId,
+      collection.debtClaim.dossier.tenantId,
       {
         type: NotificationType.COL_NEGOTIATION_REQUESTED,
         title: "Betalingsregeling aangevraagd",
@@ -996,10 +1007,10 @@ export class CollectiveCollectionService {
 
     // El deudor no ve el pedido en la app del empleador — se le avisa
     // explícitamente que su empleador actuó en su nombre.
-    if (submitterInfo.submittedByRole === "EMPLOYER" && collection.debtClaim.debtor.user_id) {
+    if (submitterInfo.submittedByRole === "EMPLOYER" && collection.debtClaim.dossier.debtor!.user_id) {
       await NotificationService.create({
-        tenant_id: collection.debtClaim.tenantId,
-        user_id: collection.debtClaim.debtor.user_id,
+        tenant_id: collection.debtClaim.dossier.tenantId,
+        user_id: collection.debtClaim.dossier.debtor!.user_id,
         type: NotificationType.COL_NEGOTIATION_REQUESTED_BY_EMPLOYER,
         title: "Uw werkgever heeft namens u een betalingsregeling aangevraagd",
         message: `Voor dossier ${collection.debtClaim.reference ?? collection.debtClaimId} werd een betalingsregeling van ${formatAmount(proposalAmount)} aangevraagd door uw werkgever, namens u.`,
@@ -1024,7 +1035,9 @@ export class CollectiveCollectionService {
     const negotiation = await prisma.cOLNegotiation.findUnique({
       where: { id: negotiationId },
       include: {
-        collection: { include: { debtClaim: { include: { debtor: true, tenant: true } } } },
+        collection: {
+          include: { debtClaim: { include: { dossier: { include: { debtor: true, tenant: true } } } } },
+        },
       },
     });
     if (!negotiation) throw new Error("Betalingsregeling niet gevonden.");
@@ -1054,10 +1067,10 @@ export class CollectiveCollectionService {
         });
       });
 
-      if (collection.debtClaim.debtor.user_id) {
+      if (collection.debtClaim.dossier.debtor!.user_id) {
         await NotificationService.create({
-          tenant_id: collection.debtClaim.tenantId,
-          user_id: collection.debtClaim.debtor.user_id,
+          tenant_id: collection.debtClaim.dossier.tenantId,
+          user_id: collection.debtClaim.dossier.debtor!.user_id,
           type: NotificationType.COL_NEGOTIATION_REJECTED,
           title: "Betalingsregeling afgewezen",
           message: `Uw voorstel voor dossier ${debtClaimReference} werd afgewezen. Reden: ${decision.notes}`,
@@ -1102,14 +1115,14 @@ export class CollectiveCollectionService {
     });
 
     await BlockadeService.suspendActiveForDebtor(
-      collection.debtClaim.debtorId,
-      collection.debtClaim.tenantId,
+      collection.debtClaim.dossier.debtorId!,
+      collection.debtClaim.dossier.tenantId,
     );
 
-    if (collection.debtClaim.debtor.user_id) {
+    if (collection.debtClaim.dossier.debtor!.user_id) {
       await NotificationService.create({
-        tenant_id: collection.debtClaim.tenantId,
-        user_id: collection.debtClaim.debtor.user_id,
+        tenant_id: collection.debtClaim.dossier.tenantId,
+        user_id: collection.debtClaim.dossier.debtor!.user_id,
         type: NotificationType.COL_NEGOTIATION_ACCEPTED,
         title: "Betalingsregeling geaccepteerd",
         message: `Uw voorstel voor dossier ${debtClaimReference} werd geaccepteerd voor ${formatAmount(acceptedAmount)}.`,
@@ -1129,7 +1142,7 @@ export class CollectiveCollectionService {
   static checkAndCloseIfSettled = async (debtClaimId: string, actorUserId?: string) => {
     const collection = await prisma.collectiveCollection.findUnique({
       where: { debtClaimId },
-      include: { debtClaim: { include: { debtor: true, tenant: true } } },
+      include: { debtClaim: { include: { dossier: { include: { debtor: true, tenant: true } } } } },
     });
     if (!collection || !OPEN_COLLECTIVE_COLLECTION_STATUSES.includes(collection.status)) {
       return null;
@@ -1160,14 +1173,14 @@ export class CollectiveCollectionService {
 
     await BlockadeService.releaseForSettledDebtClaim(
       debtClaimId,
-      collection.debtClaim.debtorId,
-      collection.debtClaim.tenantId,
+      collection.debtClaim.dossier.debtorId!,
+      collection.debtClaim.dossier.tenantId,
       actorUserId,
     );
 
     const debtClaimReference = collection.debtClaim.reference ?? debtClaimId;
 
-    await NotificationService.notifyTenantStaff(collection.debtClaim.tenantId, {
+    await NotificationService.notifyTenantStaff(collection.debtClaim.dossier.tenantId, {
       type: NotificationType.COL_PAID_IN_FULL,
       title: "Collectieve Opvolging: volledig betaald",
       message: `Dossier ${debtClaimReference} is volledig betaald via de collectieve opvolging.`,
@@ -1176,10 +1189,10 @@ export class CollectiveCollectionService {
       entity_id: collection.id,
     });
 
-    if (collection.debtClaim.debtor.user_id) {
+    if (collection.debtClaim.dossier.debtor!.user_id) {
       await NotificationService.create({
-        tenant_id: collection.debtClaim.tenantId,
-        user_id: collection.debtClaim.debtor.user_id,
+        tenant_id: collection.debtClaim.dossier.tenantId,
+        user_id: collection.debtClaim.dossier.debtor!.user_id,
         type: NotificationType.COL_PAID_IN_FULL,
         title: "Betaling volledig ontvangen",
         message: `Bedankt. Dossier ${debtClaimReference} is volledig betaald en afgesloten.`,
@@ -1226,7 +1239,7 @@ export class CollectiveCollectionService {
   ) => {
     const collection = await prisma.collectiveCollection.findUnique({
       where: { id: collectionId },
-      include: { debtClaim: { include: { debtor: true, tenant: true } } },
+      include: { debtClaim: { include: { dossier: { include: { debtor: true, tenant: true } } } } },
     });
     if (!collection) throw new Error("Dossier niet gevonden.");
     // CLOSED (zonder oplossing gesloten) mag ook overgedragen worden — dat is
@@ -1263,10 +1276,10 @@ export class CollectiveCollectionService {
       });
     });
 
-    if (collection.debtClaim.debtor.user_id) {
+    if (collection.debtClaim.dossier.debtor!.user_id) {
       await NotificationService.create({
-        tenant_id: collection.debtClaim.tenantId,
-        user_id: collection.debtClaim.debtor.user_id,
+        tenant_id: collection.debtClaim.dossier.tenantId,
+        user_id: collection.debtClaim.dossier.debtor!.user_id,
         type: NotificationType.COL_TRANSFERRED_TO_GOP,
         title: "Dossier overgedragen aan advocaat/deurwaarder",
         message: `Dossier ${collection.debtClaim.reference ?? collection.debtClaimId} werd overgedragen aan een advocaat/deurwaarder voor verdere behandeling.`,
@@ -1282,7 +1295,7 @@ export class CollectiveCollectionService {
   static close = async (collectionId: string, reason: string, actorUserId: string) => {
     const collection = await prisma.collectiveCollection.findUnique({
       where: { id: collectionId },
-      include: { debtClaim: { include: { debtor: true, tenant: true } } },
+      include: { debtClaim: { include: { dossier: { include: { debtor: true, tenant: true } } } } },
     });
     if (!collection) throw new Error("Dossier niet gevonden.");
     if (!OPEN_COLLECTIVE_COLLECTION_STATUSES.includes(collection.status)) {
@@ -1307,10 +1320,10 @@ export class CollectiveCollectionService {
       });
     });
 
-    if (collection.debtClaim.debtor.user_id) {
+    if (collection.debtClaim.dossier.debtor!.user_id) {
       await NotificationService.create({
-        tenant_id: collection.debtClaim.tenantId,
-        user_id: collection.debtClaim.debtor.user_id,
+        tenant_id: collection.debtClaim.dossier.tenantId,
+        user_id: collection.debtClaim.dossier.debtor!.user_id,
         type: NotificationType.COL_CLOSED,
         title: "Collectieve Opvolging gesloten",
         message: `De collectieve opvolging voor dossier ${collection.debtClaim.reference ?? collection.debtClaimId} werd gesloten.`,
@@ -1338,7 +1351,7 @@ export class CollectiveCollectionService {
   static reopenAfterTransferRejected = async (caseTransferId: string, actorUserId?: string) => {
     const collection = await prisma.collectiveCollection.findUnique({
       where: { transferredToCaseTransferId: caseTransferId },
-      include: { debtClaim: { include: { debtor: true, tenant: true } } },
+      include: { debtClaim: { include: { dossier: { include: { debtor: true, tenant: true } } } } },
     });
     if (!collection || collection.status !== CollectiveCollectionStatus.TRANSFERRED) {
       return null;
@@ -1366,7 +1379,7 @@ export class CollectiveCollectionService {
       });
     });
 
-    await NotificationService.notifyTenantStaff(collection.debtClaim.tenantId, {
+    await NotificationService.notifyTenantStaff(collection.debtClaim.dossier.tenantId, {
       type: NotificationType.COL_CLOSED,
       title: "Overdracht afgewezen — dossier heropend",
       message: `De advocaat/deurwaarder heeft de overdracht van dossier ${

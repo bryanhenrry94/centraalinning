@@ -77,17 +77,21 @@ export class AdminRegistryService {
   static getAllDebtClaims = async () => {
     const items = await prisma.debtClaim.findMany({
       include: {
-        tenant: { select: { id: true, name: true } },
-        debtor: { include: { person: true } },
+        dossier: {
+          include: {
+            tenant: { select: { id: true, name: true } },
+            debtor: { include: { person: true } },
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     });
     return items.map((c) => ({
       id: c.id,
       reference: c.reference,
-      tenantId: c.tenantId,
-      tenantName: c.tenant.name,
-      debtorName: personName(c.debtor.person),
+      tenantId: c.dossier.tenantId,
+      tenantName: c.dossier.tenant.name,
+      debtorName: personName(c.dossier.debtor?.person),
       principalAmount: Number(c.principalAmount),
       origin: c.origin,
       status: c.status,
@@ -99,8 +103,12 @@ export class AdminRegistryService {
     const c = await prisma.debtClaim.findUnique({
       where: { id },
       include: {
-        tenant: { select: { id: true, name: true } },
-        debtor: { include: { person: true } },
+        dossier: {
+          include: {
+            tenant: { select: { id: true, name: true } },
+            debtor: { include: { person: true } },
+          },
+        },
       },
     });
     if (!c) return null;
@@ -109,10 +117,10 @@ export class AdminRegistryService {
       reference: c.reference,
       externalReference: c.externalReference,
       description: c.description,
-      tenantId: c.tenantId,
-      tenantName: c.tenant.name,
-      debtorName: personName(c.debtor.person),
-      debtorEmail: c.debtor.email,
+      tenantId: c.dossier.tenantId,
+      tenantName: c.dossier.tenant.name,
+      debtorName: personName(c.dossier.debtor?.person),
+      debtorEmail: c.dossier.debtor?.email,
       principalAmount: Number(c.principalAmount),
       currency: c.currency,
       origin: c.origin,
@@ -124,14 +132,18 @@ export class AdminRegistryService {
 
   static getAllFinancialAgreements = async () => {
     const items = await prisma.financialAgreement.findMany({
-      include: { tenant: { select: { name: true } }, debtor: { include: { person: true } } },
+      include: {
+        dossier: {
+          include: { tenant: { select: { name: true } }, debtor: { include: { person: true } } },
+        },
+      },
       orderBy: { createdAt: "desc" },
     });
     return items.map((a) => ({
       id: a.id,
       farNumber: a.farNumber,
-      tenantName: a.tenant.name,
-      debtorName: personName(a.debtor.person),
+      tenantName: a.dossier.tenant.name,
+      debtorName: personName(a.dossier.debtor?.person),
       amount: Number(a.amount),
       status: a.status,
       createdAt: a.createdAt,
@@ -140,12 +152,12 @@ export class AdminRegistryService {
 
   static getAllBlockChecks = async () => {
     const items = await prisma.blockCheck.findMany({
-      include: { tenant: { select: { name: true } }, person: true },
+      include: { dossier: { include: { tenant: { select: { name: true } } } }, person: true },
       orderBy: { checkedAt: "desc" },
     });
     return items.map((b) => ({
       id: b.id,
-      tenantName: b.tenant.name,
+      tenantName: b.dossier.tenant.name,
       personName: personName(b.person),
       blockadeFound: b.blockadeFound,
       price: Number(b.price),
@@ -156,7 +168,13 @@ export class AdminRegistryService {
   static getAllAdministrativeCollections = async () => {
     const items = await prisma.administrativeCollection.findMany({
       include: {
-        debtClaim: { include: { tenant: { select: { name: true } }, debtor: { include: { person: true } } } },
+        debtClaim: {
+          include: {
+            dossier: {
+              include: { tenant: { select: { name: true } }, debtor: { include: { person: true } } },
+            },
+          },
+        },
       },
       orderBy: { startedAt: "desc" },
     });
@@ -164,8 +182,8 @@ export class AdminRegistryService {
       id: a.id,
       debtClaimId: a.debtClaimId,
       reference: a.debtClaim.reference,
-      tenantName: a.debtClaim.tenant.name,
-      debtorName: personName(a.debtClaim.debtor.person),
+      tenantName: a.debtClaim.dossier.tenant.name,
+      debtorName: personName(a.debtClaim.dossier.debtor?.person),
       status: a.status,
       startedAt: a.startedAt,
       finishedAt: a.finishedAt,
@@ -175,8 +193,9 @@ export class AdminRegistryService {
   static getAllBlockades = async () => {
     const items = await prisma.blockade.findMany({
       include: {
-        tenant: { select: { name: true } },
-        debtor: { include: { person: true } },
+        dossier: {
+          include: { tenant: { select: { name: true } }, debtor: { include: { person: true } } },
+        },
         originDebtClaim: { select: { reference: true } },
       },
       orderBy: { registeredAt: "desc" },
@@ -188,8 +207,8 @@ export class AdminRegistryService {
       // rechtstreekse blokkaderegistratie is — beide delen dezelfde
       // DebtClaim-referentiereeks (CollectionService.generateClaimReference).
       reference: b.originDebtClaim?.reference ?? null,
-      tenantName: b.tenant.name,
-      debtorName: personName(b.debtor.person),
+      tenantName: b.dossier.tenant.name,
+      debtorName: personName(b.dossier.debtor?.person),
       reason: b.reason,
       status: b.status,
       registeredAt: b.registeredAt,
@@ -200,7 +219,13 @@ export class AdminRegistryService {
   static getAllCollectiveCollections = async () => {
     const items = await prisma.collectiveCollection.findMany({
       include: {
-        debtClaim: { include: { tenant: { select: { name: true } }, debtor: { include: { person: true } } } },
+        debtClaim: {
+          include: {
+            dossier: {
+              include: { tenant: { select: { name: true } }, debtor: { include: { person: true } } },
+            },
+          },
+        },
         employerTenant: { select: { name: true } },
       },
       orderBy: { startedAt: "desc" },
@@ -209,8 +234,8 @@ export class AdminRegistryService {
       id: c.id,
       debtClaimId: c.debtClaimId,
       reference: c.debtClaim.reference,
-      tenantName: c.debtClaim.tenant.name,
-      debtorName: personName(c.debtClaim.debtor.person),
+      tenantName: c.debtClaim.dossier.tenant.name,
+      debtorName: personName(c.debtClaim.dossier.debtor?.person),
       employerTenantName: c.employerTenant?.name ?? null,
       status: c.status,
       startedAt: c.startedAt,
@@ -221,7 +246,13 @@ export class AdminRegistryService {
   static getAllLegalProcesses = async () => {
     const items = await prisma.legalProcess.findMany({
       include: {
-        debtClaim: { include: { tenant: { select: { name: true } }, debtor: { include: { person: true } } } },
+        debtClaim: {
+          include: {
+            dossier: {
+              include: { tenant: { select: { name: true } }, debtor: { include: { person: true } } },
+            },
+          },
+        },
         bailiff: { select: { fullname: true } },
       },
       orderBy: { startedAt: "desc" },
@@ -231,8 +262,8 @@ export class AdminRegistryService {
       debtClaimId: g.debtClaimId,
       referenceNumber: g.referenceNumber,
       reference: g.debtClaim.reference,
-      tenantName: g.debtClaim.tenant.name,
-      debtorName: personName(g.debtClaim.debtor.person),
+      tenantName: g.debtClaim.dossier.tenant.name,
+      debtorName: personName(g.debtClaim.dossier.debtor?.person),
       bailiffName: g.bailiff?.fullname ?? "-",
       status: g.status,
       startedAt: g.startedAt,
@@ -243,7 +274,13 @@ export class AdminRegistryService {
   static getAllCaseTransfers = async () => {
     const items = await prisma.caseTransfer.findMany({
       include: {
-        debtClaim: { include: { tenant: { select: { name: true } }, debtor: { include: { person: true } } } },
+        debtClaim: {
+          include: {
+            dossier: {
+              include: { tenant: { select: { name: true } }, debtor: { include: { person: true } } },
+            },
+          },
+        },
         lawyer: { select: { firstName: true, lastName: true } },
         bailiff: { select: { fullname: true } },
       },
@@ -253,8 +290,8 @@ export class AdminRegistryService {
       id: t.id,
       debtClaimId: t.debtClaimId,
       reference: t.debtClaim.reference,
-      tenantName: t.debtClaim.tenant.name,
-      debtorName: personName(t.debtClaim.debtor.person),
+      tenantName: t.debtClaim.dossier.tenant.name,
+      debtorName: personName(t.debtClaim.dossier.debtor?.person),
       assigneeName: t.lawyer
         ? `${t.lawyer.firstName} ${t.lawyer.lastName}`
         : (t.bailiff?.fullname ?? "-"),
@@ -291,7 +328,13 @@ export class AdminRegistryService {
   static getAllObligations = async () => {
     const items = await prisma.debtClaimObligation.findMany({
       include: {
-        debtClaim: { include: { tenant: { select: { name: true } }, debtor: { include: { person: true } } } },
+        debtClaim: {
+          include: {
+            dossier: {
+              include: { tenant: { select: { name: true } }, debtor: { include: { person: true } } },
+            },
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
       take: 500,
@@ -300,8 +343,8 @@ export class AdminRegistryService {
       id: o.id,
       debtClaimId: o.debtClaimId,
       reference: o.debtClaim.reference,
-      tenantName: o.debtClaim.tenant.name,
-      debtorName: personName(o.debtClaim.debtor.person),
+      tenantName: o.debtClaim.dossier.tenant.name,
+      debtorName: personName(o.debtClaim.dossier.debtor?.person),
       type: o.type,
       beneficiary: o.beneficiary,
       description: o.description,
@@ -317,7 +360,13 @@ export class AdminRegistryService {
   static getAllClaimCharges = async () => {
     const items = await prisma.claimCharge.findMany({
       include: {
-        debtClaim: { include: { tenant: { select: { name: true } }, debtor: { include: { person: true } } } },
+        debtClaim: {
+          include: {
+            dossier: {
+              include: { tenant: { select: { name: true } }, debtor: { include: { person: true } } },
+            },
+          },
+        },
       },
       orderBy: { id: "desc" },
       take: 500,
@@ -326,8 +375,8 @@ export class AdminRegistryService {
       id: c.id,
       debtClaimId: c.debtClaimId,
       reference: c.debtClaim.reference,
-      tenantName: c.debtClaim.tenant.name,
-      debtorName: personName(c.debtClaim.debtor.person),
+      tenantName: c.debtClaim.dossier.tenant.name,
+      debtorName: personName(c.debtClaim.dossier.debtor?.person),
       service: c.service,
       concept: c.concept,
       percentage: c.percentage != null ? Number(c.percentage) : null,
@@ -378,7 +427,9 @@ export class AdminRegistryService {
     const items = await prisma.cOLNetworkQuery.findMany({
       include: {
         collection: {
-          include: { debtClaim: { include: { tenant: { select: { name: true } } } } },
+          include: {
+            debtClaim: { include: { dossier: { include: { tenant: { select: { name: true } } } } } },
+          },
         },
         responses: { include: { tenant: { select: { name: true } } } },
       },
@@ -387,7 +438,7 @@ export class AdminRegistryService {
     });
     return items.map((q) => ({
       id: q.id,
-      requestingTenantName: q.collection.debtClaim.tenant.name,
+      requestingTenantName: q.collection.debtClaim.dossier.tenant.name,
       debtClaimReference: q.collection.debtClaim.reference,
       displayName: q.displayName,
       status: q.status,

@@ -75,11 +75,11 @@ export const getGopFeeRatePercent = async (params: {
 }) => {
   if (params.caseTransferId) {
     const { caseTransfer } = await requireAssignedBailiffForTransfer(params.caseTransferId);
-    return LegalProcessService.getGopFeeRatePercent(caseTransfer.debtClaim.tenantId);
+    return LegalProcessService.getGopFeeRatePercent(caseTransfer.debtClaim.dossier.tenantId);
   }
   if (params.legalProcessId) {
     const { legalProcess } = await requireAssignedBailiff(params.legalProcessId);
-    return LegalProcessService.getGopFeeRatePercent(legalProcess.debtClaim.tenantId);
+    return LegalProcessService.getGopFeeRatePercent(legalProcess.debtClaim.dossier.tenantId);
   }
   throw new Error("caseTransferId of legalProcessId is verplicht.");
 };
@@ -92,11 +92,11 @@ export const registerGopVerdict = async (data: RegisterVerdictInput) => {
 
   if (parsed.caseTransferId) {
     const { session, caseTransfer } = await requireAssignedBailiffForTransfer(parsed.caseTransferId);
-    return LegalProcessService.registerVerdict(parsed, caseTransfer.debtClaim.tenantId, session.user.id);
+    return LegalProcessService.registerVerdict(parsed, caseTransfer.debtClaim.dossier.tenantId, session.user.id);
   }
 
   const { session, legalProcess } = await requireAssignedBailiff(parsed.legalProcessId!);
-  return LegalProcessService.registerVerdict(parsed, legalProcess.debtClaim.tenantId, session.user.id);
+  return LegalProcessService.registerVerdict(parsed, legalProcess.debtClaim.dossier.tenantId, session.user.id);
 };
 
 // Sube el documento de respaldo de un embargo o costo del alguacil desde la
@@ -111,11 +111,11 @@ export const uploadVerdictSupportingDocument = async (
 
   if (data.caseTransferId) {
     const { caseTransfer } = await requireAssignedBailiffForTransfer(data.caseTransferId);
-    tenantId = caseTransfer.debtClaim.tenantId;
+    tenantId = caseTransfer.debtClaim.dossier.tenantId;
     contextId = data.caseTransferId;
   } else if (data.legalProcessId) {
     const { legalProcess } = await requireAssignedBailiff(data.legalProcessId);
-    tenantId = legalProcess.debtClaim.tenantId;
+    tenantId = legalProcess.debtClaim.dossier.tenantId;
     contextId = data.legalProcessId;
   } else {
     throw new Error("caseTransferId of legalProcessId is verplicht.");
@@ -170,7 +170,7 @@ export const registerGopBailiffCost = async (data: RegisterBailiffCostInput, fil
   if (file) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const sanitizedName = `${crypto.randomUUID()}-${file.name}`.replace(/\s+/g, "-");
-    const folder = `${legalProcess.debtClaim.tenantId}/legal-processes/${legalProcess.id}/bailiff-costs`;
+    const folder = `${legalProcess.debtClaim.dossier.tenantId}/legal-processes/${legalProcess.id}/bailiff-costs`;
     const storageKey = await StorageService.uploadFile(folder, sanitizedName, file.type, buffer);
     documentFields = {
       document_storage_key: storageKey,
@@ -182,7 +182,7 @@ export const registerGopBailiffCost = async (data: RegisterBailiffCostInput, fil
 
   return LegalProcessService.registerBailiffCost(
     { ...parsed, ...documentFields },
-    legalProcess.debtClaim.tenantId,
+    legalProcess.debtClaim.dossier.tenantId,
     session.user.id,
   );
 };
@@ -216,7 +216,7 @@ export const getGopBailiffCostsSummary = async (legalProcessId: string) => {
 // mostrar el "Totaal CFSB-5%" en vivo en FinalizeBailiffWorkDialog.
 export const getGopBailiffFeeRatePercent = async (legalProcessId: string) => {
   const { legalProcess } = await requireStaffOrAssignedBailiff(legalProcessId);
-  return LegalProcessService.getGopBailiffFeeRatePercent(legalProcess.debtClaim.tenantId);
+  return LegalProcessService.getGopBailiffFeeRatePercent(legalProcess.debtClaim.dossier.tenantId);
 };
 
 // El alguacil registra los costos facturados al debiteur y paga la comisión
@@ -265,7 +265,7 @@ export const uploadLegalProcessDocument = async (
 
   return LegalProcessService.uploadDocument({
     legalProcessId,
-    tenantId: legalProcess.debtClaim.tenantId,
+    tenantId: legalProcess.debtClaim.dossier.tenantId,
     uploadedById: session.user.id,
     fileName: file.name,
     mimeType: file.type,
@@ -305,11 +305,11 @@ export const createGopAgreement = async (
   const { session, legalProcess } = await requireStaffOrAssignedBailiff(legalProcessId);
 
   return AgreementService.create(
-    legalProcess.debtClaim.tenantId,
+    legalProcess.debtClaim.dossier.tenantId,
     {
       debtClaim_id: legalProcess.debtClaimId,
       legalProcessId,
-      debtor_id: legalProcess.debtClaim.debtorId,
+      debtor_id: legalProcess.debtClaim.dossier.debtorId,
       total_amount: data.total_amount,
       installment_amount: data.installment_amount,
       installments_count: data.installments_count,
@@ -441,7 +441,7 @@ export const adjustVerdictAmounts = async (data: VerdictAdjustAmountsInput) => {
 // y/o deurwaarder. Útil cuando el link de Sentoo se cerró sin completarse.
 export const retryGopActivationPayment = async (legalProcessId: string) => {
   const { legalProcess } = await requireStaffOrAssignedBailiff(legalProcessId);
-  return LegalProcessService.retryGopActivationPayment(legalProcessId, legalProcess.debtClaim.tenantId);
+  return LegalProcessService.retryGopActivationPayment(legalProcessId, legalProcess.debtClaim.dossier.tenantId);
 };
 
 export const getVerdictAuditLog = async (verdictId: string) => {

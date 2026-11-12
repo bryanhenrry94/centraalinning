@@ -59,7 +59,7 @@ export class PaymentTransferService {
 
       const debtClaim = await prisma.debtClaim.findUnique({
         where: { id: input.debtClaimId },
-        include: { tenant: true },
+        include: { dossier: { include: { tenant: true } } },
       });
 
       if (!debtClaim) {
@@ -131,15 +131,15 @@ export class PaymentTransferService {
         { paymentId: payment.id, amount: input.amount },
       );
 
-      if (debtClaim.tenant.contact_email) {
+      if (debtClaim.dossier.tenant.contact_email) {
         await sendTransferPaymentVerificationEmail({
-          to: debtClaim.tenant.contact_email,
+          to: debtClaim.dossier.tenant.contact_email,
           debtorEmail: input.debtorEmail,
           debtClaimReference: debtClaim.reference || debtClaim.id,
           amount: input.amount,
           referenceNumber: input.referenceNumber,
           token,
-          tenantSubdomain: debtClaim.tenant.subdomain,
+          tenantSubdomain: debtClaim.dossier.tenant.subdomain,
         });
       }
 
@@ -162,7 +162,7 @@ export class PaymentTransferService {
             obligation: {
               include: {
                 debtClaim: {
-                  include: { debtor: true, tenant: true },
+                  include: { dossier: { include: { debtor: true, tenant: true } } },
                 },
               },
             },
@@ -189,7 +189,7 @@ export class PaymentTransferService {
       success: true as const,
       data: {
         decision: verification.decision,
-        tenantId: debtClaim?.tenantId || "",
+        tenantId: debtClaim?.dossier.tenantId || "",
         payment: {
           totalAmount: Number(verification.payment.total_amount),
           referenceNumber: verification.payment.reference_number,
@@ -211,7 +211,10 @@ export class PaymentTransferService {
             obligation: {
               include: {
                 debtClaim: {
-                  include: { debtor: true, tenant: true, administrativeCollection: true },
+                  include: {
+                    dossier: { include: { debtor: true, tenant: true } },
+                    administrativeCollection: true,
+                  },
                 },
               },
             },
@@ -246,7 +249,7 @@ export class PaymentTransferService {
     const { verification } = result;
 
     const debtClaim = verification.payment.obligation?.debtClaim;
-    if (!debtClaim || debtClaim.tenantId !== actingUser.tenantId) {
+    if (!debtClaim || debtClaim.dossier.tenantId !== actingUser.tenantId) {
       return {
         success: false,
         error: "U heeft geen toegang tot deze betalingsverificatie.",
@@ -283,7 +286,7 @@ export class PaymentTransferService {
       },
     );
 
-    const debtorEmail = debtClaim.debtor?.email;
+    const debtorEmail = debtClaim.dossier.debtor?.email;
     if (debtorEmail) {
       await sendTransferPaymentApprovedEmail({
         to: debtorEmail,
@@ -292,9 +295,9 @@ export class PaymentTransferService {
       });
     }
 
-    if (debtClaim.tenant.contact_email) {
+    if (debtClaim.dossier.tenant.contact_email) {
       await sendTransferPaymentReceiptToTenant({
-        to: debtClaim.tenant.contact_email,
+        to: debtClaim.dossier.tenant.contact_email,
         amount: Number(verification.payment.total_amount),
         debtClaimReference: debtClaim.reference || debtClaim.id,
         decidedByName: actingUser.displayName,
@@ -336,8 +339,8 @@ export class PaymentTransferService {
       try {
         await BlockadeService.releaseForSettledDebtClaim(
           debtClaim.id,
-          debtClaim.debtorId,
-          debtClaim.tenantId,
+          debtClaim.dossier.debtorId!,
+          debtClaim.dossier.tenantId,
           actingUser.id,
         );
       } catch (error) {
@@ -360,7 +363,7 @@ export class PaymentTransferService {
     const { verification } = result;
 
     const debtClaim = verification.payment.obligation?.debtClaim;
-    if (!debtClaim || debtClaim.tenantId !== actingUser.tenantId) {
+    if (!debtClaim || debtClaim.dossier.tenantId !== actingUser.tenantId) {
       return {
         success: false,
         error: "U heeft geen toegang tot deze betalingsverificatie.",
@@ -394,7 +397,7 @@ export class PaymentTransferService {
       },
     );
 
-    const debtorEmail = debtClaim.debtor?.email;
+    const debtorEmail = debtClaim.dossier.debtor?.email;
     if (debtorEmail) {
       await sendTransferPaymentRejectedEmail({
         to: debtorEmail,

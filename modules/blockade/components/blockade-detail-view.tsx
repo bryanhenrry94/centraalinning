@@ -66,9 +66,9 @@ export async function BlockadeDetailView({ id }: { id: string }) {
                   <InfoRow
                     label="Schuldenaar"
                     value={
-                      blockade.debtor.person.first_name +
+                      blockade.dossier.debtor!.person.first_name +
                       " " +
-                      blockade.debtor.person.last_name
+                      blockade.dossier.debtor!.person.last_name
                     }
                   />
 

@@ -32,8 +32,6 @@ export class BlockadeService {
       return tx.blockade.create({
         data: {
           id: dossier.id,
-          tenantId: tenantId,
-          debtorId: input.debtorId!,
           reason: input.reason,
           status: input.status || "DRAFT",
           registeredAt: input.registeredAt || new Date(),
@@ -55,25 +53,29 @@ export class BlockadeService {
     const pageSize = Number(limit) || 10;
 
     const whereClause: Prisma.BlockadeWhereInput = {
-      tenantId,
+      dossier: { tenantId },
     };
 
     if (search?.trim()) {
       whereClause.OR = [
         {
-          debtor: {
-            person: {
-              first_name: {
-                contains: search,
+          dossier: {
+            debtor: {
+              person: {
+                first_name: {
+                  contains: search,
+                },
               },
             },
           },
         },
         {
-          debtor: {
-            person: {
-              last_name: {
-                contains: search,
+          dossier: {
+            debtor: {
+              person: {
+                last_name: {
+                  contains: search,
+                },
               },
             },
           },
@@ -88,7 +90,7 @@ export class BlockadeService {
 
     const tenantBlockades = await prisma.blockade.count({
       where: {
-        tenantId,
+        dossier: { tenantId },
       },
     });
 
@@ -111,9 +113,13 @@ export class BlockadeService {
         skip,
         take: pageSize,
         include: {
-          debtor: {
+          dossier: {
             include: {
-              person: true,
+              debtor: {
+                include: {
+                  person: true,
+                },
+              },
             },
           },
           originDebtClaim: {
@@ -146,9 +152,13 @@ export class BlockadeService {
     return await prisma.blockade.findUnique({
       where: { id },
       include: {
-        debtor: {
+        dossier: {
           include: {
-            person: true,
+            debtor: {
+              include: {
+                person: true,
+              },
+            },
           },
         },
         documents: true,
@@ -158,7 +168,7 @@ export class BlockadeService {
 
   static getByDebtorId = async (debtorId: string, tenantId: string) => {
     return prisma.blockade.findMany({
-      where: { debtorId, tenantId },
+      where: { dossier: { debtorId, tenantId } },
       orderBy: { registeredAt: "desc" },
     });
   };
@@ -168,11 +178,15 @@ export class BlockadeService {
   // getoond wordt op het "Mijn dossiers"-scherm (zie modules/dossier).
   static getStandaloneForTenant = async (tenantId: string) => {
     return prisma.blockade.findMany({
-      where: { tenantId, originDebtClaimId: null },
+      where: { dossier: { tenantId }, originDebtClaimId: null },
       include: {
-        debtor: {
+        dossier: {
           include: {
-            person: true,
+            debtor: {
+              include: {
+                person: true,
+              },
+            },
           },
         },
       },
@@ -245,8 +259,6 @@ export class BlockadeService {
       const debtClaim = await tx.debtClaim.create({
         data: {
           id: debtClaimDossier.id,
-          tenantId,
-          debtorId,
           reference,
           principalAmount: input.amount,
           currency: "USD",
@@ -264,8 +276,6 @@ export class BlockadeService {
       const createdBlockade = await tx.blockade.create({
         data: {
           id: blockadeDossier.id,
-          tenantId,
-          debtorId,
           reason: input.reason,
           reasonNote: input.reasonNote,
           registeredAt: input.registeredAt || new Date(),
@@ -394,7 +404,7 @@ export class BlockadeService {
     tenantId: string,
   ) => {
     const blockades = await prisma.blockade.findMany({
-      where: { debtorId, tenantId, status: "ACTIVE" },
+      where: { dossier: { debtorId, tenantId }, status: "ACTIVE" },
     });
     if (blockades.length === 0) return [];
 
@@ -447,7 +457,7 @@ export class BlockadeService {
           where: {
             id: { not: blockade.id },
             status: "ACTIVE",
-            debtor: { person_id: debtor.person_id },
+            dossier: { debtor: { person_id: debtor.person_id } },
           },
         })
       : null;
@@ -497,7 +507,7 @@ export class BlockadeService {
   static reactivate = async (blockadeId: string) => {
     const blockade = await prisma.blockade.findUnique({
       where: { id: blockadeId },
-      include: { debtor: { include: { person: true, tenant: true } } },
+      include: { dossier: { include: { debtor: { include: { person: true, tenant: true } } } } },
     });
     if (!blockade || blockade.status !== "SUSPENDED") return null;
 
@@ -506,11 +516,11 @@ export class BlockadeService {
       data: { status: "ACTIVE", releasedAt: null },
     });
 
-    if (blockade.debtor.email) {
+    if (blockade.dossier.debtor!.email) {
       await sendMailBlockade(
-        blockade.debtor.email,
-        `${blockade.debtor.person?.first_name ?? ""} ${blockade.debtor.person?.last_name ?? ""}`.trim(),
-        blockade.debtor.tenant?.name || "",
+        blockade.dossier.debtor!.email,
+        `${blockade.dossier.debtor!.person?.first_name ?? ""} ${blockade.dossier.debtor!.person?.last_name ?? ""}`.trim(),
+        blockade.dossier.debtor!.tenant?.name || "",
       );
     }
 
@@ -520,7 +530,7 @@ export class BlockadeService {
   static getSuspended = async () => {
     return prisma.blockade.findMany({
       where: { status: "SUSPENDED" },
-      include: { debtor: true },
+      include: { dossier: { include: { debtor: true } } },
     });
   };
 
@@ -541,10 +551,14 @@ export class BlockadeService {
     const blockade = await prisma.blockade.findFirst({
       where: { paymentId: payment.id, status: "DRAFT" },
       include: {
-        debtor: {
+        dossier: {
           include: {
-            person: true,
-            tenant: true,
+            debtor: {
+              include: {
+                person: true,
+                tenant: true,
+              },
+            },
           },
         },
       },
@@ -571,11 +585,11 @@ export class BlockadeService {
     }
 
     // Blokkade-notificatie naar de debiteur.
-    if (blockade.debtor.email) {
+    if (blockade.dossier.debtor!.email) {
       await sendMailBlockade(
-        blockade.debtor.email,
-        `${blockade.debtor.person?.first_name ?? ""} ${blockade.debtor.person?.last_name ?? ""}`.trim(),
-        blockade.debtor.tenant?.name || "",
+        blockade.dossier.debtor!.email,
+        `${blockade.dossier.debtor!.person?.first_name ?? ""} ${blockade.dossier.debtor!.person?.last_name ?? ""}`.trim(),
+        blockade.dossier.debtor!.tenant?.name || "",
       );
     }
 

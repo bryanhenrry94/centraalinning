@@ -181,8 +181,8 @@ export const FinancialAgreementDetailView: React.FC = () => {
   }
 
   const statusInfo = getFinancialAgreementStatusInfo(financialAgreement.status);
-  const debtorName = financialAgreement.debtor?.person
-    ? `${financialAgreement.debtor.person.first_name ?? ""} ${financialAgreement.debtor.person.last_name ?? ""}`.trim()
+  const debtorName = financialAgreement.dossier.debtor?.person
+    ? `${financialAgreement.dossier.debtor.person.first_name ?? ""} ${financialAgreement.dossier.debtor.person.last_name ?? ""}`.trim()
     : "-";
 
   return (

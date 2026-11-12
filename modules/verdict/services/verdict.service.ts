@@ -199,7 +199,10 @@ export class VerdictService {
       where: { id: input.verdictId },
       include: {
         legal_process: {
-          include: { debtClaim: { include: { tenant: true, debtor: true } }, bailiff: true },
+          include: {
+            debtClaim: { include: { dossier: { include: { tenant: true, debtor: true } } } },
+            bailiff: true,
+          },
         },
         verdict_interest: true,
       },
@@ -244,7 +247,7 @@ export class VerdictService {
 
     if (changes.some((c) => c.field === "sentence_amount")) {
       const debtClaimId = verdict.legal_process.debtClaimId;
-      const tenant = verdict.legal_process.debtClaim.tenant;
+      const tenant = verdict.legal_process.debtClaim.dossier.tenant;
       const totalInterest = verdict.verdict_interest.reduce((sum, i) => sum + i.total_interest, 0);
       const newSentenceAmount = input.sentence_amount ?? verdict.sentence_amount;
       const gopFeePercent = await SettingsService.resolveNumber(
@@ -345,7 +348,7 @@ export class VerdictService {
           actorUserId,
         );
 
-        const tenantId = verdict.legal_process.debtClaim.tenantId;
+        const tenantId = verdict.legal_process.debtClaim.dossier.tenantId;
         const reference = verdict.legal_process.debtClaim.reference;
         await NotificationService.notifyTenantStaff(tenantId, {
           type: NotificationType.GOP_REOPENED,
@@ -358,8 +361,8 @@ export class VerdictService {
 
         const notifyUserIds: string[] = [];
         if (verdict.legal_process.bailiff?.user_id) notifyUserIds.push(verdict.legal_process.bailiff.user_id);
-        if (verdict.legal_process.debtClaim.debtor.user_id) {
-          notifyUserIds.push(verdict.legal_process.debtClaim.debtor.user_id);
+        if (verdict.legal_process.debtClaim.dossier.debtor!.user_id) {
+          notifyUserIds.push(verdict.legal_process.debtClaim.dossier.debtor!.user_id);
         }
         if (notifyUserIds.length) {
           await NotificationService.createMany(notifyUserIds, {

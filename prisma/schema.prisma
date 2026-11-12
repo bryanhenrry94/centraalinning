@@ -61,19 +61,14 @@ model Tenant {
   memberships               Membership[]
   payments                  Payment[]
   financial_report_requests FinancialReportRequest[]
-  blockades                 Blockade[]
 
   subscription Subscription?
 
   contracts     Contract[]
-  debt_claims   DebtClaim[]
   dossiers      Dossier[]
   lawyers       Lawyer[]
-  block_checks  BlockCheck[]
   bank_accounts BankAccount[]
   notifications Notification[]
-
-  financial_agreements FinancialAgreement[]
 
   // COP: expedientes donde este tenant fue detectado como empleador de un
   // deudor de OTRO tenant (ver CollectiveCollection.employerTenantId).
@@ -145,11 +140,7 @@ model DebtClaim {
   id      String  @id
   dossier Dossier @relation(fields: [id], references: [id])
 
-  tenantId String
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
 
-  debtorId String
-  debtor   Debtor @relation(fields: [debtorId], references: [id])
 
   reference         String?
   externalReference String?
@@ -204,11 +195,7 @@ model FinancialAgreement {
   id      String  @id
   dossier Dossier @relation(fields: [id], references: [id])
 
-  tenantId String
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
 
-  debtorId String
-  debtor   Debtor @relation(fields: [debtorId], references: [id])
 
   contractId String?
   contract   Contract? @relation(fields: [contractId], references: [id])
@@ -248,7 +235,6 @@ model FinancialAgreement {
 
   documents FinancialAgreementDocument[]
 
-  @@index([debtorId])
   @@map("financial_agreement")
 }
 
@@ -358,11 +344,7 @@ model Blockade {
   id      String  @id
   dossier Dossier @relation(fields: [id], references: [id])
 
-  tenantId String
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
 
-  debtorId String
-  debtor   Debtor @relation(fields: [debtorId], references: [id])
 
   originDebtClaimId String?    @unique
   originDebtClaim   DebtClaim? @relation("ClaimOrigin", fields: [originDebtClaimId], references: [id])
@@ -383,8 +365,6 @@ model Blockade {
 
   documents BlockadeDocument[]
 
-  @@index([tenantId])
-  @@index([debtorId])
   @@map("blockade")
 }
 
@@ -392,14 +372,10 @@ model BlockCheck {
   id      String  @id
   dossier Dossier @relation(fields: [id], references: [id])
 
-  tenantId String
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
 
   personId String?
   person   Person? @relation(fields: [personId], references: [id])
 
-  debtorId String?
-  debtor   Debtor? @relation(fields: [debtorId], references: [id])
 
   blockadeFound Boolean
 
@@ -1858,12 +1834,7 @@ model Debtor {
   incomes      DebtorIncome[]
   verdicts     Verdict[]
   agreements   Agreement[]
-  blockades    Blockade[]
-  block_checks BlockCheck[]
-  debt_claims  DebtClaim[]
   dossiers     Dossier[]
-
-  financial_agreements FinancialAgreement[]
 
   @@map("debtor")
 }

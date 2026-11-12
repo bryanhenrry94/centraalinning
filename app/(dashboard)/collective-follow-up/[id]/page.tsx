@@ -154,7 +154,7 @@ const CollectiveCollectionDetailPage: React.FC = () => {
       if (collectionData) {
         const [timelineData, debtsResult] = await Promise.all([
           getClaimTimelineForDebtClaim(collectionData.debtClaimId),
-          getDebts({ debtor_id: collectionData.debtClaim.debtorId }),
+          getDebts({ debtor_id: collectionData.debtClaim.dossier.debtorId! }),
         ]);
         setTimeline(timelineData);
         const debt = debtsResult.data?.find((d) => d.id === collectionData.debtClaimId);
@@ -216,7 +216,7 @@ const CollectiveCollectionDetailPage: React.FC = () => {
   // nog de ene beschikbare vervolgstap (feedback sponsor, sectie 9).
   const isClosedWithoutResult = isStaff && collection.status === "CLOSED";
 
-  const person = collection.debtClaim.debtor.person;
+  const person = collection.debtClaim.dossier.debtor!.person;
   const debtorName = person
     ? `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim() || person.business_name || "-"
     : "-";

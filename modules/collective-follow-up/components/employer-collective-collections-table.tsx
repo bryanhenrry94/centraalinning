@@ -36,7 +36,7 @@ export const EmployerCollectiveCollectionsTable: React.FC<
     !!row.debtorGracePeriodDeadline && new Date(row.debtorGracePeriodDeadline) <= new Date();
 
   const columns: ListColumn<CollectiveCollectionRow>[] = [
-    { key: "tenant", label: "Deelnemer (schuldeiser)", render: (row) => row.debtClaim.tenant.name },
+    { key: "tenant", label: "Deelnemer (schuldeiser)", render: (row) => row.debtClaim.dossier.tenant.name },
     { key: "reference", label: "Referentie", render: (row) => row.debtClaim.reference || "-" },
     { key: "amount", label: "Bedrag", align: "right", render: (row) => formatCurrency(row.debtClaim.principalAmount) },
     {

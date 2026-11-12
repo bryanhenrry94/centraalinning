@@ -18,20 +18,22 @@ export const buildBlokkadePdfProps = async (
 ): Promise<BlokkadePDFProps> => {
   const claim = await prisma.debtClaim.findUnique({
     where: { id: caseId },
-    include: { tenant: true, debtor: { include: { person: true } } },
+    include: {
+      dossier: { include: { tenant: true, debtor: { include: { person: true } } } },
+    },
   });
 
   if (!claim) {
     throw new Error("Debt claim not found");
   }
 
-  const island = getNameCountry(claim.tenant.country_code);
+  const island = getNameCountry(claim.dossier.tenant.country_code);
 
   const debtorName =
-    `${claim.debtor.person?.first_name} ${claim.debtor.person?.last_name}`.trim() ||
-    claim.debtor.person?.business_name;
+    `${claim.dossier.debtor!.person?.first_name} ${claim.dossier.debtor!.person?.last_name}`.trim() ||
+    claim.dossier.debtor!.person?.business_name;
 
-  const debtorAddress = claim.debtor.person?.address || "";
+  const debtorAddress = claim.dossier.debtor!.person?.address || "";
 
   return {
     logoUrl: process.env.NEXT_PUBLIC_LOGO_URL || "",
@@ -40,7 +42,7 @@ export const buildBlokkadePdfProps = async (
     debtorAddress: debtorAddress || "",
     island: island || "Bonaire",
     referenceNumber: claim.reference || "",
-    tenantName: claim.tenant.name || "Organisatie",
+    tenantName: claim.dossier.tenant.name || "Organisatie",
   };
 };
 
@@ -53,7 +55,9 @@ export const sendBlokkadeMail = async (to: string, caseId: string) => {
   try {
     const claim = await prisma.debtClaim.findUnique({
       where: { id: caseId },
-      include: { tenant: true, debtor: { include: { person: true } } },
+      include: {
+        dossier: { include: { tenant: true, debtor: { include: { person: true } } } },
+      },
     });
 
     if (!claim) {
@@ -61,8 +65,8 @@ export const sendBlokkadeMail = async (to: string, caseId: string) => {
     }
 
     const debtorName =
-      `${claim.debtor.person?.first_name} ${claim.debtor.person?.last_name}`.trim() ||
-      claim.debtor.person?.business_name;
+      `${claim.dossier.debtor!.person?.first_name} ${claim.dossier.debtor!.person?.last_name}`.trim() ||
+      claim.dossier.debtor!.person?.business_name;
 
     const pdfBuffer = await generateBlokkadePdfBuffer(caseId);
     const pdfBase64 = pdfBuffer.toString("base64");
@@ -79,7 +83,7 @@ export const sendBlokkadeMail = async (to: string, caseId: string) => {
         <BlokkadeEmail
           logoUrl={process.env.NEXT_PUBLIC_LOGO_URL || ""}
           fullname={debtorName || "Debtor"}
-          tenantName={claim.tenant.name || "Organisatie"}
+          tenantName={claim.dossier.tenant.name || "Organisatie"}
         />
       ),
       attachments,

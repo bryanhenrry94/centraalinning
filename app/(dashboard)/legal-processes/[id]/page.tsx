@@ -172,8 +172,8 @@ const LegalProcessDetailPage: React.FC = () => {
 
   const statusInfo = getLegalProcessStatusInfo(legalProcess.status);
   const latestVerdict = legalProcess.verdicts[legalProcess.verdicts.length - 1];
-  const debtorName = legalProcess.debtClaim.debtor?.person
-    ? `${legalProcess.debtClaim.debtor.person.first_name ?? ""} ${legalProcess.debtClaim.debtor.person.last_name ?? ""}`.trim()
+  const debtorName = legalProcess.debtClaim.dossier.debtor?.person
+    ? `${legalProcess.debtClaim.dossier.debtor.person.first_name ?? ""} ${legalProcess.debtClaim.dossier.debtor.person.last_name ?? ""}`.trim()
     : "-";
 
   const handleReactivate = async () => {

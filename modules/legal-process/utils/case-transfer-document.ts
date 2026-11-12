@@ -8,7 +8,7 @@ type CaseTransferForLawyer = Awaited<
 
 export function toCaseTransferDocumentRow(caseTransfer: CaseTransferForLawyer): TableSummaryResponse {
   const statusInfo = getCaseTransferStatusInfo(caseTransfer.status);
-  const person = caseTransfer.debtClaim.debtor?.person;
+  const person = caseTransfer.debtClaim.dossier.debtor?.person;
 
   return {
     id: caseTransfer.id,

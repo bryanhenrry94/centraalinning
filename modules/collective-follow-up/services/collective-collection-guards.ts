@@ -28,13 +28,16 @@ const isTenantStaff = (session: Session) =>
   !!session.user.roles?.some((role) => (TENANT_STAFF_ROLES as string[]).includes(role));
 
 export async function requireTenantStaffForDebtClaim(debtClaimId: string) {
-  const debtClaim = await prisma.debtClaim.findUnique({ where: { id: debtClaimId } });
+  const debtClaim = await prisma.debtClaim.findUnique({
+    where: { id: debtClaimId },
+    include: { dossier: true },
+  });
   if (!debtClaim) throw new Error("Dossier niet gevonden.");
 
   const session = await getSessionOrThrow();
   if (isPlatformOwner(session)) return { session, debtClaim };
 
-  if (!isTenantStaff(session) || session.user.tenant_id !== debtClaim.tenantId) {
+  if (!isTenantStaff(session) || session.user.tenant_id !== debtClaim.dossier.tenantId) {
     throw new Error("Alleen medewerkers van deze organisatie kunnen deze actie uitvoeren.");
   }
   return { session, debtClaim };
@@ -43,14 +46,14 @@ export async function requireTenantStaffForDebtClaim(debtClaimId: string) {
 export async function requireTenantStaffForCollection(collectionId: string) {
   const collection = await prisma.collectiveCollection.findUnique({
     where: { id: collectionId },
-    include: { debtClaim: true },
+    include: { debtClaim: { include: { dossier: true } } },
   });
   if (!collection) throw new Error("Dossier niet gevonden.");
 
   const session = await getSessionOrThrow();
   if (isPlatformOwner(session)) return { session, collection };
 
-  if (!isTenantStaff(session) || session.user.tenant_id !== collection.debtClaim.tenantId) {
+  if (!isTenantStaff(session) || session.user.tenant_id !== collection.debtClaim.dossier.tenantId) {
     throw new Error("Alleen medewerkers van deze organisatie kunnen deze actie uitvoeren.");
   }
   return { session, collection };
@@ -64,13 +67,13 @@ export async function requireDebtorForCollection(collectionId: string) {
 
   const collection = await prisma.collectiveCollection.findUnique({
     where: { id: collectionId },
-    include: { debtClaim: { include: { debtor: true } } },
+    include: { debtClaim: { include: { dossier: { include: { debtor: true } } } } },
   });
   if (!collection) throw new Error("Dossier niet gevonden.");
 
   if (isPlatformOwner(session)) return { session, collection };
 
-  const isOwningDebtor = collection.debtClaim.debtor.user_id === session.user.id;
+  const isOwningDebtor = collection.debtClaim.dossier.debtor!.user_id === session.user.id;
   if (!isOwningDebtor) {
     throw new Error("Alleen de debiteur zelf kan deze actie uitvoeren.");
   }
@@ -89,7 +92,7 @@ export async function requireDebtorOrEmployerForNegotiation(collectionId: string
 
   const collection = await prisma.collectiveCollection.findUnique({
     where: { id: collectionId },
-    include: { debtClaim: { include: { debtor: true } } },
+    include: { debtClaim: { include: { dossier: { include: { debtor: true } } } } },
   });
   if (!collection) throw new Error("Dossier niet gevonden.");
 
@@ -97,7 +100,7 @@ export async function requireDebtorOrEmployerForNegotiation(collectionId: string
     return { session, collection, submittedByRole: "DEBTOR" as const };
   }
 
-  const isOwningDebtor = collection.debtClaim.debtor.user_id === session.user.id;
+  const isOwningDebtor = collection.debtClaim.dossier.debtor!.user_id === session.user.id;
   const isMatchedEmployerStaff =
     !!collection.employerTenantId &&
     isTenantStaff(session) &&
@@ -154,7 +157,7 @@ export async function requireTenantStaffForNetworkQuery(queryId: string, tenantI
 export async function requireTenantStaffForNegotiation(negotiationId: string) {
   const negotiation = await prisma.cOLNegotiation.findUnique({
     where: { id: negotiationId },
-    include: { collection: { include: { debtClaim: true } } },
+    include: { collection: { include: { debtClaim: { include: { dossier: true } } } } },
   });
   if (!negotiation) throw new Error("Betalingsregeling niet gevonden.");
 
@@ -163,7 +166,7 @@ export async function requireTenantStaffForNegotiation(negotiationId: string) {
 
   if (
     !isTenantStaff(session) ||
-    session.user.tenant_id !== negotiation.collection.debtClaim.tenantId
+    session.user.tenant_id !== negotiation.collection.debtClaim.dossier.tenantId
   ) {
     throw new Error("Alleen medewerkers van deze organisatie kunnen deze actie uitvoeren.");
   }

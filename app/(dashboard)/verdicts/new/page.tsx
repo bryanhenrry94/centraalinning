@@ -55,7 +55,7 @@ const VerdictNewPage: React.FC = () => {
           const caseTransfer = await getCaseTransferById(caseTransferId);
           if (!caseTransfer) throw new Error("Overdracht niet gevonden");
           setDebtorName(
-            formatDebtorName(caseTransfer.debtClaim?.debtor?.person),
+            formatDebtorName(caseTransfer.debtClaim?.dossier.debtor?.person),
           );
           setDossierReference(
             caseTransfer.gopNumber ?? caseTransfer.debtClaim?.reference ?? null,
@@ -71,7 +71,7 @@ const VerdictNewPage: React.FC = () => {
           const legalProcess = await getLegalProcessById(legalProcessId);
           if (!legalProcess) throw new Error("GOP-dossier niet gevonden");
           setDebtorName(
-            formatDebtorName(legalProcess.debtClaim?.debtor?.person),
+            formatDebtorName(legalProcess.debtClaim?.dossier.debtor?.person),
           );
           setDossierReference(
             legalProcess.referenceNumber ??
