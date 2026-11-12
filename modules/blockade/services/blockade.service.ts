@@ -11,6 +11,7 @@ import { ClaimTimelineService } from "@/modules/collection/services/claim-timeli
 import { NotificationService } from "@/modules/notification/services/notification.service";
 import { NotificationType } from "@/modules/notification/constants/notification-type";
 import { DebtorService } from "@/modules/collection/services/debtor.service";
+import { DossierRecordService } from "@/modules/dossier/services/dossier-record.service";
 
 export class BlockadeService {
   static createBlockade = async (
@@ -21,15 +22,24 @@ export class BlockadeService {
       throw new Error("debtorId is verplicht");
     }
 
-    const blockade = await prisma.blockade.create({
-      data: {
-        tenantId: tenantId,
-        debtorId: input.debtorId,
-        reason: input.reason,
-        status: input.status || "DRAFT",
-        registeredAt: input.registeredAt || new Date(),
-        paymentId: input.paymentId || null,
-      },
+    const blockade = await prisma.$transaction(async (tx) => {
+      const dossier = await DossierRecordService.create(tx, {
+        tenantId,
+        debtorId: input.debtorId!,
+        serviceType: "BLK",
+      });
+
+      return tx.blockade.create({
+        data: {
+          id: dossier.id,
+          tenantId: tenantId,
+          debtorId: input.debtorId!,
+          reason: input.reason,
+          status: input.status || "DRAFT",
+          registeredAt: input.registeredAt || new Date(),
+          paymentId: input.paymentId || null,
+        },
+      });
     });
 
     return blockade;
@@ -225,8 +235,16 @@ export class BlockadeService {
         origin: "BLK",
       });
 
+      const debtClaimDossier = await DossierRecordService.create(tx, {
+        tenantId,
+        debtorId,
+        serviceType: "DEBT_CLAIM",
+        reference,
+      });
+
       const debtClaim = await tx.debtClaim.create({
         data: {
+          id: debtClaimDossier.id,
           tenantId,
           debtorId,
           reference,
@@ -237,8 +255,15 @@ export class BlockadeService {
         },
       });
 
+      const blockadeDossier = await DossierRecordService.create(tx, {
+        tenantId,
+        debtorId,
+        serviceType: "BLK",
+      });
+
       const createdBlockade = await tx.blockade.create({
         data: {
+          id: blockadeDossier.id,
           tenantId,
           debtorId,
           reason: input.reason,

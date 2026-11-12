@@ -21,6 +21,7 @@ import { SettingsService } from "@/modules/settings/services/settings/settings.s
 import { StorageService } from "@/infrastructure/storage/storage.service";
 import { formatAmount } from "@/shared/utils/formatters";
 import { CollectiveCollectionService } from "@/modules/collective-follow-up/services/collective-collection.service";
+import { DossierRecordService } from "@/modules/dossier/services/dossier-record.service";
 
 const ACCEPTANCE_WINDOW_DAYS = 7;
 // Valor por defecto — el Superadministrador puede configurar la antelación
@@ -252,8 +253,16 @@ export class CaseTransferService {
         origin: "GOP",
       });
 
+      const dossier = await DossierRecordService.create(tx, {
+        tenantId,
+        debtorId: debtorId!,
+        serviceType: "DEBT_CLAIM",
+        reference,
+      });
+
       const debtClaim = await tx.debtClaim.create({
         data: {
+          id: dossier.id,
           tenantId,
           debtorId: debtorId!,
           reference,

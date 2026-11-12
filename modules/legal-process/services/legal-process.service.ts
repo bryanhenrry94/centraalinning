@@ -34,6 +34,7 @@ import { ParameterService } from "@/modules/settings/services/parameter/paramete
 import { SettingsService } from "@/modules/settings/services/settings/settings.service";
 import { StorageService } from "@/infrastructure/storage/storage.service";
 import { formatAmount } from "@/shared/utils/formatters";
+import { DossierRecordService } from "@/modules/dossier/services/dossier-record.service";
 
 const legalProcessInclude = {
   debtClaim: { include: { debtor: { include: { person: true } }, tenant: true } },
@@ -851,8 +852,15 @@ export class LegalProcessService {
         where: { originDebtClaimId: legalProcess.debtClaimId },
       });
       if (!existingBlockade) {
+        const blockadeDossier = await DossierRecordService.create(tx, {
+          tenantId: legalProcess.debtClaim.tenantId,
+          debtorId: legalProcess.debtClaim.debtorId,
+          serviceType: "BLK",
+        });
+
         await tx.blockade.create({
           data: {
+            id: blockadeDossier.id,
             tenantId: legalProcess.debtClaim.tenantId,
             debtorId: legalProcess.debtClaim.debtorId,
             reason: "UNPAID_PAYMENT",

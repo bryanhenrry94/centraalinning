@@ -15,6 +15,7 @@ import { sendFarRegisteredMail } from "@/modules/financial-agreement/services/fi
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { IDENTIFICATION_TYPE_LABELS } from "@/modules/financial-agreement/types/far-wizard.types";
 import { PersonType } from "@/shared/constants/person-type";
+import { DossierRecordService } from "@/modules/dossier/services/dossier-record.service";
 
 const financialAgreementInclude = {
   debtor: { include: { person: true } },
@@ -135,21 +136,31 @@ export class FinancialAgreementService {
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       try {
         const farNumber = await this.generateFarReference();
-        financialAgreement = await prisma.financialAgreement.create({
-          data: {
+        financialAgreement = await prisma.$transaction(async (tx) => {
+          const dossier = await DossierRecordService.create(tx, {
             tenantId,
             debtorId: input.debtorId,
-            contractId: input.contractId ?? null,
-            farNumber,
-            reference: input.reference,
-            description: input.description,
-            invoiceDate: input.invoiceDate ?? null,
-            dueDate: input.dueDate ?? null,
-            amount: input.amount,
-            currency: input.currency,
-            status: "PENDING_PAYMENT",
-            registrationFeePaymentId: paymentResult.data.paymentId,
-          },
+            serviceType: "FAR",
+            reference: farNumber,
+          });
+
+          return tx.financialAgreement.create({
+            data: {
+              id: dossier.id,
+              tenantId,
+              debtorId: input.debtorId,
+              contractId: input.contractId ?? null,
+              farNumber,
+              reference: input.reference,
+              description: input.description,
+              invoiceDate: input.invoiceDate ?? null,
+              dueDate: input.dueDate ?? null,
+              amount: input.amount,
+              currency: input.currency,
+              status: "PENDING_PAYMENT",
+              registrationFeePaymentId: paymentResult.data!.paymentId,
+            },
+          });
         });
         break;
       } catch (error) {

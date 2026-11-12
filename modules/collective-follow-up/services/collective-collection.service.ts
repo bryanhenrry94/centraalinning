@@ -21,6 +21,7 @@ import { sendInvoiceEmail } from "@/modules/payment/services/payment-mail.servic
 import { sendEmployerMatchNoticeEmail } from "@/modules/collective-follow-up/services/collective-collection-mail.service";
 import { computeDebtClaimBalances } from "@/modules/collection/utils/debt-claim-balance";
 import { formatAmount, formatCurrency, formatDate } from "@/shared/utils/formatters";
+import { DossierRecordService } from "@/modules/dossier/services/dossier-record.service";
 import {
   CollectiveCollectionStatus,
   COP_START_FEE_RATE,
@@ -218,8 +219,16 @@ export class CollectiveCollectionService {
         origin: "COP",
       });
 
+      const claimDossier = await DossierRecordService.create(tx, {
+        tenantId,
+        debtorId: debtorId!,
+        serviceType: "DEBT_CLAIM",
+        reference,
+      });
+
       const createdClaim = await tx.debtClaim.create({
         data: {
+          id: claimDossier.id,
           tenantId,
           debtorId: debtorId!,
           reference,
@@ -231,8 +240,15 @@ export class CollectiveCollectionService {
         },
       });
 
+      const blockadeDossier = await DossierRecordService.create(tx, {
+        tenantId,
+        debtorId: debtorId!,
+        serviceType: "BLK",
+      });
+
       await tx.blockade.create({
         data: {
+          id: blockadeDossier.id,
           tenantId,
           debtorId: debtorId!,
           reason: "EXTERNAL_PROCEDURE_COMPLETED",

@@ -18,6 +18,7 @@ import { sendInvoiceEmail } from "@/actions/email";
 import { AOP_STEP_CONFIG } from "@/modules/collection/utils/debt-claim-status";
 import { computeDebtClaimBalances } from "@/modules/collection/utils/debt-claim-balance";
 import { ObligationService } from "@/modules/collection/services/obligation.service";
+import { DossierRecordService } from "@/modules/dossier/services/dossier-record.service";
 import { CollectiveCollectionService } from "@/modules/collective-follow-up/services/collective-collection.service";
 import { ClaimTimelineService } from "@/modules/collection/services/claim-timeline.service";
 import { PaymentService } from "@/modules/payment/services/payment.service";
@@ -252,8 +253,16 @@ export class CollectionService {
       // gebruiker registreert komt terecht in `externalReference`.
       const reference = await this.generateClaimReference(tx);
 
+      const dossier = await DossierRecordService.create(tx, {
+        tenantId,
+        debtorId: parsedData.debtorId,
+        serviceType: "DEBT_CLAIM",
+        reference,
+      });
+
       const claim = await tx.debtClaim.create({
         data: {
+          id: dossier.id,
           tenantId,
           debtorId: parsedData.debtorId,
           reference,
@@ -648,8 +657,15 @@ export class CollectionService {
         });
 
         if (!existingBlockade) {
+          const blockadeDossier = await DossierRecordService.create(tx, {
+            tenantId: aop.debtClaim.tenantId,
+            debtorId: aop.debtClaim.debtorId,
+            serviceType: "BLK",
+          });
+
           await tx.blockade.create({
             data: {
+              id: blockadeDossier.id,
               tenantId: aop.debtClaim.tenantId,
               debtorId: aop.debtClaim.debtorId,
               reason: "UNPAID_PAYMENT",

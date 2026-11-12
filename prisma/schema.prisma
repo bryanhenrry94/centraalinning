@@ -67,6 +67,7 @@ model Tenant {
 
   contracts     Contract[]
   debt_claims   DebtClaim[]
+  dossiers      Dossier[]
   lawyers       Lawyer[]
   block_checks  BlockCheck[]
   bank_accounts BankAccount[]
@@ -92,8 +93,57 @@ model Tenant {
   @@map("tenant")
 }
 
-model DebtClaim {
+// Clase padre (class table inheritance, misma clave primaria compartida
+// que Person -> Customer/Employee/Supplier) de los 4 servicios CFSB que son
+// entidades independientes: DebtClaim (cubre AOP/COP/GOP, es un solo
+// dossier en toda su evolución), FinancialAgreement, Blockade, BlockCheck.
+// CollectiveCollection y LegalProcess NO cuelgan de acá — ya son satélites
+// 1:1 de DebtClaim, así que siguen colgando de DebtClaim como siempre.
+//
+// Fase 1 de la unificación (ver docs/plan-alineacion-cfsb.md): esta tabla
+// coexiste con las 4 específicas sin reemplazarlas — solo centraliza los
+// campos realmente comunes (tenant/debtor/referencia/fecha de registro).
+// Lo propio de cada servicio (status, montos, relaciones de workflow) sigue
+// viviendo en su tabla específica, nunca se duplica acá.
+enum DossierServiceType {
+  FAR
+  BLC
+  DEBT_CLAIM
+  BLK
+}
+
+model Dossier {
   id String @id @default(cuid())
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  // Nullable: un BlockCheck puede registrarse para un Person que todavía no
+  // es Debtor en este tenant.
+  debtorId String?
+  debtor   Debtor? @relation(fields: [debtorId], references: [id])
+
+  serviceType DossierServiceType
+
+  reference String?
+
+  registeredAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  debtClaim          DebtClaim?
+  financialAgreement FinancialAgreement?
+  blockade           Blockade?
+  blockCheck         BlockCheck?
+
+  @@index([tenantId])
+  @@index([debtorId])
+  @@map("dossier")
+}
+
+model DebtClaim {
+  id      String  @id
+  dossier Dossier @relation(fields: [id], references: [id])
 
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
@@ -151,7 +201,8 @@ model DebtClaim {
 // (AOP) nuevo vía escalatedToDebtClaimId, no por conversión de tipo.
 // Ver docs/schema-design-far-overdracht.md
 model FinancialAgreement {
-  id String @id @default(cuid())
+  id      String  @id
+  dossier Dossier @relation(fields: [id], references: [id])
 
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
@@ -282,7 +333,7 @@ model DebtClaimObligation {
   // CollectionService.applyAgreementBreachFee; null para el resto (p.ej.
   // applyNoResponseFee, que no proviene de un acuerdo incumplido).
   relatedAgreementId String?
-  relatedAgreement    Agreement? @relation(fields: [relatedAgreementId], references: [id])
+  relatedAgreement   Agreement? @relation(fields: [relatedAgreementId], references: [id])
 
   originalAmount Decimal
   paidAmount     Decimal @default(0)
@@ -304,7 +355,8 @@ model DebtClaimObligation {
 }
 
 model Blockade {
-  id String @id @default(cuid())
+  id      String  @id
+  dossier Dossier @relation(fields: [id], references: [id])
 
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
@@ -337,7 +389,8 @@ model Blockade {
 }
 
 model BlockCheck {
-  id String @id @default(cuid())
+  id      String  @id
+  dossier Dossier @relation(fields: [id], references: [id])
 
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
@@ -713,7 +766,7 @@ model LawyerFeeInvoice {
   size         Int
 
   cfsbFeeAmount Decimal @db.Decimal(18, 2) // 5% de totalAmount
-  taxAmount     Decimal @db.Decimal(18, 2) @default(0) // ABB sobre cfsbFeeAmount
+  taxAmount     Decimal @default(0) @db.Decimal(18, 2) // ABB sobre cfsbFeeAmount
 
   paymentId String  @unique
   payment   Payment @relation(fields: [paymentId], references: [id])
@@ -777,11 +830,11 @@ model CaseTransfer {
   // intypt. Null/false voor de normale overdracht (AOP -> advocaat/
   // deurwaarder), waar het vonnis nog niet bestaat op het moment van
   // overdracht.
-  isDirectGopRequest     Boolean   @default(false)
-  directVerdictNumber    String?
-  directVerdictDate      DateTime?
-  directSentenceAmount   Decimal?  @db.Decimal(18, 2)
-  directLegalInterest    Decimal?  @db.Decimal(18, 2)
+  isDirectGopRequest   Boolean   @default(false)
+  directVerdictNumber  String?
+  directVerdictDate    DateTime?
+  directSentenceAmount Decimal?  @db.Decimal(18, 2)
+  directLegalInterest  Decimal?  @db.Decimal(18, 2)
 
   // Regla CCP (sponsor, definitiva): una sola secuencia consecutiva de
   // números GOP para todo el sistema, sin importar la ruta de entrada
@@ -1306,8 +1359,8 @@ model User {
   lawyers                        Lawyer[]
   messages                       ChatMessage[]
   password_reset_tokens          PasswordResetToken[]
-  block_checks                   BlockCheck[] @relation("BlockCheckCheckedBy")
-  block_check_invitations_sent   BlockCheck[] @relation("BlockCheckInvitedBy")
+  block_checks                   BlockCheck[]                  @relation("BlockCheckCheckedBy")
+  block_check_invitations_sent   BlockCheck[]                  @relation("BlockCheckInvitedBy")
   payment_transfer_verifications PaymentTransferVerification[]
   notifications                  Notification[]
   claim_timeline_entries         ClaimTimeline[]
@@ -1808,6 +1861,7 @@ model Debtor {
   blockades    Blockade[]
   block_checks BlockCheck[]
   debt_claims  DebtClaim[]
+  dossiers     Dossier[]
 
   financial_agreements FinancialAgreement[]
 
@@ -2321,8 +2375,8 @@ model Payment {
   financial_agreement_registration FinancialAgreement?
   gop_payment_confirmation         GopPaymentConfirmation?
   collective_collection_start      CollectiveCollection?
-  legal_process_activation         LegalProcess? @relation("LegalProcessActivationPayment")
-  legal_process_bailiff_referral   LegalProcess? @relation("LegalProcessBailiffReferralPayment")
+  legal_process_activation         LegalProcess?           @relation("LegalProcessActivationPayment")
+  legal_process_bailiff_referral   LegalProcess?           @relation("LegalProcessBailiffReferralPayment")
 
   @@map("payment")
 }

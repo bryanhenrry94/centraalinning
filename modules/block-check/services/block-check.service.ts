@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { BlokCheckResponse } from "./block-check.types";
 import { Person, Prisma } from "@prisma/client";
 import { sendFinancialDeclarationInvitationMail } from "@/modules/block-check/services/financial-declaration-invite-mail.service";
+import { DossierRecordService } from "@/modules/dossier/services/dossier-record.service";
 
 const MULTIPLE_PERSONS_FOUND_ERROR =
   "Meerdere personen gevonden met deze naam. Gebruik het identificatienummer of CFSB-nummer om te verfijnen.";
@@ -96,15 +97,24 @@ export class BlockCheckService {
       where: { person_id: person.id, tenant_id: context.tenantId },
     });
 
-    const blockCheck = await prisma.blockCheck.create({
-      data: {
+    const blockCheck = await prisma.$transaction(async (tx) => {
+      const dossier = await DossierRecordService.create(tx, {
         tenantId: context.tenantId,
-        personId: person.id,
         debtorId: debtor?.id ?? null,
-        blockadeFound: has_blockade,
-        price: new Prisma.Decimal(context.price),
-        checkedById: context.userId,
-      },
+        serviceType: "BLC",
+      });
+
+      return tx.blockCheck.create({
+        data: {
+          id: dossier.id,
+          tenantId: context.tenantId,
+          personId: person.id,
+          debtorId: debtor?.id ?? null,
+          blockadeFound: has_blockade,
+          price: new Prisma.Decimal(context.price),
+          checkedById: context.userId,
+        },
+      });
     });
 
     return {
