@@ -27,6 +27,11 @@ interface DebtClaimActionsMenuProps {
   row: DebtClaimResponse;
   onReviewAgreement?: (debtClaimId: string) => void;
   onRefresh?: () => void;
+  // "Ver detalle" navega acá en vez de /collections/{id} por defecto — lo usa
+  // el overzicht "Mijn dossiers" (modules/dossier) para que el detalle de un
+  // AOP/COP/GOP se abra bajo /dossiers/{id} en vez de la ruta específica del
+  // servicio, sin duplicar este menú.
+  detailHref?: string;
 }
 
 // Extraído verbatim de collection-table.tsx (sin cambios de comportamiento)
@@ -36,6 +41,7 @@ export const DebtClaimActionsMenu = ({
   row,
   onReviewAgreement,
   onRefresh,
+  detailHref,
 }: DebtClaimActionsMenuProps) => {
   const router = useRouter();
   const [transferDebtClaimId, setTransferDebtClaimId] = React.useState<
@@ -58,8 +64,8 @@ export const DebtClaimActionsMenu = ({
   }, []);
 
   const handleView = useCallback(
-    () => router.push(`/collections/${row.id}`),
-    [router, row.id],
+    () => router.push(detailHref ?? `/collections/${row.id}`),
+    [router, row.id, detailHref],
   );
 
   const isPending = row.status === "OPEN";

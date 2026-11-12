@@ -100,7 +100,7 @@ export class DossierService {
         outstanding,
         statusLabel: phase.label,
         statusColor: phase.color,
-        detailHref: `/collections/${claim.id}`,
+        detailHref: `/dossiers/${claim.id}?type=${phase.serviceType}`,
         debtClaim: claim,
       };
     });
@@ -116,7 +116,7 @@ export class DossierService {
         claimed: far.amount,
         statusLabel: statusInfo.label,
         statusColor: statusInfo.color,
-        detailHref: `/financial-agreements/${far.id}`,
+        detailHref: `/dossiers/${far.id}?type=FAR`,
         financialAgreementId: far.id,
         farEligibleForFollowUp:
           far.status === "REGISTERED" && !far.escalatedToDebtClaimId,
@@ -133,7 +133,7 @@ export class DossierService {
         debtorName: personDisplayName(blockade.debtor?.person),
         statusLabel: statusInfo.label,
         statusColor: statusInfo.color,
-        detailHref: `/blocks/${blockade.id}`,
+        detailHref: `/dossiers/${blockade.id}?type=BLK`,
       };
     });
 

@@ -171,6 +171,7 @@ export const DossierTable = ({
               row={r.debtClaim}
               onReviewAgreement={onReviewAgreement}
               onRefresh={onRefresh}
+              detailHref={r.detailHref}
             />
           );
         }
@@ -180,7 +181,9 @@ export const DossierTable = ({
           if (r.farEligibleForFollowUp) {
             items.push({
               label: "Vervolgen (AOP starten)",
-              href: `${r.detailHref}?action=vervolgen`,
+              // r.detailHref ya trae su propio ?type=FAR — agregar con & para
+              // no romper la query string.
+              href: `${r.detailHref}&action=vervolgen`,
             });
           }
           items.push({ label: "Ver detalle", href: r.detailHref });
