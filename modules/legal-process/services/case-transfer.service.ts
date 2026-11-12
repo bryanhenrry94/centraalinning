@@ -147,20 +147,21 @@ export class CaseTransferService {
     // IGNORE y el SELECT ... FOR UPDATE en la misma transacción puede
     // reportar un deadlock (1213) bajo alta concurrencia.
     await prisma.$executeRaw`
-      INSERT IGNORE INTO person_identity_sequence (id, prefix, lastValue, updatedAt)
+      INSERT INTO person_identity_sequence (id, prefix, "lastValue", "updatedAt")
       VALUES (${crypto.randomUUID()}, ${sequenceKey}, 0, NOW())
+      ON CONFLICT (prefix) DO NOTHING
     `;
 
     const runLocked = async (tx: Prisma.TransactionClient): Promise<number> => {
       const rows = await tx.$queryRaw<{ lastValue: number }[]>`
-        SELECT lastValue FROM person_identity_sequence
+        SELECT "lastValue" FROM person_identity_sequence
         WHERE prefix = ${sequenceKey}
         FOR UPDATE
       `;
       const next = (rows[0]?.lastValue ?? 0) + 1;
 
       await tx.$executeRaw`
-        UPDATE person_identity_sequence SET lastValue = ${next}, updatedAt = NOW()
+        UPDATE person_identity_sequence SET "lastValue" = ${next}, "updatedAt" = NOW()
         WHERE prefix = ${sequenceKey}
       `;
 
@@ -178,9 +179,13 @@ export class CaseTransferService {
 
         return `GOP-${year}-${String(next).padStart(3, "0")}`;
       } catch (error) {
+        // "1213" = MySQL (InnoDB deadlock), "40P01" = PostgreSQL
+        // (deadlock_detected) — mismo escenario, código distinto por motor.
         const isDeadlock =
           error instanceof Prisma.PrismaClientKnownRequestError &&
-          (error.meta as { code?: string } | undefined)?.code === "1213";
+          ["1213", "40P01"].includes(
+            (error.meta as { code?: string } | undefined)?.code ?? "",
+          );
         if (!isDeadlock || attempt === MAX_ATTEMPTS) throw error;
         await new Promise((resolve) => setTimeout(resolve, 25 * attempt));
       }

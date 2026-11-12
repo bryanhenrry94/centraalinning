@@ -16,7 +16,7 @@ export type DebtorSummary = {
   paid_to_participant: number;
   paid_to_cfsb: number;
   balance: number;
-  // Desglose de `balance` — ver script_mysql.sql (vw_debtor_summary,
+  // Desglose de `balance` — ver script_postgres.sql (vw_debtor_summary,
   // obligations_summary): lo que el deudor le debe al participante y lo
   // que le debe a CFSB por separado (dos rutas de pago independientes).
   debtor_to_participant_balance: number;

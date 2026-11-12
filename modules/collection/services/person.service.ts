@@ -107,20 +107,21 @@ export class PersonService {
     // Separarlos reduce la sección crítica del lock a 2 sentencias sobre
     // una fila que ya existe.
     await prisma.$executeRaw`
-      INSERT IGNORE INTO person_identity_sequence (id, prefix, lastValue, updatedAt)
+      INSERT INTO person_identity_sequence (id, prefix, "lastValue", "updatedAt")
       VALUES (${crypto.randomUUID()}, ${prefix}, 0, NOW())
+      ON CONFLICT (prefix) DO NOTHING
     `;
 
     const runLocked = async (tx: Prisma.TransactionClient): Promise<number> => {
       const rows = await tx.$queryRaw<{ lastValue: number }[]>`
-        SELECT lastValue FROM person_identity_sequence
+        SELECT "lastValue" FROM person_identity_sequence
         WHERE prefix = ${prefix}
         FOR UPDATE
       `;
       const next = (rows[0]?.lastValue ?? 0) + 1;
 
       await tx.$executeRaw`
-        UPDATE person_identity_sequence SET lastValue = ${next}, updatedAt = NOW()
+        UPDATE person_identity_sequence SET "lastValue" = ${next}, "updatedAt" = NOW()
         WHERE prefix = ${prefix}
       `;
 
@@ -148,9 +149,13 @@ export class PersonService {
         return `${prefix}-${String(next).padStart(3, "0")}`;
       } catch (error) {
         lastError = error;
+        // "1213" = MySQL (InnoDB deadlock), "40P01" = PostgreSQL
+        // (deadlock_detected) — mismo escenario, código distinto por motor.
         const isDeadlock =
           error instanceof Prisma.PrismaClientKnownRequestError &&
-          (error.meta as { code?: string } | undefined)?.code === "1213";
+          ["1213", "40P01"].includes(
+            (error.meta as { code?: string } | undefined)?.code ?? "",
+          );
         if (!isDeadlock || attempt === MAX_ATTEMPTS) throw error;
         await new Promise((resolve) => setTimeout(resolve, 25 * attempt));
       }

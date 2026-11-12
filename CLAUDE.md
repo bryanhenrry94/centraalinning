@@ -73,10 +73,11 @@ A few things remain outside `modules/` as known, temporary migration debt: `acti
 
 ### Data layer
 
-- **ORM**: Prisma with MySQL/MariaDB (`lib/prisma.ts` singleton, `@prisma/adapter-mariadb`)
-- **Schema**: `prisma/schema.prisma` (68 models) — key models: `Tenant`, `User`, `Membership`, `Person`, `Debtor`, `DebtClaim`, `FinancialAgreement`, `AdministrativeCollection`, `Blockade`, `BlockCheck`, `CollectiveCollection`, `CaseTransfer`, `LegalProcess`, `Verdict`, `Agreement`, `Contract`, `Payment`, `BillingInvoice`, `Plan`/`Subscription`
+- **ORM**: Prisma with PostgreSQL (`lib/prisma.ts` singleton). Migrated from MySQL/MariaDB — see `feature/dossiers-unification-postgres`. Local dev runs against the Postgres container defined in `/Users/bryanhenrry94/workspace/postgres_db/docker-compose.yml` (database `incassodb`).
+- **Schema**: `prisma/schema.prisma` (72 models) — key models: `Tenant`, `User`, `Membership`, `Person`, `Debtor`, `DebtClaim`, `FinancialAgreement`, `AdministrativeCollection`, `Blockade`, `BlockCheck`, `CollectiveCollection`, `CaseTransfer`, `LegalProcess`, `Verdict`, `Agreement`, `Contract`, `Payment`, `BillingInvoice`, `Plan`/`Subscription`
 - `Person` is the durable cross-tenant identity record; `Debtor` is only the per-tenant/per-case link to a `Person` — don't treat `Debtor` as the identity record
 - Server Actions orchestrate; Services (`modules/*/services/`) are the only layer allowed to import `lib/prisma.ts`
+- `vw_debtor_summary` is a raw SQL view (not modeled in `schema.prisma`) queried via `$queryRawUnsafe` in `modules/collection/services/debtor.service.ts` — its definition lives in `script_postgres.sql` (apply manually after `prisma db push`/`migrate`, Prisma doesn't manage views here). `script_mysql.sql` is kept only as a historical reference for the pre-migration version.
 
 ### Business domain
 
@@ -125,7 +126,7 @@ Dutch legal documents are React components under each owning module's `templates
 
 See `.env.example`. Key variables:
 
-- `DATABASE_URL` / `DIRECT_URL` — MySQL connection strings
+- `DATABASE_URL` / `DIRECT_URL` — PostgreSQL connection strings
 - `NEXTAUTH_SECRET` / `COOKIE_DOMAIN` — session security
 - `NEXT_PUBLIC_ROOT_DOMAIN` — base domain for subdomain routing (middleware and mail links read the domain from here — never hardcode it)
 - `ADMIN_TENANT_ID` — platform owner tenant

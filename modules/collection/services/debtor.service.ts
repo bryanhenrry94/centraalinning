@@ -391,17 +391,20 @@ export class DebtorService {
     try {
       const whereClauses: string[] = [];
       const params: any[] = [];
+      // Postgres usa parámetros posicionales ($1, $2, ...) en vez del `?`
+      // de MySQL para $queryRawUnsafe.
+      let paramIndex = 1;
 
       if (filters.tenant_id) {
-        whereClauses.push(`tenant_id = ?`);
+        whereClauses.push(`tenant_id = $${paramIndex++}`);
         params.push(filters.tenant_id);
       }
       if (filters.debtor_id) {
-        whereClauses.push(`debtor_id = ?`);
+        whereClauses.push(`debtor_id = $${paramIndex++}`);
         params.push(filters.debtor_id);
       }
       // if (filters.person_id) {
-      //   whereClauses.push(`person_id = ?`);
+      //   whereClauses.push(`person_id = $${paramIndex++}`);
       //   params.push(filters.person_id);
       // }
 
