@@ -298,7 +298,7 @@ export default function DirectCopCreatePage() {
 
   return (
     <Container
-      maxWidth="lg"
+      maxWidth="sm"
       disableGutters
       sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
     >
@@ -314,23 +314,9 @@ export default function DirectCopCreatePage() {
       >
         <Box>
           <Typography variant="h4" fontWeight={700}>
-            Directe Collectieve Opvolging (COP)
-          </Typography>
-          <Typography color="text.secondary">
-            Start een collectieve opvolging binnen de samenwerking om een
-            gerechtelijke procedure te voorkomen.
+            Collectieve Opvolging (COP)
           </Typography>
         </Box>
-
-        <Button
-          type="button"
-          variant="outlined"
-          startIcon={<ListAltIcon />}
-          onClick={() => router.push("/collective-follow-up")}
-          sx={{ textTransform: "none", whiteSpace: "nowrap" }}
-        >
-          Bekijk alle COP-dossiers
-        </Button>
       </Box>
 
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -802,7 +788,7 @@ export default function DirectCopCreatePage() {
           <Box
             sx={{
               display: "flex",
-              justifyContent: "space-between",
+              justifyContent: "flex-end",
               alignItems: "center",
               gap: 2,
               mt: 2,
@@ -811,6 +797,7 @@ export default function DirectCopCreatePage() {
             <Button
               type="button"
               color="inherit"
+              variant="outlined"
               onClick={() => router.push("/dossiers")}
               sx={{ textTransform: "none" }}
             >

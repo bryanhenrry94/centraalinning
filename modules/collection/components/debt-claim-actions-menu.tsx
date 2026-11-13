@@ -111,10 +111,9 @@ export const DebtClaimActionsMenu = ({
         <PaymentConfirmDialog
           open={showPaymentDialog}
           onClose={() => setShowPaymentDialog(false)}
-          lineItems={[
-            { label: "CFSB-Kosten AOP", amount: row.paymentAmount ?? 0 },
-          ]}
+          lineItems={[]}
           total={row.paymentAmount ?? 0}
+          totalLabel="CFSB-kosten"
           payAction={
             <PaymentIntent
               onCreateTransaction={async () => ({ success: false })}

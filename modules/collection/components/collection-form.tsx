@@ -305,14 +305,9 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
       <PaymentConfirmDialog
         open={showCostDialog}
         onClose={() => setShowCostDialog(false)}
-        lineItems={[
-          { label: "CFSB-kosten", amount: cobranza },
-          { label: `ABB ${abb_rate}%`, amount: abbValue },
-          ...(additionalCosts > 0
-            ? [{ label: "Digitaal dossier", amount: additionalCosts }]
-            : []),
-        ]}
+        lineItems={[]}
         total={amountService}
+        totalLabel="CFSB-kosten"
         payAction={
           <PaymentIntent
             onCreateTransaction={handleCreateTransaction}

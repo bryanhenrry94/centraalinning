@@ -841,10 +841,9 @@ export const VerdictRegistrationForm: React.FC<
           <PaymentConfirmDialog
             open={showPaymentConfirmDialog}
             onClose={() => setShowPaymentConfirmDialog(false)}
-            lineItems={[
-              { label: "Totaal deurwaarderskosten", amount: totalBailiffCost },
-            ]}
+            lineItems={[]}
             total={bailiffCfsbCost}
+            totalLabel="CFSB-kosten deurwaarder"
             helperText="Na bevestiging van de betaling ontvangt de deelnemer een betaalverzoek voor de GOP-activering, die ingaat zodra de vereiste activeringsbetaling is bevestigd."
             payAction={
               <Button

@@ -344,10 +344,9 @@ export const FinancialAgreementDetailView: React.FC = () => {
       <PaymentConfirmDialog
         open={aopPaymentDialog.open}
         onClose={closeAopPaymentDialog}
-        lineItems={[
-          { label: "Te betalen bedrag", amount: aopPaymentDialog.amount },
-        ]}
+        lineItems={[]}
         total={aopPaymentDialog.amount}
+        totalLabel="Te betalen bedrag"
         helperText="Deze service vereist betaling voordat de administratieve opvolging (AOP) wordt geactiveerd."
         payAction={
           <PaymentIntent

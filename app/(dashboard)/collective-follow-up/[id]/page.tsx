@@ -34,7 +34,11 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { UserRole } from "@/shared/constants/user-role";
 import LoadingUI from "@/shared/ui/loading-ui";
-import { formatCurrency, formatDate, formatDateTime } from "@/shared/utils/formatters";
+import {
+  formatCurrency,
+  formatDate,
+  formatDateTime,
+} from "@/shared/utils/formatters";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { getDebts } from "@/modules/collection/actions/debtor.actions";
 import {
@@ -55,8 +59,12 @@ import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 import { PaymentConfirmDialog } from "@/shared/ui/payment-confirm-dialog";
 
 type Collection = Awaited<ReturnType<typeof getCollectiveCollectionById>>;
-type Negotiation = Awaited<ReturnType<typeof getCollectiveCollectionNegotiations>>[number];
-type TimelineEntry = Awaited<ReturnType<typeof getClaimTimelineForDebtClaim>>[number];
+type Negotiation = Awaited<
+  ReturnType<typeof getCollectiveCollectionNegotiations>
+>[number];
+type TimelineEntry = Awaited<
+  ReturnType<typeof getClaimTimelineForDebtClaim>
+>[number];
 
 type DialogKind =
   | "request-agreement"
@@ -68,17 +76,65 @@ type DialogKind =
 
 const OPEN_STATUSES = ["ACTIVE", "AWAITING_DEBTOR_RESPONSE"];
 
-const STATUS_HEADER_CONFIG: Record<string, { bg: string; border: string; text: string; icon: React.ReactNode }> = {
-  ACTIVE: { bg: "#E7F7EE", border: "#BBF0D2", text: "#16A34A", icon: <CheckCircleIcon fontSize="small" /> },
-  AWAITING_DEBTOR_RESPONSE: { bg: "#FEF0E4", border: "#FBD9B4", text: "#F97316", icon: <ScheduleIcon fontSize="small" /> },
-  PAYMENT_AGREEMENT_REQUESTED: { bg: "#FEF0E4", border: "#FBD9B4", text: "#F97316", icon: <ScheduleIcon fontSize="small" /> },
-  PAYMENT_AGREEMENT_ACCEPTED: { bg: "#E7F7EE", border: "#BBF0D2", text: "#16A34A", icon: <CheckCircleIcon fontSize="small" /> },
-  PAID_IN_FULL: { bg: "#E7F7EE", border: "#BBF0D2", text: "#16A34A", icon: <CheckCircleIcon fontSize="small" /> },
-  TRANSFERRED: { bg: "#EFF6FF", border: "#BFDBFE", text: "#3B82F6", icon: <GavelIcon fontSize="small" /> },
-  CLOSED: { bg: "#FDECEC", border: "#FCA5A5", text: "#DC2626", icon: <CancelIcon fontSize="small" /> },
-  PENDING_PAYMENT: { bg: "#FEF0E4", border: "#FBD9B4", text: "#F97316", icon: <AttachMoneyIcon fontSize="small" /> },
+const STATUS_HEADER_CONFIG: Record<
+  string,
+  { bg: string; border: string; text: string; icon: React.ReactNode }
+> = {
+  ACTIVE: {
+    bg: "#E7F7EE",
+    border: "#BBF0D2",
+    text: "#16A34A",
+    icon: <CheckCircleIcon fontSize="small" />,
+  },
+  AWAITING_DEBTOR_RESPONSE: {
+    bg: "#FEF0E4",
+    border: "#FBD9B4",
+    text: "#F97316",
+    icon: <ScheduleIcon fontSize="small" />,
+  },
+  PAYMENT_AGREEMENT_REQUESTED: {
+    bg: "#FEF0E4",
+    border: "#FBD9B4",
+    text: "#F97316",
+    icon: <ScheduleIcon fontSize="small" />,
+  },
+  PAYMENT_AGREEMENT_ACCEPTED: {
+    bg: "#E7F7EE",
+    border: "#BBF0D2",
+    text: "#16A34A",
+    icon: <CheckCircleIcon fontSize="small" />,
+  },
+  PAID_IN_FULL: {
+    bg: "#E7F7EE",
+    border: "#BBF0D2",
+    text: "#16A34A",
+    icon: <CheckCircleIcon fontSize="small" />,
+  },
+  TRANSFERRED: {
+    bg: "#EFF6FF",
+    border: "#BFDBFE",
+    text: "#3B82F6",
+    icon: <GavelIcon fontSize="small" />,
+  },
+  CLOSED: {
+    bg: "#FDECEC",
+    border: "#FCA5A5",
+    text: "#DC2626",
+    icon: <CancelIcon fontSize="small" />,
+  },
+  PENDING_PAYMENT: {
+    bg: "#FEF0E4",
+    border: "#FBD9B4",
+    text: "#F97316",
+    icon: <AttachMoneyIcon fontSize="small" />,
+  },
 };
-const DEFAULT_STATUS_HEADER = { bg: "#F1F1F1", border: "#E0E0E0", text: "#6B7280", icon: <InfoIcon fontSize="small" /> };
+const DEFAULT_STATUS_HEADER = {
+  bg: "#F1F1F1",
+  border: "#E0E0E0",
+  text: "#6B7280",
+  icon: <InfoIcon fontSize="small" />,
+};
 
 const STATUS_SUBTITLE: Record<string, string> = {
   ACTIVE: "In samenwerking met deelnemers",
@@ -159,7 +215,9 @@ const CollectiveCollectionDetailPage: React.FC = () => {
           getDebts({ debtor_id: collectionData.debtClaim.dossier.debtorId! }),
         ]);
         setTimeline(timelineData);
-        const debt = debtsResult.data?.find((d) => d.id === collectionData.debtClaimId);
+        const debt = debtsResult.data?.find(
+          (d) => d.id === collectionData.debtClaimId,
+        );
         setBalance(debt ? debt.balance : null);
       }
     } catch (error) {
@@ -182,13 +240,18 @@ const CollectiveCollectionDetailPage: React.FC = () => {
   const startedByName = useMemo(() => {
     const startedEntries = timeline
       .filter((e) => e.event === "COL_STARTED")
-      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      .sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      );
     const first = startedEntries[0];
     return first?.createdBy?.fullname || first?.createdBy?.email || null;
   }, [timeline]);
 
   const debtorNotifiedAt = useMemo(
-    () => timeline.find((e) => e.event === "COL_DEBTOR_NOTIFIED")?.createdAt ?? null,
+    () =>
+      timeline.find((e) => e.event === "COL_DEBTOR_NOTIFIED")?.createdAt ??
+      null,
     [timeline],
   );
 
@@ -207,7 +270,8 @@ const CollectiveCollectionDetailPage: React.FC = () => {
   }
 
   const statusInfo = getCollectiveCollectionStatusInfo(collection.status);
-  const headerStatus = STATUS_HEADER_CONFIG[collection.status] ?? DEFAULT_STATUS_HEADER;
+  const headerStatus =
+    STATUS_HEADER_CONFIG[collection.status] ?? DEFAULT_STATUS_HEADER;
   const openNegotiation = negotiations.find((n) => n.status === "OPEN");
   const isOpen = OPEN_STATUSES.includes(collection.status);
 
@@ -220,15 +284,22 @@ const CollectiveCollectionDetailPage: React.FC = () => {
 
   const person = collection.debtClaim.dossier.debtor!.person;
   const debtorName = person
-    ? `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim() || person.business_name || "-"
+    ? `${person.first_name ?? ""} ${person.last_name ?? ""}`.trim() ||
+      person.business_name ||
+      "-"
     : "-";
 
   const handleCreateResumePayment = async () => {
     try {
       const result = await resumeCollectiveCollectionStartPayment(collectionId);
-      return { success: true, paymentId: result.paymentId, paymentUrl: result.paymentUrl };
+      return {
+        success: true,
+        paymentId: result.paymentId,
+        paymentUrl: result.paymentUrl,
+      };
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Kon de betaling niet ophalen";
+      const message =
+        error instanceof Error ? error.message : "Kon de betaling niet ophalen";
       notifyError(message);
       return { success: false, error: message };
     }
@@ -236,7 +307,9 @@ const CollectiveCollectionDetailPage: React.FC = () => {
 
   const handleResumePaymentConfirmed = async () => {
     setShowResumePaymentDialog(false);
-    notifySuccess("Betaling bevestigd. De Collectieve Opvolging wordt geactiveerd.");
+    notifySuccess(
+      "Betaling bevestigd. De Collectieve Opvolging wordt geactiveerd.",
+    );
     refresh();
   };
 
@@ -251,11 +324,26 @@ const CollectiveCollectionDetailPage: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}>
+    <Container
+      maxWidth="lg"
+      disableGutters
+      sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1, sm: 2 } }}
+    >
       <Stack spacing={1.5}>
-        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={1}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="flex-start"
+          flexWrap="wrap"
+          gap={1}
+        >
           <Box>
-            <Typography variant="body2" fontWeight={700} color="text.secondary" sx={{ mb: 0.5 }}>
+            <Typography
+              variant="body2"
+              fontWeight={700}
+              color="text.secondary"
+              sx={{ mb: 0.5 }}
+            >
               Collectieve Opvolging – Overzicht
             </Typography>
             <Typography variant="h5" fontWeight={700}>
@@ -278,11 +366,19 @@ const CollectiveCollectionDetailPage: React.FC = () => {
               }}
             >
               {headerStatus.icon}
-              <Typography variant="body2" fontWeight={700} sx={{ color: "inherit" }}>
+              <Typography
+                variant="body2"
+                fontWeight={700}
+                sx={{ color: "inherit" }}
+              >
                 {statusInfo.label}
               </Typography>
             </Box>
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: "block", mt: 0.5 }}
+            >
               Sinds {formatDate(collection.startedAt.toString())}
             </Typography>
           </Box>
@@ -292,8 +388,15 @@ const CollectiveCollectionDetailPage: React.FC = () => {
           <CardContent>
             <Grid container spacing={3}>
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <InfoItem icon={<PersonIcon />} bg="#EFF6FF" color="#3B82F6" label="Debiteur">
-                  <Typography variant="body1" fontWeight={700}>{debtorName}</Typography>
+                <InfoItem
+                  icon={<PersonIcon />}
+                  bg="#EFF6FF"
+                  color="#3B82F6"
+                  label="Debiteur"
+                >
+                  <Typography variant="body1" fontWeight={700}>
+                    {debtorName}
+                  </Typography>
                   {person?.personal_number && (
                     <Chip
                       size="small"
@@ -311,23 +414,46 @@ const CollectiveCollectionDetailPage: React.FC = () => {
                 </InfoItem>
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <InfoItem icon={<AttachMoneyIcon />} bg="#E7F7EE" color="#16A34A" label="Openstaand bedrag">
+                <InfoItem
+                  icon={<AttachMoneyIcon />}
+                  bg="#E7F7EE"
+                  color="#16A34A"
+                  label="Openstaand bedrag"
+                >
                   <Typography variant="body1" fontWeight={700}>
-                    {formatCurrency(balance ?? collection.debtClaim.principalAmount)}
+                    {formatCurrency(
+                      balance ?? collection.debtClaim.principalAmount,
+                    )}
                   </Typography>
                 </InfoItem>
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <InfoItem icon={<CalendarTodayIcon />} bg="#F3F0FF" color="#8B5CF6" label="Gestart op">
-                  <Typography variant="body1" fontWeight={700}>{formatDate(collection.startedAt.toString())}</Typography>
+                <InfoItem
+                  icon={<CalendarTodayIcon />}
+                  bg="#F3F0FF"
+                  color="#8B5CF6"
+                  label="Gestart op"
+                >
+                  <Typography variant="body1" fontWeight={700}>
+                    {formatDate(collection.startedAt.toString())}
+                  </Typography>
                   {startedByName && (
-                    <Typography variant="caption" color="text.secondary">door {startedByName}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      door {startedByName}
+                    </Typography>
                   )}
                 </InfoItem>
               </Grid>
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                <InfoItem icon={<ShieldIcon />} bg="#FEF0E4" color="#F97316" label="Status">
-                  <Typography variant="body1" fontWeight={700}>{statusInfo.label}</Typography>
+                <InfoItem
+                  icon={<ShieldIcon />}
+                  bg="#FEF0E4"
+                  color="#F97316"
+                  label="Status"
+                >
+                  <Typography variant="body1" fontWeight={700}>
+                    {statusInfo.label}
+                  </Typography>
                   <Typography variant="caption" color="text.secondary">
                     {STATUS_SUBTITLE[collection.status] ?? ""}
                   </Typography>
@@ -338,16 +464,25 @@ const CollectiveCollectionDetailPage: React.FC = () => {
         </Card>
 
         {isStaff && collection.status === "PENDING_PAYMENT" && (
-          <Card sx={{ borderColor: "#FBD9B4", bgcolor: "#FFF7ED" }} variant="outlined">
+          <Card
+            sx={{ borderColor: "#FBD9B4", bgcolor: "#FFF7ED" }}
+            variant="outlined"
+          >
             <CardContent>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={2}
+                alignItems={{ sm: "center" }}
+                justifyContent="space-between"
+              >
                 <Box>
                   <Typography variant="body1" fontWeight={700}>
                     Startvergoeding nog niet betaald
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    De Collectieve Opvolging wordt pas actief zodra de startvergoeding (5%) via Sentoo is
-                    bevestigd. Rond de betaling af om verder te gaan.
+                    De Collectieve Opvolging wordt pas actief zodra de
+                    startvergoeding (5%) via Sentoo is bevestigd. Rond de
+                    betaling af om verder te gaan.
                   </Typography>
                 </Box>
                 <Box sx={{ minWidth: { sm: 200 } }}>
@@ -368,13 +503,9 @@ const CollectiveCollectionDetailPage: React.FC = () => {
         <PaymentConfirmDialog
           open={showResumePaymentDialog}
           onClose={() => setShowResumePaymentDialog(false)}
-          lineItems={[
-            {
-              label: "Startvergoeding (5%, incl. ABB)",
-              amount: collection.startFeeAmount ?? 0,
-            },
-          ]}
+          lineItems={[]}
           total={collection.startFeeAmount ?? 0}
+          totalLabel="CFSB-kosten"
           payAction={
             <PaymentIntent
               onCreateTransaction={handleCreateResumePayment}
@@ -389,7 +520,10 @@ const CollectiveCollectionDetailPage: React.FC = () => {
               <CardHeader title="Tijdlijn" />
               <Divider />
               <CardContent>
-                <CopTimeline debtClaimId={collection.debtClaimId} refreshKey={refreshKey} />
+                <CopTimeline
+                  debtClaimId={collection.debtClaimId}
+                  refreshKey={refreshKey}
+                />
               </CardContent>
             </Card>
           </Grid>
@@ -403,15 +537,27 @@ const CollectiveCollectionDetailPage: React.FC = () => {
                   <CardContent>
                     <Stack spacing={1.5}>
                       <Stack direction="row" alignItems="center" spacing={1.5}>
-                        <WorkOutlineIcon fontSize="small" color={collection.employerTenantId ? "success" : "disabled"} />
-                        <Typography variant="body2" sx={{ flex: 1 }}>Werkgever gevonden</Typography>
+                        <WorkOutlineIcon
+                          fontSize="small"
+                          color={
+                            collection.employerTenantId ? "success" : "disabled"
+                          }
+                        />
+                        <Typography variant="body2" sx={{ flex: 1 }}>
+                          Werkgever gevonden
+                        </Typography>
                         <Typography variant="body2" fontWeight={700}>
                           {collection.employerTenantId ? "Ja" : "Nee"}
                         </Typography>
                       </Stack>
                       <Stack direction="row" alignItems="center" spacing={1.5}>
-                        <PersonIcon fontSize="small" color={debtorNotifiedAt ? "success" : "disabled"} />
-                        <Typography variant="body2" sx={{ flex: 1 }}>Debiteur geïnformeerd</Typography>
+                        <PersonIcon
+                          fontSize="small"
+                          color={debtorNotifiedAt ? "success" : "disabled"}
+                        />
+                        <Typography variant="body2" sx={{ flex: 1 }}>
+                          Debiteur geïnformeerd
+                        </Typography>
                         <Typography variant="body2" fontWeight={700}>
                           {debtorNotifiedAt ? "Ja" : "Nee"}
                         </Typography>
@@ -421,7 +567,11 @@ const CollectiveCollectionDetailPage: React.FC = () => {
                       fullWidth
                       variant="outlined"
                       endIcon={<ChevronRightIcon />}
-                      sx={{ mt: 2, justifyContent: "space-between", textTransform: "none" }}
+                      sx={{
+                        mt: 2,
+                        justifyContent: "space-between",
+                        textTransform: "none",
+                      }}
                       onClick={() => setDialog("collaboration")}
                     >
                       Bekijk details
@@ -438,18 +588,27 @@ const CollectiveCollectionDetailPage: React.FC = () => {
                     <Stack direction="row" alignItems="center" spacing={1.5}>
                       <LabelOutlinedIcon fontSize="small" color="action" />
                       <Box>
-                        <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ display: "block" }}
+                        >
                           Referentie
                         </Typography>
                         <Typography variant="body2" fontWeight={700}>
-                          {collection.debtClaim.reference || collection.debtClaimId}
+                          {collection.debtClaim.reference ||
+                            collection.debtClaimId}
                         </Typography>
                       </Box>
                     </Stack>
                     <Stack direction="row" alignItems="center" spacing={1.5}>
                       <PersonIcon fontSize="small" color="action" />
                       <Box>
-                        <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ display: "block" }}
+                        >
                           Dossier gestart door
                         </Typography>
                         <Typography variant="body2" fontWeight={700}>
@@ -460,11 +619,17 @@ const CollectiveCollectionDetailPage: React.FC = () => {
                     <Stack direction="row" alignItems="center" spacing={1.5}>
                       <AccessTimeIcon fontSize="small" color="action" />
                       <Box>
-                        <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ display: "block" }}
+                        >
                           Laatste update
                         </Typography>
                         <Typography variant="body2" fontWeight={700}>
-                          {lastUpdateAt ? formatDateTime(lastUpdateAt.toString()) : "-"}
+                          {lastUpdateAt
+                            ? formatDateTime(lastUpdateAt.toString())
+                            : "-"}
                         </Typography>
                       </Box>
                     </Stack>
@@ -481,7 +646,9 @@ const CollectiveCollectionDetailPage: React.FC = () => {
               <Button
                 variant="outlined"
                 onClick={() =>
-                  router.push(`/legal-processes/transfers/${collection.transferredToCaseTransferId}`)
+                  router.push(
+                    `/legal-processes/transfers/${collection.transferredToCaseTransferId}`,
+                  )
                 }
               >
                 Bekijk overgedragen dossier
@@ -491,12 +658,19 @@ const CollectiveCollectionDetailPage: React.FC = () => {
         )}
 
         {isClosedWithoutResult && (
-          <Card variant="outlined" sx={{ borderColor: "#FCA5A5", bgcolor: "#FEF2F2" }}>
+          <Card
+            variant="outlined"
+            sx={{ borderColor: "#FCA5A5", bgcolor: "#FEF2F2" }}
+          >
             <CardContent>
               <Typography variant="body1" fontWeight={700}>
                 Collectieve Opvolging beëindigd zonder oplossing.
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 0.5, mb: 2 }}
+              >
                 Beschikbare vervolgstappen
               </Typography>
               <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
@@ -525,9 +699,15 @@ const CollectiveCollectionDetailPage: React.FC = () => {
                     {formatCurrency(Number(openNegotiation.proposalAmount))}
                   </Typography>
                   {!!openNegotiation.installmentsCount && (
-                    <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: "block" }}
+                    >
                       {openNegotiation.installmentsCount} termijnen van{" "}
-                      {formatCurrency(Number(openNegotiation.installmentAmount ?? 0))}
+                      {formatCurrency(
+                        Number(openNegotiation.installmentAmount ?? 0),
+                      )}
                       {openNegotiation.startDate &&
                         ` — vanaf ${formatDate(openNegotiation.startDate.toString())}`}
                       {openNegotiation.endDate &&
@@ -548,7 +728,10 @@ const CollectiveCollectionDetailPage: React.FC = () => {
               )}
               <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
                 {canDecideNegotiation && (
-                  <Button variant="contained" onClick={() => setDialog("decide-negotiation")}>
+                  <Button
+                    variant="contained"
+                    onClick={() => setDialog("decide-negotiation")}
+                  >
                     Betalingsregeling beoordelen
                   </Button>
                 )}
@@ -616,7 +799,9 @@ const CollectiveCollectionDetailPage: React.FC = () => {
           proposalAmount={Number(openNegotiation.proposalAmount)}
           installmentsCount={openNegotiation.installmentsCount}
           installmentAmount={
-            openNegotiation.installmentAmount != null ? Number(openNegotiation.installmentAmount) : null
+            openNegotiation.installmentAmount != null
+              ? Number(openNegotiation.installmentAmount)
+              : null
           }
           startDate={openNegotiation.startDate}
           endDate={openNegotiation.endDate}

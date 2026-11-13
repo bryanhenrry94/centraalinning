@@ -301,11 +301,10 @@ const FinancialAgreementsPage: React.FC = () => {
       <PaymentConfirmDialog
         open={aopPaymentDialog.open}
         onClose={closeAopPaymentDialog}
-        lineItems={[
-          { label: "Te betalen bedrag", amount: aopPaymentDialog.amount },
-        ]}
+        lineItems={[]}
         total={aopPaymentDialog.amount}
-        helperText="Deze service vereist betaling voordat de administratieve opvolging (AOP) wordt geactiveerd."
+        totalLabel="CFSB-kosten"
+        helperText=""
         payAction={
           <PaymentIntent
             onCreateTransaction={handleCreateAopTransaction}

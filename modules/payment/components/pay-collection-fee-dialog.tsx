@@ -94,10 +94,7 @@ export const PayCollectionFeeDialog: React.FC<PayCollectionFeeDialogProps> = ({
       open={open}
       onClose={onClose}
       title="CFSB-kosten"
-      lineItems={obligations.map((o) => ({
-        label: o.description,
-        amount: o.balanceAmount,
-      }))}
+      lineItems={[]}
       total={total}
       helperText="U betaalt de openstaande CFSB-kosten rechtstreeks aan CFSB. Deze kosten staan los van het bedrag dat u aan de deelnemer verschuldigd bent."
       payAction={

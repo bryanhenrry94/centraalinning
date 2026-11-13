@@ -97,7 +97,7 @@ export const FarRegistrationWizard: React.FC = () => {
       });
   }, []);
 
-  const { abbAmount, total: totalAmount } = useMemo(
+  const { total: totalAmount } = useMemo(
     () => calculateAbb(registrationFee, abbRate),
     [abbRate, registrationFee],
   );
@@ -355,11 +355,9 @@ export const FarRegistrationWizard: React.FC = () => {
       <PaymentConfirmDialog
         open={showCostDialog}
         onClose={() => setShowCostDialog(false)}
-        lineItems={[
-          { label: "Bedrag (excl. ABB)", amount: registrationFee },
-          { label: `ABB ${abbRate}%`, amount: abbAmount },
-        ]}
+        lineItems={[]}
         total={totalAmount}
+        totalLabel="Registratiekosten"
         helperText=""
         payAction={
           <PaymentIntent

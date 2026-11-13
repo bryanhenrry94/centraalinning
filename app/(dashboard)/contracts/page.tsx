@@ -334,8 +334,7 @@ export default function ContractsPage() {
             sx={{ textAlign: "justify" }}
           >
             Vul de gegevens van de betrokken partijen in en registreer uw
-            overeenkomst voor meer duidelijkheid, controle en
-            bescherming.
+            overeenkomst voor meer duidelijkheid, controle en bescherming.
           </Typography>
         </Box>
 
@@ -557,12 +556,11 @@ export default function ContractsPage() {
       <PaymentConfirmDialog
         open={aopPaymentDialog.open}
         onClose={closeAopPaymentDialog}
-        title="Administratieve opvolging starten"
-        lineItems={[
-          { label: "Servicewaarde", amount: aopPaymentDialog.amount },
-        ]}
+        title="Betaling bevestigen"
+        lineItems={[]}
         total={aopPaymentDialog.amount}
-        helperText={`Zodra de betaling is bevestigd, wordt de administratieve opvolging (AOP) voor deze overeenkomst automatisch gestart. Klik op "Annuleren" als u dit nu nog niet wilt doen. Als u doorgaat, wordt u doorgestuurd naar het beveiligde betalingsproces.`}
+        totalLabel="CFSB-kosten"
+        helperText={""}
         payAction={
           <PaymentIntent
             onCreateTransaction={handleCreateAopTransaction}

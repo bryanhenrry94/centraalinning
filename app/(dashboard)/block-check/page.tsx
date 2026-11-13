@@ -40,10 +40,7 @@ const BlokCheckPage = () => {
   const [amountService, setAmountService] = useState<number>(0);
   const [abbRate, setAbbRate] = useState<number>(0);
 
-  const { abbAmount, total: totalAmount } = calculateAbb(
-    amountService,
-    abbRate,
-  );
+  const { total: totalAmount } = calculateAbb(amountService, abbRate);
 
   useEffect(() => {
     if (!session?.user?.tenant_id) return;
@@ -262,11 +259,9 @@ const BlokCheckPage = () => {
       <PaymentConfirmDialog
         open={showCostDialog}
         onClose={() => setShowCostDialog(false)}
-        lineItems={[
-          { label: "Blok-Check (excl. ABB)", amount: amountService },
-          { label: `ABB ${abbRate}%`, amount: abbAmount },
-        ]}
+        lineItems={[]}
         total={totalAmount}
+        totalLabel="CFSB-kosten"
         payAction={
           <PaymentIntent
             onCreateTransaction={handleCreateTransaction}

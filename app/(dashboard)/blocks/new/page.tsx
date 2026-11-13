@@ -119,10 +119,7 @@ export default function BlockCreatePage() {
   const [amountService, setAmountService] = useState<number>(35.0);
   const [abbRate, setAbbRate] = useState<number>(0);
 
-  const { abbAmount, total: totalAmount } = calculateAbb(
-    amountService,
-    abbRate,
-  );
+  const { total: totalAmount } = calculateAbb(amountService, abbRate);
 
   useEffect(() => {
     if (!tenant?.id) return;
@@ -470,7 +467,7 @@ export default function BlockCreatePage() {
 
   return (
     <Container
-      maxWidth="lg"
+      maxWidth="sm"
       disableGutters
       sx={{ px: { xs: 1, sm: 3 }, py: { xs: 1.5, sm: 4 } }}
     >
@@ -493,16 +490,6 @@ export default function BlockCreatePage() {
             Registreer een economische blokkade
           </Typography>
         </Box>
-
-        <Button
-          type="button"
-          variant="outlined"
-          startIcon={<ListAltIcon />}
-          onClick={() => router.push("/blocks")}
-          sx={{ textTransform: "none", whiteSpace: "nowrap" }}
-        >
-          Bekijk alle blokkades
-        </Button>
       </Box>
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack
@@ -1042,12 +1029,10 @@ export default function BlockCreatePage() {
       <PaymentConfirmDialog
         open={showCostDialog}
         onClose={() => setShowCostDialog(false)}
-        lineItems={[
-          { label: "Servicewaarde (excl. ABB)", amount: amountService },
-          { label: `ABB ${abbRate}%`, amount: abbAmount },
-        ]}
+        lineItems={[]}
         total={totalAmount}
-        helperText="Deze service vereist betaling voordat u de blokkade registreert. Als u doorgaat, wordt u doorgestuurd naar het beveiligde betalingsproces."
+        totalLabel="CFSB-kosten"
+        helperText=""
         payAction={
           <PaymentIntent
             onCreateTransaction={handleCreateTransaction}

@@ -532,8 +532,7 @@ const OvereenkomstenRegistrerenPage = () => {
               </Typography>
               <Typography variant="body2" color="textSecondary">
                 Vul de gegevens van de betrokken partijen in en registreer uw
-                overeenkomst voor meer duidelijkheid, controle en
-                bescherming.
+                overeenkomst voor meer duidelijkheid, controle en bescherming.
               </Typography>
             </Box>
             <Button
@@ -1457,8 +1456,8 @@ const OvereenkomstenRegistrerenPage = () => {
           </DialogTitle>
           <DialogContent>
             <Typography variant="body2" sx={{ mt: 2 }}>
-              Weet u zeker dat u deze overeenkomst wilt registreren? Deze
-              actie kan niet ongedaan worden gemaakt.
+              Weet u zeker dat u deze overeenkomst wilt registreren? Deze actie
+              kan niet ongedaan worden gemaakt.
             </Typography>
           </DialogContent>
           <DialogActions>
@@ -1478,9 +1477,10 @@ const OvereenkomstenRegistrerenPage = () => {
       <PaymentConfirmDialog
         open={showCostDialog}
         onClose={() => setShowCostDialog(false)}
-        lineItems={[{ label: "Servicewaarde", amount: amountService }]}
+        lineItems={[]}
         total={amountService}
-        helperText="Deze service vereist betaling voordat u de overeenkomst registreert. Als u doorgaat, wordt u doorgestuurd naar het beveiligde betalingsproces."
+        totalLabel="CFSB-kosten"
+        helperText=""
         payAction={
           <PaymentIntent
             onCreateTransaction={handleCreateTransaction}

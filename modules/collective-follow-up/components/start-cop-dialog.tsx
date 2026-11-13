@@ -50,7 +50,7 @@ export const StartCopDialog: React.FC<StartCopDialogProps> = ({
   // betaalt altijd vergoeding + ABB bovenop (zelfde regel als BLC/Financieel
   // Rapport), nooit ABB die uit het totaal wordt teruggerekend.
   const feeAmount = principalAmount * COP_START_FEE_RATE;
-  const { abbAmount, total: totalAmount } = calculateAbb(feeAmount, abbRate);
+  const { total: totalAmount } = calculateAbb(feeAmount, abbRate);
 
   const handleCreateTransaction = async () => {
     try {
@@ -82,13 +82,11 @@ export const StartCopDialog: React.FC<StartCopDialogProps> = ({
     <PaymentConfirmDialog
       open={open}
       onClose={onClose}
-      title="Collectieve Opvolging starten"
-      lineItems={[
-        { label: "Startvergoeding (5%, excl. ABB)", amount: feeAmount },
-        { label: `ABB ${abbRate}%`, amount: abbAmount },
-      ]}
+      title="Betaling bevestigen"
+      lineItems={[]}
       total={totalAmount}
-      helperText="Start Collectieve Opvolging om via de samenwerking tot betaling of een betalingsregeling te komen en mogelijke gerechtelijke opvolging zoveel mogelijk te voorkomen. De Collectieve Opvolging wordt actief nadat de startvergoeding is betaald."
+      totalLabel="CFSB-kosten"
+      helperText=""
       payAction={
         <PaymentIntent
           onCreateTransaction={handleCreateTransaction}

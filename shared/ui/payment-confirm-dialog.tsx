@@ -29,6 +29,10 @@ interface PaymentConfirmDialogProps {
   // FinalizeLawyerWorkDialog.
   lineItems?: PaymentConfirmLineItem[];
   total?: number;
+  // Label de la fila final en negrita — "Totaal" por defecto; algunos
+  // servicios (AOP) no quieren desglose y prefieren que esa única fila lleve
+  // directamente el nombre del concepto (p.ej. "CFSB-kosten").
+  totalLabel?: string;
   helperText?: string;
   // El botón de pago (típicamente <PaymentIntent />) — se recibe como nodo
   // en vez de importarse acá para no invertir la dependencia shared/ ->
@@ -49,6 +53,7 @@ export const PaymentConfirmDialog = ({
   title = "Betaling bevestigen",
   lineItems,
   total,
+  totalLabel = "Totaal",
   helperText,
   payAction,
   cancelLabel = "Annuleren",
@@ -118,7 +123,7 @@ export const PaymentConfirmDialog = ({
                   </Stack>
                 ))}
 
-                <Divider />
+                {lineItems.length > 0 && <Divider />}
 
                 <Stack
                   direction="row"
@@ -126,7 +131,7 @@ export const PaymentConfirmDialog = ({
                   alignItems="center"
                 >
                   <Typography variant="subtitle1" fontWeight={700}>
-                    Totaal
+                    {totalLabel}
                   </Typography>
                   <Typography
                     variant="h5"

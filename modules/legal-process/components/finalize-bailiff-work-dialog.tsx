@@ -141,19 +141,14 @@ export const FinalizeBailiffWorkDialog: React.FC<FinalizeBailiffWorkDialogProps>
     notifyError("De betaling is niet gelukt. Probeer het opnieuw.");
   };
 
-  const lineItems = [
-    ...(registeredCostsTotal !== null
-      ? [{ label: "Totaal deurwaarderskosten", amount: registeredCostsTotal }]
-      : []),
-  ];
-
   return (
     <PaymentConfirmDialog
       open={open}
       onClose={handleClose}
       title="Werk afgerond: kosten en CFSB-commissie"
-      lineItems={lineItems}
+      lineItems={[]}
       total={cfsbFeeTotal ?? 0}
+      totalLabel="CFSB-commissie"
       helperText="Bij het registreren van de factuur wordt automatisch de CFSB-commissie (5%) over het totaalbedrag berekend. Deze moet betaald worden om het GOP-dossier te kunnen sluiten."
       payAction={
         <PaymentIntent

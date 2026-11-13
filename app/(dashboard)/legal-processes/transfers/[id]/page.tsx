@@ -697,23 +697,12 @@ const CaseTransferDetailPage: React.FC = () => {
         <PaymentConfirmDialog
           open={dialog === "pay-lawyer-fee"}
           onClose={() => setDialog(null)}
-          lineItems={[
-            {
-              label: isLawyerTrack
-                ? "Totaal honorarium"
-                : "Totaal kostenbedrag",
-              amount: pendingLawyerFeeInvoice.totalAmount,
-            },
-            {
-              label: "CFSB-vergoeding (5%)",
-              amount: pendingLawyerFeeInvoice.cfsbFeeAmount,
-            },
-            { label: "Belasting", amount: pendingLawyerFeeInvoice.taxAmount },
-          ]}
+          lineItems={[]}
           total={
             pendingLawyerFeeInvoice.cfsbFeeAmount +
             pendingLawyerFeeInvoice.taxAmount
           }
+          totalLabel="Te betalen bedrag"
           payAction={
             <PaymentIntent
               onCreateTransaction={async () => ({
