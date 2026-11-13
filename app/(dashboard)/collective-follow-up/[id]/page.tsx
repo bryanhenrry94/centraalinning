@@ -52,6 +52,7 @@ import { CloseCopDialog } from "@/modules/collective-follow-up/components/close-
 import { CollectiveCollaborationDialog } from "@/modules/collective-follow-up/components/collective-collaboration-dialog";
 import { resumeCollectiveCollectionStartPayment } from "@/modules/collective-follow-up/actions/collective-collection.actions";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
+import { PaymentConfirmDialog } from "@/shared/ui/payment-confirm-dialog";
 
 type Collection = Awaited<ReturnType<typeof getCollectiveCollectionById>>;
 type Negotiation = Awaited<ReturnType<typeof getCollectiveCollectionNegotiations>>[number];
@@ -139,6 +140,7 @@ const CollectiveCollectionDetailPage: React.FC = () => {
   const [balance, setBalance] = useState<number | null>(null);
   const [dialog, setDialog] = useState<DialogKind>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showResumePaymentDialog, setShowResumePaymentDialog] = useState(false);
 
   const load = useCallback(async () => {
     if (!collectionId) return;
@@ -233,6 +235,7 @@ const CollectiveCollectionDetailPage: React.FC = () => {
   };
 
   const handleResumePaymentConfirmed = async () => {
+    setShowResumePaymentDialog(false);
     notifySuccess("Betaling bevestigd. De Collectieve Opvolging wordt geactiveerd.");
     refresh();
   };
@@ -348,15 +351,37 @@ const CollectiveCollectionDetailPage: React.FC = () => {
                   </Typography>
                 </Box>
                 <Box sx={{ minWidth: { sm: 200 } }}>
-                  <PaymentIntent
-                    onCreateTransaction={handleCreateResumePayment}
-                    onPaymentConfirmed={handleResumePaymentConfirmed}
-                  />
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    sx={{ textTransform: "none", fontWeight: 700 }}
+                    onClick={() => setShowResumePaymentDialog(true)}
+                  >
+                    Betalen
+                  </Button>
                 </Box>
               </Stack>
             </CardContent>
           </Card>
         )}
+
+        <PaymentConfirmDialog
+          open={showResumePaymentDialog}
+          onClose={() => setShowResumePaymentDialog(false)}
+          lineItems={[
+            {
+              label: "Startvergoeding (5%, incl. ABB)",
+              amount: collection.startFeeAmount ?? 0,
+            },
+          ]}
+          total={collection.startFeeAmount ?? 0}
+          payAction={
+            <PaymentIntent
+              onCreateTransaction={handleCreateResumePayment}
+              onPaymentConfirmed={handleResumePaymentConfirmed}
+            />
+          }
+        />
 
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 8 }}>

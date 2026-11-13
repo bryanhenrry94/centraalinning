@@ -1,10 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   IconButton,
   Box,
@@ -24,6 +20,7 @@ import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { submitLawyerFeeInvoice } from "@/modules/legal-process/actions/case-transfer.actions";
 import { CaseTransferOutcome } from "@/modules/legal-process/services/case-transfer.validators";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
+import { PaymentConfirmDialog } from "@/shared/ui/payment-confirm-dialog";
 import { getActiveBailiffsDirectory } from "@/modules/bailiff/actions/bailiff.actions";
 import { Bailiff } from "@/modules/bailiff/services/bailiff.validators";
 
@@ -244,31 +241,21 @@ export const FinalizeLawyerWorkDialog: React.FC<
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle
-        sx={{
-          bgcolor: "secondary.main",
-          color: "white",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          fontWeight: 700,
-        }}
-      >
-        Dossier afronden
-        <IconButton onClick={handleClose} sx={{ color: "white" }}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent sx={{ pt: 2 }}>
+    <PaymentConfirmDialog
+      open={open}
+      onClose={handleClose}
+      title="Dossier afronden"
+      helperText="CFSB berekent automatisch 5% plus de toepasselijke belasting over het geregistreerde honorarium. Na betaling wordt de advocatenfase afgerond, het dossier afgesloten en een geregistreerd vonnis automatisch naar de geselecteerde deurwaarder verzonden."
+      payAction={
+        <PaymentIntent
+          onCreateTransaction={handleCreateTransaction}
+          onPaymentConfirmed={handlePaymentConfirmed}
+          onPaymentFailed={handlePaymentFailed}
+          buttonLabel="Afronden en verzenden"
+        />
+      }
+    >
         <Stack spacing={2}>
-          <Alert severity="info" sx={{ textAlign: "justify" }}>
-            CFSB berekent automatisch 5% plus de toepasselijke belasting over
-            het geregistreerde honorarium. Na betaling wordt de advocatenfase
-            afgerond, het dossier afgesloten en een geregistreerd vonnis
-            automatisch naar de geselecteerde deurwaarder verzonden.
-          </Alert>
-
           <Box>
             <FieldLabel label="Uitkomst" required />
             <RadioGroup
@@ -412,26 +399,6 @@ export const FinalizeLawyerWorkDialog: React.FC<
             />
           </Box>
         </Stack>
-      </DialogContent>
-      <DialogActions
-        sx={{
-          flexDirection: "column",
-          alignItems: "stretch",
-          gap: 1,
-          px: 3,
-          pb: 2,
-        }}
-      >
-        <PaymentIntent
-          onCreateTransaction={handleCreateTransaction}
-          onPaymentConfirmed={handlePaymentConfirmed}
-          onPaymentFailed={handlePaymentFailed}
-          buttonLabel="Afronden en verzenden"
-        />
-        <Button variant="outlined" onClick={handleClose}>
-          Annuleren
-        </Button>
-      </DialogActions>
-    </Dialog>
+    </PaymentConfirmDialog>
   );
 };

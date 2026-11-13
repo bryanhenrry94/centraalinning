@@ -65,6 +65,7 @@ import { IdentificationType } from "@/shared/constants/identification-type";
 import { identificationTypeOptions } from "@/modules/collection/components/modal-debtor-form";
 import { getInfoPersonAction } from "@/modules/collection/actions/person.actions";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
+import { PaymentConfirmDialog } from "@/shared/ui/payment-confirm-dialog";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { getContractTypeLabel } from "@/modules/contract/utils/contract-type";
 
@@ -1474,101 +1475,20 @@ const OvereenkomstenRegistrerenPage = () => {
         </Dialog>
       </form>
 
-      {/* Dialog de confirmación de costo */}
-      <Dialog
+      <PaymentConfirmDialog
         open={showCostDialog}
         onClose={() => setShowCostDialog(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <Box
-          sx={{
-            bgcolor: "secondary.main",
-            color: "white",
-            px: 2,
-            py: 1.5,
-            borderTopLeftRadius: 8,
-            borderTopRightRadius: 8,
-            borderBottom: "1px solid #e0e0e0",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Box flexGrow={1} textAlign="center">
-            <Typography variant="h5" fontWeight={700} color="white">
-              Betaling bevestigen
-            </Typography>
-          </Box>
-          <IconButton
-            onClick={() => setShowCostDialog(false)}
-            sx={{ color: "white" }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </Box>
-        <DialogContent sx={{ p: { xs: 2, sm: 4 } }}>
-          <Stack spacing={3} alignItems="center">
-            {/* Bericht */}
-            <Stack spacing={1} textAlign="center">
-              <Typography variant="body2" color="text.secondary">
-                Deze service vereist betaling voordat u de overeenkomst
-                registreert.
-              </Typography>
-            </Stack>
-
-            {/* Prijs */}
-            <Paper
-              variant="outlined"
-              sx={{
-                width: "100%",
-                p: 2,
-                borderRadius: 2,
-                textAlign: "center",
-                bgcolor: "background.default",
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                Servicewaarde
-              </Typography>
-
-              <Typography variant="h4" fontWeight={700} color="primary.main">
-                {formatCurrency(amountService)}
-              </Typography>
-            </Paper>
-
-            {/* Bericht */}
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              textAlign="center"
-            >
-              Als u doorgaat, wordt u doorgestuurd naar het beveiligde
-              betalingsproces.
-            </Typography>
-
-            {/* Acties */}
-            <Stack direction="row" spacing={2} width="100%">
-              <Button
-                fullWidth
-                variant="outlined"
-                color="inherit"
-                startIcon={<CloseIcon />}
-                onClick={() => setShowCostDialog(false)}
-                sx={{ textTransform: "none" }}
-              >
-                Annuleren
-              </Button>
-
-              <PaymentIntent
-                onCreateTransaction={handleCreateTransaction}
-                onPaymentConfirmed={handlePaymentConfirmed}
-                onPaymentFailed={handlePaymentFailed}
-              />
-            </Stack>
-          </Stack>
-        </DialogContent>
-      </Dialog>
+        lineItems={[{ label: "Servicewaarde", amount: amountService }]}
+        total={amountService}
+        helperText="Deze service vereist betaling voordat u de overeenkomst registreert. Als u doorgaat, wordt u doorgestuurd naar het beveiligde betalingsproces."
+        payAction={
+          <PaymentIntent
+            onCreateTransaction={handleCreateTransaction}
+            onPaymentConfirmed={handlePaymentConfirmed}
+            onPaymentFailed={handlePaymentFailed}
+          />
+        }
+      />
     </Box>
   );
 };

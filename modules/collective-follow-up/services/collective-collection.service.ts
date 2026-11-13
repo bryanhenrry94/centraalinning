@@ -36,6 +36,9 @@ const collectiveCollectionInclude = {
     },
   },
   employerTenant: { select: { id: true, name: true } },
+  // Solo el monto — para mostrar el desglose al retomar un pago pendiente
+  // (ver app/(dashboard)/collective-follow-up/[id]/page.tsx).
+  startFeePayment: { select: { total_amount: true } },
 } satisfies Prisma.CollectiveCollectionInclude;
 
 type CollectiveCollectionWithInclude = Prisma.CollectiveCollectionGetPayload<{
@@ -51,6 +54,9 @@ function serializeCollection<T extends CollectiveCollectionWithInclude>(collecti
       ...collection.debtClaim,
       principalAmount: Number(collection.debtClaim.principalAmount),
     },
+    startFeeAmount: collection.startFeePayment
+      ? Number(collection.startFeePayment.total_amount)
+      : null,
   };
 }
 
@@ -697,6 +703,7 @@ export class CollectiveCollectionService {
           payer: o.payer,
           originalAmount: Number(o.originalAmount),
           balanceAmount: Number(o.balanceAmount),
+          paidAmount: Number(o.paidAmount),
         })),
       );
       const employerName = employerTenant?.name || "uw werkgever";
@@ -949,6 +956,7 @@ export class CollectiveCollectionService {
         payer: o.payer,
         originalAmount: Number(o.originalAmount),
         balanceAmount: Number(o.balanceAmount),
+        paidAmount: Number(o.paidAmount),
       })),
     );
     if (receivableBalance <= 0) {

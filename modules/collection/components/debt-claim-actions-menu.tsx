@@ -22,6 +22,8 @@ import { DebtClaimResponse } from "@/modules/collection/services/collection.type
 import { isAgreementPending } from "@/modules/agreement/constants/agreement-status";
 import { TransferToLawyerDialog } from "@/modules/legal-process/components/transfer-to-lawyer-dialog";
 import { StartCopDialog } from "@/modules/collective-follow-up/components/start-cop-dialog";
+import { PaymentConfirmDialog } from "@/shared/ui/payment-confirm-dialog";
+import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 
 interface DebtClaimActionsMenuProps {
   row: DebtClaimResponse;
@@ -53,6 +55,7 @@ export const DebtClaimActionsMenu = ({
   const [menuAnchorEl, setMenuAnchorEl] = React.useState<HTMLElement | null>(
     null,
   );
+  const [showPaymentDialog, setShowPaymentDialog] = React.useState(false);
 
   const handleMenuOpen = useCallback((e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
@@ -76,16 +79,15 @@ export const DebtClaimActionsMenu = ({
         <IconButton size="small" onClick={handleMenuOpen}>
           <MoreVertIcon fontSize="small" />
         </IconButton>
-      ) : row.paymentLink ? (
+      ) : row.paymentLink && row.paymentId ? (
         <Tooltip title="Link de pago pendiente">
           <IconButton
             size="small"
-            component="a"
-            href={row.paymentLink}
-            target="_blank"
-            rel="noopener noreferrer"
             color="primary"
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              setShowPaymentDialog(true);
+            }}
           >
             <OpenInNewIcon fontSize="small" />
           </IconButton>
@@ -102,6 +104,30 @@ export const DebtClaimActionsMenu = ({
           onClose={() => setTransferDebtClaimId(null)}
           debtClaimId={transferDebtClaimId}
           onTransferred={() => onRefresh?.()}
+        />
+      )}
+
+      {showPaymentDialog && row.paymentLink && row.paymentId && (
+        <PaymentConfirmDialog
+          open={showPaymentDialog}
+          onClose={() => setShowPaymentDialog(false)}
+          lineItems={[
+            { label: "CFSB-Kosten AOP", amount: row.paymentAmount ?? 0 },
+          ]}
+          total={row.paymentAmount ?? 0}
+          payAction={
+            <PaymentIntent
+              onCreateTransaction={async () => ({ success: false })}
+              existingPayment={{
+                paymentId: row.paymentId,
+                paymentUrl: row.paymentLink,
+              }}
+              onPaymentConfirmed={async () => {
+                setShowPaymentDialog(false);
+                onRefresh?.();
+              }}
+            />
+          }
         />
       )}
 

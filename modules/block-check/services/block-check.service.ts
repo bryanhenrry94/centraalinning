@@ -130,20 +130,6 @@ export class BlockCheckService {
     };
   };
 
-  // Lijst van alle Blok-Checks van de tenant — voor het "Mijn dossiers"-
-  // overzicht (modules/dossier). Dit was de enige dienst zonder een
-  // tenant-brede lijstmethode.
-  static getAllForTenant = async (tenantId: string) => {
-    return prisma.blockCheck.findMany({
-      where: { dossier: { tenantId } },
-      include: {
-        person: true,
-        dossier: { include: { debtor: { include: { person: true } } } },
-      },
-      orderBy: { checkedAt: "desc" },
-    });
-  };
-
   // Ruta Inteligente CFSB (punto 4): invitación opcional, disparada por el
   // checkbox en el resultado del Blok-Check cuando se encontró un bloqueo.
   // El deudor sigue pagando su Declaración Financiera directamente — esto

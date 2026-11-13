@@ -32,6 +32,7 @@ import LoadingUI from "@/shared/ui/loading-ui";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
+import { PaymentConfirmDialog } from "@/shared/ui/payment-confirm-dialog";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 
 import {
@@ -160,9 +161,9 @@ export const FinancialAgreementDetailView: React.FC = () => {
   const handleAopPaymentConfirmed = async () => {
     closeAopPaymentDialog();
     notifySuccess("Vervolgingsproces gestart.");
-    // Ir directo a /collections para que el nuevo AOP quede visible de
+    // Ir directo a /dossiers para que el nuevo AOP quede visible de
     // inmediato, en vez de recargar el detalle de este FAR.
-    router.push("/collections");
+    router.push("/dossiers");
   };
 
   const handleAopPaymentFailed = async () => {
@@ -340,54 +341,22 @@ export const FinancialAgreementDetailView: React.FC = () => {
         </Card>
       </Stack>
 
-      <Dialog open={aopPaymentDialog.open} onClose={closeAopPaymentDialog} maxWidth="xs" fullWidth>
-        <Box
-          sx={{
-            bgcolor: "secondary.main",
-            color: "white",
-            px: 2,
-            py: 1.5,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Typography variant="h6" fontWeight={700} color="white">
-            Betaling bevestigen
-          </Typography>
-          <IconButton onClick={closeAopPaymentDialog} sx={{ color: "white" }}>
-            <CloseIcon />
-          </IconButton>
-        </Box>
-        <DialogContent sx={{ p: { xs: 2, sm: 4 } }}>
-          <Stack spacing={3} alignItems="center">
-            <Typography variant="body2" color="text.secondary" textAlign="center">
-              Deze service vereist betaling voordat de administratieve opvolging (AOP) wordt
-              geactiveerd.
-            </Typography>
-
-            <Paper variant="outlined" sx={{ width: "100%", p: 2, borderRadius: 2, textAlign: "center" }}>
-              <Typography variant="body2" color="text.secondary">
-                Te betalen bedrag
-              </Typography>
-              <Typography variant="h4" fontWeight={700} color="primary.main">
-                {formatCurrency(aopPaymentDialog.amount)}
-              </Typography>
-            </Paper>
-
-            <Stack direction="row" spacing={2} width="100%">
-              <Button fullWidth variant="outlined" color="inherit" onClick={closeAopPaymentDialog}>
-                Annuleren
-              </Button>
-              <PaymentIntent
-                onCreateTransaction={handleCreateAopTransaction}
-                onPaymentConfirmed={handleAopPaymentConfirmed}
-                onPaymentFailed={handleAopPaymentFailed}
-              />
-            </Stack>
-          </Stack>
-        </DialogContent>
-      </Dialog>
+      <PaymentConfirmDialog
+        open={aopPaymentDialog.open}
+        onClose={closeAopPaymentDialog}
+        lineItems={[
+          { label: "Te betalen bedrag", amount: aopPaymentDialog.amount },
+        ]}
+        total={aopPaymentDialog.amount}
+        helperText="Deze service vereist betaling voordat de administratieve opvolging (AOP) wordt geactiveerd."
+        payAction={
+          <PaymentIntent
+            onCreateTransaction={handleCreateAopTransaction}
+            onPaymentConfirmed={handleAopPaymentConfirmed}
+            onPaymentFailed={handleAopPaymentFailed}
+          />
+        }
+      />
     </Container>
   );
 };

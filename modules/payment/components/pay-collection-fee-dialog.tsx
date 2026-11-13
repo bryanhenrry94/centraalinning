@@ -1,25 +1,12 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogActions,
-  Button,
-  IconButton,
-  Typography,
-  Box,
-  Stack,
-  Divider,
-  CircularProgress,
-} from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import RequestQuoteOutlinedIcon from "@mui/icons-material/RequestQuoteOutlined";
-import { formatCurrency } from "@/shared/utils/formatters";
+import { Box, CircularProgress, Typography } from "@mui/material";
 import {
   getDebtorCollectionFeeObligations,
   requestDebtorCollectionFeePayment,
 } from "@/modules/collection/actions/debtor.actions";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
+import { PaymentConfirmDialog } from "@/shared/ui/payment-confirm-dialog";
 
 interface PayCollectionFeeDialogProps {
   open: boolean;
@@ -78,106 +65,47 @@ export const PayCollectionFeeDialog: React.FC<PayCollectionFeeDialogProps> = ({
     onClose();
   };
 
+  if (loading || obligations.length === 0) {
+    return (
+      <PaymentConfirmDialog
+        open={open}
+        onClose={onClose}
+        title="CFSB-kosten"
+        lineItems={[]}
+        total={0}
+        helperText={
+          loading
+            ? undefined
+            : "Geen openstaande CFSB-kosten voor dit dossier."
+        }
+        payAction={
+          loading ? (
+            <Box display="flex" justifyContent="center" flex={1} py={1}>
+              <CircularProgress size={28} />
+            </Box>
+          ) : null
+        }
+      />
+    );
+  }
+
   return (
-    <Dialog
+    <PaymentConfirmDialog
       open={open}
       onClose={onClose}
-      maxWidth="xs"
-      fullWidth
-      PaperProps={{ sx: { overflow: "hidden" } }}
-    >
-      <Box
-        sx={{
-          bgcolor: "secondary.main",
-          color: "white",
-          px: 1.5,
-          py: 0.75,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700 }}>
-          CFSB-kosten
-        </Typography>
-        <IconButton onClick={onClose} sx={{ color: "white" }}>
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </Box>
-      <DialogContent sx={{ pt: 2 }}>
-        {loading ? (
-          <Box display="flex" justifyContent="center" py={3}>
-            <CircularProgress size={28} />
-          </Box>
-        ) : obligations.length === 0 ? (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ textAlign: "center" }}
-          >
-            Geen openstaande CFSB-kosten voor dit dossier.
-          </Typography>
-        ) : (
-          <Stack alignItems="center" spacing={1.5}>
-            <Box
-              sx={{
-                bgcolor: "secondary.light",
-                borderRadius: "50%",
-                width: 64,
-                height: 64,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <RequestQuoteOutlinedIcon
-                sx={{ fontSize: 28, color: "secondary.main" }}
-              />
-            </Box>
-
-            <Typography variant="body1" color="secondary.main">
-              Te betalen CFSB-kosten
-            </Typography>
-
-            <Typography variant="h5" fontWeight={700} sx={{ color: "#F97316" }}>
-              {formatCurrency(total)}
-            </Typography>
-
-            <Divider sx={{ width: "100%", my: 1 }} />
-
-            <Typography
-              variant="body2"
-              color="secondary.main"
-              sx={{ textAlign: "justify" }}
-            >
-              U betaalt de openstaande CFSB-kosten rechtstreeks aan CFSB. Deze
-              kosten staan los van het bedrag dat u aan de deelnemer
-              verschuldigd bent.
-            </Typography>
-          </Stack>
-        )}
-      </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Stack direction="row" spacing={2} width="100%">
-          <Button
-            fullWidth
-            variant="outlined"
-            color="inherit"
-            startIcon={<CloseIcon />}
-            onClick={onClose}
-            sx={{ textTransform: "none" }}
-          >
-            Annuleren
-          </Button>
-
-          {!loading && obligations.length > 0 && (
-            <PaymentIntent
-              onCreateTransaction={handleCreateTransaction}
-              onPaymentConfirmed={handlePaymentConfirmed}
-            />
-          )}
-        </Stack>
-      </DialogActions>
-    </Dialog>
+      title="CFSB-kosten"
+      lineItems={obligations.map((o) => ({
+        label: o.description,
+        amount: o.balanceAmount,
+      }))}
+      total={total}
+      helperText="U betaalt de openstaande CFSB-kosten rechtstreeks aan CFSB. Deze kosten staan los van het bedrag dat u aan de deelnemer verschuldigd bent."
+      payAction={
+        <PaymentIntent
+          onCreateTransaction={handleCreateTransaction}
+          onPaymentConfirmed={handlePaymentConfirmed}
+        />
+      }
+    />
   );
 };

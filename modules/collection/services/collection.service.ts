@@ -903,11 +903,12 @@ export class CollectionService {
             beneficiary: true,
             payer: true,
             originalAmount: true,
+            paidAmount: true,
             balanceAmount: true,
             status: true,
             payments: {
               where: { status: { in: ["pending", "failed"] } },
-              select: { payment_url: true },
+              select: { id: true, payment_url: true },
               take: 1,
             },
           },
@@ -930,19 +931,20 @@ export class CollectionService {
         c.agreements?.[0]?.status ??
         null;
 
-      // El link de pago que se muestra en /collections es el del
+      // El link de pago que se muestra en /dossiers es el del
       // participante (su propia comisión CFSB) — la comisión CFSB del
       // deudor es una obligación aparte (payer: DEBTOR) que el deudor
       // gestiona desde /payments.
       const cfsbPendingObligation = c.obligations.find(
         (o: any) => o.beneficiary === "CFSB" && o.payer === "PARTICIPANT" && o.status === "PENDING",
       );
-      const { receivableBalance } = computeDebtClaimBalances(
+      const { receivableBalance, receivablePaid } = computeDebtClaimBalances(
         c.obligations.map((o: any) => ({
           beneficiary: o.beneficiary,
           payer: o.payer,
           originalAmount: Number(o.originalAmount),
           balanceAmount: Number(o.balanceAmount),
+          paidAmount: Number(o.paidAmount),
         })),
       );
 
@@ -971,7 +973,12 @@ export class CollectionService {
         },
         aopStep: c.administrativeCollection?.steps[0]?.step ?? null,
         paymentLink: cfsbPendingObligation?.payments[0]?.payment_url ?? null,
+        paymentId: cfsbPendingObligation?.payments[0]?.id ?? null,
+        paymentAmount: cfsbPendingObligation
+          ? Number(cfsbPendingObligation.originalAmount)
+          : null,
         receivableBalance,
+        receivablePaid,
         agreementStatus,
         legalProcessId: c.legalProcess?.id ?? null,
         collectiveCollectionId: c.collectiveCollection?.id ?? null,

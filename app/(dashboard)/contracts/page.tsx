@@ -16,9 +16,6 @@ import {
   Menu,
   ListItemIcon,
   ListItemText,
-  Dialog,
-  DialogContent,
-  Paper,
 } from "@mui/material";
 import {
   ListColumn,
@@ -28,7 +25,6 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import CloseIcon from "@mui/icons-material/Close";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
@@ -45,6 +41,7 @@ import { AlertService } from "@/shared/ui/alerts";
 import { deleteContract } from "@/modules/contract/actions/contract.actions";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
+import { PaymentConfirmDialog } from "@/shared/ui/payment-confirm-dialog";
 
 const CONTRACT_ACTIVATION_AMOUNT = 35;
 
@@ -557,94 +554,23 @@ export default function ContractsPage() {
       </Card>
 
       {/* Betaaldialoog voor de AOP-dienst */}
-      <Dialog
+      <PaymentConfirmDialog
         open={aopPaymentDialog.open}
         onClose={closeAopPaymentDialog}
-        maxWidth="xs"
-        fullWidth
-      >
-        <Box
-          sx={{
-            bgcolor: "secondary.main",
-            color: "white",
-            px: 2,
-            py: 1.5,
-            borderTopLeftRadius: 8,
-            borderTopRightRadius: 8,
-            borderBottom: "1px solid #e0e0e0",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Box flexGrow={1} textAlign="center">
-            <Typography variant="h5" fontWeight={700} color="white">
-              Administratieve opvolging starten
-            </Typography>
-          </Box>
-          <IconButton onClick={closeAopPaymentDialog} sx={{ color: "white" }}>
-            <CloseIcon />
-          </IconButton>
-        </Box>
-        <DialogContent sx={{ p: { xs: 2, sm: 4 } }}>
-          <Stack spacing={3} alignItems="center">
-            <Stack spacing={1} textAlign="center">
-              <Typography variant="body2" color="text.secondary">
-                Zodra de betaling is bevestigd, wordt de administratieve
-                opvolging (AOP) voor deze overeenkomst automatisch gestart. Klik
-                op "Annuleren" als u dit nu nog niet wilt doen.
-              </Typography>
-            </Stack>
-
-            <Paper
-              variant="outlined"
-              sx={{
-                width: "100%",
-                p: 2,
-                borderRadius: 2,
-                textAlign: "center",
-                bgcolor: "background.default",
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                Servicewaarde
-              </Typography>
-
-              <Typography variant="h4" fontWeight={700} color="primary.main">
-                {formatCurrency(aopPaymentDialog.amount)}
-              </Typography>
-            </Paper>
-
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              textAlign="center"
-            >
-              Als u doorgaat, wordt u doorgestuurd naar het beveiligde
-              betalingsproces.
-            </Typography>
-
-            <Stack direction="row" spacing={2} width="100%">
-              <Button
-                fullWidth
-                variant="outlined"
-                color="inherit"
-                startIcon={<CloseIcon />}
-                onClick={closeAopPaymentDialog}
-                sx={{ textTransform: "none" }}
-              >
-                Annuleren
-              </Button>
-
-              <PaymentIntent
-                onCreateTransaction={handleCreateAopTransaction}
-                onPaymentConfirmed={handleAopPaymentConfirmed}
-                onPaymentFailed={handleAopPaymentFailed}
-              />
-            </Stack>
-          </Stack>
-        </DialogContent>
-      </Dialog>
+        title="Administratieve opvolging starten"
+        lineItems={[
+          { label: "Servicewaarde", amount: aopPaymentDialog.amount },
+        ]}
+        total={aopPaymentDialog.amount}
+        helperText={`Zodra de betaling is bevestigd, wordt de administratieve opvolging (AOP) voor deze overeenkomst automatisch gestart. Klik op "Annuleren" als u dit nu nog niet wilt doen. Als u doorgaat, wordt u doorgestuurd naar het beveiligde betalingsproces.`}
+        payAction={
+          <PaymentIntent
+            onCreateTransaction={handleCreateAopTransaction}
+            onPaymentConfirmed={handleAopPaymentConfirmed}
+            onPaymentFailed={handleAopPaymentFailed}
+          />
+        }
+      />
     </Container>
   );
 }

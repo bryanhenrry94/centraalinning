@@ -77,6 +77,11 @@ export const DebtClaimResponseSchema = DebtClaimSchema.extend({
   }),
   aopStep: AopStepEnum.nullable().optional(),
   paymentLink: z.string().nullable().optional(),
+  // Acompañan a paymentLink para poder retomar el pago vía
+  // PaymentIntent.existingPayment ({ paymentId, paymentUrl }) sin crear una
+  // transacción Sentoo duplicada — ver DebtClaimActionsMenu.
+  paymentId: z.string().nullable().optional(),
+  paymentAmount: z.number().nullable().optional(),
   charges: z.array(ClaimChargeViewSchema).optional(),
   obligations: z.array(DebtClaimObligationViewSchema).optional(),
   // Saldo neto que el cliente/tenant va a cobrar (principal menos la
@@ -84,6 +89,10 @@ export const DebtClaimResponseSchema = DebtClaimSchema.extend({
   // modules/collection/utils/debt-claim-balance.ts. Opcional porque no
   // todos los mappers del servicio lo calculan (p.ej. getById/update).
   receivableBalance: z.number().optional(),
+  // Suma real de lo pagado por el deudor al participante (beneficiary:
+  // PARTICIPANT) — ver computeDebtClaimBalances. Opcional por el mismo
+  // motivo que receivableBalance.
+  receivablePaid: z.number().optional(),
   agreementStatus: z.string().nullable().optional(),
   legalProcessId: z.string().nullable().optional(),
   collectiveCollectionId: z.string().nullable().optional(),

@@ -69,8 +69,8 @@ export default function WorkstationPage() {
       bgColor: "#EAF2FE",
       buttonColor: "#1450C4",
       buttonText: "Start AOP",
-      linkList: "/collections",
-      newLink: "/collections",
+      linkList: "/dossiers",
+      newLink: "/collections/new",
     },
     {
       id: 4,

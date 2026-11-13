@@ -12,19 +12,12 @@ import {
   InputAdornment,
   Alert,
   CircularProgress,
-  Dialog,
-  DialogContent,
-  Stack,
-  Paper,
-  IconButton,
-  Divider,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import { Close as CloseIcon } from "@mui/icons-material";
 import { useSession } from "next-auth/react";
 
-import { formatCurrency } from "@/shared/utils/formatters";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
+import { PaymentConfirmDialog } from "@/shared/ui/payment-confirm-dialog";
 import { ResultView } from "../../../modules/block-check/components/block-check-result";
 import { BlokCheckResponse } from "@/modules/block-check/services/block-check.types";
 import { existsBlockCheck } from "@/modules/block-check/actions/block-check.actions";
@@ -33,6 +26,7 @@ import { canUseFeature } from "@/shared/utils/permission";
 import { AppAction } from "@/shared/constants/AppAction";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { notifyError } from "@/shared/ui/notifications";
+import { calculateAbb } from "@/shared/utils/abb";
 
 const BlokCheckPage = () => {
   const { data: session } = useSession();
@@ -46,11 +40,10 @@ const BlokCheckPage = () => {
   const [amountService, setAmountService] = useState<number>(0);
   const [abbRate, setAbbRate] = useState<number>(0);
 
-  // Prijs in het parameter is exclusief ABB — de eindgebruiker betaalt en
-  // ziet altijd prijs + 6% ABB bovenop (nooit ABB die uit het totaal wordt
-  // teruggerekend, zodat het totaal toevallig gelijk blijft aan de parameter).
-  const abbAmount = Number(((amountService * abbRate) / 100).toFixed(2));
-  const totalAmount = Number((amountService + abbAmount).toFixed(2));
+  const { abbAmount, total: totalAmount } = calculateAbb(
+    amountService,
+    abbRate,
+  );
 
   useEffect(() => {
     if (!session?.user?.tenant_id) return;
@@ -266,126 +259,24 @@ const BlokCheckPage = () => {
         <ResultView result={blokCheck} />
       )}
 
-      {/* Dialog ter bevestiging van kosten */}
-      <Dialog
+      <PaymentConfirmDialog
         open={showCostDialog}
         onClose={() => setShowCostDialog(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <Box
-          sx={{
-            bgcolor: "secondary.main",
-            color: "white",
-            px: 2,
-            py: 1.5,
-            borderTopLeftRadius: 8,
-            borderTopRightRadius: 8,
-            borderBottom: "1px solid #e0e0e0",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              width: "100%",
+        lineItems={[
+          { label: "Blok-Check (excl. ABB)", amount: amountService },
+          { label: `ABB ${abbRate}%`, amount: abbAmount },
+        ]}
+        total={totalAmount}
+        payAction={
+          <PaymentIntent
+            onCreateTransaction={handleCreateTransaction}
+            onPaymentConfirmed={async () => {
+              setShowCostDialog(false);
+              await createService();
             }}
-          >
-            <Box flexGrow={1} textAlign="center">
-              <Typography variant="h5" fontWeight={700} color="white">
-                Betaling bevestigen
-              </Typography>
-            </Box>
-
-            <IconButton
-              onClick={() => setShowCostDialog(false)}
-              sx={{ color: "white" }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </Box>
-
-        <DialogContent sx={{ p: { xs: 2, sm: 4 } }}>
-          <Stack spacing={4}>
-            {/* Servicio */}
-            <Paper
-              variant="outlined"
-              sx={{
-                width: "100%",
-                p: 2,
-                borderRadius: 2,
-                bgcolor: "background.default",
-              }}
-            >
-              <Stack spacing={1}>
-                <Stack direction="row" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">
-                    Blok-Check (excl. ABB)
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {formatCurrency(amountService)}
-                  </Typography>
-                </Stack>
-
-                <Stack direction="row" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">
-                    ABB {abbRate}%
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {formatCurrency(abbAmount)}
-                  </Typography>
-                </Stack>
-
-                <Divider />
-
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="center"
-                >
-                  <Typography variant="subtitle1" fontWeight={700}>
-                    Totaal
-                  </Typography>
-                  <Typography
-                    variant="h5"
-                    fontWeight={700}
-                    color="primary.main"
-                  >
-                    {formatCurrency(totalAmount)}
-                  </Typography>
-                </Stack>
-              </Stack>
-            </Paper>
-
-            {/* Acties */}
-            <Stack direction="row" spacing={2} width="100%">
-              <Button
-                fullWidth
-                variant="outlined"
-                color="inherit"
-                startIcon={<CloseIcon />}
-                onClick={() => setShowCostDialog(false)}
-                sx={{ textTransform: "none" }}
-              >
-                Annuleren
-              </Button>
-
-              <PaymentIntent
-                onCreateTransaction={handleCreateTransaction}
-                onPaymentConfirmed={async () => {
-                  setShowCostDialog(false);
-                  await createService();
-                }}
-              />
-            </Stack>
-          </Stack>
-        </DialogContent>
-      </Dialog>
+          />
+        }
+      />
     </Container>
   );
 };

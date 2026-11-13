@@ -10,9 +10,8 @@ import {
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import { DossierServiceType } from "@/modules/dossier/types/dossier.types";
 
-const SERVICE_TYPE_LABELS: Record<DossierServiceType, string> = {
+const SERVICE_TYPE_LABELS: Record<Exclude<DossierServiceType, "BLC">, string> = {
   FAR: "FAR",
-  BLC: "BLC",
   AOP: "AOP",
   BLK: "BLK",
   COP: "COP",

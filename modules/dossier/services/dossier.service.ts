@@ -1,7 +1,6 @@
 import { CollectionService } from "@/modules/collection/services/collection.service";
 import { FinancialAgreementService } from "@/modules/financial-agreement/services/financial-agreement.service";
 import { BlockadeService } from "@/modules/blockade/services/blockade.service";
-import { BlockCheckService } from "@/modules/block-check/services/block-check.service";
 import {
   getDebtClaimStatusInfo,
   AOP_STEP_CONFIG,
@@ -77,18 +76,22 @@ function resolveDebtClaimPhase(row: DebtClaimResponse) {
 
 export class DossierService {
   static getForTenant = async (tenantId: string): Promise<DossierRow[]> => {
-    const [debtClaims, financialAgreements, blockades, blockChecks] =
-      await Promise.all([
-        CollectionService.getAll({ tenantId }),
-        FinancialAgreementService.getAllForTenant(tenantId),
-        BlockadeService.getStandaloneForTenant(tenantId),
-        BlockCheckService.getAllForTenant(tenantId),
-      ]);
+    const [debtClaims, financialAgreements, blockades] = await Promise.all([
+      CollectionService.getAll({ tenantId }),
+      FinancialAgreementService.getAllForTenant(tenantId),
+      BlockadeService.getStandaloneForTenant(tenantId),
+    ]);
 
     const debtClaimRows: DossierRow[] = debtClaims.map((claim) => {
       const phase = resolveDebtClaimPhase(claim);
       const claimed = Number(claim.principalAmount);
       const outstanding = claim.receivableBalance ?? claimed;
+      // "Betaald" = suma real de los pagos aplicados por el deudor al
+      // participante (DebtClaimObligation.paidAmount, beneficiary:
+      // PARTICIPANT) — no un valor derivado de claimed/outstanding, que
+      // puede desviarse cuando se agregan obligaciones nuevas (p.ej. una
+      // administratieve boete) al mismo DebtClaim.
+      const paid = claim.receivablePaid ?? 0;
       return {
         id: claim.id,
         serviceType: phase.serviceType,
@@ -96,7 +99,7 @@ export class DossierService {
         reference: claim.reference || claim.id,
         debtorName: claim.debtor.fullname || "Onbekend",
         claimed,
-        paid: Math.max(claimed - outstanding, 0),
+        paid,
         outstanding,
         statusLabel: phase.label,
         statusColor: phase.color,
@@ -137,27 +140,7 @@ export class DossierService {
       };
     });
 
-    const blcRows: DossierRow[] = blockChecks.map((check) => {
-      const price = Number(check.price);
-      return {
-        id: check.id,
-        serviceType: "BLC",
-        date: check.checkedAt,
-        reference: check.id,
-        debtorName: personDisplayName(check.person ?? check.dossier.debtor?.person),
-        claimed: price,
-        paid: price,
-        outstanding: 0,
-        statusLabel: check.blockadeFound ? "Blokkade gevonden" : "Geen blokkade",
-        statusColor: check.blockadeFound ? "error" : "success",
-        detailHref: "",
-        blockCheckId: check.id,
-        blockadeFound: check.blockadeFound,
-        financialDeclarationInvited: !!check.financialDeclarationInvitedAt,
-      };
-    });
-
-    return [...debtClaimRows, ...farRows, ...blkRows, ...blcRows].sort(
+    return [...debtClaimRows, ...farRows, ...blkRows].sort(
       (a, b) => b.date.getTime() - a.date.getTime(),
     );
   };

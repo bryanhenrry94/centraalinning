@@ -24,8 +24,4 @@ export interface DossierRow {
   // Alleen aanwezig voor serviceType FAR.
   financialAgreementId?: string;
   farEligibleForFollowUp?: boolean;
-  // Alleen aanwezig voor serviceType BLC.
-  blockCheckId?: string;
-  blockadeFound?: boolean;
-  financialDeclarationInvited?: boolean;
 }

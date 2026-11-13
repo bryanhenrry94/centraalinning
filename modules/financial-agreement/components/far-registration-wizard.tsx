@@ -6,7 +6,6 @@ import { useSession } from "next-auth/react";
 import {
   Box,
   Button,
-  Divider,
   Paper,
   Step,
   StepLabel,
@@ -17,13 +16,14 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { formatCurrency } from "@/shared/utils/formatters";
 import {
   notifyError,
   notifySuccess,
   notifyWarning,
 } from "@/shared/ui/notifications";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
+import { PaymentConfirmDialog } from "@/shared/ui/payment-confirm-dialog";
+import { calculateAbb } from "@/shared/utils/abb";
 import { getParameterForTenantAction } from "@/modules/settings/actions/parameter.actions";
 import { createFinancialAgreementWithDebtor } from "@/modules/financial-agreement/actions/financial-agreement.actions";
 import { FAR_REGISTRATION_FEE } from "@/modules/financial-agreement/constants/financial-agreement";
@@ -74,6 +74,7 @@ export const FarRegistrationWizard: React.FC = () => {
   const [documents, setDocuments] = useState<File[]>([]);
   const [abbRate, setAbbRate] = useState(0);
   const [registrationFee, setRegistrationFee] = useState(FAR_REGISTRATION_FEE);
+  const [showCostDialog, setShowCostDialog] = useState(false);
 
   const { control, trigger, watch, getValues, setValue } =
     useForm<FarWizardFormValues>({
@@ -96,13 +97,9 @@ export const FarRegistrationWizard: React.FC = () => {
       });
   }, []);
 
-  const abbAmount = useMemo(
-    () => Number(((registrationFee * abbRate) / 100).toFixed(2)),
+  const { abbAmount, total: totalAmount } = useMemo(
+    () => calculateAbb(registrationFee, abbRate),
     [abbRate, registrationFee],
-  );
-  const totalAmount = useMemo(
-    () => Number((registrationFee + abbAmount).toFixed(2)),
-    [abbAmount, registrationFee],
   );
 
   const values = watch();
@@ -320,51 +317,11 @@ export const FarRegistrationWizard: React.FC = () => {
         />
       )}
       {activeStep === 3 && (
-        <>
-          <FarWizardStepOverview
-            values={values}
-            documents={documents}
-            onEditStep={setActiveStep}
-          />
-
-          <Paper variant="outlined" sx={{ p: 2.5 }}>
-            <Stack spacing={1}>
-              <Stack direction="row" justifyContent="space-between">
-                <Typography variant="body2" color="text.secondary">
-                  Bedrag (excl. ABB)
-                </Typography>
-                <Typography variant="body2" fontWeight={600}>
-                  {formatCurrency(registrationFee)}
-                </Typography>
-              </Stack>
-              <Stack direction="row" justifyContent="space-between">
-                <Typography variant="body2" color="text.secondary">
-                  ABB {abbRate}%
-                </Typography>
-                <Typography variant="body2" fontWeight={600}>
-                  {formatCurrency(abbAmount)}
-                </Typography>
-              </Stack>
-              <Divider />
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-              >
-                <Typography variant="subtitle1" fontWeight={700}>
-                  Totaal te betalen
-                </Typography>
-                <Typography variant="h5" fontWeight={700} color="primary.main">
-                  {formatCurrency(totalAmount)}
-                </Typography>
-              </Stack>
-            </Stack>
-          </Paper>
-
-          <Typography variant="body2" color="text.secondary">
-            Betaal met: online betaling (Sentoo)
-          </Typography>
-        </>
+        <FarWizardStepOverview
+          values={values}
+          documents={documents}
+          onEditStep={setActiveStep}
+        />
       )}
 
       <Stack direction="row" spacing={1.5} justifyContent="space-between">
@@ -383,13 +340,9 @@ export const FarRegistrationWizard: React.FC = () => {
             Volgende
           </Button>
         ) : (
-          <Box sx={{ minWidth: 200 }}>
-            <PaymentIntent
-              onCreateTransaction={handleCreateTransaction}
-              onPaymentConfirmed={handlePaymentConfirmed}
-              onPaymentFailed={handlePaymentFailed}
-            />
-          </Box>
+          <Button variant="contained" onClick={() => setShowCostDialog(true)}>
+            Doorgaan naar betaling
+          </Button>
         )}
       </Stack>
 
@@ -398,6 +351,27 @@ export const FarRegistrationWizard: React.FC = () => {
           🔒 Uw betaling is veilig en beveiligd.
         </Typography>
       )}
+
+      <PaymentConfirmDialog
+        open={showCostDialog}
+        onClose={() => setShowCostDialog(false)}
+        lineItems={[
+          { label: "Bedrag (excl. ABB)", amount: registrationFee },
+          { label: `ABB ${abbRate}%`, amount: abbAmount },
+        ]}
+        total={totalAmount}
+        helperText=""
+        payAction={
+          <PaymentIntent
+            onCreateTransaction={handleCreateTransaction}
+            onPaymentConfirmed={async () => {
+              setShowCostDialog(false);
+              await handlePaymentConfirmed();
+            }}
+            onPaymentFailed={handlePaymentFailed}
+          />
+        }
+      />
     </Stack>
   );
 };

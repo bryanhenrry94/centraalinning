@@ -20,7 +20,6 @@ import { StatusChip } from "@/shared/ui/status-chip";
 import { formatCurrency, formatDate } from "@/shared/utils/formatters";
 import { DebtClaimActionsMenu } from "@/modules/collection/components/debt-claim-actions-menu";
 import { DossierRow } from "@/modules/dossier/types/dossier.types";
-import { BlcResultDialog } from "@/modules/dossier/components/blc-result-dialog";
 
 const ROWS_PER_PAGE_OPTIONS = [10, 25, 50];
 
@@ -87,7 +86,6 @@ export const DossierTable = ({
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [blcRow, setBlcRow] = useState<DossierRow | null>(null);
 
   const paginatedRows = useMemo(
     () => rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
@@ -190,14 +188,6 @@ export const DossierTable = ({
           return <RowActionsMenu items={items} />;
         }
 
-        if (r.serviceType === "BLC") {
-          return (
-            <RowActionsMenu
-              items={[{ label: "Bekijken", onClick: () => setBlcRow(r) }]}
-            />
-          );
-        }
-
         // BLK standalone
         return (
           <RowActionsMenu
@@ -230,18 +220,6 @@ export const DossierTable = ({
           `${from}–${to} van ${count}`
         }
       />
-
-      {blcRow && (
-        <BlcResultDialog
-          row={blcRow}
-          open={!!blcRow}
-          onClose={() => setBlcRow(null)}
-          onInvited={() => {
-            setBlcRow(null);
-            onRefresh?.();
-          }}
-        />
-      )}
     </Box>
   );
 };

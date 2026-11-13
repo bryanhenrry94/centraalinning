@@ -7,9 +7,6 @@ import {
   Button,
   Checkbox,
   Container,
-  Dialog,
-  DialogContent,
-  Divider,
   FormControlLabel,
   Grid,
   IconButton,
@@ -47,10 +44,10 @@ import {
   updatePaymentReference,
 } from "@/modules/blockade/actions/create-blockade";
 import { notifyError, notifyInfo } from "@/shared/ui/notifications";
-import CloseIcon from "@mui/icons-material/Close";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
-import { formatCurrency } from "@/shared/utils/formatters";
+import { PaymentConfirmDialog } from "@/shared/ui/payment-confirm-dialog";
+import { calculateAbb } from "@/shared/utils/abb";
 import { useRouter } from "next/navigation";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
 import { getParameterForTenantAction } from "@/modules/settings/actions/parameter.actions";
@@ -122,11 +119,10 @@ export default function BlockCreatePage() {
   const [amountService, setAmountService] = useState<number>(35.0);
   const [abbRate, setAbbRate] = useState<number>(0);
 
-  // Prijs in het parameter is exclusief ABB — de eindgebruiker betaalt en
-  // ziet altijd prijs + 6% ABB bovenop (nooit ABB die uit het totaal wordt
-  // teruggerekend, zelfde regel als BLC/Financieel Rapport/COP).
-  const abbAmount = Number(((amountService * abbRate) / 100).toFixed(2));
-  const totalAmount = Number((amountService + abbAmount).toFixed(2));
+  const { abbAmount, total: totalAmount } = calculateAbb(
+    amountService,
+    abbRate,
+  );
 
   useEffect(() => {
     if (!tenant?.id) return;
@@ -1043,108 +1039,23 @@ export default function BlockCreatePage() {
         </Stack>
       </form>
 
-      {/* Dialoogvenster kostenbevesting */}
-      <Dialog
+      <PaymentConfirmDialog
         open={showCostDialog}
         onClose={() => setShowCostDialog(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogContent sx={{ p: { xs: 2, sm: 4 } }}>
-          <Stack spacing={3} alignItems="center">
-            {/* Titel */}
-            <Stack spacing={1} textAlign="center">
-              <Typography variant="h5" fontWeight={700}>
-                Betaling bevestigen
-              </Typography>
-
-              <Typography variant="body2" color="text.secondary">
-                Deze service vereist betaling voordat u de blokkade registreert.
-              </Typography>
-            </Stack>
-
-            {/* Prijs */}
-            <Paper
-              variant="outlined"
-              sx={{
-                width: "100%",
-                p: 2,
-                borderRadius: 2,
-                bgcolor: "background.default",
-              }}
-            >
-              <Stack spacing={1}>
-                <Stack direction="row" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">
-                    Servicewaarde (excl. ABB)
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {formatCurrency(amountService)}
-                  </Typography>
-                </Stack>
-
-                <Stack direction="row" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">
-                    ABB {abbRate}%
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {formatCurrency(abbAmount)}
-                  </Typography>
-                </Stack>
-
-                <Divider />
-
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="center"
-                >
-                  <Typography variant="subtitle1" fontWeight={700}>
-                    Totaal
-                  </Typography>
-                  <Typography
-                    variant="h5"
-                    fontWeight={700}
-                    color="primary.main"
-                  >
-                    {formatCurrency(totalAmount)}
-                  </Typography>
-                </Stack>
-              </Stack>
-            </Paper>
-
-            {/* Bericht */}
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              textAlign="center"
-            >
-              Als u doorgaat, wordt u doorgestuurd naar het beveiligde
-              betalingsproces.
-            </Typography>
-
-            {/* Acties */}
-            <Stack direction="row" spacing={2} width="100%">
-              <Button
-                fullWidth
-                variant="outlined"
-                color="inherit"
-                startIcon={<CloseIcon />}
-                onClick={() => setShowCostDialog(false)}
-                sx={{ textTransform: "none" }}
-              >
-                Annuleren
-              </Button>
-
-              <PaymentIntent
-                onCreateTransaction={handleCreateTransaction}
-                onPaymentConfirmed={handlePaymentConfirmed}
-                onPaymentFailed={handlePaymentFailed}
-              />
-            </Stack>
-          </Stack>
-        </DialogContent>
-      </Dialog>
+        lineItems={[
+          { label: "Servicewaarde (excl. ABB)", amount: amountService },
+          { label: `ABB ${abbRate}%`, amount: abbAmount },
+        ]}
+        total={totalAmount}
+        helperText="Deze service vereist betaling voordat u de blokkade registreert. Als u doorgaat, wordt u doorgestuurd naar het beveiligde betalingsproces."
+        payAction={
+          <PaymentIntent
+            onCreateTransaction={handleCreateTransaction}
+            onPaymentConfirmed={handlePaymentConfirmed}
+            onPaymentFailed={handlePaymentFailed}
+          />
+        }
+      />
     </Container>
   );
 }

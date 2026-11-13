@@ -10,7 +10,7 @@ export const DOSSIER_SERVICE_SHORTCUTS: {
 }[] = [
   { type: "FAR", label: "FAR", href: "/financial-agreements/new" },
   { type: "BLC", label: "BLC", href: "/block-check" },
-  { type: "AOP", label: "AOP", href: "/collections" },
+  { type: "AOP", label: "AOP", href: "/collections/new" },
   { type: "BLK", label: "BLK", href: "/blocks/new" },
   { type: "COP", label: "COP", href: "/collective-follow-up/new" },
   { type: "GOP", label: "GOP", href: "/legal-processes/new" },

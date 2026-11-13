@@ -36,6 +36,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { AlertService } from "@/shared/ui/alerts";
 import { formatCurrency } from "@/shared/utils/formatters";
+import { PaymentConfirmDialog } from "@/shared/ui/payment-confirm-dialog";
 
 import {
   RegisterVerdictInput,
@@ -216,6 +217,8 @@ export const VerdictRegistrationForm: React.FC<
   const [payingAndRegistering, setPayingAndRegistering] = useState(false);
   const [waitingBailiffConfirmation, setWaitingBailiffConfirmation] =
     useState(false);
+  const [showPaymentConfirmDialog, setShowPaymentConfirmDialog] =
+    useState(false);
 
   const defaultValues = useMemo(
     () =>
@@ -286,21 +289,18 @@ export const VerdictRegistrationForm: React.FC<
   // LegalProcessService.registerFirstVerdict /
   // processBailiffReferralPaymentConfirmed). Als er voor deze isla/tenant
   // geen doorverwijzingstarief geldt, is dat lado van entrada saldado.
-  const handlePayAndRegister = async () => {
+  const handleOpenPaymentConfirm = async () => {
     const valid = await trigger();
     if (!valid) {
       notifyError("Controleer de invoer voordat u doorgaat.");
       return;
     }
 
-    const confirmed = await AlertService.showConfirm(
-      "Weet je het zeker?",
-      "U staat op het punt het vonnis als concept te registreren. Na bevestiging van de betaling ontvangt de deelnemer een betaalverzoek voor de GOP-activering, die ingaat zodra de vereiste activeringsbetaling is bevestigd.",
-      "Ja, betalen en registreren",
-      "Annuleren",
-    );
-    if (!confirmed) return;
+    setShowPaymentConfirmDialog(true);
+  };
 
+  const handlePayAndRegister = async () => {
+    setShowPaymentConfirmDialog(false);
     setPayingAndRegistering(true);
     try {
       const draft = (await registerGopVerdict(getValues())) as {
@@ -798,7 +798,7 @@ export const VerdictRegistrationForm: React.FC<
                         type="button"
                         variant="contained"
                         color="primary"
-                        onClick={handlePayAndRegister}
+                        onClick={handleOpenPaymentConfirm}
                         startIcon={<LockIcon />}
                         fullWidth
                         disabled={payingAndRegistering}
@@ -837,6 +837,36 @@ export const VerdictRegistrationForm: React.FC<
               </Typography>
             </DialogContent>
           </Dialog>
+
+          <PaymentConfirmDialog
+            open={showPaymentConfirmDialog}
+            onClose={() => setShowPaymentConfirmDialog(false)}
+            lineItems={[
+              { label: "Totaal deurwaarderskosten", amount: totalBailiffCost },
+            ]}
+            total={bailiffCfsbCost}
+            helperText="Na bevestiging van de betaling ontvangt de deelnemer een betaalverzoek voor de GOP-activering, die ingaat zodra de vereiste activeringsbetaling is bevestigd."
+            payAction={
+              <Button
+                type="button"
+                variant="contained"
+                color="primary"
+                onClick={handlePayAndRegister}
+                startIcon={<LockIcon />}
+                fullWidth
+                disabled={payingAndRegistering}
+                sx={{
+                  textTransform: "none",
+                  fontSize: "1rem",
+                  fontWeight: 700,
+                  bgcolor: "#F97316",
+                  "&:hover": { bgcolor: "#EA580C" },
+                }}
+              >
+                {payingAndRegistering ? "Verwerken..." : "Betalen en registreren"}
+              </Button>
+            }
+          />
 
           <Box
             sx={{

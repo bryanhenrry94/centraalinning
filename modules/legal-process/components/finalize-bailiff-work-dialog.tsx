@@ -1,18 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  IconButton,
-  Stack,
-  TextField,
-  Alert,
-} from "@mui/material";
+import { Button, Stack, TextField, Alert } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import CloseIcon from "@mui/icons-material/Close";
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { AlertService } from "@/shared/ui/alerts";
 import {
@@ -21,6 +10,7 @@ import {
   getGopBailiffFeeRatePercent,
 } from "@/modules/legal-process/actions/legal-process.actions";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
+import { PaymentConfirmDialog } from "@/shared/ui/payment-confirm-dialog";
 import { formatCurrency } from "@/shared/utils/formatters";
 
 interface FinalizeBailiffWorkDialogProps {
@@ -151,82 +141,63 @@ export const FinalizeBailiffWorkDialog: React.FC<FinalizeBailiffWorkDialogProps>
     notifyError("De betaling is niet gelukt. Probeer het opnieuw.");
   };
 
+  const lineItems = [
+    ...(registeredCostsTotal !== null
+      ? [{ label: "Totaal deurwaarderskosten", amount: registeredCostsTotal }]
+      : []),
+  ];
+
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle
-        sx={{
-          bgcolor: "secondary.main",
-          color: "white",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          fontWeight: 600,
-        }}
-      >
-        Werk afgerond: kosten en CFSB-commissie
-        <IconButton onClick={handleClose} sx={{ color: "white" }}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} sx={{ mt: 1 }}>
-          <Alert severity="info">
-            Bij het registreren van de factuur wordt automatisch de CFSB-commissie (5%) over het
-            totaalbedrag berekend. Deze moet betaald worden om het GOP-dossier te kunnen sluiten.
-          </Alert>
-          {registeredCostsTotal !== null && (
-            <Alert severity="info" variant="outlined">
-              Totaal deurwaarderskosten: {formatCurrency(registeredCostsTotal)}
-            </Alert>
-          )}
-          {cfsbFeeTotal !== null && (
-            <Alert severity="info" variant="outlined">
-              Totaal CFSB-5%: {formatCurrency(cfsbFeeTotal)}
-            </Alert>
-          )}
-          {mismatchWarning && <Alert severity="warning">{mismatchWarning}</Alert>}
-          <TextField
-            label="Totaalbedrag gefactureerd aan de debiteur"
-            type="number"
-            size="small"
-            required
-            value={form.totalAmount}
-            onChange={set("totalAmount")}
-          />
-          <TextField
-            label="Factuurnummer (optioneel)"
-            size="small"
-            value={form.invoiceNumber}
-            onChange={set("invoiceNumber")}
-          />
-          <TextField
-            label="Factuurdatum (optioneel)"
-            type="date"
-            size="small"
-            slotProps={{ inputLabel: { shrink: true } }}
-            value={form.invoiceDate}
-            onChange={set("invoiceDate")}
-          />
-          <Button component="label" variant="outlined" startIcon={<UploadFileIcon />}>
-            {file ? file.name : combinedInvoiceRequired ? "Gezamenlijke factuur uploaden" : "Gezamenlijke factuur uploaden (optioneel)"}
-            <input type="file" hidden onChange={handleFileChange} />
-          </Button>
-          {!combinedInvoiceRequired && !file && (
-            <Alert severity="success" variant="outlined">
-              Elke geregistreerde kostenregel heeft al een eigen document — een gezamenlijke
-              factuur is hier niet verplicht.
-            </Alert>
-          )}
-        </Stack>
-      </DialogContent>
-      <DialogActions sx={{ flexDirection: "column", alignItems: "stretch", gap: 1, px: 3, pb: 2 }}>
+    <PaymentConfirmDialog
+      open={open}
+      onClose={handleClose}
+      title="Werk afgerond: kosten en CFSB-commissie"
+      lineItems={lineItems}
+      total={cfsbFeeTotal ?? 0}
+      helperText="Bij het registreren van de factuur wordt automatisch de CFSB-commissie (5%) over het totaalbedrag berekend. Deze moet betaald worden om het GOP-dossier te kunnen sluiten."
+      payAction={
         <PaymentIntent
           onCreateTransaction={handleCreateTransaction}
           onPaymentConfirmed={handlePaymentConfirmed}
           onPaymentFailed={handlePaymentFailed}
         />
-        <Button onClick={handleClose}>Annuleren</Button>
-      </DialogActions>
-    </Dialog>
+      }
+    >
+      <Stack spacing={2}>
+        {mismatchWarning && <Alert severity="warning">{mismatchWarning}</Alert>}
+        <TextField
+          label="Totaalbedrag gefactureerd aan de debiteur"
+          type="number"
+          size="small"
+          required
+          value={form.totalAmount}
+          onChange={set("totalAmount")}
+        />
+        <TextField
+          label="Factuurnummer (optioneel)"
+          size="small"
+          value={form.invoiceNumber}
+          onChange={set("invoiceNumber")}
+        />
+        <TextField
+          label="Factuurdatum (optioneel)"
+          type="date"
+          size="small"
+          slotProps={{ inputLabel: { shrink: true } }}
+          value={form.invoiceDate}
+          onChange={set("invoiceDate")}
+        />
+        <Button component="label" variant="outlined" startIcon={<UploadFileIcon />}>
+          {file ? file.name : combinedInvoiceRequired ? "Gezamenlijke factuur uploaden" : "Gezamenlijke factuur uploaden (optioneel)"}
+          <input type="file" hidden onChange={handleFileChange} />
+        </Button>
+        {!combinedInvoiceRequired && !file && (
+          <Alert severity="success" variant="outlined">
+            Elke geregistreerde kostenregel heeft al een eigen document — een gezamenlijke
+            factuur is hier niet verplicht.
+          </Alert>
+        )}
+      </Stack>
+    </PaymentConfirmDialog>
   );
 };

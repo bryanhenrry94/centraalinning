@@ -45,6 +45,7 @@ import { ProposeCaseTransferAgreementDialog } from "@/modules/legal-process/comp
 import { AgreementDecisionDialog } from "@/modules/agreement/components/agreement-decision-dialog";
 import { AgreementResponse } from "@/modules/agreement/services/agreement.validators";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
+import { PaymentConfirmDialog } from "@/shared/ui/payment-confirm-dialog";
 
 type CaseTransferDetail = Awaited<ReturnType<typeof getCaseTransferById>>;
 
@@ -110,6 +111,7 @@ const CaseTransferDetailPage: React.FC = () => {
     | "power-of-attorney"
     | "propose-agreement"
     | "decide-agreement"
+    | "pay-lawyer-fee"
   >(null);
 
   const load = useCallback(async () => {
@@ -560,72 +562,20 @@ const CaseTransferDetailPage: React.FC = () => {
                   toepasselijke belasting. Betaal de vergoeding via Sentoo zodat
                   deze fase de status &quot;Afgerond&quot; krijgt.
                 </Typography>
-                <Stack spacing={1} sx={{ mb: 2 }}>
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography variant="body2" color="text.secondary">
-                      {isLawyerTrack
-                        ? "Totaal honorarium"
-                        : "Totaal kostenbedrag"}
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600}>
-                      {formatCurrency(pendingLawyerFeeInvoice.totalAmount)}
-                    </Typography>
-                  </Stack>
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography variant="body2" color="text.secondary">
-                      CFSB-vergoeding (5%)
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600}>
-                      {formatCurrency(pendingLawyerFeeInvoice.cfsbFeeAmount)}
-                    </Typography>
-                  </Stack>
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography variant="body2" color="text.secondary">
-                      Belasting
-                    </Typography>
-                    <Typography variant="body2" fontWeight={600}>
-                      {formatCurrency(pendingLawyerFeeInvoice.taxAmount)}
-                    </Typography>
-                  </Stack>
-                  <Divider />
-                  <Stack direction="row" justifyContent="space-between">
-                    <Typography variant="subtitle2" fontWeight={700}>
-                      Totaal te betalen
-                    </Typography>
-                    <Typography variant="subtitle2" fontWeight={700}>
-                      {formatCurrency(
-                        pendingLawyerFeeInvoice.cfsbFeeAmount +
-                          pendingLawyerFeeInvoice.taxAmount,
-                      )}
-                    </Typography>
-                  </Stack>
+                <Stack direction="row" alignItems="center" spacing={2}>
+                  <Chip
+                    size="small"
+                    color="warning"
+                    label="In afwachting van betaling CFSB"
+                    sx={{ fontWeight: 700 }}
+                  />
+                  <Button
+                    variant="contained"
+                    onClick={() => setDialog("pay-lawyer-fee")}
+                  >
+                    Betaling bekijken
+                  </Button>
                 </Stack>
-                <Chip
-                  size="small"
-                  color="warning"
-                  label="In afwachting van betaling CFSB"
-                  sx={{ fontWeight: 700, mb: 2 }}
-                />
-                <PaymentIntent
-                  onCreateTransaction={async () => ({
-                    success: false,
-                    error: "N/A",
-                  })}
-                  existingPayment={{
-                    paymentId: pendingLawyerFeeInvoice.payment.id,
-                    paymentUrl:
-                      pendingLawyerFeeInvoice.payment.payment_url ?? "",
-                  }}
-                  onPaymentConfirmed={async () => {
-                    notifySuccess(
-                      isLawyerTrack
-                        ? "Betaling bevestigd. Advocatenfase afgerond."
-                        : "Betaling bevestigd. Deze route is afgerond — er is geen GOP.",
-                    );
-                    refresh();
-                  }}
-                  buttonLabel="Nu betalen via Sentoo"
-                />
               </CardContent>
             </Card>
           )}
@@ -743,6 +693,51 @@ const CaseTransferDetailPage: React.FC = () => {
         }
         onDecided={refresh}
       />
+      {pendingLawyerFeeInvoice && (
+        <PaymentConfirmDialog
+          open={dialog === "pay-lawyer-fee"}
+          onClose={() => setDialog(null)}
+          lineItems={[
+            {
+              label: isLawyerTrack
+                ? "Totaal honorarium"
+                : "Totaal kostenbedrag",
+              amount: pendingLawyerFeeInvoice.totalAmount,
+            },
+            {
+              label: "CFSB-vergoeding (5%)",
+              amount: pendingLawyerFeeInvoice.cfsbFeeAmount,
+            },
+            { label: "Belasting", amount: pendingLawyerFeeInvoice.taxAmount },
+          ]}
+          total={
+            pendingLawyerFeeInvoice.cfsbFeeAmount +
+            pendingLawyerFeeInvoice.taxAmount
+          }
+          payAction={
+            <PaymentIntent
+              onCreateTransaction={async () => ({
+                success: false,
+                error: "N/A",
+              })}
+              existingPayment={{
+                paymentId: pendingLawyerFeeInvoice.payment.id,
+                paymentUrl: pendingLawyerFeeInvoice.payment.payment_url ?? "",
+              }}
+              onPaymentConfirmed={async () => {
+                setDialog(null);
+                notifySuccess(
+                  isLawyerTrack
+                    ? "Betaling bevestigd. Advocatenfase afgerond."
+                    : "Betaling bevestigd. Deze route is afgerond — er is geen GOP.",
+                );
+                refresh();
+              }}
+              buttonLabel="Nu betalen via Sentoo"
+            />
+          }
+        />
+      )}
     </Container>
   );
 };

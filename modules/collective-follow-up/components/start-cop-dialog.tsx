@@ -1,24 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  IconButton,
-  Typography,
-  Box,
-  Paper,
-  Stack,
-  Divider,
-} from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
 import { notifyError } from "@/shared/ui/notifications";
-import { formatCurrency } from "@/shared/utils/formatters";
 import { requestStartCollectiveCollection } from "@/modules/collective-follow-up/actions/collective-collection.actions";
 import { getParameterForTenantAction } from "@/modules/settings/actions/parameter.actions";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
+import { PaymentConfirmDialog } from "@/shared/ui/payment-confirm-dialog";
+import { calculateAbb } from "@/shared/utils/abb";
 
 // Solo para mostrar el monto antes de pagar — el monto real y autoritativo
 // se calcula server-side en CollectiveCollectionService.requestStart. No se
@@ -63,8 +50,7 @@ export const StartCopDialog: React.FC<StartCopDialogProps> = ({
   // betaalt altijd vergoeding + ABB bovenop (zelfde regel als BLC/Financieel
   // Rapport), nooit ABB die uit het totaal wordt teruggerekend.
   const feeAmount = principalAmount * COP_START_FEE_RATE;
-  const abbAmount = Number(((feeAmount * abbRate) / 100).toFixed(2));
-  const totalAmount = Number((feeAmount + abbAmount).toFixed(2));
+  const { abbAmount, total: totalAmount } = calculateAbb(feeAmount, abbRate);
 
   const handleCreateTransaction = async () => {
     try {
@@ -93,110 +79,22 @@ export const StartCopDialog: React.FC<StartCopDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle
-        sx={{
-          bgcolor: "secondary.main",
-          color: "white",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          fontWeight: 600,
-        }}
-      >
-        Collectieve Opvolging starten
-        <IconButton onClick={onClose} sx={{ color: "white" }}>
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent>
-        <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2, mb: 3 }}>
-          <Stack spacing={2} sx={{ mt: 4 }}>
-            <Typography
-              variant="body2"
-              color="text.primary"
-              sx={{ textAlign: "justify" }}
-            >
-              Start Collectieve Opvolging om via de samenwerking tot betaling of
-              een betalingsregeling te komen en mogelijke gerechtelijke
-              opvolging zoveel mogelijk te voorkomen.
-            </Typography>
-            <Typography
-              variant="body2"
-              color="text.primary"
-              sx={{ textAlign: "justify" }}
-            >
-              De Collectieve Opvolging wordt actief nadat de startvergoeding is
-              betaald.
-            </Typography>
-          </Stack>
-        </Box>
-
-        <Paper
-          variant="outlined"
-          sx={{
-            width: "100%",
-            p: 2,
-            borderRadius: 2,
-            bgcolor: "#FFF7ED",
-            borderColor: "#FBD9B4",
-          }}
-        >
-          <Stack spacing={1}>
-            <Stack direction="row" justifyContent="space-between">
-              <Typography variant="body2" color="text.secondary">
-                Startvergoeding (5%, excl. ABB)
-              </Typography>
-              <Typography variant="body2" fontWeight={600}>
-                {formatCurrency(feeAmount)}
-              </Typography>
-            </Stack>
-
-            <Stack direction="row" justifyContent="space-between">
-              <Typography variant="body2" color="text.secondary">
-                ABB {abbRate}%
-              </Typography>
-              <Typography variant="body2" fontWeight={600}>
-                {formatCurrency(abbAmount)}
-              </Typography>
-            </Stack>
-
-            <Divider />
-
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Typography variant="subtitle1" fontWeight={700}>
-                Totaal
-              </Typography>
-              <Typography variant="h5" fontWeight={700} sx={{ color: "#F97316" }}>
-                {formatCurrency(totalAmount)}
-              </Typography>
-            </Stack>
-          </Stack>
-        </Paper>
-      </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Stack direction="row" spacing={2} width="100%">
-          <Button
-            fullWidth
-            variant="outlined"
-            color="inherit"
-            startIcon={<CloseIcon />}
-            onClick={onClose}
-            sx={{ textTransform: "none" }}
-          >
-            Annuleren
-          </Button>
-
-          <PaymentIntent
-            onCreateTransaction={handleCreateTransaction}
-            onPaymentConfirmed={handlePaymentConfirmed}
-          />
-        </Stack>
-      </DialogActions>
-    </Dialog>
+    <PaymentConfirmDialog
+      open={open}
+      onClose={onClose}
+      title="Collectieve Opvolging starten"
+      lineItems={[
+        { label: "Startvergoeding (5%, excl. ABB)", amount: feeAmount },
+        { label: `ABB ${abbRate}%`, amount: abbAmount },
+      ]}
+      total={totalAmount}
+      helperText="Start Collectieve Opvolging om via de samenwerking tot betaling of een betalingsregeling te komen en mogelijke gerechtelijke opvolging zoveel mogelijk te voorkomen. De Collectieve Opvolging wordt actief nadat de startvergoeding is betaald."
+      payAction={
+        <PaymentIntent
+          onCreateTransaction={handleCreateTransaction}
+          onPaymentConfirmed={handlePaymentConfirmed}
+        />
+      }
+    />
   );
 };

@@ -3,16 +3,12 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   IconButton,
-  Typography,
   Autocomplete,
   TextField,
   Stack,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
-import CloseIcon from "@mui/icons-material/Close";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,12 +24,12 @@ import {
 import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { useTenant } from "@/modules/auth/hooks/useTenant";
 import { getParameterForTenantAction } from "@/modules/settings/actions/parameter.actions";
-import { formatCurrency } from "@/shared/utils/formatters";
 import { ParameterInput } from "@/modules/settings/services/parameter/parameter.type";
 import { getDebtorsAction } from "@/modules/collection/actions/debtor.actions";
 import { createPendingDebtClaimAction } from "@/modules/collection/actions/debt-claim.actions";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
 import { PaymentType } from "@/modules/payment/services/payment.validators";
+import { PaymentConfirmDialog } from "@/shared/ui/payment-confirm-dialog";
 
 interface IRegisterInvoiceProps {
   onSave?: () => void;
@@ -124,7 +120,8 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
   }
 
   const amountService = cobranza + abbValue + additionalCosts;
-  const totalFinal = subtotal - amountService;
+
+  const [showCostDialog, setShowCostDialog] = useState(false);
 
   const handleClickNewDebtor = () => {
     setModalFormDebtor({ open: true, debtor_id: debtorId });
@@ -133,6 +130,18 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
   const handleSetDebtor = (debtor: DebtorInput) => {
     fetchDebtors();
     setValue("debtorId", debtor.id ?? "");
+  };
+
+  const handleOpenCostDialog = async () => {
+    const isValid = await trigger();
+    if (!isValid) return;
+
+    if (amountService <= 0) {
+      notifyError("Het servicebedrag moet groter zijn dan 0");
+      return;
+    }
+
+    setShowCostDialog(true);
   };
 
   /**
@@ -197,6 +206,7 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
    * Aquí solo limpiamos la UI.
    */
   const handlePaymentConfirmed = async (_paymentId: string) => {
+    setShowCostDialog(false);
     reset();
     notifySuccess("Opgenomen verzameltaak");
     onSave?.();
@@ -205,12 +215,11 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
 
   const handlePaymentFailed = async (_paymentId: string) => {
     notifyError("De betaling is mislukt. Probeer het opnieuw.");
-    onClose?.();
   };
 
   return (
     <>
-      <Box sx={{ p: 2 }}>
+      <Box>
         {/* form como contenedor para react-hook-form; el envío ocurre via PaymentIntent */}
         <form onSubmit={(e) => e.preventDefault()}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -280,46 +289,38 @@ const RegisterInvoice: React.FC<IRegisterInvoiceProps> = ({
               helperText={errors.principalAmount?.message ?? ""}
             />
 
-            <Card>
-              <CardContent>
-                <Box display="flex" justifyContent="space-between">
-                  <Typography>Vordering:</Typography>
-                  <Typography>{formatCurrency(subtotal)}</Typography>
-                </Box>
-                <Box display="flex" justifyContent="space-between">
-                  <Typography>CFSB-Kosten:</Typography>
-                  <Typography>{`-${formatCurrency(amountService)}`}</Typography>
-                </Box>
-                <Box display="flex" justifyContent="space-between">
-                  <Typography variant="h6">Te ontvangen:</Typography>
-                  <Typography variant="h6">
-                    {formatCurrency(totalFinal)}
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-
-            <Stack direction="row" spacing={2} width="100%">
+            <Stack direction="row" justifyContent="flex-end">
               <Button
-                fullWidth
-                variant="outlined"
-                color="inherit"
-                startIcon={<CloseIcon />}
-                onClick={() => onClose?.()}
+                variant="contained"
+                onClick={handleOpenCostDialog}
                 sx={{ textTransform: "none" }}
               >
-                Annuleren
+                Doorgaan naar betaling
               </Button>
-
-              <PaymentIntent
-                onCreateTransaction={handleCreateTransaction}
-                onPaymentConfirmed={handlePaymentConfirmed}
-                onPaymentFailed={handlePaymentFailed}
-              />
             </Stack>
           </Box>
         </form>
       </Box>
+
+      <PaymentConfirmDialog
+        open={showCostDialog}
+        onClose={() => setShowCostDialog(false)}
+        lineItems={[
+          { label: "CFSB-kosten", amount: cobranza },
+          { label: `ABB ${abb_rate}%`, amount: abbValue },
+          ...(additionalCosts > 0
+            ? [{ label: "Digitaal dossier", amount: additionalCosts }]
+            : []),
+        ]}
+        total={amountService}
+        payAction={
+          <PaymentIntent
+            onCreateTransaction={handleCreateTransaction}
+            onPaymentConfirmed={handlePaymentConfirmed}
+            onPaymentFailed={handlePaymentFailed}
+          />
+        }
+      />
 
       <ModalFormDebtor
         open={modalFormDebtor.open}

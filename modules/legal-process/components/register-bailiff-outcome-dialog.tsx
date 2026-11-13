@@ -2,10 +2,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   IconButton,
   Box,
@@ -13,7 +9,6 @@ import {
   Grid,
   TextField,
   Typography,
-  Alert,
   RadioGroup,
   FormControlLabel,
   Radio,
@@ -24,6 +19,7 @@ import { notifyError, notifySuccess } from "@/shared/ui/notifications";
 import { submitBailiffOutcomeInvoice } from "@/modules/legal-process/actions/case-transfer.actions";
 import { CaseTransferOutcome } from "@/modules/legal-process/services/case-transfer.validators";
 import { PaymentIntent } from "@/modules/payment/components/PaymentIntent";
+import { PaymentConfirmDialog } from "@/shared/ui/payment-confirm-dialog";
 
 interface RegisterBailiffOutcomeDialogProps {
   open: boolean;
@@ -228,31 +224,34 @@ export const RegisterBailiffOutcomeDialog: React.FC<
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle
-        sx={{
-          bgcolor: "secondary.main",
-          color: "white",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          fontWeight: 700,
-        }}
-      >
-        Dossier afronden
-        <IconButton onClick={handleClose} sx={{ color: "white" }}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent sx={{ pt: 2 }}>
+    <PaymentConfirmDialog
+      open={open}
+      onClose={handleClose}
+      title="Dossier afronden"
+      payAction={
+        canSubmitOutcome ? (
+          <PaymentIntent
+            onCreateTransaction={handleCreateTransaction}
+            onPaymentConfirmed={handlePaymentConfirmed}
+            onPaymentFailed={handlePaymentFailed}
+            buttonLabel="Afronden en verzenden"
+          />
+        ) : hasVerdict ? (
+          <Button
+            fullWidth
+            variant="contained"
+            onClick={handleContinueToVerdict}
+          >
+            Doorgaan naar vonnis registreren
+          </Button>
+        ) : (
+          <Button fullWidth variant="contained" disabled>
+            Afronden en verzenden
+          </Button>
+        )
+      }
+    >
         <Stack spacing={2}>
-          {/* <Alert severity="info" sx={{ textAlign: "justify" }}>
-            Dit formulier is enkel voor een afronding zonder vonnis. CFSB
-            berekent automatisch 5% plus de toepasselijke belasting over het
-            geregistreerde kostenbedrag. Na betaling wordt deze route afgesloten
-            — er ontstaat geen GOP.
-          </Alert> */}
-
           <Box>
             <FieldLabel label="Afronding in" required />
             <RadioGroup
@@ -350,36 +349,6 @@ export const RegisterBailiffOutcomeDialog: React.FC<
             </>
           )}
         </Stack>
-      </DialogContent>
-      <DialogActions
-        sx={{
-          flexDirection: "column",
-          alignItems: "stretch",
-          gap: 1,
-          px: 3,
-          pb: 2,
-        }}
-      >
-        {canSubmitOutcome ? (
-          <PaymentIntent
-            onCreateTransaction={handleCreateTransaction}
-            onPaymentConfirmed={handlePaymentConfirmed}
-            onPaymentFailed={handlePaymentFailed}
-            buttonLabel="Afronden en verzenden"
-          />
-        ) : hasVerdict ? (
-          <Button variant="contained" onClick={handleContinueToVerdict}>
-            Doorgaan naar vonnis registreren
-          </Button>
-        ) : (
-          <Button variant="contained" disabled>
-            Afronden en verzenden
-          </Button>
-        )}
-        <Button variant="outlined" onClick={handleClose}>
-          Annuleren
-        </Button>
-      </DialogActions>
-    </Dialog>
+    </PaymentConfirmDialog>
   );
 };
